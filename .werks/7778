@@ -1,0 +1,12 @@
+Title: Fix sorting views by inventory columns
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560254646
+
+Views that sorted their rows by inventory columns could not be rendered
+in 1.6.0b1. They always showed an exception like this: <tt>TypeError: <lambda>() takes exactly 2 arguments (3 given)</tt>.

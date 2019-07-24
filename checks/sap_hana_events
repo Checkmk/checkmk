@@ -27,7 +27,7 @@
 
 def parse_sap_hana_events(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         inst_data = {}
         for line in lines:
             if len(line) < 2:
@@ -38,13 +38,8 @@ def parse_sap_hana_events(info):
             except ValueError:
                 pass
         if inst_data:
-            parsed.setdefault((sid_instance, node), inst_data)
+            parsed.setdefault(sid_instance, inst_data)
     return parsed
-
-
-def inventory_sap_hana_events(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
 
 
 SAP_HANA_EVENTS_MAP = {
@@ -54,22 +49,21 @@ SAP_HANA_EVENTS_MAP = {
 }
 
 
-def check_sap_hana_events(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+def inventory_sap_hana_events(parsed):
+    for item in parsed.iterkeys():
+        yield item, {}
 
-        if node:
-            yield 0, 'On node: %s' % node
 
-        for event_key, event_count in data.iteritems():
-            event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(
-                event_key, (3, "unknown[%s]" % event_key))
-            state = 0
-            if event_count > 0:
-                state = event_state
-            yield state, "%s: %s" % (event_state_readable, event_count), [("num_%s" % event_key,
-                                                                           event_count)]
+@get_parsed_item_data
+def check_sap_hana_events(item, params, data):
+    for event_key, event_count in data.iteritems():
+        event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(event_key,
+                                                                    (3, "unknown[%s]" % event_key))
+        state = 0
+        if event_count > 0:
+            state = event_state
+        yield state, "%s: %s" % (event_state_readable, event_count), [("num_%s" % event_key,
+                                                                       event_count)]
 
 
 check_info['sap_hana_events'] = {
@@ -79,5 +73,4 @@ check_info['sap_hana_events'] = {
     'service_description': 'SAP HANA Events %s',
     'includes': ['sap_hana.include'],
     "has_perfdata": True,
-    "node_info": True,
 }

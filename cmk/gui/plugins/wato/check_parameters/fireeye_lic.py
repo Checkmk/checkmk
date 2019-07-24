@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersFireeyeLic(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "days",
-                Tuple(
-                    title=_("Levels for Fireeye License Expiration"),
-                    elements=[
-                        Integer(title="Warning at", default_value=90, unit="days"),
-                        Integer(title="Critical at", default_value=120, unit="days"),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            "days",
+            Tuple(
+                title=_("Levels for Fireeye License Expiration"),
+                elements=[
+                    Integer(title="Warning at", default_value=90, unit="days"),
+                    Integer(title="Critical at", default_value=120, unit="days"),
+                ],
+            ),
+        )],)
 
     @property
     def item_spec(self):

@@ -85,8 +85,8 @@ def check_memory_multiitem(params, data, base=1024):
         return 3, 'Invalid data: missing mem_used or mem_avail sizes'
 
     infotext = '%s used (%s of %s)' % (get_percent_human_readable(
-        float(mem_used) / float(mem_total) * 100), get_bytes_human_readable(mem_used, base=base),
-                                       get_bytes_human_readable(mem_total, base=base))
+        float(mem_used) / float(mem_total) * 100), get_bytes_human_readable(
+            mem_used, base=base), get_bytes_human_readable(mem_total, base=base))
 
     state = 0
     if 'levels' in params:

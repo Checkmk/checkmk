@@ -59,25 +59,24 @@ class RulespecCheckgroupParametersGenericRate(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Upper levels"),
-                     elements=[
-                         Float(title="Warning at", unit="/s"),
-                         Float(title="Critical at", unit="/s"),
-                     ],
-                 )),
-                ("levels_lower",
-                 Tuple(
-                     title=_("Lower levels"),
-                     elements=[
-                         Float(title="Warning below", unit="/s"),
-                         Float(title="Critical below", unit="/s"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Upper levels"),
+                 elements=[
+                     Float(title="Warning at", unit="/s"),
+                     Float(title="Critical at", unit="/s"),
+                 ],
+             )),
+            ("levels_lower",
+             Tuple(
+                 title=_("Lower levels"),
+                 elements=[
+                     Float(title="Warning below", unit="/s"),
+                     Float(title="Critical below", unit="/s"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

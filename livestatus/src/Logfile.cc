@@ -24,6 +24,7 @@
 
 #include "Logfile.h"
 #include <fcntl.h>
+#include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <utility>
@@ -33,7 +34,7 @@
 #include "Logger.h"
 
 namespace {
-time_t firstTimestampOf(const fs::path &path, Logger *logger) {
+time_t firstTimestampOf(const std::filesystem::path &path, Logger *logger) {
     std::ifstream is(path, std::ios::binary);
     if (!is) {
         generic_error ge("cannot open logfile " + path.string());
@@ -58,7 +59,8 @@ time_t firstTimestampOf(const fs::path &path, Logger *logger) {
 }
 }  // namespace
 
-Logfile::Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch)
+Logfile::Logfile(Logger *logger, LogCache *log_cache,
+                 std::filesystem::path path, bool watch)
     : _logger(logger)
     , _log_cache(log_cache)
     , _path(std::move(path))
@@ -89,13 +91,13 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
 
         // file might have grown. Read all classes that we already
         // have read to the end of the file
-        if (_logclasses_read != 0u) {
+        if (_logclasses_read != 0U) {
             fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(max_lines_per_logfile, file, _logclasses_read,
                       logclasses);
             fgetpos(file, &_read_pos);
         }
-        if (missing_types != 0u) {
+        if (missing_types != 0U) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(max_lines_per_logfile, file, missing_types, logclasses);
@@ -135,11 +137,11 @@ void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
         }
         _lineno++;
         // remove trailing newline (should be nuked, see above)
-        for (auto &ch : linebuffer) {
-            if (ch == '\0' || ch == '\n') {
-                ch = '\0';
-                break;
-            }
+        auto it =
+            std::find_if(linebuffer.begin(), linebuffer.end(),
+                         [](auto ch) { return ch == '\0' || ch == '\n'; });
+        if (it != linebuffer.end()) {
+            *it = '\0';
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
             _log_cache->logLineHasBeenAdded(this, logclasses);
@@ -154,7 +156,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
-        if (((1u << static_cast<int>(it->second->_class)) & logclasses) != 0u) {
+        if (((1U << static_cast<int>(it->second->_class)) & logclasses) != 0U) {
             _entries.erase(it++);
             freed++;
         } else {
@@ -172,7 +174,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     if (entry->_class == LogEntry::Class::invalid) {
         return false;
     }
-    if (((1u << static_cast<int>(entry->_class)) & logclasses) == 0u) {
+    if (((1U << static_cast<int>(entry->_class)) & logclasses) == 0U) {
         return false;
     }
     uint64_t key = makeKey(entry->_time, entry->_lineno);

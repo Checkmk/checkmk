@@ -115,7 +115,7 @@ def get_languages():
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = set([('', _('English'))])
+    languages = {('', _('English'))}
 
     for lang_dir in _get_language_dirs():
         try:
@@ -160,8 +160,10 @@ def _init_language(lang):
     translations = []  # type: List[gettext_module.NullTranslations]
     for locale_base_dir in _get_language_dirs():
         try:
-            translation = gettext_module.translation(
-                "multisite", locale_base_dir, languages=[lang], codeset='UTF-8')
+            translation = gettext_module.translation("multisite",
+                                                     locale_base_dir,
+                                                     languages=[lang],
+                                                     codeset='UTF-8')
 
         except IOError:
             continue

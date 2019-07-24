@@ -118,7 +118,9 @@ def inventory_esx_vsphere_vm_name(info):
 
 def check_esx_vsphere_vm_name(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
-    return (0, " ".join(data['name']))
+    name = data.get('name')
+    if name:
+        return 0, " ".join(name)
 
 
 check_info['esx_vsphere_vm.name'] = {

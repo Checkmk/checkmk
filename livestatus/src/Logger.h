@@ -246,11 +246,11 @@ private:
 
 class LogManager {
 public:
-    static LogManager *getLogManager() { return &_global_log_manager; }
+    static LogManager *getLogManager() { return &global_log_manager; }
     Logger *getLogger(const std::string &name);
 
 private:
-    static LogManager _global_log_manager;
+    static LogManager global_log_manager;
 
     // The mutex protects _known_loggers.
     std::mutex _mutex;

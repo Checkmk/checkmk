@@ -116,7 +116,7 @@ div.dashlet {
   canvas.pie {
     position: absolute;
     top: 7px;
-    left: 10px;
+    left: 7px;
     z-index: 10;
     transform: scale(0.8, 0.8);
     transform-origin: center;
@@ -125,7 +125,7 @@ div.dashlet {
   img.globe {
     position: absolute;
     top: 5px;
-    left: 10px;
+    left: 7px;
     z-index: 20;
     filter: grayscale(100%);
     transform: scale(0.8, 0.8);
@@ -134,12 +134,13 @@ div.dashlet {
 
   table.hoststats {
     position: absolute;
-    right: 0;
+    right: 10px;
     width: 135px;
     height: 142px;
     margin-top: 0;
     border-collapse: collapse;
     border-spacing: 0;
+    top: -1px;
 
     &.narrow {
       /* TODO: Remove this style after decoupling from classic theme */
@@ -189,6 +190,12 @@ div.dashlet > div.title span a,
 div.dashlet > div.title span body.main .popup_menu span,
 body.main .popup_menu div.dashlet > div.title span span {
   color: $theme-color-table-text;
+}
+
+div.dashlet > div.title span {
+  padding-left: 0; /* left align with titles of contained views */
+  position: relative;
+  top: 4px;
 }
 
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
@@ -683,4 +690,35 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
+}
+
+/* Adapted styling of views in dashlets */
+body.main.dashlet {
+  tr.data {
+    > td {
+      padding-top: 2px;
+      padding-bottom: 2px;
+      border-bottom: none;
+
+      &.state {
+	border-top-color: white !important;
+      }
+    }
+
+    &:last-of-type > td {
+      border-bottom: 1px solid #cccfdb;
+    }
+
+    &:nth-child(2) > td.state {
+      border-top-color: #cccfdb !important;
+    }
+  }
+
+  table.data {
+    border-spacing: 0;
+th:nth-child(1) {
+     padding-bottom: 2px;
+     padding-left: 1px;
+   }
+  }
 }

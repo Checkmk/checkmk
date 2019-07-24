@@ -128,8 +128,8 @@ def check_printer_io(item, params, info, what):
             if level in [-1, -2] or level < -3:
                 pass  # totally skip this info when level is unknown or not limited
 
-            elif capacity_max in [-1, -2]:
-                # -1: no restriction, -2: unknown
+            elif capacity_max in (-2, -1, 0):
+                # -2: unknown, -1: no restriction, 0: due to saveint
                 yield 0, 'Capacity: %s%s' % (level, capacity_unit)
 
             else:

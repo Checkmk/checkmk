@@ -1,0 +1,14 @@
+Title: Fix URL redirect from /[site]/ to /[site]/check_mk/ in SSL setups
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560755087
+
+When an user accesses the URL <tt>/[SITE]/</tt>, the user is forwarded to the
+Checkmk GUI, which is available via <tt>/[SITE]/check_mk/</tt>. In a HTTPs
+setup the redirect could forward the user to a HTTP URL instead of HTTPS in
+some cases.

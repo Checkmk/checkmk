@@ -627,20 +627,12 @@ def send_mail(message, target, from_address, context):
 
 
 def fetch_pnp_data(context, params):
-    try:
-        # Autodetect the path in OMD environments
-        path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
-        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode(
-            'utf-8')
-        env = {
-            'REMOTE_USER': "check-mk",
-            "SKIP_AUTHORIZATION": "1",
-        }
-    except:
-        # Non-omd environment - use plugin argument 1
-        path = context.get('PARAMETER_1', '')
-        php_save_path = ""  # Using default path
-        env = {'REMOTE_USER': context['CONTACTNAME'].encode('utf-8')}
+    path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT'].encode('utf-8')
+    php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT'].encode('utf-8')
+    env = {
+        'REMOTE_USER': "check-mk",
+        "SKIP_AUTHORIZATION": "1",
+    }
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
@@ -651,8 +643,8 @@ def fetch_pnp_data(context, params):
 def fetch_num_sources(context):
     svc_desc = '_HOST_' if context['WHAT'] == 'HOST' else context['SERVICEDESC']
     infos = fetch_pnp_data(
-        context, '/json?host=%s&srv=%s&view=0' % (context['HOSTNAME'].encode('utf-8'),
-                                                  svc_desc.encode('utf-8')))
+        context, '/json?host=%s&srv=%s&view=0' %
+        (context['HOSTNAME'].encode('utf-8'), svc_desc.encode('utf-8')))
     if not infos.startswith('[{'):
         raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
 
@@ -728,8 +720,8 @@ def render_cmk_graphs(context):
     except Exception as e:
         if opt_debug:
             raise
-        sys.stderr.write(
-            "ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" % (e, url, json_data))
+        sys.stderr.write("ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" %
+                         (e, url, json_data))
         return []
 
     return map(base64.b64decode, base64_strings)
@@ -845,10 +837,20 @@ def construct_content(context):
         html_info = txt_info
 
     txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
-    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
-
     context["EVENT_TXT"] = txt_info
+
+    # Add HTML formated plugin output
+    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
     context["EVENT_HTML"] = html_info
+    if "HOSTOUTPUT" in context:
+        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+    if context["WHAT"] == "SERVICE":
+        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+
+        long_serviceoutput = context["LONGSERVICEOUTPUT"]\
+            .replace('\\n', '<br>')\
+            .replace('\n', '<br>')
+        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
 
     attachments = []
 

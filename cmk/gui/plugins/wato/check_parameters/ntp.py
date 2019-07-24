@@ -112,26 +112,24 @@ class RulespecCheckgroupParametersNtpTime(CheckParameterRulespecWithoutItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[
-                    (
-                        "ntp_levels",
-                        _ntp_params(),
-                    ),
-                    ("alert_delay",
-                     Tuple(
-                         title=_("Phases without synchronization"),
-                         elements=[
-                             Age(
-                                 title=_("Warning at"),
-                                 display=["hours", "minutes"],
-                                 default_value=300,
-                             ),
-                             Age(
-                                 title=_("Critical at"),
-                                 display=["hours", "minutes"],
-                                 default_value=3600,
-                             ),
-                         ])),
-                ],),
+            Dictionary(elements=[
+                (
+                    "ntp_levels",
+                    _ntp_params(),
+                ),
+                ("alert_delay",
+                 Tuple(title=_("Phases without synchronization"),
+                       elements=[
+                           Age(
+                               title=_("Warning at"),
+                               display=["hours", "minutes"],
+                               default_value=300,
+                           ),
+                           Age(
+                               title=_("Critical at"),
+                               display=["hours", "minutes"],
+                               default_value=3600,
+                           ),
+                       ])),
+            ],),
             forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params)

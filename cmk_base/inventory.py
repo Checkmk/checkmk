@@ -38,6 +38,7 @@ import cmk.utils.store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.labels import DiscoveredHostLabelsStore
 import cmk.utils.debug
 
 import cmk_base.utils
@@ -50,7 +51,7 @@ import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
 import cmk_base.decorator
 import cmk_base.check_api as check_api
-from cmk_base.discovered_labels import DiscoveredHostLabels, DiscoveredHostLabelsStore
+from cmk_base.discovered_labels import DiscoveredHostLabels
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -231,14 +232,14 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
     _run_inventory_export_hooks(host_config, inventory_tree)
 
     success_msg = [
-        "Found %s%s%d%s inventory entries" % (tty.bold, tty.yellow, inventory_tree.count_entries(),
-                                              tty.normal)
+        "Found %s%s%d%s inventory entries" %
+        (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal)
     ]
 
     if host_config.do_host_label_discovery:
         DiscoveredHostLabelsStore(hostname).save(discovered_host_labels.to_dict())
-        success_msg.append("and %s%s%d%s host labels" % (tty.bold, tty.yellow,
-                                                         len(discovered_host_labels), tty.normal))
+        success_msg.append("and %s%s%d%s host labels" %
+                           (tty.bold, tty.yellow, len(discovered_host_labels), tty.normal))
 
     console.section_success(", ".join(success_msg))
 
@@ -247,8 +248,8 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
         _save_status_data_tree(hostname, status_data_tree)
 
         console.section_success(
-            "Found %s%s%d%s status entries" % (tty.bold, tty.yellow,
-                                               status_data_tree.count_entries(), tty.normal))
+            "Found %s%s%d%s status entries" %
+            (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
     return old_timestamp, inventory_tree, status_data_tree, discovered_host_labels
 
@@ -292,8 +293,10 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
     import cmk_base.inventory_plugins as inventory_plugins
     console.verbose("Plugins:")
     for section_name, plugin in inventory_plugins.sorted_inventory_plugins():
-        section_content = multi_host_sections.get_section_content(
-            hostname, ipaddress, section_name, for_discovery=False)
+        section_content = multi_host_sections.get_section_content(hostname,
+                                                                  ipaddress,
+                                                                  section_name,
+                                                                  for_discovery=False)
         # TODO: Don't we need to take config.check_info[check_plugin_name]["handle_empty_info"]:
         #       like it is done in checking.execute_check()? Standardize this!
         if not section_content:  # section not present (None or [])
@@ -336,8 +339,11 @@ def _gather_snmp_check_plugin_names_inventory(host_config,
                                               on_error,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
-    return snmp_scan.gather_snmp_check_plugin_names(
-        host_config, on_error, do_snmp_scan, for_inventory=True, for_mgmt_board=for_mgmt_board)
+    return snmp_scan.gather_snmp_check_plugin_names(host_config,
+                                                    on_error,
+                                                    do_snmp_scan,
+                                                    for_inventory=True,
+                                                    for_mgmt_board=for_mgmt_board)
 
 
 #.
@@ -376,7 +382,7 @@ def _save_inventory_tree(hostname, inventory_tree):
 
     old_time = None
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
-    if inventory_tree:
+    if not inventory_tree.is_empty():
         old_tree = StructuredDataTree().load_from(filepath)
         old_tree.normalize_nodes()
         if old_tree.is_equal(inventory_tree):
@@ -417,8 +423,8 @@ def _run_inventory_export_hooks(host_config, inventory_tree):
 
     console.step("Execute inventory export hooks")
     for hookname, params in hooks:
-        console.verbose(
-            "Execute export hook: %s%s%s%s" % (tty.blue, tty.bold, hookname, tty.normal))
+        console.verbose("Execute export hook: %s%s%s%s" %
+                        (tty.blue, tty.bold, hookname, tty.normal))
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
             func(host_config.hostname, params, inventory_tree.get_raw_tree())

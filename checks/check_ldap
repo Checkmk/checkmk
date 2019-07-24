@@ -26,41 +26,44 @@
 
 
 def check_ldap_arguments(params):
+
     _name, basedn, settings = params
+    args = []
 
     if "hostname" in settings:
-        args = ' -H %s' % quote_shell_string(settings["hostname"])
+        args += ["-H", settings["hostname"]]
     else:
-        args = ' -H $HOSTADDRESS$'
+        args += ["-H", "$HOSTADDRESS$"]
 
-    args += ' -b %s' % quote_shell_string(basedn)
+    args += ["-b", basedn]
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (settings["response_time"][0] / 1000.0,
-                                  settings["response_time"][1] / 1000.0)
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % warn / 1000.0, "-c", "%f" % crit / 1000.0]
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
 
     if "attribute" in settings:
-        args += ' -a %s' % quote_shell_string(settings["attribute"])
+        args += ["-a", settings["attribute"]]
 
     if "authentication" in settings:
         binddn, password = settings["authentication"]
-        args += ' -D %s -P %s' % (quote_shell_string(binddn), quote_shell_string(password))
+        args += ["-D", binddn, "-P", password]
 
     if "port" in settings:
-        args += ' -p %d' % settings["port"]
+        args += ["-p", settings["port"]]
 
     if "version" in settings:
-        args += {
-            "v2": " -2",
-            "v3": " -3",
-            "v3tls": " -3 -T",
-        }[settings["version"]]
+        versions = {
+            "v2": "-2",
+            "v3": "-3",
+            "v3tls": "-3 -T",
+        }
+        args.append(versions[settings["version"]])
 
     if settings.get("ssl"):
-        args += ' --ssl'
+        args.append("--ssl")
 
     return args
 
@@ -71,8 +74,8 @@ def check_ldap_desc(params):
     return "LDAP %s" % params[0]
 
 
-active_check_info['ldap'] = {
-    "command_line": '$USER1$/check_ldap $ARG1$',
+active_check_info["ldap"] = {
+    "command_line": "$USER1$/check_ldap $ARG1$",
     "argument_function": check_ldap_arguments,
     "service_description": check_ldap_desc,
     "has_perfdata": True,

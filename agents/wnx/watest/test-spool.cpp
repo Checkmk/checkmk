@@ -108,10 +108,10 @@ TEST(SectionProviderSpool, ReadFiles) {
     EXPECT_TRUE(!ex.empty());
     auto table = cma::tools::SplitString(ex, "\n");
     EXPECT_EQ(table.size(), 4);
-    EXPECT_TRUE(cma::tools::Find(table, std::string("aaaa")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("bbbb")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("123456")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("9999")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("aaaa")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("bbbb")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("123456")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("9999")));
 }
 
 }  // namespace cma::provider

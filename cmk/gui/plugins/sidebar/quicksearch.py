@@ -58,11 +58,14 @@ class QuicksearchSnapin(SidebarSnapin):
                  "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
 
     def show(self):
-        html.open_div(
-            id_="mk_side_search", class_="content_center", onclick="cmk.quicksearch.close_popup();")
+        html.open_div(id_="mk_side_search",
+                      class_="content_center",
+                      onclick="cmk.quicksearch.close_popup();")
         html.input(id_="mk_side_search_field", type_="text", name="search", autocomplete="off")
-        html.icon_button(
-            "#", _("Search"), "quicksearch", onclick="cmk.quicksearch.on_search_click();")
+        html.icon_button("#",
+                         _("Search"),
+                         "quicksearch",
+                         onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
         html.javascript("cmk.quicksearch.register_search_field('mk_side_search_field');")
@@ -283,12 +286,11 @@ class LivestatusSearchConductor(LivestatusSearchBase):
 
         url_params = [("view_name", target_view), ("filled_in", "filter")]
         for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(
-                target_view,
-                exact_match and self._rows[0] or None,
-                self._livestatus_table,
-                self._used_filters,
-                rows=self._rows)
+            match_info = plugin.get_matches(target_view,
+                                            exact_match and self._rows[0] or None,
+                                            self._livestatus_table,
+                                            self._used_filters,
+                                            rows=self._rows)
             if not match_info:
                 continue
             _text, url_filters = match_info
@@ -514,11 +516,10 @@ class LivestatusQuicksearch(LivestatusSearchBase):
                 html.div(_("Results for %s") % match_topic, class_="topic")
 
             for entry in elements:
-                html.a(
-                    entry["display_text"],
-                    id="result_%s" % self._query,
-                    href=entry["url"],
-                    target="main")
+                html.a(entry["display_text"],
+                       id="result_%s" % self._query,
+                       href=entry["url"],
+                       target="main")
 
 
 def generate_results(query):
@@ -663,10 +664,8 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
             "svcgroups": ["servicegroup_regex", "name"],
 
             # Host/Service domain (hosts, services)
-            "allservices": [
-                "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
-                "host_groups"
-            ],
+            "allservices": ["%sgroups" % self._group_type,
+                            "%s_groups" % self._group_type],
             "searchsvc": [
                 "%sgroups" % self._group_type, self._group_type == "service" and "groups" or
                 "host_groups"
@@ -751,8 +750,8 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
     def get_livestatus_filters(self, livestatus_table, used_filters):
         filter_lines = []
         for entry in used_filters.get(self.get_filter_shortname()):
-            filter_lines.append(
-                "Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry))
+            filter_lines.append("Filter: %s ~~ %s" %
+                                (self._get_real_fieldname(livestatus_table), entry))
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -837,8 +836,8 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
                 continue
 
             tag_key, tag_value = entry.split(":", 1)
-            filter_lines.append("Filter: tags = %s %s" % (livestatus.lqencode(tag_key),
-                                                          livestatus.lqencode(tag_value)))
+            filter_lines.append("Filter: tags = %s %s" %
+                                (livestatus.lqencode(tag_key), livestatus.lqencode(tag_value)))
 
         if len(filter_lines) > 1:
             filter_lines.append("And: %d" % len(filter_lines))
@@ -901,5 +900,5 @@ class HostAliasMatchPlugin(HostMatchPlugin):
 @match_plugin_registry.register
 class HostAddressMatchPlugin(HostMatchPlugin):
     def __init__(self):
-        super(HostAddressMatchPlugin, self).__init__(
-            livestatus_field="address", filter_shortname="ad")
+        super(HostAddressMatchPlugin, self).__init__(livestatus_field="address",
+                                                     filter_shortname="ad")

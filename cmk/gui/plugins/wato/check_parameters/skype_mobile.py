@@ -64,17 +64,14 @@ class RulespecCheckgroupParametersSkypeMobile(CheckParameterRulespecWithoutItem)
                            title=_("Requests in Processing"),
                            elements=[
                                ("upper",
-                                Tuple(
-                                    elements=[
-                                        Integer(
-                                            title=_("Warning at"),
+                                Tuple(elements=[
+                                    Integer(title=_("Warning at"),
                                             unit=_("per second"),
                                             default_value=10000),
-                                        Integer(
-                                            title=_("Critical at"),
+                                    Integer(title=_("Critical at"),
                                             unit=_("per second"),
                                             default_value=20000),
-                                    ],)),
+                                ],)),
                            ],
                            optional_keys=[],
                        ))],

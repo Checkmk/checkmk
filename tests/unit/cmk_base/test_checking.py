@@ -30,11 +30,10 @@ import cmk_base.checking
             "tp_default_value": (2, 2),
             "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
         }, (1, 1)]), ["tp2"], (2, 2)),
-        (cmk_base.config.TimespecificParamList([(1, 1),
-                                                {
-                                                    "tp_default_value": (2, 2),
-                                                    "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
-                                                }]), [], (1, 1)),
+        (cmk_base.config.TimespecificParamList([(1, 1), {
+            "tp_default_value": (2, 2),
+            "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]
+        }]), [], (1, 1)),
         # Dict based
         ({
             1: 1
@@ -142,8 +141,8 @@ import cmk_base.checking
         }),
     ])
 def test_determine_check_parameters(monkeypatch, rules, active_timeperiods, expected_result):
-    monkeypatch.setattr(cmk_base.core,
-                        "timeperiod_active", lambda tp: _check_timeperiod(tp, active_timeperiods))
+    monkeypatch.setattr(cmk_base.core, "timeperiod_active",
+                        lambda tp: _check_timeperiod(tp, active_timeperiods))
 
     determined_check_params = cmk_base.checking.determine_check_params(rules)
     assert expected_result == determined_check_params,\

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1528895946
 
 Due to a bug in the handling of the Check_MK server response, a valid downloaded MSI-packaged agent updater can be mistaken as a "login failed" response.

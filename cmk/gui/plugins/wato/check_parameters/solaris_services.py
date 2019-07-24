@@ -71,13 +71,12 @@ class RulespecInventorySolarisServicesRules(HostRulespec):
                 ('instances', ListOfStrings(title=_("Instances"))),
                 ('states',
                  ListOf(
-                     DropdownChoice(
-                         choices=[
-                             ("online", _("online")),
-                             ("disabled", _("disabled")),
-                             ("maintenance", _("maintenance")),
-                             ("legacy_run", _("legacy run")),
-                         ],),
+                     DropdownChoice(choices=[
+                         ("online", _("online")),
+                         ("disabled", _("disabled")),
+                         ("maintenance", _("maintenance")),
+                         ("legacy_run", _("legacy run")),
+                     ],),
                      title=_("States"),
                  )),
                 ('outcome',
@@ -86,10 +85,9 @@ class RulespecInventorySolarisServicesRules(HostRulespec):
                      style="dropdown",
                      elements=[
                          FixedValue("full_descr", title=_("Full Description"), totext=""),
-                         FixedValue(
-                             "descr_without_prefix",
-                             title=_("Description without type prefix"),
-                             totext=""),
+                         FixedValue("descr_without_prefix",
+                                    title=_("Description without type prefix"),
+                                    totext=""),
                      ],
                  )),
             ],
@@ -121,51 +119,50 @@ class RulespecCheckgroupParametersSolarisServices(CheckParameterRulespecWithItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("additional_servicenames",
-                 ListOfStrings(
-                     title=_("Alternative names for the service"),
-                     help=_("Here you can specify alternative names that the service might have. "
-                            "This helps when the exact spelling of the services can changed from "
-                            "one version to another."),
-                 )),
-                ("states",
-                 ListOf(
-                     Tuple(
-                         orientation="horizontal",
-                         elements=[
-                             DropdownChoice(
-                                 title=_("Expected state"),
-                                 choices=[
-                                     (None, _("Ignore the state")),
-                                     ("online", _("Online")),
-                                     ("disabled", _("Disabled")),
-                                     ("maintenance", _("Maintenance")),
-                                     ("legacy_run", _("Legacy run")),
-                                 ],
-                             ),
-                             DropdownChoice(
-                                 title=_("STIME"),
-                                 choices=[
-                                     (None, _("Ignore")),
-                                     (True, _("Has changed")),
-                                     (False, _("Did not changed")),
-                                 ],
-                             ),
-                             MonitoringState(title=_("Resulting state"),),
-                         ],
-                     ),
-                     title=_("Services states"),
-                     help=_("You can specify a separate monitoring state for each possible "
-                            "combination of service state. If you do not use this parameter, "
-                            "then only online/legacy_run will be assumed to be OK."),
-                 )),
-                ("else", MonitoringState(
-                    title=_("State if no entry matches"),
-                    default_value=2,
-                )),
-            ],)
+        return Dictionary(elements=[
+            ("additional_servicenames",
+             ListOfStrings(
+                 title=_("Alternative names for the service"),
+                 help=_("Here you can specify alternative names that the service might have. "
+                        "This helps when the exact spelling of the services can changed from "
+                        "one version to another."),
+             )),
+            ("states",
+             ListOf(
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         DropdownChoice(
+                             title=_("Expected state"),
+                             choices=[
+                                 (None, _("Ignore the state")),
+                                 ("online", _("Online")),
+                                 ("disabled", _("Disabled")),
+                                 ("maintenance", _("Maintenance")),
+                                 ("legacy_run", _("Legacy run")),
+                             ],
+                         ),
+                         DropdownChoice(
+                             title=_("STIME"),
+                             choices=[
+                                 (None, _("Ignore")),
+                                 (True, _("Has changed")),
+                                 (False, _("Did not changed")),
+                             ],
+                         ),
+                         MonitoringState(title=_("Resulting state"),),
+                     ],
+                 ),
+                 title=_("Services states"),
+                 help=_("You can specify a separate monitoring state for each possible "
+                        "combination of service state. If you do not use this parameter, "
+                        "then only online/legacy_run will be assumed to be OK."),
+             )),
+            ("else", MonitoringState(
+                title=_("State if no entry matches"),
+                default_value=2,
+            )),
+        ],)
 
     @property
     def item_spec(self):

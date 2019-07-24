@@ -56,16 +56,15 @@ class RulespecCheckgroupParametersApt(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("normal",
-                 MonitoringState(
-                     title=_("State when normal updates are pending"),
-                     default_value=1,
-                 )),
-                ("security",
-                 MonitoringState(
-                     title=_("State when security updates are pending"),
-                     default_value=2,
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("normal",
+             MonitoringState(
+                 title=_("State when normal updates are pending"),
+                 default_value=1,
+             )),
+            ("security",
+             MonitoringState(
+                 title=_("State when security updates are pending"),
+                 default_value=2,
+             )),
+        ],)

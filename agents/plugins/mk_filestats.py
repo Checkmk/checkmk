@@ -98,6 +98,8 @@ described by the following four phases:
 You should find an example configuration file at
 '../cfg_examples/filestats.cfg' relative to this file.
 """
+
+import errno
 import re
 import os
 import sys
@@ -154,7 +156,6 @@ class LazyFileStats(object):
     Only call os.stat once, and not until corresponding attributes
     are actually needed.
     """
-
     def __init__(self, path):
         super(LazyFileStats, self).__init__()
         LOGGER.debug("Creating LazyFileStats(%r)", path)
@@ -175,20 +176,20 @@ class LazyFileStats(object):
         path = self.path.encode('utf8')
         try:
             stat = os.stat(path)
-        except OSError, exc:
-            self.stat_status = "file vanished" if exc.errno == 2 else str(exc)
+        except OSError as exc:
+            self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
 
         try:
             self._size = int(stat.st_size)
-        except ValueError, exc:
+        except ValueError as exc:
             self.stat_status = str(exc)
             return
 
         try:
             self._m_time = int(stat.st_mtime)
             self._age = int(time.time()) - self._m_time
-        except ValueError, exc:
+        except ValueError as exc:
             self.stat_status = str(exc)
             return
 
@@ -234,7 +235,6 @@ class LazyFileStats(object):
 
 class PatternIterator(object):
     """Recursively iterate over all files"""
-
     def __init__(self, pattern_list):
         super(PatternIterator, self).__init__()
         self._patterns = [os.path.expanduser(p) for p in pattern_list]
@@ -284,7 +284,6 @@ def get_file_iterator(config):
 
 class AbstractFilter(object):
     """Abstract filter interface"""
-
     def matches(self, lazy_file):
         """return a boolean"""
         raise NotImplementedError()
@@ -292,7 +291,6 @@ class AbstractFilter(object):
 
 class AbstractNumericFilter(AbstractFilter):
     """Common code for filtering by comparing integers"""
-
     def __init__(self, spec_string):
         super(AbstractNumericFilter, self).__init__()
         try:

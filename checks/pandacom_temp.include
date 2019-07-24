@@ -35,8 +35,7 @@ def inventory_pandacom_module_temp(info):
 def check_pandacom_module_temp(item, params, info):
     for slot, temp_str, warn_str, crit_str in info:
         if slot == item:
-            return check_temperature(
-                int(temp_str),
-                params,
-                "pandacom_%s" % item,
-                dev_levels=(int(warn_str), int(crit_str)))
+            return check_temperature(int(temp_str),
+                                     params,
+                                     "pandacom_%s" % item,
+                                     dev_levels=(int(warn_str), int(crit_str)))

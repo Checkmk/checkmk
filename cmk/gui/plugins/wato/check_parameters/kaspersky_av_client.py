@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersKasperskyAvClient(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("signature_age",
-                 Tuple(
-                     title=_("Time Settings for Signature"),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=86400),
-                         Age(title=_("Critical at"), default_value=7 * 86400),
-                     ],
-                 )),
-                ("fullscan_age",
-                 Tuple(
-                     title=_("Time Settings for Fullscan"),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=86400),
-                         Age(title=_("Critical at"), default_value=7 * 86400),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("signature_age",
+             Tuple(
+                 title=_("Time Settings for Signature"),
+                 elements=[
+                     Age(title=_("Warning at"), default_value=86400),
+                     Age(title=_("Critical at"), default_value=7 * 86400),
+                 ],
+             )),
+            ("fullscan_age",
+             Tuple(
+                 title=_("Time Settings for Fullscan"),
+                 elements=[
+                     Age(title=_("Warning at"), default_value=86400),
+                     Age(title=_("Critical at"), default_value=7 * 86400),
+                 ],
+             )),
+        ],)

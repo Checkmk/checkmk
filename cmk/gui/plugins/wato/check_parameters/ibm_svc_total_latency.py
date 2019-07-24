@@ -58,21 +58,18 @@ class RulespecCheckgroupParametersIbmSvcTotalLatency(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("read",
-                 Levels(
-                     title=_("Read latency"),
-                     unit=_("ms"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-                ("write",
-                 Levels(
-                     title=_("Write latency"),
-                     unit=_("ms"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-            ],)
+        return Dictionary(elements=[
+            ("read",
+             Levels(title=_("Read latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+            ("write",
+             Levels(title=_("Write latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+        ],)
 
     @property
     def item_spec(self):

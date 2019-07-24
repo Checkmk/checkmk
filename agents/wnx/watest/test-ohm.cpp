@@ -10,17 +10,13 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-#include "service_processor.h"
-
+#include "common/cfg_info.h"
 #include "providers/ohm.h"
+#include "read_file.h"
+#include "service_processor.h"
 
 namespace cma::provider {  // to become friendly for wtools classes
 TEST(SectionProviderOhm, Construction) {
@@ -36,10 +32,8 @@ TEST(SectionProviderOhm, ReadData) {
     wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
 
     fs::path ohm_exe = GetOhmCliPath();
-    std::error_code ec;
-    auto exists = fs::exists(ohm_exe, ec);
-    auto regular_file = fs::is_regular_file(ohm_exe, ec);
-    ASSERT_TRUE(exists && regular_file)
+
+    ASSERT_TRUE(cma::tools::IsValidRegularFile(ohm_exe))
         << "not found " << ohm_exe.u8string()
         << " probably directories are not ready to test\n";
 
@@ -52,13 +46,24 @@ TEST(SectionProviderOhm, ReadData) {
 
     if (cma::tools::win::IsElevated()) {
         std::string out;
-        for (auto i = 0; i < 30; ++i) {
+        for (auto i = 0; i < 50; ++i) {
             out = ohm.generateContent(section::kUseEmbeddedName, true);
             if (!out.empty()) break;
-            xlog::sendStringToStdio(".", Colors::kYellow);
+            XLOG::SendStringToStdio(".", Colors::yellow);
+            if (i == 20) {
+                XLOG::SendStringToStdio(" reset OHM ", Colors::red);
+                oprocess.stop();
+                XLOG::SendStringToStdio(".", Colors::red);
+                cma::srv::ServiceProcessor::resetOhm();
+                XLOG::SendStringToStdio(".", Colors::red);
+                wtools::KillProcess(L"Openhardwaremonitorcli.exe", 1);
+                XLOG::SendStringToStdio(".", Colors::red);
+                oprocess.start(ohm_exe.wstring());
+                XLOG::SendStringToStdio(".", Colors::red);
+            }
             ::Sleep(500);
         }
-        xlog::sendStringToStdio("\n", Colors::kYellow);
+        xlog::sendStringToStdio("\n", Colors::yellow);
         EXPECT_TRUE(!out.empty()) << "Probably you have to clean ohm";
         if (!out.empty()) {
             // testing output
@@ -70,10 +75,11 @@ TEST(SectionProviderOhm, ReadData) {
 
             // table header:
             auto header = cma::tools::SplitString(table[1], ",");
-            EXPECT_EQ(header.size(), 5);
-            if (header.size() >= 5) {
-                const char* expected_strings[] = {"Index", "Name", "Parent",
-                                                  "SensorType", "Value"};
+            EXPECT_EQ(header.size(), 6);
+            if (header.size() >= 6) {
+                const char* expected_strings[] = {"Index",  "Name",
+                                                  "Parent", "SensorType",
+                                                  "Value",  "WMIStatus"};
                 int index = 0;
                 for (auto& str : expected_strings) {
                     EXPECT_EQ(str, header[index++]);
@@ -83,7 +89,7 @@ TEST(SectionProviderOhm, ReadData) {
             // table body:
             for (size_t i = 2; i < table.size(); i++) {
                 auto f_line = cma::tools::SplitString(table[i], ",");
-                EXPECT_EQ(f_line.size(), 5);
+                EXPECT_EQ(f_line.size(), 6);
             }
         }
 
@@ -101,21 +107,111 @@ TEST(SectionProviderOhm, ReadData) {
 
 // START STOP testing
 namespace cma::srv {
+
+// simple foo to calc processes by names in the PC
+int CalcOhmCount() {
+    using namespace cma::tools;
+    int count = 0;
+    std::string ohm_name{cma::provider::ohm::kExeModule};
+    StringLower(ohm_name);
+
+    wtools::ScanProcessList(
+        [ohm_name, &count](const PROCESSENTRY32& entry) -> bool {
+            std::string incoming_name = wtools::ConvertToUTF8(entry.szExeFile);
+            StringLower(incoming_name);
+            if (ohm_name == incoming_name) count++;
+            return true;
+        });
+    return count;
+}
+
+TEST(SectionProviderOhm, DoubleStart) {
+    using namespace cma::tools;
+    if (!win::IsElevated()) {
+        XLOG::l(XLOG::kStdio)
+            .w("No testing of OpenHardwareMonitor. Program must be elevated");
+        return;
+    }
+    auto ohm_path = cma::provider::GetOhmCliPath();
+    ASSERT_TRUE(IsValidRegularFile(ohm_path));
+
+    auto count = CalcOhmCount();
+    if (count != 0) {
+        XLOG::l(XLOG::kStdio)
+            .w("OpenHardwareMonitor already started, TESTING IS NOT POSSIBLE");
+        return;
+    }
+
+    {
+        TheMiniProcess oprocess;
+        oprocess.start(ohm_path);
+        count = CalcOhmCount();
+        EXPECT_EQ(count, 1);
+        oprocess.start(ohm_path);
+        count = CalcOhmCount();
+        EXPECT_EQ(count, 1);
+    }
+    count = CalcOhmCount();
+    EXPECT_EQ(count, 0) << "OHM is not killed";
+}
+
+TEST(SectionProviderOhm, ErrorReporting) {
+    using namespace cma::provider;
+    namespace fs = std::filesystem;
+
+    XLOG::l.t("Killing open hardware monitor...");
+    auto test_count = wtools::FindProcess(L"Explorer.exe");
+    EXPECT_TRUE(test_count > 0);
+
+    auto ohm_count = wtools::FindProcess(ohm::kExeModuleWide);
+    fs::path ohm_exe = GetOhmCliPath();
+    if (ohm_count) {
+        XLOG::SendStringToStdio("OHM is running...", XLOG::Colors::yellow);
+
+        // Presence
+        auto result = cma::tools::IsValidRegularFile(ohm_exe);
+        if (!result) {
+            XLOG::SendStringToStdio(
+                "OHM exe not found, will not stop running OHM, test skipped",
+                XLOG::Colors::yellow);
+            return;
+        }
+
+        for (int i = 0; i < ohm_count; ++i) {
+            wtools::KillProcess(ohm::kExeModuleWide, 1);
+        }
+    }
+
+    OhmProvider ohm(provider::kOhm, ohm::kSepChar);
+    auto x = ohm.generateContent("buzz", true);
+    EXPECT_TRUE(x.empty());
+    EXPECT_EQ(ohm.errorCount(), 1);
+    if (ohm_count) {
+        cma::tools::RunDetachedCommand(ohm_exe.u8string());
+    }
+}
+
+TEST(SectionProviderOhm, ResetOhm) {
+    std::wstring x(cma::provider::ohm::kResetCommand);
+    XLOG::l.i("out = {}", wtools::ConvertToUTF8(x));
+    EXPECT_FALSE(x.empty());
+}
+
 TEST(SectionProviderOhm, StartStop) {
     namespace fs = std::filesystem;
-    cma::srv::TheMiniProcess oprocess;
+    TheMiniProcess oprocess;
     EXPECT_EQ(oprocess.process_id_, 0);
     EXPECT_EQ(oprocess.process_handle_, INVALID_HANDLE_VALUE);
     EXPECT_EQ(oprocess.thread_handle_, INVALID_HANDLE_VALUE);
 
-    fs::path ohm_exe = cma::cfg::GetRootDir();
-    ohm_exe /= cma::cfg::dirs::kAgentBin;
-    ohm_exe /= cma::provider::kOpenHardwareMonitorCli;
-    std::error_code ec;
-    auto exists = fs::exists(ohm_exe, ec);
+    // this approximate logic to find OHM executable
+    fs::path ohm_exe = cma::cfg::GetUserDir();
+    ohm_exe /= cma::cfg::dirs::kUserBin;
+    ohm_exe /= cma::provider::ohm::kExeModule;
+    // Now check this logic vs API
     EXPECT_EQ(cma::provider::GetOhmCliPath(), ohm_exe);
-    auto regular_file = fs::is_regular_file(ohm_exe, ec);
-    ASSERT_TRUE(exists && regular_file)
+    // Presence
+    ASSERT_TRUE(cma::tools::IsValidRegularFile(ohm_exe))
         << "not found " << ohm_exe.u8string()
         << " probably directories are not ready to test\n";
 

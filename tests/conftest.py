@@ -1,13 +1,14 @@
 # This file initializes the py.test environment
+# pylint: disable=redefined-outer-name
+
+from __future__ import print_function
 
 import pytest
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
-    "unit.checks.generictests.run",  #
-    "unit.cmk.gui.old.html_tests",  #
-    "unit.cmk.gui.tools")
+    "unit.checks.generictests.run")
 
 import _pytest.monkeypatch
 import re
@@ -18,7 +19,10 @@ import pwd
 import shutil
 import sys
 import tempfile
-from pathlib2 import Path
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 import testlib
 
 #
@@ -52,12 +56,12 @@ def pytest_addoption(parser):
     if "-T" in options:
         return
 
-    parser.addoption(
-        "-T",
-        action="store",
-        metavar="TYPE",
-        default=None,
-        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()))
+    parser.addoption("-T",
+                     action="store",
+                     metavar="TYPE",
+                     default=None,
+                     help="Run tests of the given TYPE. Available types are: %s" %
+                     ", ".join(test_types.keys()))
 
 
 def pytest_configure(config):
@@ -116,11 +120,13 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
     monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
-                        os.path.join(tmp_dir, "check_mk/check_includes"))
+                        os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
                         os.path.join(tmp_dir, "etc/check_mk/conf.d"))
     monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
@@ -227,12 +233,6 @@ def setup_site_and_switch_user():
     sys.stdout.flush()
 
     exit_code = site.switch_to_site_user()
-
-    sys.stdout.write("===============================================\n")
-    sys.stdout.write("Cleaning up after testing\n")
-    sys.stdout.write("===============================================\n")
-
-    #site.rm_if_not_reusing()
     sys.exit(exit_code)
 
 
@@ -249,12 +249,11 @@ def _get_site_object():
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"
 
-    return testlib.Site(
-        site_id=_site_id(),
-        version=site_version(),
-        edition=site_edition(),
-        reuse=reuse_site(),
-        branch=site_branch())
+    return testlib.Site(site_id=_site_id(),
+                        version=site_version(),
+                        edition=site_edition(),
+                        reuse=reuse_site(),
+                        branch=site_branch())
 
 
 def _site_id():
@@ -282,4 +281,8 @@ fake_version_and_paths()
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)
 def site(request):
-    return _get_site_object()
+    site_obj = _get_site_object()
+    yield site_obj
+    print("")
+    print("Cleanup site processes after test execution...")
+    site_obj.stop()

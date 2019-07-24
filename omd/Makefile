@@ -24,9 +24,11 @@ PACKAGES := \
     libgsf \
     perl-modules \
     Python \
+    Python3 \
     freetds \
     re2 \
     python-modules \
+    python3-modules \
     boost \
     rrdtool \
     msitools \
@@ -101,7 +103,6 @@ SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # filenames and sed arguments should not contain '/'
 NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
-PKG_VERSION := $(basename $(OMD_VERSION))
 ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 
@@ -136,7 +137,6 @@ $(PRE_INSTALL):
 	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/omd/versions/$(OMD_VERSION)/bin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
@@ -146,6 +146,7 @@ $(PRE_INSTALL):
 
 
 $(INSTALL_TARGETS): $(PRE_INSTALL)
+$(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 
 $(SKEL_TARGETS): $(PRE_SKEL)
 
@@ -200,7 +201,7 @@ $(FIX_SKEL): $(SKEL_TARGETS)
 # and files not owned by a specific package.
 $(INSTALL_GLOBAL): $(INSTALL)
 	# Create link to default version
-	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
+	ln -sf $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
 	# Create global symbolic links. Those links are share between
 	# all installed versions and refer to the default version.
@@ -224,7 +225,7 @@ $(INSTALL_GLOBAL): $(INSTALL)
 
 	# Install ChangeLog created from all werks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
-	ln -s check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
+	ln -sfn check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
 	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
 
 	if [ -f COMMIT ]; then \
@@ -327,7 +328,7 @@ test:
 
 $(CMA_INSTALL): $(INSTALL_TARGETS)
 
-$(CMA_PACKAGE): $(CMA-INSTALL) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+$(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \
@@ -368,5 +369,5 @@ xzf:
 	$(APACHE_CTL) -k graceful
 
 setup:
-	echo "Please run the build in a docker container."
-	echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."
+	@echo "Please run the build in a docker container."
+	@echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."

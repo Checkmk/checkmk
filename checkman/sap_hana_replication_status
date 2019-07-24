@@ -15,8 +15,6 @@ description:
  If it returns 14 or 15 the check is OK. Otherwise the check
  reports UNKNOWN.
 
- This check is also cluster-aware.
-
 item:
  The instance name
 

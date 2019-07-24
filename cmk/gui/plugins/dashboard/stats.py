@@ -105,17 +105,16 @@ class DashletStats(Dashlet):
         total = sum([x[1] for x in pies])
 
         html.open_div(class_="stats")
-        html.canvas(
-            '',
-            class_="pie",
-            id_="%s_stats" % pie_id,
-            width=pie_diameter,
-            height=pie_diameter,
-            style="float: left")
+        html.canvas('',
+                    class_="pie",
+                    id_="%s_stats" % pie_id,
+                    width=pie_diameter,
+                    height=pie_diameter,
+                    style="float: left")
         html.img(html.theme_url("images/globe.png"), class_="globe")
 
-        html.open_table(
-            class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")
+        html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []),
+                        style="float:left")
 
         table_entries = pies
         while len(table_entries) < 6:
@@ -219,7 +218,6 @@ if (cmk.dashboard.has_canvas_support()) {
 @dashlet_registry.register
 class HostStatsDashlet(DashletStats):
     """Dashlet that displays statistics about host states as globe and a table"""
-
     @classmethod
     def type_name(cls):
         return "hoststats"
@@ -273,7 +271,6 @@ class HostStatsDashlet(DashletStats):
 @dashlet_registry.register
 class ServiceStatsDashlet(DashletStats):
     """Dashlet that displays statistics about service states as globe and a table"""
-
     @classmethod
     def type_name(cls):
         return "servicestats"

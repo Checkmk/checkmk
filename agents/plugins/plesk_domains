@@ -40,7 +40,7 @@ try:
         passwd=file('/etc/psa/.psa.shadow').read().strip(),
         charset='utf8',
     )
-except MySQLdb.Error, e:  # pylint: disable=no-member
+except MySQLdb.Error as e:  # pylint: disable=no-member
     sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
     sys.exit(1)
 

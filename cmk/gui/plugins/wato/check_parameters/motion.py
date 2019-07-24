@@ -59,19 +59,18 @@ class RulespecCheckgroupParametersMotion(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("time_periods",
-                 Dictionary(
-                     title=_("Time periods"),
-                     help=_("Specifiy time ranges during which no motion is expected. "
-                            "Outside these times, the motion detector will always be in "
-                            "state OK"),
-                     elements=[(day_id, ListOfTimeRanges(title=day_str))
-                               for day_id, day_str in defines.weekdays_by_name()],
-                     optional_keys=[],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("time_periods",
+             Dictionary(
+                 title=_("Time periods"),
+                 help=_("Specifiy time ranges during which no motion is expected. "
+                        "Outside these times, the motion detector will always be in "
+                        "state OK"),
+                 elements=[(day_id, ListOfTimeRanges(title=day_str))
+                           for day_id, day_str in defines.weekdays_by_name()],
+                 optional_keys=[],
+             )),
+        ],)
 
     @property
     def item_spec(self):

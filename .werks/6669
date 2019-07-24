@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1540209516
 
 The discovery process for the fastet LDAP server could take a large amount of time.

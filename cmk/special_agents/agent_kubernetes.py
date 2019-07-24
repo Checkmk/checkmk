@@ -48,8 +48,9 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from dateutil.parser import parse as parse_time
-from kubernetes import client
-from kubernetes.client.rest import ApiException
+# We currently have no typeshed for kubernetes
+from kubernetes import client  # type: ignore
+from kubernetes.client.rest import ApiException  # type: ignore
 
 import cmk.utils.profile
 import cmk.utils.password_store
@@ -67,12 +68,11 @@ def parse(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
-    p.add_argument(
-        '-v',
-        '--verbose',
-        action='count',
-        default=0,
-        help='Verbose mode (for even more output use -vvv)')
+    p.add_argument('-v',
+                   '--verbose',
+                   action='count',
+                   default=0,
+                   help='Verbose mode (for even more output use -vvv)')
     p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
@@ -83,16 +83,14 @@ def parse(args):
         help='Comma separated list of items that should be fetched',
     )
     p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
-    p.add_argument(
-        '--path-prefix',
-        default='',
-        action=PathPrefixAction,
-        help='Optional URL path prefix to prepend to Kubernetes API calls')
+    p.add_argument('--path-prefix',
+                   default='',
+                   action=PathPrefixAction,
+                   help='Optional URL path prefix to prepend to Kubernetes API calls')
     p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
-    p.add_argument(
-        '--profile',
-        metavar='FILE',
-        help='Profile the performance of the agent and write the output to a file')
+    p.add_argument('--profile',
+                   metavar='FILE',
+                   help='Profile the performance of the agent and write the output to a file')
 
     arguments = p.parse_args(args)
     return arguments
@@ -612,12 +610,12 @@ class NodeList(K8sList[Node]):
 
     def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, self.resources().itervalues())
+        return functools.reduce(merge, self.resources().itervalues())
 
     def cluster_stats(self):
         stats = self.stats()
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        result = reduce(merge, stats.itervalues())
+        result = functools.reduce(merge, stats.itervalues())
         # During the merging process the sum of all timestamps is calculated.
         # To obtain the average time of all nodes devide by the number of nodes.
         result['timestamp'] = round(result['timestamp'] / len(stats), 1)
@@ -683,14 +681,14 @@ class PodList(K8sList[Pod]):
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return {
-            node: reduce(merge, [p.resources for p in pods], Pod.zero_resources())
+            node: functools.reduce(merge, [p.resources for p in pods], Pod.zero_resources())
             for node, pods in by_node
             if node is not None
         }
 
     def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, [p.resources for p in self], Pod.zero_resources())
+        return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
 class NamespaceList(K8sList[Namespace]):
@@ -788,7 +786,6 @@ class PiggybackGroup(object):
     """
     A group of elements where an element is e.g. a piggyback host.
     """
-
     def __init__(self):
         # type: () -> None
         super(PiggybackGroup, self).__init__()
@@ -828,7 +825,6 @@ class PiggybackHost(object):
     """
     An element that bundles a collection of sections.
     """
-
     def __init__(self):
         # type: () -> None
         super(PiggybackHost, self).__init__()
@@ -853,7 +849,6 @@ class Section(object):
     """
     An agent section.
     """
-
     def __init__(self):
         # type: () -> None
         super(Section, self).__init__()
@@ -879,7 +874,6 @@ class ApiData(object):
     """
     Contains the collected API data.
     """
-
     def __init__(self, api_client):
         # type: (client.ApiClient) -> None
         super(ApiData, self).__init__()
@@ -917,8 +911,8 @@ class ApiData(object):
         self.namespaces = NamespaceList(map(Namespace, namespaces.items))
         self.roles = RoleList(map(Role, roles.items))
         self.cluster_roles = RoleList(map(Role, cluster_roles.items))
-        self.component_statuses = ComponentStatusList(
-            map(ComponentStatus, component_statuses.items))
+        self.component_statuses = ComponentStatusList(map(ComponentStatus,
+                                                          component_statuses.items))
         self.nodes = NodeList(map(Node, nodes.items, nodes_stats))
         self.persistent_volumes = PersistentVolumeList(map(PersistentVolume, pvs.items))
         self.persistent_volume_claims = PersistentVolumeClaimList(
@@ -947,8 +941,8 @@ class ApiData(object):
                 grouped_metrics.setdefault(namespace, []).append(response[namespace])
 
         for namespace in grouped_metrics:
-            grouped_metrics[namespace] = reduce(operator.add,
-                                                grouped_metrics[namespace]).list_metrics()
+            grouped_metrics[namespace] = functools.reduce(
+                operator.add, grouped_metrics[namespace]).list_metrics()
 
         return grouped_metrics
 
@@ -1008,7 +1002,7 @@ class ApiData(object):
         g.join('k8s_resources', self.pods.pods_per_node())
         g.join('k8s_stats', self.nodes.stats())
         g.join('k8s_conditions', self.nodes.conditions())
-        return '\n'.join(g.output(piggyback_prefix="node_"))
+        return '\n'.join(g.output())
 
     def custom_metrics_section(self):
         # type: () -> str
@@ -1083,8 +1077,8 @@ def main(args=None):
         setup_logging(arguments.verbose)
         logging.debug('parsed arguments: %s\n', arguments)
 
-        with cmk.utils.profile.Profile(
-                enabled=bool(arguments.profile), profile_file=arguments.profile):
+        with cmk.utils.profile.Profile(enabled=bool(arguments.profile),
+                                       profile_file=arguments.profile):
             api_client = get_api_client(arguments)
             api_data = ApiData(api_client)
             print(api_data.cluster_sections())
@@ -1100,6 +1094,6 @@ def main(args=None):
     except Exception as e:
         if arguments.debug:
             raise
-        print("%s" % e, file=sys.stderr)
+        sys.stderr.write("%s\n" % e)
         return 1
     return 0

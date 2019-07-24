@@ -58,8 +58,9 @@ class HTTPSConfigurableConnection(HTTPSConnection):
             if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
                 self.sock = ssl.wrap_socket(self.sock, cert_reqs=ssl.CERT_NONE)
             else:
-                self.sock = ssl.wrap_socket(
-                    self.sock, ca_certs=self.__ca_file, cert_reqs=ssl.CERT_REQUIRED)
+                self.sock = ssl.wrap_socket(self.sock,
+                                            ca_certs=self.__ca_file,
+                                            cert_reqs=ssl.CERT_REQUIRED)
 
 
 class HTTPSAuthHandler(urllib2.HTTPSHandler):
@@ -80,7 +81,6 @@ def flatten(d, separator="."):
     with no nested dicts or lists and each element is a path using the
     specified separator
     """
-
     def flatten_int(d, separator="."):
         result = []
         if isinstance(d, list):
@@ -150,11 +150,13 @@ def output_containers(opener, headers):
 
 def output_alerts(opener, headers):
     write_title("alerts")
-    obj = send_request(
-        opener, "alerts", headers, parameters={
-            'resolved': "false",
-            'acknowledged': "false"
-        })
+    obj = send_request(opener,
+                       "alerts",
+                       headers,
+                       parameters={
+                           'resolved': "false",
+                           'acknowledged': "false"
+                       })
 
     writer = gen_csv_writer()
     writer.writerow(["timestamp", "message", "severity"])
@@ -182,6 +184,21 @@ def output_cluster(opener, headers):
     writer = gen_csv_writer()
     writer.writerow(["name", "version"])
     writer.writerow([obj['name'], obj['version']])
+
+
+def output_storage_pools(opener, headers):
+    write_title("storage_pools")
+    obj = send_request(opener, "storage_pools", headers)
+
+    writer = gen_csv_writer()
+    writer.writerow(["name", "usage", "capacity"])
+
+    for entity in obj["entities"]:
+        writer.writerow([
+            entity["name"],
+            entity["usageStats"]["storage.usage_bytes"],
+            entity["usageStats"]["storage.capacity_bytes"],
+        ])
 
 
 def main():
@@ -216,6 +233,7 @@ def main():
     output_containers(opener, req_headers)
     output_alerts(opener, req_headers)
     output_cluster(opener, req_headers)
+    output_storage_pools(opener, req_headers)
 
 
 if __name__ == "__main__":

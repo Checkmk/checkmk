@@ -26,11 +26,12 @@
 #define mk_logwatch_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <filesystem>
 #include <string>
-#include "FileSystem.h"
 class Logger;
 
-void mk_logwatch_acknowledge(Logger *logger, const fs::path &logwatch_path,
+void mk_logwatch_acknowledge(Logger *logger,
+                             const std::filesystem::path &logwatch_path,
                              const std::string &host_name,
                              const std::string &file_name);
 

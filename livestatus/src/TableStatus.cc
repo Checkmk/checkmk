@@ -27,6 +27,8 @@
 #include <ctime>
 #include <memory>
 #include "AtomicInt32PointerColumn.h"
+#include "Average.h"
+#include "BoolPointerColumn.h"
 #include "Column.h"
 #include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
@@ -60,6 +62,9 @@ extern int check_external_commands;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
+extern bool g_any_event_handler_enabled;
+extern double g_average_active_latency;
+extern Average g_avg_livestatus_usage;
 extern int g_livestatus_threads;
 extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
@@ -74,6 +79,12 @@ time_t dummy_time = 0;
 int dummy_int = 0;
 }  // namespace
 #endif  // NAGIOS4
+
+namespace {
+// NOTE: We have a FixedDoubleColumn, but this lives somewhere else, and this is
+// only a temporary hack.
+double dummy_double{0};
+}  // namespace
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
@@ -90,15 +101,18 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
                       Counter::commands);
     addCounterColumns("livechecks", "checks executed via livecheck",
                       Counter::livechecks);
+    // NOTE: The NEB queues accepted connections, so we never have overflows
+    // here. Nevertheless, we provide these columns for consistency with CMC,
+    // always returning zero.
     addCounterColumns(
-        "livecheck_overflows",
-        "times a check could not be executed because no livecheck helper was free",
-        Counter::livecheck_overflows);
+        "livestatus_overflows",
+        "times a Livestatus connection could not be immediately accepted because all threads where busy",
+        Counter::overflows);
 
-    // Nagios program status data
     addColumn(std::make_unique<IntPointerColumn>(
-        "nagios_pid", "The process ID of the Nagios main process",
-        &nagios_pid));
+        "nagios_pid", "The process ID of the monitoring core", &nagios_pid));
+    addColumn(std::make_unique<IntPointerColumn>(
+        "core_pid", "The process ID of the monitoring core", &nagios_pid));
     addColumn(std::make_unique<IntPointerColumn>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
@@ -119,10 +133,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
         &accept_passive_host_checks));
-    addColumn(std::make_unique<IntPointerColumn>(
-        "enable_event_handlers",
-        "Whether event handlers are activated in general (0/1)",
-        &enable_event_handlers));
     addColumn(std::make_unique<IntPointerColumn>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
@@ -147,6 +157,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
         &process_performance_data));
+    addColumn(std::make_unique<IntPointerColumn>(
+        "enable_event_handlers",
+        "Whether event handlers are activated in general (0/1)",
+        &enable_event_handlers));
     addColumn(std::make_unique<IntPointerColumn>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
@@ -230,12 +244,56 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         &g_livestatus_threads));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "livestatus_usage",
+        "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &g_avg_livestatus_usage._average));
+
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_generic",
+        "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
+        &g_average_active_latency));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_cmk",
+        "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "average_latency_real_time",
+        "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
+        &dummy_double));
+
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_generic",
+        "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_cmk",
+        "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
+    addColumn(std::make_unique<DoublePointerColumn>(
+        "helper_usage_real_time",
+        "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        &dummy_double));
+
+    addColumn(std::make_unique<BoolPointerColumn>(
+        "has_event_handlers",
+        "Whether or not at alert handler rules are configured (0/1)",
+        &g_any_event_handler_enabled));
 
     // Special stuff for Check_MK
     addColumn(std::make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::mk_inventory_last));
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        "num_queued_notifications",
+        "The number of queued notifications which have not yet been delivered to the notification helper",
+        -1, -1, -1, 0, mc,
+        StatusSpecialIntColumn::Type::num_queued_notifications));
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
+        "num_queued_alerts",
+        "The number of queued alerts which have not yet been delivered to the alert helper",
+        -1, -1, -1, 0, mc, StatusSpecialIntColumn::Type::num_queued_alerts));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,

@@ -12,12 +12,10 @@
 #include <string>
 #include <string_view>
 
-#include "cma_core.h"
-#include "section_header.h"
-
 #include "Logger.h"
-
+#include "cma_core.h"
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma::provider {
 
@@ -26,9 +24,9 @@ namespace cma::provider {
 // three groups "***" or '***' or
 const std::regex RegexPossiblyQuoted{"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
 
-inline std::vector<std::string> TokenizeString(const std::string &Val,
-                                               const std::regex &Regex,
-                                               int SubMatch) {
+inline std::vector<std::string> TokenizeString(const std::string &val,
+                                               const std::regex &regex_val,
+                                               int sub_match) {
     // below a bit of magic
     // Basic approach is:
     // 1. std::sregex_token_iterator it(Val.begin(), Val.end(), Regex, 1);
@@ -36,32 +34,32 @@ inline std::vector<std::string> TokenizeString(const std::string &Val,
     // 3. for (; it != reg_end; ++it) std::cout << it->str() << std::endl;
     // we are using a bit more shortened syntax just to show that
     // smart people works in MK.
-    return {
-        std::sregex_token_iterator{Val.cbegin(), Val.cend(), Regex, SubMatch},
-        std::sregex_token_iterator{}};
+    return {std::sregex_token_iterator{val.cbegin(), val.cend(), regex_val,
+                                       sub_match},
+            std::sregex_token_iterator{}};
 }
 
-inline void removeQuotes(std::string &Value) {
-    if (Value.size() < 2) return;
-    if (Value.back() == '\'' || Value.back() == '\"') Value.pop_back();
-    if (Value[0] == '\'' || Value[0] == '\"')
-        Value = Value.substr(1, Value.size() - 1);
+inline void removeQuotes(std::string &val) {
+    if (val.size() < 2) return;
+
+    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
+    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
 }
 
 struct MrpeEntry {
-    MrpeEntry(const std::string &RunAsUser,    // only from cfg
-              const std::string &CommandLine,  // parsed
-              const std::string &ExeName,      // parsed
-              const std::string &Description)
-        : run_as_user_(RunAsUser)
-        , command_line_(CommandLine)
-        , exe_name_(ExeName)
-        , description_(Description) {}
+    MrpeEntry(const std::string &run_as_user,  // only from cfg
+              const std::string &cmd_line,     // parsed
+              const std::string &exe_name,     // parsed
+              const std::string &description)
+        : run_as_user_(run_as_user)
+        , command_line_(cmd_line)
+        , exe_name_(exe_name)
+        , description_(description) {}
 
-    MrpeEntry(const std::string &RunAsUser,  // only from cfg
-              const std::string &Value)
-        : run_as_user_(RunAsUser) {
-        loadFromString(Value);
+    MrpeEntry(const std::string &run_as_user,  // only from cfg
+              const std::string &value)
+        : run_as_user_(run_as_user) {
+        loadFromString(value);
     }
 
     void loadFromString(const std::string &Value);
@@ -77,8 +75,8 @@ class MrpeProvider : public Asynchronous {
 public:
     MrpeProvider() : Asynchronous(cma::section::kMrpe) {}
 
-    MrpeProvider(const std::string_view &Name, char Separator)
-        : Asynchronous(Name, Separator) {}
+    MrpeProvider(const std::string_view &name, char separator)
+        : Asynchronous(name, separator) {}
 
     virtual void loadConfig();
 
@@ -89,7 +87,7 @@ public:
     const auto &checks() const noexcept { return checks_; }
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
     // sub API
     void parseConfig();
@@ -115,9 +113,9 @@ protected:
 #endif
 };
 std::pair<std::string, std::filesystem::path> parseIncludeEntry(
-    const std::string Entry);
+    const std::string &entry);
 
-void FixCrCnForMrpe(std::string &Data);
+void FixCrCnForMrpe(std::string &str);
 
 }  // namespace cma::provider
 

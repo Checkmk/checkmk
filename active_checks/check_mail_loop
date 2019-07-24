@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import email
+import email.utils
+import email.mime.text
 import getopt
 import imaplib
 import os
@@ -149,7 +151,7 @@ required_params = [
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -335,7 +337,7 @@ def fetch_mails():
                     try:
                         data = g_M.fetch(num, '(RFC822)')[1]
                         mails[num] = email.message_from_string(data[0][1])
-                    except Exception, e:
+                    except Exception as e:
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
 
@@ -363,7 +365,7 @@ def fetch_mails():
 
                 g_mails[ts + '-' + key] = (index, rx_ts)
 
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(3, 'Failed to check for mails: %s' % parse_exception(e))
@@ -389,7 +391,7 @@ def send_mail():
         S.quit()
 
         add_expected_msg(now, key)
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(3, 'Failed to send mail: %s' % parse_exception(e))
@@ -475,7 +477,7 @@ def cleanup_mailbox():
 
         if fetch_proto == 'IMAP':
             g_M.expunge()
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         bail_out(2, 'Failed to delete mail: %s' % parse_exception(e))
@@ -519,7 +521,7 @@ def main():
 
 try:
     main()
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out(2, 'Unhandled exception: %s' % parse_exception(e))

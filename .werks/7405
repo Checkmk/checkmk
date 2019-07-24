@@ -1,0 +1,15 @@
+Title: elasticsearch_indices: new check for monitoring of elasticsearch indices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1554373898
+Class: feature
+
+This check uses the datasource program "Check state of elasticsearch". The
+document count and size growth per minute will be recorded and averaged for a
+set amount of time (30 minutes by default). The last recent document count
+growth and size growth will be compared to this average value.  You can set
+thresholds on how much higher the last recent growth can be compared to the
+average growth.

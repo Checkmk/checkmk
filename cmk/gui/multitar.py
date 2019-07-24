@@ -23,10 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+"""This module contains some helper functions dealing with the creation
+of multi-tier tar files (tar files containing tar files)"""
 
-# This module contains some helper functions dealing with the creation
-# of multi-tier tar files (tar files containing tar files)
-
+import errno
 import hashlib
 import os
 import tarfile
@@ -222,13 +222,12 @@ class SnapshotCreationBase(object):
             if debug:
                 self._logger.debug(" ".join(command))
             try:
-                p = subprocess.Popen(
-                    command,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    shell=False,
-                    close_fds=True)
+                p = subprocess.Popen(command,
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     shell=False,
+                                     close_fds=True)
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
@@ -379,8 +378,9 @@ def create(tar_filename, components):
                 def exclude_filter(x, excludes=excludes):
                     return filter_subtar_files(x, excludes)
 
-                subtar_obj.add(
-                    os.path.join(basedir, filename), arcname=filename, filter=exclude_filter)
+                subtar_obj.add(os.path.join(basedir, filename),
+                               arcname=filename,
+                               filter=exclude_filter)
 
             subtar_size = len(subtar_buffer.getvalue())
             subtar_buffer.seek(0)
@@ -390,13 +390,13 @@ def create(tar_filename, components):
             info.uid = 0
             info.gid = 0
             info.size = subtar_size
-            info.mode = 0644
+            info.mode = 0o644
             info.type = tarfile.REGTYPE
 
             tar.addfile(info, subtar_buffer)
 
-    logger.debug(
-        "Packaging %s took %.3fsec" % (os.path.basename(tar_filename), time.time() - start))
+    logger.debug("Packaging %s took %.3fsec" %
+                 (os.path.basename(tar_filename), time.time() - start))
 
 
 def filter_subtar_files(tarinfo, excludes):
@@ -617,7 +617,7 @@ def extract(tar, components):
         try:
             try:
                 subtarstream = tar.extractfile(name + ".tar")
-            except:
+            except Exception:
                 continue  # may be missing, e.g. sites.tar is only present
                 # if some sites have been created.
 
@@ -639,8 +639,8 @@ def extract(tar, components):
             subtar = tarfile.open(fileobj=subtarstream)
             subtar.extractall(target_dir)
         except Exception:
-            raise MKGeneralException(
-                'Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
+            raise MKGeneralException('Failed to extract subtar %s: %s' %
+                                     (name, traceback.format_exc()))
 
 
 # Try to cleanup everything starting from the root_path
@@ -686,7 +686,7 @@ def wipe_directory(path):
                 try:
                     os.remove(p)
                 except OSError as e:
-                    if e.errno == 2:  # no such file or directory
+                    if e.errno == errno.ENOENT:
                         continue
                     else:
                         raise

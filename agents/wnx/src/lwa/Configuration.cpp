@@ -45,6 +45,7 @@
 #include "types.h"
 
 #define __STDC_FORMAT_MACROS
+namespace fs = std::experimental::filesystem;
 
 namespace {
 
@@ -751,7 +752,7 @@ public:
 };
 
 // Used in testing
-bool CheckIniFile(const std::filesystem::path& Path) {
+bool CheckIniFile(const std::filesystem::path &Path) {
     auto p = std::make_unique<Configuration>();
     Configuration &parser(*p);
     Configurable<int> port(parser, "global", "port", 6556);
@@ -992,27 +993,6 @@ void AddKeyedPattern(YAML::Node Node, const std::string Key,
     auto string = ToYamlKeyedString(Key, Pattern, Value);
     auto node = YAML::Load(string);
     Node.push_back(node);
-}
-
-// converts "*" intp "@user\\*"
-void PatchRelativePath(YAML::Node Yaml, const std::string &Group,
-                       const std::string &Key, const std::string &Name,
-                       const std::string &Marker) {
-    auto group = Yaml[Group];
-    if (group.IsDefined() && group.IsMap()) {
-        auto key = group[Key];
-        if (key.IsDefined() && key.IsSequence()) {
-            auto sz = key.size();
-            for (size_t k = 0; k < sz; ++k) {
-                if (key[k][Name].IsDefined() && key[k][Name].IsScalar()) {
-                    auto entry = key[k][Name].as<std::string>();
-                    std::filesystem::path p = entry;
-                    if (p.is_relative())
-                        key[k][Name] = std::string(Marker) + "\\" + entry;
-                }
-            }
-        }
-    }
 }
 
 YAML::Node Parser::emitYaml() noexcept {

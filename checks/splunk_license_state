@@ -1,0 +1,109 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<splunk_license_state>>>
+# Splunk_Enterprise_Splunk_Analytics_for_Hadoop_Download_Trial 5 30 524288000 1561977130 VALID
+# Splunk_Forwarder 5 30 1048576 2147483647 VALID
+# Splunk_Free 3 30 524288000 2147483647 VALID
+
+# expiration_time default is warn/crit 14d/7d
+
+SplunkLicenseState = collections.namedtuple("lcs", [
+    "max_violations",
+    "window_period",
+    "quota",
+    "expiration_time",
+    "time_to_expiration",
+    "status",
+])
+
+
+def parse_splunk_license_state(info):
+    parsed = {}
+
+    for lcs_detail in info:
+        try:
+            label, max_violations, window_period, quota, expiration_time, status = lcs_detail
+
+            time_to_expiration = float(expiration_time) - time.time()
+            parsed.setdefault(label, []).append(
+                SplunkLicenseState(max_violations, window_period,
+                                   get_bytes_human_readable(int(quota)),
+                                   get_timestamp_human_readable(int(expiration_time)),
+                                   time_to_expiration, status))
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+factory_settings["splunk_license_state_default_levels"] = {
+    "state": 2,
+    "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+}
+
+
+@get_parsed_item_data
+def check_splunk_license_state(item, params, item_data):
+    data = item_data[0]
+    state = 0
+
+    if data.status == "EXPIRED":
+        state = params.get("state")
+
+    yield state, "Status: %s" % data.status
+
+    if data.time_to_expiration > 0:
+        warn, crit = params["expiration_time"]
+        state = 0
+
+        infotext = "Expiration time: %s" % data.expiration_time
+
+        if data.time_to_expiration <= crit:
+            state = 2
+        elif data.time_to_expiration <= warn:
+            state = 1
+
+        if state != 0:
+            infotext += " (expires in %s - Warn/Crit at %s/%s)" % (get_age_human_readable(
+                data.time_to_expiration), get_age_human_readable(warn),
+                                                                   get_age_human_readable(crit))
+
+        yield state, infotext
+
+    yield 0, "Max violations: %s within window period of %s Days, Quota: %s" % (
+        data.max_violations, data.window_period, data.quota)
+
+
+check_info["splunk_license_state"] = {
+    "parse_function": parse_splunk_license_state,
+    "check_function": check_splunk_license_state,
+    "inventory_function": discover(),
+    "service_description": "Splunk License %s",
+    "group": "splunk_license_state",
+    "default_levels_variable": "splunk_license_state_default_levels",
+}

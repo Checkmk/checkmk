@@ -3,6 +3,7 @@
 //
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 #include "cfg.h"
@@ -23,19 +24,20 @@ public:
     ~YamlLoader() { OnStart(cma::AppType::test); }
 };
 
-inline void CreateFile(std::filesystem::path Path, std::string Content) {
+inline void ConstructFile(std::filesystem::path Path,
+                          std::string_view Content) {
     std::ofstream ofs(Path);
 
     ofs << Content;
 }
 
 void SafeCleanTempDir();
-void SafeCleanTempDir(const std::string Sub);
+void SafeCleanTempDir(std::string_view sub_dir);
 
 inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
                           const std::string YamlName) {
     auto ini_file = Lwa / (YamlName + ".ini");
-    CreateFile(Lwa / ini_file, Content);
+    ConstructFile(Lwa / ini_file, Content);
     return ini_file;
 }
 
@@ -43,7 +45,7 @@ inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();
     auto normal_dir =
-        temp_dir.wstring().find(L"\\temp", 0) != std::wstring::npos;
+        temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
     if (normal_dir) {
         std::error_code ec;
         auto lwa_dir = temp_dir / "in";
@@ -72,5 +74,6 @@ inline void SafeCleanBakeryDir() {
                 wtools::ConvertToUTF8(bakery_dir));
     }
 }
+void PrintNode(YAML::Node node, std::string_view S);
 }  // namespace tst
 #endif  // test_tools_h__

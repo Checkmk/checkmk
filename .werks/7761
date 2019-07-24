@@ -1,0 +1,32 @@
+Title: New livestatus columns tags and labels
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1559673940
+Class: feature
+
+The hosts and services tables now have two new columns named
+<tt>tags</tt> for fetching the configured tags and <tt>labels</tt>
+for fetching the configured labels.
+
+In the past one had to use the columns <tt>custom_variables</tt>
+to get the TAGS custom variable of a host and parse the value of
+this variable to get the configured host tags. This approach also
+had some limitations in terms of filtering by tags. The tag group
+information was totally missing here.
+
+The new <tt>tags</tt> column can be parsed and filtered with less
+trouble. If you do livestatus queries on the tags we recommend to
+use these fields.
+
+One example for a livestatus query and the resulting data:
+
+C+:
+OMD[heute]:~$ lq "GET hosts\nColumns: tags\nOutputFormat: json"
+[[{"snmp_ds":"no-snmp","address_family":"no-ip","networking":"lan","tcp":"tcp","site":"heute","piggyback":"piggyback","criticality":"prod","agent":"cmk-agent"}]]
+C-:
+
+The filtering can be done just like for other dictionary style
+columns.

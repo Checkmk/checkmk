@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_recovery_area>>>
-# TUX12C 0 4800 19 0
+# <<<oracle_longactivesessions:seq(124)>>>
+# instance_name | sid | serial | machine | process | osuser | program | last_call_el | sql_id
 
 # Columns:
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
@@ -45,7 +45,6 @@ def check_oracle_longactivesessions(item, params, info):
     itemfound = False
 
     for line in info:
-
         if len(line) <= 1:
             continue
 
@@ -55,7 +54,6 @@ def check_oracle_longactivesessions(item, params, info):
             itemfound = True
 
         if line[0] == item and line[1] != '':
-
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, \
             last_call_el, sql_id = line
@@ -64,6 +62,11 @@ def check_oracle_longactivesessions(item, params, info):
                         % (sidnr, serial, process, get_age_human_readable(int(last_call_el)), machine, osuser, program, sql_id)
 
     if itemfound:
+        infotext = "%s" % sessioncount
+        perfdata = [("count", sessioncount, warn, crit)]
+        if sessioncount == 0:
+            return 0, infotext, perfdata
+
         if sessioncount >= crit:
             state = 2
         elif sessioncount >= warn:
@@ -71,18 +74,13 @@ def check_oracle_longactivesessions(item, params, info):
         else:
             state = 0
 
-        if sessioncount == 0:
-            return 0, "%d long active sessions (%d, warn/crit at %d/%d)" \
-                % (sessioncount, sessioncount, warn, crit), \
-                [("count", sessioncount, warn, crit)]
-        elif sessioncount <= 10:
-            return state, "%d long active sessions (%d, warn/crit at %d/%d) %s" \
-                % (sessioncount, sessioncount, warn, crit, longoutput), \
-                [("count", sessioncount, warn, crit)]
-        elif sessioncount > 10:
-            return state, "%d long active sessions (%d, warn/crit at %d/%d)" \
-                % (sessioncount, sessioncount, warn, crit), \
-                [("count", sessioncount, warn, crit)]
+        if state:
+            infotext += " (warn/crit at %d/%d)" % (warn, crit)
+
+        if sessioncount <= 10:
+            infotext += " %s" % longoutput
+
+        return state, infotext, perfdata
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't

@@ -88,13 +88,12 @@ def check_infoblox_temp(item, params, parsed):
         reading = parsed[item]["reading"]
         devunit = parsed[item]["unit"].lower()
         devstate, devstatename = parsed[item]["state"]
-        return check_temperature(
-            reading,
-            params,
-            "infoblox_cpu_temp_%s" % item,
-            dev_status=devstate,
-            dev_status_name=devstatename,
-            dev_unit=devunit)
+        return check_temperature(reading,
+                                 params,
+                                 "infoblox_cpu_temp_%s" % item,
+                                 dev_status=devstate,
+                                 dev_status_name=devstatename,
+                                 dev_unit=devunit)
 
 
 check_info['infoblox_temp'] = {

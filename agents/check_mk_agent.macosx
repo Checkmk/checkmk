@@ -47,7 +47,7 @@ fi
 
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0i1"
+echo "Version: 1.7.0i1"
 echo "AgentOS: macosx"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -105,41 +105,36 @@ netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x];
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-if [ -r "$MK_CONFDIR/fileinfo.cfg" ]; then
-    echo '<<<fileinfo:sep(124)>>>'
+perl -e '
+my @patterns = ();
+foreach (<"$ARGV[0]/fileinfo.cfg">, <"$ARGV[0]/fileinfo.d/*">) {
+    open my $handle, "<", $_ or next;
+    while (<$handle>) {
+        chomp;
+        next if /^\s*(#|$)/;
+        my $pattern = $_;
+        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+        push @patterns, $pattern;
+    }
+    warn "error while reading $_: $!\n" if $!;
+    close $handle;
+}
+exit if ! @patterns;
 
-    old_state=$(set +o)
-    set +f
+print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
 
-    # let the shell do all the expansion, and pipe all files to perl
-    (cat "$MK_CONFDIR/fileinfo.cfg" "$MK_CONFDIR/fileinfo.d/*" 2>/dev/null) | while read -r pattern; do
-        case $pattern in
-            /*) pattern=$(replace_datevariable "$pattern")
-                for f in $pattern; do echo $f; done
-                ;;
-        esac
-    done | perl -e  '
-           print time."\n";
-           print "[[[header]]]\n";
-           print "name|status|size|time\n";
-           print "[[[content]]]\n";
-           while (<>) {
-               chomp $_;
-               if (-d $_) { next; }
-               if (not -f $_) {
-                   print "$_|missing\n";
-                   next;
-               }
-               ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size,
-                $atime, $mtime, $ctime, $blksize, $blocks) = stat($_);
-               if ($!) {
-                   print "$_|stat failed\n";
-               } else {
-                   print "$_|ok|$size|$mtime\n";
-               }
-           }'
-    set +vx; eval "$old_state"
-fi
+foreach (@patterns) {
+    while (<"$_">) {
+        if (! -f) {
+            print "$_|missing\n" if ! -d;
+        } elsif (my @infos = stat) {
+            print "$_|ok|$infos[7]|$infos[9]\n";
+        } else {
+            print "$_|stat failed: $!\n";
+        }
+    }
+}
+' -- "$MK_CONFDIR"
 
 
 if type tmutil >/dev/null

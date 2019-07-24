@@ -114,8 +114,9 @@ PortNumbers = NamedTuple('PortNumbers', [
 def _default_port_numbers():
     # type: () -> PortNumbers
     """Returns all port numbers related to the event console"""
-    return PortNumbers(
-        syslog_udp=PortNumber(514), syslog_tcp=PortNumber(514), snmptrap_udp=PortNumber(162))
+    return PortNumbers(syslog_udp=PortNumber(514),
+                       syslog_tcp=PortNumber(514),
+                       snmptrap_udp=PortNumber(162))
 
 
 # a Unix file descriptor number
@@ -124,14 +125,12 @@ FileDescriptor = NamedTuple('FileDescriptor', [('value', int)])
 
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
-
     def __init__(self, prog, version, paths, port_numbers):
         # type: (str, str, Paths, PortNumbers) -> None
-        super(ECArgumentParser, self).__init__(
-            prog=prog,
-            formatter_class=RawDescriptionHelpFormatter,
-            description='Start the Check_MK event console.',
-            epilog=self._epilog(paths))
+        super(ECArgumentParser, self).__init__(prog=prog,
+                                               formatter_class=RawDescriptionHelpFormatter,
+                                               description='Start the Check_MK event console.',
+                                               epilog=self._epilog(paths))
         self._add_arguments(version, port_numbers)
 
     @staticmethod
@@ -143,49 +142,45 @@ class ECArgumentParser(ArgumentParser):
 
     def _add_arguments(self, version, port_numbers):
         # type: (str, PortNumbers) -> None
-        self.add_argument(
-            '-V', '--version', action='version', version='%(prog)s version ' + version)
+        self.add_argument('-V',
+                          '--version',
+                          action='version',
+                          version='%(prog)s version ' + version)
         self.add_argument('-v', '--verbose', action='count', default=0, help='increase verbosity')
         self.add_argument('--syslog', action='store_true', help='enable built-in UDP syslog server')
-        self.add_argument(
-            '--syslog-fd',
-            metavar='FD',
-            type=self._file_descriptor,
-            help=('use the given file descriptor instead of UDP port %d' %
-                  port_numbers.syslog_udp.value))
-        self.add_argument(
-            '--syslog-tcp', action='store_true', help='enable built-in TCP syslog server')
-        self.add_argument(
-            '--syslog-tcp-fd',
-            metavar='FD',
-            type=self._file_descriptor,
-            help=('use the given file descriptor instead of TCP port %d' %
-                  port_numbers.syslog_tcp.value))
+        self.add_argument('--syslog-fd',
+                          metavar='FD',
+                          type=self._file_descriptor,
+                          help=('use the given file descriptor instead of UDP port %d' %
+                                port_numbers.syslog_udp.value))
+        self.add_argument('--syslog-tcp',
+                          action='store_true',
+                          help='enable built-in TCP syslog server')
+        self.add_argument('--syslog-tcp-fd',
+                          metavar='FD',
+                          type=self._file_descriptor,
+                          help=('use the given file descriptor instead of TCP port %d' %
+                                port_numbers.syslog_tcp.value))
         self.add_argument('--snmptrap', action='store_true', help='enable built-in snmptrap server')
-        self.add_argument(
-            '--snmptrap-fd',
-            metavar='FD',
-            type=self._file_descriptor,
-            help=('use the given file descriptor instead of UDP port %d' %
-                  port_numbers.snmptrap_udp.value))
-        self.add_argument(
-            '-g',
-            '--foreground',
-            action='store_true',
-            help='run in the foreground instead of daemonizing')
-        self.add_argument(
-            '-d',
-            '--debug',
-            action='store_true',
-            help='enable debug mode, letting exceptions through')
-        self.add_argument(
-            '--profile-status',
-            action='store_true',
-            help='create performance profile for status thread')
-        self.add_argument(
-            '--profile-event',
-            action='store_true',
-            help='create performance profile for event thread')
+        self.add_argument('--snmptrap-fd',
+                          metavar='FD',
+                          type=self._file_descriptor,
+                          help=('use the given file descriptor instead of UDP port %d' %
+                                port_numbers.snmptrap_udp.value))
+        self.add_argument('-g',
+                          '--foreground',
+                          action='store_true',
+                          help='run in the foreground instead of daemonizing')
+        self.add_argument('-d',
+                          '--debug',
+                          action='store_true',
+                          help='enable debug mode, letting exceptions through')
+        self.add_argument('--profile-status',
+                          action='store_true',
+                          help='create performance profile for status thread')
+        self.add_argument('--profile-event',
+                          action='store_true',
+                          help='create performance profile for event thread')
 
     @staticmethod
     def _file_descriptor(value):
@@ -240,15 +235,16 @@ def settings(version, omd_root, default_config_dir, argv):
     port_numbers = _default_port_numbers()
     parser = ECArgumentParser(Path(argv[0]).name, version, paths, port_numbers)
     args = parser.parse_args(argv[1:])
-    options = Options(
-        verbosity=args.verbose,
-        syslog_udp=_endpoint(args.syslog, args.syslog_fd, port_numbers.syslog_udp),
-        syslog_tcp=_endpoint(args.syslog_tcp, args.syslog_tcp_fd, port_numbers.syslog_tcp),
-        snmptrap_udp=_endpoint(args.snmptrap, args.snmptrap_fd, port_numbers.snmptrap_udp),
-        foreground=args.foreground,
-        debug=args.debug,
-        profile_status=args.profile_status,
-        profile_event=args.profile_event)
+    options = Options(verbosity=args.verbose,
+                      syslog_udp=_endpoint(args.syslog, args.syslog_fd, port_numbers.syslog_udp),
+                      syslog_tcp=_endpoint(args.syslog_tcp, args.syslog_tcp_fd,
+                                           port_numbers.syslog_tcp),
+                      snmptrap_udp=_endpoint(args.snmptrap, args.snmptrap_fd,
+                                             port_numbers.snmptrap_udp),
+                      foreground=args.foreground,
+                      debug=args.debug,
+                      profile_status=args.profile_status,
+                      profile_event=args.profile_event)
     return Settings(paths=paths, options=options)
 
 

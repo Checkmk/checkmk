@@ -83,7 +83,7 @@ opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -146,7 +146,7 @@ def get_upnp_info(control, namespace, action):
             req = urllib2.Request(url, data, headers)
             handle = urllib2.urlopen(req)
             break  # got a good response
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             if e.code == 500:
                 # Is the result when the old URL can not be found, continue in this
                 # case and revert the order of base urls in the hope that the other
@@ -154,7 +154,7 @@ def get_upnp_info(control, namespace, action):
                 # during an agent execution
                 base_urls.reverse()
                 continue
-        except Exception, e:
+        except Exception as e:
             if opt_debug:
                 sys.stdout.write('----------------------------\n')
                 sys.stdout.write(traceback.format_exc())
@@ -206,7 +206,7 @@ try:
     ]:
         try:
             status.update(get_upnp_info(_control, _namespace, _action))
-        except:
+        except Exception:
             if opt_debug:
                 raise
 
@@ -216,7 +216,7 @@ try:
     for pair in status.items():
         sys.stdout.write('%s %s\n' % pair)
 
-except:
+except Exception:
     if opt_debug:
         raise
     sys.stderr.write('Unhandled error: %s' % traceback.format_exc())

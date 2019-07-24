@@ -62,7 +62,7 @@ class TranslationBaseChecker(BaseChecker):
     """
 
     __implements__ = (IAstroidChecker,)
-    TRANSLATION_FUNCTIONS = set([
+    TRANSLATION_FUNCTIONS = {
         '_',
         'gettext',
         'ngettext',
@@ -76,7 +76,7 @@ class TranslationBaseChecker(BaseChecker):
         'ugettext_noop',
         'ungettext',
         'ungettext_lazy',
-    ])
+    }
 
     name = 'translation-base-checker'
     BASE_ID = 76
@@ -188,7 +188,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
                 return False
             # Case 2
             elif not all_unescapable and parent_is_HTML(node):
-                if filter(lambda x: x != "img", tags):
+                if [x for x in tags if x != "img"]:
                     message = "OK! Is protected by HTML(...)!\n"
                     message += "'''%s'''\n----> %s" % (first.value, ", ".join(tags))
                     self.add_message(self.MESSAGE_ID, args=message, node=node)

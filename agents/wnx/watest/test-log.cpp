@@ -11,6 +11,26 @@
 #include "read_file.h"
 #include "test_tools.h"
 
+namespace xlog {
+TEST(xlogTest, xlogLowLevel) {
+    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::kAddCr));
+    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::kAddCr));
+
+    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::kNoCr));
+    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::kNoCr));
+
+    std::string s;
+    EXPECT_NO_THROW(xlog::RmCr(s));
+    xlog::AddCr(s);
+    EXPECT_EQ(s, "\n");
+    xlog::AddCr(s);
+    EXPECT_EQ(s, "\n");
+    xlog::RmCr(s);
+    EXPECT_EQ(s, "");
+    EXPECT_NO_THROW(xlog::RmCr(s));
+}
+}  // namespace xlog
+
 namespace XLOG {
 
 TEST(LogTest, RotationFileNameCreation) {

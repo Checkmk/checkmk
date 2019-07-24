@@ -54,11 +54,10 @@ class RulespecCheckgroupParametersDb2Mem(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Percentage(title=_("Warning if less than"), unit=_("% memory left")),
-                Percentage(title=_("Critical if less than"), unit=_("% memory left")),
-            ],)
+        return Tuple(elements=[
+            Percentage(title=_("Warning if less than"), unit=_("% memory left")),
+            Percentage(title=_("Critical if less than"), unit=_("% memory left")),
+        ],)
 
     @property
     def item_spec(self):

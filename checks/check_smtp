@@ -27,14 +27,14 @@
 
 def check_smtp_arguments(params):
     _description, settings = params
-    args = ''
+    args = []
 
     if "expect" in settings:
-        args += ' -e %s' % quote_shell_string(settings["expect"])
+        args += ["-e", settings["expect"]]
 
     if "port" in settings:
         port = int(settings["port"])  # ValueSpec was broken, convert to int
-        args += ' -p %d' % port
+        args += ["-p", port]
 
     # Be compatible to legacy option
     if "ip_version" in settings:
@@ -46,49 +46,52 @@ def check_smtp_arguments(params):
         address_family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
 
     if address_family == "ipv6":
-        args += " -6"
+        args.append("-6")
         address = "$_HOSTADDRESS_6$"
     else:
-        args += " -4"
+        args.append("-4")
         address = "$_HOSTADDRESS_4$"
 
     for s in settings.get("commands", []):
-        args += ' -C %s' % quote_shell_string(s)
+        args += ["-C", s]
 
     for s in settings.get("command_responses", []):
-        args += ' -R %s' % quote_shell_string(s)
+        args += ["-R", s]
 
-    if settings.get('from'):
-        args += ' -f %s' % quote_shell_string(settings["from"])
+    if settings.get("from"):
+        args += ["-f", settings["from"]]
 
     if "response_time" in settings:
-        args += ' -w %0.4f -c %0.4f' % (settings["response_time"][0], settings["response_time"][1])
+        warn, crit = settings["response_time"]
+        args += ["-w", "%0.4f" % warn]
+        args += ["-c", "%0.4f" % crit]
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
 
     if "auth" in settings:
-        auth = settings["auth"]
-        args += ' -A LOGIN -U %s -P %s' % (quote_shell_string(auth[0]), quote_shell_string(auth[1]))
+        username, password = settings["auth"]
+        args += ["-A", "LOGIN", "-U", username, "-P", password]
 
-    if settings.get('starttls', False):
-        args += ' -S'
+    if settings.get("starttls", False):
+        args.append("-S")
 
-    if 'fqdn' in settings:
-        args += ' -F %s' % quote_shell_string(settings['fqdn'])
+    if "fqdn" in settings:
+        args += ["-F", settings["fqdn"]]
 
     if "cert_days" in settings:
         # legacy behavior
         if isinstance(settings["cert_days"], int):
-            args += ' -D %d' % settings["cert_days"]
+            args += ["-D", settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
-            args += ' -D %d,%d' % (warn, crit)
+            args += ["-D", "%d,%d" % (warn, crit)]
 
-    if 'hostname' in settings:
-        args += ' -H %s' % settings['hostname']
+    if "hostname" in settings:
+        args += ["-H", settings["hostname"]]
     else:
-        args += ' -H ' + address
+        args += ["-H", address]
+
     return args
 
 
@@ -98,8 +101,8 @@ def check_smtp_desc(params):
     return "SMTP %s" % params[0]
 
 
-active_check_info['smtp'] = {
-    "command_line": '$USER1$/check_smtp $ARG1$',
+active_check_info["smtp"] = {
+    "command_line": "$USER1$/check_smtp $ARG1$",
     "argument_function": check_smtp_arguments,
     "service_description": check_smtp_desc,
     "has_perfdata": True,

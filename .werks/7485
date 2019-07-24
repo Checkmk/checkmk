@@ -1,0 +1,12 @@
+Title: mk_mysql: look in local config files for socket definitions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1559734826
+Class: fix
+
+We now also search the file 'mysql.local.cfg' when determining the configured sockets.
+Previously only msql.cfg has been considered.
+

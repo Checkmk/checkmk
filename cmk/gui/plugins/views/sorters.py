@@ -336,9 +336,8 @@ class PerfValSorter(Sorter):
         return ['service_perf_data']
 
     def cmp(self, r1, r2):
-        return cmp(
-            utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)),
-            utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True)))
+        return cmp(utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)),
+                   utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True)))
 
 
 @sorter_registry.register
@@ -450,7 +449,7 @@ class SorterHostIpv4Address(Sorter):
         def split_ip(ip):
             try:
                 return tuple(int(part) for part in ip.split('.'))
-            except:
+            except ValueError:
                 return ip
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))

@@ -112,8 +112,8 @@ def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
             for result in _process_icon(what, row, tags, custom_vars, icon_id, icon):
                 icons.append(result)
         except Exception:
-            icons.append((icon.sort_index(),
-                          'Exception in icon plugin!<br />' + traceback.format_exc()))
+            icons.append(
+                (icon.sort_index(), 'Exception in icon plugin!<br />' + traceback.format_exc()))
     return icons
 
 
@@ -172,13 +172,13 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
 #  False to get only columns for dropdown menu icons
 #  None to get columns for all active icons
 def iconpainter_columns(what, toplevel):
-    cols = set([
+    cols = {
         'site',
         'host_name',
         'host_address',
         'host_custom_variable_names',
         'host_custom_variable_values',
-    ])
+    }
 
     if what == 'service':
         cols.update([

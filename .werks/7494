@@ -1,0 +1,10 @@
+Title: oracle_jobs: Fixed crash while gathering job specific data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558351117
+Class: fix
+
+

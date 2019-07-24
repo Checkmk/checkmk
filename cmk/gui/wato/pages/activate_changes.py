@@ -76,20 +76,18 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         # TODO: Remove once new changes mechanism has been implemented
         if self._may_discard_changes():
-            html.context_button(
-                _("Discard Changes!"),
-                html.makeactionuri([("_action", "discard")]),
-                "discard",
-                id_="discard_changes_button")
+            html.context_button(_("Discard Changes!"),
+                                html.makeactionuri([("_action", "discard")]),
+                                "discard",
+                                id_="discard_changes_button")
 
         if config.user.may("wato.sites"):
-            html.context_button(
-                _("Site Configuration"), watolib.folder_preserving_link([("mode", "sites")]),
-                "sites")
+            html.context_button(_("Site Configuration"),
+                                watolib.folder_preserving_link([("mode", "sites")]), "sites")
 
         if config.user.may("wato.auditlog"):
-            html.context_button(
-                _("Audit Log"), watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
+            html.context_button(_("Audit Log"),
+                                watolib.folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
     def _may_discard_changes(self):
         if not config.user.may("wato.activate"):
@@ -127,11 +125,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
-        watolib.add_change(
-            "changes-discarded",
-            msg,
-            domains=watolib.ConfigDomain.enabled_domains(),
-            need_restart=True)
+        watolib.add_change("changes-discarded",
+                           msg,
+                           domains=watolib.ConfigDomain.enabled_domains(),
+                           need_restart=True)
 
         self._extract_snapshot(file_to_restore)
         cmk.gui.watolib.activate_changes.execute_activate_changes(
@@ -140,10 +137,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         for site_id in cmk.gui.watolib.changes.activation_site_ids():
             self.confirm_site_changes(site_id)
 
-        html.header(
-            self.title(),
-            show_body_start=display_options.enabled(display_options.H),
-            show_top_heading=display_options.enabled(display_options.T))
+        html.header(self.title(),
+                    show_body_start=display_options.enabled(display_options.H),
+                    show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")
 
         html.begin_context_buttons()
@@ -243,11 +239,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       "a permitted user to do it for you."))
 
         forms.end()
-        html.jsbutton(
-            "activate_affected",
-            _("Activate affected"),
-            "cmk.activation.activate_changes(\"affected\")",
-            cssclass="hot")
+        html.jsbutton("activate_affected",
+                      _("Activate affected"),
+                      "cmk.activation.activate_changes(\"affected\")",
+                      cssclass="hot")
         html.jsbutton("activate_selected", _("Activate selected"),
                       "cmk.activation.activate_changes(\"selected\")")
 
@@ -285,8 +280,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _change_table(self):
-        with table_element(
-                "changes", sortable=False, searchable=False, css="changes", limit=None) as table:
+        with table_element("changes", sortable=False, searchable=False, css="changes",
+                           limit=None) as table:
             for _change_id, change in reversed(self._changes):
                 css = []
                 if self._is_foreign(change):
@@ -338,8 +333,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return html.render_a(title, href=url)
 
     def _activation_status(self):
-        with table_element(
-                "site-status", searchable=False, sortable=False, css="activation") as table:
+        with table_element("site-status", searchable=False, sortable=False,
+                           css="activation") as table:
 
             for site_id, site in sort_sites(cmk.gui.watolib.changes.activation_sites()):
                 table.row()
@@ -377,7 +372,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.icon_button(
                         url="javascript:void(0)",
                         id_="activate_%s" % site_id,
-                        cssclass=["activate_site"],
+                        cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
                         icon="need_replicate",
                         onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
@@ -386,7 +381,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     html.icon_button(
                         url="javascript:void(0)",
                         id_="activate_%s" % site_id,
-                        cssclass=["activate_site"],
+                        cssclass="activate_site",
                         title=_(
                             "This site needs a restart for activating the changes. Start it now."),
                         icon="need_restart",
@@ -397,27 +392,27 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 site_url = site.get("multisiteurl")
                 if site_url:
-                    html.icon_button(
-                        site_url,
-                        _("Open this site's local web user interface"),
-                        "url",
-                        target="_blank")
+                    html.icon_button(site_url,
+                                     _("Open this site's local web user interface"),
+                                     "url",
+                                     target="_blank")
 
                 table.text_cell(_("Site"), site.get("alias", site_id))
 
                 # Livestatus
                 table.cell(_("Status"), css="narrow nobr")
-                html.status_label(
-                    content=status, status=status, title=_("This site is %s") % status)
+                html.status_label(content=status,
+                                  status=status,
+                                  title=_("This site is %s") % status)
 
                 # Livestatus-/Check_MK-Version
-                table.cell(
-                    _("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")
+                table.cell(_("Version"),
+                           site_status.get("livestatus_version", ""),
+                           css="narrow nobr")
 
-                table.cell(
-                    _("Changes"),
-                    "%d" % len(self._changes_of_site(site_id)),
-                    css="number narrow nobr")
+                table.cell(_("Changes"),
+                           "%d" % len(self._changes_of_site(site_id)),
+                           css="number narrow nobr")
 
                 table.cell(_("Progress"), css="repprogress")
                 html.open_div(id_="site_%s_status" % site_id, class_=["msg"])

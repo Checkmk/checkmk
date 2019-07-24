@@ -21,14 +21,26 @@ constexpr std::string_view kBakeryMarker =
 enum class Force { no, yes };
 bool UpgradeLegacy(Force force_upgrade = Force::no);
 
-// Intermediate API used in testing
+bool PatchOldFilesWithDatHash();  // the part of engine
+
+// optionally move protocol file from old location to new one
+// return true if location are different
+bool UpdateProtocolFile(std::wstring_view new_location,
+                        std::wstring_view old_location);
+
+// Intermediate API
+// accepts only "checkmk\\agent" ending path as program data
+// return count of files copied
+enum class CopyFolderMode { keep_old, remove_old };
 int CopyAllFolders(const std::filesystem::path& LegacyRoot,
-                   const std::filesystem::path& ProgramData);
+                   const std::filesystem::path& ProgramData,
+                   CopyFolderMode mode);
+
 int CopyRootFolder(const std::filesystem::path& LegacyRoot,
                    const std::filesystem::path& ProgramData);
 
 // INI --------------------------------------------
-// Intermediate API used in testing and indirectly in production
+// Intermediate API used in indirectly in production
 bool ConvertIniFiles(const std::filesystem::path& LegacyRoot,
                      const std::filesystem::path& ProgramData);
 bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
@@ -37,27 +49,37 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
                         const std::filesystem::path& ProgramData,
                         bool LocalFileExists);
 
-// This function will use correct extension and correct sub path
-std::filesystem::path CreateYamlFromIniSmart(
-    const std::filesystem::path IniFile,     // ini file to use
-    const std::filesystem::path Pd,          // directory to send
-    const std::string YamlName,              // name to be used in output
-    bool ForceBakeryFile = false) noexcept;  // in some create bakery!
+std::filesystem::path CreateUserYamlFromIni(
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name                // name to be used in output
+    ) noexcept;
+
+std::filesystem::path CreateBakeryYamlFromIni(
+    const std::filesystem::path& ini_file,      // ini file to use
+    const std::filesystem::path& program_data,  // directory to send
+    const std::string& yaml_name                // name to be used in output
+    ) noexcept;
 
 // after upgrade we create in root our protocol
-bool CreateProtocolFile(std::filesystem::path ProtocolFile,
-                        const std::string_view OptionalContent);
+bool CreateProtocolFile(const std::filesystem::path& dir,
+                        std::string_view OptionalContent);
 // LOW level
 // gtest [+]
 std::optional<YAML::Node> LoadIni(std::filesystem::path File);
 // gtest [+]
-bool StoreYaml(const std::filesystem::path File, const YAML::Node Yaml,
-               const std::string Comment) noexcept;
+bool StoreYaml(const std::filesystem::path& File, YAML::Node Yaml,
+               const std::string& Comment) noexcept;
 // gtest [+]
-bool IsBakeryIni(const std::filesystem::path Path) noexcept;
+bool IsBakeryIni(const std::filesystem::path& Path) noexcept;
 // gtest [+]
-std::string MakeComments(const std::filesystem::path SourceFilePath,
+std::string MakeComments(const std::filesystem::path& SourceFilePath,
                          bool Bakery) noexcept;
+
+[[nodiscard]] bool CreateFolderSmart(const std::filesystem::path& tgt) noexcept;
+bool IsPathProgramData(const std::filesystem::path& program_data);
+[[nodiscard]] bool IsFileNonCompatible(
+    const std::filesystem::path& fname) noexcept;
 // --------------------------------------------
 
 // Intermediate API used in testing
@@ -73,33 +95,56 @@ bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 std::wstring FindLegacyAgent();
 int GetServiceStatusByName(const std::wstring& Name);
 int GetServiceStatus(SC_HANDLE ServiceHandle);
+// this is full-featured function
+// may be used in production as part of top level API
+bool StopWindowsService(std::wstring_view service_name);
 
 bool IsLegacyAgentActive();
 bool ActivateLegacyAgent();
 bool DeactivateLegacyAgent();
-
-// this is full-featured function
-// may be used in production as part of top level API
-bool StopWindowsService(const std::wstring& Name);
 
 // limited function, just to have for testing
 bool StartWindowsService(const std::wstring& Name);
 
 // used to wait for some long starting/stopping drivers
 int WaitForStatus(std::function<int(const std::wstring&)> StatusChecker,
-                  const std::wstring& ServiceName, int ExpectedStatus,
-                  int Time);
+                  std::wstring_view ServiceName, int ExpectedStatus, int Time);
 
 // used to copy folders from legacy agent to programdata
 int CopyFolderRecursive(
-    const std::filesystem::path& Source, const std::filesystem::path& Target,
-    const std::function<bool(std::filesystem::path)>& Predicate) noexcept;
+    const std::filesystem::path& source, const std::filesystem::path& target,
+    std::filesystem::copy_options copy_mode,
+    const std::function<bool(std::filesystem::path)>& predicate) noexcept;
 
 bool RunDetachedProcess(const std::wstring& Name);
 namespace details {
 bool IsIgnoredFile(const std::filesystem::path& filename);
 }
 
+std::filesystem::path ConstructProtocolFileName(
+    const std::filesystem::path& dir) noexcept;
+
+// API to fix hash in 1.5 agent
+constexpr std::string_view kHashName = "hash";
+constexpr std::string_view kIniHashMarker = "# agent hash: ";
+constexpr std::string_view kStateHashMarker = "'installed_aghash': '";
+std::filesystem::path FindOldIni();
+std::filesystem::path FindOldState();
+std::string GetNewHash(const std::filesystem::path& dat) noexcept;
+
+std::string GetOldHashFromIni(const std::filesystem::path& ini) noexcept;
+std::string GetOldHashFromState(const std::filesystem::path& state) noexcept;
+std::string GetOldHashFromFile(const std::filesystem::path& ini,
+                               std::string_view marker) noexcept;
+
+bool PatchHashInFile(const std::filesystem::path& ini, const std::string& hash,
+                     std::string_view marker) noexcept;
+bool PatchIniHash(const std::filesystem::path& ini,
+                  const std::string& hash) noexcept;
+bool PatchStateHash(const std::filesystem::path& ini,
+                    const std::string& hash) noexcept;
+std::filesystem::path FindOwnDatFile();
+std::filesystem::path ConstructDatFileName() noexcept;
 }  // namespace cma::cfg::upgrade
 
 #endif  // upgrade_h__

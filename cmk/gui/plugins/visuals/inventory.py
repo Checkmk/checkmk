@@ -90,7 +90,10 @@ class FilterInvtableTimestampAsAge(Filter):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
+        self._from_varprefix = self.ident + "_from"
+        self._to_varprefix = self.ident + "_to"
+        Filter.__init__(self, self._invinfo,
+                        [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
 
     def display(self):
         html.open_table()
@@ -98,26 +101,28 @@ class FilterInvtableTimestampAsAge(Filter):
         html.open_tr()
         html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.ident + "_from", 0)
+        self._valuespec().render_input(self._from_varprefix, 0)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.ident + "_to", 0)
+        self._valuespec().render_input(self._to_varprefix, 0)
         html.close_td()
         html.close_tr()
 
         html.close_table()
 
+    def _valuespec(self):
+        return Age(display=["days"])
+
     def double_height(self):
         return True
 
     def filter_table_with_conversion(self, rows, conv):
-        from_value = Age().from_html_vars(self.ident + "_from")
-        to_value = Age().from_html_vars(self.ident + "_to")
-
+        from_value = self._valuespec().from_html_vars(self._from_varprefix)
+        to_value = self._valuespec().from_html_vars(self._to_varprefix)
         if not from_value and not to_value:
             return rows
 
@@ -367,8 +372,13 @@ class FilterInvText(Filter):
     def __init__(self):
         Filter.__init__(self, "host", [self.ident], [])
 
+    @property
+    def filtertext(self):
+        "Returns the string to filter"
+        return html.request.var(self.htmlvars[0], "").strip().lower()
+
     def need_inventory(self):
-        return True
+        return bool(self.filtertext)
 
     def display(self):
         htmlvar = self.htmlvars[0]
@@ -376,8 +386,7 @@ class FilterInvText(Filter):
         html.text_input(htmlvar, current_value)
 
     def filter_table(self, rows):
-        htmlvar = self.htmlvars[0]
-        filtertext = html.request.var(htmlvar, "").strip().lower()
+        filtertext = self.filtertext
         if not filtertext:
             return rows
 
@@ -385,7 +394,7 @@ class FilterInvText(Filter):
             regex = re.compile(filtertext, re.IGNORECASE)
         except re.error:
             raise MKUserError(
-                htmlvar,
+                self.htmlvars[0],
                 _('You search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
@@ -418,9 +427,6 @@ class FilterInvFloat(Filter):
     def __init__(self):
         Filter.__init__(self, "host", [self.ident + "_from", self.ident + "_to"], [])
 
-    def need_inventory(self):
-        return True
-
     def display(self):
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
@@ -436,26 +442,23 @@ class FilterInvFloat(Filter):
         if self._unit:
             html.write(self._unit)
 
+    def filter_configs(self):
+        "Returns scaled lower and upper bounds"
+
+        def _scaled_bound(value):
+            try:
+                return float(html.request.var(value)) * self._scale
+            except (TypeError, ValueError):
+                return None
+
+        return [_scaled_bound(val) for val in self.htmlvars[:2]]
+
+    def need_inventory(self):
+        return any(self.filter_configs())
+
     def filter_table(self, rows):
-        fromvar = self.htmlvars[0]
-        fromtext = html.request.var(fromvar)
-        lower = None
-        if fromtext:
-            try:
-                lower = float(fromtext) * self._scale
-            except:
-                pass
-
-        tovar = self.htmlvars[1]
-        totext = html.request.var(tovar)
-        upper = None
-        if totext:
-            try:
-                upper = float(totext) * self._scale
-            except:
-                pass
-
-        if lower is None and upper is None:
+        lower, upper = self.filter_configs()
+        if not any((lower, upper)):
             return rows
 
         newrows = []
@@ -480,7 +483,7 @@ class FilterInvBool(FilterTristate):
         FilterTristate.__init__(self, "host", self.ident)
 
     def need_inventory(self):
-        return True
+        return self.tristate_value() != -1
 
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
@@ -517,7 +520,7 @@ class FilterHasInv(FilterTristate):
         FilterTristate.__init__(self, "host", "host_inventory")
 
     def need_inventory(self):
-        return True
+        return self.tristate_value() != -1
 
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
@@ -559,19 +562,22 @@ class FilterInvHasSoftwarePackage(Filter):
     def double_height(self):
         return True
 
+    @property
+    def filtername(self):
+        return html.get_unicode_input(self._varprefix + "name")
+
     def need_inventory(self):
-        return True
+        return bool(self.filtername)
 
     def display(self):
         html.text_input(self._varprefix + "name")
         html.br()
         html.begin_radio_group(horizontal=True)
         html.radiobutton(self._varprefix + "match", "exact", True, label=_("exact match"))
-        html.radiobutton(
-            self._varprefix + "match",
-            "regex",
-            False,
-            label=_("regular expression, substring match"))
+        html.radiobutton(self._varprefix + "match",
+                         "regex",
+                         False,
+                         label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
         html.write_text(_("Min.&nbsp;Version:"))
@@ -580,13 +586,12 @@ class FilterInvHasSoftwarePackage(Filter):
         html.write_text(_("Max.&nbsp;Vers.:"))
         html.text_input(self._varprefix + "version_to", size=9)
         html.br()
-        html.checkbox(
-            self._varprefix + "negate",
-            False,
-            label=_("Negate: find hosts <b>not</b> having this package"))
+        html.checkbox(self._varprefix + "negate",
+                      False,
+                      label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
-        name = html.get_unicode_input(self._varprefix + "name")
+        name = self.filtername
         if not name:
             return rows
 

@@ -51,6 +51,10 @@ def inventory_netapp_api_volumes(parsed):
         yield volume, {}
 
 
+def _create_key(protocol, mode, field):
+    return "_".join([protocol, mode, field])
+
+
 # Cannot use decorator get_parsed_item_data for this check function due to the
 # specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item, params, parsed):
@@ -72,48 +76,79 @@ def check_netapp_api_volumes(item, params, parsed):
                                                    inodes_avail, params)
 
     counter_wrapped = False
-    counters = []
+    infotexts = []
     now = time.time()
     base = {}
 
     perf_protocols = params.get("perfdata", [])
-    for protocol in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]:
-        if protocol[:-1] not in perf_protocols:
+    for protocol in ["", "nfs", "cifs", "san", "fcp", "iscsi"]:
+        if protocol not in perf_protocols:
             continue
-        for mode in ["read_", "write_", "other_"]:
-            for field, factor, format_text in [
-                ("data", None, None),
-                ("ops", None, "%s: %.2f 1/s"),
-                ("latency", 10000.0, "%s: %.2f ms"),
+        for mode in ["read", "write", "other"]:
+            for field, format_func in [
+                ("data", get_bytes_human_readable),
+                ("ops", lambda x: "%.2f 1/s" % x),
+                ("latency", lambda x: "%s: %.2f ms" % x),
             ]:
-                key = protocol + mode + field
+                key = _create_key(protocol, mode, field)
                 value = volume.get(key)
-                if value is not None:
-                    value = int(value)
-                    try:
-                        delta = get_rate(
-                            "netapp_api_volumes.%s.%s" % (item, key), now, value, onwrap=RAISE)
-                        perf.append((key, delta))
+                if value is None:
+                    continue
 
-                        # Quite hacky.. this base information is used later on by the "latency" field
-                        if field == "ops":
-                            if delta == 0.0:
-                                base[key] = 1.0
-                            else:
-                                base[key] = float(delta)
+                value = int(value)
+                try:
+                    delta = get_rate("netapp_api_volumes.%s.%s" % (item, key),
+                                     now,
+                                     value,
+                                     onwrap=RAISE)
+                except MKCounterWrapped:
+                    counter_wrapped = True
+                    continue
 
-                        if protocol == "" and mode in ["read_", "write_"]:
-                            if factor:
-                                delta = delta / (factor * base[protocol + mode + "ops"])
-                            if format_text:
-                                counters.append(format_text % (key, delta))
-                            else:
-                                counters.append("%s: %s" % (key, get_bytes_human_readable(delta)))
-                    except MKCounterWrapped:
-                        counter_wrapped = True
+                perf.append((key, delta))
+
+                # Quite hacky.. this base information is used later on by the "latency" field
+                if field == "ops":
+                    if delta == 0.0:
+                        base[key] = 1.0
+                    else:
+                        base[key] = float(delta)
+
+                if protocol == "" and mode in ["read", "write"]:
+                    if field == "latency":
+                        # See https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
+                        # for scaling issues:
+                        # read_latency           micro
+                        # write_latency          micro
+                        # other_latency          micro
+                        # nfs_read_latency       micro
+                        # nfs_write_latency      micro
+                        # nfs_other_latency      micro
+                        # cifs_read_latency      micro
+                        # cifs_write_latency     micro
+                        # cifs_other_latency     micro
+                        # san_read_latency       micro
+                        # san_write_latency      micro
+                        # san_other_latency      micro
+                        #
+                        # === 7-Mode environments only ===
+                        # fcp_read_latency       milli
+                        # fcp_write_latency      milli
+                        # fcp_other_latency      milli
+                        # iscsi_read_latency     milli
+                        # iscsi_write_latency    milli
+                        # iscsi_other_latency    milli
+                        #
+                        # FIXME The metric system expects milliseconds but should get seconds
+                        if protocol in ["fcp", "iscsi"]:
+                            divisor = 1.0
+                        else:
+                            divisor = 1000.0
+                        delta = delta / (divisor * base[_create_key(protocol, mode, "ops")])
+                    infotexts.append("%s: %s" % (key, format_func(delta)))
 
     if not counter_wrapped:
-        info += ", " + ", ".join(counters)
+        info += ", " + ", ".join(infotexts)
 
     return state, info, perf
 

@@ -81,7 +81,6 @@ class ModeAutomation(AjaxPage):
     This page is accessible without regular login. The request is authenticated using the given
     login secret that has previously been exchanged during "site login" (see above).
     """
-
     def __init__(self):
         super(ModeAutomation, self).__init__()
 
@@ -114,7 +113,7 @@ class ModeAutomation(AjaxPage):
         # the normal WATO page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
-        with watolib.exclusive_lock():
+        with store.lock_checkmk_configuration():
             watolib.init_wato_datastructures(with_wato_lock=False)
 
             # TODO: Refactor these two calls to also use the automation_command_registry
@@ -166,8 +165,8 @@ class ModeAutomation(AjaxPage):
 
         if our_id is not None and our_id != site_id:
             raise MKGeneralException(
-                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
-                                                                                          site_id))
+                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
 
         profile = html.request.var("profile")
         if not profile:

@@ -33,8 +33,12 @@ def inventory_statgrab_cpu(info):
 def check_statgrab_cpu(_no_item, params, info):
     if not params:
         params = {}
+
     user = 0
     nice = 0
+    system = 0
+    idle = 0
+    iowait = 0
     for var, value in info:
         if var == 'user':
             user = int(value)

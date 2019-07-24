@@ -193,7 +193,6 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
-
     def plugin_base_class(self):
         return UserConnector
 
@@ -210,7 +209,6 @@ user_connector_registry = UserConnectorRegistry()
 class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
-
     def plugin_base_class(self):
         return UserAttribute
 

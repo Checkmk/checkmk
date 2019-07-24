@@ -1,0 +1,73 @@
+#exec 2>&-
+set +xv
+
+export _EDC_ADD_ERRNO2=1
+export PATH=/bin
+
+export MK_LIDIR=/usr/lib/check_mk_agent
+export MK_CONFDIR=/etc/check_mk
+# Make sure, locally installed binaries are found
+PATH=$PATH:/usr/bin
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. Please
+# refer to online documentation for details about local checks.
+LOCALDIR=$MK_LIDIR/local
+
+# All files in SPOOLDIR will simply appended to the agent
+# output if they are not outdated (see below)
+SPOOLDIR=$MK_CONFDIR/spool
+
+echo '<<<check_mk>>>'
+echo 'Version: 1.7.0i1'
+echo 'AgentOS: z/OS'
+echo PluginsDirectory: $PLUGINSDIR
+echo LocalDirectory: $LOCALDIR
+echo SpoolDirectory: $SPOOLDIR
+echo AgentDirectory: $MK_CONFDIR
+
+dir=$(pwd)
+
+
+# Processes
+echo '<<<ps>>>'
+echo 'ps -ef -o user,vsz,vsz64,pcpu,comm' | su | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
+
+# Uptime
+echo '<<<uptime>>>'
+/usr/bin/uptime
+
+
+# Filesystems
+echo '<<<df_zos>>>'
+df -vkP | sed 1d | sed 's/^\s*$/##########/g'
+echo '##########'
+
+
+# Plugins
+if cd $PLUGINSDIR 2>/dev/null
+then
+    for skript in $(ls)
+    do
+        if [ -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+fi
+
+
+# Local checks
+echo '<<<local>>>'
+if cd $LOCALDIR ; then
+    for skript in $(ls) ; do
+        if [ -f "$skript" -a -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+fi

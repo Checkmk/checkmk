@@ -34,20 +34,20 @@ def inventory_brocade_info(info):
 def brocade_info_try_it(info):
     try:
         model = info[0][0][0]
-    except:
+    except Exception:
         model = "-"
     try:
         wwn = info[2][0][0]
         wwn = " ".join(["%02X" % ord(tok) for tok in wwn])
-    except:
+    except Exception:
         wwn = "-"
     try:
         fw = info[1][0][0]
-    except:
+    except Exception:
         fw = "-"
     try:
         ssn = info[1][0][1]
-    except:
+    except Exception:
         ssn = "-"
 
     return model, ssn, fw, wwn

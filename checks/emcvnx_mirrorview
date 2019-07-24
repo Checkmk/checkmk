@@ -94,31 +94,33 @@
 
 def parse_emcvnx_mirrorview(info):
     parsed = {}
+    instance = None
     for line in info:
         if ' '.join(line).startswith("Unable to validate the identity of the server."):
             break
 
         elif line[0] == "MirrorView Name":
             lun_name = line[1].replace("_", " ").replace("Mirror", "").strip()
-            parsed.setdefault(lun_name, {})
+            instance = parsed.setdefault(lun_name, {})
+            continue
 
-        else:
+        if instance is not None:
             if "UID" in line[0]:
                 lun_value = ":".join(line[1:]).strip()
             else:
                 lun_value = " ".join(line[1:]).strip()
 
             if line[0] == "Images":
-                parsed[lun_name].setdefault("Images", {})
+                instance.setdefault("Images", {})
             else:
-                if "Images" in parsed[lun_name]:
+                if "Images" in instance:
                     if line[0] == "Image UID":
                         image_uid = lun_value
-                        parsed[lun_name]["Images"].setdefault(image_uid, {})
+                        instance["Images"].setdefault(image_uid, {})
                     else:
-                        parsed[lun_name]["Images"][image_uid][line[0]] = lun_value
+                        instance["Images"][image_uid][line[0]] = lun_value
                 else:
-                    parsed[lun_name][line[0]] = lun_value
+                    instance[line[0]] = lun_value
     return parsed
 
 

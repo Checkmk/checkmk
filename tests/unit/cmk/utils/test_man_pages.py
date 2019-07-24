@@ -68,7 +68,7 @@ def test_all_man_pages(tmpdir):
 def test_load_all_man_pages():
     for name in man_pages.all_man_pages().keys():
         man_page = man_pages.load_man_page(name)
-        assert type(man_page) == dict
+        assert isinstance(man_page, dict)
         _check_man_page_structure(man_page)
 
 
@@ -86,23 +86,23 @@ def test_print_man_page_table(capsys):
 
 def man_page_catalog_titles():
     titles = man_pages.man_page_catalog_titles()
-    assert type(titles) == dict
+    assert isinstance(titles, dict)
     assert "hw" in titles
     assert "os" in titles
 
 
 def test_load_man_page_catalog():
     catalog = man_pages.load_man_page_catalog()
-    assert type(catalog) == dict
+    assert isinstance(catalog, dict)
 
     for path, entries in catalog.items():
-        assert type(path) == tuple
-        assert type(entries) == list
+        assert isinstance(path, tuple)
+        assert isinstance(entries, list)
 
         # TODO: Test for unknown paths?
 
         for entry in entries:
-            assert type(entry) == dict
+            assert isinstance(entry, dict)
 
             # Test for non fallback man pages
             assert "Cannot parse man page" not in entry["title"]
@@ -142,10 +142,9 @@ def test_find_missing_manpages():
 
     import cmk_base.check_api as check_api
     config.load_all_checks(check_api.get_check_api_context)
-    checks_sorted = [ (name, entry) for (name, entry) in config.check_info.items()
+    checks_sorted = sorted([ (name, entry) for (name, entry) in config.check_info.items()
                       if not _is_pure_section_declaration(entry) ] + \
-       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ]
-    checks_sorted.sort()
+       [ ("check_" + name, entry) for (name, entry) in config.active_check_info.items() ])
     assert len(checks_sorted) > 1000
 
     for check_plugin_name, check in checks_sorted:
@@ -175,20 +174,20 @@ def _check_man_page_structure(page):
         assert key in page["header"]
 
     if "configuration" in page:
-        assert type(page["configuration"]) == list
+        assert isinstance(page["configuration"], list)
 
     if "parameters" in page:
-        assert type(page["parameters"]) == list
+        assert isinstance(page["parameters"], list)
 
     if "inventory" in page:
-        assert type(page["inventory"]) == list
+        assert isinstance(page["inventory"], list)
 
-    assert type(page["header"]["agents"]) == list
+    assert isinstance(page["header"]["agents"], list)
 
 
 def test_load_man_page_format():
     page = man_pages.load_man_page("if64")
-    assert type(page) == dict
+    assert isinstance(page, dict)
 
     _check_man_page_structure(page)
 

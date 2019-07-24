@@ -1,0 +1,68 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_seh_ports(info):
+    parsed = {}
+    for oid_end, tag, status, port_number in info[0]:
+        oid_index = oid_end.split('.')[0]
+        if tag != u"":
+            parsed.setdefault(oid_index, {}).update(tag=tag)
+        if port_number != "0":
+            parsed.setdefault(port_number, {}).update(status=status)
+    return parsed
+
+
+def inventory_seh_ports(parsed):
+    for key, port in parsed.iteritems():
+        yield key, {"status_at_discovery": port.get("status")}
+
+
+@get_parsed_item_data
+def check_seh_ports(item, params, data):
+    for key in ("tag", "status"):
+        if key in data:
+            yield 0, "%s: %s" % (key.title(), data[key])
+
+    if params.get("status_at_discovery") != data.get("status"):
+        yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")
+
+
+check_info['seh_ports'] = {
+    "parse_function": parse_seh_ports,
+    "inventory_function": inventory_seh_ports,
+    "check_function": check_seh_ports,
+    "service_description": "Port %s",
+    "snmp_info": [(
+        ".1.3.6.1.4.1.1229.2.50.2.1",
+        [
+            OID_END,
+            "10",  #PortTag
+            "26",  #Connection status
+            "27",  #UTN slot number
+        ])],
+    "snmp_scan_function": lambda oid: '.1.3.6.1.4.1.1229.1.1' in oid(".1.3.6.1.2.1.1.2.0"),
+}

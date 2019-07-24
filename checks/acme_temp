@@ -58,12 +58,11 @@ def check_acme_temp(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
-            return check_temperature(
-                float(value_str),
-                params,
-                "acme_temp.%s" % item,
-                dev_status=dev_state,
-                dev_status_name=dev_state_readable)
+            return check_temperature(float(value_str),
+                                     params,
+                                     "acme_temp.%s" % item,
+                                     dev_status=dev_state,
+                                     dev_status_name=dev_state_readable)
 
 
 check_info['acme_temp'] = {

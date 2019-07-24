@@ -138,8 +138,9 @@ class RulespecCheckgroupParametersDiskstat(CheckParameterRulespecWithItem):
                      unit=_("ms"),
                      default_levels=(80.0, 160.0),
                  )),
-                ("read_wait", Levels(
-                    title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
+                ("read_wait", Levels(title=_("Read wait"),
+                                     unit=_("ms"),
+                                     default_levels=(30.0, 50.0))),
                 ("write_wait",
                  Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
                 ("average",

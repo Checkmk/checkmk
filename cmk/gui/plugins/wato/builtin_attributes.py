@@ -32,7 +32,8 @@ import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
+
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     HostAddress,
@@ -64,7 +65,9 @@ from cmk.gui.plugins.wato import (
     HostAttributeTopicNetworkScan,
     HostAttributeTopicAddress,
     HostAttributeTopicManagementBoard,
+    HostAttributeTopicCustomAttributes,
     HostAttributeTopicMetaData,
+    HostAttributeTopicDataSources,
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,
     host_attribute_registry,
@@ -79,6 +82,10 @@ from cmk.gui.plugins.wato import (
 class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
+
+    @classmethod
+    def sort_index(cls):
+        return 10
 
     def name(self):
         return "alias"
@@ -100,6 +107,10 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
 class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicAddress
+
+    @classmethod
+    def sort_index(cls):
+        return 30
 
     def name(self):
         return "ipaddress"
@@ -135,6 +146,10 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicAddress
 
+    @classmethod
+    def sort_index(cls):
+        return 40
+
     def name(self):
         return "ipv6address"
 
@@ -169,6 +184,10 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicAddress
 
+    @classmethod
+    def sort_index(cls):
+        return 50
+
     def name(self):
         return "additional_ipv4addresses"
 
@@ -198,6 +217,10 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicAddress
 
+    @classmethod
+    def sort_index(cls):
+        return 60
+
     def name(self):
         return "additional_ipv6addresses"
 
@@ -225,7 +248,11 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 @host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicDataSources
+
+    @classmethod
+    def sort_index(cls):
+        return 70
 
     def name(self):
         return "snmp_community"
@@ -258,6 +285,10 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
+    @classmethod
+    def sort_index(cls):
+        return 80
+
     def show_in_table(self):
         return True
 
@@ -278,7 +309,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             orientation="horizontal",
         )
 
-    def is_visible(self, for_what):
+    def is_visible(self, for_what, new):
         return for_what != "cluster"
 
     def to_nagios(self, value):
@@ -330,6 +361,10 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def topic(self):
         return HostAttributeTopicNetworkScan
+
+    @classmethod
+    def sort_index(cls):
+        return 90
 
     def show_in_table(self):
         return False
@@ -437,19 +472,25 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _get_criticality_choices(self):
         """Returns the current configuration of the tag_group criticality"""
+        cache_id = "criticality_choices"
+
+        if cache_id in current_app.g:
+            return current_app.g[cache_id]
+
         tags = cmk.utils.tags.TagConfig()
         tags.parse_config(watolib.TagConfigFile().load_for_reading())
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:
+            current_app.g[cache_id] = []
             return []
-        return criticality_group.get_tag_choices()
+
+        current_app.g[cache_id] = criticality_group.get_tag_choices()
+        return current_app.g[cache_id]
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""
-        tags = cmk.utils.tags.TagConfig()
-        tags.parse_config(watolib.TagConfigFile().load_for_reading())
-        criticality_group = tags.get_tag_group("criticality")
-        if not criticality_group:
+        choices = self._get_criticality_choices()
+        if not choices:
             return []
 
         return [("tag_criticality",
@@ -458,7 +499,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                      help=_("Added hosts will be created as \"offline\" host by default. You "
                             "can change this option to activate monitoring of new hosts after "
                             "next activation of the configuration after the scan."),
-                     choices=self._get_criticality_choices,
+                     choices=choices,
                      default_value="offline",
                  ))]
 
@@ -506,6 +547,10 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
 
     def topic(self):
         return HostAttributeTopicNetworkScan
+
+    @classmethod
+    def sort_index(cls):
+        return 100
 
     def show_in_table(self):
         return False
@@ -600,6 +645,10 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicManagementBoard
 
+    @classmethod
+    def sort_index(cls):
+        return 110
+
     def show_in_table(self):
         return False
 
@@ -623,6 +672,10 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
     def topic(self):
         return HostAttributeTopicManagementBoard
+
+    @classmethod
+    def sort_index(cls):
+        return 120
 
     def show_in_table(self):
         return False
@@ -650,6 +703,10 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
     def topic(self):
         return HostAttributeTopicManagementBoard
+
+    @classmethod
+    def sort_index(cls):
+        return 130
 
     def show_in_table(self):
         return False
@@ -686,6 +743,10 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicManagementBoard
 
+    @classmethod
+    def sort_index(cls):
+        return 140
+
     def show_in_table(self):
         return False
 
@@ -706,6 +767,10 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
     def topic(self):
         return HostAttributeTopicBasicSettings
+
+    @classmethod
+    def sort_index(cls):
+        return 20
 
     def show_in_table(self):
         return True
@@ -743,11 +808,18 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicMetaData
 
+    @classmethod
+    def sort_index(cls):
+        return 160
+
     def show_in_table(self):
         return False
 
     def show_in_form(self):
         return True
+
+    def show_on_create(self):
+        return False
 
     def show_in_folder(self):
         return False
@@ -798,11 +870,18 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicMetaData
 
+    @classmethod
+    def sort_index(cls):
+        return 170
+
     def show_in_table(self):
         return False
 
     def show_in_form(self):
         return True
+
+    def show_on_create(self):
+        return False
 
     def show_in_folder(self):
         return False
@@ -832,11 +911,18 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicMetaData
 
+    @classmethod
+    def sort_index(cls):
+        return 155
+
     def show_in_table(self):
         return False
 
     def show_in_form(self):
         return True
+
+    def show_on_create(self):
+        return False
 
     def show_in_folder(self):
         return True
@@ -888,7 +974,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                     ),
                 ),
             ],
-            title=_("Meta data"),
+            title=_("Created"),
             optional_keys=[],
         )
 
@@ -902,7 +988,11 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return _("Labels")
 
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicCustomAttributes
+
+    @classmethod
+    def sort_index(cls):
+        return 190
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

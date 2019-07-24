@@ -43,6 +43,8 @@ from cmk.gui.plugins.metrics import (
     TB,
     m,
     parse_color_into_hexrgb,
+    MAX_CORES,
+    indexed_color,
 )
 
 # TODO Graphingsystem:
@@ -111,7 +113,7 @@ unit_info["%"] = {
     "title": _("%"),
     "description": _("Percentage (0...100)"),
     "symbol": _("%"),
-    "render": lambda v: cmk.utils.render.percent(v, precision=3),
+    "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True),
 }
 
 unit_info["s"] = {
@@ -267,7 +269,7 @@ unit_info["ppm"] = {
 unit_info["%/m"] = {
     "title": _("Percent Per Meter"),
     "symbol": _("%/m"),
-    "render": lambda v: cmk.utils.render.percent(v, precision=3) + _("/m"),
+    "render": lambda v: cmk.utils.render.percent(v, scientific_notation=True) + _("/m"),
 }
 
 unit_info["bar"] = {
@@ -301,6 +303,12 @@ unit_info['bytes/op'] = {
     "render": cmk.utils.render.fmt_bytes,
 }
 
+unit_info['EUR'] = {
+    "title": _("Euro"),
+    "symbol": u"€",
+    "render": lambda v: u"%s €" % v,
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -314,71 +322,7 @@ unit_info['bytes/op'] = {
 #   '----------------------------------------------------------------------'
 
 # Title are always lower case - except the first character!
-
-# Colors:
-#
-#                   red
-#  magenta                       orange
-#            11 12 13 14 15 16
-#         46                   21
-#         45                   22
-#   blue  44                   23  yellow
-#         43                   24
-#         42                   25
-#         41                   26
-#            36 35 34 33 32 31
-#     cyan                       yellow-green
-#                  green
-#
-# Special colors:
-# 51  gray
-# 52  brown 1
-# 53  brown 2
-#
-# For a new metric_info you have to choose a color. No more hex-codes are needed!
-# Instead you can choose a number of the above color ring and a letter 'a' or 'b
-# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
-# Both number and letter must be declared!
-#
-# Example:
-# "color" : "23/a" (basic color yellow)
-# "color" : "23/b" (nuance of color yellow)
-#
-# As an alternative you can call indexed_color with a color index and the maximum
-# number of colors you will need to generate a color. This function tries to return
-# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
-# have stronger contrast than the colors at idx 3 and idx 10.
-
-# retrieve an indexed color.
-# param idx: the color index
-# param total: the total number of colors needed in one graph.
-COLOR_WHEEL_SIZE = 48
-
-
-def indexed_color(idx, total):
-    if idx < COLOR_WHEEL_SIZE:
-        # use colors from the color wheel if possible
-        base_col = (idx % 4) + 1
-        tone = ((idx / 4) % 6) + 1
-        if idx % 8 < 4:
-            shade = "a"
-        else:
-            shade = "b"
-        return "%d%d/%s" % (base_col, tone, shade)
-    else:
-        # generate distinct rgb values. these may be ugly ; also, they
-        # may overlap with the colors from the wheel
-        idx = idx - COLOR_WHEEL_SIZE
-        base_color = idx % 7  # red, green, blue, red+green, red+blue,
-        # green+blue, red+green+blue
-        delta = 255 / ((total - COLOR_WHEEL_SIZE) / 7)
-        offset = 255 - (delta * ((idx / 7) + 1))
-
-        red = int(base_color in [0, 3, 4, 6])
-        green = int(base_color in [1, 3, 5, 6])
-        blue = int(base_color in [2, 4, 5, 6])
-        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
-
+# Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
 MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
 
@@ -1471,6 +1415,18 @@ metric_info["fs_provisioning"] = {
     "color": "#ff8000",
 }
 
+metric_info["uncommitted"] = {
+    "title": _("Uncommitted"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
+metric_info["overprovisioned"] = {
+    "title": _("Overprovisioned"),
+    "unit": "bytes",
+    "color": "24/a",
+}
+
 metric_info["temp"] = {
     "title": _("Temperature"),
     "unit": "c",
@@ -1671,8 +1627,6 @@ metric_info["cpu_entitlement_util"] = {
     "unit": "",
     "color": "#FF5555",
 }
-
-MAX_CORES = 128
 
 for i in range(MAX_CORES):
     # generate different colors for each core.
@@ -2085,6 +2039,18 @@ metric_info["disk_latency"] = {
     "title": _("Average disk latency"),
     "unit": "s",
     "color": "#c04080",
+}
+
+metric_info["disk_read_latency"] = {
+    "title": _("Disk read latency"),
+    "unit": "s",
+    "color": "#40c080",
+}
+
+metric_info["disk_write_latency"] = {
+    "title": _("Disk write latency"),
+    "unit": "s",
+    "color": "#4080c0",
 }
 
 metric_info["read_latency"] = {
@@ -3713,6 +3679,48 @@ metric_info["harddrive_udma_crc_errors"] = {
     "color": "46/a",
 }
 
+metric_info["nvme_media_and_data_integrity_errors"] = {
+    "title": _("Media and data integrity errors"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["nvme_error_information_log_entries"] = {
+    "title": _("Error information log entries"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["nvme_critical_warning"] = {
+    "title": _("Critical warning"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["nvme_available_spare"] = {
+    "title": _("Available Spare"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["nvme_spare_percentage_used"] = {
+    "title": _("Percentage used"),
+    "unit": "%",
+    "color": "24/a",
+}
+
+metric_info["nvme_data_units_read"] = {
+    "title": _("Data units read"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["nvme_data_units_written"] = {
+    "title": _("Data units written"),
+    "unit": "bytes",
+    "color": "24/a",
+}
+
 metric_info["ap_devices_total"] = {
     "title": _("Total devices"),
     "unit": "count",
@@ -4597,13 +4605,13 @@ metric_info["emcvnx_dedupl_shared_capacity"] = {
 metric_info["docker_all_containers"] = {
     "title": _("Number of containers"),
     "unit": "count",
-    "color": "11/a",
+    "color": "43/a",
 }
 
 metric_info["docker_running_containers"] = {
     "title": _("Running containers"),
     "unit": "count",
-    "color": "21/a",
+    "color": "31/a",
 }
 
 metric_info["ready_containers"] = {
@@ -4615,13 +4623,13 @@ metric_info["ready_containers"] = {
 metric_info["docker_paused_containers"] = {
     "title": _("Paused containers"),
     "unit": "count",
-    "color": "31/a",
+    "color": "24/a",
 }
 
 metric_info["docker_stopped_containers"] = {
     "title": _("Stopped containers"),
     "unit": "count",
-    "color": "41/a",
+    "color": "14/a",
 }
 
 metric_info["docker_count"] = {
@@ -4639,13 +4647,13 @@ metric_info["docker_active"] = {
 metric_info["docker_size"] = {
     "title": _("Size"),
     "unit": "bytes",
-    "color": "31/a",
+    "color": "41/a",
 }
 
 metric_info["docker_reclaimable"] = {
     "title": _("Reclaimable"),
     "unit": "bytes",
-    "color": "41/a",
+    "color": "31/a",
 }
 
 metric_info["k8s_nodes"] = {
@@ -5529,6 +5537,12 @@ metric_info['aws_elbv2_load_balancer_target_groups'] = {
     'color': '35/a',
 }
 
+metric_info['service_costs_eur'] = {
+    'title': _('Service Costs per Day'),
+    'unit': 'EUR',
+    'color': '35/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",
@@ -5659,6 +5673,204 @@ metric_info["vcsw"] = {
     "title": _("Virtual context switches"),
     "unit": "%",
     "color": "22/a",
+}
+
+metric_info["job_total"] = {
+    "title": _("Total number of jobs"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["failed_jobs"] = {
+    "title": _("Total number of failed jobs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["zombie_jobs"] = {
+    "title": _("Total number of zombie jobs"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["splunk_slave_usage_bytes"] = {
+    "title": _("Slave usage bytes across all pools"),
+    "unit": "bytes",
+    "color": "11/a",
+}
+
+metric_info["fired_alerts"] = {
+    "title": _("Number of fired alerts"),
+    "unit": "count",
+    "color": "22/a",
+}
+
+metric_info["elasticsearch_size_avg"] = {
+    "title": _("Average size growth"),
+    "unit": "bytes",
+    "color": "33/a",
+}
+
+metric_info["elasticsearch_size_rate"] = {
+    "title": _("Size growth per minute"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["elasticsearch_size"] = {
+    "title": _("Total size"),
+    "unit": "bytes",
+    "color": "31/b",
+}
+
+metric_info["elasticsearch_count_avg"] = {
+    "title": _("Average document count growth"),
+    "unit": "count",
+    "color": "45/a",
+}
+
+metric_info["elasticsearch_count_rate"] = {
+    "title": _("Document count growth per minute"),
+    "unit": "count",
+    "color": "43/a",
+}
+
+metric_info["elasticsearch_count"] = {
+    "title": _("Total documents"),
+    "unit": "count",
+    "color": "43/b",
+}
+
+metric_info["active_primary_shards"] = {
+    "title": _("Active primary shards"),
+    "unit": "count",
+    "color": "21/b",
+}
+
+metric_info["active_shards"] = {
+    "title": _("Active shards"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["active_shards_percent_as_number"] = {
+    "title": _("Active shards in percent"),
+    "unit": "%",
+    "color": "22/a",
+}
+
+metric_info["number_of_data_nodes"] = {
+    "title": _("Data nodes"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["delayed_unassigned_shards"] = {
+    "title": _("Delayed unassigned shards"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["initializing_shards"] = {
+    "title": _("Initializing shards"),
+    "unit": "count",
+    "color": "52/a",
+}
+
+metric_info["number_of_nodes"] = {
+    "title": _("Nodes"),
+    "unit": "count",
+    "color": "43/a",
+}
+
+metric_info["number_of_pending_tasks"] = {
+    "title": _("Pending tasks"),
+    "unit": "count",
+    "color": "53/a",
+}
+
+metric_info["number_of_pending_tasks_rate"] = {
+    "title": _("Pending tasks delta"),
+    "unit": "count",
+    "color": "14/b",
+}
+
+metric_info["number_of_pending_tasks_avg"] = {
+    "title": _("Average pending tasks delta"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["relocating_shards"] = {
+    "title": _("Relocating shards"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info["task_max_waiting_in_queue_millis"] = {
+    "title": _("Maximum wait time of all tasks in queue"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["unassigned_shards"] = {
+    "title": _("Unassigned shards"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["number_of_in_flight_fetch"] = {
+    "title": _("Ongoing shard info requests"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["open_file_descriptors"] = {
+    "title": _("Open file descriptors"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["max_file_descriptors"] = {
+    "title": _("Max file descriptors"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["cpu_percent"] = {
+    "title": _("CPU used"),
+    "unit": "%",
+    "color": "16/a",
+}
+
+metric_info["cpu_total_in_millis"] = {
+    "title": _("CPU total in ms"),
+    "unit": "1/s",
+    "color": "26/a",
+}
+
+metric_info["mem_total_virtual_in_bytes"] = {
+    "title": _("Total virtual memory"),
+    "unit": "bytes",
+    "color": "53/a",
+}
+
+metric_info["flush_time"] = {
+    "title": _("Flush time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
+metric_info["flushed"] = {
+    "title": _("Flushes"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["avg_flush_time"] = {
+    "title": _("Average flush time"),
+    "unit": "s",
+    "color": "31/a",
 }
 
 #.
@@ -6403,6 +6615,9 @@ df_translation = {
         "name": "fs_used",
         "scale": MB
     },
+    "fs_used": {
+        "scale": MB
+    },
     "fs_size": {
         "scale": MB
     },
@@ -6422,6 +6637,12 @@ df_translation = {
     },
     "trend_hoursleft": {
         "scale": 3600,
+    },
+    "uncommitted": {
+        "scale": MB,
+    },
+    "overprovisioned": {
+        "scale": MB,
     },
 }
 
@@ -6447,6 +6668,7 @@ check_metrics["check_mk-fast_lta_silent_cubes.capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_volumes"] = df_translation
+check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
@@ -6463,6 +6685,7 @@ check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats.fs"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
 check_metrics["check_mk-lvm_lvs"] = df_translation
+check_metrics["check_mk-fjdarye200_pools"] = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
@@ -6478,6 +6701,9 @@ for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
 check_metrics["check_mk-netapp_api_volumes"] = {
     "~(?!%s).*$" % "|".join(df_netapp_perfvarnames): {
         "name": "fs_used",
+        "scale": MB
+    },
+    "fs_used": {
         "scale": MB
     },
     "fs_size": {
@@ -7489,6 +7715,12 @@ check_metrics["check_mk-arcserve_backup"] = {
     }
 }
 
+check_metrics["check_mk-oracle_longactivesessions"] = {
+    "count": {
+        "name": "oracle_count",
+    },
+}
+
 check_metrics["check_mk-oracle_rman"] = {
     "age": {
         "name": "backup_age"
@@ -7692,7 +7924,7 @@ check_metrics["check_mk-smart.stats"] = {
         "scale": 3600
     },
     "Power_Cycle_Count": {
-        "name": "harddrive_power_cycle"
+        "name": "harddrive_power_cycles"
     },
     "Reallocated_Sector_Ct": {
         "name": "harddrive_reallocated_sectors"
@@ -7717,6 +7949,30 @@ check_metrics["check_mk-smart.stats"] = {
     },
     "UDMA_CRC_Error_Count": {
         "name": "harddrive_udma_crc_errors"
+    },
+    "Power_Cycles": {
+        "name": "harddrive_power_cycles"
+    },
+    "Media_and_Data_Integrity_Errors": {
+        "name": "nvme_media_and_data_integrity_errors"
+    },
+    "Error_Information_Log_Entries": {
+        "name": "nvme_error_information_log_entries"
+    },
+    "Critical_Warning": {
+        "name": "nvme_critical_warning"
+    },
+    "Available_Spare": {
+        "name": "nvme_available_spare"
+    },
+    "Percentage_Used": {
+        "name": "nvme_spare_percentage_used"
+    },
+    "Data_Units_Read": {
+        "name": "nvme_data_units_read"
+    },
+    "Data_Units_Written": {
+        "name": "nvme_data_units_written"
     },
 }
 
@@ -8039,6 +8295,13 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
+    "metric": "oracle_count",
+    "half_value": 250,
+    "exponent": 2,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
     "metric": "database_apply_lag",
     "half_value": 2500,
     "exponent": 2,
@@ -8241,6 +8504,37 @@ perfometer_info.append({
     ],
     "total": 100,
     "label": ("fs_used(%)", "%"),
+})
+
+# Filesystem check without overcommittment
+perfometer_info.append({
+    "type": "linear",
+    "condition": "fs_used,uncommitted,+,fs_size,<",
+    "segments": [
+        "fs_used",
+        "uncommitted",
+        "fs_size,fs_used,-,uncommitted,-#e3fff9",  # free
+        "0.1#559090",  # fs_size marker
+    ],
+    "total": "fs_size",
+    "label": ("fs_used(%)", "%"),
+})
+
+# Filesystem check with overcommittment
+perfometer_info.append({
+    "type": "linear",
+    "condition": "fs_used,uncommitted,+,fs_size,>=",
+    "segments": [
+        "fs_used",
+        "fs_size,fs_used,-#e3fff9",  # free
+        "0.1#559090",  # fs_size marker
+        "overprovisioned,fs_size,-#ffa000",  # overcommittment
+    ],
+    "total": "overprovisioned",
+    "label": (
+        "fs_used,fs_used,uncommitted,+,/,100,*",  # percent used scaled
+        "%",
+    ),
 })
 
 # Filesystem without over-provisioning
@@ -8793,13 +9087,12 @@ perfometer_info.append({
         "metric": "mail_queue_deferred_length",
         "half_value": 10000,
         "exponent": 5,
-    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "mail_queue_active_length",
-                        "half_value": 10000,
-                        "exponent": 5,
-                    }],
+    }, {
+        "type": "logarithmic",
+        "metric": "mail_queue_active_length",
+        "half_value": 10000,
+        "exponent": 5,
+    }],
 })
 
 perfometer_info.append({
@@ -9080,6 +9373,59 @@ perfometer_info.append({
     "color": "16/a",
 })
 
+perfometer_info.append(("stacked", [{
+    "type": "logarithmic",
+    "metric": "elasticsearch_size_rate",
+    "half_value": 5000,
+    "exponent": 2,
+}, {
+    "type": "logarithmic",
+    "metric": "elasticsearch_count_rate",
+    "half_value": 10,
+    "exponent": 2,
+}]))
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "number_of_pending_tasks_rate",
+    "half_value": 10,
+    "exponent": 2,
+    "unit": "count",
+})
+
+perfometer_info.append(("dual", [{
+    "type": "linear",
+    "segments": ["active_primary_shards"],
+    "total": "active_shards",
+}, {
+    "type": "linear",
+    "segments": ["active_shards"],
+    "total": "active_shards",
+}]))
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["active_shards_percent_as_number"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": [
+        "docker_running_containers",
+        "docker_paused_containers",
+        "docker_stopped_containers",
+    ],
+    "total": "docker_all_containers",
+})
+
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'docker_size',
+    'half_value': GB,
+    'exponent': 2.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9237,6 +9583,12 @@ graph_info["threadpool"] = {
     ],
 }
 
+graph_info["disk_rw_latency"] = {
+    "title": _("Disk latency"),
+    "metrics": [("disk_read_latency", "area"), ("disk_write_latency", "-area")],
+}
+
+# TODO: is this still used?
 graph_info["disk_latency"] = {
     "title": _("Disk latency"),
     "metrics": [("read_latency", "area"), ("write_latency", "-area")],
@@ -9358,6 +9710,32 @@ graph_info["replicas"] = {
     "scalars": ["ready_replicas:crit",]
 }
 
+graph_info["docker_containers"] = {
+    "title": _("Docker Containers"),
+    "metrics": [
+        ("docker_running_containers", "area"),
+        ("docker_paused_containers", "stack"),
+        ("docker_stopped_containers", "stack"),
+        ("docker_all_containers", "line"),
+    ],
+}
+
+graph_info["docker_df"] = {
+    "title": _("Docker Disk Usage"),
+    "metrics": [
+        ("docker_size", "area"),
+        ("docker_reclaimable", "area"),
+    ],
+}
+
+graph_info["docker_df_count"] = {
+    "title": _("Docker Disk Usage Count"),
+    "metrics": [
+        ("docker_count", "area"),
+        ("docker_active", "area"),
+    ],
+}
+
 graph_info["used_cpu_time"] = {
     "title": _("Used CPU Time"),
     "metrics": [
@@ -9457,7 +9835,6 @@ graph_info["util_average_1"] = {
         "util:crit",
     ],
     "range": ("util:min", "util:max"),
-    "optional_metrics": ["util_average"],
 }
 
 graph_info["util_average_2"] = {
@@ -9506,6 +9883,10 @@ graph_info["cpu_utilization_4"] = {
     "range": (0, 100),
 }
 
+# The following 6 graphs come in pairs.
+# If possible, we display the "util" metric,
+# otherwise we display the sum of the present metrics.
+
 graph_info["cpu_utilization_5"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -9513,6 +9894,23 @@ graph_info["cpu_utilization_5"] = {
         ("system", "stack"),
         ("io_wait", "stack"),
         ("user,system,io_wait,+,+#004080", "line", _("Total")),
+    ],
+    "conflicting_metrics": [
+        "util",
+        "idle",
+        "cpu_util_guest",
+        "cpu_util_steal",
+    ],
+    "range": (0, 100),
+}
+
+graph_info["cpu_utilization_5_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("util#004080", "line", _("Total")),
     ],
     "conflicting_metrics": [
         "cpu_util_guest",
@@ -9530,6 +9928,23 @@ graph_info["cpu_utilization_6"] = {
         ("cpu_util_steal", "stack"),
         ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total")),
     ],
+    "conflicting_metrics": [
+        "util",
+        "cpu_util_guest",
+    ],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+
+graph_info["cpu_utilization_6_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_steal", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
     "conflicting_metrics": ["cpu_util_guest",],
     "omit_zero_metrics": True,
     "range": (0, 100),
@@ -9545,9 +9960,26 @@ graph_info["cpu_utilization_7"] = {
         ("cpu_util_steal", "stack"),
         ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total")),
     ],
+    "conflicting_metrics": ["util",],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
+
+graph_info["cpu_utilization_7_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("cpu_util_steal", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+
+# ^-- last six graphs go pairwise together (see above)
 
 graph_info["cpu_utilization_8"] = {
     "title": _("CPU utilization"),
@@ -9557,6 +9989,19 @@ graph_info["cpu_utilization_8"] = {
         ("interrupt", "stack"),
     ],
     "range": (0, 100),
+}
+
+graph_info["util_fallback"] = {
+    "metrics": [("util", "area"),],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
+    "range": ("util:min", "util:max"),
+    "conflicting_metrics": [
+        "util_average",
+        "system",
+    ],
 }
 
 graph_info["cpu_entitlement"] = {
@@ -10481,7 +10926,7 @@ register_netapp_api_vs_traffic_graphs()
 graph_info["harddrive_health_statistic"] = {
     "title": _("Harddrive health statistic"),
     "metrics": [
-        ("harddrive_power_cycle", "stack"),
+        ("harddrive_power_cycles", "stack"),
         ("harddrive_reallocated_sectors", "stack"),
         ("harddrive_reallocated_events", "stack"),
         ("harddrive_spin_retries", "stack"),
@@ -10950,5 +11395,13 @@ graph_info["nodes_by_type"] = {
     "metrics": [
         ("number_of_nodes", "area"),
         ("number_of_data_nodes", "area"),
+    ],
+}
+
+graph_info["active_shards"] = {
+    "title": _("Active shards"),
+    "metrics": [
+        ("active_shards", "area"),
+        ("active_primary_shards", "area"),
     ],
 }

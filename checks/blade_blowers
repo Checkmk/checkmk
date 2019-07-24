@@ -81,7 +81,7 @@ def check_blade_blowers(item, _no_params, info):
         rpm = int(info[blower - 1 + 2 * num_blowers][0])
         perfdata += [("rpm", rpm)]
         output += 'Speed at %d RMP' % rpm
-    except:
+    except Exception:
         pass
 
     try:
@@ -91,7 +91,7 @@ def check_blade_blowers(item, _no_params, info):
             output += 'Speed is at %d%% of max' % perc
         else:
             output += ' (%d%% of max)' % perc
-    except:
+    except Exception:
         pass
 
     if state == "1":

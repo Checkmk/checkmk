@@ -27,7 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
-    Checkbox,
+    DropdownChoice,
     Dictionary,
     Integer,
     Optional,
@@ -50,38 +50,6 @@ cpu_util_common_dict = Dictionary(
            "Note that not all parameters you can configure here are applicable "
            "to all checks."),
     elements=[
-        ("average",
-         Integer(
-             title=_("Averaging"),
-             help=_("When this option is activated then the CPU utilization is being "
-                    "averaged <b>before</b> the levels are being applied."),
-             unit=_("minutes"),
-             minvalue=1,
-             default_value=15,
-             label=_("Compute average over last "),
-         )),
-        ("levels_single",
-         Tuple(
-             title=_("Levels on single cores"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=90.0),
-                 Percentage(title=_("Critical at"), default_value=95.0)
-             ],
-             help=_("Here you can set levels on the CPU utilization on single cores"),
-         )),
-        ("util",
-         Levels(
-             title=_("Levels on total CPU utilization"),
-             unit="%",
-             default_levels=(90, 95),
-             default_difference=(5, 8),
-             default_value=None,
-             help=_(
-                 "The CPU utilization sums up the percentages of CPU time that is used "
-                 "for user processes, kernel routines (system), disk wait (sometimes also "
-                 "called IO wait) or nothing (idle). The levels are always applied "
-                 "on the average utiliazation since the last check - which is usually one minute."),
-         )),
         ("core_util_time_total",
          Tuple(
              title=_("Levels over an extended time period on total CPU utilization"),
@@ -96,35 +64,57 @@ cpu_util_common_dict = Dictionary(
                  "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
              ))),
         ("core_util_time",
+         Tuple(title=_("Levels over an extended time period on a single core CPU utilization"),
+               elements=[
+                   Percentage(title=_("High utilization at "), default_value=100.0),
+                   Age(title=_("Warning after "), default_value=5 * 60),
+                   Age(title=_("Critical after "), default_value=15 * 60),
+               ],
+               help=_("A single thread fully utilizing a single core (potentially due to a bug) "
+                      "may go unnoticed when only monitoring the total utilization of the CPU. "
+                      "With this configuration, check_mk will alert if a single core is "
+                      "exceeding a utilization threshold over an extended period of time."
+                      "This is currently only supported on linux and windows agents "
+                      "as well as devices monitored through the host-resource mib"))),
+        ("average",
+         Integer(
+             title=_("Averaging for total CPU utilization"),
+             help=_(
+                 "When this option is activated then the CPU utilization is being "
+                 "averaged <b>before</b> the levels on total CPU utilization are being applied."),
+             unit=_("minutes"),
+             minvalue=1,
+             default_value=15,
+             label=_("Compute average over last "),
+         )),
+        ("util",
+         Levels(
+             title=_("Levels on total CPU utilization"),
+             unit="%",
+             default_levels=(90, 95),
+             default_difference=(5, 8),
+             default_value=None,
+             help=_(
+                 "The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes, kernel routines (system), disk wait (sometimes also "
+                 "called IO wait) or nothing (idle). The levels are always applied "
+                 "on the average utilization since the last check - which is usually one minute."),
+         )),
+        ("levels_single",
          Tuple(
-             title=_("Levels over an extended time period on a single core CPU utilization"),
+             title=_("Levels on single cores"),
              elements=[
-                 Percentage(title=_("High utilization at "), default_value=100.0),
-                 Age(title=_("Warning after "), default_value=5 * 60),
-                 Age(title=_("Critical after "), default_value=15 * 60),
+                 Percentage(title=_("Warning at"), default_value=90.0),
+                 Percentage(title=_("Critical at"), default_value=95.0)
              ],
-             help=_("A single thread fully utilizing a single core (potentially due to a bug) "
-                    "may go unnoticed when only monitoring the total utilization of the CPU. "
-                    "With this configuration, check_mk will alert if a single core is "
-                    "exceeding a utilization threshold over an extended period of time."
-                    "This is currently only supported on linux and windows agents "
-                    "as well as devices monitored through the host-resource mib"))),
-        ("core_util_graph",
-         Checkbox(
-             title=_("Graphs for individual cores"),
-             label=_("Enable performance graph for utilization of individual cores"),
-             help=_("This adds another graph to the performance CPU utilization "
-                    "details page, showing utilization of individual cores. "
-                    "Please note that this graph may be impractical on "
-                    "device with very many cores. "
-                    "This is currently only supported on linux and windows agents "
-                    "as well as devices monitored through the host-resource mib"))),
+             help=_("Here you can set levels on the CPU utilization on single cores"),
+         )),
         ("iowait",
          Tuple(
-             title=_("Levels on disk wait (IO wait)"),
+             title=_("Levels on IO wait (UNIX only)"),
              elements=[
-                 Percentage(title=_("Warning at a disk wait of"), default_value=30.0),
-                 Percentage(title=_("Critical at a disk wait of"), default_value=50.0)
+                 Percentage(title=_("Warning at a disk wait of"), default_value=5.0),
+                 Percentage(title=_("Critical at a disk wait of"), default_value=10.0)
              ],
              help=_(
                  "The disk wait is the total percentage of time all CPUs have nothing else to do but waiting "
@@ -133,12 +123,27 @@ cpu_util_common_dict = Dictionary(
                  "applications being run this might or might not be totally normal."))),
         ("steal",
          Tuple(
-             title=_("Levels on steal CPU utilization"),
+             title=_("Levels on steal CPU utilization (UNIX only)"),
              elements=[
                  Percentage(title=_("Warning at a steal time of"), default_value=30.0),
                  Percentage(title=_("Critical at a steal time of"), default_value=50.0)
              ],
              help=_("Here you can set levels on the steal CPU utilization."),
+         )),
+        ("core_util_graph",
+         DropdownChoice(
+             title=_("Graphs for individual cores"),
+             help=_("This adds another graph to the performance CPU utilization "
+                    "details page, showing utilization of individual cores. "
+                    "Please note that this graph may be impractical on "
+                    "device with very many cores. "
+                    "This is currently only supported on linux and windows agents "
+                    "as well as devices monitored through the host-resource mib"),
+             choices=[
+                 (True, _("Enable")),
+                 (False, _("Disable")),
+             ],
+             default_value=True,
          )),
     ],
 )
@@ -162,7 +167,7 @@ class RulespecCheckgroupParametersCpuUtilizationOs(CheckParameterRulespecWithout
 
     @property
     def title(self):
-        return _("CPU utilization")
+        return _("CPU utilization for simple devices")
 
     @property
     def match_type(self):
@@ -194,7 +199,7 @@ class RulespecCheckgroupParametersCpuIowait(CheckParameterRulespecWithoutItem):
 
     @property
     def title(self):
-        return _("CPU utilization (legacy)")
+        return _("CPU utilization on Linux/UNIX")
 
     @property
     def match_type(self):

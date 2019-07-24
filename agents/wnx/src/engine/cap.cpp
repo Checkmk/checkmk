@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include "cfg.h"
@@ -259,80 +260,85 @@ bool NeedReinstall(const std::filesystem::path Target,
 }
 
 // returns true when changes had been done
-bool ReinstallCaps(const std::filesystem::path TargetCap,
-                   const std::filesystem::path SourceCap) {
+bool ReinstallCaps(const std::filesystem::path target_cap,
+                   const std::filesystem::path source_cap) {
     bool changed = false;
     namespace fs = std::filesystem;
     std::error_code ec;
     std::vector<std::wstring> files_left;
-    if (fs::exists(TargetCap, ec)) {
+    if (fs::exists(target_cap, ec)) {
         if (true ==
-            Process(TargetCap.u8string(), ProcMode::remove, files_left)) {
-            XLOG::l.t("File '{}' uninstall-ed", TargetCap.u8string());
-            fs::remove(TargetCap, ec);
+            Process(target_cap.u8string(), ProcMode::remove, files_left)) {
+            XLOG::l.t("File '{}' uninstall-ed", target_cap.u8string());
+            fs::remove(target_cap, ec);
             for (auto &name : files_left)
                 XLOG::l.i("\tRemoved '{}'", wtools::ConvertToUTF8(name));
             changed = true;
         }
     } else
         XLOG::l.t("File '{}' is absent, skipping uninstall",
-                  TargetCap.u8string());
+                  target_cap.u8string());
 
     files_left.clear();
-    if (fs::exists(SourceCap, ec)) {
+    if (fs::exists(source_cap, ec)) {
         if (true ==
-            Process(SourceCap.u8string(), ProcMode::install, files_left)) {
-            XLOG::l.t("File {} installed", SourceCap.u8string());
-            fs::copy_file(SourceCap, TargetCap, ec);
+            Process(source_cap.u8string(), ProcMode::install, files_left)) {
+            XLOG::l.t("File '{}' installed", source_cap.u8string());
+            fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
                 XLOG::l.i("\tAdded '{}'", wtools::ConvertToUTF8(name));
             changed = true;
         }
     } else
-        XLOG::l.t("File {} is absent, skipping install", SourceCap.u8string());
+        XLOG::l.t("File '{}' is absent, skipping install",
+                  source_cap.u8string());
 
     return changed;
 }
 
-bool ReinstallIni(const std::filesystem::path TargetIni,
-                  const std::filesystem::path SourceIni) {
+bool ReinstallIni(const std::filesystem::path target_ini,
+                  const std::filesystem::path source_ini) {
     namespace fs = std::filesystem;
     std::error_code ec;
 
+    auto packaged_agent = IsIniFileFromInstaller(source_ini);
+    if (packaged_agent)
+        XLOG::l.i(
+            "This is PACKAGED AGENT,"
+            "upgrading ini to the bakery.yml skipped");
+
     // remove old files
     auto bakery_yml = cma::cfg::GetBakeryFile();
-    fs::remove(bakery_yml, ec);
-    fs::remove(TargetIni, ec);
+    if (!packaged_agent) fs::remove(bakery_yml, ec);
+    fs::remove(target_ini, ec);
 
     // generate new
-    if (fs::exists(SourceIni)) {
+    if (!fs::exists(source_ini, ec)) return true;
+
+    if (!packaged_agent) {
         cma::cfg::cvt::Parser p;
         p.prepare();
-        p.readIni(SourceIni.u8string(), false);
+        p.readIni(source_ini.u8string(), false);
         auto yaml = p.emitYaml();
 
         std::ofstream ofs(bakery_yml, std::ios::binary);
         if (ofs) {
-            ofs << cma::cfg::upgrade::MakeComments(SourceIni, true);
+            ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
             ofs << yaml;
         }
         ofs.close();
-        fs::copy_file(SourceIni, TargetIni, ec);
     }
+    fs::copy_file(source_ini, target_ini, ec);
 
     return true;
 }
 
-void Install() {
-    using namespace cma::cfg;
-    using namespace cma::cfg::cap;
+static void InstallCapFile() {
     namespace fs = std::filesystem;
-
-    fs::path target_cap = cma::cfg::GetUserDir();
-    target_cap /= dirs::kCapInstallDir;
+    fs::path target_cap = cma::cfg::GetUserInstallDir();
     target_cap /= files::kCapFile;
-    fs::path source_cap = cma::cfg::GetRootDir();
-    source_cap /= dirs::kCapInstallDir;
+
+    fs::path source_cap = cma::cfg::GetFileInstallDir();
     source_cap /= files::kCapFile;
 
     XLOG::l.t("Installing cap file '{}'", source_cap.u8string());
@@ -343,15 +349,16 @@ void Install() {
     } else
         XLOG::l.t(
             "Installing of CAP file is not required, the file is already installed");
+}
 
-    fs::path target_ini = cma::cfg::GetUserDir();
-    target_ini /= dirs::kCapInstallDir;
+static void InstallIniFile() {
+    namespace fs = std::filesystem;
+
+    fs::path target_ini = cma::cfg::GetUserInstallDir();
     target_ini /= files::kIniFile;
-    fs::path source_ini = cma::cfg::GetRootDir();
-    source_ini /= dirs::kCapInstallDir;
+    fs::path source_ini = cma::cfg::GetFileInstallDir();
     source_ini /= files::kIniFile;
 
-    std::error_code ec;
     XLOG::l.t("Installing ini file '{}'", source_ini.u8string());
     if (NeedReinstall(target_ini, source_ini)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_ini.u8string(),
@@ -360,6 +367,85 @@ void Install() {
     } else
         XLOG::l.t(
             "Installing of INI file is not required, the file is already installed");
+}
+
+static void PrintInstallCopyLog(std::string_view info_on_error,
+                                std::filesystem::path in_file,
+                                std::filesystem::path out_file,
+                                const std::error_code &ec) noexcept {
+    if (ec.value() == 0)
+        XLOG::l.i("\tSuccess");
+    else
+        XLOG::d("\t{} in '{}' out '{}' error [{}] '{}'", info_on_error,
+                in_file.u8string(), out_file.u8string(), ec.value(),
+                ec.message());
+}
+
+static std::string KillTrailingCR(std::string &&message) {
+    if (!message.empty() && message.back() == '\n') message.pop_back();
+    if (!message.empty() && message.back() == '\r') message.pop_back();  // win
+    return std::move(message);
+}
+
+// true when copy or copy not required
+// false on error
+bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
+                       std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
+                       std::wstring_view source_dir)  // @root/install
+    noexcept {
+    namespace fs = std::filesystem;
+
+    std::error_code ec;
+    fs::path target_file = target_dir;
+    if (!fs::is_directory(target_dir, ec)) {
+        XLOG::l.i("Target Folder '{}' is suspicious [{}] '{}'",
+                  target_file.u8string(), ec.value(),
+                  KillTrailingCR(ec.message()));
+        return false;
+    }
+
+    target_file /= filename;
+    fs::path source_file = source_dir;
+    source_file /= filename;
+
+    XLOG::l.t("Copy file '{}' to '{}'", source_file.u8string(),
+              target_file.u8string());
+
+    if (!fs::exists(source_file, ec)) {
+        // special case, no source file => remove target file
+        fs::remove(target_file, ec);
+        PrintInstallCopyLog("Remove failed", source_file, target_file, ec);
+        return true;
+    }
+
+    if (!cma::tools::IsValidRegularFile(source_file)) {
+        XLOG::l.i("File '{}' is bad", source_file.u8string());
+        return false;
+    }
+
+    if (NeedReinstall(target_file, source_file)) {
+        XLOG::l.i("Reinstalling '{}' with '{}'", target_file.u8string(),
+                  source_file.u8string());
+
+        fs::copy_file(source_file, target_file,
+                      fs::copy_options::overwrite_existing, ec);
+        PrintInstallCopyLog("Copy failed", source_file, target_file, ec);
+    } else
+        XLOG::l.t("Copy is not required, the file is already exists");
+    return true;
+}
+
+void Install() {
+    using namespace cma::cfg;
+    using namespace cma::cfg::cap;
+
+    InstallCapFile();
+    InstallIniFile();
+
+    auto source = GetFileInstallDir();
+
+    InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source);
+    InstallFileAsCopy(files::kUserYmlFile, GetUserDir(), source);
 }
 
 }  // namespace cma::cfg::cap

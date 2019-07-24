@@ -10,6 +10,10 @@ RUN yum -y --enablerepo=extras install \
     centos-release-scl-rh \
     && yum -y install \
     curl \
+    && curl http://mirror.ghettoforge.org/distributions/gf/el/6/plus/x86_64/rsync-3.1.2-1.gf.el6.x86_64.rpm --output rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && rpm -i rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && rm rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    && yum -y install \
     dpkg \
     enchant \
     gcc \
@@ -17,8 +21,6 @@ RUN yum -y --enablerepo=extras install \
     krb5-devel \
     make \
     mysql-devel \
-    nodejs \
-    npm \
     openldap-devel \
     postfix \
     python27 \
@@ -29,10 +31,12 @@ RUN yum -y --enablerepo=extras install \
     vim \
     which
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-    && scl enable python27 'python get-pip.py'
-RUN scl enable python27 'pip install --upgrade setuptools virtualenv' \
-    && scl enable python27 'pip install git+https://github.com/pypa/pipenv.git'
+    && scl enable python27 'python get-pip.py' \
+    && scl enable python27 'pip install --upgrade setuptools virtualenv' \
+    && scl enable python27 'pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a' \
+    && curl -sL https://rpm.nodesource.com/setup_10.x | bash -
 RUN yum -y install \
+    nodejs \
     $PACKAGES \
     && yum clean all
 

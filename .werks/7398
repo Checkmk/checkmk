@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1554962632
 
 Due to an inconsistent parameter format, the default parameters could not be displayed during discovery.

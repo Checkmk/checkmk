@@ -59,27 +59,26 @@ class RulespecCheckgroupParametersHuaweiOsnLaser(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('levels_low_in',
-                 Tuple(
-                     title=_('Levels for laser input'),
-                     default_value=(-160.0, -180.0),
-                     elements=[
-                         Integer(title=_("Warning below")),
-                         Integer(title=_("Critical below")),
-                     ],
-                 )),
-                ('levels_low_out',
-                 Tuple(
-                     title=_('Levels for laser output'),
-                     default_value=(-160.0, -180.0),
-                     elements=[
-                         Integer(title=_("Warning below")),
-                         Integer(title=_("Critical below")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('levels_low_in',
+             Tuple(
+                 title=_('Levels for laser input'),
+                 default_value=(-160.0, -180.0),
+                 elements=[
+                     Integer(title=_("Warning below")),
+                     Integer(title=_("Critical below")),
+                 ],
+             )),
+            ('levels_low_out',
+             Tuple(
+                 title=_('Levels for laser output'),
+                 default_value=(-160.0, -180.0),
+                 elements=[
+                     Integer(title=_("Warning below")),
+                     Integer(title=_("Critical below")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

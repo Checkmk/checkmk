@@ -263,10 +263,10 @@ def mocked_ldap():
         # encoding. The latter want's to have byte encoded strings and MockLdap
         # wants unicode strings :-/. Prepare the data we normally send to
         # python-ldap for MockLdap here.
-        if type(base) != unicode:
+        if not isinstance(base, unicode):
             base = base.decode("utf-8")
 
-        if type(filterstr) != unicode:
+        if not isinstance(filterstr, unicode):
             filterstr = filterstr.decode("utf-8")
 
         return self.search(base, scope, filterstr, attrlist, attrsonly)
@@ -352,7 +352,7 @@ def test_group_base_dn_not_exists(mocked_ldap, monkeypatch):
 
 
 def test_locked_attributes(mocked_ldap):
-    assert set(mocked_ldap.locked_attributes()) == set(['alias', 'password', 'locked', 'email'])
+    assert set(mocked_ldap.locked_attributes()) == {'alias', 'password', 'locked', 'email'}
 
 
 def test_multisite_attributes(mocked_ldap):

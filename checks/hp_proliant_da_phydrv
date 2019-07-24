@@ -42,18 +42,19 @@ hp_proliant_da_phydrv_status = {
     1: 'other',
     2: 'ok',
     3: 'failed',
-    4: 'predictiveFailure',
+    4: 'predictive failure',
     5: 'erasing',
-    6: 'eraseDone',
-    7: 'eraseQueued',
-    8: 'ssdWearOut',
-    9: 'notAuthenticated',
+    6: 'erase done',
+    7: 'erase queued',
+    8: 'SSD wear out',
+    9: 'not authenticated',
 }
 
 hp_proliant_da_phydrv_smart_status = {
     1: 'other',
     2: 'ok',
-    3: 'replaceDrive',
+    3: 'replace drive',
+    4: 'replace drive SSD wear out',
 }
 
 
@@ -66,7 +67,7 @@ def check_hp_proliant_da_phydrv(item, _no_params, info):
         # First condition is for legacy discovered services
         if line[1] == item or (line[0] + '/' + line[1]) == item:
             _cntlr_index, _index, bay, status, ref_hours, size, condition, \
-                bus_number, smart_status = line
+                bus_number, smart_status, _model, _serial, _ty, _fw = line
 
             snmp_status = hp_proliant_da_phydrv_status[int(status)]
 
@@ -78,7 +79,6 @@ def check_hp_proliant_da_phydrv(item, _no_params, info):
                 'Smart status: %s, Ref hours: %s, Size: %sMB, Condition: %s' %
                 (bay, bus_number, snmp_status,
                  hp_proliant_da_phydrv_smart_status[int(smart_status)], ref_hours, size, condition))
-    return (3, "item not found in snmp data")
 
 
 check_info["hp_proliant_da_phydrv"] = {
@@ -98,6 +98,10 @@ check_info["hp_proliant_da_phydrv"] = {
             "37",  # CPQIDA-MIB::cpqDaPhyDrvCondition
             "50",  # CPQIDA-MIB::cpqDaPhyDrvBusNumber
             "57",  # CPQIDA-MIB::cpqDaPhyDrvSmartStatus
+            "3",  # CPQIDA-MIB::cpqDaPhyDrvModel
+            "51",  # CPQIDA-MIB::cpqDaPhyDrvSerialNum
+            "60",  # CPQIDA-MIB::pqDaPhyDrvType
+            "4",  # CPQIDA-MIB::cpqDaPhyDrvFWRev
         ]),
     'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

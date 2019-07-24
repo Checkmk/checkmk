@@ -178,10 +178,11 @@ def _update_mongodb_history_lifetime(settings, config, mongodb):
 
 
 def _mongodb_next_id(mongodb, name, first_id=0):
-    ret = mongodb.db.counters.find_and_modify(
-        query={'_id': name}, update={'$inc': {
-            'seq': 1
-        }}, new=True)
+    ret = mongodb.db.counters.find_and_modify(query={'_id': name},
+                                              update={'$inc': {
+                                                  'seq': 1
+                                              }},
+                                              new=True)
 
     if not ret:
         # Initialize the index!
@@ -247,8 +248,8 @@ def _get_mongodb(history, query):
         elif operator_name == 'in':
             mongo_filter = {'$in': argument}
         else:
-            raise Exception(
-                'Filter operator of filter %s not implemented for MongoDB archive' % column_name)
+            raise Exception('Filter operator of filter %s not implemented for MongoDB archive' %
+                            column_name)
 
         if column_name[:6] == 'event_':
             query['event.' + column_name[6:]] = mongo_filter

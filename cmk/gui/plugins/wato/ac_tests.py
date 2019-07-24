@@ -176,6 +176,12 @@ class ACTestLivestatusUsage(ACTest):
         )
 
         usage, threads, active_connections, overflows_rate = site_status
+
+        # Microcore has an averaged usage pre-calculated. The Nagios core does not have this column.
+        # Calculate a non averaged usage instead
+        if usage is None:
+            usage = float(active_connections) / float(threads)
+
         usage_perc = 100 * usage
 
         usage_warn, usage_crit = 80, 95
@@ -186,10 +192,12 @@ class ACTestLivestatusUsage(ACTest):
         else:
             cls = ACResultOK
 
-        yield cls(
-            _("The current livestatus usage is %.2f%%. You have a connection overflow "
-              "rate of %.2f/s. %d of %d connections used") % (usage_perc, overflows_rate,
-                                                              active_connections, threads))
+        yield cls(_("The current livestatus usage is %.2f%%") % usage_perc)
+        yield cls(_("%d of %d connections used") % (active_connections, threads))
+
+        # Only available with Microcore
+        if overflows_rate is not None:
+            yield cls(_("You have a connection overflow rate of %.2f/s") % overflows_rate)
 
 
 @ac_test_registry.register
@@ -230,7 +238,7 @@ class ACTestTmpfs(ACTest):
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':
                     return True
-            except:
+            except Exception:
                 continue
         return False
 

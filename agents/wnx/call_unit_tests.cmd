@@ -29,7 +29,5 @@ goto end
 :error
 popd
 powershell Write-Host "Unit test failed" -Foreground Red 
-powershell Write-Host "Killing msi in artefacts" -Foreground Red 
-del %REMOTE_MACHINE%\check_mk_service.msi
 exit 100
 :end

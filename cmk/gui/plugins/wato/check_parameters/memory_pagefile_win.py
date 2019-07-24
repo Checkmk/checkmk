@@ -118,10 +118,7 @@ class RulespecCheckgroupParametersMemoryPagefileWin(CheckParameterRulespecWithou
                                 # -> need hide option in filesize valuespec
                                 back=lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
                                 forth=lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)),
-                            PredictiveLevels(
-                                title=_("Predictive levels"),
-                                unit=_("GB"),
-                                default_difference=(0.5, 1.0))
+                            PredictiveLevels(unit=_("GB"), default_difference=(0.5, 1.0))
                         ],
                         default_value=(80.0, 90.0))),
                 ("average",

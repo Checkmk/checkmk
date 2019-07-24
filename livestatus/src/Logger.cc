@@ -183,7 +183,7 @@ Logger *LogManager::lookup(const std::string &name, Logger *parent) {
     return it->second.get();
 }
 
-LogManager LogManager::_global_log_manager;
+LogManager LogManager::global_log_manager;
 
 // -----------------------------------------------------------------------------
 

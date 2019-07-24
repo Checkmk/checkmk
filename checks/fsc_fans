@@ -24,26 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-def inventory_fsc_fans(info):
-    return [(line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
-            for line in info
-            if int(line[1]) > 0]
+factory_settings['fsc_fans_default_levels'] = {
+    'lower': (2000, 1000),
+}
 
 
-def check_fsc_fans(item, params, info):
+def parse_fsc_fans(info):
+    parsed = {}
+    for fan_name, rpm_str in info:
+        try:
+            rpm = int(rpm_str)
+        except ValueError:
+            continue
+        parsed.setdefault(fan_name, rpm)
+    return parsed
+
+
+def inventory_fsc_fans(parsed):
+    return [(fan_name, {}) for fan_name in parsed.iterkeys()]
+
+
+@get_parsed_item_data
+def check_fsc_fans(item, params, data):
     if isinstance(params, tuple):
         params = {'lower': params}
-
-    for line in info:  # , value1, value2 in info:
-        name = line[0]
-        if name != item:
-            continue
-        rpm = int(line[1])
-        return check_fan(rpm, params)
+    return check_fan(data, params)
 
 
 check_info["fsc_fans"] = {
+    'parse_function': parse_fsc_fans,
     'inventory_function': inventory_fsc_fans,
     'check_function': check_fsc_fans,
     'service_description': 'FSC %s',
@@ -52,4 +61,5 @@ check_info["fsc_fans"] = {
     'has_perfdata': True,
     'group': "hw_fans",
     'includes': ['fan.include', 'fsc.include'],
+    'default_levels_variable': 'fsc_fans_default_levels',
 }

@@ -24,9 +24,9 @@
 
 #include "LogwatchListColumn.h"
 #include <algorithm>
+#include <filesystem>
 #include <iterator>
 #include <ostream>
-#include "FileSystem.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "Row.h"
@@ -47,27 +47,27 @@ std::vector<std::string> LogwatchListColumn::getValue(
         return {};
     }
     try {
-        if (fs::exists(dir)) {
+        if (std::filesystem::exists(dir)) {
             std::vector<std::string> filenames;
-            auto it = fs::directory_iterator(dir);
+            auto it = std::filesystem::directory_iterator(dir);
             std::transform(begin(it), end(it), std::back_inserter(filenames),
                            [](const auto &entry) {
                                return entry.path().filename().string();
                            });
             return filenames;
         }
-    } catch (const fs::filesystem_error &e) {
+    } catch (const std::filesystem::filesystem_error &e) {
         Warning(logger()) << name() << ": " << e.what();
     }
     return {};
 }
 
-fs::path LogwatchListColumn::getDirectory(Row row) const {
+std::filesystem::path LogwatchListColumn::getDirectory(Row row) const {
     auto logwatch_path = _mc->mkLogwatchPath();
     auto host_name = getHostName(row);
     return logwatch_path.empty() || host_name.empty()
-               ? fs::path()
-               : fs::path(logwatch_path) / pnp_cleanup(host_name);
+               ? std::filesystem::path()
+               : std::filesystem::path(logwatch_path) / pnp_cleanup(host_name);
 }
 
 std::string LogwatchListColumn::getHostName(Row row) const {

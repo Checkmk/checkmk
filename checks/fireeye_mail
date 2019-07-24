@@ -248,12 +248,11 @@ factory_settings['received_levels'] = {'rate': (6000, 7000)}
 
 def check_fireeye_mail_received(no_item, params, info):
     start, end, received = info[0][13:16]
-    warn, crit = params.get('rate')
-    infotext = 'Mails received between %s and %s: %s' % \
-        (start.split(' ')[1], end.split(' ')[1], received)
-    perf_counter = 'mail_received_rate'
-    received = int(received) * 60
-    return fireeye_check_generic(infotext, perf_counter, received, warn, crit)
+    yield 0, 'Mails received between %s and %s: %s' % (start, end, received)
+    start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
+    end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
+    rate = float(received) / (end_timestamp - start_timestamp)
+    yield check_levels(rate, 'mail_received_rate', params.get('rate'), unit='/s', infoname='Rate')
 
 
 check_info['fireeye_mail.received'] = {

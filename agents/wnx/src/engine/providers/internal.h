@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "carrier.h"
-
 #include "section_header.h"
 
 namespace cma::srv {
@@ -73,7 +72,7 @@ public:
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
     std::string generateContent(const std::string_view& SectionName,
-                                bool ForceGeneration = false) const;
+                                bool ForceGeneration = false);
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const;
@@ -85,11 +84,20 @@ public:
     virtual void registerCommandLine(const std::string& CmdLine);
 
     virtual void preStart() noexcept {}
+    uint64_t errorCount() const { return error_count_; }
+    uint64_t resetError() { return error_count_.exchange(0); }
+
+    char separator() const { return separator_; }
 
 protected:
-    bool headerless_;  // if true no makeHeader called during content generation
-    // may change the time when next request is possible
-    void updateDelayTime();
+    // conditionally(depending from the name of section) sets delay after error
+    void setupDelayOnFail() noexcept;
+
+    void setHeaderless() { headerless_ = true; }
+
+    // to stop section from rerunning during time defined in setupDelayOnFail
+    // usually related to the openhardware monitor
+    void disableSectionTemporary();
 
     bool sendGatheredData(const std::string& CommandLine);
     virtual std::string makeHeader(const std::string_view SectionName) const {
@@ -98,11 +106,9 @@ protected:
                                        : SectionName,
                                    separator_);
     }
-    virtual std::string makeBody() const = 0;
+    virtual std::string makeBody() = 0;
 
     const std::string uniq_name_;  // unique identification of section provider
-    std::string ip_;
-    char separator_;
 
     cma::carrier::CoreCarrier carrier_;  // transport
     std::chrono::time_point<std::chrono::steady_clock> allowed_from_time_;
@@ -114,11 +120,20 @@ protected:
 
     int timeout_;  // may be set in...
     bool enabled_;
+    // optional API to store info about errors used, for example by OHM
+    uint64_t registerError() { return error_count_.fetch_add(1); }
+
+private:
+    bool headerless_;  // if true no makeHeader called during content generation
+    std::string ip_;
+    char separator_;
+    std::atomic<uint64_t> error_count_ = 0;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
-    FRIEND_TEST(ProviderTest, BasicWmi);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, BasicWmi);
+    FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
 #endif
 };
 

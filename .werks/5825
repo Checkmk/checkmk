@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1529314447
 
 Werk 6053 broke synchronisation of personal user settings to slave sites. This has been fixed.

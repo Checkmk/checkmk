@@ -54,6 +54,60 @@ if_default_traffic_levels = None, None
 if_default_average = None
 if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken devices
 
+Interface = collections.namedtuple("Interface", [
+    "ifIndex",
+    "ifGroup",
+    "ifDescr",
+    "ifType",
+    "ifSpeed",
+    "ifOperStatus",
+    "ifOperStatusName",
+    "ifInOctets",
+    "inucast",
+    "inmcast",
+    "inbcast",
+    "ifInDiscards",
+    "ifInErrors",
+    "ifOutOctets",
+    "outucast",
+    "outmcast",
+    "outbcast",
+    "ifOutDiscards",
+    "ifOutErrors",
+    "ifOutQLen",
+    "ifAlias",
+    "ifPhysAddress",
+])
+
+
+def interface_from(line):
+    (ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast,
+     ifInDiscards, ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards,
+     ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress) = line
+
+    # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
+    # of just the ifOperStatus
+    if isinstance(ifOperStatus, tuple):
+        ifOperStatus, ifOperStatusName = ifOperStatus
+    else:
+        ifOperStatusName = if_statename(ifOperStatus)
+
+    ifGroup = None
+    if isinstance(ifIndex, tuple):
+        ifGroup, ifIndex = ifIndex
+
+    # Fix bug in TP Link switches
+    ifSpeed = saveint(ifSpeed)
+    if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
+        ifSpeed /= 1000000
+
+    ifDescr = cleanup_if_strings(ifDescr)
+    ifAlias = cleanup_if_strings(ifAlias)
+    return Interface(ifIndex, ifGroup, ifDescr, ifType, ifSpeed, ifOperStatus, ifOperStatusName,
+                     ifInOctets, inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets,
+                     outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias,
+                     ifPhysAddress)
+
 
 #
 #    +-----------------------------------------------------------------------------+
@@ -107,7 +161,7 @@ def cleanup_if_strings(s):
 def tryint(x):
     try:
         return int(x)
-    except:
+    except (TypeError, ValueError):
         return x
 
 
@@ -302,6 +356,38 @@ def _prepare_if_group_patterns_from_conf():
     return group_patterns
 
 
+def _uses_description_and_alias(settings):
+    uses_description = settings.get('use_desc', if_inventory_uses_description)
+    if uses_description:
+        return True, False
+
+    uses_alias = settings.get('use_alias', if_inventory_uses_alias)
+    if uses_alias:
+        return False, True
+
+    item_appearance = settings.get('item_appearance', if_inventory_uses_description)
+    if item_appearance == 'descr':
+        return True, False
+    if item_appearance == 'alias':
+        return False, True
+    return False, False
+
+
+def _group_pattern_matches(host_name, item, if_type, group_attributes):
+    if host_name not in group_attributes["group_patterns"]:
+        return False
+
+    group_iftype = group_attributes["group_patterns"][host_name].get("iftype")
+    if group_iftype is not None and saveint(group_iftype) != saveint(if_type):
+        return False
+
+    group_items = group_attributes["group_patterns"][host_name].get("items")
+    if group_items is not None and tryint(item) not in map(tryint, group_items):
+        return False
+
+    return True
+
+
 def inventory_if_common(info, has_nodeinfo=False):
     if has_nodeinfo:
         length = 21
@@ -327,11 +413,11 @@ def inventory_if_common(info, has_nodeinfo=False):
                 return True
         return False
 
+    current_host_name = host_name()
     group_patterns = _prepare_if_group_patterns_from_conf()
     for settings in settings_sets:
         global_seen_items = set()
-        uses_description = settings.get('use_desc', if_inventory_uses_description)
-        uses_alias = settings.get('use_alias', if_inventory_uses_alias)
+        uses_description, uses_alias = _uses_description_and_alias(settings)
         # Need to copy porttypes as the discovery function appends to the list below.
         # The check must not modify the global if_inventory_porttypes configuration variable.
         porttypes = settings.get('porttypes', if_inventory_porttypes)[:]
@@ -347,121 +433,78 @@ def inventory_if_common(info, has_nodeinfo=False):
         # Determine whether single, grouped or both
         for line in info:
             _node, line = if_extract_node(line, has_nodeinfo)
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, _ifInOctets, \
-                _inucast, _inmcast, _inbcast, _ifInDiscards, _ifInErrors, _ifOutOctets, \
-                _outucast, _outmcast, _outbcast, _ifOutDiscards, _ifOutErrors, \
-                _ifOutQLen, ifAlias, _ifPhysAddress = line
-
-            # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-            # of just the ifOperStatus
-            if isinstance(ifOperStatus, tuple):
-                ifOperStatus = ifOperStatus[0]
-
-            ifGroup = None
-            if isinstance(ifIndex, tuple):
-                ifGroup, ifIndex = ifIndex
-
-            ifDescr = cleanup_if_strings(ifDescr)
-            ifAlias = cleanup_if_strings(ifAlias)
+            interface = interface_from(line)
 
             # Fix bug in brocade switches
-            if ifIndex == '':
+            if interface.ifIndex == '':
                 continue
 
-            # Fix bug in TP Link switches
-            ifSpeed = saveint(ifSpeed)
-            if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
-                ifSpeed /= 1000000
-
             # compute item now - also for unmonitored ports - in order to see if it is unique.
-            if uses_description and ifDescr:
-                item = ifDescr
-            elif uses_alias and ifAlias:
-                item = ifAlias
+            if uses_description and interface.ifDescr:
+                item = interface.ifDescr
+            elif uses_alias and interface.ifAlias:
+                item = interface.ifAlias
             else:
-                item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
+                item = if_pad_with_zeroes(info, interface.ifIndex, has_nodeinfo, pad_portnumbers)
 
             if item not in global_seen_items:
                 global_seen_items.add(item)
             else:
                 duplicates.add(item)
 
-            current_host_name = host_name()
-
             # Prepare grouped interfaces
-            is_only_in_group = False
+            discover_single_interface = True
             for group_name, attrs in group_patterns.items():
-                group_type = attrs["group_type"]
-                group_presence = attrs["group_presence"]
-
-                if current_host_name not in attrs["group_patterns"]:
+                if not _group_pattern_matches(current_host_name, item, interface.ifType, attrs):
                     continue
 
-                p_node_items = attrs["group_patterns"][current_host_name].get("items")
-                p_iftype = attrs["group_patterns"][current_host_name].get("iftype")
+                if attrs["group_presence"] == "instead":
+                    discover_single_interface = False
 
-                # Interfaces can be grouped by item or iftype
-                match_type = True
-                if p_iftype is not None and saveint(p_iftype) != saveint(ifType):
-                    match_type = False
-
-                match_item = True
-                if p_node_items is not None and not tryint(item) in map(tryint, p_node_items):
-                    match_item = False
-
-                if not (match_item and match_type):
-                    continue
-
-                if group_presence == "instead":
-                    is_only_in_group = True
-
-                have_groups.setdefault(
-                    group_name, {
-                        "group_presence": group_presence,
-                        "group_type": group_type,
-                        "group_patterns": attrs["group_patterns"],
-                    })
+                have_groups.setdefault(group_name, {
+                    "group_type": attrs["group_type"],
+                    "group_patterns": attrs["group_patterns"],
+                })
 
                 # If we're on a cluster, we have no chance calculating expected speed
-                if group_type == "single_host":
+                if attrs["group_type"] == "single_host":
                     have_groups[group_name].setdefault("interfaces", [])
-                    have_groups[group_name]["interfaces"].append((saveint(ifSpeed), ifOperStatus,
-                                                                  ifType))
+                    have_groups[group_name]["interfaces"].append(
+                        (saveint(interface.ifSpeed), interface.ifOperStatus, interface.ifType))
 
             # The agent output already set this interface to grouped
-            if ifGroup:
+            if interface.ifGroup:
                 have_groups.setdefault(
-                    ifGroup, {
+                    interface.ifGroup, {
                         "interfaces": [],
                         "group_type": "single_host",
-                        "group_presence": "instead",
                         "group_patterns": {
-                            host_name(): {
+                            current_host_name: {
                                 "items": [],
-                                "iftype": ifType
+                                "iftype": interface.ifType
                             }
                         },
                     })
-                have_groups[ifGroup]["interfaces"].append((saveint(ifSpeed), ifOperStatus, ifType))
-                is_only_in_group = True
+                have_groups[interface.ifGroup]["interfaces"].append(
+                    (saveint(interface.ifSpeed), interface.ifOperStatus, interface.ifType))
 
             # Prepare single interfaces
-            if not is_only_in_group and ifIndex not in seen_indicies and \
-               ifType in porttypes and ifOperStatus in portstates and \
-               port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
+            if discover_single_interface and interface.ifIndex not in seen_indicies and \
+               interface.ifType in porttypes and interface.ifOperStatus in portstates and \
+               port_match(interface.ifAlias, match_alias) and port_match(interface.ifDescr, match_desc):
                 params = {}
                 if if_inventory_monitor_state:
-                    params["state"] = [ifOperStatus]
+                    params["state"] = [interface.ifOperStatus]
 
-                if ifSpeed != "" and if_inventory_monitor_speed:
-                    params["speed"] = int(ifSpeed)
-                seen_indicies.add(ifIndex)
+                if interface.ifSpeed != "" and if_inventory_monitor_speed:
+                    params["speed"] = int(interface.ifSpeed)
+                seen_indicies.add(interface.ifIndex)
 
                 try:
-                    index_as_item = int(item) == int(ifIndex)
+                    index_as_item = int(item) == int(interface.ifIndex)
                 except (TypeError, ValueError):
                     index_as_item = False
-                pre_inventory.append((item, "%r" % params, int(ifIndex), index_as_item))
+                pre_inventory.append((item, "%r" % params, int(interface.ifIndex), index_as_item))
 
         # Create pseudo interfaces out of groups
         # On cluster groups we have no 'interfaces' key
@@ -495,7 +538,7 @@ def inventory_if_common(info, has_nodeinfo=False):
                 if group_type == "single_host" and if_inventory_monitor_state:
                     params["state"] = [group_operStatus]
 
-                if group_type == "single_host" and ifSpeed != "" and if_inventory_monitor_speed:
+                if group_type == "single_host" and if_inventory_monitor_speed:
                     params["speed"] = total_speed
 
                 # Note: the group interface index is always set to 1
@@ -542,223 +585,205 @@ def check_if_common(item, params, info, has_nodeinfo=False, group_name="Group", 
     else:
         this_time = timestamp
 
+    if not params.get("aggregate"):
+        return check_if_common_single(item,
+                                      params,
+                                      info,
+                                      has_nodeinfo=has_nodeinfo,
+                                      timestamp=this_time)
+
     # If this item is in an ifgroup create a pseudo interface and
     # pass its data to the common instance.
     # This is done by simply adding the additional group_info data
     # to the already existing info table.
-    if params.get("aggregate"):
-        params = _convert_old_if_group_params(params)
-        group_members = {}
-        matching_interfaces = []
+    params = _convert_old_if_group_params(params)
+    group_members = {}
+    matching_interfaces = []
 
-        for element in info:
-            node, line = if_extract_node(element, has_nodeinfo)
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
-                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-                ifOutQLen, ifAlias, _ifPhysAddress = line
+    for element in info:
+        node, line = if_extract_node(element, has_nodeinfo)
+        interface = interface_from(line)
 
-            ifGroup = None
-            if isinstance(ifIndex, tuple):
-                ifGroup, ifIndex = ifIndex
+        service_name_type = params["aggregate"].get("item_type")
+        if service_name_type == "description":
+            if_member_item = interface.ifDescr
+        elif service_name_type == "alias":
+            if_member_item = interface.ifAlias
+        else:  # index
+            pad_portnumbers = item[0] == '0'
+            if_member_item = if_pad_with_zeroes(info, interface.ifIndex, has_nodeinfo,
+                                                pad_portnumbers)
 
-            service_name_type = params["aggregate"].get("item_type")
-            if service_name_type == "description":
-                if_member_item = ifDescr
-            elif service_name_type == "alias":
-                if_member_item = ifAlias
-            else:  # index
-                pad_portnumbers = item[0] == '0'
-                if_member_item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
+        if interface.ifGroup and interface.ifGroup == item:
+            matching_interfaces.append((if_member_item, element))
 
-            if ifGroup and ifGroup == item:
-                matching_interfaces.append((if_member_item, element))
-
-            else:
-                if node is None:
-                    node = host_name()
-
-                if node not in params["aggregate"]["group_patterns"]:
-                    continue
-
-                attrs = params["aggregate"]["group_patterns"][node]
-                node_items = attrs.get("items")
-                iftype = attrs.get("iftype")
-
-                # The iftype and node_items parameters are further restrictions
-                # If none of them are set, the interface is added to the group
-                # tryint -> force "01" and "1" to be identical.
-                add_interface = True  # This approach is easier to comprehend..
-
-                if node_items is not None and \
-                   tryint(if_member_item) not in map(tryint, node_items):
-                    add_interface = False
-
-                if iftype is not None and \
-                   not saveint(ifType) == saveint(iftype):
-                    add_interface = False
-
-                this_element = (if_member_item, element)
-                if add_interface and this_element not in matching_interfaces:
-                    matching_interfaces.append(this_element)
-
-        # TODO Now we're done and have all matching interfaces
-        # Accumulate info over matching_interfaces
-        wrapped = False
-
-        group_info = {
-            "ifSpeed": 0,
-            "ifInOctets": 0,
-            "inucast": 0,
-            "inmcast": 0,
-            "inbcast": 0,
-            "ifInDiscards": 0,
-            "ifInErrors": 0,
-            "ifOutOctets": 0,
-            "outucast": 0,
-            "outmcast": 0,
-            "outbcast": 0,
-            "ifOutDiscards": 0,
-            "ifOutErrors": 0,
-            "ifOutQLen": 0,
-        }
-
-        num_up = 0
-        for (if_member_item, element) in matching_interfaces:
-            node, line = if_extract_node(element, has_nodeinfo)
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
-                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-                ifOutQLen, ifAlias, _ifPhysAddress = line
-
-            # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-            # of just the ifOperStatus
-            if isinstance(ifOperStatus, tuple):
-                ifOperStatus, ifOperStatusName = ifOperStatus
-            else:
-                ifOperStatusName = if_statename(ifOperStatus)
-
-            # Append an additional entry to the info table containing the calculated group_info
-            if ifOperStatus == '1':
-                num_up += 1
-
-            ifGroup = None
-            if isinstance(ifIndex, tuple):
-                ifGroup, ifIndex = ifIndex
-
-            group_members.setdefault(node, [])
-            group_members[node].append({
-                "name": if_member_item,
-                "state": ifOperStatus,
-                "state_name": ifOperStatusName,
-            })
-
-            # Only these values are packed into counters
-            # We might need to enlarge this table
-            # However, more values leads to more MKCounterWrapped...
-            for name, counter in [
-                ("in", ifInOctets),
-                ("inucast", inucast),
-                ("inmcast", inmcast),
-                ("inbcast", inbcast),
-                ("indisc", ifInDiscards),
-                ("inerr", ifInErrors),
-                ("out", ifOutOctets),
-                ("outucast", outucast),
-                ("outmcast", outmcast),
-                ("outbcast", outbcast),
-                ("outdisc", ifOutDiscards),
-                ("outerr", ifOutErrors),
-            ]:
-                try:
-                    get_rate(
-                        "if.%s.%s.%s" % (name, item, if_member_item),
-                        this_time,
-                        saveint(counter),
-                        onwrap=RAISE)
-                except MKCounterWrapped:
-                    wrapped = True
-                    # continue, other counters might wrap as well
-
-            # Add interface info to group info
-            group_info["ifSpeed"] += ifOperStatus == "1" and saveint(ifSpeed) or 0
-            group_info["ifInOctets"] += saveint(ifInOctets)
-            group_info["inucast"] += saveint(inucast)
-            group_info["inmcast"] += saveint(inmcast)
-            group_info["inbcast"] += saveint(inbcast)
-            group_info["ifInDiscards"] += saveint(ifInDiscards)
-            group_info["ifInErrors"] += saveint(ifInErrors)
-            group_info["ifOutOctets"] += saveint(ifOutOctets)
-            group_info["outucast"] += saveint(outucast)
-            group_info["outmcast"] += saveint(outmcast)
-            group_info["outbcast"] += saveint(outbcast)
-            group_info["ifOutDiscards"] += saveint(ifOutDiscards)
-            group_info["ifOutErrors"] += saveint(ifOutErrors)
-            group_info["ifOutQLen"] += saveint(ifOutQLen)
-            # This is the fallback ifType if None is set in the parameters
-            group_info["ifType"] = ifType
-
-        if num_up == len(matching_interfaces):
-            group_operStatus = "1"  # up
-        elif num_up > 0:
-            group_operStatus = "8"  # degraded
         else:
-            group_operStatus = "2"  # down
+            if node is None:
+                node = host_name()
 
-        alias_info = []
-        add_node_info = len(params["aggregate"].get("group_patterns", {})) >= 2
+            if node not in params["aggregate"]["group_patterns"]:
+                continue
 
-        for node_name, attrs in params["aggregate"].get("group_patterns", {}).items():
-            if attrs.get("iftype"):
-                alias_info.append("%sif type %s" % \
-                                 (add_node_info and "Node %s: " % node_name or "",
-                                  attrs["iftype"]))
-                group_info["ifType"] = attrs["iftype"]
+            attrs = params["aggregate"]["group_patterns"][node]
+            node_items = attrs.get("items")
+            iftype = attrs.get("iftype")
 
-            if attrs.get("items"):
-                alias_info.append("%d grouped interfaces" % len(matching_interfaces))
+            # The iftype and node_items parameters are further restrictions
+            # If none of them are set, the interface is added to the group
+            # tryint -> force "01" and "1" to be identical.
+            add_interface = True  # This approach is easier to comprehend..
 
-        if has_nodeinfo:
-            group_entry = [None]
-        else:
-            group_entry = []
+            if node_items is not None and \
+                tryint(if_member_item) not in map(tryint, node_items):
+                add_interface = False
 
-        group_entry += [
-            "ifgroup%s" % item,  # ifIndex
-            item,  # ifDescr
-            group_info["ifType"],  # ifType
-            group_info["ifSpeed"],  # ifSpeed
-            group_operStatus,  # ifOperStatus
-            group_info["ifInOctets"],  # ifInOctets
-            group_info["inucast"],  # inucast
-            group_info["inmcast"],  # inmcast
-            group_info["inbcast"],  # inbcast
-            group_info["ifInDiscards"],  # ifInDiscards
-            group_info["ifInErrors"],  # ifInErrors
-            group_info["ifOutOctets"],  # ifOutOctets
-            group_info["outucast"],  # outucast
-            group_info["outmcast"],  # outmcast
-            group_info["outbcast"],  # outbcast
-            group_info["ifOutDiscards"],  # ifOutDiscards
-            group_info["ifOutErrors"],  # ifOutErrors
-            group_info["ifOutQLen"],  # ifOutQLen
-            ", ".join(alias_info),
-            "",  # ifPhysAddress
-        ]
+            if iftype is not None and \
+                not saveint(interface.ifType) == saveint(iftype):
+                add_interface = False
 
-        # If applicable, signal the check_if_common_single if the counter of the
-        # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
-        # however any counter wrap of one of its members causes the accumulation being invalid
-        return check_if_common_single(
-            item,
-            params, [group_entry],
-            wrapped,
-            has_nodeinfo=has_nodeinfo,
-            group_members=group_members,
-            group_name=group_name)
+            this_element = (if_member_item, element)
+            if add_interface and this_element not in matching_interfaces:
+                matching_interfaces.append(this_element)
 
-    return check_if_common_single(
-        item, params, info, has_nodeinfo=has_nodeinfo, group_name=group_name)
+    # TODO Now we're done and have all matching interfaces
+    # Accumulate info over matching_interfaces
+    wrapped = False
+
+    group_info = {
+        "ifSpeed": 0,
+        "ifInOctets": 0,
+        "inucast": 0,
+        "inmcast": 0,
+        "inbcast": 0,
+        "ifInDiscards": 0,
+        "ifInErrors": 0,
+        "ifOutOctets": 0,
+        "outucast": 0,
+        "outmcast": 0,
+        "outbcast": 0,
+        "ifOutDiscards": 0,
+        "ifOutErrors": 0,
+        "ifOutQLen": 0,
+    }
+
+    num_up = 0
+    for (if_member_item, element) in matching_interfaces:
+        node, line = if_extract_node(element, has_nodeinfo)
+        interface = interface_from(line)
+
+        # Append an additional entry to the info table containing the calculated group_info
+        if interface.ifOperStatus == '1':
+            num_up += 1
+
+        group_members.setdefault(node, [])
+        group_members[node].append({
+            "name": if_member_item,
+            "state": interface.ifOperStatus,
+            "state_name": interface.ifOperStatusName,
+        })
+
+        # Only these values are packed into counters
+        # We might need to enlarge this table
+        # However, more values leads to more MKCounterWrapped...
+        for name, counter in [
+            ("in", interface.ifInOctets),
+            ("inucast", interface.inucast),
+            ("inmcast", interface.inmcast),
+            ("inbcast", interface.inbcast),
+            ("indisc", interface.ifInDiscards),
+            ("inerr", interface.ifInErrors),
+            ("out", interface.ifOutOctets),
+            ("outucast", interface.outucast),
+            ("outmcast", interface.outmcast),
+            ("outbcast", interface.outbcast),
+            ("outdisc", interface.ifOutDiscards),
+            ("outerr", interface.ifOutErrors),
+        ]:
+            try:
+                get_rate("if.%s.%s.%s" % (name, item, if_member_item),
+                         this_time,
+                         saveint(counter),
+                         onwrap=RAISE)
+            except MKCounterWrapped:
+                wrapped = True
+                # continue, other counters might wrap as well
+
+        # Add interface info to group info
+        group_info["ifSpeed"] += interface.ifOperStatus == "1" and interface.ifSpeed or 0
+        group_info["ifInOctets"] += saveint(interface.ifInOctets)
+        group_info["inucast"] += saveint(interface.inucast)
+        group_info["inmcast"] += saveint(interface.inmcast)
+        group_info["inbcast"] += saveint(interface.inbcast)
+        group_info["ifInDiscards"] += saveint(interface.ifInDiscards)
+        group_info["ifInErrors"] += saveint(interface.ifInErrors)
+        group_info["ifOutOctets"] += saveint(interface.ifOutOctets)
+        group_info["outucast"] += saveint(interface.outucast)
+        group_info["outmcast"] += saveint(interface.outmcast)
+        group_info["outbcast"] += saveint(interface.outbcast)
+        group_info["ifOutDiscards"] += saveint(interface.ifOutDiscards)
+        group_info["ifOutErrors"] += saveint(interface.ifOutErrors)
+        group_info["ifOutQLen"] += saveint(interface.ifOutQLen)
+        # This is the fallback ifType if None is set in the parameters
+        group_info["ifType"] = interface.ifType
+
+    if num_up == len(matching_interfaces):
+        group_operStatus = "1"  # up
+    elif num_up > 0:
+        group_operStatus = "8"  # degraded
+    else:
+        group_operStatus = "2"  # down
+
+    alias_info = []
+    add_node_info = len(params["aggregate"].get("group_patterns", {})) >= 2
+
+    for node_name, attrs in params["aggregate"].get("group_patterns", {}).items():
+        if attrs.get("iftype"):
+            alias_info.append("%sif type %s" % \
+                                (add_node_info and "Node %s: " % node_name or "",
+                                attrs["iftype"]))
+            group_info["ifType"] = attrs["iftype"]
+
+        if attrs.get("items"):
+            alias_info.append("%d grouped interfaces" % len(matching_interfaces))
+
+    if has_nodeinfo:
+        group_entry = [None]
+    else:
+        group_entry = []
+
+    group_entry += [
+        "ifgroup%s" % item,  # ifIndex
+        item,  # ifDescr
+        group_info["ifType"],  # ifType
+        group_info["ifSpeed"],  # ifSpeed
+        group_operStatus,  # ifOperStatus
+        group_info["ifInOctets"],  # ifInOctets
+        group_info["inucast"],  # inucast
+        group_info["inmcast"],  # inmcast
+        group_info["inbcast"],  # inbcast
+        group_info["ifInDiscards"],  # ifInDiscards
+        group_info["ifInErrors"],  # ifInErrors
+        group_info["ifOutOctets"],  # ifOutOctets
+        group_info["outucast"],  # outucast
+        group_info["outmcast"],  # outmcast
+        group_info["outbcast"],  # outbcast
+        group_info["ifOutDiscards"],  # ifOutDiscards
+        group_info["ifOutErrors"],  # ifOutErrors
+        group_info["ifOutQLen"],  # ifOutQLen
+        ", ".join(alias_info),
+        "",  # ifPhysAddress
+    ]
+
+    # If applicable, signal the check_if_common_single if the counter of the
+    # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
+    # however any counter wrap of one of its members causes the accumulation being invalid
+    return check_if_common_single(item,
+                                  params, [group_entry],
+                                  wrapped,
+                                  has_nodeinfo=has_nodeinfo,
+                                  group_members=group_members,
+                                  group_name=group_name,
+                                  timestamp=this_time)
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -789,10 +814,7 @@ def check_if_common_single(item,
     cluster_items = {}
 
     # error checking might be turned off
-    if params["errors"]:
-        err_warn, err_crit = params["errors"]
-    else:
-        err_warn, err_crit = None, None
+    err_warn, err_crit = params.get("errors", (None, None))
 
     # broadcast storm detection is turned off by default
     if "nucasts" in params:
@@ -810,291 +832,278 @@ def check_if_common_single(item,
 
     for line in info:
         node, line = if_extract_node(line, has_nodeinfo)
-        ifIndex, ifDescr, _ifType, ifSpeed, ifOperStatus, ifInOctets,  \
-            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress = line
+        interface = interface_from(line)
 
-        # Windows NICs sends pairs of ifOperStatus and its Windows-Name instead
-        # of just the ifOperStatus
-        if isinstance(ifOperStatus, tuple):
-            ifOperStatus, ifOperStatusName = ifOperStatus
+        if not if_item_matches(item, interface.ifIndex, interface.ifAlias, interface.ifDescr):
+            continue
+
+        if group_members:
+            # The detailed group info is added later on
+            infotext = group_name + " Status "
         else:
-            ifOperStatusName = if_statename(ifOperStatus)
+            if "infotext_format" in params:
+                bracket_info = ""
+                if params["infotext_format"] == "alias":
+                    bracket_info = interface.ifAlias
+                elif params["infotext_format"] == "description":
+                    bracket_info = interface.ifDescr
+                elif params["infotext_format"] == "alias_and_description":
+                    bracket_info = ", ".join(
+                        [i for i in [interface.ifAlias, interface.ifDescr] if i])
+                elif params["infotext_format"] == "alias_or_description":
+                    bracket_info = interface.ifAlias if interface.ifAlias else interface.ifDescr
+                elif params["infotext_format"] == "desription_or_alias":
+                    bracket_info = interface.ifDescr if interface.ifDescr else interface.ifAlias
 
-        if isinstance(ifIndex, tuple):
-            _ifGroup, ifIndex = ifIndex
-
-        ifDescr = cleanup_if_strings(ifDescr)
-        ifAlias = cleanup_if_strings(ifAlias)
-
-        if if_item_matches(item, ifIndex, ifAlias, ifDescr):
-            if group_members:
-                # The detailed group info is added later on
-                infotext = group_name + " Status "
-            else:
-                if "infotext_format" in params:
-                    bracket_info = ""
-                    if params["infotext_format"] == "alias":
-                        bracket_info = ifAlias
-                    elif params["infotext_format"] == "description":
-                        bracket_info = ifDescr
-                    elif params["infotext_format"] == "alias_and_description":
-                        bracket_info = ", ".join([i for i in [ifAlias, ifDescr] if i])
-                    elif params["infotext_format"] == "alias_or_description":
-                        bracket_info = ifAlias if ifAlias else ifDescr
-                    elif params["infotext_format"] == "desription_or_alias":
-                        bracket_info = ifDescr if ifDescr else ifAlias
-
-                    if bracket_info:
-                        infotext = "[%s]" % bracket_info
-                    else:
-                        infotext = ""
+                if bracket_info:
+                    infotext = "[%s]" % bracket_info
                 else:
-                    # Display port number or alias in infotext if that is not part
-                    # of the service description anyway
-                    if item.lstrip("0") == ifIndex \
-                        and (item == ifAlias or ifAlias == '') \
-                        and (item == ifDescr or ifDescr == ''): # description trivial
-                        infotext = ""
-                    elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '':  # non-unique Alias
-                        infotext = "[%s/%s]" % (ifAlias, ifDescr)
-                    elif item != ifAlias and ifAlias != '':  # alias useful
-                        infotext = "[%s] " % ifAlias
-                    elif item != ifDescr and ifDescr != '':  # description useful
-                        infotext = "[%s] " % ifDescr
-                    else:
-                        infotext = "[%s] " % ifIndex
-
-                if node is not None:
-                    infotext = "%son %s: " % (infotext, node)
-
-            state = 0
-            infotext += "(%s)" % ifOperStatusName
-            if targetstates and (ifOperStatus != targetstates and
-                                 not (isinstance(targetstates,
-                                                 (list, tuple)) and ifOperStatus in targetstates)):
-                state = 2
-
-            if map_operstates and ifOperStatus in map_operstates:
-                state = map_operstates[ifOperStatus]
-
-            if state == 1:
-                infotext += "(!) "
-            elif state == 2:
-                infotext += "(!!) "
-            elif state == 3:
-                infotext += "(?) "
+                    infotext = ""
             else:
-                infotext += " "
+                # Display port number or alias in infotext if that is not part
+                # of the service description anyway
+                if item.lstrip("0") == interface.ifIndex \
+                    and (item == interface.ifAlias or interface.ifAlias == '') \
+                    and (item == interface.ifDescr or interface.ifDescr == ''): # description trivial
+                    infotext = ""
+                elif item == "%s %s" % (interface.ifAlias, interface.ifIndex
+                                       ) and interface.ifDescr != '':  # non-unique Alias
+                    infotext = "[%s/%s]" % (interface.ifAlias, interface.ifDescr)
+                elif item != interface.ifAlias and interface.ifAlias != '':  # alias useful
+                    infotext = "[%s] " % interface.ifAlias
+                elif item != interface.ifDescr and interface.ifDescr != '':  # description useful
+                    infotext = "[%s] " % interface.ifDescr
+                else:
+                    infotext = "[%s] " % interface.ifIndex
 
-            if group_members:
-                infotext = infotext[:-1]  # remove last space
-                infotext += ", Members: "
-                for group_node, members in group_members.items():
-                    member_info = []
-                    for member in members:
-                        member_info.append("%s (%s)" % (member["name"], member["state_name"]))
+            if node is not None:
+                infotext = "%son %s: " % (infotext, node)
 
-                    nodeinfo = ""
-                    if group_node is not None and len(group_members) > 1:
-                        nodeinfo = " on node %s" % group_node
-                    infotext += "[%s%s] " % (", ".join(member_info), nodeinfo)
+        state = 0
+        infotext += "(%s)" % interface.ifOperStatusName
+        if targetstates and (
+                interface.ifOperStatus != targetstates and
+                not (isinstance(targetstates,
+                                (list, tuple)) and interface.ifOperStatus in targetstates)):
+            state = 2
 
-            if ifPhysAddress:
-                infotext += 'MAC: %s, ' % if_render_mac_address(ifPhysAddress)
+        if map_operstates and interface.ifOperStatus in map_operstates:
+            state = map_operstates[interface.ifOperStatus]
 
-            # prepare reference speed for computing relative bandwidth usage
-            speed = saveint(ifSpeed)
-            if speed:
-                if speed > 9 * 1000 * 1000 * 1000 * 1000:
-                    speed /= (1000 * 1000)
-                ref_speed = speed / 8.0
-            elif targetspeed:
-                ref_speed = targetspeed / 8.0
-            else:
-                ref_speed = None
+        if state == 1:
+            infotext += "(!) "
+        elif state == 2:
+            infotext += "(!!) "
+        elif state == 3:
+            infotext += "(?) "
+        else:
+            infotext += " "
 
-            # Check speed settings of interface, but only if speed information
-            # is available. This is not always the case.
-            if speed:
-                infotext += get_nic_speed_human_readable(speed)
-                if not targetspeed is None and speed != targetspeed:
-                    infotext += " (wrong speed, expected: %s)(!)" % get_nic_speed_human_readable(
-                        targetspeed)
-                    state = max(state, 1)
-            elif targetspeed:
-                infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
-            else:
-                infotext += "speed unknown"
+        if group_members:
+            infotext = infotext[:-1]  # remove last space
+            infotext += ", Members: "
+            for group_node, members in group_members.items():
+                member_info = []
+                for member in members:
+                    member_info.append("%s (%s)" % (member["name"], member["state_name"]))
 
-            # Convert the traffic levels to interface specific levels, for example where the percentage
-            # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
-            traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, ref_speed,
-                                                         assumed_speed_in, assumed_speed_out)
+                nodeinfo = ""
+                if group_node is not None and len(group_members) > 1:
+                    nodeinfo = " on node %s" % group_node
+                infotext += "[%s%s] " % (", ".join(member_info), nodeinfo)
 
-            # Speed in bytes
-            speed_b_in = (assumed_speed_in / 8) if assumed_speed_in else ref_speed
-            speed_b_out = (assumed_speed_out / 8) if assumed_speed_out else ref_speed
+        if interface.ifPhysAddress:
+            infotext += 'MAC: %s, ' % if_render_mac_address(interface.ifPhysAddress)
 
-            #
-            # All internal values within ths check after this point are bytes, not bits!
-            #
+        # prepare reference speed for computing relative bandwidth usage
+        speed = interface.ifSpeed
+        if speed:
+            ref_speed = speed / 8.0
+        elif targetspeed:
+            ref_speed = targetspeed / 8.0
+        else:
+            ref_speed = None
 
-            # When the interface is reported as down, there is no need to try to handle,
-            # the performance counters. Most devices do reset the counter values to zero,
-            # but we spotted devices, which do report error packes even for down interfaces.
-            # To deal with it, we simply skip over all performance counter checks for down
-            # interfaces.
-            if str(ifOperStatus) == "2":
-                return state, infotext
+        # Check speed settings of interface, but only if speed information
+        # is available. This is not always the case.
+        if speed:
+            infotext += get_nic_speed_human_readable(speed)
+            if not targetspeed is None and speed != targetspeed:
+                infotext += " (wrong speed, expected: %s)(!)" % get_nic_speed_human_readable(
+                    targetspeed)
+                state = max(state, 1)
+        elif targetspeed:
+            infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
+        else:
+            infotext += "speed unknown"
 
-            # Performance counters
-            rates = []
-            wrapped = False
+        # Convert the traffic levels to interface specific levels, for example where the percentage
+        # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
+        traffic_levels = get_specific_traffic_levels(general_traffic_levels, unit, ref_speed,
+                                                     assumed_speed_in, assumed_speed_out)
+
+        # Speed in bytes
+        speed_b_in = (assumed_speed_in / 8) if assumed_speed_in else ref_speed
+        speed_b_out = (assumed_speed_out / 8) if assumed_speed_out else ref_speed
+
+        #
+        # All internal values within ths check after this point are bytes, not bits!
+        #
+
+        # When the interface is reported as down, there is no need to try to handle,
+        # the performance counters. Most devices do reset the counter values to zero,
+        # but we spotted devices, which do report error packes even for down interfaces.
+        # To deal with it, we simply skip over all performance counter checks for down
+        # interfaces.
+        if str(interface.ifOperStatus) == "2":
+            return state, infotext
+
+        # Performance counters
+        rates = []
+        wrapped = False
+        perfdata = []
+        for name, counter, warn, crit, mmin, mmax in [
+            ("in", interface.ifInOctets, traffic_levels[('in', 'upper', 'warn')],
+             traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
+            ("inucast", interface.inucast, None, None, None, None),
+            ("innucast", saveint(interface.inmcast) + saveint(interface.inbcast), nucast_warn,
+             nucast_crit, None, None),
+            ("indisc", interface.ifInDiscards, disc_warn, disc_crit, None, None),
+            ("inerr", interface.ifInErrors, err_warn, err_crit, None, None),
+            ("out", interface.ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
+             traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
+            ("outucast", interface.outucast, None, None, None, None),
+            ("outnucast", saveint(interface.outmcast) + saveint(interface.outbcast), nucast_warn,
+             nucast_crit, None, None),
+            ("outdisc", interface.ifOutDiscards, disc_warn, disc_crit, None, None),
+            ("outerr", interface.ifOutErrors, err_warn, err_crit, None, None),
+        ]:
+
+            try:
+                if node is None:
+                    rate = get_rate("if.%s.%s" % (name, item),
+                                    this_time,
+                                    saveint(counter),
+                                    onwrap=RAISE)
+                    if force_counter_wrap:
+                        raise MKCounterWrapped("Forced counter wrap")
+                else:  # clustered check needs one counter per variable, item AND NODE
+                    rate = get_rate("if.%s.%s.%s" % (node, name, item),
+                                    this_time,
+                                    saveint(counter),
+                                    onwrap=RAISE)
+                    if force_counter_wrap:
+                        raise MKCounterWrapped("Forced counter wrap")
+                rates.append(rate)
+                perfdata.append((name, rate, warn, crit, mmin, mmax))
+            except MKCounterWrapped:
+                wrapped = True
+                # continue, other counters might wrap as well
+
+        # if at least one counter wrapped, we do not handle the counters at all
+        if wrapped:
+            # If there is a threshold on the bandwidth, we cannot proceed
+            # further (the check would be flapping to green on a wrap)
+            if any(traffic_levels.values()):
+                raise MKCounterWrapped("Counter wrap, skipping checks this time")
             perfdata = []
-            for name, counter, warn, crit, mmin, mmax in [
-                ("in", ifInOctets, traffic_levels[('in', 'upper', 'warn')],
-                 traffic_levels[('in', 'upper', 'crit')], 0, speed_b_in),
-                ("inucast", inucast, None, None, None, None),
-                ("innucast", saveint(inmcast) + saveint(inbcast), nucast_warn, nucast_crit, None,
-                 None),
-                ("indisc", ifInDiscards, disc_warn, disc_crit, None, None),
-                ("inerr", ifInErrors, err_warn, err_crit, None, None),
-                ("out", ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
-                 traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
-                ("outucast", outucast, None, None, None, None),
-                ("outnucast", saveint(outmcast) + saveint(outbcast), nucast_warn, nucast_crit, None,
-                 None),
-                ("outdisc", ifOutDiscards, disc_warn, disc_crit, None, None),
-                ("outerr", ifOutErrors, err_warn, err_crit, None, None),
-            ]:
+        else:
+            perfdata.append(("outqlen", saveint(interface.ifOutQLen)))
 
-                try:
-                    if node is None:
-                        rate = get_rate(
-                            "if.%s.%s" % (name, item), this_time, saveint(counter), onwrap=RAISE)
-                        if force_counter_wrap:
-                            raise MKCounterWrapped("Forced counter wrap")
-                    else:  # clustered check needs one counter per variable, item AND NODE
-                        rate = get_rate(
-                            "if.%s.%s.%s" % (node, name, item),
-                            this_time,
-                            saveint(counter),
-                            onwrap=RAISE)
-                        if force_counter_wrap:
-                            raise MKCounterWrapped("Forced counter wrap")
-                    rates.append(rate)
-                    perfdata.append((name, rate, warn, crit, mmin, mmax))
-                except MKCounterWrapped:
-                    wrapped = True
-                    # continue, other counters might wrap as well
+            def format_value(value):
+                if unit == "Bit":
+                    return get_nic_speed_human_readable(value * 8)
+                return "%s/s" % get_bytes_human_readable(value)
 
-            # if at least one counter wrapped, we do not handle the counters at all
-            if wrapped:
-                # If there is a threshold on the bandwidth, we cannot proceed
-                # further (the check would be flapping to green on a wrap)
-                if any(traffic_levels.values()):
-                    raise MKCounterWrapped("Counter wrap, skipping checks this time")
-                perfdata = []
-            else:
-                perfdata.append(("outqlen", saveint(ifOutQLen)))
+            # loop over incoming and outgoing traffic
+            for what, traffic, urate, nurate, discrate, errorrate, speed in \
+                [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
+                    ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
 
-                def format_value(value):
-                    if unit == "Bit":
-                        return get_nic_speed_human_readable(value * 8)
-                    return "%s/s" % get_bytes_human_readable(value)
+                if (what, 'predictive') in traffic_levels:
+                    params = traffic_levels[(what, 'predictive')]
+                    bw_warn, bw_crit = None, None
+                else:
+                    bw_warn = traffic_levels[(what, 'upper', 'warn')]
+                    bw_crit = traffic_levels[(what, 'upper', 'crit')]
+                    bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
+                    bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
+                    params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
 
-                # loop over incoming and outgoing traffic
-                for what, traffic, urate, nurate, discrate, errorrate, speed in \
-                   [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
-                     ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
+                # handle computation of average
+                if average:
+                    traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic,
+                                              average)
+                    infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
+                    dsname = "%s_avg_%d" % (what, average)
+                    perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
+                    traffic = traffic_avg  # apply levels to average traffic
+                    title = "%s average %d" % (what.title(), average)
+                else:
+                    dsname = what
+                    title = what.title()
 
-                    if (what, 'predictive') in traffic_levels:
-                        params = traffic_levels[(what, 'predictive')]
-                        bw_warn, bw_crit = None, None
-                    else:
-                        bw_warn = traffic_levels[(what, 'upper', 'warn')]
-                        bw_crit = traffic_levels[(what, 'upper', 'crit')]
-                        bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
-                        bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
-                        params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
+                # Check bandwidth thresholds incl. prediction
+                result = check_levels(traffic,
+                                      dsname,
+                                      params,
+                                      statemarkers=True,
+                                      human_readable_func=format_value,
+                                      infoname=title)
+                state = max(state, result[0])
+                infotext += ", " + result[1]
+                perfdata += result[2]
 
-                    # handle computation of average
-                    if average:
-                        traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic,
-                                                  average)
-                        infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
-                        dsname = "%s_avg_%d" % (what, average)
-                        perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
-                        traffic = traffic_avg  # apply levels to average traffic
-                        title = "%s average %d" % (what.title(), average)
-                    else:
-                        dsname = what
-                        title = what.title()
+                if speed:
+                    perc_used = 100.0 * traffic / speed
 
-                    # Check bandwidth thresholds incl. prediction
-                    result = check_levels(
-                        traffic,
-                        dsname,
-                        params,
-                        statemarkers=True,
-                        human_readable_func=format_value,
-                        infoname=title)
-                    state = max(state, result[0])
-                    infotext += ", " + result[1]
-                    perfdata += result[2]
+                    assumed_info = ""
+                    if assumed_speed_in or assumed_speed_out:
+                        assumed_info = "/" + format_value(speed)
+                    infotext += " (%.1f%%%s)" % (perc_used, assumed_info)
 
-                    if speed:
-                        perc_used = 100.0 * traffic / speed
-
-                        assumed_info = ""
-                        if assumed_speed_in or assumed_speed_out:
-                            assumed_info = "/" + format_value(speed)
-                        infotext += " (%.1f%%%s)" % (perc_used, assumed_info)
-
-                    # check percentage of error packets
-                    pacrate = urate + nurate + errorrate
-                    if pacrate > 0.0:  # any packets transmitted?
-                        errperc = 100.0 * errorrate / pacrate
-                        if errperc > 0:
-                            infotext += ", %s-errors: %.2f%%" % (what, errperc)
-                            if isinstance(err_crit, float):  # percentual levels
-                                if errperc >= err_crit:
-                                    state = 2
-                                    infotext += "(!!) >= %s%%" % str(err_crit)
-                                elif errperc >= err_warn:
-                                    state = max(state, 1)
-                                    infotext += "(!) >= %s%%" % str(err_warn)
-                            elif isinstance(err_crit, int):  # absolute levels
-                                if errorrate >= err_crit:
-                                    state = 2
-                                    infotext += ", %s-error packets: %d (!!) >= %s" % (
-                                        what, errorrate, err_crit)
-                                elif errorrate >= err_warn:
-                                    state = max(state, 1)
-                                    infotext += ", %s-errors packets: %d (!!) >= %s" % (
-                                        what, errorrate, err_warn)
-
-                    # check rate of non-unicast packets and discards
-                    for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn,
-                                                       nucast_crit),
-                                                      ("discards", discrate, disc_warn, disc_crit)]:
-
-                        if _crit is not None and _warn is not None:
-                            infotext += ", %s %s %.2f/s" % (what, _txt, _rate)
-
-                            if _rate >= _crit:
+                # check percentage of error packets
+                pacrate = urate + nurate + errorrate
+                if pacrate > 0.0:  # any packets transmitted?
+                    errperc = 100.0 * errorrate / pacrate
+                    if errperc > 0:
+                        infotext += ", %s-errors: %.2f%%" % (what, errperc)
+                        if isinstance(err_crit, float):  # percentual levels
+                            if errperc >= err_crit:
                                 state = 2
-                                infotext += "(!!) >= " + str(_crit)
-                            elif _rate >= _warn:
+                                infotext += "(!!) >= %s%%" % str(err_crit)
+                            elif errperc >= err_warn:
                                 state = max(state, 1)
-                                infotext += "(!) >= " + str(_warn)
+                                infotext += "(!) >= %s%%" % str(err_warn)
+                        elif isinstance(err_crit, int):  # absolute levels
+                            if errorrate >= err_crit:
+                                state = 2
+                                infotext += ", %s-error packets: %d (!!) >= %s" % (what, errorrate,
+                                                                                   err_crit)
+                            elif errorrate >= err_warn:
+                                state = max(state, 1)
+                                infotext += ", %s-errors packets: %d (!!) >= %s" % (what, errorrate,
+                                                                                    err_warn)
 
-            if node:
-                cluster_items[node] = (state, infotext, perfdata)
-            else:
-                return (state, infotext, perfdata)
+                # check rate of non-unicast packets and discards
+                for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn,
+                                                   nucast_crit),
+                                                  ("discards", discrate, disc_warn, disc_crit)]:
+
+                    if _crit is not None and _warn is not None:
+                        infotext += ", %s %s %.2f/s" % (what, _txt, _rate)
+
+                        if _rate >= _crit:
+                            state = 2
+                            infotext += "(!!) >= " + str(_crit)
+                        elif _rate >= _warn:
+                            state = max(state, 1)
+                            infotext += "(!) >= " + str(_warn)
+
+        if node:
+            cluster_items[node] = (state, infotext, perfdata)
+        else:
+            return (state, infotext, perfdata)
 
     # if system is a cluster we have more than one line per item with
     # different node, results are collected in cluster_items

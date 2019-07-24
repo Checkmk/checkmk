@@ -31,14 +31,6 @@
 #
 
 
-# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
-def parse_mysql_ping(info):
-    parsed = {}
-    for instance, line in _mysql_iter_instance_lines(info):
-        parsed.setdefault(instance, []).append(line)
-    return parsed
-
-
 @get_parsed_item_data
 def check_mysql_ping(_no_item, _no_params, data):
     message = " ".join(data[0])
@@ -48,7 +40,7 @@ def check_mysql_ping(_no_item, _no_params, data):
 
 
 check_info['mysql_ping'] = {
-    "parse_function": parse_mysql_ping,
+    "parse_function": mysql_parse_per_item(lambda info: info),
     "inventory_function": discover(),
     "check_function": check_mysql_ping,
     "service_description": "MySQL Instance %s",

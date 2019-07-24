@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 
-def check_firewall_if(item, params, parsed):
+@get_parsed_item_data
+def check_firewall_if(item, params, data):
 
     infotext_names = {
         "ip4_in_blocked": "Incoming IPv4 packets blocked: ",
@@ -33,9 +34,7 @@ def check_firewall_if(item, params, parsed):
 
     this_time = time.time()
 
-    for what in parsed[item]:
-
-        counter = parsed[item][what]
+    for what, counter in data.iteritems():
         rate = get_rate("firewall_if-%s.%s" % (what, item), this_time, counter, onwrap=RAISE)
 
         if params.get("averaging"):
@@ -46,12 +45,11 @@ def check_firewall_if(item, params, parsed):
         else:
             check_against = rate
 
-        status, infotext, extraperf = check_levels(
-            check_against,
-            what,
-            params.get(what),
-            human_readable_func=lambda x: "%.2f pkts/s" % x,
-            infoname=infotext_names[what])
+        status, infotext, extraperf = check_levels(check_against,
+                                                   what,
+                                                   params.get(what),
+                                                   human_readable_func=lambda x: "%.2f pkts/s" % x,
+                                                   infoname=infotext_names[what])
 
         perfdata = [(what, rate)] + extraperf[:1]
 

@@ -59,11 +59,11 @@ def ipmi_common_check_levels(sensorname, val, params):
             if levels.get("lower"):
                 warn, crit = levels["lower"]
                 if val < crit:
-                    crit_texts.append(
-                        "%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+                    crit_texts.append("%s %s (warn/crit below %s/%s)" %
+                                      (sensorname, val, warn, crit))
                 elif val < warn:
-                    warn_texts.append(
-                        "%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+                    warn_texts.append("%s %s (warn/crit below %s/%s)" %
+                                      (sensorname, val, warn, crit))
             if levels.get("upper"):
                 warn, crit = levels["upper"]
                 if val >= crit:
@@ -182,7 +182,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
             try:
                 ambient_count += 1
                 ambient_sum += float(val)
-            except:
+            except (TypeError, ValueError):
                 pass
 
     if ambient_count > 0:

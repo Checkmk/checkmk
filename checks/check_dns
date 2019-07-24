@@ -27,13 +27,13 @@
 
 def check_dns_arguments(params):
     description, settings = params
-    args = '-H %s' % quote_shell_string(description)
+    args = ["-H", description]
 
     if "server" in settings:
         if settings["server"] is not None:
-            args += ' -s %s' % quote_shell_string(settings["server"])
+            args += ["-s", settings["server"]]
     else:
-        args += " -s '$HOSTADDRESS$'"
+        args += ["-s", "$HOSTADDRESS$"]
 
     if "expected_address" in settings:
         # Convert from old (str) to new (list of strings)
@@ -42,29 +42,30 @@ def check_dns_arguments(params):
         if isinstance(exp, basestring):
             exp = [exp]
         for entry in exp:
-            args += ' -a %s' % quote_shell_string(entry)
+            args += ["-a", entry]
 
     if settings.get("expected_authority"):
-        args += ' -A'
+        args.append("-A")
 
     if "response_time" in settings:
-        args += ' -w %f' % float(settings["response_time"][0])
-        args += ' -c %f' % float(settings["response_time"][1])
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % float(warn)]
+        args += ["-c", "%f" % float(crit)]
 
     if "timeout" in settings:
-        args += ' -t %d' % int(settings['timeout'])
+        args += ["-t", settings["timeout"]]
 
     return args
 
 
 def check_dns_desc(params):
     if "name" in params[1]:
-        return params[1]['name']
+        return params[1]["name"]
     return "DNS %s" % params[0]
 
 
-active_check_info['dns'] = {
-    "command_line": '$USER1$/check_dns $ARG1$',
+active_check_info["dns"] = {
+    "command_line": "$USER1$/check_dns $ARG1$",
     "argument_function": check_dns_arguments,
     "service_description": check_dns_desc,
     "has_perfdata": True,

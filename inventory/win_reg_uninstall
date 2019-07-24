@@ -30,7 +30,7 @@
 
 
 def inv_win_reg_uninstall(info):
-    paclist = inv_tree_list("software.packages:")
+    parsed_packages = []
     for line in info:
         if len(line) == 7:
             display_name, publisher, path, pacname, version, estimated_size, date = line
@@ -71,7 +71,10 @@ def inv_win_reg_uninstall(info):
             "language": language,
             "package_type": "registry",
         }
-        paclist.append(entry)
+        parsed_packages.append(entry)
+
+    paclist = inv_tree_list("software.packages:")
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['win_reg_uninstall'] = {

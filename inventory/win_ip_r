@@ -53,9 +53,12 @@
 
 def inv_win_ip_r(info):
     routes = inv_tree_list("networking.routes:")
-    for _type, target, _mask, gateway, device in info:
+    for _type, target, mask, gateway, device in info:
         routes.append({
-            "target": target,
+            "target": "{target}/{subnet}".format(
+                target=target,
+                # Convert subnetmask to CIDR
+                subnet=sum([bin(int(x)).count("1") for x in mask.split(".")])),
             "device": device,
             "gateway": gateway,
             "type": _type,

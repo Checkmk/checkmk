@@ -50,5 +50,5 @@ for item in dom.getElementsByTagName('SecureSyncStatus'):
     completed = item.getElementsByTagName('Complete')[0].firstChild.data
     targetname = item.getElementsByTagName('TargetName')[0].firstChild.data
     instancename = item.getElementsByTagName('InstanceName')[0].firstChild.data
-    sys.stdout.write(
-        "%s|%s|%s|%s|%s\n" % (application, result, completed, targetname, instancename))
+    sys.stdout.write("%s|%s|%s|%s|%s\n" %
+                     (application, result, completed, targetname, instancename))

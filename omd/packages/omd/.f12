@@ -17,6 +17,7 @@ sudo gzip $ROOT/share/man/man8/omd.8
       sudo chmod +x $ROOT/lib/omd/hooks/$hook ; \
   done )
 sudo mkdir -p $ROOT/lib/omd/scripts/post-create
+sudo mkdir -p $ROOT/lib/omd/scripts/post-update
 sudo cp -v omd.service $ROOT/share/omd
 sudo cp -v omd.bin $ROOT/bin/omd
 sudo cp -rv omdlib $ROOT/lib/python

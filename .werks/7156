@@ -1,0 +1,10 @@
+Title: Dropping support for Ubuntu 17.10
+Level: 3
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557293035
+Class: feature
+
+Ubuntu 17.10 is End of Life. Therefore we stop supporting this Distro.

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cme
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1553014274
 
 Fixed uploading customer logos for some customers. An error like this could occur: "KeyError ('globals')"

@@ -1,0 +1,87 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public jobs  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public jobs for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# jobs along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<splunk_jobs>>>
+# splunk-system-user, , 0.91, False, 61440, False
+# admin, search, 0.101, False, 69632, False
+
+JobCount = collections.namedtuple('JobCount', ['jobs', 'failed', 'zombies', 'output'])
+
+
+def parse_splunk_jobs(info):
+    parsed = {}
+    long_output = ""
+    job_count, failed_count, zombie_count = 0, 0, 0
+
+    for job_detail in info:
+        try:
+            published, author, app, dispatchstate, iszombie = job_detail
+            job_count += 1
+
+            if dispatchstate == "FAILED":
+                failed_count += 1
+            if iszombie == "True":
+                zombie_count += 1
+
+            long_output += "%s - Author: %s, Application: %s, State: %s, Zombie: %s\n" % (
+                published, author, app, dispatchstate, iszombie)
+
+        except (IndexError, ValueError):
+            pass
+
+    parsed.setdefault("job", []).append(JobCount(job_count, failed_count, zombie_count,
+                                                 long_output))
+
+    return parsed
+
+
+def inventory_splunk_jobs(parsed):
+    yield None, {}
+
+
+def check_splunk_jobs(no_item, params, parsed):
+    data = parsed["job"][0]
+
+    for key, value, infotext in [
+        ("job_total", data.jobs, "Job Count"),
+        ("failed_jobs", data.failed, "Failed jobs"),
+        ("zombie_jobs", data.zombies, "Zombie jobs"),
+    ]:
+
+        yield check_levels(value, key, params.get(key), human_readable_func=int, infoname=infotext)
+
+    if data.output:
+        yield 0, "\n%s" % data.output
+
+
+check_info["splunk_jobs"] = {
+    "parse_function": parse_splunk_jobs,
+    "check_function": check_splunk_jobs,
+    "inventory_function": inventory_splunk_jobs,
+    "service_description": "Splunk Jobs",
+    "group": "splunk_jobs",
+    "has_perfdata": True,
+}

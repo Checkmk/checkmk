@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['sap_hana_license_default_levels'] = {
-    'license_usage': (80.0, 90.0),
+    'license_usage_perc': (80.0, 90.0),
 }
 
 SAP_HANA_MAYBE = collections.namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
@@ -33,12 +33,12 @@ SAP_HANA_MAYBE = collections.namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 
 def parse_sap_hana_license(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
         for line in lines:
             if len(line) < 7:
                 continue
 
-            inst = parsed.setdefault((sid_instance, node), {})
+            inst = parsed.setdefault(sid_instance, {}).setdefault(node, {})
             for index, key, in [
                 (0, "enforced"),
                 (1, "permanent"),
@@ -69,18 +69,17 @@ def _parse_maybe_bool(value):
 
 
 def inventory_sap_hana_license(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_license(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_license(item, params, node_data):
+    nodes = [n for n in node_data.keys() if n]
+    if nodes:
+        yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-        if node:
-            yield 0, 'On node: %s' % node
-
+    for data in node_data.itervalues():
         enforced = data['enforced']
         if enforced.bool:
             yield _check_product_usage(data['size'], data['limit'], params)
@@ -103,26 +102,28 @@ def check_sap_hana_license(item, params, parsed):
         if expiration_date != "?":
             yield 1, 'Expiration date: %s' % expiration_date
 
+        # It ONE physical device and at least two nodes.
+        # Thus we only need to check the first one.
+        return
+
 
 def _check_product_usage(size, limit, params):
-    yield check_levels(
-        size,
-        "license_size",
-        params.get('license_size', (None, None)),
-        human_readable_func=get_bytes_human_readable,
-        infoname="Size")
+    yield check_levels(size,
+                       "license_size",
+                       params.get('license_size', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname="Size")
 
     try:
         usage_perc = 100.0 * size / limit
     except ZeroDivisionError:
         yield 1, 'Usage: cannot calculate'
     else:
-        yield check_levels(
-            usage_perc,
-            "license_usage",
-            params['license_usage'],
-            human_readable_func=get_percent_human_readable,
-            infoname="Usage")
+        yield check_levels(usage_perc,
+                           "license_usage_perc",
+                           params.get('license_usage_perc', (None, None)),
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Usage")
 
 
 check_info['sap_hana_license'] = {
@@ -132,7 +133,7 @@ check_info['sap_hana_license'] = {
     'service_description': 'SAP HANA License %s',
     'includes': ['sap_hana.include'],
     "has_perfdata": True,
-    "node_info": True,
+    'node_info': True,
     'default_levels_variable': 'sap_hana_license_default_levels',
     'group': 'sap_hana_license',
 }

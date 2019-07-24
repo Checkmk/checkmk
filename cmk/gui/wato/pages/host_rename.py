@@ -70,6 +70,11 @@ from cmk.gui.plugins.wato import (
     wato_confirm,
 )
 
+try:
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+except ImportError:
+    alert_handling = None  # type: ignore
+
 
 @gui_background_job.job_registry.register
 class RenameHostsBackgroundJob(WatoBackgroundJob):
@@ -93,7 +98,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
 
         super(RenameHostsBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
-        if self.is_running():
+        if self.is_active():
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
     def _back_url(self):
@@ -130,12 +135,12 @@ class ModeBulkRenameHost(WatoMode):
         return _("Bulk renaming of hosts")
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
         host_renaming_job = RenameHostsBackgroundJob()
         if host_renaming_job.is_available():
-            html.context_button(
-                _("Last result"), host_renaming_job.detail_url(), "background_job_details")
+            html.context_button(_("Last result"), host_renaming_job.detail_url(),
+                                "background_job_details")
 
     def action(self):
         renaming_config = self._vs_renaming_config().from_html_vars("")
@@ -227,7 +232,7 @@ class ModeBulkRenameHost(WatoMode):
             try:
                 reverse_dns = socket.gethostbyaddr(hostname)[0]
                 return reverse_dns
-            except:
+            except Exception:
                 return hostname
 
         elif operation == ('case', 'upper'):
@@ -304,39 +309,37 @@ class ModeBulkRenameHost(WatoMode):
                 ("drop_domain", _("Drop Domain Suffix")),
                 ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
                 ("regex", _("Regular expression substitution"),
-                 Tuple(
-                     help=
-                     _("Please specify a regular expression in the first field. This expression should at "
-                       "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                       "In the second field you specify the translated host name and can refer to the first matched "
-                       "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"
-                      ),
-                     elements=[
-                         RegExpUnicode(
-                             title=_("Regular expression for the beginning of the host name"),
-                             help=_("Must contain at least one subgroup <tt>(...)</tt>"),
-                             mingroups=0,
-                             maxgroups=9,
-                             size=30,
-                             allow_empty=False,
-                             mode=RegExpUnicode.prefix,
-                         ),
-                         TextUnicode(
-                             title=_("Replacement"),
-                             help=
-                             _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"
-                              ),
-                             size=30,
-                             allow_empty=False,
-                         )
-                     ])),
+                 Tuple(help=_(
+                     "Please specify a regular expression in the first field. This expression should at "
+                     "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                     "In the second field you specify the translated host name and can refer to the first matched "
+                     "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"
+                 ),
+                       elements=[
+                           RegExpUnicode(
+                               title=_("Regular expression for the beginning of the host name"),
+                               help=_("Must contain at least one subgroup <tt>(...)</tt>"),
+                               mingroups=0,
+                               maxgroups=9,
+                               size=30,
+                               allow_empty=False,
+                               mode=RegExpUnicode.prefix,
+                           ),
+                           TextUnicode(
+                               title=_("Replacement"),
+                               help=
+                               _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"
+                                ),
+                               size=30,
+                               allow_empty=False,
+                           )
+                       ])),
                 ("explicit", _("Explicit renaming"),
-                 Tuple(
-                     orientation="horizontal",
-                     elements=[
-                         Hostname(title=_("current host name"), allow_empty=False),
-                         Hostname(title=_("new host name"), allow_empty=False),
-                     ])),
+                 Tuple(orientation="horizontal",
+                       elements=[
+                           Hostname(title=_("current host name"), allow_empty=False),
+                           Hostname(title=_("new host name"), allow_empty=False),
+                       ])),
             ])
 
 
@@ -386,8 +389,8 @@ class ModeRenameHost(WatoMode):
 
         host_renaming_job = RenameHostBackgroundJob(self._host)
         if host_renaming_job.is_available():
-            html.context_button(
-                _("Last result"), host_renaming_job.detail_url(), "background_job_details")
+            html.context_button(_("Last result"), host_renaming_job.detail_url(),
+                                "background_job_details")
 
     def action(self):
         if watolib.get_pending_changes_info():
@@ -403,8 +406,9 @@ class ModeRenameHost(WatoMode):
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
-            host_renaming_job = RenameHostBackgroundJob(
-                self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname))
+            host_renaming_job = RenameHostBackgroundJob(self._host,
+                                                        title=_("Renaming of %s -> %s") %
+                                                        (self._host.name(), newname))
             renamings = [(watolib.Folder.current(), self._host.name(), newname)]
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
 
@@ -497,18 +501,16 @@ def rename_host_in_rulesets(folder, oldname, newname):
         changed = False
         for varname, ruleset in rulesets.get_rulesets().items():
             for _rule_folder, _rulenr, rule in ruleset.get_rules():
-                # TODO: Move to rule?
-                if watolib.rename_host_in_list(rule.host_list, oldname, newname):
+                if rule.replace_explicit_host_condition(oldname, newname):
                     changed_rulesets.append(varname)
                     changed = True
 
         if changed:
-            add_change(
-                "edit-ruleset",
-                _("Renamed host in %d rulesets of folder %s") % (len(changed_rulesets),
-                                                                 folder.title),
-                obj=folder,
-                sites=folder.all_site_ids())
+            add_change("edit-ruleset",
+                       _("Renamed host in %d rulesets of folder %s") %
+                       (len(changed_rulesets), folder.title),
+                       obj=folder,
+                       sites=folder.all_site_ids())
             rulesets.save()
 
         for subfolder in folder.all_subfolders().values():
@@ -551,11 +553,6 @@ def rename_host_in_event_rules(oldname, newname):
     if num_changed:
         actions += ["notify_global"] * num_changed
         save_notification_rules(rules)
-
-    try:
-        import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
-    except:
-        alert_handling = None
 
     if alert_handling:
         rules = alert_handling.load_alert_handler_rules()

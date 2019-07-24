@@ -5,7 +5,7 @@ from pathlib2 import Path
 from cmk.special_agents.utils import DataCache
 
 
-class TestCache(DataCache):
+class KeksDose(DataCache):
     @property
     def cache_interval(self):
         return 5
@@ -18,12 +18,12 @@ class TestCache(DataCache):
 
 
 def test_datacache_init(tmpdir):
-    tcache = TestCache(tmpdir, 'test')
+    tcache = KeksDose(tmpdir, 'test')
     assert isinstance(tcache._cache_file_dir, Path)
     assert isinstance(tcache._cache_file, Path)
     assert not tcache.debug
 
-    tc_debug = TestCache(tmpdir, 'test', debug=True)
+    tc_debug = KeksDose(tmpdir, 'test', debug=True)
     assert tc_debug.debug
 
     with pytest.raises(TypeError):
@@ -31,7 +31,7 @@ def test_datacache_init(tmpdir):
 
 
 def test_datacache_timestamp(tmpdir):
-    tcache = TestCache(tmpdir, 'test')
+    tcache = KeksDose(tmpdir, 'test')
 
     assert tcache.cache_timestamp is None  # file doesn't exist yet
 
@@ -40,7 +40,7 @@ def test_datacache_timestamp(tmpdir):
 
 
 def test_datacache_valid(monkeypatch, tmpdir):
-    tcache = TestCache(tmpdir, 'test')
+    tcache = KeksDose(tmpdir, 'test')
     tcache._write_to_cache('cached data')
 
     valid_time = tcache.cache_timestamp + tcache.cache_interval - 1
@@ -58,7 +58,7 @@ def test_datacache_valid(monkeypatch, tmpdir):
 
 
 def test_datacache_validity(monkeypatch, tmpdir):
-    tcache = TestCache(tmpdir, 'test')
+    tcache = KeksDose(tmpdir, 'test')
     tcache._write_to_cache('cached data')
 
     invalid_time = tcache.cache_timestamp + tcache.cache_interval + 1

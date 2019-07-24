@@ -1,7 +1,10 @@
 import pytest
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.check_parameters.ps import (forbid_re_delimiters_inside_groups,
-                                                      convert_inventory_processes)
+from cmk.gui.plugins.wato.check_parameters.ps import (
+    forbid_re_delimiters_inside_groups,
+    convert_inventory_processes,
+    validate_process_discovery_descr_option,
+)
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
 
 
@@ -14,6 +17,12 @@ def test_validate_ps_allowed_regex(pattern):
 def test_validate_ps_forbidden_regex(pattern):
     with pytest.raises(MKUserError):
         forbid_re_delimiters_inside_groups(pattern, '')
+
+
+@pytest.mark.parametrize('description', ["%s%5"])
+def test_validate_process_discovery_descr_option(description):
+    with pytest.raises(MKUserError):
+        validate_process_discovery_descr_option(description, '')
 
 
 @pytest.mark.parametrize('params, result', [

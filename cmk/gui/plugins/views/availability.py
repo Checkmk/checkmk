@@ -123,12 +123,11 @@ def render_availability_options(what):
     html.begin_floating_options("avoptions", is_open)
     for name, height, _show_in_reporting, vs in avoption_entries:
         html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
-    html.end_floating_options(
-        reset_url=html.makeuri(
-            [("_reset", "1")],
-            remove_prefix="avo_",
-            delvars=["apply", "filled_in"],
-        ))
+    html.end_floating_options(reset_url=html.makeuri(
+        [("_reset", "1")],
+        remove_prefix="avo_",
+        delvars=["apply", "filled_in"],
+    ))
 
     html.hidden_fields()
     html.end_form()
@@ -398,13 +397,12 @@ def render_availability_timeline(what, av_entry, avoptions):
     # soso..
 
     # Table with detailed events
-    with table_element(
-            "av_timeline", "", css="timelineevents", sortable=False, searchable=False) as table:
+    with table_element("av_timeline", "", css="timelineevents", sortable=False,
+                       searchable=False) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
-            table.row(
-                id_="timetable_%d" % row_nr,
-                onmouseover="cmk.availability.timetable_hover(%d, 1);" % row_nr,
-                onmouseout="cmk.availability.timetable_hover(%d, 0);" % row_nr)
+            table.row(id_="timetable_%d" % row_nr,
+                      onmouseover="cmk.availability.timetable_hover(%d, 1);" % row_nr,
+                      onmouseout="cmk.availability.timetable_hover(%d, 0);" % row_nr)
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -412,11 +410,12 @@ def render_availability_timeline(what, av_entry, avoptions):
                         row["from"]):
                     html.disabled_icon_button("timewarp_off")
                 else:
-                    html.icon_button(
-                        url, _("Time warp - show BI aggregate during this time period"), "timewarp")
+                    html.icon_button(url,
+                                     _("Time warp - show BI aggregate during this time period"),
+                                     "timewarp")
             else:
-                url = html.makeuri([("anno_site", av_entry["site"]), ("anno_host",
-                                                                      av_entry["host"]),
+                url = html.makeuri([("anno_site", av_entry["site"]),
+                                    ("anno_host", av_entry["host"]),
                                     ("anno_service", av_entry["service"]),
                                     ("anno_from", str(row["from"])),
                                     ("anno_until", str(row["until"]))])
@@ -469,13 +468,12 @@ def render_availability_table(group_title, availability_table, what, avoptions):
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
     # table.py module.
-    with table_element(
-            "av_items",
-            av_table["title"],
-            css="availability",
-            searchable=False,
-            limit=None,
-            omit_headers="omit_headers" in avoptions["labelling"]) as table:
+    with table_element("av_items",
+                       av_table["title"],
+                       css="availability",
+                       searchable=False,
+                       limit=None,
+                       omit_headers="omit_headers" in avoptions["labelling"]) as table:
 
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
@@ -599,15 +597,15 @@ def render_bi_availability(title, aggr_rows):
                            _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(
-                _("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"),
+                                "report")
         if av_mode == "availability" and config.user.may("general.csv_export"):
-            html.context_button(
-                _("Export as CSV"), html.makeuri([("output_format", "csv_export")]), "download_csv")
+            html.context_button(_("Export as CSV"), html.makeuri([("output_format", "csv_export")]),
+                                "download_csv")
 
         if av_mode == "timeline":
-            html.context_button(
-                _("Availability"), html.makeuri([("av_mode", "availability")]), "availability")
+            html.context_button(_("Availability"), html.makeuri([("av_mode", "availability")]),
+                                "availability")
 
         elif len(aggr_rows) == 1:
             aggr_name = aggr_rows[0]["aggr_name"]
@@ -633,7 +631,7 @@ def render_bi_availability(title, aggr_rows):
 
         try:
             timewarp = int(html.request.var("timewarp"))
-        except:
+        except (ValueError, TypeError):
             timewarp = None
 
         has_reached_logrow_limit = False
@@ -669,12 +667,11 @@ def render_bi_availability(title, aggr_rows):
                     "aggr_group": html.request.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(
-                    row,
-                    omit_root=False,
-                    expansion_level=bi.load_ex_level(),
-                    only_problems=False,
-                    lazy=False)
+                renderer = bi.FoldableTreeRendererTree(row,
+                                                       omit_root=False,
+                                                       expansion_level=bi.load_ex_level(),
+                                                       only_problems=False,
+                                                       lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with html.plugged():
@@ -702,20 +699,19 @@ def render_bi_availability(title, aggr_rows):
                         elif not button_forth_shown and previous_span and int(
                                 previous_span["from"]) == timewarp and int(
                                     span["from"]) != timewarp:
-                            html.icon_button(
-                                html.makeuri([("timewarp", str(int(span["from"])))]),
-                                _("Jump one phase forth"), "forth")
+                            html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]),
+                                             _("Jump one phase forth"), "forth")
                             button_forth_shown = True
                         previous_span = span
                     if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
                     html.write_text(" &nbsp; ")
-                    html.icon_button(
-                        html.makeuri([("timewarp", "")]), _("Close Timewarp"), "closetimewarp")
-                    html.write_text(
-                        "%s %s" % (_("Timewarp to "),
-                                   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))))
+                    html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"),
+                                     "closetimewarp")
+                    html.write_text("%s %s" %
+                                    (_("Timewarp to "),
+                                     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))))
                     html.close_h3()
 
                     html.open_table(class_=["data", "table", "timewarp"])
@@ -741,8 +737,8 @@ def render_bi_availability(title, aggr_rows):
                 "Your query matched more than %d log entries. "
                 "<b>Note:</b> The shown data does not necessarily reflect the "
                 "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
-            text += html.render_a(
-                _('Repeat query without limit.'), html.makeuri([("_unset_logrow_limit", "1")]))
+            text += html.render_a(_('Repeat query without limit.'),
+                                  html.makeuri([("_unset_logrow_limit", "1")]))
             html.show_warning(text)
 
         if html.output_format == "csv_export" and config.user.may("general.csv_export"):
@@ -803,7 +799,7 @@ def get_annotation_date_render_function(annotations, avoptions):
         itertools.chain.from_iterable([(a[1]["from"], a[1]["until"]) for a in annotations] +
                                       [avoptions["range"][0]]))
 
-    multi_day = len(set([time.localtime(t)[:3] for t in timestamps])) > 1
+    multi_day = len({time.localtime(t)[:3] for t in timestamps}) > 1
     if multi_day:
         return cmk.utils.render.date_and_time
     return cmk.utils.render.time_of_day
@@ -855,8 +851,8 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
             table.cell("", css="buttons")
             if annotation.get("downtime") is True:
-                html.icon(
-                    _("This period has been reclassified as a scheduled downtime"), "downtime")
+                html.icon(_("This period has been reclassified as a scheduled downtime"),
+                          "downtime")
             elif annotation.get("downtime") is False:
                 html.icon(
                     _("This period has been reclassified as a not being a scheduled downtime"),
@@ -865,9 +861,8 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
             if not cmk.is_raw_edition():
-                table.cell(
-                    _("Hide in report"),
-                    _("Yes") if annotation.get("hide_from_report") else _("No"))
+                table.cell(_("Hide in report"),
+                           _("Yes") if annotation.get("hide_from_report") else _("No"))
 
 
 def edit_annotation():
@@ -951,11 +946,10 @@ def _vs_annotation():
             ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
             ("downtime",
              Optional(
-                 DropdownChoice(
-                     choices=[
-                         (True, _("regard as scheduled downtime")),
-                         (False, _("do not regard as scheduled downtime")),
-                     ],),
+                 DropdownChoice(choices=[
+                     (True, _("regard as scheduled downtime")),
+                     (False, _("do not regard as scheduled downtime")),
+                 ],),
                  title=_("Scheduled downtime"),
                  label=_("Reclassify downtime of this period"),
              )),

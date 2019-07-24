@@ -1,0 +1,20 @@
+Title: Fix possible AttributeError "function" has no attribute "get" exception during checking
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1562760919
+
+In the moment a check timeout occured while checking a host when using the Microcore an exception
+like this could occur in all previous 1.6 releases:
+
+C+:
+An exception occured while processing host "beta"
+Traceback (most recent call last):
+  File "/omd/sites/beta/lib/python/cmk_base/cee/keepalive.py", line 331, in do_keepalive
+    exit_code = host_config.exit_code_spec.get("timeout", 2)
+AttributeError: 'function' object has no attribute 'get'
+C-:

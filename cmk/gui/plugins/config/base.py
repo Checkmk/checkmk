@@ -68,15 +68,8 @@ multisite_contactgroups = {}
 #   |____/|_|\__,_|\___|_.__/ \__,_|_|
 #
 
-sidebar = [
-    ('tactical_overview', 'open'),
-    ('search', 'open'),
-    ('views', 'open'),
-    ('reports', 'closed'),  # does not harm if not available
-    ('bookmarks', 'open'),
-    ('admin', 'open'),
-    ('master_control', 'closed')
-]
+sidebar = [('tactical_overview', 'open'), ('search', 'open'), ('views', 'open'), ('admin', 'open'),
+           ('bookmarks', 'open'), ('master_control', 'closed')]
 
 # Interval of snapin updates in seconds
 sidebar_update_interval = 30.0
@@ -213,7 +206,7 @@ ui_theme = "classic"
 start_url = "dashboard.py"
 
 # Page heading for main frame set
-page_heading = "Check_MK %s"
+page_heading = "Checkmk %s"
 
 login_screen = {}
 
@@ -269,7 +262,7 @@ virtual_host_trees = []
 force_pnp_graphing = False
 
 # Target email address for "Crashed Check" page
-crash_report_target = "feedback@check-mk.org"
+crash_report_target = "feedback@checkmk.com"
 
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False
@@ -491,3 +484,5 @@ bi_use_legacy_compilation = False
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+default_bi_layout = "hierarchy"
+bi_layouts = {"templates": {}, "aggregations": {}}

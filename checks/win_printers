@@ -35,14 +35,30 @@ factory_settings['win_printer_default_levels'] = {
     "crit_states": [9, 10],
 }
 
+WinPrinter = collections.namedtuple("WinPrinter", ["jobs", "status", "error"])
 
-def inventory_win_printers(info):
+
+def parse_win_printers(info):
+    parsed = {}
     for line in info:
-        if line[-1] != '9':  # Do not discovery offline printers
-            yield " ".join(line[:-3]), {}
+        if len(line) < 4:
+            continue
+        try:
+            parsed.setdefault(" ".join(line[:-3]),
+                              WinPrinter(int(line[-3]), int(line[-2]), int(line[-1])))
+        except ValueError:
+            pass
+    return parsed
 
 
-def check_win_printers(item, params, info):
+@discover
+def inventory_win_printers(printer_name, printer_attrs):
+    # Do not discovery offline printers
+    return printer_attrs.error != '9'
+
+
+@get_parsed_item_data
+def check_win_printers(item, params, data):
     status_map = {
         1: "Other",
         2: "Unkown",
@@ -79,35 +95,33 @@ def check_win_printers(item, params, info):
     else:
         warn, crit = params.get('levels', (None, None))
 
-    for line in info:
-        name = " ".join(line[:-3])
-        if name == item:
-            state = 0
-            current_jobs, status, error = map(int, line[-3:])
+    state = 0
+    current_jobs = data.jobs
+    status = data.status
+    error = data.error
 
-            error_text = ""
-            if error in params['crit_states']:
-                state = 2
-                error_text = "Error State: %s(!!)" % error_map[error]
-            elif error in params['warn_states']:
-                state = 1
-                error_text = "Error State: %s(!)" % error_map[error]
+    error_text = ""
+    if error in params['crit_states']:
+        state = 2
+        error_text = "Error State: %s(!!)" % error_map[error]
+    elif error in params['warn_states']:
+        state = 1
+        error_text = "Error State: %s(!)" % error_map[error]
 
-            queue_label = ""
-            if crit is not None and current_jobs >= crit:
-                state = 2
-                queue_label = "(!!)"
-            elif warn is not None and current_jobs >= warn:
-                state = max(1, state)
-                queue_label = "(!)"
+    queue_label = ""
+    if crit is not None and current_jobs >= crit:
+        state = 2
+        queue_label = "(!!)"
+    elif warn is not None and current_jobs >= warn:
+        state = max(1, state)
+        queue_label = "(!)"
 
-            return state, "%s jobs current%s, State: %s, %s" %\
-                    ( current_jobs, queue_label, status_map[status], error_text )
-
-    return 3, "Printer not found in agent output"
+    return state, "%s jobs current%s, State: %s, %s" %\
+           (current_jobs, queue_label, status_map[status], error_text)
 
 
 check_info["win_printers"] = {
+    "parse_function": parse_win_printers,
     "check_function": check_win_printers,
     "group": "windows_printer_queues",
     "inventory_function": inventory_win_printers,

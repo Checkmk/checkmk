@@ -59,49 +59,48 @@ class RulespecCheckgroupParametersPduGude(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("kWh",
-                 Tuple(
-                     title=_("Total accumulated Active Energy of Power Channel"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=_("kW")),
-                         Integer(title=_("critical at"), unit=_("kW")),
-                     ],
-                 )),
-                ("W",
-                 Tuple(
-                     title=_("Active Power"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=_("W")),
-                         Integer(title=_("critical at"), unit=_("W")),
-                     ],
-                 )),
-                ("A",
-                 Tuple(
-                     title=_("Current on Power Channel"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=_("A")),
-                         Integer(title=_("critical at"), unit=_("A")),
-                     ],
-                 )),
-                ("V",
-                 Tuple(
-                     title=_("Voltage on Power Channel"),
-                     elements=[
-                         Integer(title=_("warning if below"), unit=_("V")),
-                         Integer(title=_("critical if below"), unit=_("V")),
-                     ],
-                 )),
-                ("VA",
-                 Tuple(
-                     title=_("Line Mean Apparent Power"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=_("VA")),
-                         Integer(title=_("critical at"), unit=_("VA")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("kWh",
+             Tuple(
+                 title=_("Total accumulated Active Energy of Power Channel"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=_("kW")),
+                     Integer(title=_("critical at"), unit=_("kW")),
+                 ],
+             )),
+            ("W",
+             Tuple(
+                 title=_("Active Power"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=_("W")),
+                     Integer(title=_("critical at"), unit=_("W")),
+                 ],
+             )),
+            ("A",
+             Tuple(
+                 title=_("Current on Power Channel"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=_("A")),
+                     Integer(title=_("critical at"), unit=_("A")),
+                 ],
+             )),
+            ("V",
+             Tuple(
+                 title=_("Voltage on Power Channel"),
+                 elements=[
+                     Integer(title=_("warning if below"), unit=_("V")),
+                     Integer(title=_("critical if below"), unit=_("V")),
+                 ],
+             )),
+            ("VA",
+             Tuple(
+                 title=_("Line Mean Apparent Power"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=_("VA")),
+                     Integer(title=_("critical at"), unit=_("VA")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

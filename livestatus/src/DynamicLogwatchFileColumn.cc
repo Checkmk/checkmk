@@ -30,7 +30,7 @@
 
 namespace {
 // Replace \\ with \ and \s with space
-std::string unescape_filename(std::string filename) {
+std::string unescape_filename(const std::string &filename) {
     std::string filename_native;
     bool quote_active = false;
     for (auto c : filename) {

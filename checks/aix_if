@@ -91,9 +91,10 @@ def parse_aix_if(info):
 
     if_table = []
     for nic in nic_info:
-        if "Up" in nic_info[nic]["flags"]:
+        flags = nic_info[nic].get("flags", [])
+        if "Up" in flags:
             nic_info[nic]["ifOperStatus"] = 1
-        elif "Down" in nic_info[nic]["flags"]:
+        elif "Down" in flags:
             nic_info[nic]["ifOperStatus"] = 2
         # No information from entstat. We consider interfaces up
         # if they have been used at least some time since the

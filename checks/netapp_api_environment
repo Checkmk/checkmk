@@ -53,8 +53,8 @@ def check_netapp_api_environment(item, _no_params, parsed):
 check_info["netapp_api_environment"] = {
     'check_function': check_netapp_api_environment,
     'inventory_function': inventory_netapp_api_environment,
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["node-name", "sensor-name"]),
+    'parse_function': lambda info: netapp_api_parse_lines(info,
+                                                          custom_keys=["node-name", "sensor-name"]),
     'service_description': 'PSU Controller %s',
     'includes': ["netapp_api.include"]
 }

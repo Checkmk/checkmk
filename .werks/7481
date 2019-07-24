@@ -1,0 +1,10 @@
+Title: zfs_arc_cache: now available for FreeBSD
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558083200
+Class: feature
+
+

@@ -561,6 +561,7 @@ using WorkString = std::basic_string<T>;
         // old GCC cannot find not declared xlog::l
         // xlog::l("You have error opening file %s", FileName);
 #endif
+        return;
     }
 
     {

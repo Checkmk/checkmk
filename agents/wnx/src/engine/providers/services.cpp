@@ -2,27 +2,31 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/services.h"
+
 #include <string>
 
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
-#include "providers/services.h"
-
 namespace cma {
 
 namespace provider {
 
-static const char *GetServiceStartType(SC_HANDLE Handle, LPCWSTR service_name) {
+// simple converter from well know service status to readble string
+static const char *GetServiceStartType(SC_HANDLE manager_handle,
+                                       LPCWSTR service_name) {
     // Query the start type of the service
-    auto handle = ::OpenServiceW(Handle, service_name, SERVICE_QUERY_CONFIG);
-    if (!handle) return "invalid1";
+    auto handle =
+        ::OpenServiceW(manager_handle, service_name, SERVICE_QUERY_CONFIG);
+    if (nullptr == handle) return "invalid1";
 
     ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
 
     DWORD bytes_required = 0;
-    if (::QueryServiceConfig(handle, NULL, 0, &bytes_required))
+    if (TRUE == ::QueryServiceConfig(handle, nullptr, 0, &bytes_required)) {
         return "invalid2";  // should not happen!
+    }
 
     if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER) return "invalid3";
 
@@ -30,8 +34,10 @@ static const char *GetServiceStartType(SC_HANDLE Handle, LPCWSTR service_name) {
     auto buffer = std::make_unique<unsigned char[]>(buf_size);
     auto lpsc = reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(buffer.get());
 
-    if (!::QueryServiceConfig(handle, lpsc, buf_size, &bytes_required))
+    if (FALSE ==
+        ::QueryServiceConfig(handle, lpsc, buf_size, &bytes_required)) {
         return "invalid4";  // should not happen!
+    }
 
     switch (lpsc->dwStartType) {
         case SERVICE_AUTO_START:
@@ -71,27 +77,28 @@ static const char *ConvertState2Name(int State) {
     }
 }
 
-static auto EnumAllServices(SC_HANDLE Handle) {
+static std::tuple<DWORD, DWORD> EnumAllServices(SC_HANDLE Handle) {
     DWORD bytes_needed = 0;
     DWORD num_services = 0;
-    ::EnumServicesStatusExW(Handle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                            SERVICE_STATE_ALL, NULL, 0, &bytes_needed,
-                            &num_services, 0, 0);
 
-    return std::make_tuple(bytes_needed, num_services);
+    ::EnumServicesStatusExW(Handle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                            SERVICE_STATE_ALL, nullptr, 0, &bytes_needed,
+                            &num_services, nullptr, nullptr);
+
+    return {bytes_needed, num_services};
 }
 
-std::string Services::makeBody() const {
+std::string Services::makeBody() {
     using namespace std::chrono;
 
     XLOG::t(XLOG_FUNC + " entering");
 
     // Pre-History: open and close
     auto handle = ::OpenSCManager(
-        0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
+        nullptr, nullptr, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
 
     // check for fail:
-    if (!handle) {
+    if (nullptr == handle) {
         XLOG::l("OpenSCManager Fialed with error {}", GetLastError());
         return {};
     }
@@ -108,9 +115,10 @@ std::string Services::makeBody() const {
 
     // read data about service into local buffer
     auto buffer = std::make_unique<unsigned char[]>(bytes_needed);
-    if (!::EnumServicesStatusExW(handle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                                 SERVICE_STATE_ALL, buffer.get(), bytes_needed,
-                                 &bytes_needed, &num_services, 0, 0)) {
+    if (FALSE == ::EnumServicesStatusExW(
+                     handle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                     SERVICE_STATE_ALL, buffer.get(), bytes_needed,
+                     &bytes_needed, &num_services, nullptr, nullptr)) {
         XLOG::l("EnumServices Failed with error {}", GetLastError());
         return {};
     }

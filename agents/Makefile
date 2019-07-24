@@ -57,13 +57,15 @@ setversion:
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \
-	        sed -i 's/echo Version: [0-9.a-z-]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
+	        sed -i 's/echo "Version: [0-9.a-z-]*"/echo "Version: $(NEW_VERSION)"/g' $$agent; \
 	    fi ; \
 	done
 	package="Check_MK Windows Agent" ; \
-	mail=feedback@check-mk.org ; \
+	mail=feedback@checkmk.com; \
 	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
 	    windows/configure.ac
+	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/"\
+		wnx/src/common/wnx_version.h
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
 
@@ -123,7 +125,7 @@ $(DEB_PACKAGE): $(RPM_PACKAGE)
 	tar xf control.tar.* -C ctrl && \
 	sed -i -e '/^Depends:/d' \
 	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
-	       -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
+	       -e 's/^Maintainer:.*/Maintainer: feedback@checkmk.com/' ctrl/control && \
 	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	xz --decompress data.tar.xz && \
 	gzip data.tar && \

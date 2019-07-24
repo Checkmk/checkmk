@@ -2,34 +2,37 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/ohm.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <tuple>
 
+#include "cfg.h"
+#include "cma_core.h"
+#include "common/wtools.h"
 #include "fmt/format.h"
-
+#include "glob_match.h"
+#include "logger.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
-#include "common/wtools.h"
-
-#include "cfg.h"
-#include "cma_core.h"
-#include "glob_match.h"
-
-#include "logger.h"
-
-#include "providers/ohm.h"
-
 namespace cma::provider {
 
-std::filesystem::path GetOhmCliPath() {
+// makes OHM binary filename
+std::filesystem::path GetOhmCliPath() noexcept {
+    return GetOhmCliPath(cma::cfg::GetUserDir());
+}
+
+std::filesystem::path GetOhmCliPath(const std::filesystem::path& dir) noexcept {
     namespace fs = std::filesystem;
-    fs::path ohm_exe = cma::cfg::GetRootDir();
-    ohm_exe /= cma::cfg::dirs::kAgentBin;
-    ohm_exe /= cma::provider::kOpenHardwareMonitorCli;
+
+    fs::path ohm_exe = dir;
+    ohm_exe /= cma::cfg::dirs::kUserBin;
+    ohm_exe /= ohm::kExeModule;
+
     return ohm_exe;
 }
 
@@ -46,16 +49,21 @@ void OhmProvider::updateSectionStatus() {
     }
 }
 
-/*
-std::string OhmProvider::makeBody() const {
+std::string OhmProvider::makeBody() {
     using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
-
+    auto result = Wmi::makeBody();
     // probably we do not need this function
     // during loading config
+    if (result.empty()) {
+        auto error_count = registerError();
+        XLOG::d.t("No data for OHM, error number [{}]", error_count + 1);
+    } else {
+        if (resetError()) {
+            XLOG::d.t("OHM is available again ");
+        }
+    }
 
-    return "";
+    return result;
 }
-*/
 
 }  // namespace cma::provider

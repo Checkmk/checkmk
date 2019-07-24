@@ -36,8 +36,9 @@
 def inv_check_mk(info):
     node = inv_tree("networking.")
     for line in info:
-        if line[0] == "Hostname:":
+        if len(line) == 2 and line[0] == "Hostname:":
             node["hostname"] = line[1]
+            break
 
 
 inv_info['check_mk'] = {

@@ -200,8 +200,15 @@ std::string Device::generateData() {
     return result;
 }
 
-// #TODO overcomplicated function, to be refactored
-void Device::mainThread() {
+static void UpdateCounterByEc(size_t& counter, std::error_code& ec) {
+    if (ec.value())
+        counter++;  // error, this is not good
+    else
+        counter = 0;
+}
+
+// #TODO overcomplicated function, to be re-factored
+void Device::mainThread() noexcept {
     std::unique_lock lk(lock_);
     auto port = port_;
     auto ip_address = ip_address_;
@@ -221,7 +228,7 @@ void Device::mainThread() {
     using namespace asio::ip;
     try {
         asio::io_context io_context;
-        udp::socket s(io_context);
+        udp::socket sock(io_context);
         bool connected = false;
         bool connect_required =
             false;  // true on first connect or on change connect address
@@ -250,28 +257,31 @@ void Device::mainThread() {
             lk.unlock();
 
             if (port && connect_required) {
-                connected = connectSocket(io_context, s, ip_address, port);
+                connected = connectSocket(io_context, sock, ip_address, port);
                 counter = 0;
                 if (connected) connect_required = false;
             }
 
             if (working_period_) {
                 // transmit data to server
-                auto data = generateData();
+                auto raw_data = generateData();
                 if (connected) {
+                    auto packed_data = PackData(raw_data, crypt.get());
+
                     std::error_code ec;
-                    auto packed_data = PackData(data, crypt.get());
-                    s.send(asio::buffer(packed_data.data(), packed_data.size()),
-                           0, ec);
-                    if (ec.value()) {
-                        if (counter > 3)
-                            mainThreadReporter("Can't Send", ec, ip_address,
-                                               port);
-                        counter++;  // error, this is not good
-                    } else
-                        counter = 0;
+                    sock.send(
+                        asio::buffer(packed_data.data(), packed_data.size()), 0,
+                        ec);
+
+                    // errors reporting
+                    UpdateCounterByEc(counter, ec);
+
+                    if (counter > 3)
+                        mainThreadReporter("Can't Send", ec, ip_address, port);
+
                 } else if (port == 0)
-                    XLOG::l.i("Trace out '{}' Address='{}'", data, ip_address);
+                    XLOG::l.i("Trace out '{}' Address='{}'", raw_data,
+                              ip_address);
             }
 
             // wait for stop here TOO

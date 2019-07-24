@@ -1,0 +1,12 @@
+Title: win_printers: Handle printer status messages
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558432415
+Class: fix
+
+It is known that agent output may contain status messages of printers which
+lead to a crash of the check function. This werk fixes this issue by
+ignoring these messages.

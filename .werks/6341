@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1531218870
 
 When installing agent bakery RPMs/DEBs an error message "SyntaxError: invalid syntax" could occur.

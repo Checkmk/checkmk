@@ -33,6 +33,8 @@ import dicttoxml  # type: ignore
 
 import cmk
 
+import cmk.utils.store as store
+
 import cmk.gui.pages
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
@@ -106,13 +108,13 @@ class PermissionWATOAllowedAPI(Permission):
 
 
 _FORMATTERS = {
-    "json": (
-        json.dumps,
-        lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
+    "json":
+        (json.dumps,
+         lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
     "python": (repr, pprint.pformat),
-    "xml": (
-        dicttoxml.dicttoxml,
-        lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
+    "xml":
+        (dicttoxml.dicttoxml,
+         lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
 }
 
 
@@ -125,8 +127,8 @@ def page_api():
         if html.output_format not in _FORMATTERS:
             html.set_output_format("python")
             raise MKUserError(
-                None, "Only %s are supported as output formats" % " and ".join(
-                    '"%s"' % f for f in _FORMATTERS))
+                None, "Only %s are supported as output formats" %
+                " and ".join('"%s"' % f for f in _FORMATTERS))
 
         # TODO: Add some kind of helper for boolean-valued variables?
         pretty_print_var = html.request.var("pretty_print", "no").lower()
@@ -224,7 +226,7 @@ def _check_request_keys(api_call, request_object):
 
 def _execute_action(api_call, request_object):
     if api_call.get("locking", True):
-        with watolib.exclusive_lock():
+        with store.lock_checkmk_configuration():
             return _execute_action_no_lock(api_call, request_object)
     return _execute_action_no_lock(api_call, request_object)
 

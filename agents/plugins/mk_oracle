@@ -131,6 +131,13 @@ fi
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+unsupported_os () {
+    logging -c -e "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
+    exit 1
+}
+
+
 file_mtime () {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
@@ -140,45 +147,54 @@ set_os_env () {
     if [ "$OS_TYPE" = 'Linux' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX='stat -c %X'
-        STATCY='stat -c %Y'
 
     elif [ "$OS_TYPE" = 'SunOS' ]; then
         # expand the PATH for inetd. Otherwise some stuff in /opt/sfw/bin is not found!
         export PATH=$PATH:/usr/ucb:/usr/proc/bin:opt/sfw/bin:/opt/sfw/sbin:/usr/sfw/bin:/usr/sfw/sbin:/opt/csw/bin
         GREP="/usr/xpg4/bin/grep"
         if [ ! -x "$GREP" ]; then
-            logging -c "[set_os_env]" "Please make sure that ${GREP} is existing on Solaris. Aborting mk_oracle plugin."
-            echo "Please make sure that $GREP is existing on Solaris!" >&2
-            echo "Aborting mk_oracle plugin." >&2
+            logging -c -e "[set_os_env]" "Please make sure that ${GREP} is existing on Solaris. Aborting mk_oracle plugin."
             exit 127
         fi
 
         AWK=$(which nawk)
-        STATCX='file_mtime'
-        STATCY='file_mtime'
 
     elif [ "$OS_TYPE" = 'AIX' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX='file_mtime'
-        STATCY='file_mtime'
 
     elif [ "$OS_TYPE" = 'HP-UX' ]; then
         GREP=$(which grep)
         AWK=$(which awk)
-        STATCX="perl -le 'print((stat shift)[8])'"
-        STATCY="perl -le 'print((stat shift)[9])'"
 
     else
-        logging -c "[set_os_env]" "Unsupported OS: ${OS_TYPE}"
-        echo "Unsupported OS: $OS_TYPE" >&2
-        exit 1
+        unsupported_os
 
     fi
 
-    export GREP AWK STATCX STATCY
+    export GREP AWK
 }
+
+
+mk_ora_atime () {
+    case $OS_TYPE in
+        Linux) stat -c %X "$@";;
+        SunOS|AIX) file_mtime "$@";;
+        HP-UX) perl -le 'print((stat shift)[8])' "$@";;
+        *) unsupported_os;;
+    esac
+}
+
+
+mk_ora_mtime () {
+    case $OS_TYPE in
+        Linux) stat -c %Y "$@";;
+        SunOS|AIX) file_mtime "$@";;
+        HP-UX) perl -le 'print((stat shift)[9])' "$@";;
+        *) unsupported_os;;
+    esac
+}
+
 
 #.
 #   .--config--------------------------------------------------------------.
@@ -250,7 +266,7 @@ OLRLOC=/etc/oracle/olr.loc
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=/dev/null
     . "$MK_CONFDIR/mk_oracle.cfg"
 fi
 
@@ -291,6 +307,7 @@ fi
 #   '-w'        1 (WARNING)         error but plugin goes on
 #   '-c'        2 (CRITICAL)        error and plugin exits
 #   '-u'        3 (UNKNOWN)         ?
+#   '-e'                            Writes message to stderr, too
 #
 # Add some useful messages:
 #   logging "" "Set OS environment" "OS: ${OS_TYPE}" "GREP: ${GREP}"
@@ -324,6 +341,7 @@ logging () {
             local criticality=
             local args=
             local header=
+            local to_stderr=false
 
             let i=0
             while test -n "$1"; do
@@ -348,6 +366,11 @@ logging () {
                         shift
                         ;;
 
+                    -e)
+                        to_stderr=true
+                        shift
+                        ;;
+
                     *)
                         args[$i]="$1"
                         i=$((i+1))
@@ -364,9 +387,15 @@ logging () {
 
             if [ "${#args[@]}" -le 1 ]; then
                 echo "$header" >> "$log_file"
+                if [ $to_stderr = true ]; then
+                    echo "$header" >&2
+                fi
             else
                 for arg in "${args[@]:1}"; do
                     echo "${header} $arg" >> "$log_file"
+                    if [ $to_stderr = true ]; then
+                        echo "${header} $arg" >&2
+                    fi
                 done
             fi
 
@@ -402,15 +431,17 @@ set_ora_env () {
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
             # OLRLOC holds CRS_HOME
+            # shellcheck source=/dev/null
             . ${OLRLOC}
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
             if [ "${ORACLE_SID:0:1}" = '+' ]; then
+                # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$(${crs_home}/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
+                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
             fi
         else
             # Single Instance with oratab
@@ -418,8 +449,7 @@ set_ora_env () {
             # /var/opt/oracle/oratab is needed for Oracle Solaris
             test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
             if ! test -f ${ORATAB:-""}; then
-                logging -c "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
-                echo "ORA-99999 oratab not found" >&2
+                logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
                 exit 1
             fi
             ORACLE_HOME=$("${GREP}" "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
@@ -434,15 +464,13 @@ set_ora_env () {
 
     LD_LIBRARY_PATH=$ORACLE_HOME/lib
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
-        logging -c "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
-        echo "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!" >&2
+        logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
         return 2
     fi
 
     TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
     if ! test -f "${TNS_ADMIN}/sqlnet.ora"; then
-        logging -c "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
-        echo "ORA-99998 Couldn't find ${TNS_ADMIN}/sqlnet.ora" >&2
+        logging -c -e "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
         exit 1
     fi
     export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
@@ -796,6 +824,7 @@ sql_dataguard_stats () {
                      ||'|'|| d.FS_FAILOVER_OBSERVER_HOST
                      ||'|'|| d.FS_FAILOVER_CURRENT_TARGET
                      ||'|'|| ms.status
+                     ||'|'|| d.open_mode
               FROM  v\$database d
               JOIN  v\$parameter vp on 1=1
               JOIN v\$instance i on 1=1
@@ -872,7 +901,7 @@ sql_rman () {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select /*"$HINT_RMAN" check_mk rman1 */ upper(name)
+        echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
@@ -901,7 +930,7 @@ sql_rman () {
                             , bd2.INCREMENTAL_CHANGE#
                      order by name, bd2.INCREMENTAL_LEVEL);
 
-              select /*"$HINT_RMAN" check_mk rman2 */ name
+              select /*$HINT_RMAN check_mk rman2 */ name
                     || '|' || 'COMPLETED'
                     || '|'
                     || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
@@ -917,7 +946,7 @@ sql_rman () {
                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                    );
 
-              select /*"$HINT_RMAN" check_mk rman3 */ name
+              select /*$HINT_RMAN check_mk rman3 */ name
                      || '|COMPLETED'
                      || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
                      || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
@@ -1547,7 +1576,7 @@ sql_asm_diskgroup () {
            || '|' || sum(d.total_mb)
            || '|' || sum(d.free_mb)
            || '|' || d.failgroup
-           || '|' || d.VOTING_FILE
+           || '|' || max(d.VOTING_FILE)
            || '|' || d.FAILGROUP_TYPE
            || '|' || g.offline_disks
            || '|' || min(decode(d.REPAIR_TIMER, 0, 8640000, d.REPAIR_TIMER))
@@ -1755,7 +1784,7 @@ do_custom_sqls () {
                 "Max cache age: $max_cache_age"
 
         if [ "$MK_ORA_DEBUG_CONNECT" = "1" ]; then
-            do_testmode_custom_sql 
+            do_testmode_custom_sql
         else
             if [ -z "$max_cache_age" ]; then
                 local output=
@@ -1988,7 +2017,7 @@ run_cached () {
     # perl is needed for Solaris => no date +%s availible
     now=$(perl -le "print time()")
     if [ -e "${cache_file}.new" ]; then
-        cf_atime=$(eval "$STATCX" "${cache_file}.new")
+        cf_atime=$(mk_ora_atime "${cache_file}.new")
         if [ $((now - cf_atime)) -ge $((maxage * 2)) ]; then
             # Kill the process still accessing that file in case
             # it is still running. This avoids overlapping processes!
@@ -2001,7 +2030,7 @@ run_cached () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$cache_file" ]; then
-        mtime=$(eval "$STATCY" "$cache_file")
+        mtime=$(mk_ora_mtime "$cache_file")
         if [ $((now - mtime)) -le "$maxage" ]; then
             use_cache_file=1
         fi
@@ -2035,15 +2064,17 @@ run_cached () {
 
 mk_ora_db_connect () {
     local sid="$1"
+    local CFGTNSALIAS=""
 
     ORADBUSER=""
     DBPASSWORD=""
+    offset=${offset:-0}
 
     if [[ "$sid" =~ ^REMOTE_INSTANCE_.* ]]; then
         # working on REMOTE_-Mode!
         ORACFGLINE=$(eval "echo \${$1}")
         ORACLE_SID=$(echo "${ORACFGLINE}" | cut -d":" -f7)
-        TNSALIAS=$(echo "${REMOTE_VARNAME}" | cut -d"_" -f3-)
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f9)
 
     else
         # working with locally running instances
@@ -2070,9 +2101,10 @@ mk_ora_db_connect () {
             # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
             offset=1
         fi
+
+        CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f$((6+offset)))
     fi
 
-    offset=${offset:-0}
     if [ -n "$SQLS_DBUSER" ]; then
         ORADBUSER=${SQLS_DBUSER}
         DBPASSWORD=${SQLS_DBPASSWORD}
@@ -2085,17 +2117,37 @@ mk_ora_db_connect () {
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
+    if [ -f $OLRLOC ] && [ ! -z "$crs_home" ] ; then
+        if [ -d "$crs_home" ] ; then
+            # we found GI/Restart
+            # => Use hostname instead of localhost
+            DBHOST=${DBHOST:-$(hostname)}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected. crs_home: $crs_home"
+        else
+            DBHOST=${DBHOST:-"localhost"}
+            logging "[${sid}] [mk_ora_db_connect]" "OLR detected, crs_home missing"
+        fi
+    else
+        DBHOST=${DBHOST:-"localhost"}
+        logging "[${sid}] [mk_ora_db_connect]" "Single Instance"
+    fi
+
+    if [ ! -z "$CFGTNSALIAS" ] ; then
+        logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
+    fi
+
     TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
             P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
         else
-            P_TNSALIAS_P=$ORACLE_SID
+            # use TNSALIAS from ORACFGLINE or ORACLE_SID when empty
+            P_TNSALIAS_P=${CFGTNSALIAS:-${ORACLE_SID}}
         fi
 
         # PREFIX / POSTFIX makes no sense for ASM
         # => only 1 Instance with known connection possible
-        if [ -n "$P_TNSALIAS_P" -a ! "${ORACLE_SID:0:1}" = '+'  ]; then
+        if [ -n "$P_TNSALIAS_P" ] && [ ! "${ORACLE_SID:0:1}" = '+' ]; then
             PREFIX_SID="PREFIX_$sid"
             PREFIX_SID=${!PREFIX_SID}
             if [ -n "$PREFIX_SID" ]; then
@@ -2118,13 +2170,20 @@ mk_ora_db_connect () {
         fi
 
         TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
+
+        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
+
         if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
             TNSPINGOK=yes
         else
             unset TNSALIAS
         fi
     else
-        unset TNSALIAS
+        if [ -z "$CFGTNSALIAS" ] ; then
+            unset TNSALIAS
+        else
+            TNSALIAS=${SQLS_TNSALIAS:-${CFGTNSALIAS}}
+        fi
     fi
 
     logging "[${sid}] [mk_ora_db_connect]" "ORA DB user: $ORADBUSER"\
@@ -2140,17 +2199,18 @@ mk_ora_db_connect () {
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
-        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
         if [ "${ORADBUSER:0:1}" = '/' ]; then
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ "$TNSPINGOK" = 'no' ]; then
+            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
+                # or no alias is configured in CFGTNSALIAS
                 # defaults to localhost:1521/<ORACLE_SID>
-                TNSALIAS="${DBHOST:-"localhost"}:${DBPORT:-1521}/${ORACLE_SID}"
+                TNSALIAS="${DBHOST}:${DBPORT:-1521}/${ORACLE_SID}"
             fi
         fi
     fi
@@ -2185,9 +2245,7 @@ mk_ora_sqlplus () {
 
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
-        logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
-        echo "sqlplus not found or ORACLE_HOME wrong!"
-        echo "SQLPLUS=${SQLPLUS}"
+        logging -w -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
         return 1
     fi
 
@@ -2372,11 +2430,7 @@ if [ "$MK_ORA_LOGGING" == "1" ]; then
 fi
 
 set_os_env
-logging "[preliminaries]" "OS: ${OS_TYPE}"\
-        "GREP: ${GREP}" "AWK: ${AWK}" "STATCX: ${STATCX}" "STATCY: ${STATCY}"
-
-
-logging "[preliminaries]" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
+logging "[preliminaries]" "OS: ${OS_TYPE}" "SYNC_SECTIONS: ${SYNC_SECTIONS}"\
         "ASYNC_SECTIONS: ${ASYNC_SECTIONS}" "SYNC_ASM_SECTIONS: ${SYNC_ASM_SECTIONS}"\
         "ASYNC_ASM_SECTIONS: ${ASYNC_ASM_SECTIONS}" "CACHE_MAXAGE: ${CACHE_MAXAGE}"\
         "ONLY_SIDS: ${ONLY_SIDS}" "SKIP_SIDS: ${SKIP_SIDS}"
@@ -2417,8 +2471,7 @@ fi
 # In the later case we ouput empty agent sections so that Check_MK will be
 # happy and execute the actual check functions.
 if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-    logging -c "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
-    echo "No SIDs and \$MK_VARDIR/mk_oracle.found not found" >&2
+    logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
     exit 1
 fi
 

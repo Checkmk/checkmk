@@ -123,70 +123,65 @@ class RulespecCheckgroupParametersServices(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("additional_servicenames",
-                 ListOfStrings(
-                     title=_("Alternative names for the service"),
-                     help=_("Here you can specify alternative names that the service might have. "
-                            "This helps when the exact spelling of the services can changed from "
-                            "one version to another."),
-                 )),
-                ("states",
-                 ListOf(
-                     Tuple(
-                         orientation="horizontal",
-                         elements=[
-                             DropdownChoice(
-                                 title=_("Expected state"),
-                                 default_value="running",
-                                 choices=[(None, _("ignore the state")), ("running", _("running")),
-                                          ("stopped", _("stopped"))],
-                             ),
-                             DropdownChoice(
-                                 title=_("Start type"),
-                                 default_value="auto",
-                                 choices=[
-                                     (None, _("ignore the start type")),
-                                     ("demand", _("demand")),
-                                     ("disabled", _("disabled")),
-                                     ("auto", _("auto")),
-                                     ("unknown", _("unknown (old agent)")),
-                                 ],
-                             ),
-                             MonitoringState(title=_("Resulting state"),),
-                         ],
-                         default_value=("running", "auto", 0)),
-                     title=_("Services states"),
-                     help=_("You can specify a separate monitoring state for each possible "
-                            "combination of service state and start type. If you do not use "
-                            "this parameter, then only running/auto will be assumed to be OK."),
-                 )),
-                (
-                    "else",
-                    MonitoringState(
-                        title=_("State if no entry matches"),
-                        default_value=2,
-                    ),
-                ),
-                ('icon',
-                 UserIconOrAction(
-                     title=_("Add custom icon or action"),
-                     help=_(
-                         "You can assign icons or actions to the found services in the status GUI."
-                     ),
-                 ))
-            ],)
+        return Dictionary(elements=[
+            ("additional_servicenames",
+             ListOfStrings(
+                 title=_("Alternative names for the service"),
+                 help=_("Here you can specify alternative names that the service might have. "
+                        "This helps when the exact spelling of the services can changed from "
+                        "one version to another."),
+             )),
+            ("states",
+             ListOf(
+                 Tuple(orientation="horizontal",
+                       elements=[
+                           DropdownChoice(
+                               title=_("Expected state"),
+                               default_value="running",
+                               choices=[(None, _("ignore the state")), ("running", _("running")),
+                                        ("stopped", _("stopped"))],
+                           ),
+                           DropdownChoice(
+                               title=_("Start type"),
+                               default_value="auto",
+                               choices=[
+                                   (None, _("ignore the start type")),
+                                   ("demand", _("demand")),
+                                   ("disabled", _("disabled")),
+                                   ("auto", _("auto")),
+                                   ("unknown", _("unknown (old agent)")),
+                               ],
+                           ),
+                           MonitoringState(title=_("Resulting state"),),
+                       ],
+                       default_value=("running", "auto", 0)),
+                 title=_("Services states"),
+                 help=_("You can specify a separate monitoring state for each possible "
+                        "combination of service state and start type. If you do not use "
+                        "this parameter, then only running/auto will be assumed to be OK."),
+             )), (
+                 "else",
+                 MonitoringState(
+                     title=_("State if no entry matches"),
+                     default_value=2,
+                 ),
+             ),
+            ('icon',
+             UserIconOrAction(
+                 title=_("Add custom icon or action"),
+                 help=_("You can assign icons or actions to the found services in the status GUI."),
+             ))
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Name of the service"),
-            help=_("Please Please note, that the agent replaces spaces in "
-                   "the service names with underscores. If you are unsure about the "
-                   "correct spelling of the name then please look at the output of "
-                   "the agent (cmk -d HOSTNAME). The service names  are in the first "
-                   "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
-                   "do not mix up the service name with the display name of the service."
-                   "The latter one is just being displayed as a further information."),
-            allow_empty=False)
+        return TextAscii(title=_("Name of the service"),
+                         help=_(
+                             "Please Please note, that the agent replaces spaces in "
+                             "the service names with underscores. If you are unsure about the "
+                             "correct spelling of the name then please look at the output of "
+                             "the agent (cmk -d HOSTNAME). The service names  are in the first "
+                             "column of the section &lt;&lt;&lt;services&gt;&gt;&gt;. Please "
+                             "do not mix up the service name with the display name of the service."
+                             "The latter one is just being displayed as a further information."),
+                         allow_empty=False)

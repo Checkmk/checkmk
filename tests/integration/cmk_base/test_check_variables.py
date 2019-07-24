@@ -1,18 +1,19 @@
-import pytest
+# pylint: disable=redefined-outer-name
 import subprocess
+import pytest  # type: ignore
 
-from testlib import web
+from testlib import web  # pylint: disable=unused-import
 import cmk_base.config as config
 import cmk_base.check_api as check_api
+import cmk_base.autochecks as autochecks
 
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "modes-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("modes-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
 
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
@@ -69,6 +70,7 @@ check_info["test_check_1"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load(with_conf_d=False)
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context.
@@ -79,10 +81,11 @@ check_info["test_check_1"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    assert site.read_file("var/check_mk/autochecks/modes-test-host.mk") == """[
-  ('test_check_1', None, test_check_1_default_levels),
-]
-"""
+    services = autochecks.parse_autochecks_file("modes-test-host")
+    assert services[0].check_plugin_name == "test_check_1"
+    assert services[0].item is None
+    assert services[0].parameters_unresolved == "test_check_1_default_levels"
+    assert services[0].service_labels.to_dict() == {}
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", "modes-test-host"],
@@ -142,6 +145,7 @@ check_info["test_check_2"] = {
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load(with_conf_d=False)
 
     # Verify that the default variable is in the check context and
     # not in the global checks module context
@@ -162,10 +166,11 @@ check_info["test_check_2"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    assert site.read_file("var/check_mk/autochecks/modes-test-host.mk") == """[
-  ('test_check_2', None, {}),
-]
-"""
+    services = autochecks.parse_autochecks_file("modes-test-host")
+    assert services[0].check_plugin_name == "test_check_2"
+    assert services[0].item is None
+    assert services[0].parameters_unresolved == "{}"
+    assert services[0].service_labels.to_dict() == {}
 
 
 # Test whether or not factory settings and checkgroup parameters work
@@ -216,10 +221,11 @@ check_info["test_check_3"] = {
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
-    assert site.read_file("var/check_mk/autochecks/modes-test-host.mk") == """[
-  ('test_check_3', None, {}),
-]
-"""
+    services = autochecks.parse_autochecks_file("modes-test-host")
+    assert services[0].check_plugin_name == "test_check_3"
+    assert services[0].item is None
+    assert services[0].parameters_unresolved == "{}"
+    assert services[0].service_labels.to_dict() == {}
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", "modes-test-host"],

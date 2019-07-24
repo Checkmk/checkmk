@@ -192,8 +192,11 @@ def parse_ucs_bladecenter_if(info):
             # Grouped interfaces are identified when the type of the ifIndex field is a tuple
             # Speed and OperState
             if "portchannel" in values:
-                entry[0] = (group_prefix + " " + values["portchannel"].get("Name", values["portchannel"].get("PortId", "")),\
-                            str(last_index + index))
+                port_name = values["portchannel"].get("Name")
+                if not port_name:
+                    port_name = values["portchannel"].get("PortId", "")
+
+                entry[0] = (group_prefix + " " + port_name, str(last_index + index))
                 speed = values["portchannel"].get("AdminSpeed") or values["portchannel"].get(
                     "OperSpeed")
                 # It looks like that the AdminSpeed of a portchannel is the speed of one member

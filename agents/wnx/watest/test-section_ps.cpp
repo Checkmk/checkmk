@@ -20,9 +20,6 @@ std::string OutputProcessLine(ULONGLONG virtual_size,
                               long long thread_count, const std::string &user,
                               const std::string &exe_file);
 
-std::wstring GetProcessListFromWmi();
-std::string ProducePsWmi(bool FullPath);
-
 static long long convert(std::string Val) {
     try {
         return std::stoll(Val);
@@ -33,6 +30,27 @@ static long long convert(std::string Val) {
 
 std::vector<std::string> SpecialProcesses = {
     {"System Idle Process"}, {"Memory"}, {"Registry"}, {"Memory Compression"}};
+
+TEST(PsTest, Time) {
+    {
+        std::string in = "2019052313140";
+
+        auto check_time = ConvertWmiTimeToHumanTime(in);
+        EXPECT_EQ(check_time, 0);
+        EXPECT_EQ(ConvertWmiTimeToHumanTime(""), 0);
+    }
+
+    std::string in = "20190523131406.074948+120";
+
+    auto check_time = ConvertWmiTimeToHumanTime(in);
+    auto check_tm = *std::localtime(&check_time);
+    EXPECT_EQ(check_tm.tm_hour, 13);
+    EXPECT_EQ(check_tm.tm_sec, 06);
+    EXPECT_EQ(check_tm.tm_min, 14);
+    EXPECT_EQ(check_tm.tm_year, 119);
+    EXPECT_EQ(check_tm.tm_mon, 4);
+    EXPECT_EQ(check_tm.tm_mday, 23);
+}
 
 TEST(PsTest, All) {  //
     using namespace std::chrono;
@@ -80,7 +98,7 @@ TEST(PsTest, All) {  //
     EXPECT_EQ(convert(by_comma[9]), thread_count);
     EXPECT_EQ(convert(by_comma[10]), uptime);
 
-    auto processes = GetProcessListFromWmi();
+    auto processes = GetProcessListFromWmi(ps::kSepString);
     auto table = cma::tools::SplitString(processes, L"\n");
     EXPECT_TRUE(!processes.empty());
 
@@ -117,7 +135,7 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[9]) > 0);
-            EXPECT_TRUE(convert(by_comma[10]) > 0);
+            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
     {
@@ -153,7 +171,7 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
             if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
             EXPECT_TRUE(convert(by_comma[9]) > 0);
-            EXPECT_TRUE(convert(by_comma[10]) > 0);
+            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
 }

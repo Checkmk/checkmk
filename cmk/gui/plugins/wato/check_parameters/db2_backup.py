@@ -56,20 +56,18 @@ class RulespecCheckgroupParametersDb2Backup(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Optional(
-            Tuple(
-                elements=[
-                    Age(title=_("Warning at"),
-                        display=["days", "hours", "minutes"],
-                        default_value=86400 * 14),
-                    Age(title=_("Critical at"),
-                        display=["days", "hours", "minutes"],
-                        default_value=86400 * 28)
-                ],),
+            Tuple(elements=[
+                Age(title=_("Warning at"),
+                    display=["days", "hours", "minutes"],
+                    default_value=86400 * 14),
+                Age(title=_("Critical at"),
+                    display=["days", "hours", "minutes"],
+                    default_value=86400 * 28)
+            ],),
             title=_("Specify time since last successful backup"),
         )
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+        return TextAscii(title=_("Instance"),
+                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

@@ -151,108 +151,108 @@ SUBSECTIONS1 = {
         ],
         [
             '[', '"sha256:ed5d6b154e9754577224bc7f57e893f899664d4b0b336157063a714877024930",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.10.10"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.10.10"}', ']'
         ],
         [
             '[', '"sha256:df118e583614f41d5f190ced1a344ee3ccce2c36e91caf795d78e3c01d906701",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
         ],
         [
             '[', '"sha256:4a77be28f8e54a4e6a8ecd8cfbd1963463d1e7ac719990206ced057af41e9957",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
         ],
         [
             '[', '"sha256:f4bfbb70768f233f1adca8e9e7333695a263773c2663a97732519f3e0eed87b7",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p3"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p3"}', ']'
         ],
         [
             '[', '"sha256:ff19a3911e0a1560a945c4d749cb47ffd1ca9397f506d195ae8d30a86f46807e",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.17"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.17"}', ']'
         ],
         [
             '[', '"sha256:c0582f734ad1bb8c9adaf014c6d0b90ec532bf137afcdb4afe304c0c581ed308",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:91152cc1c4bcd3aba6309d88b2c2a7e53f2e6209757f3fda180489f064994287",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:8ca14ae84dd9a788bcaddd196cbed346d6cd624fa1a63253728df769e26d2a21",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:44a5d6d152722adef8dada252863f178993d955b49caa8ea7b954d9ebc93b1c2",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:44a5d6d152722adef8dada252863f178993d955b49caa8ea7b954d9ebc93b1c2",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:2e89feac75330553688011dfb2efc0f9c6e44b61a419d937ad826c8628007e10",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.13"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.13"}', ']'
         ],
         [
             '[', '"sha256:096300fde75dddfb273b343aa94957dffdbb4b57212debaddbd6f7714442df57",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.13"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.13"}', ']'
         ],
         [
             '[', '"sha256:8d463a5f7635ebd0c6f418236c571273083e1c5bc63711a2babc4048208f9aa3",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.12"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.12"}', ']'
         ],
         [
             '[', '"sha256:a1f15f9a2b1640ac73437fc96b658b7c9907ab14127e1ec82cd93986874e3159",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.12"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.12"}', ']'
         ],
         [
             '[', '"sha256:ee5124a3adb5eb20012a7189ea34495da3e39ff8517c2c260954654d3edf1553",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.11"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.11"}', ']'
         ],
         [
             '[', '"sha256:6143303a8e14d19961946d8749b698e2d1a90262c62a11dee5a40367907afe88",',
@@ -290,77 +290,77 @@ SUBSECTIONS1 = {
             '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-12', '09:17:54', '+0200',
             'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"","RunningFor":"7',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2…","Names":"monitoringx","Networks":"bridge","Ports":"","RunningFor":"7',
             'hours', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:40:21', '+0200',
-            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"2',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
-            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"2',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
-            'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=2018.10.10","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:40:20',
             '+0200',
-            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"2',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
             '08:39:29', '+0200',
-            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
             '08:37:43', '+0200',
-            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2018-10-10', '08:37:26', '+0200',
-            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"2',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:26',
             '+0200',
-            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -368,105 +368,105 @@ SUBSECTIONS1 = {
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:25',
             '+0200',
-            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:37:25',
             '+0200',
-            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
             '08:36:45', '+0200',
-            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'set', '-e', '…\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
-            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '2', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:58',
             '+0200',
-            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:58',
             '+0200',
-            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
-            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
-            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:57',
             '+0200',
-            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
-            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
-            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
-            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:56',
             '+0200',
-            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
-            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
-            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', '\'#(nop)', '…\\"","CreatedAt":"2018-10-10', '08:34:55',
             '+0200',
-            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"2',
+            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"2',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
@@ -486,12 +486,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0-2018.09.13",
         },
     },
@@ -501,12 +501,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.13"
         },
     },
@@ -516,12 +516,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0-2018.09.14"
         },
     },
@@ -537,12 +537,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 751900000,
         u'amount_containers': 1,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0p5"
         },
     },
@@ -584,12 +584,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 972300000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.14"
         },
     },
@@ -599,12 +599,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 814900000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0-2018.09.12"
         },
     },
@@ -614,12 +614,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.14"
         },
     },
@@ -629,12 +629,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.12"
         },
     },
@@ -644,12 +644,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.14"
         },
     },
@@ -659,12 +659,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 817600000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0p5"
         },
     },
@@ -687,12 +687,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 844300000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.10.10"
         },
     },
@@ -702,12 +702,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.11"
         },
     },
@@ -717,12 +717,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 817400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "1.5.0p3"
         },
     },
@@ -732,12 +732,12 @@ EXPECTED_IMAGES1 = {
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
-            "maintainer": "feedback@check-mk.org",
+            "maintainer": "feedback@checkmk.com",
             "org.opencontainers.image.description": "Check_MK is a leading tool for Infrastructure & Application Monitoring",
-            "org.opencontainers.image.source": "https://git.mathias-kettner.de/",
-            "org.opencontainers.image.title": "Check_MK",
-            "org.opencontainers.image.url": "https://mathias-kettner.com/",
-            "org.opencontainers.image.vendor": "Mathias Kettner GmbH",
+            "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+            "org.opencontainers.image.vendor": "tribe29 GmbH",
             "org.opencontainers.image.version": "2018.09.17"
         },
     },
@@ -747,12 +747,12 @@ EXPECTED_CONTAINERS1 = {
     u'0d7e34ebb911': {
         u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10'
         },
         u'Name': u'youthful_pare',
@@ -761,7 +761,7 @@ EXPECTED_CONTAINERS1 = {
     u'10d6b884f348': {
         u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'wizardly_ritchie',
         u'Status': u'Created',
@@ -769,12 +769,12 @@ EXPECTED_CONTAINERS1 = {
     u'24772268cc09': {
         u'Created': u'2018-10-10 08:37:25 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'Name': u'zen_bartik',
@@ -783,7 +783,7 @@ EXPECTED_CONTAINERS1 = {
     u'4a6806b168b1': {
         u'Created': u'2018-10-10 08:39:29 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'festive_fermi',
         u'Status': u'Exited (0) 2 days ago',
@@ -791,7 +791,7 @@ EXPECTED_CONTAINERS1 = {
     u'4d4d9f3be74b': {
         u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'pensive_spence',
         u'Status': u'Exited (0) 2 days ago',
@@ -799,7 +799,7 @@ EXPECTED_CONTAINERS1 = {
     u'55632dca94c8': {
         u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'stoic_perlman',
         u'Status': u'Created',
@@ -807,13 +807,13 @@ EXPECTED_CONTAINERS1 = {
     u'580a7b4bd20a': {
         u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/'
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk'
         },
         u'Name': u'reverent_proskuriakova',
         u'Status': u'Created',
@@ -821,7 +821,7 @@ EXPECTED_CONTAINERS1 = {
     u'6cae82f879ff': {
         u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'elated_poitras',
         u'Status': u'Created',
@@ -829,13 +829,13 @@ EXPECTED_CONTAINERS1 = {
     u'6fe73b950209': {
         u'Created': u'2018-10-10 08:37:26 +0200 CEST',
         u'Labels': {
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/'
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk'
         },
         u'Name': u'admiring_haibt',
         u'Status': u'Created',
@@ -843,13 +843,13 @@ EXPECTED_CONTAINERS1 = {
     u'73237ecc5183': {
         u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK'
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk'
         },
         u'Name': u'festive_stallman',
         u'Status': u'Created',
@@ -869,7 +869,7 @@ EXPECTED_CONTAINERS1 = {
     u'860d8dfff4f6': {
         u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'dazzling_meninsky',
         u'Status': u'Created',
@@ -878,12 +878,12 @@ EXPECTED_CONTAINERS1 = {
         u'Created': u'2018-10-10 08:37:25 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.version': u'1.5.0p5',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH'
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH'
         },
         u'Name': u'keen_cori',
         u'Status': u'Created',
@@ -891,7 +891,7 @@ EXPECTED_CONTAINERS1 = {
     u'93e0c88a69fa': {
         u'Created': u'2018-10-10 08:37:43 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'objective_darwin',
         u'Status': u'Exited (0) 2 days ago',
@@ -899,7 +899,7 @@ EXPECTED_CONTAINERS1 = {
     u'9b08cf26da8c': {
         u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'pensive_swartz',
         u'Status': u'Created',
@@ -907,7 +907,7 @@ EXPECTED_CONTAINERS1 = {
     u'a073bb9adfbe': {
         u'Created': u'2018-10-10 08:36:45 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'jovial_archimedes',
         u'Status': u'Exited (0) 2 days ago',
@@ -915,7 +915,7 @@ EXPECTED_CONTAINERS1 = {
     u'a17f21f95383': {
         u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'serene_poincare',
         u'Status': u'Created',
@@ -923,7 +923,7 @@ EXPECTED_CONTAINERS1 = {
     u'aad80d524200': {
         u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'competent_keller',
         u'Status': u'Created',
@@ -931,13 +931,13 @@ EXPECTED_CONTAINERS1 = {
     u'b17185d5dcc5': {
         u'Created': u'2018-10-10 08:40:21 +0200 CEST',
         u'Labels': {
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK'
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk'
         },
         u'Name': u'friendly_banach',
         u'Status': u'Created',
@@ -945,12 +945,12 @@ EXPECTED_CONTAINERS1 = {
     u'bfdb64ccf0ba': {
         u'Created': u'2018-10-10 08:37:26 +0200 CEST',
         u'Labels': {
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5',
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring'
         },
         u'Name': u'lucid_bohr',
@@ -959,7 +959,7 @@ EXPECTED_CONTAINERS1 = {
     u'c04099ed3f18': {
         u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'dreamy_thompson',
         u'Status': u'Created',
@@ -967,7 +967,7 @@ EXPECTED_CONTAINERS1 = {
     u'cdc7e1e4a24e': {
         u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'lucid_brown',
         u'Status': u'Created',
@@ -975,7 +975,7 @@ EXPECTED_CONTAINERS1 = {
     u'd1c70f4690b5': {
         u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'trusting_panini',
         u'Status': u'Created',
@@ -983,7 +983,7 @@ EXPECTED_CONTAINERS1 = {
     u'd37198a74c08': {
         u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'distracted_mccarthy',
         u'Status': u'Created',
@@ -991,7 +991,7 @@ EXPECTED_CONTAINERS1 = {
     u'df44340ed121': {
         u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'unruffled_hopper',
         u'Status': u'Created',
@@ -1013,12 +1013,12 @@ EXPECTED_CONTAINERS1 = {
         u'Created': u'2018-10-12 09:17:54 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5',
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'Name': u'monitoringx',
         u'Status': u'Created',
@@ -1142,14 +1142,14 @@ SUBSECTIONS2 = {
     'image_labels': [
         [
             '[', '"sha256:485933207afd6e390c5e91f37b49b8610f483299de0bcff4b6fadca1cdb641b6",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
         ],
         [
             '[', '"sha256:0983f5184ce73305dbba6b15bdb5ce90cb07790177690f4ce09e4a16b388842c",',
-            '{"maintainer":"feedback@check-mk.org"}', ']'
+            '{"maintainer":"feedback@checkmk.com"}', ']'
         ],
         [
             '[', '"sha256:ed55e8b953366b628773629b98dba9adc07a9c1543efbb04c18f0052e26ee719",',
@@ -1167,108 +1167,108 @@ SUBSECTIONS2 = {
         ],
         [
             '[', '"sha256:ed5d6b154e9754577224bc7f57e893f899664d4b0b336157063a714877024930",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.10.10"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.10.10"}', ']'
         ],
         [
             '[', '"sha256:df118e583614f41d5f190ced1a344ee3ccce2c36e91caf795d78e3c01d906701",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
         ],
         [
             '[', '"sha256:4a77be28f8e54a4e6a8ecd8cfbd1963463d1e7ac719990206ced057af41e9957",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
         ],
         [
             '[', '"sha256:f4bfbb70768f233f1adca8e9e7333695a263773c2663a97732519f3e0eed87b7",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p3"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0p3"}', ']'
         ],
         [
             '[', '"sha256:ff19a3911e0a1560a945c4d749cb47ffd1ca9397f506d195ae8d30a86f46807e",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.17"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.17"}', ']'
         ],
         [
             '[', '"sha256:c0582f734ad1bb8c9adaf014c6d0b90ec532bf137afcdb4afe304c0c581ed308",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:91152cc1c4bcd3aba6309d88b2c2a7e53f2e6209757f3fda180489f064994287",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:8ca14ae84dd9a788bcaddd196cbed346d6cd624fa1a63253728df769e26d2a21",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:44a5d6d152722adef8dada252863f178993d955b49caa8ea7b954d9ebc93b1c2",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:44a5d6d152722adef8dada252863f178993d955b49caa8ea7b954d9ebc93b1c2",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.14"}', ']'
         ],
         [
             '[', '"sha256:2e89feac75330553688011dfb2efc0f9c6e44b61a419d937ad826c8628007e10",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.13"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.13"}', ']'
         ],
         [
             '[', '"sha256:096300fde75dddfb273b343aa94957dffdbb4b57212debaddbd6f7714442df57",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.13"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.13"}', ']'
         ],
         [
             '[', '"sha256:8d463a5f7635ebd0c6f418236c571273083e1c5bc63711a2babc4048208f9aa3",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.12"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"1.5.0-2018.09.12"}', ']'
         ],
         [
             '[', '"sha256:a1f15f9a2b1640ac73437fc96b658b7c9907ab14127e1ec82cd93986874e3159",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.12"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.12"}', ']'
         ],
         [
             '[', '"sha256:ee5124a3adb5eb20012a7189ea34495da3e39ff8517c2c260954654d3edf1553",',
-            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK',
+            '{"maintainer":"feedback@checkmk.com","org.opencontainers.image.description":"Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-            'Kettner', 'GmbH","org.opencontainers.image.version":"2018.09.11"}', ']'
+            'Monitoring","org.opencontainers.image.source":"https://github.com/tribe29/checkmk","org.opencontainers.image.title":"Checkmk","org.opencontainers.image.url":"https://checkmk.com/","org.opencontainers.image.vendor":"tribe29',
+             'GmbH","org.opencontainers.image.version":"2018.09.11"}', ']'
         ],
         [
             '[', '"sha256:6143303a8e14d19961946d8749b698e2d1a90262c62a11dee5a40367907afe88",',
@@ -1290,71 +1290,71 @@ SUBSECTIONS2 = {
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
-            'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(100)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
-            'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"affectionate_shannon","Networks":"bridge","Ports":"","RunningFor":"3',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"affectionate_shannon","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
-            'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"distracted_heisenberg","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
-            'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_kowalevski","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
-            'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"peaceful_joliot","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
-            'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
-            'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
-            'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(1)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
-            'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
@@ -1374,10 +1374,10 @@ SUBSECTIONS2 = {
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '09:17:54', '+0200',
-            'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
             '0.0.0.0:8080-\\u003e5000/tcp","RunningFor":"4', 'days',
             'ago","Size":"0B","Status":"Up', '6', 'hours', '(healthy)"}'
@@ -1385,91 +1385,91 @@ SUBSECTIONS2 = {
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
-            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
-            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
-            'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
-            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
-            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
-            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
-            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
-            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
-            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
-            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -1477,85 +1477,85 @@ SUBSECTIONS2 = {
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
-            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
-            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
-            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
-            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
@@ -1575,12 +1575,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'0d7e34ebb911',
         u'Image': u'03d98e475cd6',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10'
         },
         u'LocalVolumes': u'0',
@@ -1598,7 +1598,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'10d6b884f348',
         u'Image': u'a0a951b126eb',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1615,12 +1615,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'11893c5d9694',
         u'Image': u'559214f8c758',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1638,12 +1638,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'24772268cc09',
         u'Image': u'6e66f5473958',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1661,7 +1661,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'249ca074445f',
         u'Image': u'010bad2c964b',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1678,7 +1678,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'4a6806b168b1',
         u'Image': u'089108b69108',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1695,7 +1695,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'4d4d9f3be74b',
         u'Image': u'b16a30c66821',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1712,7 +1712,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'55632dca94c8',
         u'Image': u'1919d446eafa',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1729,12 +1729,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'580a7b4bd20a',
         u'Image': u'3e0dd44b22e4',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10'
         },
         u'LocalVolumes': u'0',
@@ -1752,12 +1752,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'58ea2160fe8f',
         u'Image': u'3bd4e802a09f',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1775,7 +1775,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'63c0ad8e9eb7',
         u'Image': u'0983f5184ce7',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1792,7 +1792,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'6cae82f879ff',
         u'Image': u'1d9b21b9e019',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1809,12 +1809,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'6fe73b950209',
         u'Image': u'd4c95e27986c',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1832,12 +1832,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'73237ecc5183',
         u'Image': u'd27276979703',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10'
         },
         u'LocalVolumes': u'0',
@@ -1855,12 +1855,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'74ee5065acb2',
         u'Image': u'a0529d041d12',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1899,7 +1899,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'7db7baa17fee',
         u'Image': u'fd98c3cc9762',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1916,7 +1916,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'802786d33cfb',
         u'Image': u'010bad2c964b',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1954,7 +1954,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'860d8dfff4f6',
         u'Image': u'7e7f944ba518',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -1971,12 +1971,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'8f8ded35fc90',
         u'Image': u'6bccd8c3ed71',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -1994,7 +1994,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'93e0c88a69fa',
         u'Image': u'b16a30c66821',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2011,12 +2011,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'95796d6d26db',
         u'Image': u'fcd54dfcb5b8',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -2034,7 +2034,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'9b08cf26da8c',
         u'Image': u'164429e47a3f',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2051,7 +2051,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'a073bb9adfbe',
         u'Image': u'7aa4b82c92ae',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2068,7 +2068,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'a17f21f95383',
         u'Image': u'a2a187fcaa76',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2085,7 +2085,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'aad80d524200',
         u'Image': u'e002e37aec84',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2102,12 +2102,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'b17185d5dcc5',
         u'Image': u'94f49a7afedb',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.10.10'
         },
         u'LocalVolumes': u'0',
@@ -2125,12 +2125,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'bfdb64ccf0ba',
         u'Image': u'21b2f3d5e6c0',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'0',
@@ -2148,7 +2148,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'c04099ed3f18',
         u'Image': u'd1a41c564864',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2165,7 +2165,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'cdc7e1e4a24e',
         u'Image': u'999fc035fc76',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2182,7 +2182,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'd1c70f4690b5',
         u'Image': u'0b5da1249a04',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2199,7 +2199,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'd37198a74c08',
         u'Image': u'caac4aa6ac57',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2216,7 +2216,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'd91a2be75e8b',
         u'Image': u'010bad2c964b',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2233,7 +2233,7 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'df44340ed121',
         u'Image': u'1b013e043efa',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
@@ -2271,12 +2271,12 @@ EXPECTED_CONTAINERS2 = {
         u'Id': u'fdd04795069e',
         u'Image': u'checkmk/check-mk-raw:1.5.0p5',
         u'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         u'LocalVolumes': u'1',
@@ -2303,12 +2303,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0-2018.09.13'
         },
         'amount_containers': 0
@@ -2324,7 +2324,7 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312400000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         'amount_containers': 1
     },
@@ -2340,12 +2340,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.09.13'
         },
         'amount_containers': 0
@@ -2362,12 +2362,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0-2018.09.14'
         },
         'amount_containers': 0
@@ -2397,12 +2397,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817600000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         'amount_containers': 0
@@ -2419,12 +2419,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751900000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         'amount_containers': 1
@@ -2494,12 +2494,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 972300000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.09.14'
         },
         'amount_containers': 0
@@ -2516,12 +2516,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 814900000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0-2018.09.12'
         },
         'amount_containers': 0
@@ -2538,12 +2538,12 @@ EXPECTED_IMAGES2 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.09.14'
         },
         'amount_containers': 0
@@ -2687,14 +2687,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:559214f8c75811dd06bbb9de1c7b913c6897ff888e01f7b4706e3a48d6e58fa7",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -2711,14 +2711,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:559214f8c75811dd06bbb9de1c7b913c6897ff888e01f7b4706e3a48d6e58fa7",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817562729,'],
         ['"VirtualSize":', '817562729,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -2764,7 +2764,7 @@ SUBSECTIONS3 = {
         ], ['],'], ['"ArgsEscaped":', 'true,'],
         ['"Image":', '"sha256:6cd8be12f4ea663ccba3050c4e49bd24ab2133bcd6582b98d11e1d3075cd8a6e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', 'null,'],
-        ['"OnBuild":', 'null,'], ['"Labels":', '{'], ['"maintainer":', '"feedback@check-mk.org"'],
+        ['"OnBuild":', 'null,'], ['"Labels":', '{'], ['"maintainer":', '"feedback@checkmk.com"'],
         ['}'], ['},'], ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'],
         ['"Config":', '{'], ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
         ['"AttachStdin":', 'false,'], ['"AttachStdout":', 'false,'], ['"AttachStderr":', 'false,'],
@@ -2776,7 +2776,7 @@ SUBSECTIONS3 = {
         ['"ArgsEscaped":', 'true,'],
         ['"Image":', '"sha256:6cd8be12f4ea663ccba3050c4e49bd24ab2133bcd6582b98d11e1d3075cd8a6e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', 'null,'],
-        ['"OnBuild":', 'null,'], ['"Labels":', '{'], ['"maintainer":', '"feedback@check-mk.org"'],
+        ['"OnBuild":', 'null,'], ['"Labels":', '{'], ['"maintainer":', '"feedback@checkmk.com"'],
         ['}'], ['},'], ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'],
         ['"Size":', '312404556,'], ['"VirtualSize":', '312404556,'], ['"GraphDriver":', '{'],
         ['"Data":', '{'],
@@ -2951,14 +2951,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:94f49a7afedbb29d237891f6c4039db2e73960d3a02499a66b4158e36e18119f",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.10.10"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -2975,14 +2975,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:94f49a7afedbb29d237891f6c4039db2e73960d3a02499a66b4158e36e18119f",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.10.10"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '844317793,'],
         ['"VirtualSize":', '844317793,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3033,14 +3033,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:d4c95e27986c20a707d4f943040da6b4ec79991adbf3bd3795036153eccf4663",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3057,14 +3057,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:d4c95e27986c20a707d4f943040da6b4ec79991adbf3bd3795036153eccf4663",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817561911,'],
         ['"VirtualSize":', '817561911,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3117,14 +3117,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:377f530526c6b6a0c6f9a609662d323a8beb33fdcc7004507ca09fa958884389",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3141,14 +3141,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:377f530526c6b6a0c6f9a609662d323a8beb33fdcc7004507ca09fa958884389",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p5"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '751885817,'],
         ['"VirtualSize":', '751885817,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3199,14 +3199,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:a46c70fafb97acdc4643257a07e2290d96ab4242fdfe11e0ae318bcc3c5325f1",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p3"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3223,14 +3223,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:a46c70fafb97acdc4643257a07e2290d96ab4242fdfe11e0ae318bcc3c5325f1",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0p3"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817394362,'],
         ['"VirtualSize":', '817394362,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3283,14 +3283,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:181350fc92291c5bdb0d36a998a28d1f78854d6be8a052949d99c8095e0af3f8",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.17"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3307,14 +3307,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:181350fc92291c5bdb0d36a998a28d1f78854d6be8a052949d99c8095e0af3f8",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.17"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '831431070,'],
         ['"VirtualSize":', '831431070,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3365,14 +3365,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:6c4f4f10cced68c3cf441948903f5f8fa93655445f33d79632bdd23a9c0840f4",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3389,14 +3389,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:6c4f4f10cced68c3cf441948903f5f8fa93655445f33d79632bdd23a9c0840f4",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '831425908,'],
         ['"VirtualSize":', '831425908,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3448,14 +3448,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:688325a00909823baa9ed3d50f5ef4ed16abb44e519bb80b32efcbf221daaa8c",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3472,14 +3472,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:688325a00909823baa9ed3d50f5ef4ed16abb44e519bb80b32efcbf221daaa8c",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '831425899,'],
         ['"VirtualSize":', '831425899,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3531,14 +3531,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:ab07946db07bd7c6f0b0360f5dd33558cc1d95afe78e6b367f997795d3bc09e3",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3555,14 +3555,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:ab07946db07bd7c6f0b0360f5dd33558cc1d95afe78e6b367f997795d3bc09e3",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.14"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '972256089,'],
         ['"VirtualSize":', '972256089,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3614,14 +3614,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:f4b9edc5ccef68a90483ba6272dd766abdbfd4eef84e751fbfb70942f490983e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.14"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3638,14 +3638,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:f4b9edc5ccef68a90483ba6272dd766abdbfd4eef84e751fbfb70942f490983e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.14"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817965472,'],
         ['"VirtualSize":', '817965472,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3696,14 +3696,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:f4b9edc5ccef68a90483ba6272dd766abdbfd4eef84e751fbfb70942f490983e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.14"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3720,14 +3720,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:f4b9edc5ccef68a90483ba6272dd766abdbfd4eef84e751fbfb70942f490983e",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.14"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817965472,'],
         ['"VirtualSize":', '817965472,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3779,14 +3779,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:1279a98be898d5d9834447b7f9effb4209ce7ad72ce0ada70eef2a76fc8deb30",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.13"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3803,14 +3803,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:1279a98be898d5d9834447b7f9effb4209ce7ad72ce0ada70eef2a76fc8deb30",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.13"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '831418094,'],
         ['"VirtualSize":', '831418094,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3861,14 +3861,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:6c7d657ff8143bed866d393682ed6da9d1da9ff3eba3906332c19b7078659ac6",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.13"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3885,14 +3885,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:6c7d657ff8143bed866d393682ed6da9d1da9ff3eba3906332c19b7078659ac6",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.13"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '817961530,'],
         ['"VirtualSize":', '817961530,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -3943,14 +3943,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:8cf1aa71b39c4ca824aebd5c20b0790750add56e5aa18b8f01408f3bba629942",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.12"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -3967,14 +3967,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:8cf1aa71b39c4ca824aebd5c20b0790750add56e5aa18b8f01408f3bba629942",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"1.5.0-2018.09.12"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '814907653,'],
         ['"VirtualSize":', '814907653,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -4026,14 +4026,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:699b9ae110ea244e88162a74fb311a1147e28ca3ef3ff3f1b871c866ab54699d",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.12"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -4050,14 +4050,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:699b9ae110ea244e88162a74fb311a1147e28ca3ef3ff3f1b871c866ab54699d",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.12"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '828361723,'],
         ['"VirtualSize":', '828361723,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -4109,14 +4109,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:38acc2cecea17dc893309f5b91c080b3eda7bbcd922ad240065ab34f677390ca",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.11"'], ['}'], ['},'],
         ['"DockerVersion":', '"18.06.1-ce",'], ['"Author":', '"",'], ['"Config":', '{'],
         ['"Hostname":', '"",'], ['"Domainname":', '"",'], ['"User":', '"",'],
@@ -4133,14 +4133,14 @@ SUBSECTIONS3 = {
         ['"Image":', '"sha256:38acc2cecea17dc893309f5b91c080b3eda7bbcd922ad240065ab34f677390ca",'],
         ['"Volumes":', 'null,'], ['"WorkingDir":', '"",'], ['"Entrypoint":', '['],
         ['"/docker-entrypoint.sh"'], ['],'], ['"OnBuild":', 'null,'], ['"Labels":', '{'],
-        ['"maintainer":', '"feedback@check-mk.org",'],
+        ['"maintainer":', '"feedback@checkmk.com",'],
         [
             '"org.opencontainers.image.description":', '"Check_MK', 'is', 'a', 'leading', 'tool',
             'for', 'Infrastructure', '&', 'Application', 'Monitoring",'
-        ], ['"org.opencontainers.image.source":', '"https://git.mathias-kettner.de/",'],
-        ['"org.opencontainers.image.title":', '"Check_MK",'],
-        ['"org.opencontainers.image.url":', '"https://mathias-kettner.com/",'],
-        ['"org.opencontainers.image.vendor":', '"Mathias', 'Kettner', 'GmbH",'],
+        ], ['"org.opencontainers.image.source":', '"https://github.com/tribe29/checkmk",'],
+        ['"org.opencontainers.image.title":', '"Checkmk",'],
+        ['"org.opencontainers.image.url":', '"https://checkmk.com/",'],
+        ['"org.opencontainers.image.vendor":', '"tribe29', 'GmbH",'],
         ['"org.opencontainers.image.version":', '"2018.09.11"'], ['}'], ['},'],
         ['"Architecture":', '"amd64",'], ['"Os":', '"linux",'], ['"Size":', '828358667,'],
         ['"VirtualSize":', '828358667,'], ['"GraphDriver":', '{'], ['"Data":', '{'],
@@ -4319,71 +4319,71 @@ SUBSECTIONS3 = {
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:12:19', '+0200',
-            'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(100)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
-            'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"11893c5d9694","Image":"559214f8c758","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"affectionate_shannon","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:02', '+0200',
-            'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"95796d6d26db","Image":"fcd54dfcb5b8","Labels":"org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/","LocalVolumes":"0","Mounts":"","Names":"distracted_heisenberg","Networks":"bridge","Ports":"","RunningFor":"3',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"distracted_heisenberg","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
-            'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"58ea2160fe8f","Image":"3bd4e802a09f","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"lucid_kowalevski","Networks":"bridge","Ports":"","RunningFor":"3',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"lucid_kowalevski","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '16:12:01', '+0200',
-            'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"74ee5065acb2","Image":"a0529d041d12","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"peaceful_joliot","Networks":"bridge","Ports":"","RunningFor":"3',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"peaceful_joliot","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:11:24', '+0200',
-            'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"7db7baa17fee","Image":"fd98c3cc9762","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_jennings","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:09:34', '+0200',
-            'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"249ca074445f","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"infallible_goodall","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:07:29', '+0200',
-            'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"63c0ad8e9eb7","Image":"0983f5184ce7","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"ecstatic_babbage","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(1)', '3', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12', '16:05:44', '+0200',
-            'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
+            'CEST","ID":"d91a2be75e8b","Image":"010bad2c964b","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_bardeen","Networks":"bridge","Ports":"","RunningFor":"3',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '3', 'days', 'ago"}'
         ],
         [
@@ -4403,32 +4403,32 @@ SUBSECTIONS3 = {
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
             '09:17:54', '+0200',
-            'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"fdd04795069e","Image":"checkmk/check-mk-raw:1.5.0p5","Labels":"org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"1","Mounts":"/etc/localtime,10b7c962177bf2\xe2\x80\xa6","Names":"monitoringx","Networks":"bridge","Ports":"6557/tcp,',
             '0.0.0.0:8080-\\u003e5000/tcp","RunningFor":"4', 'days',
             'ago","Size":"0B","Status":"Up', '6', 'hours', '(healthy)"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:21', '+0200',
-            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"b17185d5dcc5","Image":"94f49a7afedb","Labels":"org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk","LocalVolumes":"0","Mounts":"","Names":"friendly_banach","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
-            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"73237ecc5183","Image":"d27276979703","Labels":"org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/","LocalVolumes":"0","Mounts":"","Names":"festive_stallman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
@@ -4436,17 +4436,17 @@ SUBSECTIONS3 = {
             '08:40:20', '+0200',
             'CEST","ID":"0d7e34ebb911","Image":"03d98e475cd6","Labels":"org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"youthful_pare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:40:20', '+0200',
-            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"580a7b4bd20a","Image":"3e0dd44b22e4","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=2018.10.10,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"reverent_proskuriakova","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -4454,51 +4454,51 @@ SUBSECTIONS3 = {
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:39:29', '+0200',
-            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"4a6806b168b1","Image":"089108b69108","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"festive_fermi","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:37:43', '+0200',
-            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"93e0c88a69fa","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"objective_darwin","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/docker-entrypoint.\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
-            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"6fe73b950209","Image":"d4c95e27986c","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"admiring_haibt","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:26', '+0200',
-            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"bfdb64ccf0ba","Image":"21b2f3d5e6c0","Labels":"maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
             'GmbH,org.opencontainers.image.version=1.5.0p5","LocalVolumes":"0","Mounts":"","Names":"lucid_bohr","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
-            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"24772268cc09","Image":"6e66f5473958","Labels":"org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
-            'Monitoring,org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
+            'Monitoring,org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk","LocalVolumes":"0","Mounts":"","Names":"zen_bartik","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:37:25', '+0200',
-            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://git.mathias-kettner.de/,org.opencontainers.image.title=Check_MK,org.opencontainers.image.url=https://mathias-kettner.com/,org.opencontainers.image.vendor=Mathias',
-            'Kettner',
-            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@check-mk.org,org.opencontainers.image.description=Check_MK',
+            'CEST","ID":"8f8ded35fc90","Image":"6bccd8c3ed71","Labels":"org.opencontainers.image.source=https://github.com/tribe29/checkmk,org.opencontainers.image.title=Checkmk,org.opencontainers.image.url=https://checkmk.com/,org.opencontainers.image.vendor=tribe29',
+            
+            'GmbH,org.opencontainers.image.version=1.5.0p5,maintainer=feedback@checkmk.com,org.opencontainers.image.description=Check_MK',
             'is', 'a', 'leading', 'tool', 'for', 'Infrastructure', '\\u0026', 'Application',
             'Monitoring","LocalVolumes":"0","Mounts":"","Names":"keen_cori","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
@@ -4506,85 +4506,85 @@ SUBSECTIONS3 = {
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:36:45', '+0200',
-            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"a073bb9adfbe","Image":"7aa4b82c92ae","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"jovial_archimedes","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'set", '-e',
             '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10', '08:34:58', '+0200',
-            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"4d4d9f3be74b","Image":"b16a30c66821","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_spence","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Exited', '(0)', '6', 'days', 'ago"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
-            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"df44340ed121","Image":"1b013e043efa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"unruffled_hopper","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:58', '+0200',
-            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"860d8dfff4f6","Image":"7e7f944ba518","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dazzling_meninsky","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"a17f21f95383","Image":"a2a187fcaa76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"serene_poincare","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"6cae82f879ff","Image":"1d9b21b9e019","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"elated_poitras","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:57', '+0200',
-            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"aad80d524200","Image":"e002e37aec84","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"competent_keller","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"d1c70f4690b5","Image":"0b5da1249a04","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"trusting_panini","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"9b08cf26da8c","Image":"164429e47a3f","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"pensive_swartz","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"c04099ed3f18","Image":"d1a41c564864","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"dreamy_thompson","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:56', '+0200',
-            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"cdc7e1e4a24e","Image":"999fc035fc76","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"lucid_brown","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"10d6b884f348","Image":"a0a951b126eb","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"wizardly_ritchie","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"d37198a74c08","Image":"caac4aa6ac57","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"distracted_mccarthy","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
             '{"Command":"\\"/bin/sh', '-c', "'#(nop)", '\xe2\x80\xa6\\"","CreatedAt":"2018-10-10',
             '08:34:55', '+0200',
-            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
+            'CEST","ID":"55632dca94c8","Image":"1919d446eafa","Labels":"maintainer=feedback@checkmk.com","LocalVolumes":"0","Mounts":"","Names":"stoic_perlman","Networks":"bridge","Ports":"","RunningFor":"6',
             'days', 'ago","Size":"0B","Status":"Created"}'
         ],
         [
@@ -4612,12 +4612,12 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817961530,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0-2018.09.13'
         },
         'amount_containers': 0
@@ -4633,7 +4633,7 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312404556,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org'
+            u'maintainer': u'feedback@checkmk.com'
         },
         'amount_containers': 1
     },
@@ -4648,12 +4648,12 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831418094,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'2018.09.13'
         },
         'amount_containers': 0
@@ -4669,12 +4669,12 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817965472,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0-2018.09.14'
         },
         'amount_containers': 0
@@ -4702,12 +4702,12 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817562729,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         'amount_containers': 0
@@ -4723,12 +4723,12 @@ EXPECTED_IMAGES3 = {
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751885817,
         'Labels': {
-            u'maintainer': u'feedback@check-mk.org',
+            u'maintainer': u'feedback@checkmk.com',
             u'org.opencontainers.image.description': u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source': u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title': u'Check_MK',
-            u'org.opencontainers.image.url': u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor': u'Mathias Kettner GmbH',
+            u'org.opencontainers.image.source': u'https://github.com/tribe29/checkmk',
+            u'org.opencontainers.image.title': u'Checkmk',
+            u'org.opencontainers.image.url': u'https://checkmk.com/',
+            u'org.opencontainers.image.vendor': u'tribe29 GmbH',
             u'org.opencontainers.image.version': u'1.5.0p5'
         },
         'amount_containers': 1

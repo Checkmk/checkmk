@@ -61,19 +61,22 @@ def _parse_install_date(install_date_str):
 
 
 def inv_win_wmi_updates(info):
-    paclist = inv_tree_list("software.packages:")
+    parsed_packages = []
     for line in info:
-        if len(line) <> 4:
+        if len(line) != 4:
             continue
 
         _, description, knowledge_base, install_date_str = line
-        paclist.append({
+        parsed_packages.append({
             "name": "Windows Update " + knowledge_base,
             "version": knowledge_base,
-            "vendor": "Micorosoft " + description,
+            "vendor": "Microsoft " + description,
             "install_date": _parse_install_date(install_date_str),
             "package_type": "wmi",
         })
+
+    paclist = inv_tree_list("software.packages:")
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['win_wmi_updates'] = {

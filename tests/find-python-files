@@ -19,7 +19,7 @@ SEARCH+=" livestatus"
 SEARCH+=" managed"
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
-SEARCH+=" omd/packages/cma"
+SEARCH+=" omd/packages/appliance"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
@@ -37,6 +37,7 @@ find $REAL_SEARCH \
      -name test_docker_parse_node_images.py -prune -o \
      -name typeshed -prune -o \
      -name run-clang-tidy.py -prune -o \
+     -name chroot -prune -o \
      -type f -print | sort | while read F; do
     if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"

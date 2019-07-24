@@ -118,7 +118,7 @@ def check_cmk_agent_update(_no_item, _no_params, info):
                         levels_text = ""
                     yield state, "last update check: " + get_timestamp_human_readable(
                         parsed["last_check"]) + levels_text
-                except:
+                except Exception:
                     yield 1, "no successful connect to server yet"
 
             if parsed["last_update"]:

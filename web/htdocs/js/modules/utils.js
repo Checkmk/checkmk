@@ -541,16 +541,16 @@ export function count_context_button(oA)
     return handler.responseText;
 }
 
-export function unhide_context_buttons(oA)
+export function unhide_context_buttons(toggle_button)
 {
-    var oNode;
-    var oTd = oA.parentNode.parentNode;
-    for (var i in oTd.children) {
-        oNode = oTd.children[i];
-        if (oNode.tagName == "DIV" && !has_class(oNode, "togglebutton"))
-            oNode.style.display = "";
+    var cells = toggle_button.parentNode.parentNode;
+    var children = cells.children;
+    for (var i = 0; i < children.length; i++) {
+        var node = children[i];
+        if (node.tagName == "DIV" && !has_class(node, "togglebutton"))
+            node.style.display = "";
     }
-    oA.parentNode.style.display = "none";
+    toggle_button.parentNode.style.display = "none";
 }
 
 var g_tag_groups = {

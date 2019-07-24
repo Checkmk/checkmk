@@ -43,7 +43,6 @@ except Exception:
 def handle_check_mk_check_result(check_plugin_name, description):
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
-
     def wrap(check_func):
         def wrapped_check_func(hostname, *args, **kwargs):
             host_config = config.get_config_cache().get_host_config(hostname)

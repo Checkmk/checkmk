@@ -159,12 +159,11 @@ class ModePatternEditor(WatoMode):
                 # If no host/file given match all rules
                 rule_matches = True
 
-            html.begin_foldable_container(
-                "rule",
-                "%s" % abs_rulenr,
-                True,
-                HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
-                indent=False)
+            html.begin_foldable_container("rule",
+                                          "%s" % abs_rulenr,
+                                          True,
+                                          HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
+                                          indent=False)
             with table_element("pattern_editor_rule_%d" % abs_rulenr, sortable=False) as table:
                 abs_rulenr += 1
 

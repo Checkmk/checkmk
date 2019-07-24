@@ -35,15 +35,12 @@
 # /dev/sdb: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
 
 
-def inventory_dmraid(checkname, info):
-    inventory = []
-    for line in info:
-        if checkname == "dmraid.ldisks" and line[0] == "name":
-            inventory.append((line[2], None))
-        elif checkname == "dmraid.pdisks" and line[0].startswith("/dev/sd"):
-            item = line[0].split(":")[0]
-            inventory.append((item, None))
-    return inventory
+def inventory_dmraid_ldisks(info):
+    return [(line[2], None) for line in info if line[0] == "name"]
+
+
+def inventory_dmraid_pdisks(info):
+    return [(line[0].split(":")[0], None) for line in info if line[0].startswith("/dev/sd")]
 
 
 def check_dmraid_pdisks(item, _no_params, info):
@@ -77,12 +74,12 @@ def check_dmraid_ldisks(item, _no_params, info):
 
 check_info["dmraid.ldisks"] = {
     'check_function': check_dmraid_ldisks,
-    'inventory_function': inventory_dmraid,
+    'inventory_function': inventory_dmraid_ldisks,
     'service_description': 'RAID LDisk %s',
 }
 
 check_info["dmraid.pdisks"] = {
     'check_function': check_dmraid_pdisks,
-    'inventory_function': inventory_dmraid,
+    'inventory_function': inventory_dmraid_pdisks,
     'service_description': 'RAID PDisk %s',
 }

@@ -59,41 +59,40 @@ class RulespecCheckgroupParametersMssqlStats(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("batch_requests/sec",
-                 Tuple(
-                     title=_("Batch Requests/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
-                         Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),
-                     ],
-                 )),
-                ("sql_compilations/sec",
-                 Tuple(
-                     title=_("SQL Compilations/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
-                         Float(title=_("critical at"), unit=_("/sec"), default_value=20000.0),
-                     ],
-                 )),
-                ("sql_re-compilations/sec",
-                 Tuple(
-                     title=_("SQL Re-Compilations/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
-                         Float(title=_("critical at"), unit=_("/sec"), default_value=200.0),
-                     ],
-                 )),
-                ("locks_per_batch",
-                 Tuple(
-                     title=_("Locks/Batch"),
-                     elements=[
-                         Float(title=_("warning at"), default_value=1000.0),
-                         Float(title=_("critical at"), default_value=3000.0),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("batch_requests/sec",
+             Tuple(
+                 title=_("Batch Requests/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
+                     Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),
+                 ],
+             )),
+            ("sql_compilations/sec",
+             Tuple(
+                 title=_("SQL Compilations/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
+                     Float(title=_("critical at"), unit=_("/sec"), default_value=20000.0),
+                 ],
+             )),
+            ("sql_re-compilations/sec",
+             Tuple(
+                 title=_("SQL Re-Compilations/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
+                     Float(title=_("critical at"), unit=_("/sec"), default_value=200.0),
+                 ],
+             )),
+            ("locks_per_batch",
+             Tuple(
+                 title=_("Locks/Batch"),
+                 elements=[
+                     Float(title=_("warning at"), default_value=1000.0),
+                     Float(title=_("critical at"), default_value=3000.0),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

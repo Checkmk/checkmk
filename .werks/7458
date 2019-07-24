@@ -1,0 +1,27 @@
+Title: Cisco CPU checks: Cleaned up SNMP scan functions
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1557229283
+Class: fix
+
+There are four Cisco CPU checks: cisco_cpu, cisco_cpu_multiitem, cisco_nexus_cpu, cisco_oldcpu.
+We discover the Cisco CPU utilization services in the following order:
+
+- if it's a Nexus device the cisco_nexus_cpu check is used
+
+- if the device contains the SNMP table .1.3.6.1.4.1.9.9.109.1.1.1.1.8.* then
+  cisco_cpu_multiitem is used
+
+- if the device has the OID .1.3.6.1.4.1.9.9.109.1.1.1.1.5.1 then cisco_cpu is used
+
+- if .1.3.6.1.4.1.9.2.1.57.0 exists then cisco_oldcpu is used
+
+After firmware updates there may be deprecated OIDs like
+.1.3.6.1.4.1.9.2.1.57.0 or .1.3.6.1.4.1.9.9.109.1.1.1.1.5.1.
+In such cases you have to re-discover the related hosts.
+
+There also may Cisco hosts which have discovered the 'wrong' check type.
+After a re-discovery the CPU check type may change.

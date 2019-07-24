@@ -26,6 +26,9 @@ description:
  All other aspects of this check are completely compatible of {if}.
  Please refer to that man page for further information.
 
+ To check the current state of Windows bonding interfaces you need to
+ install the agent plugin windows_if.ps1 on the target host.
+
 item:
  See man page of {if} for details
 

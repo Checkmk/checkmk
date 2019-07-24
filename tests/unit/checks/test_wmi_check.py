@@ -331,6 +331,7 @@ discovered_wmi_cpuload_result = [(None, None)]
     ('wmi_cpuload', info_wmi_cpuload_6, discovered_wmi_cpuload_result),
     ('wmi_cpuload', info_wmi_cpuload_7, discovered_wmi_cpuload_result),
     ('wmi_cpuload', info_wmi_cpuload_8, discovered_wmi_cpuload_result),
+    ('dotnet_clrmemory', [[u'WMItimeout']], []),
 ])
 def test_wmi_cpu_load_discovery(check_manager, check_name, info, expected):
     check = check_manager.get_check(check_name)

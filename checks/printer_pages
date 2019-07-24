@@ -26,7 +26,10 @@
 
 
 def parse_printer_pages(info):
-    return {'pages_total': int(info[0][0])}
+    try:
+        return {'pages_total': int(info[0][0])}
+    except (IndexError, ValueError):
+        return {}
 
 
 check_info["printer_pages"] = {

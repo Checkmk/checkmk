@@ -57,6 +57,7 @@ from cmk.gui.plugins.wato import (
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
+from cmk.gui.htmllib import HTML
 
 
 def process_level_elements():
@@ -74,8 +75,16 @@ def process_level_elements():
              orientation="vertical",
              choices=[
                  (True, _("100% is all cores at full load")),
-                 (False, _("<b>N</b> * 100% as each core contributes with 100% at full load")),
-             ])),
+                 (False,
+                  HTML(_("<b>N</b> * 100% as each core contributes with 100% at full load"))),
+             ],
+             invalid_choice_title=_("Unspecified.") + " " +
+             _("Starting from version 1.6.0 this value must be configured. "
+               "Read Werk #6646 for further information."),
+             invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " +
+             _("Starting from version 1.6.0 this value must be configured. "
+               "Read Werk #6646 for further information."),
+         )),
         ('levels',
          Tuple(
              title=_('Levels for process count'),
@@ -139,14 +148,13 @@ def process_level_elements():
              ],
          )),
         ("max_age",
-         Tuple(
-             title=_("Maximum allowed age"),
-             help=_("Alarms you if the age of the process (not the consumed CPU "
-                    "time, but the real time) exceed the configured levels."),
-             elements=[
-                 Age(title=_("Warning at"), default_value=3600),
-                 Age(title=_("Critical at"), default_value=7200),
-             ])),
+         Tuple(title=_("Maximum allowed age"),
+               help=_("Alarms you if the age of the process (not the consumed CPU "
+                      "time, but the real time) exceed the configured levels."),
+               elements=[
+                   Age(title=_("Warning at"), default_value=3600),
+                   Age(title=_("Critical at"), default_value=7200),
+               ])),
         ("virtual_levels",
          Tuple(
              title=_("Virtual memory usage"),
@@ -164,12 +172,11 @@ def process_level_elements():
              ],
          )),
         ("resident_levels_perc",
-         Tuple(
-             title=_("Physical memory usage, in percentage of total RAM"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=25.0),
-                 Percentage(title=_("Critical at"), default_value=50.0),
-             ])),
+         Tuple(title=_("Physical memory usage, in percentage of total RAM"),
+               elements=[
+                   Percentage(title=_("Warning at"), default_value=25.0),
+                   Percentage(title=_("Critical at"), default_value=50.0),
+               ])),
         ("handle_count",
          Tuple(
              title=_('Handle Count (Windows only)'),
@@ -273,11 +280,20 @@ def match_alt(x):
     return 0
 
 
+def validate_process_discovery_descr_option(description, varprefix):
+    if '%s' in description and re.search(r'%(\d+)', description):
+        raise MKUserError(
+            varprefix,
+            _('Combining "%s" and "%1" style replacements in the sevice description is not allowed.'
+             ))
+
+
 def process_discovery_descr_option():
     return TextAscii(
         title=_('Process Name'),
         style="dropdown",
         allow_empty=False,
+        validate=validate_process_discovery_descr_option,
         help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
                "you do this, then the pattern must be a regular expression and be prefixed "
                "with ~. For each <tt>%s</tt> in the description, the expression has to "
@@ -345,8 +361,8 @@ def user_match_options(extra_elements=None):
         title=_("Name of operating system user"),
         style="dropdown",
         elements=[
-            TextAscii(
-                title=_("Exact name of the operating system user"), label=_("User:"), size=50),
+            TextAscii(title=_("Exact name of the operating system user"), label=_("User:"),
+                      size=50),
             Transform(
                 RegExp(
                     size=50,
@@ -398,10 +414,9 @@ class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=process_level_elements(),
-                ignored_keys=["match_groups"],
-                required_keys=["cpu_rescale_max"]),
+            Dictionary(elements=process_level_elements(),
+                       ignored_keys=["match_groups"],
+                       required_keys=["cpu_rescale_max"]),
             forth=ps_convert_inventorized_from_singlekeys,
         )
 
@@ -428,13 +443,12 @@ class ManualCheckParameterPs(ManualCheckParameterRulespec):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[
-                    ("process", process_match_options()),
-                    ("user", user_match_options()),
-                ] + process_level_elements(),
-                ignored_keys=["match_groups"],
-                required_keys=["cpu_rescale_max"]),
+            Dictionary(elements=[
+                ("process", process_match_options()),
+                ("user", user_match_options()),
+            ] + process_level_elements(),
+                       ignored_keys=["match_groups"],
+                       required_keys=["cpu_rescale_max"]),
             forth=ps_cleanup_params,
         )
 
@@ -530,7 +544,7 @@ class RulespecInventoryProcessesRules(HostRulespec):
                          help=
                          _("Here you can select default parameters that are being set "
                            "for detected services. Note: the preferred way for setting parameters is to use "
-                           "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                           "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
                            "State and Count of Processes</a> instead. "
                            "A change there will immediately be active, while a change in this rule "
                            "requires a re-discovery of the services."),
@@ -639,22 +653,22 @@ def hr_process_match_path_option():
 def hr_process_match_elements():
     return [
         ('match_name_or_path',
-         CascadingDropdown(
-             title=_('Process Match textual description or path of process'),
-             choices=[
-                 ('match_name', _("Match textual description"), hr_process_match_name_option()),
-                 ('match_path', _("Match process path"), hr_process_match_path_option()),
-                 ('match_all', _("Match all processes")),
-             ])),
+         CascadingDropdown(title=_('Process Match textual description or path of process'),
+                           choices=[
+                               ('match_name', _("Match textual description"),
+                                hr_process_match_name_option()),
+                               ('match_path', _("Match process path"),
+                                hr_process_match_path_option()),
+                               ('match_all', _("Match all processes")),
+                           ])),
         ('match_status',
-         ListChoice(
-             title=_('Process Status Matching'),
-             choices=[
-                 ('running', _('Running')),
-                 ('runnable', _('Runnable (Waiting for resource)')),
-                 ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
-                 ('invalid', _('Invalid (Not loaded)')),
-             ])),
+         ListChoice(title=_('Process Status Matching'),
+                    choices=[
+                        ('running', _('Running')),
+                        ('runnable', _('Runnable (Waiting for resource)')),
+                        ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
+                        ('invalid', _('Invalid (Not loaded)')),
+                    ])),
     ]
 
 
@@ -692,17 +706,16 @@ def hr_process_parameter_elements():
          )),
         ('status',
          ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(choices=[
-                         ('running', _('Running')),
-                         ('runnable', _('Runnable (Waiting for resource)')),
-                         ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
-                         ('invalid', _('Invalid (Not loaded)')),
-                     ]),
-                     MonitoringState()
-                 ]),
+             Tuple(orientation="horizontal",
+                   elements=[
+                       DropdownChoice(choices=[
+                           ('running', _('Running')),
+                           ('runnable', _('Runnable (Waiting for resource)')),
+                           ('not_runnable', _('Not runnable (Loaded but waiting for event)')),
+                           ('invalid', _('Invalid (Not loaded)')),
+                       ]),
+                       MonitoringState()
+                   ]),
              title=_('Map process states'),
          )),
     ]
@@ -739,7 +752,7 @@ class RulespecDiscoveryHRProcessesRules(HostRulespec):
                      help=
                      _("Here you can select default parameters that are being set "
                        "for detected services. Note: the preferred way for setting parameters is to use "
-                       "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                       "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
                        "State and Count of Processes</a> instead. "
                        "A change there will immediately be active, while a change in this rule "
                        "requires a re-discovery of the services."),
@@ -772,12 +785,10 @@ class RulespecCheckgroupParametersHRPs(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."
-            ),
-            elements=hr_process_parameter_elements(),
-            ignored_keys=["match_name_or_path", "match_status", "match_groups"])
+        return Dictionary(help=_(
+            "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."),
+                          elements=hr_process_parameter_elements(),
+                          ignored_keys=["match_name_or_path", "match_status", "match_groups"])
 
     @property
     def item_spec(self):

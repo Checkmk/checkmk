@@ -23,23 +23,19 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import functools
 
 
-def _mysql_iter_instance_lines(lines):
-    def _detect_instance(line):
-        if line[0].startswith("[["):
-            instance = line[0].strip('[]')
-            return instance or "mysql"
-        return None
+def mysql_parse_per_item(parse_function):
+    @functools.wraps(parse_function)
+    def wrapped_parse_function(info):
+        item = 'mysql'
+        grouped = {}
+        for line in info:
+            if line[0].startswith('[['):
+                item = ' '.join(line).strip('[ ]') or item
+                continue
+            grouped.setdefault(item, []).append(line)
+        return {k: parse_function(grouped[k]) for k in grouped}
 
-    instance = None
-    for line in lines:
-        detected_instance = _detect_instance(line)
-        if detected_instance:
-            instance = detected_instance
-        elif instance:
-            yield instance, line
-
-    if instance is None:
-        for line in lines:
-            yield "mysql", line
+    return wrapped_parse_function

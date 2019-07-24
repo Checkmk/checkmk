@@ -87,6 +87,8 @@ from cmk.gui.plugins.wato import (
     PermissionSectionWATO,
 )
 
+import cmk.gui.node_visualization
+
 #   .--Base class----------------------------------------------------------.
 #   |             ____                        _                            |
 #   |            | __ )  __ _ ___  ___    ___| | __ _ ___ ___              |
@@ -189,11 +191,33 @@ class BIManagement(object):
                     "contact_groups": pack["contact_groups"],
                 }
 
+                self._add_missing_aggr_ids()
         except Exception as e:
             if config.debug:
                 raise
 
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
+
+    def _add_missing_aggr_ids(self):
+        # Determine existing IDs
+        used_aggr_ids = set()
+        for pack_id, pack in self._packs.iteritems():
+            used_aggr_ids.update({x["ID"] for x in pack["aggregations"] if "ID" in x})
+
+        # Compute missing IDs
+        new_id = ""
+        for pack_id, pack in self._packs.iteritems():
+            aggr_id_counter = 0
+            for aggregation in pack["aggregations"]:
+                if "ID" not in aggregation:
+                    while True:
+                        aggr_id_counter += 1
+                        new_id = "%s_aggr_%d" % (pack_id, aggr_id_counter)
+                        if new_id in used_aggr_ids:
+                            continue
+                        break
+                    used_aggr_ids.add(new_id)
+                    aggregation["ID"] = new_id
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
@@ -240,6 +264,8 @@ class BIManagement(object):
     def _convert_aggregation_to_bi(self, aggr):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
+            ("ID", None),
+            ("use_layout_id", ""),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
@@ -338,7 +364,7 @@ class BIManagement(object):
         def tryint(x):
             try:
                 return int(x)
-            except:
+            except ValueError:
                 return x
 
         if isinstance(rule, tuple):
@@ -422,12 +448,12 @@ class BIManagement(object):
         for pack_id, pack in self._packs.iteritems():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, _description = self.rule_called_by_node(aggregation["node"])
-                aggregations_that_use_rule.setdefault(rule_id, []).append((pack_id, aggr_id,
-                                                                           aggregation))
+                aggregations_that_use_rule.setdefault(rule_id, []).append(
+                    (pack_id, aggr_id, aggregation))
                 sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
                 for sub_rule_id in sub_rule_ids:
-                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((pack_id, aggr_id,
-                                                                                   aggregation))
+                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append(
+                        (pack_id, aggr_id, aggregation))
         return aggregations_that_use_rule
 
     def _aggregation_recursive_sub_rule_ids(self, ruleid):
@@ -507,8 +533,8 @@ class ModeBI(WatoMode, BIManagement):
     def buttons(self):
         global_buttons()
         if self._pack:
-            html.context_button(
-                _("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]), "back")
+            html.context_button(_("All Packs"), html.makeuri_contextless([("mode", "bi_packs")]),
+                                "back")
 
     def _add_change(self, action_name, text):
         site_ids = [site[0] for site in config.wato_slave_sites()] + [config.omd_site()]
@@ -568,8 +594,8 @@ class ModeBI(WatoMode, BIManagement):
             raise MKUserError(
                 varprefix + "_1_0",
                 _("The rule you selected needs %d argument(s) (%s), "
-                  "but you configured %d arguments.") % (len(rule_params), ', '.join(rule_params),
-                                                         len(arguments)))
+                  "but you configured %d arguments.") %
+                (len(rule_params), ', '.join(rule_params), len(arguments)))
 
     def _get_vs_call_rule(self):
         return Tuple(
@@ -716,10 +742,9 @@ class ModeBI(WatoMode, BIManagement):
         # Configuration of leaf nodes
         vs_node_simplechoices = [
             ("host", _("State of a host"),
-             Tuple(
-                 help=_("Will create child nodes representing the state of hosts (usually the "
-                        "host check is done via ping)."),
-                 elements=[self._vs_host_re])),
+             Tuple(help=_("Will create child nodes representing the state of hosts (usually the "
+                          "host check is done via ping)."),
+                   elements=[self._vs_host_re])),
             ("service", _("State of a service"),
              Tuple(
                  help=_("Will create child nodes representing the state of services."),
@@ -783,78 +808,92 @@ class ModeBI(WatoMode, BIManagement):
         else:
             cme_elements = []
 
+        visualization_choices = []
+        visualization_choices.append((None, _("Use default layout")))
+        templates = cmk.gui.node_visualization.BILayoutManagement.get_all_bi_template_layouts()
+        for template_id in sorted(templates.keys()):
+            visualization_choices.append((template_id, template_id))
+
         return Dictionary(
             title=_("Aggregation Properties"),
             optional_keys=False,
             render="form",
-            elements=cme_elements + [
-                ("groups",
-                 Transform(
-                     ListOf(
-                         Alternative(
-                             style="dropdown",
-                             orientation="horizontal",
-                             elements=[
-                                 TextUnicode(title=_("Group name")),
-                                 ListOfStrings(
-                                     title=_("Group path"), orientation="horizontal",
-                                     separator="/"),
-                             ],
-                         ),
+            elements=cme_elements +
+            [("ID",
+              TextAscii(
+                  title=_("Aggregation ID"),
+                  help=_(
+                      "The ID of the aggregation must be a unique text. It will be as unique ID."),
+                  allow_empty=False,
+                  size=80,
+              )),
+             ("groups",
+              Transform(
+                  ListOf(Alternative(
+                      style="dropdown",
+                      orientation="horizontal",
+                      elements=[
+                          TextUnicode(title=_("Group name")),
+                          ListOfStrings(
+                              title=_("Group path"), orientation="horizontal", separator="/"),
+                      ],
+                  ),
                          title=_("Aggregation Groups")),
-                     forth=transform_aggregation_groups_to_gui,
-                     back=transform_aggregation_groups_to_disk,
-                 )),
-                ("node",
-                 CascadingDropdown(
-                     title=_("Rule to call"),
-                     choices=self._node_call_choices() + self._foreach_choices(
-                         self._node_call_choices()))),
-                ("disabled",
+                  back=transform_aggregation_groups_to_disk,
+                  forth=transform_aggregation_groups_to_gui,
+              )),
+             ("node",
+              CascadingDropdown(title=_("Rule to call"),
+                                choices=self._node_call_choices() +
+                                self._foreach_choices(self._node_call_choices()))),
+             ("disabled",
+              Checkbox(
+                  title=_("Disabled"),
+                  label=_("Currently disable this aggregation"),
+              )),
+             ("hard_states",
+              Checkbox(
+                  title=_("Use Hard States"),
+                  label=_("Base state computation on hard states"),
+                  help=
+                  _("Hard states can only differ from soft states if at least one host or service "
+                    "of the BI aggregate has more than 1 maximum check attempt. For example if you "
+                    "set the maximum check attempts of a service to 3 and the service is CRIT "
+                    "just since one check then it's soft state is CRIT, but its hard state is still OK. "
+                    "<b>Note:</b> When computing the availbility of a BI aggregate this option "
+                    "has no impact. For that purpose always the soft (i.e. real) states will be used."
+                   ),
+              )),
+             ("downtime_aggr_warn",
+              Checkbox(
+                  title=_("Aggregation of Downtimes"),
+                  label=_("Escalate downtimes based on aggregated WARN state"),
+                  help=
+                  _("When computing the state 'in scheduled downtime' for an aggregate "
+                    "first all leaf nodes that are within downtime are assumed CRIT and all others "
+                    "OK. Then each aggregated node is assumed to be in downtime if the state "
+                    "is CRIT under this assumption. You can change this to WARN. The influence of "
+                    "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
+                    "and want the downtime information also escalated in case such a node would go into "
+                    "WARN state."),
+              )),
+             (
+                 "single_host",
                  Checkbox(
-                     title=_("Disabled"),
-                     label=_("Currently disable this aggregation"),
-                 )),
-                ("hard_states",
-                 Checkbox(
-                     title=_("Use Hard States"),
-                     label=_("Base state computation on hard states"),
-                     help=
-                     _("Hard states can only differ from soft states if at least one host or service "
-                       "of the BI aggregate has more than 1 maximum check attempt. For example if you "
-                       "set the maximum check attempts of a service to 3 and the service is CRIT "
-                       "just since one check then it's soft state is CRIT, but its hard state is still OK. "
-                       "<b>Note:</b> When computing the availbility of a BI aggregate this option "
-                       "has no impact. For that purpose always the soft (i.e. real) states will be used."
-                      ),
-                 )),
-                ("downtime_aggr_warn",
-                 Checkbox(
-                     title=_("Aggregation of Downtimes"),
-                     label=_("Escalate downtimes based on aggregated WARN state"),
-                     help=
-                     _("When computing the state 'in scheduled downtime' for an aggregate "
-                       "first all leaf nodes that are within downtime are assumed CRIT and all others "
-                       "OK. Then each aggregated node is assumed to be in downtime if the state "
-                       "is CRIT under this assumption. You can change this to WARN. The influence of "
-                       "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
-                       "and want the downtime information also escalated in case such a node would go into "
-                       "WARN state."),
-                 )),
-                (
-                    "single_host",
-                    Checkbox(
-                        title=_("Optimization"),
-                        label=_("The aggregation covers data from only one host and its parents."),
-                        help=_(
-                            "If you have a large number of aggregations that cover only one host and "
-                            "maybe its parents (such as Check_MK cluster hosts), "
-                            "then please enable this optimization. It reduces the time for the "
-                            "computation. Do <b>not</b> enable this for aggregations that contain "
-                            "data of more than one host!"),
-                    ),
-                ),
-            ])
+                     title=_("Optimization"),
+                     label=_("The aggregation covers data from only one host and its parents."),
+                     help=_(
+                         "If you have a large number of aggregations that cover only one host and "
+                         "maybe its parents (such as Check_MK cluster hosts), "
+                         "then please enable this optimization. It reduces the time for the "
+                         "computation. Do <b>not</b> enable this for aggregations that contain "
+                         "data of more than one host!"),
+                 ),
+             ),
+             ("use_layout_id",
+              DropdownChoice(title=_("Use visualization layout"),
+                             choices=visualization_choices,
+                             default_value=None))])
 
     # .--------------------------------------------------------------------.
     # | Methods for analysing the rules and aggregations                   |
@@ -933,13 +972,12 @@ class ModeBI(WatoMode, BIManagement):
             html.close_a()
             html.close_li()
         else:
-            html.begin_foldable_container(
-                "bi_rule_trees",
-                "%s%s" % (tree_prefix, tree_path),
-                False,
-                title,
-                title_url=edit_url,
-                tree_img="tree_black")
+            html.begin_foldable_container("bi_rule_trees",
+                                          "%s%s" % (tree_prefix, tree_path),
+                                          False,
+                                          title,
+                                          title_url=edit_url,
+                                          tree_img="tree_black")
             for sub_rule_id in sub_rule_ids:
                 self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
             html.end_foldable_container()
@@ -983,8 +1021,8 @@ class ModeBIPacks(ModeBI):
     def buttons(self):
         ModeBI.buttons(self)
         if config.user.may("wato.bi_admin"):
-            html.context_button(
-                _("New BI Pack"), html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
+            html.context_button(_("New BI Pack"),
+                                html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
 
     def action(self):
         if config.user.may("wato.bi_admin") and html.request.has_var("_delete"):
@@ -997,8 +1035,8 @@ class ModeBIPacks(ModeBI):
             if pack["rules"]:
                 raise MKUserError(
                     None,
-                    _("You cannot delete this pack. It contains <b>%d</b> rules.") % len(
-                        pack["rules"]))
+                    _("You cannot delete this pack. It contains <b>%d</b> rules.") %
+                    len(pack["rules"]))
             c = wato_confirm(
                 _("Confirm BI pack deletion"),
                 _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?"
@@ -1019,8 +1057,8 @@ class ModeBIPacks(ModeBI):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if config.user.may("wato.bi_admin"):
-                    edit_url = html.makeuri_contextless([("mode", "bi_edit_pack"), ("pack",
-                                                                                    pack_id)])
+                    edit_url = html.makeuri_contextless([("mode", "bi_edit_pack"),
+                                                         ("pack", pack_id)])
                     html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
                     delete_url = html.makeactionuri([("_delete", pack_id)])
                     html.icon_button(delete_url, _("Delete this BI pack"), "delete")
@@ -1175,8 +1213,8 @@ class ModeBIAggregations(ModeBI):
         ModeBI.buttons(self)
         html.context_button(_("Rules"), self.url_to_pack([("mode", "bi_rules")]), "aggr")
         if self.have_rules() and self.is_contact_for_pack():
-            html.context_button(
-                _("New Aggregation"), self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
+            html.context_button(_("New Aggregation"),
+                                self.url_to_pack([("mode", "bi_edit_aggregation")]), "new")
 
     def action(self):
         self.must_be_contact_for_pack()
@@ -1256,58 +1294,59 @@ class ModeBIAggregations(ModeBI):
         html.hidden_fields()
         if self._pack["aggregations"]:
             fieldstyle = "margin-top:10px"
-            html.button(
-                "_bulk_delete_bi_aggregations", _("Bulk delete"), "submit", style=fieldstyle)
+            html.button("_bulk_delete_bi_aggregations",
+                        _("Bulk delete"),
+                        "submit",
+                        style=fieldstyle)
 
             move_choices = [(pack_id, attrs["title"])
                             for pack_id, attrs in self._packs.items()
                             if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs)]
 
             if move_choices:
-                html.button(
-                    "_bulk_move_bi_aggregations", _("Bulk move"), "submit", style=fieldstyle)
+                html.button("_bulk_move_bi_aggregations",
+                            _("Bulk move"),
+                            "submit",
+                            style=fieldstyle)
 
                 if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
-                        'bulk_moveto', ''))
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                    html.request.var('bulk_moveto', ''))
 
-                html.select(
-                    "bulk_moveto",
-                    move_choices,
-                    "@",
-                    onchange="cmk.selection.update_bulk_moveto(this.value)",
-                    attrs={
-                        'class': 'bulk_moveto',
-                        'style': fieldstyle
-                    })
+                html.select("bulk_moveto",
+                            move_choices,
+                            "@",
+                            onchange="cmk.selection.update_bulk_moveto(this.value)",
+                            attrs={
+                                'class': 'bulk_moveto',
+                                'style': fieldstyle
+                            })
         html.end_form()
 
     def _render_aggregations(self):
         with table_element("bi_aggr", _("Aggregations")) as table:
             for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
                 table.row()
-                table.cell(
-                    html.render_input(
-                        "_toggle_group",
-                        type_="button",
-                        class_="checkgroup",
-                        onclick="cmk.selection.toggle_all_rows();",
-                        value='X'),
-                    sortable=False,
-                    css="checkbox")
+                table.cell(html.render_input("_toggle_group",
+                                             type_="button",
+                                             class_="checkgroup",
+                                             onclick="cmk.selection.toggle_all_rows();",
+                                             value='X'),
+                           sortable=False,
+                           css="checkbox")
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
                 table.cell(_("Actions"), css="buttons")
                 edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                     ("id", aggregation_id), ("pack",
-                                                                              self._pack_id)])
+                                                     ("id", aggregation_id),
+                                                     ("pack", self._pack_id)])
                 html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
                 if self.is_contact_for_pack():
                     delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
                     html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-                table.text_cell(_("Nr."), aggregation_id + 1, css="number")
+                table.text_cell(_("ID"), aggregation.get("ID"))
 
                 if cmk.is_managed_edition():
                     table.text_cell(_("Customer"))
@@ -1350,8 +1389,9 @@ class ModeBIAggregations(ModeBI):
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
             return
-        self.render_rule_tree(
-            toplevel_rule["id"], toplevel_rule["id"], tree_prefix="%s_" % aggregation_id)
+        self.render_rule_tree(toplevel_rule["id"],
+                              toplevel_rule["id"],
+                              tree_prefix="%s_" % aggregation_id)
 
 
 #.
@@ -1387,15 +1427,15 @@ class ModeBIRules(ModeBI):
     def buttons(self):
         ModeBI.buttons(self)
         if self._view_type == "list":
-            html.context_button(
-                _("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]), "aggr")
+            html.context_button(_("Aggregations"), self.url_to_pack([("mode", "bi_aggregations")]),
+                                "aggr")
             if self.is_contact_for_pack():
                 html.context_button(
                     _("New Rule"),
                     self.url_to_pack([("mode", "bi_edit_rule"), ("pack", self._pack_id)]), "new")
-            html.context_button(
-                _("Unused Rules"), self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]),
-                "unusedbirules")
+            html.context_button(_("Unused Rules"),
+                                self.url_to_pack([("mode", "bi_rules"), ("view", "unused")]),
+                                "unusedbirules")
         else:
             html.context_button(_("Back"), html.makeuri([("view", "list")]), "back")
 
@@ -1516,18 +1556,17 @@ class ModeBIRules(ModeBI):
                 html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
 
                 if html.request.has_var('bulk_moveto'):
-                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
-                        'bulk_moveto', ''))
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' %
+                                    html.request.var('bulk_moveto', ''))
 
-                html.select(
-                    "bulk_moveto",
-                    move_choices,
-                    "@",
-                    onchange="cmk.selection.update_bulk_moveto(this.value)",
-                    attrs={
-                        'class': 'bulk_moveto',
-                        'style': fieldstyle
-                    })
+                html.select("bulk_moveto",
+                            move_choices,
+                            "@",
+                            onchange="cmk.selection.update_bulk_moveto(this.value)",
+                            attrs={
+                                'class': 'bulk_moveto',
+                                'style': fieldstyle
+                            })
         html.end_form()
 
     def render_rules(self, title, only_unused):
@@ -1545,15 +1584,13 @@ class ModeBIRules(ModeBI):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(
-                        html.render_input(
-                            "_toggle_group",
-                            type_="button",
-                            class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows();",
-                            value='X'),
-                        sortable=False,
-                        css="checkbox")
+                    table.cell(html.render_input("_toggle_group",
+                                                 type_="button",
+                                                 class_="checkgroup",
+                                                 onclick="cmk.selection.toggle_all_rows();",
+                                                 value='X'),
+                               sortable=False,
+                               css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)
 
                     table.cell(_("Actions"), css="buttons")
@@ -1564,7 +1601,11 @@ class ModeBIRules(ModeBI):
                     html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
                     if rule_refs == 0:
-                        tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", rule_id)])
+                        tree_url = html.makeuri_contextless([
+                            ("mode", "bi_rule_tree"),
+                            ("id", rule_id),
+                            ("pack", self._pack_id),
+                        ])
                         html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
                                          "bitree")
 
@@ -1576,9 +1617,8 @@ class ModeBIRules(ModeBI):
 
                     table.cell("", css="narrow")
                     if rule.get("disabled"):
-                        html.icon(
-                            _("This rule is currently disabled and will not be applied"),
-                            "disabled")
+                        html.icon(_("This rule is currently disabled and will not be applied"),
+                                  "disabled")
                     else:
                         html.empty_icon_button()
 
@@ -1598,12 +1638,12 @@ class ModeBIRules(ModeBI):
                     table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                     table.cell(_("Used by"))
                     have_this = set([])
-                    for (pack_id, aggr_id, aggregation) in aggregations_that_use_rule.get(
-                            rule_id, []):
+                    for (pack_id, aggr_id,
+                         aggregation) in aggregations_that_use_rule.get(rule_id, []):
                         if aggr_id not in have_this:
                             aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                                 ("id", aggr_id), ("pack",
-                                                                                   pack_id)])
+                                                                 ("id", aggr_id),
+                                                                 ("pack", pack_id)])
                             html.a(self.aggregation_title(aggregation), href=aggr_url)
                             html.br()
                             have_this.add(aggr_id)
@@ -1703,6 +1743,14 @@ class ModeBIEditAggregation(ModeBI):
     def buttons(self):
         html.context_button(_("Abort"), html.makeuri([("mode", "bi_aggregations")]), "abort")
 
+    def _get_aggregations_by_id(self):
+        ids = {}
+        for _pack, settings in self._packs.iteritems():
+            for aggregation in settings["aggregations"]:
+                if "ID" in aggregation:
+                    ids[aggregation["ID"]] = (settings["title"], aggregation)
+        return ids
+
     def action(self):
         self.must_be_contact_for_pack()
         if html.check_transaction():
@@ -1711,6 +1759,15 @@ class ModeBIEditAggregation(ModeBI):
             if len(new_aggr["groups"]) == 0:
                 raise MKUserError('rule_p_groups_0',
                                   _("Please define at least one aggregation group"))
+
+            aggr_id = new_aggr["ID"]
+            aggregation_ids = self._get_aggregations_by_id()
+            if aggr_id in aggregation_ids and aggregation_ids[aggr_id][
+                    1] != self._edited_aggregation:
+                raise MKUserError(
+                    "aggr_p_id",
+                    "This aggregation id is already used in pack %s" % aggregation_ids[aggr_id][0])
+
             if self._new:
                 self._pack["aggregations"].append(new_aggr)
                 self._add_change(
@@ -2055,9 +2112,12 @@ class ModeBIEditRule(ModeBI):
                                            size=80,
                                        )) for state, name in [
                                            ("0", "OK"),
-                                           ("1", "WARN"),
-                                           ("2", "CRIT"),
-                                           ("3", "UNKNOWN"),
+                                           ("1",
+                                            "WARN"),
+                                           ("2",
+                                            "CRIT"),
+                                           ("3",
+                                            "UNKNOWN"),
                                        ]]),
                  title=_("Additional messages describing rule state"),
                  help=
@@ -2069,17 +2129,17 @@ class ModeBIEditRule(ModeBI):
             ("icon", IconSelector(title=_("Icon"))),
         ]
 
-        return Dictionary(
-            title=_("Rule Properties"),
-            optional_keys=False,
-            render="form",
-            elements=elements,
-            headers=[
-                (_("Rule Properties"), ["id", "title", "docu_url", "comment", "params",
-                                        "disabled"]),
-                (_("Child Node Generation"), ["nodes"]),
-                (_("Aggregation Function"), ["aggregation", "state_messages", "icon"]),
-            ])
+        return Dictionary(title=_("Rule Properties"),
+                          optional_keys=False,
+                          render="form",
+                          elements=elements,
+                          headers=[
+                              (_("Rule Properties"),
+                               ["id", "title", "docu_url", "comment", "params", "disabled"]),
+                              (_("Child Node Generation"), ["nodes"]),
+                              (_("Aggregation Function"), ["aggregation", "state_messages",
+                                                           "icon"]),
+                          ])
 
 
 #.
@@ -2097,17 +2157,16 @@ bi_aggregation_functions = {}
 bi_aggregation_functions["worst"] = {
     "title": _("Worst - take worst of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(
-            help=_(
-                "Normally this value is <tt>1</tt>, which means that the worst state "
-                "of all child nodes is being used as the total state. If you set it for example "
-                "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-                "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-                "resulting state would be WARN. Or you could say that the worst to nodes are "
-                "first dropped and then the worst of the remaining nodes defines the state. "),
-            title=_("Take n'th worst state for n = "),
-            default_value=1,
-            min_value=1),
+        Integer(help=_(
+            "Normally this value is <tt>1</tt>, which means that the worst state "
+            "of all child nodes is being used as the total state. If you set it for example "
+            "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+            "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+            "resulting state would be WARN. Or you could say that the worst to nodes are "
+            "first dropped and then the worst of the remaining nodes defines the state. "),
+                title=_("Take n'th worst state for n = "),
+                default_value=1,
+                min_value=1),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2120,15 +2179,15 @@ bi_aggregation_functions["worst"] = {
 bi_aggregation_functions["best"] = {
     "title": _("Best - take best of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(
-            help=_("Normally this value is <tt>1</tt>, which means that the best state "
-                   "of all child nodes is being used as the total state. If you set it for example "
-                   "to <tt>2</tt>, then the node with the best state is not being regarded. "
-                   "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-                   "state would be WARN."),
-            title=_("Take n'th best state for n = "),
-            default_value=1,
-            min_value=1),
+        Integer(help=_(
+            "Normally this value is <tt>1</tt>, which means that the best state "
+            "of all child nodes is being used as the total state. If you set it for example "
+            "to <tt>2</tt>, then the node with the best state is not being regarded. "
+            "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+            "state would be WARN."),
+                title=_("Take n'th best state for n = "),
+                default_value=1,
+                min_value=1),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2140,25 +2199,23 @@ bi_aggregation_functions["best"] = {
 
 
 def vs_count_ok_count(title, defval, defvalperc):
-    return Alternative(
-        title=title,
-        style="dropdown",
-        match=lambda x: str(x).endswith("%") and 1 or 0,
-        elements=[
-            Integer(
-                title=_("Explicit number"),
-                label=_("Number of OK-nodes"),
-                min_value=0,
-                default_value=defval),
-            Transform(
-                Percentage(
-                    label=_("Percent of OK-nodes"), display_format="%.0f",
-                    default_value=defvalperc),
-                title=_("Percentage"),
-                forth=lambda x: float(x[:-1]),
-                back=lambda x: "%d%%" % x,
-            ),
-        ])
+    return Alternative(title=title,
+                       style="dropdown",
+                       match=lambda x: str(x).endswith("%") and 1 or 0,
+                       elements=[
+                           Integer(title=_("Explicit number"),
+                                   label=_("Number of OK-nodes"),
+                                   min_value=0,
+                                   default_value=defval),
+                           Transform(
+                               Percentage(label=_("Percent of OK-nodes"),
+                                          display_format="%.0f",
+                                          default_value=defvalperc),
+                               title=_("Percentage"),
+                               forth=lambda x: float(x[:-1]),
+                               back=lambda x: "%d%%" % x,
+                           ),
+                       ])
 
 
 bi_aggregation_functions["count_ok"] = {
@@ -2168,144 +2225,6 @@ bi_aggregation_functions["count_ok"] = {
         vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
     ]),
 }
-
-#.
-#   .--Example Configuration-----------------------------------------------.
-#   |               _____                           _                      |
-#   |              | ____|_  ____ _ _ __ ___  _ __ | | ___                 |
-#   |              |  _| \ \/ / _` | '_ ` _ \| '_ \| |/ _ \                |
-#   |              | |___ >  < (_| | | | | | | |_) | |  __/                |
-#   |              |_____/_/\_\__,_|_| |_| |_| .__/|_|\___|                |
-#   |                                        |_|                           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-bi_example = '''
-aggregation_rules["host"] = (
-  "Host $HOSTNAME$",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "general",      [ "$HOSTNAME$" ] ),
-      ( "performance",  [ "$HOSTNAME$" ] ),
-      ( "filesystems",  [ "$HOSTNAME$" ] ),
-      ( "networking",   [ "$HOSTNAME$" ] ),
-      ( "applications", [ "$HOSTNAME$" ] ),
-      ( "logfiles",     [ "$HOSTNAME$" ] ),
-      ( "hardware",     [ "$HOSTNAME$" ] ),
-      ( "other",        [ "$HOSTNAME$" ] ),
-  ]
-)
-
-aggregation_rules["general"] = (
-  "General State",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", HOST_STATE ),
-      ( "$HOSTNAME$", "Uptime" ),
-      ( "checkmk",    [ "$HOSTNAME$" ] ),
-  ]
-)
-
-aggregation_rules["filesystems"] = (
-  "Disk & Filesystems",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "Disk|MD" ),
-      ( "multipathing", [ "$HOSTNAME$" ]),
-      ( FOREACH_SERVICE, "$HOSTNAME$", "fs_(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
-      ( FOREACH_SERVICE, "$HOSTNAME$", "Filesystem(.*)", "filesystem", [ "$HOSTNAME$", "$1$" ] ),
-  ]
-)
-
-aggregation_rules["filesystem"] = (
-  "$FS$",
-  [ "HOSTNAME", "FS" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "fs_$FS$$" ),
-      ( "$HOSTNAME$", "Filesystem$FS$$" ),
-      ( "$HOSTNAME$", "Mount options of $FS$$" ),
-  ]
-)
-
-aggregation_rules["multipathing"] = (
-  "Multipathing",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "Multipath" ),
-  ]
-)
-
-aggregation_rules["performance"] = (
-  "Performance",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
-  ]
-)
-
-aggregation_rules["hardware"] = (
-  "Hardware",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "IPMI|RAID" ),
-  ]
-)
-
-aggregation_rules["networking"] = (
-  "Networking",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "NFS|Interface|TCP" ),
-  ]
-)
-
-aggregation_rules["checkmk"] = (
-  "Check_MK",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-       ( "$HOST$", "Check_MK|Uptime" ),
-  ]
-)
-
-aggregation_rules["logfiles"] = (
-  "Logfiles",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "LOG" ),
-  ]
-)
-aggregation_rules["applications"] = (
-  "Applications",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", "ASM|ORACLE|proc" ),
-  ]
-)
-
-aggregation_rules["other"] = (
-  "Other",
-  [ "HOSTNAME" ],
-  "worst",
-  [
-      ( "$HOSTNAME$", REMAINING ),
-  ]
-)
-
-host_aggregations += [
-  ( DISABLED, "Hosts", FOREACH_HOST, [ "tcp" ], ALL_HOSTS, "host", ["$HOSTNAME$"] ),
-]
-'''
 
 #.
 #   .--Declarations--------------------------------------------------------.
@@ -2445,3 +2364,135 @@ class BIHostRenamer(BIManagement):
                 if watolib.rename_host_in_list(node[1][1], oldname, newname):
                     renamed = 1
         return renamed
+
+
+#.
+#   .--Example Configuration-----------------------------------------------.
+#   |               _____                           _                      |
+#   |              | ____|_  ____ _ _ __ ___  _ __ | | ___                 |
+#   |              |  _| \ \/ / _` | '_ ` _ \| '_ \| |/ _ \                |
+#   |              | |___ >  < (_| | | | | | | |_) | |  __/                |
+#   |              |_____/_/\_\__,_|_| |_| |_| .__/|_|\___|                |
+#   |                                        |_|                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+bi_example = """
+bi_packs['default'] = {
+ 'aggregations': [],
+ 'contact_groups': [],
+ 'host_aggregations': [({'disabled': True,
+                         'downtime_aggr_warn': False,
+                         'hard_states': False,
+                         'ID': 'default_aggregation',
+                         'use_layout_id': None},
+                        [u'Hosts'],
+                        FOREACH_HOST,
+                        ['tcp'],
+                        ALL_HOSTS,
+                        'host',
+                        ['$HOSTNAME$'])],
+ 'id': 'default',
+ 'public': True,
+ 'rules': {'applications': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'ASM|ORACLE|proc')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Applications'},
+           'checkmk': {'aggregation': 'worst',
+                       'nodes': [('$HOST$',
+                                  'Check_MK|Uptime')],
+                       'params': ['HOSTNAME'],
+                       'title': 'Check_MK'},
+           'filesystem': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'fs_$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Filesystem$FS$$'),
+                                    ('$HOSTNAME$',
+                                     'Mount options of $FS$$')],
+                          'params': ['HOSTNAME',
+                                     'FS'],
+                          'title': '$FS$'},
+           'filesystems': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'Disk|MD'),
+                                     ('multipathing',
+                                      ['$HOSTNAME$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'fs_(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$']),
+                                     (FOREACH_SERVICE,
+                                      [],
+                                      '$HOSTNAME$',
+                                      'Filesystem(.*)',
+                                      'filesystem',
+                                      ['$HOSTNAME$',
+                                       '$1$'])],
+                           'params': ['HOSTNAME'],
+                           'title': 'Disk & Filesystems'},
+           'general': {'aggregation': 'worst',
+                       'nodes': [('$HOSTNAME$',
+                                  HOST_STATE),
+                                 ('$HOSTNAME$',
+                                  'Uptime'),
+                                 ('checkmk',
+                                  ['$HOSTNAME$'])],
+                       'params': ['HOSTNAME'],
+                       'title': 'General State'},
+           'hardware': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'IPMI|RAID')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Hardware'},
+           'host': {'aggregation': 'worst',
+                    'nodes': [('general',
+                               ['$HOSTNAME$']),
+                              ('performance',
+                               ['$HOSTNAME$']),
+                              ('filesystems',
+                               ['$HOSTNAME$']),
+                              ('networking',
+                               ['$HOSTNAME$']),
+                              ('applications',
+                               ['$HOSTNAME$']),
+                              ('logfiles',
+                               ['$HOSTNAME$']),
+                              ('hardware',
+                               ['$HOSTNAME$']),
+                              ('other',
+                               ['$HOSTNAME$'])],
+                    'params': ['HOSTNAME'],
+                    'title': 'Host $HOSTNAME$'},
+           'logfiles': {'aggregation': 'worst',
+                        'nodes': [('$HOSTNAME$',
+                                   'LOG')],
+                        'params': ['HOSTNAME'],
+                        'title': 'Logfiles'},
+           'multipathing': {'aggregation': 'worst',
+                            'nodes': [('$HOSTNAME$',
+                                       'Multipath')],
+                            'params': ['HOSTNAME'],
+                            'title': 'Multipathing'},
+           'networking': {'aggregation': 'worst',
+                          'nodes': [('$HOSTNAME$',
+                                     'NFS|Interface|TCP')],
+                          'params': ['HOSTNAME'],
+                          'title': 'Networking'},
+           'other': {'aggregation': 'worst',
+                     'nodes': [('$HOSTNAME$',
+                                REMAINING)],
+                     'params': ['HOSTNAME'],
+                     'title': 'Other'},
+           'performance': {'aggregation': 'worst',
+                           'nodes': [('$HOSTNAME$',
+                                      'CPU|Memory|Vmalloc|Kernel|Number of threads')],
+                           'params': ['HOSTNAME'],
+                           'title': 'Performance'}},
+ 'title': u'Default Pack'
+}
+"""

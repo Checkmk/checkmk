@@ -2,7 +2,9 @@ import java.text.SimpleDateFormat
 
 properties([
   parameters([
-    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' )
   ])
 ])
 
@@ -14,15 +16,25 @@ DISTRO_LIST = DISTRO_LIST - ['sles-15']
 // Testing CMA is not needed
 DISTRO_LIST = DISTRO_LIST - ['cma']
 
-println("Building for the following Distros:")
-println(DISTRO_LIST)
+println("Building for the following Distros: " + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
 
 def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERSION = dateFormat.format(date)
-def TEST_DATA = '/var/jenkins_home/test-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERSION
+
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERSION
+if(BRANCH == 'master') {
+    CMK_VERSION = dateFormat.format(date)
+} else if (VERSION == 'daily') {
+    CMK_VERSION = BRANCH + '-' + dateFormat.format(date)
+} else {
+    CMK_VERSION = VERSION
+}
+
+def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
+OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -30,12 +42,11 @@ node {
         IMAGE = 'ubuntu-18.04-common'
         println(IMAGE)
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
+        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
             stage('checkout sources') {
                 cleanWs()
                 dir(TEST_DATA + '/git') {
-                    git branch: 'master', changelog: false, credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6', poll: false, url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk.git'
-                    //checkout(scm)
+                    checkout(scm)
                 }
             }
         }
@@ -48,7 +59,7 @@ try {
             node {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image(DISTRO + '-os-image').pull()
-                    docker.image(DISTRO + '-os-image').inside("-u 0:0 -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO}") {
+                    docker.image(DISTRO + '-os-image').inside("-u 0:0 --ulimit nofile=1024:1024  -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --hostname ${DISTRO}") {
                         stage('install ' + DISTRO + ' omd') {
                             DISTRO_CODE = sh ( script: """
                                 case $DISTRO in
@@ -60,6 +71,9 @@ try {
                                         ;;
                                     'debian-9')
                                         DISTRO_CODE='_0.stretch_amd64.deb'
+                                        ;;
+                                    'debian-10')
+                                        DISTRO_CODE='_0.buster_amd64.deb'
                                         ;;
                                     'ubuntu-14.04')
                                         DISTRO_CODE='_0.trusty_amd64.deb'
@@ -75,6 +89,9 @@ try {
                                         ;;
                                     'ubuntu-18.10')
                                         DISTRO_CODE='_0.cosmic_amd64.deb'
+                                        ;;
+                                    'ubuntu-19.04')
+                                        DISTRO_CODE='_0.disco_amd64.deb'
                                         ;;
                                     'centos-6')
                                         DISTRO_CODE='-el6-38.x86_64.rpm'
@@ -123,7 +140,7 @@ try {
                                 sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                                 sh 'ls -lah'
                                 dir (DISTRO + '-dest') {
-                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/int_master/junit.xml -o junit_suite_name=$DISTRO --maxfail 300' make -C tests test-integration"
+                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/${OMD_SITE}/junit.xml -o junit_suite_name=$DISTRO --maxfail 300' make -C tests EDITION=${EDITION} VERSION=${CMK_VERSION} OMD_SITE=${OMD_SITE} test-integration"
                                 }
                             }
                         }
@@ -131,8 +148,8 @@ try {
                             sh """
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
-                                cp /omd/sites/int_master/junit.xml $DISTRO/
-                                cp -r /omd/sites/int_master/var/log $DISTRO/
+                                cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
+                                cp -r /omd/sites/${OMD_SITE}/var/log $DISTRO/
                                 chown -R 112:120 $DISTRO
                             """
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"
@@ -145,13 +162,15 @@ try {
             }
         }
     }
-    parallel DOCKER_BUILDS
+    throttle(['IntegrationTest']) {
+        parallel DOCKER_BUILDS
+    }
 } finally {
     node {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             println(DOCKER_REGISTRY)
             IMAGE = 'ubuntu-18.04-common'
-            docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
+            docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
                 stage('checkout sources') {
                     sh 'rm -rf results'
                     dir('results') {

@@ -33,7 +33,11 @@ tsm_scratch_default_levels = (5, 7)
 
 def inventory_tsm_scratch(info):
     inventory = []
-    for inst, _tapes, library in info:
+
+    for line in info:
+        if len(line) != 3:
+            continue
+        inst, _tapes, library = line
         if inst != 'default':
             item = "%s / %s" % (inst, library)
         else:

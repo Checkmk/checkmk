@@ -59,15 +59,16 @@ class RulespecCheckgroupParametersOracleRecoveryArea(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Levels for used space (reclaimable is considered as free)"),
-                           elements=[
-                               Percentage(title=_("warning at"), default_value=70.0),
-                               Percentage(title=_("critical at"), default_value=90.0),
-                           ],
-                       ))],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Levels for used space (reclaimable is considered as free)"),
+                 elements=[
+                     Percentage(title=_("warning at"), default_value=70.0),
+                     Percentage(title=_("critical at"), default_value=90.0),
+                 ],
+             ))
+        ],)
 
     @property
     def item_spec(self):

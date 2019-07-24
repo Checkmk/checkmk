@@ -1,0 +1,21 @@
+Title: bluenet2_powerrail: Fixed incomplete status mapping
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558351526
+Class: fix
+
+The following entity states were added:
+
+updateInProgress
+updateError
+onGoingSwitch
+high
+low
+alarm
+warning
+ok
+disabled
+fwVersionTooNew

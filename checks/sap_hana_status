@@ -27,48 +27,63 @@
 
 def parse_sap_hana_status(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
         for line in lines:
-            inst = parsed.setdefault((sid_instance, node), {})
-            if line[0].lower() == "version":
-                inst.setdefault("version", line[2])
-            elif line[0].lower() == "all started":
-                inst.update({
+            if line[0].lower() == "all started":
+                item_name = 'Status'
+                item_data = {
+                    "instance": sid_instance,
                     "state_name": line[1],
                     "message": line[2],
-                })
+                }
+            else:  # Version
+                item_name = line[0]
+                item_data = {
+                    "instance": sid_instance,
+                    'version': line[2],
+                }
+            parsed.setdefault(item_name, {}).setdefault(node, item_data)
     return parsed
 
 
+def _check_sap_hana_status_data(data):
+    state_name = data['state_name']
+    if state_name.lower() == "ok":
+        state = 0
+    elif state_name.lower() == "unknown":
+        state = 3
+    else:
+        state = 2
+    return state, "Status: %s" % state_name
+
+
 def inventory_sap_hana_status(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_status(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_status(item, params, node_data):
+    nodes = [n for n in node_data.keys() if n]
+    if nodes:
+        yield 0, 'Nodes: %s' % ", ".join(nodes)
 
-        if node:
-            yield 0, 'On node: %s' % node
-
-        state_name = data['state_name']
-        if state_name.lower() == "ok":
-            state = 0
-        elif state_name.lower() == "unknown":
-            state = 3
+    for data in node_data.itervalues():
+        if item == 'Status':
+            yield _check_sap_hana_status_data(data)
         else:
-            state = 2
-        yield state, "Status: %s" % state_name
-        yield 0, "Version: %s" % data['version']
+            yield 0, "Version: %s" % data['version']
+
+        # It ONE physical device and at least two nodes.
+        # Thus we only need to check the first one.
+        return
 
 
 check_info['sap_hana_status'] = {
     'parse_function': parse_sap_hana_status,
     'inventory_function': inventory_sap_hana_status,
     'check_function': check_sap_hana_status,
-    'service_description': 'SAP HANA Info %s',
+    'service_description': 'SAP HANA %s',
     'includes': ['sap_hana.include'],
     "node_info": True,
 }

@@ -26,11 +26,8 @@
 #include "Row.h"
 
 #ifdef CMC
-#include "Core.h"
-#include "MonitoringCore.h"
 #include "Object.h"
-#include "RRDBackend.h"
-#include "RRDInfoCache.h"
+#include "RRDInfo.h"
 #include "State.h"
 #include "cmc.h"
 #else
@@ -41,6 +38,7 @@
 int32_t ServiceSpecialIntColumn::getValue(
     Row row, const contact* /* auth_user */) const {
 #ifdef CMC
+    (void)_mc;
     if (auto object = columnData<Object>(row)) {
         switch (_type) {
             case Type::real_hard_state: {
@@ -53,25 +51,18 @@ int32_t ServiceSpecialIntColumn::getValue(
                            : state->_last_hard_state;
             }
             case Type::pnp_graph_present:
-                return _mc->impl<Core>()
-                               ->_rrd_backend.infoFor(object)
-                               ._names.empty()
-                           ? 0
-                           : 1;
+                return object->rrdInfo().names_.empty() ? 0 : 1;
         }
     }
 #else
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::real_hard_state:
-                if (svc->current_state == 0) {
+                if (svc->current_state == STATE_OK) {
                     return 0;
                 }
-                if (svc->state_type == HARD_STATE) {
-                    return svc->current_state;
-                }
-                return svc->last_hard_state;
-
+                return svc->state_type == HARD_STATE ? svc->current_state
+                                                     : svc->last_hard_state;
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, svc->host_ptr->name,
                                         svc->description);

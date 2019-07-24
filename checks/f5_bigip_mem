@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME
+# The WATO group 'memory_simple' needs an item and the service_description should
+# have a '%s'.  At the moment the current item 'total'/'TMM' and 'Memory' without '%s'
+# works but is not consistent.  This will be fixed in the future.
+# If we change this we loose history and parameter sets have to be adapted.
+
 # Example output:
 # Overall memory
 # .1.3.6.1.4.1.3375.2.1.7.1.1.0 8396496896 sysHostMemoryTotal

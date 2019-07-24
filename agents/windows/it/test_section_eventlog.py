@@ -20,7 +20,7 @@ except ImportError:
         raise
 
 
-class Globals:
+class Globals(object):
     local_statefile = 'eventstate.txt'
     state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
     section = 'logwatch'
@@ -189,14 +189,15 @@ def verify_eventstate():
         expected_eventstate = last_records()
         with open(os.path.join(Globals.statedir, Globals.statefile)) as statefile:
             actual_eventstate = dict(get_log_state(line) for line in statefile)
-        for (expected_log, expected_state), (actual_log, actual_state) in zip(
-                sorted(expected_eventstate.items()), sorted(actual_eventstate.items())):
+        for (expected_log,
+             expected_state), (actual_log, actual_state) in zip(sorted(expected_eventstate.items()),
+                                                                sorted(actual_eventstate.items())):
             assert expected_log == actual_log
             state_tolerance = 0 if expected_log == Globals.testlog else Globals.tolerance
             assert math.fabs(expected_state - actual_state) <= state_tolerance, (
                 "expected state for log '%s' is %d, actual state %d, "
-                'state_tolerance %d' % (expected_log, expected_state, actual_state,
-                                        state_tolerance))
+                'state_tolerance %d' %
+                (expected_log, expected_state, actual_state, state_tolerance))
 
 
 @pytest.mark.usefixtures('no_statefile')
@@ -207,7 +208,8 @@ def test_section_eventlog__no_statefile__no_events(request, testconfig, expected
 
 
 @pytest.mark.usefixtures('with_statefile', 'create_events')
-def test_section_eventlog__application_warnings(
-        request, testconfig, expected_output_application_events, actual_output, testfile):
+def test_section_eventlog__application_warnings(request, testconfig,
+                                                expected_output_application_events, actual_output,
+                                                testfile):
     # request.node.name gives test name
     remotetest(expected_output_application_events, actual_output, testfile, request.node.name)

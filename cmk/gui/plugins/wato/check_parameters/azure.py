@@ -61,38 +61,37 @@ class RulespecCheckgroupParametersAzureAgentInfo(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("warning_levels",
-                 Tuple(
-                     title=_("Upper levels for encountered warnings"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=1),
-                         Integer(title=_("Critical at"), default_value=10),
-                     ],
-                 )),
-                ("exception_levels",
-                 Tuple(
-                     title=_("Upper levels for encountered exceptions"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=1),
-                         Integer(title=_("Critical at"), default_value=1),
-                     ],
-                 )),
-                ("remaining_reads_levels_lower",
-                 Tuple(
-                     title=_("Lower levels for remaining API reads"),
-                     elements=[
-                         Integer(title=_("Warning below"), default_value=6000),
-                         Integer(title=_("Critical below"), default_value=3000),
-                     ],
-                 )),
-                ("remaining_reads_unknown_state",
-                 MonitoringState(
-                     title=_("State if remaining API reads are unknown"),
-                     default_value=1,
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("warning_levels",
+             Tuple(
+                 title=_("Upper levels for encountered warnings"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=1),
+                     Integer(title=_("Critical at"), default_value=10),
+                 ],
+             )),
+            ("exception_levels",
+             Tuple(
+                 title=_("Upper levels for encountered exceptions"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=1),
+                     Integer(title=_("Critical at"), default_value=1),
+                 ],
+             )),
+            ("remaining_reads_levels_lower",
+             Tuple(
+                 title=_("Lower levels for remaining API reads"),
+                 elements=[
+                     Integer(title=_("Warning below"), default_value=6000),
+                     Integer(title=_("Critical below"), default_value=3000),
+                 ],
+             )),
+            ("remaining_reads_unknown_state",
+             MonitoringState(
+                 title=_("State if remaining API reads are unknown"),
+                 default_value=1,
+             )),
+        ],)
 
     @property
     def item_spec(self):
@@ -119,33 +118,32 @@ class RulespecCheckgroupParametersWebserver(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("avg_response_time_levels",
-                 Tuple(
-                     title=_("Upper levels for average response time"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.00, unit="s"),
-                         Float(title=_("Critical at"), default_value=10.0, unit="s"),
-                     ],
-                 )),
-                ("error_rate_levels",
-                 Tuple(
-                     title=_("Upper levels for rate of server errors"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
-                         Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
-                     ],
-                 )),
-                ("cpu_time_percent_levels",
-                 Tuple(
-                     title=_("Upper levels for CPU time"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=85., unit="%"),
-                         Float(title=_("Critical at"), default_value=95., unit="%"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("avg_response_time_levels",
+             Tuple(
+                 title=_("Upper levels for average response time"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.00, unit="s"),
+                     Float(title=_("Critical at"), default_value=10.0, unit="s"),
+                 ],
+             )),
+            ("error_rate_levels",
+             Tuple(
+                 title=_("Upper levels for rate of server errors"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
+                     Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
+                 ],
+             )),
+            ("cpu_time_percent_levels",
+             Tuple(
+                 title=_("Upper levels for CPU time"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=85., unit="%"),
+                     Float(title=_("Critical at"), default_value=95., unit="%"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):
@@ -172,70 +170,67 @@ class RulespecCheckgroupParametersAzureStorageaccounts(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('ingress_levels',
-                 Tuple(
-                     title=_("Levels on ingress data in bytes"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="B"),
-                         Float(title=_("Critical at"), unit="B"),
-                     ],
-                 )),
-                ('egress_levels',
-                 Tuple(
-                     title=_("Levels on ingress data in bytes"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="B"),
-                         Float(title=_("Critical at"), unit="B"),
-                     ],
-                 )),
-                ('used_capacity_levels',
-                 Tuple(
-                     title=_("Levels on used capacity in bytes"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="B"),
-                         Float(title=_("Critical at"), unit="B"),
-                     ],
-                 )),
-                ('server_latency_levels',
-                 Tuple(
-                     title=_("Levels on server latency in seconds"),
-                     help=_(
-                         "Average latency used by Azure Storage to process a successful request"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="s"),
-                         Float(title=_("Critical at"), unit="s"),
-                     ],
-                 )),
-                ('e2e_latency_levels',
-                 Tuple(
-                     title=_("Levels on end-to-end latency in seconds"),
-                     help=
-                     _("Average end-to-end latency of successful requests made to a storage service"
-                      ),
-                     elements=[
-                         Float(title=_("Warning at"), unit="s"),
-                         Float(title=_("Critical at"), unit="s"),
-                     ],
-                 )),
-                ('transactions_levels',
-                 Tuple(
-                     title=_("Levels on transaction count"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-                ('availability_levels',
-                 Tuple(
-                     title=_("Levels on availability in percent"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="%"),
-                         Float(title=_("Critical at"), unit="%"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('ingress_levels',
+             Tuple(
+                 title=_("Levels on ingress data in bytes"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="B"),
+                     Float(title=_("Critical at"), unit="B"),
+                 ],
+             )),
+            ('egress_levels',
+             Tuple(
+                 title=_("Levels on ingress data in bytes"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="B"),
+                     Float(title=_("Critical at"), unit="B"),
+                 ],
+             )),
+            ('used_capacity_levels',
+             Tuple(
+                 title=_("Levels on used capacity in bytes"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="B"),
+                     Float(title=_("Critical at"), unit="B"),
+                 ],
+             )),
+            ('server_latency_levels',
+             Tuple(
+                 title=_("Levels on server latency in seconds"),
+                 help=_("Average latency used by Azure Storage to process a successful request"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="s"),
+                     Float(title=_("Critical at"), unit="s"),
+                 ],
+             )),
+            ('e2e_latency_levels',
+             Tuple(
+                 title=_("Levels on end-to-end latency in seconds"),
+                 help=_(
+                     "Average end-to-end latency of successful requests made to a storage service"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="s"),
+                     Float(title=_("Critical at"), unit="s"),
+                 ],
+             )),
+            ('transactions_levels',
+             Tuple(
+                 title=_("Levels on transaction count"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+            ('availability_levels',
+             Tuple(
+                 title=_("Levels on availability in percent"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="%"),
+                     Float(title=_("Critical at"), unit="%"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):
@@ -357,24 +352,21 @@ class RulespecCheckgroupParametersAzureVms(CheckParameterRulespecWithItem):
 
 
 def _azure_vms_summary_levels(title, lower=(None, None), upper=(None, None)):
-    return Dictionary(
-        title=_(title),
-        elements=[
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower levels"),
-                 elements=[
-                     Integer(title=_("Warning below"), default_value=lower[0]),
-                     Integer(title=_("Critical below"), default_value=lower[1]),
-                 ])),
-            ("levels",
-             Tuple(
-                 title=_("Upper levels"),
-                 elements=[
-                     Integer(title=_("Warning at"), default_value=upper[0]),
-                     Integer(title=_("Critical at"), default_value=upper[1]),
-                 ])),
-        ])
+    return Dictionary(title=_(title),
+                      elements=[
+                          ("levels_lower",
+                           Tuple(title=_("Lower levels"),
+                                 elements=[
+                                     Integer(title=_("Warning below"), default_value=lower[0]),
+                                     Integer(title=_("Critical below"), default_value=lower[1]),
+                                 ])),
+                          ("levels",
+                           Tuple(title=_("Upper levels"),
+                                 elements=[
+                                     Integer(title=_("Warning at"), default_value=upper[0]),
+                                     Integer(title=_("Critical at"), default_value=upper[1]),
+                                 ])),
+                      ])
 
 
 @rulespec_registry.register
@@ -424,8 +416,8 @@ class RulespecCheckgroupParametersAzureVmsSummary(CheckParameterRulespecWithoutI
                          ("stopped", _azure_vms_summary_levels("Stopped VMs")),
                          ("deallocating", _azure_vms_summary_levels("Deallocating VMs")),
                          ("deallocated", _azure_vms_summary_levels("Deallocated VMs")),
-                         ("unknown", _azure_vms_summary_levels(
-                             "VMs in unknown state", upper=(1, 1))),
+                         ("unknown", _azure_vms_summary_levels("VMs in unknown state",
+                                                               upper=(1, 1))),
                      ],
                  )),
             ],
@@ -452,57 +444,56 @@ class RulespecCheckgroupParametersAzureVirtualnetworkgateways(CheckParameterRule
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('connections_levels_upper',
-                 Tuple(
-                     title=_("Upper levels on number of Point-to-site connections"),
-                     elements=[
-                         Float(title=_("Warning at")),
-                         Float(title=_("Critical at")),
-                     ],
-                 )),
-                ('connections_levels_lower',
-                 Tuple(
-                     title=_("Lower levels on number of Point-to-site connections"),
-                     elements=[
-                         Float(title=_("Warning below")),
-                         Float(title=_("Critical below")),
-                     ],
-                 )),
-                ('p2s_bandwidth_levels_upper',
-                 Tuple(
-                     title=_("Upper levels on Point-to-site bandwidth in bytes per second"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="B/s"),
-                         Float(title=_("Critical at"), unit="B/s"),
-                     ],
-                 )),
-                ('p2s_bandwidth_levels_lower',
-                 Tuple(
-                     title=_("Lower levels on Point-to-site bandwidth in bytes per second"),
-                     elements=[
-                         Float(title=_("Warning below"), unit="B/s"),
-                         Float(title=_("Critical below"), unit="B/s"),
-                     ],
-                 )),
-                ('s2s_bandwidth_levels_upper',
-                 Tuple(
-                     title=_("Upper levels on Site-to-site bandwidth in bytes per second"),
-                     elements=[
-                         Float(title=_("Warning at"), unit="B/s"),
-                         Float(title=_("Critical at"), unit="B/s"),
-                     ],
-                 )),
-                ('s2s_bandwidth_levels_lower',
-                 Tuple(
-                     title=_("Lower levels on Site-to-site bandwidth in bytes per second"),
-                     elements=[
-                         Float(title=_("Warning below"), unit="B/s"),
-                         Float(title=_("Critical below"), unit="B/s"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('connections_levels_upper',
+             Tuple(
+                 title=_("Upper levels on number of Point-to-site connections"),
+                 elements=[
+                     Float(title=_("Warning at")),
+                     Float(title=_("Critical at")),
+                 ],
+             )),
+            ('connections_levels_lower',
+             Tuple(
+                 title=_("Lower levels on number of Point-to-site connections"),
+                 elements=[
+                     Float(title=_("Warning below")),
+                     Float(title=_("Critical below")),
+                 ],
+             )),
+            ('p2s_bandwidth_levels_upper',
+             Tuple(
+                 title=_("Upper levels on Point-to-site bandwidth in bytes per second"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="B/s"),
+                     Float(title=_("Critical at"), unit="B/s"),
+                 ],
+             )),
+            ('p2s_bandwidth_levels_lower',
+             Tuple(
+                 title=_("Lower levels on Point-to-site bandwidth in bytes per second"),
+                 elements=[
+                     Float(title=_("Warning below"), unit="B/s"),
+                     Float(title=_("Critical below"), unit="B/s"),
+                 ],
+             )),
+            ('s2s_bandwidth_levels_upper',
+             Tuple(
+                 title=_("Upper levels on Site-to-site bandwidth in bytes per second"),
+                 elements=[
+                     Float(title=_("Warning at"), unit="B/s"),
+                     Float(title=_("Critical at"), unit="B/s"),
+                 ],
+             )),
+            ('s2s_bandwidth_levels_lower',
+             Tuple(
+                 title=_("Lower levels on Site-to-site bandwidth in bytes per second"),
+                 elements=[
+                     Float(title=_("Warning below"), unit="B/s"),
+                     Float(title=_("Critical below"), unit="B/s"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):
@@ -510,3 +501,45 @@ class RulespecCheckgroupParametersAzureVirtualnetworkgateways(CheckParameterRule
             title=_("Virtual network gateway name"),
             help=_("Specify virtual network gateway names that the rule should apply to"),
         )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAzureUsageDetails(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "azure_usagedetails"
+
+    @property
+    def title(self):
+        return _("Azure Usage Details (Costs)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("To obtain the data required for this check, please configure"
+                   " the datasource program \"Microsoft Azure\"."),
+            elements=[
+                ('levels',
+                 Tuple(
+                     title=_("Upper levels on daily costs"),
+                     help=_("The levels on costs will be considered to be in the currency"
+                            " corresponding to the reported data."),
+                     elements=[
+                         Float(title=_("Warning at")),
+                         Float(title=_("Critical at")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Service Type"))

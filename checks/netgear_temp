@@ -103,12 +103,11 @@ def check_netgear_temp(item, params, parsed):
             yield 0, "Type: %s" % data["type"]
 
         dev_status, dev_status_name = map_states[data["state"]]
-        yield check_temperature(
-            data["reading"],
-            params,
-            "netgear_temp.%s" % item,
-            dev_status=dev_status,
-            dev_status_name=dev_status_name)
+        yield check_temperature(data["reading"],
+                                params,
+                                "netgear_temp.%s" % item,
+                                dev_status=dev_status,
+                                dev_status_name=dev_status_name)
 
 
 check_info['netgear_temp'] = {

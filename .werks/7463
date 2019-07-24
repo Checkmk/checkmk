@@ -1,0 +1,10 @@
+Title: oracle_asm_diskgroup: Skip invalid, too short lines, which led to a crash
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557828109
+Class: fix
+
+

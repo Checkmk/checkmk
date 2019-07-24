@@ -1,0 +1,16 @@
+Title: Make agent related rules available in bakery ruleset list
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1559415629
+Class: feature
+
+The rulesets "Encryption" and "TCP port for connection to Check_MK agent" are used
+by Checkmk during checking but also by the Agent Bakery for configuring the baked
+agent correctly. The rulesets are located in the "Access to Agents / Checkmk Agent"
+ruleset group.
+
+Users often try to find the ruleset in the wrong group while configuring the
+Agent Bakery packages. For this reason the ruleset is now available in both groups.

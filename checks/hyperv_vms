@@ -70,6 +70,10 @@
 def parse_hyperv_vms(info):
     parsed = {}
     for line in info:
+        if len(line) != 4:
+            # skip lines containing invalid data like e.g.
+            # ../tests/unit/checks/generictests/datasets/hyperv_vms.py, line 16 or 17
+            continue
         # Remove quotes
         line = [x.strip('"') for x in line]
         if line[1].endswith("..."):  # broken output

@@ -24,21 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import copy
+
 
 def _transform_check_http(params):
     if isinstance(params, dict):
         return params
-    name, mode = params
-    mode_name = 'cert' if "cert_days" in mode else 'url'
+    name, mode = copy.deepcopy(params)
+    mode_name = "cert" if "cert_days" in mode else "url"
 
     transformed = {"name": name, "mode": (mode_name, mode)}
     # The proxy option has ben isolated in version 1.6.0i1
     proxy_address = mode.get("proxy")
     if proxy_address:
         proxy = transformed.setdefault("proxy", {"address": proxy_address})
-        # ':' outside a IPv6 address indicates port
-        if ':' in proxy_address.split(']')[-1]:
-            proxy["address"], proxy["port"] = proxy_address.rsplit(':', 1)
+        # ":" outside a IPv6 address indicates port
+        if ":" in proxy_address.split("]")[-1]:
+            proxy["address"], proxy["port"] = proxy_address.rsplit(":", 1)
         if "proxy_auth" in mode:
             proxy["auth"] = mode["proxy_auth"]
 
@@ -46,8 +48,8 @@ def _transform_check_http(params):
     host_settings = transformed.setdefault("host", {})
     # URL mode:
     if "virthost" in mode:
-        virthost, omit_ip = mode["virthost"]
-        mode["virthost"] = virthost
+        virthost, omit_ip = mode.pop("virthost")
+        host_settings["virthost"] = virthost
         if omit_ip or proxy_address:
             host_settings["address"] = virthost
     # CERT mode:
@@ -75,8 +77,8 @@ def _get_host(params):
     if address is None:
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
-    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family"))
-    return HostSettings(address, host.get("port"), family)
+    HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
+    return HostSettings(address, host.get("port"), family, host.get("virthost", address))
 
 
 def _get_proxy(params):
@@ -94,125 +96,122 @@ def _get_proxy(params):
 
 
 def _certificate_args(host, proxy, settings):
-    args = ['-H', host.address]
+    args = []
 
     if "cert_days" in settings:
         # legacy behavior
         if isinstance(settings["cert_days"], int):
-            args += ['-C', settings["cert_days"]]
+            args += ["-C", settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
-            args += ['-C', '%d,%d' % (warn, crit)]
+            args += ["-C", "%d,%d" % (warn, crit)]
 
     if proxy:
-        args += ['--ssl', '-j', 'CONNECT']
+        args += ["--ssl", "-j", "CONNECT"]
 
     return args
 
 
 def _url_args(host, _proxy, settings):
-    args = ["-H", settings.get("virthost", host.address)]
+    args = []
 
     if "uri" in settings:
-        args += ['-u', settings["uri"]]
+        args += ["-u", settings["uri"]]
 
     ssl = settings.get("ssl")
     if ssl in [True, "auto"]:
-        args += ['--ssl']
+        args.append("--ssl")
     elif ssl:
-        args += ['--ssl=%s' % ssl]
+        args.append("--ssl=%s" % ssl)
 
     if "response_time" in settings:
-        args += [
-            '-w',
-            '%f' % (settings["response_time"][0] / 1000.0), '-c',
-            '%f' % (settings["response_time"][1] / 1000.0)
-        ]
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % warn / 1000.0, "-c", "%f" % crit / 1000.0]
 
     if "timeout" in settings:
-        args += ['-t', settings["timeout"]]
+        args += ["-t", settings["timeout"]]
 
     if "user_agent" in settings:
-        args += ['-A', settings["user_agent"]]
+        args += ["-A", settings["user_agent"]]
 
     for header in settings.get("add_headers", []):
-        args += ['-k', header]
+        args += ["-k", header]
 
     if "auth" in settings:
         username, password = settings["auth"]
         args += ["-a", passwordstore_get_cmdline("%s:%%s" % username, password)]
 
     if "onredirect" in settings:
-        args += ['--onredirect=%s' % settings["onredirect"]]
+        args.append("--onredirect=%s" % settings["onredirect"])
 
     if "expect_response" in settings:
-        args += ['-e', ",".join(settings["expect_response"])]
+        args += ["-e", ",".join(settings["expect_response"])]
 
     if "expect_string" in settings:
-        args += ['-s', settings["expect_string"]]
+        args += ["-s", settings["expect_string"]]
 
     if "expect_response_header" in settings:
-        args += ['-d', settings["expect_response_header"]]
+        args += ["-d", settings["expect_response_header"]]
 
     if "expect_regex" in settings:
-        if len(settings['expect_regex']) >= 4 and settings['expect_regex'][3]:
-            args += ['-l']
-        if settings['expect_regex'][1]:
-            args += ['-R']
+        if len(settings["expect_regex"]) >= 4 and settings["expect_regex"][3]:
+            args.append("-l")
+        if settings["expect_regex"][1]:
+            args.append("-R")
         else:
-            args += ['-r']
-        args += [settings['expect_regex'][0]]
-        if settings['expect_regex'][2]:
-            args += ['--invert-regex']
+            args.append("-r")
+        args += [settings["expect_regex"][0]]
+        if settings["expect_regex"][2]:
+            args.append("--invert-regex")
 
     if settings.get("extended_perfdata"):
-        args += ['--extended-perfdata']
+        args.append("--extended-perfdata")
 
     if "post_data" in settings:
         data, content_type = settings["post_data"]
-        args += ['-P', data, '-T', content_type]
+        args += ["-P", data, "-T", content_type]
 
     if "method" in settings:
-        args += ['-j', settings["method"]]
+        args += ["-j", settings["method"]]
 
     if settings.get("no_body"):
-        args += ['--no-body']
+        args.append("--no-body")
 
     if "page_size" in settings:
-        args += ['-m', '%d:%d' % settings["page_size"]]
+        args += ["-m", "%d:%d" % settings["page_size"]]
 
     if "max_age" in settings:
-        args += ['-M', settings["max_age"]]
+        args += ["-M", settings["max_age"]]
 
     # FIXME: This option is deprecated. According to the monitoring-plugins
     # the "urlize" plugin should be used.
     if settings.get("urlize"):
-        args += ['-L']
+        args.append("-L")
 
     return args
 
 
 def _common_args(host, proxy, params):
-    args = []
+    args = ["-H", host.virtual]
 
-    if host.family == 'ipv6':
-        args += ['-6']
+    if host.family == "ipv6":
+        args.append("-6")
     if not params.get("disable_sni"):
-        args += ['--sni']
+        args.append("--sni")
     if proxy and proxy.auth:
         args += ["-b", proxy.auth]
 
     specify_port = proxy.port if proxy else host.port
     if specify_port:
-        args += ['-p', specify_port]
+        args += ["-p", specify_port]
 
     # last two arguments correspond to -I/-H, respectively
     if proxy:
-        args += [proxy.address]
+        args.append(proxy.address)
     address = host.address
     if proxy and host.port:
-        address += ':%s' % host.port
-    args += [address]
+        address += ":%s" % host.port
+    args.append(address)
 
     return args
 
@@ -225,7 +224,7 @@ def check_http_arguments(params):
     host = _get_host(params)
     proxy = _get_proxy(params)
 
-    if mode_name == 'cert':
+    if mode_name == "cert":
         args = _certificate_args(host, proxy, settings)
     else:
         args = _url_args(host, proxy, settings)
@@ -247,8 +246,8 @@ def check_http_description(params):
     return "HTTP %s" % description
 
 
-active_check_info['http'] = {
-    "command_line": '$USER1$/check_http $ARG1$',
+active_check_info["http"] = {
+    "command_line": "$USER1$/check_http $ARG1$",
     "argument_function": check_http_arguments,
     "service_description": check_http_description,
     "has_perfdata": True,

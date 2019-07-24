@@ -39,11 +39,12 @@ from typing import NamedTuple, Text, List, Optional  # pylint: disable=unused-im
 import cmk
 import cmk.utils.store
 from cmk.utils.defines import short_service_state_name
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
-from cmk.gui.background_job import BackgroundProcessInterface, JobStatus  # pylint: disable=unused-import
+from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
 
 from cmk.gui.pages import page_registry, AjaxPage
@@ -60,6 +61,7 @@ from cmk.gui.watolib.automations import (
     check_mk_automation,
 )
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.rulesets import RuleConditions
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -137,6 +139,7 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
     ("action", str),
     ("show_checkboxes", bool),
     ("show_parameters", bool),
+    ("show_discovered_labels", bool),
     ("ignore_errors", bool),
 ])
 
@@ -162,7 +165,6 @@ class ModeDiscovery(WatoMode):
     starts a the discovery data update process. Additional processing is done by
     ModeAjaxServiceDiscovery()
     """
-
     @classmethod
     def name(cls):
         return "inventory"
@@ -187,11 +189,14 @@ class ModeDiscovery(WatoMode):
             show_checkboxes = False
 
         show_parameters = not config.user.load_file("parameter_column", False)
+        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
+                                                           False)
 
         self._options = DiscoveryOptions(
             action=action,
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
+            show_discovered_labels=show_discovered_labels,
             ignore_errors=bool(html.request.var("ignoreerrors")),
         )
 
@@ -200,8 +205,8 @@ class ModeDiscovery(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
 
         host_status_button(self._host.name(), "host")
 
@@ -245,8 +250,8 @@ class ModeDiscovery(WatoMode):
         self._async_progress_msg_container()
         self._service_container()
         html.javascript("cmk.service_discovery.start(%s, %s, %s)" %
-                        (json.dumps(self._host.name()), json.dumps(self._host.folder().path()),
-                         json.dumps(self._options._asdict())))
+                        (json.dumps(self._host.name()), json.dumps(
+                            self._host.folder().path()), json.dumps(self._options._asdict())))
 
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
@@ -290,7 +295,15 @@ def _get_check_table(request):
     if config.site_is_local(request.host.site_id()):
         return execute_discovery_job(request)
 
-    return _get_check_table_from_remote(request)
+    discovery_result = _get_check_table_from_remote(request)
+    discovery_result.check_table = _add_missing_service_labels(discovery_result.check_table)
+    return discovery_result
+
+
+# 1.6.0b4 introduced the service labels column which might be missing when
+# fetching information from remote sites.
+def _add_missing_service_labels(check_table):
+    return [(e + ({},) if len(e) < 11 else e) for e in check_table]
 
 
 def _get_check_table_from_remote(request):
@@ -303,11 +316,11 @@ def _get_check_table_from_remote(request):
         sync_changes_before_remote_automation(request.host.site_id())
 
         return DiscoveryResult(*ast.literal_eval(
-            watolib.do_remote_automation(
-                config.site(request.host.site_id()), "service-discovery-job", [
-                    ("host_name", request.host.name()),
-                    ("options", json.dumps(request.options._asdict())),
-                ])))
+            watolib.do_remote_automation(config.site(request.host.site_id()),
+                                         "service-discovery-job", [
+                                             ("host_name", request.host.name()),
+                                             ("options", json.dumps(request.options._asdict())),
+                                         ])))
     except watolib.MKAutomationException as e:
         if "Invalid automation command: service-discovery-job" not in "%s" % e:
             raise
@@ -333,8 +346,8 @@ def _get_check_table_from_remote(request):
 
         return DiscoveryResult(
             job_status={
-                "is_running": False,
-                "state": JobStatus.state_initialized,
+                "is_active": False,
+                "state": JobStatusStates.INITIALIZED,
             },
             check_table=check_table,
             check_table_created=time.time(),
@@ -344,7 +357,6 @@ def _get_check_table_from_remote(request):
 @automation_command_registry.register
 class AutomationServiceDiscoveryJob(AutomationCommand):
     """Is called by _get_check_table() to execute the background job on a remote site"""
-
     def command_name(self):
         return "service-discovery-job"
 
@@ -365,8 +377,9 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         host.need_permission("read")
 
         options = json.loads(html.get_ascii_input("options"))
-        return StartDiscoveryRequest(
-            host=host, folder=host.folder(), options=DiscoveryOptions(**options))
+        return StartDiscoveryRequest(host=host,
+                                     folder=host.folder(),
+                                     options=DiscoveryOptions(**options))
 
     def execute(self, request):
         # type: (StartDiscoveryRequest) -> str
@@ -379,13 +392,13 @@ def execute_discovery_job(request):
     based on the currently cached data"""
     job = ServiceDiscoveryBackgroundJob(request.host.name())
 
-    if not job.is_running() and request.options.action in [
+    if not job.is_active() and request.options.action in [
             DiscoveryAction.SCAN, DiscoveryAction.REFRESH
     ]:
         job.set_function(job.discover, request)
         job.start()
 
-    if job.is_running() and request.options.action == DiscoveryAction.STOP:
+    if job.is_active() and request.options.action == DiscoveryAction.STOP:
         job.stop()
 
     r = job.get_result(request)
@@ -469,7 +482,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # tupe: (StartDiscoveryRequest) -> DiscoveryResult
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
-        job_status["is_running"] = self.is_running()
+        job_status["is_active"] = self.is_active()
 
         # TODO: Use the correct time. This is difficult because cmk_base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
@@ -501,6 +514,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         request.setdefault("update_target", None)
         request.setdefault("update_source", None)
         request.setdefault("update_services", [])
+
+        # Make Folder() be able to detect the current folder correctly
+        html.request.set_var("folder", request["folder_path"])
 
         folder = watolib.Folder.folder(request["folder_path"])
         self._host = folder.host(request["host_name"])
@@ -542,7 +558,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         page_code = renderer.render(discovery_result, request)
 
         return {
-            "is_finished": not self._is_running(discovery_result),
+            "is_finished": not self._is_active(discovery_result),
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result),
             "body": page_code,
@@ -553,8 +569,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _get_status_message(self, discovery_result):
         # type: (DiscoveryResult) -> Optional[Text]
-        if discovery_result.job_status["state"] == JobStatus.state_initialized:
-            if self._is_running(discovery_result):
+        if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
+            if self._is_active(discovery_result):
                 return _("Initializing discovery...")
             return _("No discovery information available. Please perform a full scan.")
 
@@ -564,19 +580,19 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "duration"]
         finished_txt = cmk.utils.render.date_and_time(finished_time)
 
-        if discovery_result.job_status["state"] == JobStatus.state_running:
+        if discovery_result.job_status["state"] == JobStatusStates.RUNNING:
             return _("%s running for %s") % (job_title, duration_txt)
 
-        if discovery_result.job_status["state"] == JobStatus.state_exception:
+        if discovery_result.job_status["state"] == JobStatusStates.EXCEPTION:
             return _("%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)") % \
                                 (job_title, duration_txt, "\n".join(discovery_result.job_status["loginfo"]["JobException"]))
 
         messages = []
-        if discovery_result.job_status["state"] == JobStatus.state_stopped:
+        if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
             messages.append(
                 _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt))
 
-        elif discovery_result.job_status["state"] == JobStatus.state_finished:
+        elif discovery_result.job_status["state"] == JobStatusStates.FINISHED:
             messages.append(
                 _("%s finished after %s at %s.") % (job_title, duration_txt, finished_txt))
 
@@ -591,12 +607,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             messages.append(_("Found no services yet. To retry please execute a full scan."))
 
         with html.plugged():
-            html.begin_foldable_container(
-                treename="service_discovery",
-                id_="options",
-                isopen=False,
-                title=_("Job details"),
-                indent=False)
+            html.begin_foldable_container(treename="service_discovery",
+                                          id_="options",
+                                          isopen=False,
+                                          title=_("Job details"),
+                                          indent=False)
             html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
             html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
             html.close_div()
@@ -639,13 +654,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             and html.transaction_manager.check_transaction():
             return False
 
-        if self._is_running(previous_discovery_result):
+        if self._is_active(previous_discovery_result):
             return False
 
         return True
 
-    def _is_running(self, discovery_result):
-        return discovery_result.job_status["is_running"]
+    def _is_active(self, discovery_result):
+        return discovery_result.job_status["is_active"]
 
     def _get_check_table(self):
         # type: () -> DiscoveryResult
@@ -660,6 +675,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         show_parameters = not config.user.load_file("parameter_column", False)
         if show_parameters != self._options.show_parameters:
             config.user.save_file("parameter_column", not self._options.show_parameters)
+
+        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
+                                                           False)
+        if show_discovered_labels != self._options.show_discovered_labels:
+            config.user.save_file("discovery_show_discovered_labels",
+                                  not self._options.show_discovered_labels)
 
     def _handle_action(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> DiscoveryResult
@@ -684,7 +705,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ), set(), set()
         apply_changes = False
         for table_source, check_type, _checkgroup, item, paramstring, _params, \
-            descr, _state, _output, _perfdata in discovery_result.check_table:
+            descr, _state, _output, _perfdata, service_labels in discovery_result.check_table:
 
             table_target = self._get_table_target(request, table_source, check_type, item)
 
@@ -706,14 +727,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -723,7 +744,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
 
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -741,7 +762,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
                 ]:
-                    autochecks_to_save[(check_type, item)] = paramstring
+                    autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.add(descr)
@@ -750,7 +771,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
             ]:
-                autochecks_to_save[(check_type, item)] = paramstring
+                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                 saved_services.add(descr)
 
             elif table_source in [
@@ -762,7 +783,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 # for adding, removing, etc. of this service on the cluster. Therefore we
                 # do not allow any operation for this clustered service on the related node.
                 # We just display the clustered service state (OLD, NEW, VANISHED).
-                autochecks_to_save[(check_type, item)] = paramstring
+                autochecks_to_save[(check_type, item)] = (paramstring, service_labels)
                 saved_services.add(descr)
 
         if apply_changes:
@@ -797,7 +818,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return
 
         def _compile_patterns(services):
-            return ["%s$" % re.escape(s) for s in services]
+            return [{"$regex": "%s$" % re.escape(s)} for s in services]
 
         rulesets = watolib.AllRulesets()
         rulesets.load()
@@ -805,13 +826,15 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         try:
             ruleset = rulesets.get("ignored_services")
         except KeyError:
-            ruleset = watolib.Ruleset("ignored_services")
+            ruleset = watolib.Ruleset("ignored_services",
+                                      ruleset_matcher.get_tag_to_group_map(config.tags))
 
         modified_folders = []
 
         service_patterns = _compile_patterns(services)
-        modified_folders += self._remove_from_rule_of_host(
-            ruleset, service_patterns, value=not value)
+        modified_folders += self._remove_from_rule_of_host(ruleset,
+                                                           service_patterns,
+                                                           value=not value)
 
         # Check whether or not the service still needs a host specific setting after removing
         # the host specific setting above and remove all services from the service list
@@ -830,11 +853,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
         other_rule = self._get_rule_of_host(ruleset, value)
-        if other_rule:
-            disable_patterns = set(other_rule.item_list).difference(service_patterns)
-            other_rule.item_list = sorted(list(disable_patterns))
+        if other_rule and isinstance(other_rule.conditions.service_description, list):
+            for service_condition in service_patterns:
+                if service_condition in other_rule.conditions.service_description:
+                    other_rule.conditions.service_description.remove(service_condition)
 
-            if not other_rule.item_list:
+            if not other_rule.conditions.service_description:
                 ruleset.delete_rule(other_rule)
 
             return [other_rule.folder]
@@ -846,13 +870,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         rule = self._get_rule_of_host(ruleset, value)
 
         if rule:
-            rule.item_list = sorted(list(set(service_patterns).union(rule.item_list)))
-            if not rule.item_list:
-                ruleset.delete_rule(rule)
+            for service_condition in service_patterns:
+                if service_condition not in rule.conditions.service_description:
+                    rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = watolib.Rule.create(folder, ruleset, [self._host.name()],
-                                       sorted(service_patterns))
+            rule = watolib.Rule.create(folder, ruleset)
+
+            conditions = RuleConditions(folder.path())
+            conditions.host_name = [self._host.name()]
+            conditions.service_description = sorted(service_patterns)
+            rule.update_conditions(conditions)
+
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 
@@ -925,7 +954,7 @@ class DiscoveryPageRenderer(object):
 
     def _show_discovery_details(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
-        if not discovery_result.check_table and self._is_running(discovery_result):
+        if not discovery_result.check_table and self._is_active(discovery_result):
             html.show_info(_("Discovered no service yet."))
             return
 
@@ -960,21 +989,25 @@ class DiscoveryPageRenderer(object):
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:
-                    self._show_bulk_actions(
-                        table, discovery_result, entry.table_group, collect_headers=False)
+                    self._show_bulk_actions(table,
+                                            discovery_result,
+                                            entry.table_group,
+                                            collect_headers=False)
 
                 for check in sorted(checks, key=lambda c: c[6].lower()):
                     self._show_check_row(table, discovery_result, request, check,
                                          entry.show_bulk_actions)
 
                 if entry.show_bulk_actions:
-                    self._show_bulk_actions(
-                        table, discovery_result, entry.table_group, collect_headers="finished")
+                    self._show_bulk_actions(table,
+                                            discovery_result,
+                                            entry.table_group,
+                                            collect_headers="finished")
             html.hidden_fields()
             html.end_form()
 
-    def _is_running(self, discovery_result):
-        return discovery_result.job_status["is_running"]
+    def _is_active(self, discovery_result):
+        return discovery_result.job_status["is_active"]
 
     def _get_group_header(self, entry):
         map_icons = {
@@ -1016,7 +1049,7 @@ class DiscoveryPageRenderer(object):
                 "fix_all",
                 _("Fix all missing/vanished"),
                 self._start_js_call(fix_all_options),
-                disabled=self._is_running(discovery_result),
+                disabled=self._is_active(discovery_result),
             )
 
         if already_has_services \
@@ -1029,7 +1062,7 @@ class DiscoveryPageRenderer(object):
                 "refresh",
                 _("Automatic refresh (tabula rasa)"),
                 self._start_js_call(refresh_options),
-                disabled=self._is_running(discovery_result),
+                disabled=self._is_active(discovery_result),
             )
 
         scan_options = self._options._replace(action=DiscoveryAction.SCAN)
@@ -1037,14 +1070,15 @@ class DiscoveryPageRenderer(object):
             "scan",
             _("Full scan"),
             self._start_js_call(scan_options),
-            disabled=self._is_running(discovery_result),
+            disabled=self._is_active(discovery_result),
         )
 
         if already_has_services:
             self._show_checkbox_button(discovery_result)
             self._show_parameters_button(discovery_result)
+            self._show_discovered_labels_button(discovery_result)
 
-        if self._is_running(discovery_result):
+        if self._is_active(discovery_result):
             stop_options = self._options._replace(action=DiscoveryAction.STOP)
             html.jsbutton(
                 "stop",
@@ -1065,7 +1099,7 @@ class DiscoveryPageRenderer(object):
             "show_checkboxes",
             checkbox_title,
             self._start_js_call(checkbox_options),
-            disabled=self._is_running(discovery_result),
+            disabled=self._is_active(discovery_result),
         )
 
     def _show_parameters_button(self, discovery_result):
@@ -1081,7 +1115,23 @@ class DiscoveryPageRenderer(object):
             "show_parameters",
             params_title,
             self._start_js_call(params_options),
-            disabled=self._is_running(discovery_result),
+            disabled=self._is_active(discovery_result),
+        )
+
+    def _show_discovered_labels_button(self, discovery_result):
+        # type: (DiscoveryResult) -> None
+        if self._options.show_discovered_labels:
+            params_options = self._options._replace(show_discovered_labels=False)
+            params_title = _("Hide discovered labels")
+        else:
+            params_options = self._options._replace(show_discovered_labels=True)
+            params_title = _("Show discovered labels")
+
+        html.jsbutton(
+            "show_discovered_labels",
+            params_title,
+            self._start_js_call(params_options),
+            disabled=self._is_active(discovery_result),
         )
 
     def _start_js_call(self, options, request_vars=None):
@@ -1139,18 +1189,20 @@ class DiscoveryPageRenderer(object):
         html.jsbutton(
             "_bulk_%s_%s" % (source, target),
             target_label,
-            self._start_js_call(
-                options, request_vars={
-                    "update_target": target,
-                    "update_source": source,
-                }),
+            self._start_js_call(options,
+                                request_vars={
+                                    "update_target": target,
+                                    "update_source": source,
+                                }),
             title=_("Move %s to %s services") % (label, target),
-            disabled=self._is_running(discovery_result),
+            disabled=self._is_active(discovery_result),
         )
 
     def _bulk_action_colspan(self):
         colspan = 5
         if self._options.show_parameters:
+            colspan += 1
+        if self._options.show_discovered_labels:
             colspan += 1
         if self._options.show_checkboxes:
             colspan += 1
@@ -1158,7 +1210,7 @@ class DiscoveryPageRenderer(object):
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         table_source, check_type, checkgroup, item, _paramstring, params, \
-            descr, state, output, _perfdata = check
+            descr, state, output, _perfdata, service_labels = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -1191,6 +1243,10 @@ class DiscoveryPageRenderer(object):
             table.cell(_("Check parameters"))
             self._show_check_parameters(table_source, check_type, checkgroup, params)
 
+        if self._options.show_discovered_labels:
+            table.cell(_("Discovered labels"))
+            self._show_discovered_labels(service_labels)
+
     def _show_status_detail(self, table_source, check_type, item, descr, output):
         if table_source not in [
                 DiscoveryState.CUSTOM,
@@ -1221,8 +1277,8 @@ class DiscoveryPageRenderer(object):
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text(
-                    _("Timespecific parameters computed at %s") % cmk.utils.render.date_and_time(
-                        params["tp_computed_params"]["computed_at"]))
+                    _("Timespecific parameters computed at %s") %
+                    cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"]))
                 html.br()
                 params = params["tp_computed_params"]["params"]
             rulespec.valuespec.validate_datatype(params, "")
@@ -1240,6 +1296,14 @@ class DiscoveryPageRenderer(object):
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text(paramtext)
 
+    def _show_discovered_labels(self, service_labels):
+        label_code = cmk.gui.view_utils.render_labels(
+            service_labels,
+            "service",
+            with_links=False,
+            label_sources={k: "discovered" for k in service_labels.keys()})
+        html.write(label_code)
+
     def _show_bulk_checkbox(self, table, discovery_result, request, check_type, item,
                             show_bulk_actions):
         if not self._options.show_checkboxes or not config.user.may("wato.services"):
@@ -1250,7 +1314,7 @@ class DiscoveryPageRenderer(object):
             return
 
         css_classes = ["service_checkbox"]
-        if self._is_running(discovery_result):
+        if self._is_active(discovery_result):
             css_classes.append("disabled")
 
         table.cell(
@@ -1273,11 +1337,11 @@ class DiscoveryPageRenderer(object):
             return
 
         button_classes = ["service_button"]
-        if self._is_running(discovery_result):
+        if self._is_active(discovery_result):
             button_classes.append("disabled")
 
         table_source, check_type, checkgroup, item, _paramstring, _params, \
-            descr, _state, _output, _perfdata = check
+            descr, _state, _output, _perfdata, _service_labels = check
         checkbox_name = DiscoveryPageRenderer.checkbox_name(check_type, item)
 
         num_buttons = 0
@@ -1348,13 +1412,12 @@ class DiscoveryPageRenderer(object):
             title=_("Move to %s services") % descr_target,
             icon="service_to_%s" % descr_target,
             class_=button_classes,
-            onclick=self._start_js_call(
-                options,
-                request_vars={
-                    "update_target": table_target,
-                    "update_source": table_source,
-                    "update_services": [checkbox_name],
-                }),
+            onclick=self._start_js_call(options,
+                                        request_vars={
+                                            "update_target": table_target,
+                                            "update_source": table_source,
+                                            "update_services": [checkbox_name],
+                                        }),
         )
 
     def _icon_button_removed(self, table_source, checkbox_name, button_classes):
@@ -1364,13 +1427,12 @@ class DiscoveryPageRenderer(object):
             title=_("Remove service"),
             icon="service_to_removed",
             class_=button_classes,
-            onclick=self._start_js_call(
-                options,
-                request_vars={
-                    "update_target": DiscoveryState.REMOVED,
-                    "update_source": table_source,
-                    "update_services": [checkbox_name],
-                }),
+            onclick=self._start_js_call(options,
+                                        request_vars={
+                                            "update_target": DiscoveryState.REMOVED,
+                                            "update_source": table_source,
+                                            "update_services": [checkbox_name],
+                                        }),
         )
 
     def _rulesets_button(self, descr):
@@ -1589,10 +1651,10 @@ class ModeAjaxExecuteCheck(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = check_mk_automation(
-                self._site,
-                "active-check", [self._host_name, self._check_type, self._item],
-                sync=False)
+            state, output = check_mk_automation(self._site,
+                                                "active-check",
+                                                [self._host_name, self._check_type, self._item],
+                                                sync=False)
         except Exception as e:
             state = 3
             output = "%s" % e

@@ -54,18 +54,12 @@ def parse_lnx_thermal(info):
         return {}
     parsed = {}
     for line in info:
+        temperature, trip_points = _parse_temp_value_str(line)
+        if temperature is None and trip_points is None:
+            continue
+
         zone_identifier = 0
-        temperature_3rd_element_idx = 2
-        temperature_4th_element_idx = 3
-        temperature_factor = 1000.0
         zone_raw = line[zone_identifier]
-        try:
-            int(line[temperature_3rd_element_idx])  # may raise an exception
-            temperature = int(line[temperature_3rd_element_idx]) / temperature_factor
-            trip_points = dict(zip(line[4::2], [int(x) / temperature_factor for x in line[3::2]]))
-        except ValueError:
-            temperature = int(line[temperature_4th_element_idx]) / temperature_factor
-            trip_points = dict(zip(line[5::2], [int(x) / temperature_factor for x in line[4::2]]))
         zone_formatted = zone_raw.replace('thermal_zone', 'Zone ')
         parsed[zone_formatted] = {}
         temperature_and_trip_points = ('temperature', 'passive', 'critical', 'hot')
@@ -79,6 +73,22 @@ def parse_lnx_thermal(info):
                 # ignore trip point types not supported yet
                 pass
     return parsed
+
+
+def _parse_temp_value_str(line):
+    temperature_factor = 1000.0
+    for temp_idx, trip_point_key_idx, trip_point_value_idx in [
+        (2, 4, 3),
+        (3, 5, 4),
+    ]:
+        try:
+            temp = int(line[temp_idx]) / temperature_factor
+            trip_point_keys = line[trip_point_key_idx::2]
+            trip_point_values = [int(x) / temperature_factor for x in line[trip_point_value_idx::2]]
+            return temp, dict(zip(trip_point_keys, trip_point_values))
+        except (IndexError, ValueError):
+            pass
+    return None, None
 
 
 def inventory_lnx_thermal(parsed):

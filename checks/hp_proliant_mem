@@ -38,6 +38,8 @@ check_info["hp_proliant_mem"] = {
             "7",  # CPQHLTH-MIB::cpqHeResMem2ModuleType
             "19",  # CPQHLTH-MIB::cpqHeResMem2ModuleStatus
             "20",  # CPQHLTH-MIB::cpqHeResMem2ModuleCondition
+            "12",  # CPQHLTH-MIB::cpqHeResMem2SerialNo
+            "3",  # CPQHLTH-MIB::cpqHeResMem2CpuNum
         ]),
     'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
     'includes': ['hp_proliant.include'],

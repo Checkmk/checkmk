@@ -52,7 +52,6 @@ def with_unused_counter_removal(plugin_name):
     The decorated parse function will clean up all couters for that plugin which are more
     than ten times older than the youngest one to avoid growing up the item state.
     '''
-
     def is_plugin_counter_with_age(ident, value):
         if not isinstance(value, tuple):
             return False
@@ -144,7 +143,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     node = line[0]
     if node is not None and node != "":
         infos.append("Node %s" % node)
-    prediction_perf = []
+
     for what, ctr in [("read", line[2]), ("write", line[3])]:
         if node:
             countername = "diskstat.%s.%s.%s" % (node, item, what)
@@ -165,24 +164,28 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         elif mode == 'bytes':
             bytes_per_sec = per_sec
 
-        infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
-        perfdata.append((what, bytes_per_sec, warn, crit))
         dsname = what
 
         # compute average of the rate over ___ minutes
         if average_range is not None:
-            avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
-            dsname = what + ".avg"
-            perfdata.append((dsname, avg))
-            bytes_per_sec = avg
+            perfdata.append((dsname, bytes_per_sec, warn, crit))
+            bytes_per_sec = get_average(countername + ".avg", this_time, bytes_per_sec,
+                                        average_range)
+            dsname += ".avg"
 
         # check levels
-        state, text, extraperf = check_levels(
-            bytes_per_sec, dsname, levels, unit="MB/s", scale=1048576, statemarkers=True)
+        state, text, extraperf = check_levels(bytes_per_sec,
+                                              dsname,
+                                              levels,
+                                              scale=1048576,
+                                              statemarkers=True,
+                                              unit='/s',
+                                              human_readable_func=get_bytes_human_readable,
+                                              infoname=what)
         if text:
             infos.append(text)
         status = max(state, status)
-        prediction_perf += extraperf
+        perfdata += extraperf
 
     # Add performance data for averaged IO
     if average_range is not None:
@@ -268,8 +271,6 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
             if params.get("ql_perfdata"):
                 perfdata.append((what + "_ql", ql))
-
-    perfdata += prediction_perf
 
     return (status, ", ".join(infos), perfdata)
 
@@ -463,54 +464,50 @@ def check_diskstat_dict(item, params, disks):
     # Utilization
     if "utilization" in disk:
         util = disk.pop("utilization")
-        yield check_levels(
-            util,
-            "disk_utilization",
-            params.get("utilization"),
-            human_readable_func=get_percent_human_readable,
-            scale=0.01,
-            statemarkers=False,
-            infoname=prefix + "Utilization")
+        yield check_levels(util,
+                           "disk_utilization",
+                           params.get("utilization"),
+                           human_readable_func=get_percent_human_readable,
+                           scale=0.01,
+                           statemarkers=False,
+                           infoname=prefix + "Utilization")
 
     # Throughput
     for what in "read", "write":
         if what + "_throughput" in disk:
             throughput = disk.pop(what + "_throughput")
-            state, infotext, extraperf = check_levels(
-                throughput,
-                "disk_" + what + "_throughput",
-                params.get(what),
-                unit="/s",
-                scale=1048576,
-                statemarkers=False,
-                human_readable_func=get_bytes_human_readable,
-                infoname=what.title())
+            state, infotext, extraperf = check_levels(throughput,
+                                                      "disk_" + what + "_throughput",
+                                                      params.get(what),
+                                                      unit="/s",
+                                                      scale=1048576,
+                                                      statemarkers=False,
+                                                      human_readable_func=get_bytes_human_readable,
+                                                      infoname=what.title())
             yield state, infotext, extraperf
 
     # Average wait from end to end
     for what in ["wait", "read_wait", "write_wait"]:
         if "average_" + what in disk:
             wait = disk.pop("average_" + what)
-            yield check_levels(
-                wait,
-                "disk_average_" + what,
-                params.get(what),
-                unit="ms",
-                scale=0.001,
-                statemarkers=False,
-                infoname="Average %s" % what.title().replace("_", " "))
+            yield check_levels(wait,
+                               "disk_average_" + what,
+                               params.get(what),
+                               unit="ms",
+                               scale=0.001,
+                               statemarkers=False,
+                               infoname="Average %s" % what.title().replace("_", " "))
 
     # Average disk latency
     if "latency" in disk:
         latency = disk.pop("latency")
-        yield check_levels(
-            latency,
-            "disk_latency",
-            params.get("latency"),
-            unit="ms",
-            scale=0.001,
-            statemarkers=False,
-            infoname='Latency')
+        yield check_levels(latency,
+                           "disk_latency",
+                           params.get("latency"),
+                           unit="ms",
+                           scale=0.001,
+                           statemarkers=False,
+                           infoname='Latency')
 
     # Read/write disk latency
     for what in ["read", "write"]:
@@ -519,14 +516,13 @@ def check_diskstat_dict(item, params, disks):
             continue
         latency = disk.pop(latency_key)
         if latency is not None:
-            yield check_levels(
-                latency,
-                "disk_%s" % latency_key,
-                params.get(latency_key),
-                unit="ms",
-                scale=0.001,
-                statemarkers=False,
-                infoname='%s latency' % what.title())
+            yield check_levels(latency,
+                               "disk_%s" % latency_key,
+                               params.get(latency_key),
+                               unit="ms",
+                               scale=0.001,
+                               statemarkers=False,
+                               infoname='%s latency' % what.title())
 
     # Queue lengths
     for what, plugin_text in [
@@ -536,12 +532,11 @@ def check_diskstat_dict(item, params, disks):
     ]:
         if what in disk:
             ql = disk.pop(what)
-            yield check_levels(
-                ql,
-                "disk_" + what,
-                params.get(what),
-                statemarkers=False,
-                infoname="Average %s" % plugin_text)
+            yield check_levels(ql,
+                               "disk_" + what,
+                               params.get(what),
+                               statemarkers=False,
+                               infoname="Average %s" % plugin_text)
 
     # I/O operations
     for what in "read", "write":

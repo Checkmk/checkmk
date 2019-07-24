@@ -27,46 +27,46 @@
 
 def check_form_submit_arguments(params):
     _description, settings = params
-    args = ''
+    args = []
 
     if "virthost" in settings:
-        args += ' -H %s' % quote_shell_string(settings["virthost"])
+        args += ["-H", settings["virthost"]]
 
     if "port" in settings:
-        args += ' -p %d' % settings["port"]
+        args += ["-p", settings["port"]]
 
     if "uri" in settings:
-        args += ' -u %s' % quote_shell_string(settings["uri"])
+        args += ["-u", settings["uri"]]
 
     if settings.get("ssl"):
-        args += ' -s'
+        args.append("-s")
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
 
     if "expect_regex" in settings:
-        args += ' -e %s' % quote_shell_string(settings["expect_regex"])
+        args += ["-e", settings["expect_regex"]]
 
     if "form_name" in settings:
-        args += ' -f %s' % quote_shell_string(settings["form_name"])
+        args += ["-f", settings["form_name"]]
 
     if "query" in settings:
-        args += ' -q %s' % quote_shell_string(settings["query"])
+        args += ["-q", settings["query"]]
 
     if "num_succeeded" in settings:
-        args += ' -n %s' % ','.join(map(str, settings["num_succeeded"]))
+        args += ["-n", ",".join(map(str, settings["num_succeeded"]))]
 
-    if not settings.get('hosts'):
-        args += " -I $HOSTADDRESS$"
+    if not settings.get("hosts"):
+        args += ["-I", "$HOSTADDRESS$"]
     else:
-        for address in settings['hosts']:
-            args += " -I %s" % quote_shell_string(address)
+        for address in settings["hosts"]:
+            args += ["-I", address]
 
     return args
 
 
-active_check_info['form_submit'] = {
-    "command_line": '$USER1$/check_form_submit $ARG1$',
+active_check_info["form_submit"] = {
+    "command_line": "$USER1$/check_form_submit $ARG1$",
     "argument_function": check_form_submit_arguments,
     "service_description": lambda params: "FORM %s" % params[0],
 }

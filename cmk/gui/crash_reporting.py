@@ -163,9 +163,9 @@ def show_context_buttons(what, tardata):
 
     elif what == "gui":
         download_data_url = "data:application/octet-stream;base64,%s" % base64.b64encode(tardata)
-        html.context_button(
-            _("Download"), "javascript:cmk.crash_reporting.download('%s')" % download_data_url,
-            "download")
+        html.context_button(_("Download"),
+                            "javascript:cmk.crash_reporting.download('%s')" % download_data_url,
+                            "download")
 
     html.end_context_buttons()
 
@@ -276,7 +276,7 @@ def handle_report_form(tardata, what):
             _("Failed to send the crash report. Please download it manually and send it "
               "to <a href=\"%s\">%s</a>") % (report_url, get_crash_report_target(what)))
         html.close_div()
-        html.javascript("cmk.crash_reporting.submit('https://checkmk.com/crash_report.php', " \
+        html.javascript("cmk.crash_reporting.submit('https://crash.checkmk.com', " \
                                             "'%s');" % url_encoded_params)
     except MKUserError as e:
         action_message = "%s" % e
@@ -288,7 +288,7 @@ def handle_report_form(tardata, what):
 # TODO: Would be cleaner to override if we used OOP
 def get_crash_report_target(what):
     if what == "cma":
-        return "feedback@check-mk.org"
+        return "feedback@checkmk.com"
     return config.crash_report_target
 
 
@@ -355,11 +355,22 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 def show_crash_report(info):
 
     html.h2(_("Crash Report"))
-    html.open_table(class_="data")
+    html.open_table(class_=["data", "crash_report"])
+
+    _crash_row(_("Exception"),
+               "%s (%s)" % (info["exc_type"], info["exc_value"]),
+               odd=True,
+               pre=True)
+    _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
+    _crash_row(_("Local Variables"),
+               format_local_vars(info["local_vars"]) if "local_vars" in info else "",
+               odd=True,
+               pre=True)
 
     _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
-    _crash_row(
-        _("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True)
+    _crash_row(_("Time"),
+               time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])),
+               odd=True)
     _crash_row(_("Operating System"), info["os"], False)
     if info["crash_type"] == "cma":
         version_title = _("CMA Version")
@@ -369,14 +380,6 @@ def show_crash_report(info):
     _crash_row(_("Edition"), info.get("edition", ""), False)
     _crash_row(_("Core"), info.get("core", ""), True)
     _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
-    _crash_row(
-        _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
-    _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
-    _crash_row(
-        _("Local Variables"),
-        format_local_vars(info["local_vars"]) if "local_vars" in info else "",
-        odd=True,
-        pre=True)
 
     joined_paths = "<br>".join(
         [html.attrencode(p) for p in info.get("python_paths", [_("Unknown")])])
@@ -418,7 +421,7 @@ def show_crashed_check_details(info):
 
 
 def format_traceback(tb):
-    return "\n".join(traceback.format_list(tb))
+    return "".join(traceback.format_list(tb))
 
 
 def format_params(params):
@@ -455,7 +458,7 @@ def show_old_dump_trace(tardata):
     for line in trace.splitlines():
         try:
             tracelines.append(line.decode('utf-8'))
-        except:
+        except UnicodeDecodeError:
             tracelines.append(repr(line))
     trace = "\r\n".join(tracelines)
     output_box(_("Crash Report"), trace)

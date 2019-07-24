@@ -49,46 +49,24 @@
 #   '----------------------------------------------------------------------'
 
 
-# FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
+@mysql_parse_per_item
 def parse_mysql(info):
-    def parse_line(line):
-        if len(line) == 2:
-            varname, value = line
-            try:
-                value = int(value)
-            except:
-                pass
-        else:
-            varname = line[0]
-            value = None
-        return varname, value
-
-    parsed = {}
-    instance = False
+    data = {}
     for line in info:
-        if line[0].startswith("[["):
-            instance = line[0][2:-2]
-            if instance == "":
-                instance = "mysql"
-            parsed[instance] = {}
-        elif instance:
-            varname, value = parse_line(line)
-            parsed[instance][varname] = value
-
-    # Old Agent Plugin, no Instances in output
-    if not instance:
-        parsed['mysql'] = {}
-        for line in info:
-            varname, value = parse_line(line)
-            parsed['mysql'][varname] = value
-
-    return parsed
+        try:
+            data[line[0]] = int(line[1])
+        except IndexError:
+            continue
+        except ValueError:
+            data[line[0]] = line[1]
+    return data
 
 
-def check_mysql_version(item, _no_params, parsed):
-    if item in parsed and not len(parsed[item]) == 0:
-        values = parsed[item]
-        return 0, "Version: " + values['version']
+@get_parsed_item_data
+def check_mysql_version(_no_item, _no_params, data):
+    version = data.get('version')
+    if version:
+        yield 0, "Version: %s" % version
 
 
 check_info['mysql'] = {
@@ -96,6 +74,7 @@ check_info['mysql'] = {
     "inventory_function": discover(lambda k, values: 'version' in values),
     "check_function": check_mysql_version,
     "service_description": "MySQL Version %s",
+    "includes": ['mysql.include'],
 }
 
 #.
@@ -115,36 +94,31 @@ check_info['mysql'] = {
 # }
 
 
-def check_mysql_sessions(item, params, parsed):
-    if item in parsed and not len(parsed[item]) == 0:
-        values = parsed[item]
-        total_sessions = values["Threads_connected"]
-        running_sessions = values["Threads_running"]
-        connects = get_rate("mysql.sessions", time.time(), values["Connections"])
+@get_parsed_item_data
+def check_mysql_sessions(_no_item, params, data):
+    total_sessions = data["Threads_connected"]
+    running_sessions = data["Threads_running"]
+    connects = get_rate("mysql.sessions", time.time(), data["Connections"])
 
-        infos = []
-        perfdata = []
+    for value, perfvar, what, format_str, unit in [
+        (total_sessions, "total_sessions", "total", "%d %s%s", ""),
+        (running_sessions, "running_sessions", "running", "%d %s%s", ""),
+        (connects, "connect_rate", "connections", "%.2f %s%s", "/s"),
+    ]:
+        infotext = format_str % (value, what, unit)
         status = 0
+        if what in params:
+            warn, crit = params[what]
+            if value >= crit:
+                status = 2
+                infotext += "(!!)"
+            elif value >= warn:
+                status = 1
+                infotext += "(!)"
+        else:
+            warn, crit = None, None
 
-        for value, perfvar, what, format_str, unit in [
-            (total_sessions, "total_sessions", "total", "%d", ""),
-            (running_sessions, "running_sessions", "running", "%d", ""),
-            (connects, "connect_rate", "connections", "%.2f", "/s"),
-        ]:
-            infos.append((format_str + " %s%s") % (value, what, unit))
-            if what in params:
-                warn, crit = params[what]
-                if value >= crit:
-                    status = 2
-                    infos[-1] += "(!!)"
-                elif value >= warn:
-                    status = max(status, 1)
-                    infos[-1] += "(!)"
-            else:
-                warn, crit = None, None
-            perfdata.append((perfvar, value, warn, crit))
-
-        return status, ", ".join(infos), perfdata
+        yield status, infotext, [(perfvar, value, warn, crit)]
 
 
 check_info['mysql.sessions'] = {
@@ -166,15 +140,13 @@ check_info['mysql.sessions'] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_mysql_iostat(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
+@get_parsed_item_data
+def check_mysql_iostat(item, params, data):
+    if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
+        return
 
-        if not ("Innodb_data_read" in values and "Innodb_data_written" in values):
-            return 3, "Incomplete agent output"
-
-        line = [None, None, values["Innodb_data_read"] / 512, values["Innodb_data_written"] / 512]
-        return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
+    line = [None, None, data["Innodb_data_read"] / 512, data["Innodb_data_written"] / 512]
+    return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
 
 
 check_info['mysql.innodb_io'] = {
@@ -199,43 +171,42 @@ check_info['mysql.innodb_io'] = {
 
 # TODO: This check should rather output the current number of connections.
 # The historic maximum can be viewed in the RRD data...
-def check_mysql_connections(item, params, parsed):
-    if item in parsed:
-        values = parsed[item]
-        if 'Max_used_connections' not in values:
-            return 3, 'Connection information are missing'
+@get_parsed_item_data
+def check_mysql_connections(_no_item, params, data):
+    if 'Max_used_connections' not in data:
+        return 3, 'Connection information are missing'
 
-        # The maximum number of connections that have been in use simultaneously
-        # since the server started.
-        conn = float(values['Max_used_connections'])
+    # The maximum number of connections that have been in use simultaneously
+    # since the server started.
+    conn = float(data['Max_used_connections'])
 
-        # Maximum number of possible parallel connections
-        max_conn = float(values['max_connections'])
+    # Maximum number of possible parallel connections
+    max_conn = float(data['max_connections'])
 
-        perc_used = conn / max_conn * 100
+    perc_used = conn / max_conn * 100
 
-        status = 0
-        status_txt = ''
-        perf_data = [
-            ("connections_max_used", conn),
-            ("connections_max", max_conn),
-            ('connections_perc_used', perc_used),
-        ]
+    status = 0
+    status_txt = ''
+    perf_data = [
+        ("connections_max_used", conn),
+        ("connections_max", max_conn),
+        ('connections_perc_used', perc_used),
+    ]
 
-        if 'perc_used' in params:
-            warn, crit = params['perc_used']
-            if perc_used >= crit:
-                status = 2
-                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                             'has been reached at least once since program start' % crit
-            elif perc_used >= warn:
-                status = 1
-                status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                             'has been reached at least once since program start' % warn
+    if 'perc_used' in params:
+        warn, crit = params['perc_used']
+        if perc_used >= crit:
+            status = 2
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start' % crit
+        elif perc_used >= warn:
+            status = 1
+            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
+                         'has been reached at least once since program start' % warn
 
 
-        return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-                (conn, max_conn, perc_used, status_txt), perf_data
+    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
+            (conn, max_conn, perc_used, status_txt), perf_data
 
 
 @discover

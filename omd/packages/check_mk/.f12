@@ -5,5 +5,7 @@ SITE=${SITE:-$(cat ../../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+sudo mkdir -p $ROOT/lib/omd/scripts/update-pre-hooks
+sudo install -m 755 cmk.update-pre-hooks $ROOT/lib/omd/scripts/update-pre-hooks
 sed -e "s|###ROOT###|$ROOT|g" -e "s|###SITE###|$SITE|g" skel/etc/check_mk/apache.conf | sudo tee $ROOT/etc/check_mk/apache.conf >/dev/null
 sudo omd restart $SITE apache

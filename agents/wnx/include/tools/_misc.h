@@ -32,10 +32,24 @@ inline void sleep(int Milliseconds) noexcept {
                                   milliseconds(Milliseconds));
 }
 
+template <typename T, typename B>
+inline void sleep(std::chrono::duration<T, B> dur) noexcept {
+    using namespace std::chrono;
+    std::this_thread::sleep_until(steady_clock::now() + dur);
+}
+
 // gtest [+]
 inline bool IsEqual(std::string_view Left, std::string_view Right) {
     return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
                       [](char LeftChar, char RightChar) {
+                          return std::tolower(LeftChar) ==
+                                 std::tolower(RightChar);
+                      });
+}
+
+inline bool IsEqual(std::wstring_view Left, std::wstring_view Right) {
+    return std::equal(Left.cbegin(), Left.cend(), Right.cbegin(), Right.cend(),
+                      [](wchar_t LeftChar, wchar_t RightChar) {
                           return std::tolower(LeftChar) ==
                                  std::tolower(RightChar);
                       });
@@ -132,16 +146,15 @@ auto ConstructVector(Args&... Str) {
     return std::vector{Str...};
 };
 
-inline bool IsRegularFileValid(std::filesystem::path& Path) {
+// check for existence and regularity
+// #TODO gtest
+inline bool IsValidRegularFile(const std::filesystem::path& filepath) {
     namespace fs = std::filesystem;
-    std::error_code ec;
-    if (!fs::exists(Path, ec)) {
-        return false;
-    }
 
-    if (!fs::is_regular_file(Path)) {
-        return false;
-    }
+    std::error_code ec;
+    if (!fs::exists(filepath, ec)) return false;
+
+    if (!fs::is_regular_file(filepath)) return false;
 
     return true;
 }
@@ -158,7 +171,7 @@ inline void AddDirSymbol(std::wstring& Dir) {
     Dir = p.wstring();
 }
 
-// useful tools to combine to buffers
+// to combine to buffers
 // #TODO test!
 template <typename T>
 inline void AddVector(std::vector<char>& Accu, const T& Add) noexcept {
@@ -233,7 +246,7 @@ void* GetOffsetInBytes(T* Object, size_t Offset) {
     return static_cast<void*>(reinterpret_cast<char*>(Object) + Offset);
 }
 
-// returns const void*. #TODO make it with templates C++
+// returns const void*, never fails
 template <typename T>
 const void* GetOffsetInBytes(const T* Object, size_t Offset) {
     return static_cast<const void*>(reinterpret_cast<const char*>(Object) +
@@ -258,19 +271,6 @@ std::optional<uint64_t> ConvertToUint64(const T& Str) noexcept {
     }
 }
 
-// #TODO to be tested - do not use it
-template <typename T, typename U>
-U ConvertToUint(const T& Str, U Default) noexcept {
-    static_assert(std::is_arithmetic<U> && std::is_unsigned<U>,
-                  "U is not good type");
-    try {
-        if constexpr (sizeof(U) <= 4) return std::stoul(Str);
-        return std::stoull(Str);
-    } catch (const std::exception&) {
-        return Default;
-    }
-}
-
 template <typename T>
 uint64_t ConvertToUint64(const T& Str, uint64_t Default) noexcept {
     try {
@@ -285,7 +285,7 @@ uint64_t ConvertToUint64(const T& Str, uint64_t Default) noexcept {
 namespace win {
 template <typename T>
 inline bool SetEnv(const std::basic_string<T>& EnvVarName,
-                   const std::basic_string<T>& EnvVarValue) {
+                   const std::basic_string<T>& EnvVarValue) noexcept {
     auto cmd = EnvVarName;
     if constexpr (sizeof(T) == 1) {
         cmd += "=" + EnvVarValue;
@@ -297,21 +297,21 @@ inline bool SetEnv(const std::basic_string<T>& EnvVarName,
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const T* Name) {
-    T remote_machine_string[MAX_PATH];
-    remote_machine_string[0] = 0;
+std::basic_string<T> GetEnv(const T* Name) noexcept {
+    T env_var_value[MAX_PATH];
+    env_var_value[0] = 0;
 
     // we need constexpr here to eliminate compilation error
     if constexpr (sizeof(T) == 1) {
-        ::GetEnvironmentVariableA(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableA(Name, env_var_value, MAX_PATH);
     } else {
-        ::GetEnvironmentVariableW(Name, remote_machine_string, MAX_PATH);
+        ::GetEnvironmentVariableW(Name, env_var_value, MAX_PATH);
     }
-    return std::basic_string<T>(remote_machine_string);
+    return std::basic_string<T>(env_var_value);
 }
 
 template <typename T>
-std::basic_string<T> GetEnv(const std::basic_string<T>& Name) {
+std::basic_string<T> GetEnv(const std::basic_string<T>& Name) noexcept {
     return GetEnv(Name.c_str());
 }
 
@@ -365,7 +365,7 @@ inline std::vector<std::string_view> ToView(
 // string splitter
 // gtest [+]
 inline std::vector<std::string> SplitString(const std::string& In,
-                                            const std::string Delim,
+                                            const std::string& Delim,
                                             int MaxCount = 0) noexcept {
     // sanity
     if (In.empty()) return {};
@@ -398,7 +398,7 @@ inline std::vector<std::string> SplitString(const std::string& In,
 // "a.b", "." => {"a", "b"}
 // ".b", "." => { "b"}
 inline std::vector<std::wstring> SplitString(const std::wstring& In,
-                                             const std::wstring Delim,
+                                             const std::wstring& Delim,
                                              int MaxCount = 0) noexcept {
     // sanity
     if (In.empty()) return {};
@@ -463,53 +463,66 @@ inline std::vector<std::wstring> SplitStringExact(const std::wstring& In,
 // C++ is not happy with templating of this function
 // we have to make call like JoinVector<wchar_t>
 // so we have to implementations
-inline std::wstring JoinVector(const std::vector<std::wstring> Values,
-                               const std::wstring& Separator) {
-    std::wstring values_string;
-    size_t sz = 0;
-    if (Values.empty()) {
+inline std::wstring JoinVector(const std::vector<std::wstring> values,
+                               std::wstring_view separator) {
+    if (values.empty()) {
         return {};
     }
 
-    for_each(Values.begin(), Values.end(),
+    size_t sz = 0;
+    for_each(values.begin(), values.end(),
              [&sz](std::wstring Entry) { sz += Entry.size() + 1; });
+
+    std::wstring values_string;
     values_string.reserve(sz);
 
-    values_string = *Values.begin();
-    for_each(Values.begin() + 1, Values.end(),
-             [&values_string, Separator](std::wstring Entry) {
-                 values_string += Separator + Entry;
+    values_string = *values.begin();
+    for_each(values.begin() + 1, values.end(),
+             [&values_string, separator](std::wstring_view entry) {
+                 values_string += separator;
+                 values_string += entry;
              });
     return values_string;
 }
 
 // version for string
-inline std::string JoinVector(const std::vector<std::string>& Values,
-                              const std::string& Separator) {
-    std::string values_string;
-    size_t sz = 0;
-    if (Values.empty()) {
+inline std::string JoinVector(const std::vector<std::string>& values,
+                              std::string_view separator) {
+    if (values.empty()) {
         return {};
     }
 
-    for_each(Values.begin(), Values.end(),
+    size_t sz = 0;
+    for_each(values.begin(), values.end(),
              [&sz](std::string Entry) { sz += Entry.size() + 1; });
+
+    std::string values_string;
     values_string.reserve(sz);
 
-    values_string = *Values.begin();
-    for_each(Values.begin() + 1, Values.end(),
-             [&values_string, Separator](std::string Entry) {
-                 values_string += Separator + Entry;
+    values_string = *values.begin();
+    for_each(values.begin() + 1, values.end(),
+             [&values_string, separator](std::string_view entry) {
+                 values_string += separator;
+                 values_string += entry;
              });
     return values_string;
 }
 
 template <typename T>
-bool Find(const std::vector<T>& Vector, const T& Value) {
-    if (Vector.empty()) return false;
+void ConcatVector(std::vector<T>& target, const std::vector<T>& source) {
+    std::copy(source.begin(), source.end(), std::back_inserter(target));
+}
 
-    auto found = std::find(Vector.begin(), Vector.end(), Value);
-    return found != Vector.end();
+// temporary and limited ersatz for the future range::find
+template <typename T>
+bool find(const std::vector<T>& Vector, const T& Value) {
+    return Vector.end() != std::find(Vector.begin(), Vector.end(), Value);
+}
+
+// temporary and limited ersatz for the future range::none_of
+template <typename T, typename Pr>
+bool none_of(const std::vector<T>& Vector, Pr p) {
+    return std::none_of(Vector.begin(), Vector.end(), p);
 }
 
 inline std::string TimeToString(
@@ -546,7 +559,7 @@ auto formatv(const std::string Format, const Args&... args) {
         std::apply(print_message, x);
     } catch (const std::exception&) {
         // XLOG::l.crit("Invalid string to format \"{}\"", std::get<0>(x));
-        XLOG::l.crit("Invalid string/parameters to format '{}'", Format);
+        xlog::l("Invalid string/parameters to format '%s'", Format.c_str());
     }
     return buffer;
 }

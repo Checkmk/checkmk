@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-import pytest
+import pytest  # type: ignore
 
 import cmk.gui.htmllib as htmllib
 from cmk.gui.globals import html
 
 
 def test_htmllib_integration(register_builtin_html):
-    assert type(html.escaper) == htmllib.Escaper
+    assert isinstance(html.escaper, htmllib.Escaper)
 
     assert html.attrencode("") == ""
     assert html.permissive_attrencode("") == ""
@@ -20,7 +20,7 @@ def test_htmllib_integration(register_builtin_html):
     (htmllib.HTML("\">alert(1)"), "\">alert(1)"),
     (1.1, "1.1"),
     ("<", "&lt;"),
-    ("'", "'"),
+    ("'", "&#x27;"),
 ])
 def test_escape_attribute(inp, out):
     assert htmllib.Escaper().escape_attribute(inp) == out

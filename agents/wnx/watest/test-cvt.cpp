@@ -331,14 +331,15 @@ TEST(CvtTest, PluginsLocalSection) {
         EXPECT_EQ(plu[vars::kPluginsExecution].size(), 5);
         auto exec = plu[vars::kPluginsExecution];
         EXPECT_EQ(exec[0][vars::kPluginPattern].as<std::string>(),
-                  "@user\\windows_updates.vbs");
+                  std::string(yml_var::kUserPlugins) + "\\windows_updates.vbs");
         EXPECT_EQ(exec[1][vars::kPluginPattern].as<std::string>(),
-                  "@user\\mk_inventory.ps1");
+                  std::string(yml_var::kUserPlugins) + "\\mk_inventory.ps1");
         EXPECT_EQ(exec[2][vars::kPluginPattern].as<std::string>(),
-                  "@user\\ps_perf.ps1");
+                  std::string(yml_var::kUserPlugins) + "\\ps_perf.ps1");
         EXPECT_EQ(exec[3][vars::kPluginPattern].as<std::string>(),
-                  "@user\\*.ps1");
-        EXPECT_EQ(exec[4][vars::kPluginPattern].as<std::string>(), "@user\\*");
+                  std::string(yml_var::kUserPlugins) + "\\*.ps1");
+        EXPECT_EQ(exec[4][vars::kPluginPattern].as<std::string>(),
+                  std::string(yml_var::kUserPlugins) + "\\*");
 
         EXPECT_EQ(exec[0][vars::kPluginTimeout].as<int>(), 120);
         EXPECT_EQ(exec[0][vars::kPluginCacheAge].as<int>(), 3600);

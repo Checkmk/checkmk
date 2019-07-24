@@ -37,9 +37,10 @@ import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.valuespec import (
     Timerange,
+    TextAscii,
     DropdownChoice,
     DateFormat,
     Dictionary,
@@ -152,12 +153,11 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
     @property
     def valuespec(self):
-        return DropdownChoice(
-            title=_("Find differences..."),
-            choices=[
-                (False, _("Always show all rows")),
-                (True, _("Omit rows where all columns are identical")),
-            ])
+        return DropdownChoice(title=_("Find differences..."),
+                              choices=[
+                                  (False, _("Always show all rows")),
+                                  (True, _("Omit rows where all columns are identical")),
+                              ])
 
 
 #.
@@ -189,23 +189,6 @@ def paint_custom_var(what, key, row, choices=None):
         return key, html.attrencode(custom_val)
 
     return key, ""
-
-
-def paint_nagios_link(row):
-    # We need to use the Nagios-URL as configured
-    # in sites.
-    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/extinfo.cgi?host=" + html.urlencode(row["host_name"])
-    svc = row.get("service_description")
-    if svc:
-        url += "&type=2&service=" + html.urlencode(svc)
-        what = "service"
-    else:
-        url += "&type=1"
-        what = "host"
-    return "singleicon", html.render_a(
-        html.render_icon('nagios',
-                         _('Show this %s in Nagios') % what), url)
 
 
 def paint_future_time(timestamp):
@@ -250,8 +233,11 @@ def paint_icons(what, row):
                     onclick = url[8:]
                     url = 'javascript:void(0)'
 
-                output += html.render_icon_button(
-                    url, title, icon_name, onclick=onclick, target=target_frame)
+                output += html.render_icon_button(url,
+                                                  title,
+                                                  icon_name,
+                                                  onclick=onclick,
+                                                  target=target_frame)
             else:
                 output += html.render_icon(icon_name, title)
         else:
@@ -448,28 +434,6 @@ def paint_host_state_short(row, short=False):
         name = name[0]
 
     return "state hstate hstate%s" % state, name
-
-
-@painter_registry.register
-class PainterServiceNagiosLink(Painter):
-    @property
-    def ident(self):
-        return "service_nagios_link"
-
-    @property
-    def title(self):
-        return _("Icon with link to service in Nagios GUI")
-
-    @property
-    def short_title(self):
-        return u""
-
-    @property
-    def columns(self):
-        return ['site', 'host_name', 'service_description']
-
-    def render(self, row, cell):
-        return paint_nagios_link(row)
 
 
 @painter_registry.register
@@ -983,7 +947,7 @@ class PainterSvcNextNotification(Painter):
 
 
 def paint_notification_postponement_reason(what, row):
-    # Needs to be in sync with the possible reasons. Can not be translaated otherwise.
+    # Needs to be in sync with the possible reasons. Can not be translated otherwise.
     reasons = {
         "delayed notification": _("Delay notification"),
         "periodic notification": _("Periodic notification"),
@@ -1592,9 +1556,7 @@ def notes_matching_pattern_entries(dirs, item):
     matching = []
     for directory in dirs:
         if os.path.isdir(directory):
-            entries = [d for d in os.listdir(directory) if d[0] != '.']
-            entries.sort()
-            entries.reverse()
+            entries = sorted([d for d in os.listdir(directory) if d[0] != '.'], reverse=True)
             for pattern in entries:
                 if pattern[0] == '.':
                     continue
@@ -1614,9 +1576,7 @@ def paint_custom_notes(what, row):
         dirs = [cmk.utils.paths.default_config_dir + "/notes/hosts"]
         item = host
 
-    files = notes_matching_pattern_entries(dirs, item)
-    files.sort()
-    files.reverse()
+    files = sorted(notes_matching_pattern_entries(dirs, item), reverse=True)
     contents = []
 
     def replace_tags(text):
@@ -1745,8 +1705,7 @@ def paint_custom_vars(what, row, blacklist=None):
     if blacklist is None:
         blacklist = []
 
-    items = row[what + "_custom_variables"].items()
-    items.sort()
+    items = sorted(row[what + "_custom_variables"].items())
     rows = []
     for varname, value in items:
         if varname not in blacklist:
@@ -2527,60 +2486,6 @@ class PainterHostBlack(Painter):
 
 
 @painter_registry.register
-class PainterHostBlackNagios(Painter):
-    @property
-    def ident(self):
-        return "host_black_nagios"
-
-    @property
-    def title(self):
-        return _("Hostname, red background if down, link to Nagios services")
-
-    @property
-    def short_title(self):
-        return _("Host")
-
-    @property
-    def columns(self):
-        return ['site', 'host_name', 'host_state']
-
-    @property
-    def sorter(self):
-        return 'site_host'
-
-    def render(self, row, cell):
-        host = row["host_name"]
-        baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-        url = baseurl + "/status.cgi?host=" + html.urlencode(host)
-        state = row["host_state"]
-        if state != 0:
-            return None, html.render_div(html.render_a(host, url), class_="hostdown")
-        return None, html.render_a(host, url)
-
-
-@painter_registry.register
-class PainterHostNagiosLink(Painter):
-    @property
-    def ident(self):
-        return "host_nagios_link"
-
-    @property
-    def title(self):
-        return _("Icon with link to host to Nagios GUI")
-
-    @property
-    def short_title(self):
-        return u""
-
-    @property
-    def columns(self):
-        return ['site', 'host_name']
-
-    def render(self, row, cell):
-        return paint_nagios_link(row)
-
-
-@painter_registry.register
 class PainterHostWithState(Painter):
     @property
     def ident(self):
@@ -2636,18 +2541,19 @@ class PainterHost(Painter):
 
     @property
     def parameters(self):
-        elements = [("color_choices",
-                     ListChoice(
-                         choices=[("colorize_up", _("Colorize background if host is up")),
-                                  ("colorize_down", _("Colorize background if host is down")),
-                                  ("colorize_unreachable",
-                                   _("Colorize background if host unreachable")),
-                                  ("colorize_pending", _("Colorize background if host is pending")),
-                                  ("colorize_downtime",
-                                   _("Colorize background if host is downtime"))],
-                         title=_("Coloring"),
-                         help=_("Here you can configure the background color for specific states. "
-                                "The coloring for host in dowtime overrules all other coloring.")))]
+        elements = [
+            ("color_choices",
+             ListChoice(choices=[
+                 ("colorize_up", _("Colorize background if host is up")),
+                 ("colorize_down", _("Colorize background if host is down")),
+                 ("colorize_unreachable", _("Colorize background if host unreachable")),
+                 ("colorize_pending", _("Colorize background if host is pending")),
+                 ("colorize_downtime", _("Colorize background if host is downtime"))
+             ],
+                        title=_("Coloring"),
+                        help=_("Here you can configure the background color for specific states. "
+                               "The coloring for host in dowtime overrules all other coloring.")))
+        ]
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
@@ -3539,8 +3445,8 @@ class PainterHostgroupHosts(Painter):
     def render(self, row, cell):
         h = ""
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(row["site"]),
-                                                               html.urlencode(host))
+            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(
+                row["site"]), html.urlencode(host))
             if checked:
                 css = "hstate%d" % state
             else:
@@ -4160,8 +4066,10 @@ class PainterCommentExpires(Painter):
         return ['ts_format', 'ts_date']
 
     def render(self, row, cell):
-        return paint_age(
-            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what='future')
+        return paint_age(row["comment_expire_time"],
+                         row["comment_expire_time"] != 0,
+                         3600,
+                         what='future')
 
 
 @painter_registry.register
@@ -5138,8 +5046,8 @@ class ABCPainterTagsWithTitles(Painter):
         for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
             tag_group = config.tags.get_tag_group(tag_group_id)
             if tag_group:
-                entries.append((tag_group.title, dict(tag_group.get_tag_choices()).get(
-                    tag_id, tag_id)))
+                entries.append(
+                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id)))
                 continue
 
             aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
@@ -5254,11 +5162,10 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def render(self, row, cell):
-        return "", render_labels(
-            get_labels(row, "host"),
-            "host",
-            with_links=True,
-            label_sources=get_label_sources(row, "host"))
+        return "", render_labels(get_labels(row, "host"),
+                                 "host",
+                                 with_links=True,
+                                 label_sources=get_label_sources(row, "host"))
 
 
 @painter_registry.register
@@ -5277,15 +5184,105 @@ class PainterServiceLabels(Painter):
 
     @property
     def columns(self):
-        return ["service_labels", "host_label_sources"]
+        return ["service_labels", "service_label_sources"]
 
     @property
     def sorter(self):
         return "service_labels"
 
     def render(self, row, cell):
-        return "", render_labels(
-            get_labels(row, "service"),
-            "service",
-            with_links=True,
-            label_sources=get_label_sources(row, "service"))
+        return "", render_labels(get_labels(row, "service"),
+                                 "service",
+                                 with_links=True,
+                                 label_sources=get_label_sources(row, "service"))
+
+
+class AbstractPainterSpecificMetric(Painter):
+    @property
+    def ident(self):
+        raise NotImplementedError()
+
+    @property
+    def title(self):
+        return lambda p=None: self.title_with_parameters(p)
+
+    @property
+    def short_title(self):
+        return lambda p=None: self.title_with_parameters(p)
+
+    def title_with_parameters(self, parameters):
+        try:
+            if not parameters:
+                # Used in Edit-View
+                return "Show single metric"
+            return metrics.metric_info[parameters["metric"]]["title"]
+        except KeyError:
+            return _("Metric not found")
+
+    @property
+    def columns(self):
+        raise NotImplementedError()
+
+    @property
+    def parameters(self):
+        cache_id = "painter_specific_metric_choices"
+        if cache_id in current_app.g:
+            choices = current_app.g[cache_id]
+        else:
+            choices = []
+            for key, value in metrics.metric_info.iteritems():
+                choices.append((key, value.get("title")))
+            choices.sort(key=lambda x: x[1])
+            current_app.g[cache_id] = choices
+
+        return Dictionary(elements=[
+            ("metric",
+             DropdownChoice(title=_("Show metric"),
+                            choices=choices,
+                            help=_("If available, the following metric will be shown"))),
+            ("column_title", TextAscii(title=_("Custom title"))),
+        ],
+                          optional_keys=["column_title"])
+
+    def _render(self, row, cell, perf_data_entries, check_command):
+        show_metric = cell.painter_parameters()["metric"]
+        translated_metrics = metrics.translate_perf_data(perf_data_entries,
+                                                         check_command=check_command)
+
+        if show_metric not in translated_metrics:
+            return "", ""
+
+        return "", translated_metrics[show_metric]["unit"]["render"](
+            translated_metrics[show_metric]["value"])
+
+
+@painter_registry.register
+class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
+    @property
+    def ident(self):
+        return "host_specific_metric"
+
+    @property
+    def columns(self):
+        return ["host_perf_data", "host_check_command"]
+
+    def render(self, row, cell):
+        perf_data_entries = row["host_perf_data"]
+        check_command = row["host_check_command"]
+        return self._render(row, cell, perf_data_entries, check_command)
+
+
+@painter_registry.register
+class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
+    @property
+    def ident(self):
+        return "service_specific_metric"
+
+    @property
+    def columns(self):
+        return ["service_perf_data", "service_check_command"]
+
+    def render(self, row, cell):
+        perf_data_entries = row["service_perf_data"]
+        check_command = row["service_check_command"]
+        return self._render(row, cell, perf_data_entries, check_command)

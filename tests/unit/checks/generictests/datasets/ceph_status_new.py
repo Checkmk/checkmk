@@ -5,7 +5,7 @@ checkname = 'ceph_status'
 
 
 info = [['{'],
-        ['"fsid":', '"f31a6bb1-27fc-4a47-ba8b-e7e06d0b1efa",'],
+        ['"fsid":', '"123-abc-456",'],
         ['"health":', '{'],
         ['"checks":', '{},'],
         ['"status":', '"HEALTH_OK",'],
@@ -56,4 +56,4 @@ discovery = {'': [(None, {})], 'mgrs': [], 'osds': [], 'pgs': []}
 
 checks = {'': [(None,
                 {'epoch': (1, 3, 30)},
-                [(0, 'Status: OK', []), (0, 'Epoch: 0/30 m', [])])]}
+                [(0, 'Health: OK', []), (0, 'Epoch: 0/30 m', [])])]}

@@ -19,6 +19,19 @@ namespace cma {
 
 namespace provider {
 
+// Confirmed values with AB from LA(3600s)
+std::unordered_map<std::string_view, std::chrono::duration<int>>
+    g_delays_on_fail = {
+        {kDotNetClrMemory, cma::cfg::G_DefaultDelayOnFail},  //
+        {kWmiWebservices, cma::cfg::G_DefaultDelayOnFail},   //
+        {kWmiCpuLoad, cma::cfg::G_DefaultDelayOnFail},       //
+        {kMsExch, cma::cfg::G_DefaultDelayOnFail},           //
+        {kOhm, cma::cfg::G_DefaultDelayOnFail},
+
+        // end of the real sections
+        {kBadWmi, cma::cfg::G_DefaultDelayOnFail},  // used to testing
+};
+
 // pickup first word before space
 // "word left over" => ["word", "ledt over"]
 auto SplitStringLine(const std::string& Line) {
@@ -39,11 +52,13 @@ auto SplitStringLine(const std::string& Line) {
 }
 
 // returns tuple with parsed command line
-auto ParseCommandLine(const std::string& Line) noexcept {
+// {marker of Answer, First, Leftover}
+std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
+    const std::string& Line) noexcept {
     using namespace cma::section;
     using namespace std;
 
-    unsigned long long marker = 0;
+    uint64_t marker = 0;
     try {
         auto [marker_str, leftover] = SplitStringLine(Line);
         marker = std::stoull(marker_str, nullptr,
@@ -55,20 +70,19 @@ auto ParseCommandLine(const std::string& Line) noexcept {
             auto [section_name_str, leftover_last] = SplitStringLine(leftover);
 
             // make valid return
-            return make_tuple(marker, section_name_str, leftover_last);
+            return {marker, section_name_str, leftover_last};
         }
     } catch (const std::exception& e) {
-        XLOG::l("Command line {} is not valid(exception: {})", Line, e.what());
+        XLOG::l("Command line '{}' is not valid, exception: '{}'", Line,
+                e.what());
         marker = 0;
     }
 
-    return make_tuple(marker,
-                      std::string(kUseEmbeddedName),  // default
-                      std::string(""));
+    return {marker, std::string(kUseEmbeddedName), ""};
 }
 
 std::string Basic::generateContent(const std::string_view& SectionName,
-                                   bool ForceGeneration) const {
+                                   bool ForceGeneration) {
     auto real_name = SectionName == cma::section::kUseEmbeddedName
                          ? uniq_name_
                          : SectionName;
@@ -81,7 +95,7 @@ std::string Basic::generateContent(const std::string_view& SectionName,
     try {
         auto section_body = makeBody();
         if (section_body.empty()) {
-            XLOG::d("Section {} cannot provide data", uniq_name_);
+            XLOG::d("Section '{}' cannot provide data", uniq_name_);
             return {};
         }
         // header-less mode is for the Plugins and Local
@@ -119,10 +133,19 @@ void Basic::registerCommandLine(const std::string& CmdLine) {
     ip_ = ip;
 }
 
+void Basic::setupDelayOnFail() noexcept {
+    // setup delay on fail
+    try {
+        const auto& delay_in_seconds = g_delays_on_fail[uniq_name_];
+        delay_on_fail_ = delay_in_seconds;
+    } catch (const std::exception&) {
+        // do nothing here
+    }
+}
+
 // if section fails then we may set time point in the future to avoid
 // calling section too soon
-// gtest[+]
-void Basic::updateDelayTime() {
+void Basic::disableSectionTemporary() {
     using namespace std::chrono;
     if (delay_on_fail_.count() == 0) return;
 
@@ -132,8 +155,9 @@ void Basic::updateDelayTime() {
     {
         // System clock is not Steady Clock
         auto sys_clock = system_clock::now() + delay_on_fail_;
-        XLOG::t("Resetting time for earliest start of the section {} at {}",
-                getUniqName(), cma::tools::TimeToString(sys_clock));
+        XLOG::l.w(
+            "Resetting time for earliest start of the section '{}' at '{}'",
+            getUniqName(), cma::tools::TimeToString(sys_clock));
     }
 }
 
@@ -165,7 +189,6 @@ bool Basic::sendGatheredData(const std::string& CommandLine) {
     return false;
 }
 
-// #TODO gtest
 bool Synchronous::startSynchronous(
     const std::string& InternalPort,  // format "type:value", where type:
                                       // mail - for mail slot
@@ -177,7 +200,7 @@ bool Synchronous::startSynchronous(
     using namespace cma::section;
     try {
         carrier_.establishCommunication(InternalPort);
-        if (!sendGatheredData(CommandLine)) updateDelayTime();
+        sendGatheredData(CommandLine);
 
     } catch (const std::exception& e) {
         XLOG::l(XLOG_FUNC + " - unexpected exception {}", e.what());
@@ -186,13 +209,11 @@ bool Synchronous::startSynchronous(
     return true;
 }
 
-// #TODO gtest
 bool Asynchronous::startAsynchronous(
     const std::string& InternalPort,
     const std::string& CommandLine,  // future use
     bool Detached,                   // no waiting, and no joining
     std::chrono::milliseconds Period) {
-    // #TODO avoid possible race condition
     if (thread_.joinable()) {
         XLOG::l("Attempt to start service twice, no way!");
         return false;
@@ -249,7 +270,7 @@ void Asynchronous::threadProc(
         for (;;) {
             auto tm = steady_clock().now();
 
-            if (!sendGatheredData(CommandLine)) updateDelayTime();
+            sendGatheredData(CommandLine);
 
             // automatically stopped when delay is 0
             if (Period == 0ms) break;

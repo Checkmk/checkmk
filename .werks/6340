@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1531217694
 
 The debian agent package shipped with Check_MK (located in share/check_mk/agent/*.deb) was

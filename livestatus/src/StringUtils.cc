@@ -103,6 +103,9 @@ std::string ipv4ToString(in_addr_t ipv4_address) {
     return addr_buf;
 }
 
-std::string portToString(in_port_t port) { return std::to_string(ntohs(port)); }
+std::string portToString(in_port_t port) {
+    // NOLINTNEXTLINE(readability-isolate-declaration)
+    return std::to_string(ntohs(port));
+}
 #endif
 }  // namespace mk

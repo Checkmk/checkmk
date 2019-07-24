@@ -1,0 +1,250 @@
+#!/bin/bash
+# Little wrapper for futurize.
+
+REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+cd "$REPO_PATH"
+
+# If futurize does not find any modifications then it returns:
+# RefactoringTool: No files need to be modified.
+
+# Otherwise futurize prints output on stdout:
+# RefactoringTool: Refactored checks/3par_capacity
+# --- checks/3par_capacity	(original)
+# +++ checks/3par_capacity	(refactored)
+# @@ -26,14 +26,14 @@
+#
+#
+#  def inventory_3par_capacity(parsed):
+# -    for key, value in parsed.iteritems():
+# +    for key, value in parsed.items():
+#          if value['totalMiB'] == 0:
+#              continue
+#          yield (key.replace("Capacity", ""), {})
+#
+#
+#  def check_3par_capacity(item, params, parsed):
+# -    for key, value in parsed.iteritems():
+# +    for key, value in parsed.items():
+#          if key.replace("Capacity", "") == item:
+#              total = value['totalMiB']
+#              free = value['freeMiB']
+
+ENABLED_FIXERS=
+
+# *** Fixers that are not listed via futurize -l ***
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_buffer"
+# from futurize docs: perhaps not safe
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
+# No diff, this fixer fixes:
+#   mypkg/
+#       __init__.py
+#       collections.py
+#       core.py
+#       ...
+# Python 2 (in core.py):
+#   from collections import deque
+# Since Python 2.5 relative imports were introduced.
+# The following statements are equivalent:
+#   from .collections import deque
+#   from mypkg.collections import deque
+# In Python 3 the former one is recommended.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
+# Called by libfuturize.fixes.fix_future_standard_library
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
+# futurize does not handle this yet. Fix incompatible imports and module
+# references that must be fixed after fix_imports. No diff; maps:
+#   'whichdb' to 'dbm' (whichdb included in dbm)
+#	'anydbm' to 'dbm' (anydbm included in dbm)
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
+# Unknown fixer
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_urllib"
+# Included in libfuturize.fix_future_standard_library_urllib
+#---------------------------------------------------------------------------
+
+# *** Mechanical/easy fixers ***
+#---------------------------------------------------------------------------
+ENABLED_FIXERS+=" lib2to3.fixes.fix_apply"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_except"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_exec"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_exitfunc"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_filter"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_funcattrs"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_getcwdu"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_has_key"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_idioms"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_input"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_intern"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_isinstance"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_itertools"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_itertools_imports"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_methodattrs"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_ne"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_nonzero"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_numliterals"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_paren"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_raw_input"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_reduce"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_renames"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_repr"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_standarderror"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_sys_exc"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_throw"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_tuple_params"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_types"
+ENABLED_FIXERS+=" lib2to3.fixes.fix_xreadlines"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_absolute_import"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_next_call"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_raise"
+ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
+#---------------------------------------------------------------------------
+
+# *** More complex fixers, need to be verified manually ***
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_dict"
+# Python 3 dictionaries have .keys(), .values(), and .items() methods which
+# return memory-efficient set-like iterator objects, not lists as in Python 2.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_map"
+# Python 3: Returns an iterator, Python 2 returns a list.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_zip"
+# Python 3: Returns an iterator, Python 2 returns a list.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_operator"
+# RefactoringTool: No files need to be modified.
+# RefactoringTool: Warnings/messages while refactoring:
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_dotnet_clrmemory.py ###
+# RefactoringTool: Line 52: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_eventlog.py ###
+# RefactoringTool: Line 152: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/_test_section_openhardwaremonitor.py ###
+# RefactoringTool: Line 57: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_plugin_group.py ###
+# RefactoringTool: Line 94: You should use 'operator.mul(repeating_pattern)' here.
+# RefactoringTool: Line 107: You should use 'operator.mul(re_variadic)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_ps.py ###
+# RefactoringTool: Line 51: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_services.py ###
+# RefactoringTool: Line 38: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_winperf.py ###
+# RefactoringTool: Line 46: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/windows/it/test_section_wmi_webservices.py ###
+# RefactoringTool: Line 93: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_dotnet_clrmemory.py ###
+# RefactoringTool: Line 52: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_eventlog.py ###
+# RefactoringTool: Line 145: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/_test_section_openhardwaremonitor.py ###
+# RefactoringTool: Line 57: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/_test_section_plugin_group.py ###
+# RefactoringTool: Line 94: You should use 'operator.mul(repeating_pattern)' here.
+# RefactoringTool: Line 107: You should use 'operator.mul(re_variadic)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_ps.py ###
+# RefactoringTool: Line 69: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_services.py ###
+# RefactoringTool: Line 38: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_winperf.py ###
+# RefactoringTool: Line 44: You should use 'operator.mul(re_str)' here.
+# RefactoringTool: ### In file /home/si/git/check_mk/agents/wnx/integration/test_section_wmi_webservices.py ###
+# RefactoringTool: Line 89: You should use 'operator.mul(re_str)' here.
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_basestring"
+#   from past.builtins import basestring
+# As six does
+#   str_types = (str, unicode) if sys.version_info[0] == 3 else (basestring,)
+# Then we can grep after 'sys.version_info' and remove these statements
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_long"
+# Similar to libfuturize.fixes.fix_basestring
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_cmp"
+#   from past.builtins import cmp
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_division_safe"
+#-  x = a / b
+#+  from __future__ import division
+#+  from past.utils import old_div
+#+  x = old_div(a, b)
+# Note: Path("/path1") / Path("path2") is also handled :(
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_execfile"
+#   from past.builtins import execfile
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_builtins"
+#+  from builtins import chr, map, str, range, ...
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library"
+# A lot of module imports are changed
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_future_standard_library_urllib"
+# A urllib2 -> urllib
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
+# from builtins import range
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
+# unicode (Python2) -> str (Python 3)
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
+#+  from __future__ import print_function
+#-    print "Foo"
+#+    print("Foo")
+# Can be changed easily
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
+#+  from builtins import object
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
+#-  class ABCSNMPBackend(object):
+#-      __metaclass__ = abc.ABCMeta
+#-
+#+  class ABCSNMPBackend(with_metaclass(abc.ABCMeta, object)):
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_next"
+# The fix_next_call fixer in libfuturize.fixes is applied instead of fix_next in
+# stage 1. The new fixer changes any obj.next() calls to next(obj), which is
+# Py2/3 compatible, but doesn’t change any next method names to __next__, which
+# would break Py2 compatibility
+#---------------------------------------------------------------------------
+
+# *** Useless fixers ***
+#---------------------------------------------------------------------------
+# lib2to3.fixes.fix_ws_comma
+# This performs cosmetic changes. This is not applied by default because it
+# does not serve to improve Python 2/3 compatibility. (In some cases it may
+# also reduce readability: see issue #58.)
+#---------------------------------------------------------------------------
+
+if [ -z "$ENABLED_FIXERS" ]; then
+    echo "No fixer enabled"
+    exit 0
+fi
+
+# Check all relevant files in case no PYTHON_FILES is set via environment
+PYTHON_FILES=${PYTHON_FILES-$($REPO_PATH/tests/find-python-files)}
+PYTHON_FILES=$(echo "$PYTHON_FILES" | grep -v "$REPO_PATH/agents/plugins")
+
+FIXER_OPTS=""
+for FIXER in $ENABLED_FIXERS; do
+    FIXER_OPTS+=" -f $FIXER"
+done
+
+# shellcheck disable=SC2086
+RESULT=$(futurize $FIXER_OPTS $PYTHON_FILES 2>&1)
+# This may be a bug: futurize produces some bogus messages like:
+#     RefactoringTool: No changes to check_bi_aggr
+#     RefactoringTool: Files that need to be modified:
+#     RefactoringTool: check_bi_aggr
+echo "$RESULT" | grep  -v '^RefactoringTool: '
+echo "$RESULT" | grep '^+++ .*(refactored)$' | \
+    sed -e 's/^+++ //' -e 's/[[:blank:]]*(refactored)$/:1:1: error: file needs to be refactored/'

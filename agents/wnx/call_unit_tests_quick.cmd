@@ -1,1 +1,1 @@
-call call_unit_tests.cmd -PluginTest.Async*:PluginTest.Sync*:PlayerTest.RealLife* skip
+call call_unit_tests.cmd -*_Long

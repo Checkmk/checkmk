@@ -258,6 +258,7 @@ class Server(object):
                 logging.debug(
                     "Server.get_data_from_entities: header: '%s', class_id: '%s' - attributes: '%s'",
                     header, class_id, ','.join(attributes))
+
                 try:
                     xml_objects = self._get_class_data(class_id)
                 except CommunicationException as e:
@@ -269,14 +270,30 @@ class Server(object):
                 for xml_object in xml_objects:
                     xml_data = []
                     for attribute in attributes:
-                        attribute_data = xml_object.attrib.get(attribute)
+                        attribute_data = self._get_attribute_data(xml_object, attribute)
                         if attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
-                            attribute_data = ''  # ensure order of entries in
-                            # related check plugins is consistent
+                            # ensure order of entries in related check plugins is consistent
+                            attribute_data = ''
                         xml_data.append((attribute, attribute_data))
                     data.setdefault(header, []).append((class_id, xml_data))
         return data
+
+    def _get_attribute_data(self, xml_object, attribute):
+        logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
+        attribute_data = xml_object.attrib.get(attribute)
+        if attribute_data:
+            return attribute_data
+
+        # UCS-B-Series API change, eg.:
+        # 'OperState'   -> 'operState'
+        # 'AmbientTemp' -> 'ambientTemp'
+        attribute_lower = attribute[0].lower() + attribute[1:]
+        logging.debug("Server._get_attribute_data: Try getting attribute '%s' (lower)",
+                      attribute_lower)
+        attribute_data = xml_object.attrib.get(attribute_lower)
+        if attribute_data:
+            return attribute_data
 
     def _get_class_data(self, class_id):
         """
@@ -315,8 +332,10 @@ class Server(object):
         try:
             if self._verify_ssl is False:
                 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-            response = self._session.post(
-                self._url, headers=headers, data=xml_string, verify=self._verify_ssl)
+            response = self._session.post(self._url,
+                                          headers=headers,
+                                          data=xml_string,
+                                          verify=self._verify_ssl)
         except requests.ConnectionError as e:
             logging.debug("Server._communicate: PostError: '%s'", e)
             raise CommunicationException(e)
@@ -359,12 +378,11 @@ def debug():
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument(
-        "--no-cert-check",
-        action="store_true",
-        help="Disables the checking of the servers ssl certificate.")
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--no-cert-check",
+                        action="store_true",
+                        help="Disables the checking of the servers ssl certificate.")
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
     parser.add_argument("-p", "--password", required=True, help="The password.")

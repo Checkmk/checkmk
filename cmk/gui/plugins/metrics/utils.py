@@ -37,12 +37,12 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKGeneralException
+from cmk.utils.memoize import MemoizeCache
 
 
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
-
     def __init__(self, list_identifier=None, start_index=None):
         OrderedDict.__init__(self)
         self._list_identifier = list_identifier or "item"
@@ -107,6 +107,72 @@ scale_symbols = {
     T: "T",
     P: "P",
 }
+
+MAX_CORES = 128
+
+# Colors:
+#
+#                   red
+#  magenta                       orange
+#            11 12 13 14 15 16
+#         46                   21
+#         45                   22
+#   blue  44                   23  yellow
+#         43                   24
+#         42                   25
+#         41                   26
+#            36 35 34 33 32 31
+#     cyan                       yellow-green
+#                  green
+#
+# Special colors:
+# 51  gray
+# 52  brown 1
+# 53  brown 2
+#
+# For a new metric_info you have to choose a color. No more hex-codes are needed!
+# Instead you can choose a number of the above color ring and a letter 'a' or 'b
+# where 'a' represents the basic color and 'b' is a nuance/shading of the basic color.
+# Both number and letter must be declared!
+#
+# Example:
+# "color" : "23/a" (basic color yellow)
+# "color" : "23/b" (nuance of color yellow)
+#
+# As an alternative you can call indexed_color with a color index and the maximum
+# number of colors you will need to generate a color. This function tries to return
+# high contrast colors for "close" indices, so the colors of idx 1 and idx 2 may
+# have stronger contrast than the colors at idx 3 and idx 10.
+
+# retrieve an indexed color.
+# param idx: the color index
+# param total: the total number of colors needed in one graph.
+_COLOR_WHEEL_SIZE = 48
+
+
+def indexed_color(idx, total):
+    if idx < _COLOR_WHEEL_SIZE:
+        # use colors from the color wheel if possible
+        base_col = (idx % 4) + 1
+        tone = ((idx / 4) % 6) + 1
+        if idx % 8 < 4:
+            shade = "a"
+        else:
+            shade = "b"
+        return "%d%d/%s" % (base_col, tone, shade)
+    else:
+        # generate distinct rgb values. these may be ugly ; also, they
+        # may overlap with the colors from the wheel
+        idx = idx - _COLOR_WHEEL_SIZE
+        base_color = idx % 7  # red, green, blue, red+green, red+blue,
+        # green+blue, red+green+blue
+        delta = 255 / ((total - _COLOR_WHEEL_SIZE) / 7)
+        offset = 255 - (delta * ((idx / 7) + 1))
+
+        red = int(base_color in [0, 3, 4, 6])
+        green = int(base_color in [1, 3, 5, 6])
+        blue = int(base_color in [2, 4, 5, 6])
+        return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -358,8 +424,8 @@ def _evaluate_rpn(expression, translated_metrics):
         parts = parts[1:]
         if operator_name in rpn_operators:
             if len(stack) < 2:
-                raise MKGeneralException(
-                    "Syntax error in expression '%s': too few operands" % expression)
+                raise MKGeneralException("Syntax error in expression '%s': too few operands" %
+                                         expression)
             op1 = stack[-2]
             op2 = stack[-1]
             result = rpn_operators[operator_name](op1, op2)
@@ -368,8 +434,8 @@ def _evaluate_rpn(expression, translated_metrics):
             stack.append(_evaluate_literal(operator_name, translated_metrics))
 
     if len(stack) != 1:
-        raise MKGeneralException(
-            "Syntax error in expression '%s': too many operands left" % expression)
+        raise MKGeneralException("Syntax error in expression '%s': too many operands left" %
+                                 expression)
 
     return stack[0]
 
@@ -501,13 +567,12 @@ def get_graph_range(graph_template, translated_metrics):
     try:
         return evaluate(graph_template["range"][0], translated_metrics)[0], \
                evaluate(graph_template["range"][1], translated_metrics)[0]
-    except:
+    except Exception:
         return None, None
 
 
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-
     def eval_to_string(match):
         expression = match.group()[2:-1]
         unit_name = None
@@ -635,7 +700,7 @@ def _graph_without_missing_optional_metrics(graph_template, translated_metrics):
         try:
             evaluate(metric_definition[0], translated_metrics)
             working_metrics.append(metric_definition)
-        except:
+        except Exception:
             pass
 
     reduced_graph_template = graph_template.copy()
@@ -821,7 +886,6 @@ def fade_color(rgb, v):
 
 def darken_color(rgb, v):
     """Make a color darker. v ranges from 0 (not darker) to 1 (black)"""
-
     def darken(x, v):
         return x * (1.0 - v)
 
@@ -830,7 +894,6 @@ def darken_color(rgb, v):
 
 def lighten_color(rgb, v):
     """Make a color lighter. v ranges from 0 (not lighter) to 1 (white)"""
-
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 
@@ -848,3 +911,12 @@ def _mix_colors(a, b):
 
 def render_color_icon(color):
     return html.render_div('', class_="color", style="background-color: %s" % color)
+
+
+@MemoizeCache
+def reverse_translate_metric_name(canonical_name):
+    "Return all known perf data names that are translated into canonical_name"
+    return set([
+        metric for trans in check_metrics.values()
+        for metric, options in trans.items() if options.get('name', '') == canonical_name
+    ] + [canonical_name])

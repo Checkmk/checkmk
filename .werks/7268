@@ -1,0 +1,16 @@
+Title: BI aggregations: Introduced aggregation ID
+Level: 1
+Component: bi
+Class: feature
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563197753
+
+In previous versions aggregation templates were identified by the pack name and an automatic index number.
+The index number however did not work well when multiple users modify aggregations at the same time.
+In a worst case scenario, the wrong aggregation was edited/deleted.
+
+This werk introduces a mandatory id for each aggregation.
+Upon saving, old configurations automatically get an ID assigned.

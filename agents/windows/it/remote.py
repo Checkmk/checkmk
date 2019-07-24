@@ -96,14 +96,12 @@ def actual_output(write_config, wait_agent):
 
 class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
-
     def __init__(self, section):
         super(DuplicateSectionError, self).__init__(self, 'Section %r already exists' % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
-
     def __init__(self, section):
         super(NoSectionError, self).__init__(self, 'No section: %r' % (section))
 
@@ -111,7 +109,6 @@ class NoSectionError(Exception):
 class IniWriter(ConfigParser.RawConfigParser):
     """Writer for Windows ini files. Simplified version of RawConfigParser but
     supports multiple values for a single key."""
-
     def add_section(self, section):
         """Create a new section in the configuration.
 
@@ -120,7 +117,7 @@ class IniWriter(ConfigParser.RawConfigParser):
         case-insensitive variants.
         """
         if section.lower() == 'default':
-            raise ValueError, 'Invalid section name: %s' % section
+            raise ValueError('Invalid section name: %s' % section)
 
         if section in self._sections:
             raise DuplicateSectionError(section)
@@ -166,17 +163,17 @@ def remotetest(expected_output, actual_output, testfile, testname=None, testclas
             # if re.match(expected, actual) is None:
             #     print 'DEBUG: actual output\r\n', '\r\n'.join(actual_output)
             #     print 'DEBUG: expected output\r\n', '\r\n'.join(expected_output)
-            assert re.match(expected,
-                            actual) is not None, ("expected '%s', actual '%s'" % (expected, actual))
+            assert re.match(expected, actual) is not None, ("expected '%s', actual '%s'" %
+                                                            (expected, actual))
         try:
             assert len(actual_output) >= len(expected_output), (
                 'actual output is shorter than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                              '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' %
+                ('\n'.join(expected_output), '\n'.join(actual_output)))
             assert len(actual_output) <= len(expected_output), (
                 'actual output is longer than expected:\n'
-                'expected output:\n%s\nactual output:\n%s' % ('\n'.join(expected_output),
-                                                              '\n'.join(actual_output)))
+                'expected output:\n%s\nactual output:\n%s' %
+                ('\n'.join(expected_output), '\n'.join(actual_output)))
         except TypeError:
             # expected_output may be an iterator without len
             assert len(actual_output) > 0, 'Actual output was empty'

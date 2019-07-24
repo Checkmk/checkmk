@@ -58,7 +58,9 @@ def get_inventory_data(inventory_tree, tree_path):
     elif attribute_keys:
         attributes = inventory_tree.get_sub_attributes(parsed_path)
         if attributes is not None:
-            invdata = attributes.get_child_data().get(attribute_keys)
+            # In paint_host_inventory_tree we parse invpath and get
+            # a path and attribute_keys which may be either None, [], or ["KEY"].
+            invdata = attributes.get_child_data().get(attribute_keys[-1])
     return invdata
 
 
@@ -482,10 +484,12 @@ class InventoryHousekeeping(object):
             return
 
         # TODO: remove with pylint 2
-        inventory_archive_hosts = set(
-            [x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
-        inventory_delta_cache_hosts = set(
-            [x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
+        inventory_archive_hosts = {
+            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+        }
+        inventory_delta_cache_hosts = {
+            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()  # pylint: disable=no-member
+        }
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
         for foldername in folders_to_delete:
@@ -513,7 +517,7 @@ class InventoryHousekeeping(object):
         last_cleanup.touch()  # pylint: disable=no-member
 
     def _get_timestamps_for_host(self, hostname):
-        timestamps = set(["None"])  # 'None' refers to the histories start
+        timestamps = {"None"}  # 'None' refers to the histories start
         try:
             timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
         except OSError:

@@ -57,12 +57,11 @@ class ManualCheckParameterMemCluster(ManualCheckParameterRulespec):
         return ListOf(
             Tuple(elements=[
                 Integer(title=_("Equal or more than"), unit=_("nodes")),
-                Tuple(
-                    title=_("Percentage of total RAM"),
-                    elements=[
-                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-                    ])
+                Tuple(title=_("Percentage of total RAM"),
+                      elements=[
+                          Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                          Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                      ])
             ]),
             help=_("Here you can specify the total memory usage levels for clustered hosts."),
             title=_("Memory Usage"),

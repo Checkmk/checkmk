@@ -12,8 +12,6 @@ description:
  goes CRIT. If there are disabled alerts the check reports
  WARN and if there are high alerts then the check goes CRIT.
 
- This check is also cluster-aware.
-
 item:
  The instance name
 

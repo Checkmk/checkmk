@@ -47,23 +47,20 @@ from cmk.gui.plugins.wato import (
 
 
 def _vs_mssql_backup_age(title):
-    return Alternative(
-        title=_("%s" % title),
-        style="dropdown",
-        elements=[
-            Tuple(
-                title=_("Set levels"),
-                elements=[
-                    Age(title=_("Warning if older than")),
-                    Age(title=_("Critical if older than")),
-                ]),
-            Tuple(
-                title=_("No levels"),
-                elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
-                ]),
-        ])
+    return Alternative(title=_("%s" % title),
+                       style="dropdown",
+                       elements=[
+                           Tuple(title=_("Set levels"),
+                                 elements=[
+                                     Age(title=_("Warning if older than")),
+                                     Age(title=_("Critical if older than")),
+                                 ]),
+                           Tuple(title=_("No levels"),
+                                 elements=[
+                                     FixedValue(None, totext=""),
+                                     FixedValue(None, totext=""),
+                                 ]),
+                       ])
 
 
 @rulespec_registry.register
@@ -86,12 +83,12 @@ class RulespecDiscoveryMssqlBackup(HostRulespec):
             title=_("Discovery of MSSQL backup"),
             elements=[
                 ("mode",
-                 DropdownChoice(
-                     title=_("Backup modes"),
-                     choices=[
-                         ("summary", _("Create a service for each instance")),
-                         ("per_type", _("Create a service for each instance and backup type")),
-                     ])),
+                 DropdownChoice(title=_("Backup modes"),
+                                choices=[
+                                    ("summary", _("Create a service for each instance")),
+                                    ("per_type",
+                                     _("Create a service for each instance and backup type")),
+                                ])),
             ],
         )
 
@@ -112,30 +109,29 @@ class RulespecCheckgroupParametersMssqlBackup(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                help=_("This rule allows you to set limits on the age of backups for "
-                       "different backup types. If your agent does not support "
-                       "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
-                       "Backup</i>, etc.) you can use the option <i>Database Backup"
-                       "</i> to set a general limit"),
-                elements=[
-                    ("database", _vs_mssql_backup_age("Database backup")),
-                    ("database_diff", _vs_mssql_backup_age("Database diff backup")),
-                    ("log", _vs_mssql_backup_age("Log backup")),
-                    ("file_or_filegroup", _vs_mssql_backup_age("File or filegroup backup")),
-                    ("file_diff", _vs_mssql_backup_age("File diff backup")),
-                    ("partial", _vs_mssql_backup_age("Partial backup")),
-                    ("partial_diff", _vs_mssql_backup_age("Partial diff backup")),
-                    ("unspecific", _vs_mssql_backup_age("Unspecific backup")),
-                    ("not_found", MonitoringState(title=_("State if no backup found"))),
-                ]),
-            forth=lambda params: (params if isinstance(params, dict) else {
-                'database': (
-                    params[0],
-                    params[1],
-                )
-            }))
+        return Transform(Dictionary(
+            help=_("This rule allows you to set limits on the age of backups for "
+                   "different backup types. If your agent does not support "
+                   "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
+                   "Backup</i>, etc.) you can use the option <i>Database Backup"
+                   "</i> to set a general limit"),
+            elements=[
+                ("database", _vs_mssql_backup_age("Database backup")),
+                ("database_diff", _vs_mssql_backup_age("Database diff backup")),
+                ("log", _vs_mssql_backup_age("Log backup")),
+                ("file_or_filegroup", _vs_mssql_backup_age("File or filegroup backup")),
+                ("file_diff", _vs_mssql_backup_age("File diff backup")),
+                ("partial", _vs_mssql_backup_age("Partial backup")),
+                ("partial_diff", _vs_mssql_backup_age("Partial diff backup")),
+                ("unspecific", _vs_mssql_backup_age("Unspecific backup")),
+                ("not_found", MonitoringState(title=_("State if no backup found"))),
+            ]),
+                         forth=lambda params: (params if isinstance(params, dict) else {
+                             'database': (
+                                 params[0],
+                                 params[1],
+                             )
+                         }))
 
     @property
     def item_spec(self):

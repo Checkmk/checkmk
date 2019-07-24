@@ -46,7 +46,7 @@ def test_load_data_from_file_locking(tmpdir):
 def test_load_data_from_not_permitted_file(tmpdir):
     locked_file = tmpdir.join("test")
     locked_file.write("[1, 2]")
-    os.chmod("%s" % locked_file, 0200)
+    os.chmod("%s" % locked_file, 0o200)
 
     with pytest.raises(MKGeneralException) as e:
         store.load_data_from_file("%s" % locked_file)

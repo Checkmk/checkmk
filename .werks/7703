@@ -1,0 +1,13 @@
+Title: mk_oracle: New default hostname in GI/Restart configurations
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1559635589
+Class: feature
+
+The old design used localhost as default connection host when
+DBHOST is empty in mk_oracle.cfg. This has been changed from
+localhost to $(hostname) for configurations with Grid-Infrastructure
+or Oracle Restart

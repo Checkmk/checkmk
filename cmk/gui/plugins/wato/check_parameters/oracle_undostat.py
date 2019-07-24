@@ -60,24 +60,23 @@ class RulespecCheckgroupParametersOracleUndostat(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Levels for remaining undo retention"),
-                     elements=[
-                         Age(title=_("warning if less then"), default_value=600),
-                         Age(title=_("critical if less then"), default_value=300),
-                     ],
-                 )),
-                (
-                    'nospaceerrcnt_state',
-                    MonitoringState(
-                        default_value=2,
-                        title=_("State in case of non space error count is greater then 0: "),
-                    ),
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Levels for remaining undo retention"),
+                 elements=[
+                     Age(title=_("warning if less then"), default_value=600),
+                     Age(title=_("critical if less then"), default_value=300),
+                 ],
+             )),
+            (
+                'nospaceerrcnt_state',
+                MonitoringState(
+                    default_value=2,
+                    title=_("State in case of non space error count is greater then 0: "),
                 ),
-            ],)
+            ),
+        ],)
 
     @property
     def item_spec(self):

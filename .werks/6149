@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1526982355
 
 The calculation of the CPU utilization of processes on linux systems was not taking the number

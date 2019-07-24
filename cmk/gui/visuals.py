@@ -36,11 +36,13 @@ import cmk.gui.utils as utils
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.permissions import declare_permission
+from cmk.gui.pages import page_registry
 from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
     ValueSpec,
     ListOfMultiple,
+    ABCPageListOfMultipleGetChoice,
     FixedValue,
     IconSelector,
     TextUnicode,
@@ -108,8 +110,8 @@ def declare_visual_permissions(what, what_plural):
     declare_permission(
         "general.edit_" + what,
         _("Customize %s and use them") % what_plural,
-        _("Allows to create own %s, customize builtin %s and use them.") % (what_plural,
-                                                                            what_plural),
+        _("Allows to create own %s, customize builtin %s and use them.") %
+        (what_plural, what_plural),
         ["admin", "user"],
     )
 
@@ -174,7 +176,6 @@ class UserVisualsCache(object):
     """Realizes a in memory cache (per apache process). This has been introduced to improve the
     situation where there are hundreds of custom visuals (views here). These visuals are rarely
     changed, but read and evaluated(!) during each page request which costs a lot of time."""
-
     def __init__(self):
         super(UserVisualsCache, self).__init__()
         self._cache = {}
@@ -319,7 +320,7 @@ def declare_custom_permissions(what):
                 visuals = store.load_data_from_file(path, {})
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
-        except:
+        except Exception:
             if config.debug:
                 raise
 
@@ -482,8 +483,8 @@ def page_list(what,
                 config.user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
-    for title1, items in [(_('Customized'), my_visuals), (_("Owned by other users"),
-                                                          foreign_visuals),
+    for title1, items in [(_('Customized'), my_visuals),
+                          (_("Owned by other users"), foreign_visuals),
                           (_('Builtin'), builtin_visuals)]:
         html.open_h3()
         html.write(title1)
@@ -532,10 +533,9 @@ def page_list(what,
                 table.cell(_('Title'))
                 title2 = _u(visual['title'])
                 if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
-                    html.a(
-                        title2,
-                        href="%s.py?%s=%s" % (what_s, visual_type_registry[what]().ident_attr,
-                                              visual_name))
+                    html.a(title2,
+                           href="%s.py?%s=%s" %
+                           (what_s, visual_type_registry[what]().ident_attr, visual_name))
                 else:
                     html.write_text(title2)
                 html.help(_u(visual['description']))
@@ -859,15 +859,15 @@ def page_edit_visual(what,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
-            ('description', TextAreaUnicode(
-                title=_('Description') + '<sup>*</sup>', rows=4, cols=50)),
+            ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
+                                            rows=4,
+                                            cols=50)),
             ('linktitle',
-             TextUnicode(
-                 title=_('Button Text') + '<sup>*</sup>',
-                 help=_('If you define a text here, then it will be used in '
-                        'context buttons linking to the %s instead of the regular title.') %
-                 visual_type.title,
-                 size=26)),
+             TextUnicode(title=_('Button Text') + '<sup>*</sup>',
+                         help=_('If you define a text here, then it will be used in '
+                                'context buttons linking to the %s instead of the regular title.') %
+                         visual_type.title,
+                         size=26)),
             ('icon', IconSelector(title=_('Button Icon'),)),
             ('visibility', Dictionary(
                 title=_('Visibility'),
@@ -1207,40 +1207,60 @@ def get_filter_headers(table, infos, context):
 #   '----------------------------------------------------------------------'
 
 
-# Implements a list of available filters for the given infos. By default no
-# filter is selected. The user may select a filter to be activated, then the
-# filter is rendered and the user can provide a default value.
 class VisualFilterList(ListOfMultiple):
-    def __init__(self, info_list, **kwargs):
-        self._infos = info_list
+    """Implements a list of available filters for the given infos. By default no
+    filter is selected. The user may select a filter to be activated, then the
+    filter is rendered and the user can provide a default value.
+    """
+    @classmethod
+    def get_choices(cls, infos, ignore):
+        return sorted(cls._get_filter_specs(infos, ignore).items(),
+                      key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
-        ignore = kwargs.get("ignore", set())
+    @classmethod
+    def _get_filters(cls, infos, ignore):
+        return {
+            fname: fspec._filter
+            for fname, fspec in cls._get_filter_specs(infos, ignore).iteritems()
+        }
 
-        # First get all filters useful for the infos, then create VisualFilter
-        # valuespecs from them and then sort them
+    @classmethod
+    def _get_filter_specs(cls, infos, ignore):
         fspecs = {}
-        self._filters = {}
-        for info in self._infos:
+        for info in infos:
             for fname, filter_ in filters_allowed_for_info(info).items():
                 if fname not in fspecs and fname not in ignore:
                     fspecs[fname] = VisualFilter(
                         fname,
                         title=filter_.title,
                     )
-                    self._filters[fname] = fspecs[fname]._filter
+        return fspecs
 
-        # Convert to list and sort them!
-        fspecs = sorted(fspecs.items(), key=lambda x: (x[1]._filter.sort_index, x[1].title()))
+    def __init__(self, info_list, **kwargs):
+        ignore = kwargs.get("ignore", set())
+        self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
         kwargs.setdefault('del_label', _('Remove filter'))
         kwargs["delete_style"] = "filter"
 
-        ListOfMultiple.__init__(self, fspecs, **kwargs)
+        super(VisualFilterList, self).__init__(self.get_choices(info_list, ignore),
+                                               "ajax_visual_filter_list_get_choice",
+                                               page_request_vars={
+                                                   "infos": info_list,
+                                                   "ignore": list(ignore),
+                                               },
+                                               **kwargs)
 
     def filter_names(self):
         return self._filters.keys()
+
+
+@page_registry.register_page("ajax_visual_filter_list_get_choice")
+class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
+    def _get_choices(self, request):
+        return VisualFilterList.get_choices(request["infos"], set(request["ignore"]))
 
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
@@ -1492,11 +1512,10 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
                 break
             vars_values.append((var, val))
 
-        add_site_hint = may_add_site_hint(
-            name,
-            info_keys=visual_info_registry.keys(),
-            single_info_keys=visual["single_infos"],
-            filter_names=dict(vars_values).keys())
+        add_site_hint = may_add_site_hint(name,
+                                          info_keys=visual_info_registry.keys(),
+                                          single_info_keys=visual["single_infos"],
+                                          filter_names=dict(vars_values).keys())
 
         if add_site_hint and html.request.var('site'):
             vars_values.append(('site', html.request.var('site')))
@@ -1517,8 +1536,8 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             # For views and dashboards currently the current filter
             # settings
             else:
-                uri = html.makeuri_contextless(
-                    vars_values + [(visual_type.ident_attr, name)], filename=visual_type.show_url)
+                uri = html.makeuri_contextless(vars_values + [(visual_type.ident_attr, name)],
+                                               filename=visual_type.show_url)
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))
@@ -1596,9 +1615,9 @@ def ajax_popup_add():
 
         for name, title in sorted(visuals, key=lambda x: x[1]):
             html.open_li()
-            html.open_a(
-                href="javascript:void(0)",
-                onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+            html.open_a(href="javascript:void(0)",
+                        onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" %
+                        (visual_type_name, name))
             html.icon(None, visual_type_name.rstrip('s'))
             html.write(title)
             html.close_a()
@@ -1636,8 +1655,6 @@ def ajax_add_visual():
     # type of the visual to add (e.g. view)
     element_type = html.request.var("type")
 
-    extra_data = []
-    for what in ['context', 'params']:
-        extra_data.append(json.loads(html.request.var(what)))
-
-    visual_type.add_visual_handler(visual_name, element_type, *extra_data)
+    create_info = json.loads(html.request.var("create_info"))
+    visual_type.add_visual_handler(visual_name, element_type, create_info["context"],
+                                   create_info["params"])

@@ -59,21 +59,20 @@ class RulespecCheckgroupParametersWinLicense(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("status",
-                 ListOfStrings(
-                     title=_("Allowed license states"),
-                     help=_("Here you can specify the allowed license states for windows."),
-                     default_value=['Licensed', 'Initial grace period'],
-                 )),
-                ("expiration_time",
-                 Tuple(
-                     title=_("Time until license expiration"),
-                     help=_("Remaining days until the Windows license expires"),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
-                         Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("status",
+             ListOfStrings(
+                 title=_("Allowed license states"),
+                 help=_("Here you can specify the allowed license states for windows."),
+                 default_value=['Licensed', 'Initial grace period'],
+             )),
+            ("expiration_time",
+             Tuple(
+                 title=_("Time until license expiration"),
+                 help=_("Remaining days until the Windows license expires"),
+                 elements=[
+                     Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
+                     Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
+                 ],
+             )),
+        ],)

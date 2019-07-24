@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import errno
 import socket
 import ssl
 from contextlib import closing
@@ -57,24 +58,37 @@ def test_lqencode(query_part):
     assert result == u"xyzabc"
 
 
+@pytest.mark.parametrize("inp,expected_result", [
+    ("ab c", u"'ab c'"),
+    ("ab'c", u"'ab''c'"),
+    (u"ä \nabc", u"'ä \nabc'"),
+])
+def test_quote_dict(inp, expected_result):
+    result = livestatus.quote_dict(inp)
+    assert isinstance(result, unicode)
+    assert result == expected_result
+
+
 def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
 
 
 def test_livestatus_local_connection_no_socket(sock_path):
-    with pytest.raises(
-            livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
-        livestatus.LocalConnection()
+    live = livestatus.LocalConnection()
+    with pytest.raises(livestatus.MKLivestatusSocketError,
+                       match="Cannot connect to 'unix:%s'" % sock_path):
+        live.connect()
 
 
 def test_livestatus_local_connection_not_listening(sock_path):
     sock = socket.socket(socket.AF_UNIX)
     sock.bind("%s" % sock_path)
 
-    with pytest.raises(
-            livestatus.MKLivestatusSocketError, match="Cannot connect to 'unix:%s'" % sock_path):
-        livestatus.LocalConnection()
+    live = livestatus.LocalConnection()
+    with pytest.raises(livestatus.MKLivestatusSocketError,
+                       match="Cannot connect to 'unix:%s'" % sock_path):
+        live.connect()
 
 
 def test_livestatus_local_connection(sock_path):
@@ -110,7 +124,7 @@ def test_livestatus_ipv6_connection():
         except socket.error as e:
             # Skip this test in case ::1 can not be bound to
             # (happened in docker container with IPv6 disabled)
-            if e.errno == 99:  # Cannot assign requested address
+            if e.errno == errno.EADDRNOTAVAIL:
                 pytest.skip("Unable to bind to ::1 (%s)" % e)
 
         port = sock.getsockname()[1]  # pylint: disable=no-member
@@ -157,8 +171,10 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
     if ca_file_path is not None:
         ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
 
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path)
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=tls,
+                                           verify=verify,
+                                           ca_file_path=ca_file_path)
 
     if ca_file_path is None:
         ca_file_path = "%s/var/ssl/ca-certificates.crt" % tmpdir
@@ -177,15 +193,20 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
 
 
 def test_create_socket_not_existing_ca_file():
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="/x/y/z.pem")
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=True,
+                                           verify=True,
+                                           ca_file_path="/x/y/z.pem")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="No such file or"):
         live._create_socket(socket.AF_INET)
 
 
 def test_create_socket_no_cert(tmpdir):
     open("%s/z.pem" % tmpdir, "wb")
-    live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="%s/z.pem" % tmpdir)
-    with pytest.raises(livestatus.MKLivestatusConfigError, match="unknown error"):
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
+                                           tls=True,
+                                           verify=True,
+                                           ca_file_path="%s/z.pem" % tmpdir)
+    with pytest.raises(livestatus.MKLivestatusConfigError,
+                       match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)

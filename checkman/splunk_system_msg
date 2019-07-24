@@ -1,0 +1,15 @@
+title: Splunk: System messages
+agents: splunk
+catalog: app/splunk
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the occurance of system messages in splunk. It outputs
+ the last worst state in the service details and an overview of all messages in
+ the long output section.
+
+ Please note that you have to clear such messages within Splunk.
+
+inventory:
+ One service for will be created
+

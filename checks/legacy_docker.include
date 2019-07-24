@@ -45,7 +45,6 @@ def append_deprecation_warning(check_function):
     These legacy parse results correspond to agents/plugins from version
     1.5.0b1 to 1.5.0p12
     '''
-
     @functools.wraps(check_function)
     def wrapper(item, params, parsed):
 
@@ -332,7 +331,6 @@ def parse_legacy_docker_messed_up_labels(string):
     'string' is in the format "key1=value1,key2=value2,...", but there
     may be unescaped commas in the values.
     '''
-
     def toggle_key_value():
         for chunk in string.split('='):
             for item in chunk.rsplit(',', 1):

@@ -1,0 +1,16 @@
+title: Fujitsu ETERNUS DX200 storage systems: Thin provisioning pool
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPLv2
+distribution: none
+description:
+ This check monitors the capacity of thin provisioning pools
+ for storage systems from Fujitsu which support the
+ FJDARY-E150.MIB like the ETERNUS DX200.
+ Limits can be configured through WATO by "Filesystems (used space and growth)".
+
+item:
+ The index of the thin provisioning pool.
+
+inventory:
+ One item per pool will be discovered.

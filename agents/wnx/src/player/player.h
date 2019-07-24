@@ -6,15 +6,12 @@
 #include <optional>
 #include <string>
 
+#include "cma_core.h"
 #include "common/wtools.h"
+#include "fmt/format.h"
+#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
-
-#include "fmt/format.h"
-
-#include "cma_core.h"
-
-#include "logger.h"
 
 namespace cma::player {
 constexpr int kMaxPluginsToExec = 32;
@@ -46,7 +43,7 @@ public:
             // now exec all
             for (auto& exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
-                auto started = ar->goExec(exec, false, true, true);
+                auto started = ar->goExecAsJob(exec);
                 if (started)
                     processes_.push_back(ar);
                 else
@@ -72,7 +69,7 @@ public:
             // now exec all
             for (auto& exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
-                auto started = ar->goExec(exec, false, true, true);
+                auto started = ar->goExecAsJob(exec);
                 if (started)
                     processes_.push_back(ar);
                 else
@@ -189,7 +186,8 @@ public:
             if (KillWhatLeft) {
                 for (auto pid : waiting_processes) {
                     wtools::KillProcess(pid, -1);
-                    XLOG::d("Process {} killed", pid);  // not normal situation
+                    XLOG::d("Process [{}] killed",
+                            pid);  // abnormal situation
                 }
             }
 
@@ -282,11 +280,15 @@ private:
                 auto success = GetExitCodeProcess(h, &exit_code);
                 if (success) {
                     if (exit_code == STILL_ACTIVE) {
-                        XLOG::t("Process {} is active", pid);
+#if (0)
+                        // disabled due to high noise
+                        XLOG::t("Process [{}] is active", pid);
+#endif  // endif
                         waiting_processes.push_back(pid);
                     } else {
                         // store exit code
-                        XLOG::d("Process {} has exit code {}", pid, exit_code);
+                        XLOG::t("Process [{}] has exit code [{}]", pid,
+                                exit_code);
                         storeExitCode(pid, exit_code);
                     }
                 } else {
@@ -306,7 +308,7 @@ private:
 
         if (exec_array_.size() > kMaxPluginsToExec) return false;  // !
 
-        auto execute_string = BuildCommand(FileExec);
+        auto execute_string = ConstructCommandToExec(FileExec);
         if (execute_string.empty()) {
             XLOG::l("Can\'t create exe string for the {}", FileExec.u8string());
             return false;
@@ -320,7 +322,7 @@ private:
         using namespace std;
 
         // now check for duplicates:
-        auto stringToSearch = BuildCommand(FileExec);
+        auto stringToSearch = ConstructCommandToExec(FileExec);
         auto found = find_if(
             exec_array_.begin(), exec_array_.end(),
             [stringToSearch](const wstring FromExec) {
@@ -343,7 +345,7 @@ private:
         if (!isExecValid(FileExec)) return false;
         if (!isExecIn(FileExec)) return false;
 
-        auto execute_string = BuildCommand(FileExec);
+        auto execute_string = ConstructCommandToExec(FileExec);
 
         exec_array_.emplace_back(execute_string);
         return true;
@@ -361,7 +363,7 @@ private:
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);
-    FRIEND_TEST(PlayerTest, RealLifeInventory);
+    FRIEND_TEST(PlayerTest, RealLifeInventory_Long);
     FRIEND_TEST(v, StartStop);
 #endif
 };

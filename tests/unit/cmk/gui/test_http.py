@@ -11,12 +11,10 @@ from cmk.gui.globals import html
 
 
 def test_http_request_allowed_vars():
-    environ = dict(
-        create_environ(
-            method="POST",
-            content_type="application/x-www-form-urlencoded",
-            input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa")),
-        REQUEST_URI='')
+    environ = dict(create_environ(method="POST",
+                                  content_type="application/x-www-form-urlencoded",
+                                  input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa")),
+                   REQUEST_URI='')
     req = http.Request(environ)
     assert req.var("asd") == "x"
     assert req.var("_Y21rYWRtaW4=") == "aaa"

@@ -87,7 +87,11 @@ private:
     bool generateOutput(std::string &buffer,
                         const std::optional<std::string> &remoteIP);
 
+protected:
     std::unique_ptr<SectionHeaderBase> _header;
 };
+
+constexpr const char kTabSeparator = '\t';
+constexpr const wchar_t *kWideTabSeparator = L"\t";
 
 #endif  // Section_h

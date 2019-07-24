@@ -89,12 +89,16 @@ public:
         return data_ / dirs::kState;
     }
 
+    inline std::filesystem::path getAuState() const {
+        return data_ / dirs::kAuStateLocation;
+    }
+
     inline std::filesystem::path getPluginConfigPath() const {
         return data_ / dirs::kPluginConfig;
     }
 
-    inline std::filesystem::path getCache() const {
-        return data_ / dirs::kCache;
+    inline std::filesystem::path getBackup() const {
+        return data_ / dirs::kBackup;
     }
 
     inline std::filesystem::path getUpdate() const {
@@ -114,7 +118,7 @@ private:
     // #TODO gtest?
     // #TODO into ConfigInfo
     std::filesystem::path makeDefaultDataFolder(
-        const std::wstring& AgentDataFolder);
+        std::wstring_view AgentDataFolder);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -124,6 +128,9 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, FoldersTest);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
 
@@ -131,6 +138,11 @@ private:
 
 namespace cma::cfg {
 namespace details {
+// low level API to combine sequences
+enum class Combine { overwrite, merge, merge_value };
+constexpr Combine GetCombineMode(std::string_view name);
+void CombineSequence(std::string_view name, YAML::Node target_value,
+                     const YAML::Node source_value, Combine combine);
 
 // critical and invisible global variables
 // YAML config and PAThs are here
@@ -187,6 +199,10 @@ class ConfigInfo {
                     XLOG::l("Cannot load cfg '{}'", path_.u8string());
                     data_.clear();
                 }
+            } catch (const std::exception& e) {
+                XLOG::l.crit("Can't load yaml file '{}', exception: '{}'",
+                             path_.u8string(), e.what());
+                bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
                 bad_ = true;
@@ -274,12 +290,17 @@ public:
 
     auto getCacheDir() const {
         std::lock_guard lk(lock_);
-        return folders_.getCache();
+        return folders_.getBackup();
     }
 
     auto getStateDir() const {
         std::lock_guard lk(lock_);
         return folders_.getState();
+    }
+
+    auto getAuStateDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getAuState();
     }
 
     auto getPluginConfigDir() const {
@@ -342,11 +363,10 @@ public:
     }
 
     // main api call to load all three configs
-    LoadCfgStatus loadAggregated(const std::wstring& ConfigFileName,
-                                 bool SaveOnSuccess, bool RestoreOnFail);
+    LoadCfgStatus loadAggregated(const std::wstring& config_filename,
+                                 YamlCacheOp cache_op);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src,
-                           bool MergeSequences = false);
+    static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& FullPath);
@@ -396,9 +416,15 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
     FRIEND_TEST(StartTest, CheckStatus);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
 extern ConfigInfo G_ConfigInfo;
+
+std::filesystem::path ConvertLocationToLogPath(std::string_view location);
+std::filesystem::path GetDefaultLogPath();
 
 }  // namespace details
 }  // namespace cma::cfg

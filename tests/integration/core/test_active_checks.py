@@ -3,11 +3,9 @@
 # pylint: disable=redefined-outer-name
 
 import collections
-import pytest
+import pytest  # type: ignore
 
 from testlib import web  # pylint: disable=unused-import
-
-import cmk_base.config as config
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
@@ -18,11 +16,10 @@ def test_cfg(request, web, site):
     site.set_config("CORE", config.core, with_restart=True)
 
     print "Applying default config"
-    web.add_host(
-        "test-host", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_agent": "no-agent",
-        })
+    web.add_host("test-host", attributes={
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "no-agent",
+    })
 
     web.activate_changes()
     yield config
@@ -47,10 +44,7 @@ def test_active_check_execution(test_cfg, site, web):
                             'service_description': u'\xc4ctive-Check',
                             'command_line': 'echo "123"'
                         },
-                        "conditions": {
-                            "host_specs": config.ALL_HOSTS,
-                            "host_tags": [],
-                        },
+                        "condition": {},
                         "options": {},
                     },],
                 }
@@ -87,7 +81,7 @@ def test_active_check_macros(test_cfg, site, web):
             sorted([
                 "/wato/", "auto-piggyback", "ip-v4", "ip-v4-only", "lan", "no-agent", "no-snmp",
                 "ping", "prod",
-                "site:%s" % site.id, "wato"
+                "site:%s" % site.id
             ])),
         "$_HOSTADDRESS_4$": "127.0.0.1",
         "$_HOSTADDRESS_6$": "",
@@ -108,10 +102,7 @@ def test_active_check_macros(test_cfg, site, web):
                 'service_description': descr(var),
                 'command_line': 'echo "Output: %s"' % var,
             },
-            "conditions": {
-                "host_specs": config.ALL_HOSTS,
-                "host_tags": [],
-            },
+            "condition": {},
         })
 
     try:

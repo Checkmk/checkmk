@@ -53,5 +53,6 @@ RUN apt-get update \
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b
 RUN mv /usr/bin/gcc /usr/bin/gcc-old \
-    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/gcc \
-    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/cc
+    && mv /usr/bin/cc /usr/bin/cc-old \
+    && ln -s /usr/bin/gcc-8 /usr/bin/gcc \
+    && ln -s /usr/bin/gcc-8 /usr/bin/cc

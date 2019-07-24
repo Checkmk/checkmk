@@ -53,16 +53,15 @@ class RulespecCheckgroupParametersLampOperationTime(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Age(
-                    title=_("Warning at"),
-                    default_value=1000 * 3600,
-                    display=["hours"],
-                ),
-                Age(
-                    title=_("Critical at"),
-                    default_value=1500 * 3600,
-                    display=["hours"],
-                ),
-            ],)
+        return Tuple(elements=[
+            Age(
+                title=_("Warning at"),
+                default_value=1000 * 3600,
+                display=["hours"],
+            ),
+            Age(
+                title=_("Critical at"),
+                default_value=1500 * 3600,
+                display=["hours"],
+            ),
+        ],)

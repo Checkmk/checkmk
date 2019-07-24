@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -41,6 +41,12 @@
 # bpool/acs_fs    available       11329512075414  -
 # bpool/acs_fs    mountpoint      /backup/acs     local
 # bpool/acs_fs    type    filesystem      -
+# DataStorage/ ISO-File 	name	DataStorage/ ISO-File 	-
+# DataStorage/ ISO-File 	quota	0	default
+# DataStorage/ ISO-File 	used	180048	-
+# DataStorage/ ISO-File 	available	3849844262352	-
+# DataStorage/ ISO-File 	mountpoint	/mnt/DataStorage/ ISO-File 	default
+# DataStorage/ ISO-File 	type	filesystem	-
 # [df]
 # /                    10255636 1836517 8419119    18%    /
 # /dev                 10255636 1836517 8419119    18%    /dev
@@ -58,60 +64,80 @@
 # tsrdb10exp/export/opt 5128704  145743 4982717     3%    /opt
 # tsrdb10exp           5128704      21 4982717     1%    /tsrdb10exp
 # tsrdb10dat           30707712 19914358 10789464    65%    /u01
+# DataStorage/ ISO-File      3759613713     176 3759613537     0%    /mnt/DataStorage/ ISO-File
 
 
-def parse_zfs_entry(info):
-    def mb(x):
-        return saveint(x) / (1024.0 * 1024)
-
-    entry = {}
-    for _name, what, value in info:
-        if what in ["used", "available"]:
-            entry[what] = mb(value)
-        elif what == "quota":
-            if value not in ['0', '-']:
-                entry[what] = mb(value)
-        elif what in ['mountpoint', 'type', 'name']:
-            entry[what] = value
-
-    return entry
+def _prep_value(value):
+    """Try to convert string to float in MB"""
+    try:
+        value = float(value) / (1024 * 1024)
+    except ValueError:
+        pass
+    return value
 
 
-def parse_zfsget(info):
-    run_zfs = True
-    run_df = False
-    last_name = None
-    zfs_agent_data = []
-    zfs_converted = []
-    df_parsed = {}
-    for line in info:
-        if line == ['[zfs]']:
-            run_zfs = True
-            run_df = False
-            continue
-        if line == ['[df]']:
-            run_df = True
-            run_zfs = False
-            continue
+def _get_similarity_of_strings(w1, w2):
+    """
+    Compares two strings and outputs a float value of the similarity match
+    1.0 is a perfect match
+    """
+    return sum(i == j for i, j in zip(w1, w2)) / float(max(len(w1), len(w2)))
 
-        if run_zfs:
-            name = line[0]
-            # New block so parse everthing and go on collecting more blocks
-            if last_name != name:
-                last_name = name
-                if zfs_agent_data:
-                    new_entry = parse_zfs_entry(zfs_agent_data)
-                    if new_entry:
-                        zfs_converted.append(new_entry)
-                    zfs_agent_data = []
-            zfs_agent_data.append(line[:3])
 
-        if run_df:
-            if len(line) == 6:
-                device, kbytes, used, avail, _percent, mountpoint = line
+def _parse_zfs(lines):
+    """Go through all zfs lines and collect corresponding lines into a dict entry"""
+    data = {}
+    for line in lines:
+        # last item is always the source element, we do not care about that one
+        joined_line = " ".join(line[:-1])
+        for prop in (" name ", " quota ", " used ", " available ", " mountpoint ", " type "):
+            if prop not in joined_line:
+                continue
+            name, raw_value = joined_line.split(prop)
+            if prop == " quota " and raw_value in ("0", "-"):
+                continue
             else:
-                device, _fs_type, kbytes, used, avail, _percent, mountpoint = line
+                data.setdefault(name, {})[prop.strip()] = _prep_value(raw_value)
+
+    # parsed has the device name as key, because there may exist
+    # several device names per mount point, and we know only
+    # later which one to take
+    parsed = {}
+    for entry in data.itervalues():
+        if entry["mountpoint"].startswith("/"):
+            entry["is_pool"] = "/" not in entry["name"]
+            if entry["available"] != 0 and entry["type"] == "filesystem":
+                parsed[entry["name"]] = entry
+    return parsed
+
+
+def _parse_df(lines, parsed_zfs):
+    parsed = {}
+    for line in lines:
+        line_str = " ".join(line)
+        reg = r"(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\W+(\d+[%])\s+(.*)"
+        match = re.match(reg, line_str)
+        if match:
+            _first, kbytes, used, avail, _percent, mountpoint = match.groups()
+
             if mountpoint.startswith("/"):
+                # here we get the actual device name
+                # the output from 'df' does not give us a useful seperator(whitespace) but it is possible that:
+                # a) the device name contains a whitespace
+                # b) the fs_type is included
+                # hence we can not get the device names easiliy
+                # 'first' contians all elements from the beginning until the first kbytes item
+                # we compare 'first' to zfs mountpoint names and take the device name with the highest similarity
+                matches = []
+                for name in parsed_zfs.keys():
+                    matches.append(_get_similarity_of_strings(name, _first))
+                if matches and max(matches) > 0.5:
+                    device = parsed_zfs.keys()[matches.index(max(matches))]
+                else:
+                    # TODO: fix special case that will fail here if not zfs item exists
+                    # white space in name and fs_type ("/foo", "bar", "zfs")
+                    device = " ".join(_first)
+
                 entry = {}
                 entry["name"] = device
                 entry["mountpoint"] = mountpoint
@@ -130,77 +156,70 @@ def parse_zfsget(info):
                 entry["total"] = total / 1024.0
                 entry["used"] = used / 1024.0
                 entry["available"] = avail / 1024.0
-                df_parsed[mountpoint] = entry
+                parsed[mountpoint] = entry
 
     # Now remove duplicate entries for the root filesystem, such
     # as /dev/ or /lib/libc.so.1. We do this if size, used and
     # avail is equal. I hope that it will not happen too often
     # that this is per chance the case for different passed-through
     # filesystems
-    root_entry = df_parsed.get("/")
+    root_entry = parsed.get("/")
     if root_entry:
         t_u_a = (root_entry["total"], root_entry["used"], root_entry["available"])
         drop = []
-        for mountpoint, entry in df_parsed.items():
+        for mountpoint, entry in parsed.items():
             if mountpoint != "/" and \
                 t_u_a == (entry["total"], entry["used"], entry["available"]):
                 drop.append(mountpoint)
         for mp in drop:
-            del df_parsed[mp]
+            del parsed[mp]
+    return parsed
 
-    # parsed has the device name as key, because there may exist
-    # several device names per mount point, and we know only
-    # later which one to take
-    zfs_parsed = {}
-    for entry in zfs_converted:
-        if entry["mountpoint"].startswith("/"):
-            entry["is_pool"] = '/' not in entry["name"]
-            if entry['available'] != 0 and entry['type'] == 'filesystem':
-                zfs_parsed[entry["name"]] = entry
+
+def parse_zfsget(info):
+    parsed = {}
+
+    # check if a section for df exists and split info into two section lists
+    if ["[df]"] in info:
+        idx = info.index(["[df]"])
+        info_zfs = info[:idx]
+        info_df = info[idx + 1:]
+    else:
+        info_zfs = info
+        info_df = []
+
+    # parse both lists of lines
+    parsed_zfs = _parse_zfs(info_zfs)
+    parsed_df = _parse_df(info_df, parsed_zfs)
 
     # parsed_df and parsed_final have the mount point as key
-    parsed_final = {}
-    for mountpoint, entry_df in df_parsed.items():
-        found = False
+    for mountpoint, entry_df in parsed_df.iteritems():
         # for every mount point in the df section, if the device name
         # is also present in the "parsed" variable, we take those data
-        for name, entry in zfs_parsed.items():
+        for name, entry_zfs in parsed_zfs.items():
             if entry_df["name"] == name:
-                parsed_final[mountpoint] = entry
-                found = True
+                parsed[mountpoint] = entry_zfs
+                break
         # if a mount point in the df section is not present in the
         # parsed variable, we take the data from the df section
-        if not found:
-            parsed_final[mountpoint] = entry_df
+        else:
+            parsed[mountpoint] = entry_df
 
-    return parsed_final
+    return parsed
 
 
-def inventory_zfsget(info):
+def inventory_zfsget(parsed):
     mplist = []
-    parsed = parse_zfsget(info)
     for mountpoint in parsed.iterkeys():
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
     return df_inventory(mplist)
 
 
-# def convert_zfssize(txt):
-#     units_to_mb = {
-#         'K'  : 1/1024.0,
-#         'M'  : 1.0,
-#         'G'  : 1024.0,
-#         'T'  : 1024 * 1024.0,
-#         'P'  : 1024 * 1024 * 1024.0,
-#     }
-#     return float(txt[:-1]) * units_to_mb[txt[-1]]
-
-
-def check_zfsget(item, params, info):
-    entries = parse_zfsget(info)
-    # ist item drin -> OK, ansonsten gleich hier
+def check_zfsget(item, params, parsed):
     fslist = []
-    for mountpoint, entry in entries.items():
+    # contains item? -> ok, else gets added here
+    for mountpoint, entry in parsed.items():
         if "patterns" in params or item == mountpoint:
             # 1. Filesystems with a quota
             if "quota" in entry:
@@ -217,7 +236,8 @@ def check_zfsget(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
-check_info['zfsget'] = {
+check_info["zfsget"] = {
+    "parse_function": parse_zfsget,
     "check_function": check_zfsget,
     "inventory_function": inventory_zfsget,
     "service_description": "Filesystem %s",

@@ -88,9 +88,9 @@ def check_sap_dialog(item, params, info):
                 state = 2
             elif value[0] >= warn:
                 state = 1
-        yield state, "%s: %d%s" % (key, value[0],
-                                   (value[1] != '-' and value[1] or '')), [(perf_clean_key(key),
-                                                                            value[0])]
+        yield state, "%s: %d%s" % (key, value[0], (value[1] != '-' and value[1] or '')), [
+            (perf_clean_key(key), value[0])
+        ]
 
 
 check_info['sap.dialog'] = {

@@ -27,6 +27,7 @@ static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
 class AsyncAnswer {
 public:
     using DataBlock = std::vector<uint8_t>;
+    enum class Order { random, plugins_last };
     AsyncAnswer()
         : timeout_(5), awaiting_segments_(0), tp_id_(GenerateAnswerId()) {}
 
@@ -37,8 +38,7 @@ public:
     //
     bool isAnswerInUse() const {
         std::lock_guard lk(lock_);
-        return external_ip_ != "" || segments_.size() || awaiting_segments_ ||
-               received_segments_;
+        return isAnswerInUseNoLock();
     }
 
     void dropAnswer();  // owner does it, reset all to initial state
@@ -59,8 +59,7 @@ public:
     // #TODO gtest
     auto getAllClear() {}
 
-    // #TODO gtest
-    bool prepareAnswer(std::string Ip);
+    bool prepareAnswer(std::string_view Ip) noexcept;
 
     // Reporting Function, which called by the sections
     // #TODO gtest
@@ -94,6 +93,11 @@ public:
     }
 
 private:
+    bool isAnswerInUseNoLock() const {
+        return !external_ip_.empty() || !segments_.empty() ||
+               awaiting_segments_ != 0 || received_segments_ != 0;
+    }
+
     struct SegmentInfo {
         std::string name_;
         size_t length_;
@@ -118,6 +122,15 @@ private:
 
     // awaiting_sections_ used for predicate
     std::condition_variable cv_ready_;
+
+    DataBlock plugins_;
+    DataBlock local_;
+
+    const Order order_ = Order::plugins_last;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class AsyncAnswerTest;
+    FRIEND_TEST(AsyncAnswerTest, Base);
+#endif
 };
 }  // namespace cma::srv
 

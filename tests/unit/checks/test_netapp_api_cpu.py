@@ -83,16 +83,17 @@ def test_parse_function(check_manager, info, result_parsed):
         {
             'levels': (80.0, 90.0)
         },
-        (0, 'Total CPU: 13.3%, 2 CPUs', [('util', 13.333333333333334, 80.0, 90.0, 0, 2)]),
-        (0, 'Total CPU: 0.833%, 2 CPUs', [('util', 0.8333333333333334, 80.0, 90.0, 0, 2)]),
+        (0, 'Total CPU: 13.33%, 2 CPUs', [('util', 13.333333333333334, 80.0, 90.0, 0, 2)]),
+        (0, 'Total CPU: 0.83%, 2 CPUs', [('util', 0.8333333333333334, 80.0, 90.0, 0, 2)]),
     ),
     (
         {
             'levels': (10.0, 90.0)
         },
-        (1, 'Total CPU: 13.3% (warn/crit at 10.0%/90.0%), 2 CPUs', [('util', 13.333333333333334,
-                                                                     10.0, 90.0, 0, 2)]),
-        (0, 'Total CPU: 0.833%, 2 CPUs', [('util', 0.8333333333333334, 10.0, 90.0, 0, 2)]),
+        (1, 'Total CPU: 13.33% (warn/crit at 10.0%/90.0%), 2 CPUs', [
+            ('util', 13.333333333333334, 10.0, 90.0, 0, 2)
+        ]),
+        (0, 'Total CPU: 0.83%, 2 CPUs', [('util', 0.8333333333333334, 10.0, 90.0, 0, 2)]),
     ),
     (
         {
@@ -101,9 +102,9 @@ def test_parse_function(check_manager, info, result_parsed):
         },
         (0, '2min average: 0%, 2 CPUs', [('util', 13.333333333333334, 80.0, 90.0, 0, 2),
                                          ('util_average', 0, 80.0, 90.0, 0, 100)]),
-        (0, '2min average: 0.417%, 2 CPUs', [('util', 0.8333333333333334, 80.0, 90.0, 0, 2),
-                                             ('util_average', 0.4166666666666666, 80.0, 90.0, 0,
-                                              100)]),
+        (0, '2min average: 0.42%, 2 CPUs', [('util', 0.8333333333333334, 80.0, 90.0, 0, 2),
+                                            ('util_average', 0.4166666666666666, 80.0, 90.0, 0, 100)
+                                           ]),
     ),
 ])
 def test_cluster_mode_check_function(check_manager, monkeypatch, params, first_result_change,

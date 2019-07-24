@@ -37,7 +37,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class FailedNotificationsDashlet(Dashlet):
     """Dashlet notifying users in case of failure to send notifications"""
-
     @classmethod
     def type_name(cls):
         return "notify_failed_notifications"
@@ -84,8 +83,8 @@ class FailedNotificationsDashlet(Dashlet):
 }"""
 
     def show(self):
-        notdata = notifications.load_failed_notifications(
-            after=notifications.acknowledged_time(), stat_only=True)
+        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
+                                                          stat_only=True)
 
         if notdata is None:
             failed_notifications = 0
@@ -99,8 +98,10 @@ class FailedNotificationsDashlet(Dashlet):
         html.open_div(class_="failed_notifications_inner")
 
         confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
-        html.icon_button(
-            confirm_url, _("Clear failed notifications"), "closetimewarp", target="main")
+        html.icon_button(confirm_url,
+                         _("Clear failed notifications"),
+                         "closetimewarp",
+                         target="main")
 
         view_url = html.makeuri_contextless([("view_name", "failed_notifications")],
                                             filename="view.py")

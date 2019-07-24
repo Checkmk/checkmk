@@ -31,7 +31,7 @@ RUN apt-get update \
     && python get-pip.py \
     && rm get-pip.py \
     && pip install --upgrade setuptools \
-    && pip install git+https://github.com/pypa/pipenv.git \
+    && pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a \
     && curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add - \
     && VERSION=node_11.x; DISTRO=jessie; echo "deb https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list \
     && VERSION=node_11.x; DISTRO=jessie; echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list \

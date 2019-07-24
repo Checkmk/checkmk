@@ -97,7 +97,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             for line in content:
                 try:
                     pprint.pprint(json.loads(line))
-                except:
+                except Exception:
                     print line
         else:
             return content
@@ -148,7 +148,7 @@ class DataCache(object):
         try:
             return self._cache_file.stat().st_mtime
         except OSError as exc:
-            if exc.errno == 2:
+            if exc.errno == errno.ENOENT:
                 logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
                 return None
             logging.info("Cannot calculate cache file age: %s", exc)

@@ -58,16 +58,15 @@ class RulespecCheckgroupParametersCiscoFwConnections(CheckParameterRulespecWitho
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("connections",
-                 Tuple(
-                     help=_("This rule sets limits to the current number of connections through "
-                            "a Cisco ASA firewall."),
-                     title=_("Maximum number of firewall connections"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("connections",
+             Tuple(
+                 help=_("This rule sets limits to the current number of connections through "
+                        "a Cisco ASA firewall."),
+                 title=_("Maximum number of firewall connections"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+        ],)

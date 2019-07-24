@@ -31,7 +31,11 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
+    RegExpUnicode,
+    RegExp,
     TextAscii,
+    Tuple,
+    Integer,
 )
 
 from cmk.gui.plugins.wato import (
@@ -66,12 +70,11 @@ class RulespecDiscoverySystemdUnitsServicesRules(HostRulespec):
                 ('names', ListOfStrings(title=_("Service unit names"))),
                 ('states',
                  ListOf(
-                     DropdownChoice(
-                         choices=[
-                             ("active", "active"),
-                             ("inactive", "inactive"),
-                             ("failed", "failed"),
-                         ],),
+                     DropdownChoice(choices=[
+                         ("active", "active"),
+                         ("inactive", "inactive"),
+                         ("failed", "failed"),
+                     ],),
                      title=_("States"),
                  )),
             ],
@@ -102,28 +105,53 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("states",
-                 Dictionary(
-                     elements=[
-                         ("active",
-                          MonitoringState(
-                              title=_("Monitoring state if service is active"),
-                              default_value=0,
-                          )),
-                     ],)),
-                ("states_default",
-                 MonitoringState(
-                     title=_("Monitoring state for any other service state"),
-                     default_value=2,
-                 )),
-                ("else",
-                 MonitoringState(
-                     title=_("Monitoring state if a monitored service is not found at all."),
-                     default_value=2,
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("ignored",
+             ListOf(
+                 RegExpUnicode(
+                     title=_("Pattern (Regex)"),
+                     size=40,
+                     mode=RegExp.infix,
+                 ),
+                 title=_("Exclude services matching provided regex patterns"),
+                 help=_(
+                     '<p>You can optionally define one or multiple regular expressions '
+                     'where a matching case will result in the exclusion of the concerning service(s). '
+                     'This allows to ignore services which are known to fail beforehand. </p>'),
+                 add_label=_("Add pattern"),
+             )),
+            ("states",
+             Dictionary(
+                 title=_("Map systemd states to monitoring states"),
+                 elements=[
+                     ("active",
+                      MonitoringState(
+                          title=_("Monitoring state if service is active"),
+                          default_value=0,
+                      )),
+                 ],
+             )),
+            ("states_default",
+             MonitoringState(
+                 title=_("Monitoring state for any other service state"),
+                 default_value=2,
+             )),
+            ("else",
+             MonitoringState(
+                 title=_("Monitoring state if a monitored service is not found at all."),
+                 default_value=2,
+             )),
+            ("activating_levels",
+             Tuple(
+                 title=_("Define a tolerating time period for activating services"),
+                 help=
+                 _("Choose time levels (in seconds) for which a service is allowed to be in an 'activating' state"
+                  ),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("seconds"), default_value=30),
+                     Integer(title=_("Critical at"), unit=_("seconds"), default_value=60),
+                 ])),
+        ],)
 
     @property
     def item_spec(self):

@@ -1,0 +1,12 @@
+diff -Nur dest/jira-2.0.0.orig/setup.py dest/jira-2.0.0/setup.py
+--- dest/jira-2.0.0.orig/setup.py	2018-07-12 19:43:12.000000000 +0200
++++ dest/jira-2.0.0/setup.py	2019-06-19 22:37:21.710525256 +0200
+@@ -9,7 +9,4 @@
+ except ImportError:
+     pass
+ 
+-
+-setuptools.setup(
+-    setup_requires=['pbr>=3.0.0', 'setuptools>=17.1', 'pytest-runner', 'sphinx>=1.6.5'],
+-    pbr=True)
++setuptools.setup(setup_requires=['pbr>=3.0.0', 'setuptools>=17.1'], pbr=True)

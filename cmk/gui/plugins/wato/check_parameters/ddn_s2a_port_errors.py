@@ -59,81 +59,80 @@ class RulespecCheckgroupParametersDdnS2APortErrors(CheckParameterRulespecWithIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("link_failure_errs",
-                 Tuple(
-                     title=_(u"Link failure errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("lost_sync_errs",
-                 Tuple(
-                     title=_(u"Lost synchronization errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("loss_of_signal_errs",
-                 Tuple(
-                     title=_(u"Loss of signal errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("prim_seq_errs",
-                 Tuple(
-                     title=_(u"PrimSeq erros"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("crc_errs",
-                 Tuple(
-                     title=_(u"CRC errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("receive_errs",
-                 Tuple(
-                     title=_(u"Receive errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("ctio_timeouts",
-                 Tuple(
-                     title=_(u"CTIO timeouts"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("ctio_xmit_errs",
-                 Tuple(
-                     title=_(u"CTIO transmission errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-                ("ctio_other_errs",
-                 Tuple(
-                     title=_(u"other CTIO errors"),
-                     elements=[
-                         Integer(title=_(u"Warning at")),
-                         Integer(title=_(u"Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("link_failure_errs",
+             Tuple(
+                 title=_(u"Link failure errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("lost_sync_errs",
+             Tuple(
+                 title=_(u"Lost synchronization errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("loss_of_signal_errs",
+             Tuple(
+                 title=_(u"Loss of signal errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("prim_seq_errs",
+             Tuple(
+                 title=_(u"PrimSeq erros"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("crc_errs",
+             Tuple(
+                 title=_(u"CRC errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("receive_errs",
+             Tuple(
+                 title=_(u"Receive errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("ctio_timeouts",
+             Tuple(
+                 title=_(u"CTIO timeouts"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("ctio_xmit_errs",
+             Tuple(
+                 title=_(u"CTIO transmission errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+            ("ctio_other_errs",
+             Tuple(
+                 title=_(u"other CTIO errors"),
+                 elements=[
+                     Integer(title=_(u"Warning at")),
+                     Integer(title=_(u"Critical at")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

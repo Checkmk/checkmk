@@ -67,12 +67,12 @@ class RulespecCheckgroupParametersEsxVsphereObjectsCount(CheckParameterRulespecW
                  ListOf(
                      Dictionary(
                          optional_keys=False,
-                         elements=[("vm_names", ListOfStrings(title=_("VMs"))),
-                                   ("hosts_count",
-                                    Integer(title=_("Number of hosts"), default_value=2)),
-                                   ("state",
-                                    MonitoringState(title=_("State if violated"),
-                                                    default_value=1))],
+                         elements=[
+                             ("vm_names", ListOfStrings(title=_("VMs"))),
+                             ("hosts_count", Integer(title=_("Number of hosts"), default_value=2)),
+                             ("state", MonitoringState(title=_("State if violated"),
+                                                       default_value=1))
+                         ],
                      ),
                      title=_("VM distribution"),
                      help=_(

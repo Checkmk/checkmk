@@ -37,7 +37,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class StaticTextDashlet(Dashlet):
     """Dashlet that displays a static text"""
-
     @classmethod
     def type_name(cls):
         return "nodata"

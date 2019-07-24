@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1524062928
 
 The tabula rasa discovery could assign incorrect default parameters to the discovered service.

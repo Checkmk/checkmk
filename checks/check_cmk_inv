@@ -29,13 +29,17 @@ def check_cmk_inv(params):
     if params is None:
         params = {}  # convert from legacy rule syntax
 
-    return "--inv-fail-status=%d --hw-changes=%d --sw-changes=%d --sw-missing=%d" % (params.get(
-        "fail_status", 1), params.get("hw_changes", 0), params.get("sw_changes",
-                                                                   0), params.get("sw_missing", 0))
+    args = []
+    args += ["--inv-fail-status=%d" % params.get("fail_status", 1)]
+    args += ["--hw-changes=%d" % params.get("hw_changes", 0)]
+    args += ["--sw-changes=%d" % params.get("sw_changes", 0)]
+    args += ["--sw-missing=%d" % params.get("sw_missing", 0)]
+
+    return args
 
 
-active_check_info['cmk_inv'] = {
-    "command_line": 'cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$',
+active_check_info["cmk_inv"] = {
+    "command_line": "cmk $ARG1$ --cache --inventory-as-check $HOSTNAME$",
     "argument_function": check_cmk_inv,
     "service_description": lambda x: "Check_MK HW/SW Inventory",
 }

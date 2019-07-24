@@ -17,6 +17,7 @@
 namespace cma::cfg {
 
 Global::Global() {
+    XLOG::l.t("Global init");
     setDefaults();
     calcDerivatives();
     setupEnvironment();
@@ -77,13 +78,16 @@ void Global::loadFromMainConfig() {
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
 
-        public_log_ = GetVal(logging, vars::kLogPublic, true);
+        auto yml_log_location =
+            GetVal(logging, vars::kLogLocation, std::string());
+        yaml_log_path_ =
+            cma::cfg::details::ConvertLocationToLogPath(yml_log_location);
 
         std::string default_debug = tgt::IsDebug() ? "yes" : "no";
         auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
-        if (debug_level == "" || debug_level == "no")
+        if (debug_level.empty() || debug_level == "no")
             debug_level_ = LogLevel::kLogBase;
-        else if (debug_level == "yes")
+        else if (debug_level == "yes" || debug_level == "true")
             debug_level_ = LogLevel::kLogDebug;
         else if (debug_level == "all")
             debug_level_ = LogLevel::kLogAll;
@@ -126,24 +130,41 @@ void Global::setDefaults() {
     realtime_sections_ = {};
 
     // log
-    public_log_ = true;
     debug_level_ = tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
     windbg_ = true;
     event_log_ = true;
     log_file_name_ = kDefaultLogFileName;
 }
 
+void Global::updateLogNames(std::filesystem::path log_path) {
+    if (log_path.empty()) XLOG::d.i("log_path is empty");
+
+    logfile_dir_ = log_path;
+
+    logfile_dir_ =
+        cma::cfg::details::ConvertLocationToLogPath(logfile_dir_.u8string());
+
+    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
+
+    logfile_ = logfile_dir_ / log_file_name_;
+    logfile_as_string_ = logfile_.u8string();
+    logfile_as_wide_ = logfile_.wstring();
+}
+
+// may be called only during start
+void Global::updateLogNamesByDefault() {
+    //
+    updateLogNames({});
+}
 // optimization
 void Global::calcDerivatives() {
+#if 0
     auto rfid = public_log_ ? cma::cfg::kPublicFolderId : kWindowsFolderId;
     const auto dir = cma::tools::win::GetSomeSystemFolder(rfid);
     logfile_dir_ = dir;
     if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
-
-    if (log_file_name_ == "") log_file_name_ = kDefaultLogFileName;
-    logfile_ = logfile_dir_ / log_file_name_;
-    logfile_as_string_ = logfile_.u8string();
-    logfile_as_wide_ = logfile_.wstring();
+#endif
+    updateLogNames(yaml_log_path_);
 }
 
 // transfer global data into app environment
@@ -196,36 +217,8 @@ void WinPerf::loadFromMainConfig() {
     }
 }
 
-bool ReplaceInString(std::string& InOut, const std::string Marker,
-                     const std::string Replace) {
-    auto pos = InOut.find(Marker);
-    if (pos != std::string::npos) {
-        InOut.replace(pos, Marker.length(), Replace);
-        return true;
-    }
-    return false;
-}
-
-std::string ReplacePredefinedMarkers(const std::string Path) {
-    auto f = Path;
-    const std::pair<const std::string, const std::wstring> pairs[] = {
-        {vars::kPluginCoreFolder, GetSystemPluginsDir()},
-        {vars::kPluginUserFolder, GetUserPluginsDir()},
-        {vars::kLocalUserFolder, GetLocalDir()},
-        {vars::kProgramDataFolder, GetUserDir()}
-
-    };
-
-    for (const auto& p : pairs) {
-        if (ReplaceInString(f, p.first, wtools::ConvertToUTF8(p.second)))
-            return f;
-    }
-
-    return f;
-}
-
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node>& Yaml) {
+                          const std::vector<YAML::Node>& Yaml) noexcept {
     for (const auto& entry : Yaml) {
         try {
             // --exception control start --
@@ -236,11 +229,18 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
             auto retry = entry[vars::kPluginRetry].as<int>(0);
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
-            auto cache_age =
-                entry[vars::kPluginCacheAge].as<int>(async ? 3600 : 0);
+            auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
+            if (cache_age && !async) {
+                XLOG::d.t(
+                    "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
+                    pattern, cache_age);
+                async = true;
+            }
 
-            ExeUnit.emplace_back(pattern, async, timeout, cache_age, retry,
-                                 run);
+            if (async)
+                ExeUnit.emplace_back(pattern, timeout, cache_age, retry, run);
+            else
+                ExeUnit.emplace_back(pattern, timeout, retry, run);
             // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -259,7 +259,7 @@ void Plugins::loadFromMainConfig(const std::string& GroupName) {
     reset();
     units_.resize(0);
 
-    local_ = GroupName == groups::kLocalGroup;
+    local_ = GroupName == groups::kLocal;
 
     // attempt to load all
     try {
@@ -356,7 +356,8 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         return cli;
     }
 
-    if (cli.cmd_line_.back() == L' ') cli.cmd_line_.pop_back();
+    if (!cli.cmd_line_.empty() && cli.cmd_line_.back() == L' ')
+        cli.cmd_line_.pop_back();
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
               wtools::ConvertToUTF8(cli.cmd_line_));

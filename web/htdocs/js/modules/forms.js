@@ -41,7 +41,7 @@ function enable_select2_dropdowns(container) {
     if (!container)
         container = $(document);
 
-    elements = $(container).find(".select2-enable").not("tbody.vlof_prototype .select2-enable");
+    elements = $(container).find(".select2-enable").not(".vlof_prototype .select2-enable");
     elements.select2({
         dropdownAutoWidth : true,
         minimumResultsForSearch: 5
@@ -55,7 +55,7 @@ function enable_label_input_fields(container) {
     let elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
         // Do not tagify objects that are part of a ListOf valuespec template
-        if (element.closest("tbody.vlof_prototype") !== null) {
+        if (element.closest(".vlof_prototype") !== null) {
             return;
         }
 
@@ -66,8 +66,24 @@ function enable_label_input_fields(container) {
 
         let world = element.getAttribute("data-world");
 
+        tagify.on("invalid", function() {
+            $("div.label_error").remove(); // Remove all previous errors
+
+            // Print a validation error message
+            var msg = document.createElement("div");
+            msg.classList.add("message", "error", "label_error");
+            msg.innerHTML = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+            element.parentNode.insertBefore(msg, element.nextSibling);
+        });
+
+        tagify.on("add", function() {
+            $("div.label_error").remove(); // Remove all previous errors
+        });
+
         // Realize the auto completion dropdown field by using an ajax call
         tagify.on("input", function(e) {
+            $("div.label_error").remove(); // Remove all previous errors
+
             var value = e.detail;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 

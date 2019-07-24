@@ -1,0 +1,10 @@
+Title: lnx_thermal: Skip sensors which do not contain valid temperature values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558362500
+Class: fix
+
+

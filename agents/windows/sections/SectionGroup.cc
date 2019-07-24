@@ -26,26 +26,27 @@
 #include "Logger.h"
 #include "SectionHeader.h"
 
-namespace {
+namespace section_group {
+constexpr const char kSeparator = kTabSeparator;
 
 std::unique_ptr<SectionHeaderBase> makeHeader(bool show_header,
                                               const std::string &outputName,
                                               Logger *logger) {
     if (show_header)
-        return std::make_unique<SectionHeader<',', SectionBrackets>>(outputName,
-                                                                     logger);
+        return std::make_unique<SectionHeader<kSeparator, SectionBrackets>>(
+            outputName, logger);
     else
         return std::make_unique<HiddenHeader>(logger);
 }
 
-}  // namespace
+}  // namespace section_group
 
 SectionGroup::SectionGroup(const std::string &outputName,
                            const std::string &configName,
                            const Environment &env, Logger *logger,
                            const WinApiInterface &winapi, bool show_header)
     : Section(configName, env, logger, winapi,
-              makeHeader(show_header, outputName, logger)) {}
+              section_group::makeHeader(show_header, outputName, logger)) {}
 
 SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));

@@ -368,11 +368,10 @@ class SiteManagement(object):
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
-        cmk.gui.watolib.changes.add_change(
-            "edit-sites",
-            _("Deleted site %s") % html.render_tt(site_id),
-            domains=domains,
-            sites=[default_site()])
+        cmk.gui.watolib.changes.add_change("edit-sites",
+                                           _("Deleted site %s") % html.render_tt(site_id),
+                                           domains=domains,
+                                           sites=[default_site()])
         return None
 
     @classmethod
@@ -469,23 +468,21 @@ class CEESiteManagement(SiteManagement):
                  default_value=defaults["channels"],
              )),
             ("heartbeat",
-             Tuple(
-                 title=_("Regular heartbeat"),
-                 orientation="float",
-                 elements=[
-                     Integer(
-                         label=_("One heartbeat every"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=defaults["heartbeat"][0],
-                     ),
-                     Float(
-                         label=_("with a timeout of"),
-                         unit=_("sec"),
-                         minvalue=0.1,
-                         default_value=defaults["heartbeat"][1],
-                         display_format="%.1f"),
-                 ])),
+             Tuple(title=_("Regular heartbeat"),
+                   orientation="float",
+                   elements=[
+                       Integer(
+                           label=_("One heartbeat every"),
+                           unit=_("sec"),
+                           minvalue=1,
+                           default_value=defaults["heartbeat"][0],
+                       ),
+                       Float(label=_("with a timeout of"),
+                             unit=_("sec"),
+                             minvalue=0.1,
+                             default_value=defaults["heartbeat"][1],
+                             display_format="%.1f"),
+                   ])),
             ("channel_timeout",
              Float(
                  title=_("Timeout waiting for a free channel"),
@@ -695,6 +692,7 @@ class AutomationPushSnapshot(AutomationCommand):
     def get_request(self):
         # type: () -> PushSnapshotRequest
         site_id = html.request.var("siteid")
+
         self._verify_slave_site_config(site_id)
 
         snapshot = html.request.uploaded_file("snapshot")
@@ -705,29 +703,31 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def execute(self, request):
         # type: (PushSnapshotRequest) -> bool
-        multitar.extract_from_buffer(request.tar_content,
-                                     cmk.gui.watolib.activate_changes.get_replication_paths())
+        with store.lock_checkmk_configuration():
+            multitar.extract_from_buffer(request.tar_content,
+                                         cmk.gui.watolib.activate_changes.get_replication_paths())
 
-        try:
-            self._save_site_globals_on_slave_site(request.tar_content)
+            try:
+                self._save_site_globals_on_slave_site(request.tar_content)
 
-            cmk.gui.watolib.activate_changes.confirm_all_local_changes()  # pending changes are lost
+                # pending changes are lost
+                cmk.gui.watolib.activate_changes.confirm_all_local_changes()
 
-            hooks.call("snapshot-pushed")
+                hooks.call("snapshot-pushed")
 
-            # Create rule making this site only monitor our hosts
-            create_distributed_wato_file(request.site_id, is_slave=True)
-        except Exception:
-            raise MKGeneralException(
-                _("Failed to deploy configuration: \"%s\". "
-                  "Please note that the site configuration has been synchronized "
-                  "partially.") % traceback.format_exc())
+                # Create rule making this site only monitor our hosts
+                create_distributed_wato_file(request.site_id, is_slave=True)
+            except Exception:
+                raise MKGeneralException(
+                    _("Failed to deploy configuration: \"%s\". "
+                      "Please note that the site configuration has been synchronized "
+                      "partially.") % traceback.format_exc())
 
-        cmk.gui.watolib.changes.log_audit(
-            None, "replication",
-            _("Synchronized with master (my site id is %s.)") % request.site_id)
+            cmk.gui.watolib.changes.log_audit(
+                None, "replication",
+                _("Synchronized with master (my site id is %s.)") % request.site_id)
 
-        return True
+            return True
 
     def _save_site_globals_on_slave_site(self, tarcontent):
         tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)

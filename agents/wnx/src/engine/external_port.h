@@ -5,17 +5,14 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
-
-#include "tools/_xlog.h"
-
-#include "logger.h"
+#include <queue>
 
 #include "asio.h"
-
-#include "common/cfg_info.h"
-
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "encryption.h"
+#include "logger.h"
+#include "tools/_xlog.h"
 
 namespace cma::world {
 using ReplyFunc =
@@ -38,70 +35,61 @@ inline std::vector<uint8_t> generateData() {
 }  // namespace test
 
 namespace cma::world {
+
 // below is working example from asio
-// verified and working
-// try not damage it
+// DOUBLE verified
 
 // implements asio logic for the low level TCP transport:
 // read and write
+// NOT THREAD SAFE
 class AsioSession : public std::enable_shared_from_this<AsioSession> {
 public:
-    AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {
-        /*
-                auto h = socket_.native_handle();
-                auto cleared_socket = RemoveSocketInheritance(h);
-                socket_.native_handle() = cleared_socket;
-        */
-    }
+    // we are good guys. Use AsioSession::s_ptr instead of millions brackets
+    using s_ptr = std::shared_ptr<AsioSession>;
+
+    AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
 
     void start(cma::world::ReplyFunc Reply) {
-        if (mode_one_shot_) {
-            // typical functionality of current agent
-            // accept connection, get data, write data, close connection
-            std::vector<unsigned char> send_back;
+        // typical functionality of current agent
+        // accept connection, get data, write data, close connection
+        auto send_back = Reply(getCurrentRemoteIp());
 
-            // #TODO move to gtest
-            constexpr bool internal_test = false;
-            if (internal_test) {
-                send_back = test::generateData();
-                const bool simulate_delay = true;
-                if (simulate_delay) {
-                    using namespace std::chrono;
-                    std::this_thread::sleep_until(steady_clock::now() +
-                                                  15000ms);
-                }
-            } else {
-                send_back = Reply(getCurrentRemoteIp());
-                // send_back = test::generateData();
-            }
+        if (send_back.empty()) return;
 
-            if (send_back.size()) {
-                auto crypt = cma::encrypt::MakeCrypt();
-                do_write(send_back.data(), send_back.size(), crypt.get());
-                XLOG::l.i("Send {} bytes of data", send_back.size());
+        auto crypt = cma::encrypt::MakeCrypt();
+        do_write(send_back.data(), send_back.size(), crypt.get());
+        XLOG::l.i("Send [{}] bytes of data", send_back.size());
 
-                if (tgt::IsDebug()) {
-                    std::string s(send_back.begin(), send_back.end());
-                    auto t = cma::tools::SplitString(s, std::string("\n"));
-                    XLOG::t.i("Send {} last string is {}", send_back.size(),
-                              t.back());
-                }
-            }
-        } else {
-            // continuous working, for the future
-            do_read();
-        }
+        logWhenDebugging(send_back);
     }
 
+    const asio::ip::tcp::socket& currentSocket() const { return socket_; }
+
 private:
+    // not g-tested
+    // prints last line of the output in the log
+    // to see how correct was an answer
+    void logWhenDebugging(const cma::ByteVector& send_back) const noexcept {
+        if (!tgt::IsDebug()) return;
+
+        std::string s(send_back.begin(), send_back.end());
+        auto t = cma::tools::SplitString(s, "\n");
+        XLOG::t.i("Send {} last string is {}", send_back.size(), t.back());
+    }
+
     std::string getCurrentRemoteIp() const noexcept {
-        std::string ip = "";
         try {
-            ip = socket_.remote_endpoint().address().to_string();
+            std::error_code ec;
+            auto remote_ep = socket_.remote_endpoint(ec);
+            if (ec.value() == 0) return remote_ep.address().to_string();
+
+            XLOG::d(
+                "No remote endpoint, error = [{}], may happen only in <GTEST>",
+                ec.value());
         } catch (const std::exception& e) {
             XLOG::l.bp("Unexpected exception hits '{}'", e.what());
         }
-        return ip;
+        return {};
     }
     void do_read();
     size_t allocCryptBuffer(const cma::encrypt::Commander* Crypt) noexcept;
@@ -111,7 +99,6 @@ private:
     asio::ip::tcp::socket socket_;
     enum { kMaxLength = 1024 };
     char data_[kMaxLength];
-    const bool mode_one_shot_ = cma::cfg::IsOneShotMode();
     const size_t segment_size_ = 48 * 1024;
     std::unique_ptr<char> crypt_buf_;
 };
@@ -127,6 +114,30 @@ private:
 // This ASIO Based
 // =====================================================
 namespace cma::world {
+class ExternalPort;  // forward
+
+// store incoming session into the queue
+using SinkFunc = std::function<bool(AsioSession::s_ptr, ExternalPort*)>;
+
+inline std::pair<std::string, bool> GetSocketInfo(
+    const asio::ip::tcp::socket& sock) noexcept {
+    std::error_code ec;
+    auto remote_ep = sock.remote_endpoint(ec);
+    if (ec.value() != 0) {
+        XLOG::l("Error on socket [{}] with '{}'", ec.value(), ec.message());
+        return {};  // empty socket
+    }
+    try {
+        auto addr = remote_ep.address();
+        auto ip = addr.to_string();
+        bool ipv6 = addr.is_v6();
+        return {ip, ipv6};
+    } catch (const std::exception& e) {
+        XLOG::d("Something goes wrong with socket '{}'", e.what());
+    }
+    return {};
+}
+
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
@@ -134,7 +145,8 @@ public:
         : default_port_(Port)
         , shutdown_thread_(false)
         , io_started_(false)
-        , owner_(Owner) {}
+        , owner_(Owner)
+        , wake_delay_(std::chrono::milliseconds(500)) {}
 
     virtual ~ExternalPort() {}
 
@@ -151,15 +163,20 @@ public:
 
     // Supplementary API
     void reloadConfig() {}
-    bool isIoStarted() const { return io_started_; }
+    bool isIoStarted() const noexcept { return io_started_; }
 
-    auto defaultPort() const { return default_port_; }
+    uint16_t defaultPort() const noexcept { return default_port_; }
+
+    void putOnQueue(AsioSession::s_ptr asio_session);
+
+    const size_t kMaxSessionQueueLength = 16;
 
 private:
     wtools::BaseServiceProcessor* owner_ = nullptr;
     // Internal class from  ASIO documentation
     class server {
     public:
+        // this server is not used anymore, left as reference
         server(asio::io_context& io_context, bool Ipv6, short port,
                cma::world::ReplyFunc Reply)
             : acceptor_(
@@ -181,8 +198,61 @@ private:
             do_accept(Reply);
         }
 
-    private:
+        server(asio::io_context& io_context, bool Ipv6, short port)
+            : acceptor_(
+                  io_context,
+                  asio::ip::tcp::endpoint(
+                      Ipv6 ? asio::ip::tcp::v6() : asio::ip::tcp::v4(), port))
+            , socket_(io_context) {}
+
         // this is the only entry point
+        // based on the code example from asio
+        void run_accept(cma::world::SinkFunc sink, ExternalPort* Port) {
+            XLOG::t.i("Accepting connection");
+            acceptor_.async_accept(socket_, [this, sink,
+                                             Port](std::error_code ec) {
+                if (ec.value()) {
+                    XLOG::l("Error on connection [{}] '{}'", ec.value(),
+                            ec.message());
+                } else {
+                    try {
+                        auto [ip, ipv6] = GetSocketInfo(socket_);
+                        XLOG::d.i("Connected from '{}' ipv6 :{} -> queue", ip,
+                                  ipv6);
+
+                        auto x =
+                            std::make_shared<AsioSession>(std::move(socket_));
+
+                        // only_from checking
+                        // we are doing this always
+                        if (cma::cfg::groups::global.isIpAddressAllowed(ip))
+                            sink(x, Port);
+                        else {
+                            XLOG::d("Address '{}' is not allowed", ip);
+                        }
+
+                    } catch (const std::system_error& e) {
+                        if (e.code().value() == WSAECONNRESET)
+                            XLOG::l.i(XLOG_FLINE + " Client closed connection");
+                        else
+                            XLOG::l(
+                                XLOG_FLINE +
+                                    " Thrown unexpected exception '{}' with value {}",
+                                e.what(), e.code().value());
+                    } catch (const std::exception& e) {
+                        XLOG::l(
+                            XLOG_FLINE + " Thrown unexpected exception '{}'",
+                            e.what());
+                    }
+                }
+
+                // inside we have async call, this is not recursion
+                run_accept(sink, Port);
+            });
+        }
+
+    private:
+        // this is obsolete entry point for obsolete server
         void do_accept(cma::world::ReplyFunc Reply) {
             acceptor_.async_accept(socket_, [this, Reply](std::error_code ec) {
                 if (ec.value()) {
@@ -203,11 +273,10 @@ private:
                         // we are doping it always
                         if (!cma::cfg::groups::global.isIpAddressAllowed(ip)) {
                             XLOG::d.i("Address '{}' is not allowed", ip);
-                            return;
+                        } else {
+                            // #TODO blocking call here. This is not a good idea
+                            x->start(Reply);
                         }
-
-                        // #TODO blocking call here. This is not a good idea
-                        x->start(Reply);
                     } catch (const std::system_error& e) {
                         if (e.code().value() == WSAECONNRESET)
                             XLOG::l.i(XLOG_FLINE + " Client closed connection");
@@ -239,6 +308,18 @@ private:
     };
 
 protected:
+    // asio sessions API
+    std::shared_ptr<AsioSession> getSession();
+    void processQueue(cma::world::ReplyFunc reply) noexcept;
+    void wakeThread();
+    void timedWaitForSession();
+
+    // check for end
+    bool isShutdown() const noexcept {
+        std::lock_guard lk(io_thread_lock_);
+        return shutdown_thread_;
+    }
+
     // returns thread continue status
     bool registerContext(asio::io_context* Context) {
         std::lock_guard<std::mutex> lk(io_thread_lock_);
@@ -251,7 +332,7 @@ protected:
     }
 
     void stopExecution() {
-        // call of the function SIgnal under lock
+        // call of the function Signal under lock
         std::lock_guard<std::mutex> lk(io_thread_lock_);
         XLOG::l.t("Stopping execution");
         if (context_) {
@@ -261,13 +342,8 @@ protected:
     }
 
     uint16_t default_port_ = 0;  // work port
-    const bool mode_one_shot_ = cma::cfg::IsOneShotMode();
 
     void ioThreadProc(cma::world::ReplyFunc Reply);
-
-    // critical data is below this mutex
-    mutable std::mutex data_lock_;
-    // at the moment we have no critical data
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth
@@ -276,13 +352,23 @@ protected:
     bool shutdown_thread_;
     bool io_started_;
 
-    asio::io_context*
-        context_;  // NOT reusable, should not be locked, not OWNED
+    asio::io_context* context_;  // NOT OWNED, should not be locked
+
+    // asio sessions queue data
+    mutable std::mutex queue_lock_;
+    std::queue<std::shared_ptr<AsioSession>> session_queue_;
+
+    // asio sessions waker
+    mutable std::mutex wake_lock_;
+    std::condition_variable wake_thread_;
+    std::chrono::milliseconds wake_delay_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ExternalPortTest;
     FRIEND_TEST(ExternalPortTest, CreateDelete);
     FRIEND_TEST(ExternalPortTest, StartStop);
+    FRIEND_TEST(ExternalPortTest, LowLevelApiBase);
+    FRIEND_TEST(ExternalPortTest, LowLevelApiEx);
 #endif
 };
 

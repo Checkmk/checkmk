@@ -26,7 +26,10 @@
 
 
 def vbox_guest_make_dict(info):
-    return dict([(l[1].split('/', 2)[2].rstrip(','), l[3]) for l in info])
+    # output differs in version 6.x so we need to deal with empty values for
+    # /VirtualBox/GuestInfo/OS/ServicePack
+    return dict([(l[1].split('/', 2)[2].rstrip(','), l[3]) if len(l) == 4 else
+                 (l[1].split('/', 2)[2].rstrip(','), "") for l in info])
 
 
 def check_vbox_guest(_no_item, _no_params, info):
@@ -34,7 +37,7 @@ def check_vbox_guest(_no_item, _no_params, info):
         return (3, "Error running VBoxControl guestproperty enumerate")
     try:
         d = vbox_guest_make_dict(info)
-    except:
+    except Exception:
         d = {}
 
     if len(d) == 0:

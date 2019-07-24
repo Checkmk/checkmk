@@ -28,11 +28,13 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+from collections import namedtuple
 import os
 import time
 import re
 import hashlib
 import traceback
+from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
 
 import livestatus
@@ -47,6 +49,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils
 import cmk.gui.view_utils
+from cmk.gui.permissions import Permission  # pylint: disable=unused-import
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -463,7 +466,7 @@ class Command(object):
         return None
 
     def executor(self, command, site):
-        # type: (str, str) -> Callable
+        # type: (str, str) -> None
         """Function that is called to execute this action"""
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
@@ -483,7 +486,7 @@ command_registry = CommandRegistry()
 def register_legacy_command(spec):
     ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
     cls = type(
-        "LegacyCommand%s" % ident.title(), (Command,), {
+        "LegacyCommand%s" % str(ident).title(), (Command,), {
             "_ident": ident,
             "_spec": spec,
             "ident": property(lambda s: s._ident),
@@ -633,7 +636,6 @@ class DataSource(object):
 
 class DataSourceLivestatus(DataSource):
     """Base class for all simple data sources which 1:1 base on a livestatus table"""
-
     @property
     def table(self):
         return RowTableLivestatus(self.ident)
@@ -661,7 +663,7 @@ class RowTable(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         raise NotImplementedError()
 
 
@@ -670,10 +672,113 @@ class RowTableLivestatus(RowTable):
         super(RowTableLivestatus, self).__init__()
         self._table_name = table_name
 
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        # TODO: Move query_data into this class
-        return query_data(
-            view.datasource, columns, query, only_sites, view.row_limit, tablename=self._table_name)
+    @property
+    def table_name(self):
+        return self._table_name
+
+    @staticmethod
+    def _prepare_columns(columns, view):
+
+        dynamic_columns = dict()
+        for index, cell in enumerate(view.row_cells):
+            dyn_col = cell.painter().dynamic_columns(cell)
+            dynamic_columns[index] = dyn_col
+            columns += dyn_col
+
+        columns = list(set(columns))
+
+        datasource = view.datasource
+        merge_column = datasource.merge_by
+        if merge_column:
+            columns = [merge_column] + columns
+
+        # Most layouts need current state of object in order to
+        # choose background color - even if no painter for state
+        # is selected. Make sure those columns are fetched. This
+        # must not be done for the table 'log' as it cannot correctly
+        # distinguish between service_state and host_state
+        if "log" not in datasource.infos:
+            state_columns = []
+            if "service" in datasource.infos:
+                state_columns += ["service_has_been_checked", "service_state"]
+            if "host" in datasource.infos:
+                state_columns += ["host_has_been_checked", "host_state"]
+            for c in state_columns:
+                if c not in columns:
+                    columns.append(c)
+
+        # Remove columns which are implicitely added by the datasource
+        return [c for c in columns if c not in datasource.add_columns], dynamic_columns
+
+    def prepare_lql(self, columns, headers):
+        query = "GET %s\n" % self.table_name
+        query += "Columns: %s\n" % " ".join(columns)
+        query += headers
+        return query
+
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        """Retrieve data via livestatus, convert into list of dicts,
+
+        view: view object
+        columns: the list of livestatus columns to query
+        headers: query headers
+        only_sites: list of sites the query is limited to
+        limit: maximum number of data rows to query
+        all_active_filters: Momentarily unused
+        """
+
+        datasource = view.datasource
+
+        columns, dynamic_columns = self._prepare_columns(columns, view)
+        query = self.prepare_lql(columns, headers + datasource.add_headers)
+        data = query_livestatus(query, only_sites, limit, datasource.auth_domain)
+
+        if datasource.merge_by:
+            data = _merge_data(data, columns)
+        # convert lists-rows into dictionaries.
+        # performance, but makes live much easier later.
+        columns = ["site"] + columns + datasource.add_columns
+        rows = datasource.post_process([dict(zip(columns, row)) for row in data])
+
+        for index, cell in enumerate(view.row_cells):
+            painter = cell.painter()
+            painter.derive(rows, cell, dynamic_columns.get(index))
+
+        return rows
+
+
+def query_livestatus(query, only_sites, limit, auth_domain):
+
+    sites.live().set_prepend_site(True)
+
+    if limit is not None:
+        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
+    else:
+        sites.live().set_limit(None)
+
+    if all((
+            config.debug_livestatus_queries,
+            html.output_format == "html",
+            display_options.enabled(display_options.W),
+    )):
+        html.open_div(class_=["livestatus", "message"])
+        html.tt(query.replace('\n', '<br>\n'))
+        html.close_div()
+
+    if only_sites is None:
+        only_sites = []
+
+    if only_sites:
+        sites.live().set_only_sites(only_sites)
+
+    sites.live().set_auth_domain(auth_domain)
+    data = sites.live().query(query)
+    sites.live().set_auth_domain("read")
+    sites.live().set_only_sites(None)
+    sites.live().set_prepend_site(False)
+    sites.live().set_limit()  # removes limit
+
+    return data
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
@@ -713,9 +818,39 @@ class Painter(object):
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
+    def dynamic_columns(self, cell):
+        # type: (Cell) -> List[str]
+        """Return list of dynamically generated column as specified by Cell
+
+        Some columns for the Livestatus query need to be generated at
+        execution time, knowing user configuration. Using the Cell object
+        generated the required column names."""
+        return []
+
+    def derive(self, rows, cell, dynamic_columns):
+        # type: (List[Dict], Cell, Optional[List[str]]) -> None
+        """Post process query according to cell
+
+        This function processes data immediately after it is handled back
+        from the Livestatus Datasource. It gets access to the entire
+        returned table and sequentially to each of the cells configured.
+
+        rows: List of Dictionaries
+             Data table of the returning query. Every element is a
+             dictionary which keys are the column names. Derive function
+             should mutate in place each row. When processing data or
+             generating new columns.
+        cell: Cell
+            Used to retrieve configuration parameters
+        dynamic_columns: List[str]
+            The exact dynamic columns generated by the painter before the
+            query. As they might be required to find them again within the
+            data."""
+        pass
+
     @abc.abstractmethod
     def render(self, row, cell):
-        # type: (dict, Cell) -> Tuple[str, str]
+        # type: (Dict, Cell) -> Tuple[str, str]
         """Renders the painter for the given row
         The paint function gets one argument: A data row, which is a python
         dictionary representing one data object (host, service, ...). Its
@@ -737,7 +872,7 @@ class Painter(object):
         return self.title
 
     def group_by(self, row):
-        # type: (dict) -> Optional[Union[str, Tuple]]
+        # type: (Dict) -> Optional[Union[str, Tuple]]
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 
@@ -800,7 +935,7 @@ def register_painter(ident, spec):
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: spec["paint"](row),
             "short_title": property(lambda s: s._spec.get("short", s.title)),
-            "group_by": property(lambda s: s._spec.get("groupby")),
+            "group_by": lambda self, row: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
             "printable": property(lambda s: s._spec.get("printable", True)),
@@ -836,7 +971,7 @@ class Sorter(object):
 
     @abc.abstractmethod
     def cmp(self, r1, r2):
-        # type: (dict, dict) -> int
+        # type: (Dict, Dict) -> int
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -879,7 +1014,7 @@ sorter_registry = SorterRegistry()
 # register some painters dynamically
 def register_sorter(ident, spec):
     cls = type(
-        "LegacySorter%s" % ident.title(), (Sorter,), {
+        "LegacySorter%s" % str(ident).title(), (Sorter,), {
             "_ident": ident,
             "_spec": spec,
             "ident": property(lambda s: s._ident),
@@ -892,12 +1027,12 @@ def register_sorter(ident, spec):
 
 
 # TODO: Refactor to plugin_registries
-multisite_builtin_views = {}
-view_hooks = {}
-inventory_displayhints = {}
+multisite_builtin_views = {}  # type: Dict
+view_hooks = {}  # type: Dict
+inventory_displayhints = {}  # type: Dict
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
-view_is_enabled = {}
+view_is_enabled = {}  # type: Dict
 
 
 def view_title(view):
@@ -925,8 +1060,9 @@ def paint_host_list(site, hosts):
 
 
 def format_plugin_output(output, row):
-    return cmk.gui.view_utils.format_plugin_output(
-        output, row, shall_escape=config.escape_plugin_output)
+    return cmk.gui.view_utils.format_plugin_output(output,
+                                                   row,
+                                                   shall_escape=config.escape_plugin_output)
 
 
 def link_to_view(content, row, view_name):
@@ -974,11 +1110,10 @@ def url_to_view(row, view_name):
             except KeyError:
                 pass
 
-        add_site_hint = visuals.may_add_site_hint(
-            view_name,
-            info_keys=datasource.infos,
-            single_info_keys=view["single_infos"],
-            filter_names=dict(url_vars).keys())
+        add_site_hint = visuals.may_add_site_hint(view_name,
+                                                  info_keys=datasource.infos,
+                                                  single_info_keys=view["single_infos"],
+                                                  filter_names=dict(url_vars).keys())
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 
@@ -1141,7 +1276,7 @@ def cmp_ip_address(column, r1, r2):
     def split_ip(ip):
         try:
             return tuple(int(part) for part in ip.split('.'))
-        except:
+        except Exception:
             return ip
 
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
@@ -1169,86 +1304,6 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
         return number
     except Exception as e:
         return str(e)
-
-
-# Retrieve data via livestatus, convert into list of dicts,
-# prepare row-function needed for painters
-# datasource: the datasource object as defined in plugins/views/datasources.py
-# columns: the list of livestatus columns to query
-# add_headers: additional livestatus headers to add
-# only_sites: list of sites the query is limited to
-# limit: maximum number of data rows to query
-def query_data(datasource, columns, add_headers, only_sites=None, limit=None, tablename=None):
-    if only_sites is None:
-        only_sites = []
-
-    if tablename is None:
-        tablename = datasource.table
-
-    add_headers += datasource.add_headers
-    merge_column = datasource.merge_by
-    if merge_column:
-        columns = [merge_column] + columns
-
-    # Most layouts need current state of object in order to
-    # choose background color - even if no painter for state
-    # is selected. Make sure those columns are fetched. This
-    # must not be done for the table 'log' as it cannot correctly
-    # distinguish between service_state and host_state
-    if "log" not in datasource.infos:
-        state_columns = []
-        if "service" in datasource.infos:
-            state_columns += ["service_has_been_checked", "service_state"]
-        if "host" in datasource.infos:
-            state_columns += ["host_has_been_checked", "host_state"]
-        for c in state_columns:
-            if c not in columns:
-                columns.append(c)
-
-    # Remove columns which are implicitely added by the datasource
-    columns = [c for c in columns if c not in datasource.add_columns]
-    query = "GET %s\n" % tablename
-    rows = do_query_data(query, columns, datasource.add_columns, merge_column, add_headers,
-                         only_sites, limit, datasource.auth_domain)
-
-    return datasource.post_process(rows)
-
-
-def do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
-                  auth_domain):
-    query += "Columns: %s\n" % " ".join(columns)
-    query += add_headers
-    sites.live().set_prepend_site(True)
-
-    if limit is not None:
-        sites.live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
-    else:
-        sites.live().set_limit(None)
-
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and display_options.enabled(display_options.W):
-        html.open_div(class_=["livestatus", "message"])
-        html.tt(query.replace('\n', '<br>\n'))
-        html.close_div()
-
-    if only_sites:
-        sites.live().set_only_sites(only_sites)
-    sites.live().set_auth_domain(auth_domain)
-    data = sites.live().query(query)
-    sites.live().set_auth_domain("read")
-    sites.live().set_only_sites(None)
-    sites.live().set_prepend_site(False)
-    sites.live().set_limit()  # removes limit
-
-    if merge_column:
-        data = _merge_data(data, columns)
-
-    # convert lists-rows into dictionaries.
-    # performance, but makes live much easier later.
-    columns = ["site"] + columns + add_columns
-    rows = [dict(zip(columns, row)) for row in data]
-
-    return rows
 
 
 # Merge all data rows with different sites but the same value
@@ -1290,8 +1345,7 @@ def _merge_data(data, columns):
             merged[mergekey] = row
 
     # return all rows sorted according to merge key
-    mergekeys = merged.keys()
-    mergekeys.sort()
+    mergekeys = sorted(merged.keys())
     return [merged[k] for k in mergekeys]
 
 
@@ -1381,10 +1435,9 @@ class ViewStore(object):
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         return _transform_old_views(
-            visuals.load(
-                'views',
-                multisite_builtin_views,
-                skip_func=lambda v: v['datasource'] not in data_source_registry))
+            visuals.load('views',
+                         multisite_builtin_views,
+                         skip_func=lambda v: v['datasource'] not in data_source_registry))
 
     def _load_permitted_views(self, all_views):
         """Returns all view defitions that a user is allowed to use"""
@@ -1452,7 +1505,7 @@ def _transform_old_views(all_views):
                     # For all other context types assume the view is showing multiple objects
                     # and the datasource can simply be gathered from the datasource
                     view['single_infos'] = []
-            except:  # Exceptions can happen for views saved with certain GIT versions
+            except Exception:  # Exceptions can happen for views saved with certain GIT versions
                 if config.debug:
                     raise
 
@@ -1475,7 +1528,7 @@ def _transform_old_views(all_views):
                 context.setdefault(filter_name, {})
                 try:
                     f = visuals.get_filter(filter_name)
-                except:
+                except Exception:
                     # The exact match filters have been removed. They where used only as
                     # link filters anyway - at least by the builtin views.
                     continue
@@ -1600,6 +1653,7 @@ class Cell(object):
         self._painter_params = None
         self._link_view_name = None
         self._tooltip_painter_name = None
+        self._custom_title = None
 
         if painter_spec:
             self._from_view(painter_spec)
@@ -1625,6 +1679,7 @@ class Cell(object):
         self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
             self._painter_params = painter_spec[0][1]
+            self._custom_title = self._painter_params.get('column_title', None)
 
         if painter_spec[1] is not None:
             self._link_view_name = painter_spec[1]
@@ -1692,6 +1747,9 @@ class Cell(object):
         return self._painter_params
 
     def title(self, use_short=True):
+        if self._custom_title:
+            return self._custom_title
+
         painter = self.painter()
         if use_short:
             return self._get_short_title(painter)
@@ -1743,7 +1801,7 @@ class Cell(object):
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
-            classes += ["sort", _get_primary_sorter_order(self._view, self.painter_name())]
+            classes += ["sort"]
             onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
             title = _('Sort by %s') % self.title()
 
@@ -1773,14 +1831,14 @@ class Cell(object):
         # - Negate/Disable when at first position
         # - Move to the first position when already in sorters
         # - Add in the front of the user sorters when not set
-        sorter_name = _get_sorter_name_of_painter(self.painter_name())
-        if self.is_joined():
-            # TODO: Clean this up and then remove Cell.join_service()
-            this_asc_sorter = (sorter_name, False, self.join_service())
-            this_desc_sorter = (sorter_name, True, self.join_service())
-        else:
-            this_asc_sorter = (sorter_name, False)
-            this_desc_sorter = (sorter_name, True)
+        painter_name = self.painter_name()
+        sorter_name = _get_sorter_name_of_painter(painter_name)
+        if painter_name == 'svc_metrics_hist':
+            hash_id = ':%s' % hash(str(self.painter_parameters()))
+            sorter_name += hash_id
+
+        this_asc_sorter = SorterEntry(sorter_name, False, self.join_service())
+        this_desc_sorter = SorterEntry(sorter_name, True, self.join_service())
 
         if user_sort and this_asc_sorter == user_sort[0]:
             # Second click: Change from asc to desc order
@@ -1801,14 +1859,9 @@ class Cell(object):
             # Now add the sorter as primary user sorter
             sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-        p = []
-        for s in sorter:
-            if len(s) == 2:
-                p.append((s[1] and '-' or '') + s[0])
-            else:
-                p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
+        sorters = [SorterEntry(*s) for s in sorter]
 
-        return ','.join(p)
+        return _encode_sorter_url(sorters)
 
     def render(self, row):
         row = join_row(row, self)
@@ -1878,8 +1931,8 @@ class Cell(object):
 
             return css_classes, txt
         except Exception:
-            raise MKGeneralException(
-                'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc()))
+            raise MKGeneralException('Failed to paint "%s": %s' %
+                                     (self.painter_name(), traceback.format_exc()))
 
     def render_content(self, row):
         if not row:
@@ -1913,10 +1966,43 @@ class Cell(object):
         return has_content
 
 
+SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+
+
+def _encode_sorter_url(sorters):
+    p = []
+    for s in sorters:
+        url = ('-' if s.negate else '') + s.sorter
+        if s.join_key:
+            url += '~' + s.join_key
+        p.append(url)
+
+    return ','.join(p)
+
+
+def _parse_url_sorters(sort):
+    sorters = []
+    if not sort:
+        return sorters
+    for s in sort.split(','):
+        if "~" in s:
+            sorter, join_index = s.split('~', 1)
+        else:
+            sorter, join_index = s, None
+
+        negate = False
+        if sorter.startswith('-'):
+            negate = True
+            sorter = sorter[1:]
+
+        sorters.append(SorterEntry(sorter, negate, join_index))
+    return sorters
+
+
 class JoinCell(Cell):
     def __init__(self, view, painter_spec):
         self._join_service_descr = None
-        self._custom_title = None
         super(JoinCell, self).__init__(view, painter_spec)
 
     def _from_view(self, painter_spec):
@@ -1925,7 +2011,7 @@ class JoinCell(Cell):
         if len(painter_spec) >= 4:
             self._join_service_descr = painter_spec[3]
 
-        if len(painter_spec) == 5:
+        if len(painter_spec) == 5 and self._custom_title is None:
             self._custom_title = painter_spec[4]
 
     def is_joined(self):
@@ -1939,9 +2025,7 @@ class JoinCell(Cell):
             (livestatus.lqencode(join_column_name), livestatus.lqencode(self._join_service_descr))
 
     def title(self, use_short=True):
-        if self._custom_title:
-            return self._custom_title
-        return self._join_service_descr
+        return self._custom_title or self._join_service_descr
 
     def export_title(self):
         return "%s.%s" % (self._painter_name, self.join_service())
@@ -1976,10 +2060,12 @@ def _get_sorter_name_of_painter(painter_name_or_spec):
 
 
 def _get_separated_sorters(view):
-    group_sort = [(_get_sorter_name_of_painter(p), False)
-                  for p in view.spec['group_painters']
-                  if painter_exists(p) and _get_sorter_name_of_painter(p) is not None]
-    view_sort = [s for s in view.spec['sorters'] if not s[0] in group_sort]
+    group_sort = [
+        SorterEntry(_get_sorter_name_of_painter(p), False)
+        for p in view.spec['group_painters']
+        if painter_exists(p) and _get_sorter_name_of_painter(p) is not None
+    ]
+    view_sort = [SorterEntry(*s) for s in view.spec['sorters'] if not s[0] in group_sort]
 
     user_sort = view.user_sorters
 
@@ -1987,18 +2073,6 @@ def _get_separated_sorters(view):
     _substract_sorters(view_sort, user_sort)
 
     return group_sort, user_sort, view_sort
-
-
-def _get_primary_sorter_order(view, painter_name):
-    sorter_name = _get_sorter_name_of_painter(painter_name)
-    this_asc_sorter = (sorter_name, False)
-    this_desc_sorter = (sorter_name, True)
-    _group_sort, user_sort, _view_sort = _get_separated_sorters(view)
-    if user_sort and this_asc_sorter == user_sort[0]:
-        return 'asc'
-    elif user_sort and this_desc_sorter == user_sort[0]:
-        return 'desc'
-    return ''
 
 
 def _substract_sorters(base, remove):

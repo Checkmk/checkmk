@@ -58,7 +58,8 @@ def parse_db2_bp_hitratios(info):
                     current_node_offset += 1
                     current_instance = "%s DPF %s" % (instance, node_names[current_node_offset])
                     databases.setdefault(current_instance, [node_headers])
-                databases[current_instance].append(line)
+                if current_instance in databases:
+                    databases[current_instance].append(line)
         else:
             databases[instance] = lines
 
@@ -92,9 +93,9 @@ def check_db2_bp_hitratios(item, no_params, parsed):
                     "INDEX_HIT": "Index",
                     "XDA_HIT": "XDA",
                 }
-                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [("%sratio" % key.lower(),
-                                                                       float(value), None, None, 0,
-                                                                       100)]
+                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [
+                    ("%sratio" % key.lower(), float(value), None, None, 0, 100)
+                ]
             break
 
 

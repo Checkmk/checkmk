@@ -7,6 +7,7 @@ namespace cma {
 
 enum class AppType { automatic = 99, srv = 0, test, exe };
 enum class YamlCacheOp { nothing, update };
+constexpr const wchar_t* kTemporaryRoot = L"CMA_TEST_DIR";
 
 AppType AppDefaultType();  // defined by main
 

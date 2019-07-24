@@ -1,0 +1,20 @@
+Title: mk_logwatch: Default limit for transmitted data
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1559333264
+Class: feature
+
+The linux version of mk_logwatch now limits the amount of data that is being sent.
+
+Up to now it was possible to limit the number of processed bytes/lines.
+Now you can also configure the maximum number of bytes that is sent to the monitoring
+site. By default, the limit is set to the maximum size of the file storing the log
+lines on the server side, which is 500 KB.
+The remaining data that has been computed is discarded.
+
+This behaviour can be configured by setting the option 'maxoutputsize'
+(see <a href='https://checkmk.de/checkmk_logfiles.html'>here</a>).
+

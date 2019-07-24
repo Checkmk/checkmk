@@ -28,16 +28,25 @@
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 # power-supply-list 20    is-auto-power-reset-enabled false   power-supply-part-no 114-00065+A2 ...
 
+discovery_netapp_api_psu_rules = []
 
-def inventory_netapp_api_psu(parsed):
-    for key, values in parsed.items():
-        if values.get("power-supply-is-not-installed") != "true":
-            item_name = "%s/%s" % tuple(key.split("."))
+
+def _format_item(key):
+    return key.replace('.', '/')
+
+
+def discovery_netapp_api_psu(parsed):
+    if _discover_single_items(discovery_netapp_api_psu_rules):
+        for key in _get_psus_with_power_supply(parsed):
+            item_name = _format_item(key)
             yield item_name, None
 
 
 def check_netapp_api_psu(item, _no_params, parsed):
     psu = parsed.get("%s.%s" % tuple(item.split("/")))
+    if not psu:
+        return
+
     if psu.get("power-supply-is-error") == "true":
         yield 2, "Error in PSU %s" % psu["power-supply-element-number"]
     else:
@@ -46,9 +55,52 @@ def check_netapp_api_psu(item, _no_params, parsed):
 
 check_info["netapp_api_psu"] = {
     'check_function': check_netapp_api_psu,
-    'inventory_function': inventory_netapp_api_psu,
+    'inventory_function': discovery_netapp_api_psu,
     'parse_function': lambda info: netapp_api_parse_lines(
         info, custom_keys=["power-supply-list", "power-supply-element-number"]),
+    'service_description': 'Power Supply Shelf %s',
+    'includes': ["netapp_api.include"]
+}
+
+
+def discovery_netapp_api_psu_summary(parsed):
+    if _discover_single_items(discovery_netapp_api_psu_rules):
+        return
+    if _get_psus_with_power_supply(parsed):
+        yield 'Summary', {}
+
+
+def _get_psus_with_power_supply(psus):
+    return {
+        key: psu
+        for key, psu in psus.iteritems()
+        if psu.get("power-supply-is-not-installed") != "true"
+    }
+
+
+def _get_failed_power_supply_elements(psus):
+    erred_psus = []
+    for key, value in psus.iteritems():
+        if value.get("power-supply-is-error") == "true":
+            erred_psus.append(_format_item(key))
+    return erred_psus
+
+
+def check_netapp_api_psu_summary(item, _no_params, parsed):
+    psus = _get_psus_with_power_supply(parsed)
+    yield 0, "%d power supply units in total" % len(psus)
+
+    erred_psus = _get_failed_power_supply_elements(psus)
+    if erred_psus:
+        erred_psus_names = ", ".join(erred_psus)
+        count = len(erred_psus)
+        yield 2, "%d power supply unit%s in error state (%s)" % (count, "" if count == 1 else "s",
+                                                                 erred_psus_names)
+
+
+check_info['netapp_api_psu.summary'] = {
+    'check_function': check_netapp_api_psu_summary,
+    'inventory_function': discovery_netapp_api_psu_summary,
     'service_description': 'Power Supply Shelf %s',
     'includes': ["netapp_api.include"]
 }

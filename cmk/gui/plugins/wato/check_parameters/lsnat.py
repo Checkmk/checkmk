@@ -60,12 +60,11 @@ class RulespecCheckgroupParametersLsnat(CheckParameterRulespecWithoutItem):
         return Dictionary(
             elements=[
                 ("current_bindings",
-                 Tuple(
-                     title=_("Number of current LSNAT bindings"),
-                     elements=[
-                         Integer(title=_("Warning at"), size=10, unit=_("bindings")),
-                         Integer(title=_("Critical at"), size=10, unit=_("bindings")),
-                     ])),
+                 Tuple(title=_("Number of current LSNAT bindings"),
+                       elements=[
+                           Integer(title=_("Warning at"), size=10, unit=_("bindings")),
+                           Integer(title=_("Critical at"), size=10, unit=_("bindings")),
+                       ])),
             ],
             optional_keys=False,
         )

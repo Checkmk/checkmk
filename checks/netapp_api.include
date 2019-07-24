@@ -56,3 +56,9 @@ def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func
             instances[name] = instance
 
     return instances
+
+
+def _discover_single_items(discovery_rules):
+    config = host_extra_conf_merged(host_name(), discovery_rules)
+    mode = config.get("mode", "single")
+    return mode == "single"

@@ -17,6 +17,16 @@ description:
  The Broker and Observer are automatically detected and monitored
  as well.
 
+ Set primary_broker_state=True in environments with Data-Guard
+ and disabled Broker. Otherwise the Switoverstate on Primary is
+ ignored
+
+ The Active Data-Guard Option is an addional license from
+ Oracle. When a Standby Datebase is opened READ ONLY and media
+ recovery is active, the option is in use and the default state
+ is WARN. This can be changed with the parameter
+ active_dataguard_option.
+
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.

@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0i1
+Version: 1.7.0i1
 Date: 1531750420
 
 Since Check_MK 1.5.0i2, the Linux Agent Updater executable (cmk-update-agent)
@@ -22,4 +22,4 @@ from a ruleset.
 
 Please note that the deployment of the Python2 script may bring back some old problems (for
 details, see again Werk #5267) and hence we can offer no support for troubleshooting while deploying
-the Agent Updater as a script. However, a mail to feedback@check-mk.org is much appreciated.
+the Agent Updater as a script. However, a mail to feedback@checkmk.com is much appreciated.

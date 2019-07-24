@@ -25,29 +25,28 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_fast_lta_volumes(info):
-    inventory = []
-    for volname, _volquota, _volused in info:
-        inventory.append((volname, {}))
-    return inventory
-
-
-def check_fast_lta_volumes(item, params, info):
-    fslist = []
+def parse_fast_lta_volumes(info):
+    parsed = {}
     for volname, volquota, volused in info:
-        if volname == item:
-            fslist = []
+        try:
             size_mb = int(volquota) / 1048576.0
             avail_mb = (int(volquota) - int(volused)) / 1048576.0
-            fslist.append((item, size_mb, avail_mb, 0))
-            return df_check_filesystem_list(item, params, fslist)
+        except ValueError:
+            continue
+        parsed.setdefault(volname, []).append((volname, size_mb, avail_mb, 0))
 
-    return 3, "Volume %s not found" % item
+    return parsed
+
+
+@get_parsed_item_data
+def check_fast_lta_volumes(item, params, data):
+    yield df_check_filesystem_list(item, params, data)
 
 
 check_info["fast_lta_volumes"] = {
+    "parse_function": parse_fast_lta_volumes,
     "check_function": check_fast_lta_volumes,
-    "inventory_function": inventory_fast_lta_volumes,
+    "inventory_function": discover(),
     "service_description": "Fast LTA Volume %s",
     "has_perfdata": True,
     "group": "filesystem",

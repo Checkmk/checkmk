@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import NamedTuple, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
+
+from cmk.utils.regex import regex
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
 # Conveniance macros for legacy tuple based host and service rules
@@ -39,226 +43,135 @@ NEGATE = '@negate'  # negation in boolean lists
 # - What's about compilation of the regexes?
 
 
-class RulesetToDictTransformer(object):
-    """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
-    This is done in place to keep the references to the ruleset working.
+def get_rule_options(entry):
+    """Get the options from a rule.
+
+    Pick out the option element of a rule. Currently the options "disabled"
+    and "comments" are being honored."""
+    if isinstance(entry[-1], dict):
+        return entry[:-1], entry[-1]
+
+    return entry, {}
+
+
+def in_extraconf_hostlist(hostlist, hostname):
+    """Whether or not the given host matches the hostlist.
+
+    Entries in list are hostnames that must equal the hostname.
+    Expressions beginning with ! are negated: if they match,
+    the item is excluded from the list.
+
+    Expressions beginning with ~ are treated as regular expression.
+    Also the three special tags '@all', '@clusters', '@physical'
+    are allowed.
     """
 
-    def __init__(self, tag_to_group_map):
-        super(RulesetToDictTransformer, self).__init__()
-        self._tag_groups = tag_to_group_map
+    # Migration help: print error if old format appears in config file
+    # FIXME: When can this be removed?
+    try:
+        if hostlist[0] == "":
+            raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
+    except IndexError:
+        pass  # Empty list, no problem.
 
-    def transform_in_place(self, ruleset, is_service, is_binary):
-        for index, rule in enumerate(ruleset):
-            if not isinstance(rule, dict):
-                ruleset[index] = self._transform_rule(rule, is_service, is_binary)
-
-    def _transform_rule(self, tuple_rule, is_service, is_binary):
-        rule = {
-            "condition": {},
-        }
-
-        tuple_rule = list(tuple_rule)
-
-        # Extract optional rule_options from the end of the tuple
-        if isinstance(tuple_rule[-1], dict):
-            rule["options"] = tuple_rule.pop()
-
-        # Extract value from front, if rule has a value
-        if not is_binary:
-            value = tuple_rule.pop(0)
-        else:
-            value = True
-            if tuple_rule[0] == NEGATE:
-                value = False
-                tuple_rule = tuple_rule[1:]
-        rule["value"] = value
-
-        # Extract list of items from back, if rule has items
-        service_condition = {}
-        if is_service:
-            service_condition = self._transform_item_list(tuple_rule.pop())
-
-        # Rest is host list or tag list + host list
-        host_condition = self._transform_host_conditions(tuple_rule)
-
-        if "$or" in service_condition and "$or" in host_condition:
-            rule["condition"] = {
-                "$and": [
-                    {
-                        "$or": host_condition.pop("$or")
-                    },
-                    {
-                        "$or": service_condition.pop("$or")
-                    },
-                ]
-            }
-        elif "$nor" in service_condition and "$nor" in host_condition:
-            rule["condition"] = {
-                "$and": [
-                    {
-                        "$nor": host_condition.pop("$nor")
-                    },
-                    {
-                        "$nor": service_condition.pop("$nor")
-                    },
-                ]
-            }
-
-        rule["condition"].update(service_condition)
-        rule["condition"].update(host_condition)
-
-        return rule
-
-    def _transform_item_list(self, item_list):
-        if item_list == ALL_SERVICES:
-            return {}
-
-        if not item_list:
-            raise NotImplementedError()
-
-        sub_conditions = []
-
-        # Assume WATO conforming rule where either *all* or *none* of the
-        # host expressions are negated.
-        # TODO: This is WATO specific. Should we handle this like base did before?
-        negate = item_list[0].startswith("!")
-
-        # Construct list of all item conditions
-        for check_item in item_list:
-            if check_item[0] == '!':  # strip negate character
-                check_item = check_item[1:]
-            check_item = "^" + check_item
-            sub_conditions.append({"service_description": {"$regex": check_item}})
-
-        return self._build_sub_condition("service_description", negate, "$regex", check_item,
-                                         sub_conditions)
-
-    def _transform_host_conditions(self, tuple_rule):
-        if len(tuple_rule) == 1:
-            host_tags = []
-            host_list = tuple_rule[0]
-        else:
-            host_tags = tuple_rule[0]
-            host_list = tuple_rule[1]
-
-        condition = {}
-        condition.update(self._transform_host_tags(host_tags))
-        condition.update(self._transform_host_list(host_list))
-        return condition
-
-    def _transform_host_list(self, host_list):
-        if host_list == ALL_HOSTS:
-            return {}
-
-        if not host_list:
-            raise NotImplementedError()
-
-        sub_conditions = []
-
-        # Assume WATO conforming rule where either *all* or *none* of the
-        # host expressions are negated.
-        # TODO: This is WATO specific. Should we handle this like base did before?
-        negate = host_list[0].startswith("!")
-
-        num_conditions = len(host_list)
-        has_regex = self._host_list_has_regex(host_list)
-
-        # Simplify case where we only have full host name matches
-        if not has_regex and num_conditions > 1:
-            list_op = "$nin" if negate else "$in"
-            return {"host_name": {list_op: [h.lstrip("!") for h in host_list]}}
-
-        # Construct list of all host item conditions
-        for check_item in host_list:
-            if check_item[0] == '!':  # strip negate character
-                check_item = check_item[1:]
-
-            if check_item[0] == '~':
-                check_item = "^" + check_item[1:]
-                regex_match = True
-            else:
-                regex_match = False
-
-            if check_item == CLUSTER_HOSTS[0]:
-                raise MKGeneralException(
-                    "Found a ruleset using CLUSTER_HOSTS as host condition. "
-                    "This is not supported anymore. These rules can not be transformed "
-                    "automatically to the new format. Please check out your configuration and "
-                    "replace the rules in question.")
-            if check_item == PHYSICAL_HOSTS[0]:
-                raise MKGeneralException(
-                    "Found a ruleset using PHYSICAL_HOSTS as host condition. "
-                    "This is not supported anymore. These rules can not be transformed "
-                    "automatically to the new format. Please check out your configuration and "
-                    "replace the rules in question.")
-
-            sub_op = "$regex" if regex_match else "$eq"
-
-            sub_conditions.append({"host_name": {sub_op: check_item}})
-
-        return self._build_sub_condition("host_name", negate, sub_op, check_item, sub_conditions)
-
-    def _host_list_has_regex(self, host_list):
-        for check_item in host_list:
-            if check_item[0] == '!':  # strip negate character
-                check_item = check_item[1:]
-
-            if check_item[0] == '~':
+    for hostentry in hostlist:
+        if hostentry == '':
+            raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        negate = False
+        use_regex = False
+        if hostentry[0] == '@':
+            if hostentry == '@all':
                 return True
-        return False
+            # TODO: Is not used anymore for a long time. Will be cleaned up
+            # with 1.6 tuple ruleset cleanup
+            #ic = is_cluster(hostname)
+            #if hostentry == '@cluster' and ic:
+            #    return True
+            #elif hostentry == '@physical' and not ic:
+            #    return True
 
-    def _build_sub_condition(self, field, negate, sub_op, check_item, sub_conditions):
-        """This function simplifies the constructed conditions
-
-        - The or/nor condition is skipped where we only have a single condition
-        - "$eq" is skipped where we only have a simple field equality match
-        """
-        if len(sub_conditions) == 1:
-            if sub_op == "$eq":
-                return {field: {"$ne": check_item} if negate else check_item}
-            if sub_op == "$regex":
-                if negate:
-                    return {field: {"$not": {"$regex": check_item}}}
-                return sub_conditions[0]
-            raise NotImplementedError()
-
-        op = "$nor" if negate else "$or"
-        return {op: sub_conditions}
-
-    def _transform_host_tags(self, host_tags):
-        if not host_tags:
-            return {}
-
-        # Remove folder tag from tag list
-        # TODO: where to put the folder to instead?
-        host_tags = [t for t in host_tags if not t.startswith("/")]
-
-        conditions = {}
-        for tag_id in host_tags:
-            negate = False
-            if tag_id[0] == '!':
-                tag_id = tag_id[1:]
+        # Allow negation of hostentry with prefix '!'
+        else:
+            if hostentry[0] == '!':
+                hostentry = hostentry[1:]
                 negate = True
 
-            # Assume it's an aux tag in case there is a tag configured without known group
-            tag_group_id = self._tag_groups.get(tag_id, tag_id)
+            # Allow regex with prefix '~'
+            if hostentry[0] == '~':
+                hostentry = hostentry[1:]
+                use_regex = True
 
-            conditions["host_tags." + tag_group_id] = {"$ne": tag_id} if negate else tag_id
+        try:
+            if not use_regex and hostname == hostentry:
+                return not negate
+            # Handle Regex. Note: hostname == True -> generic unknown host
+            elif use_regex and hostname != True:
+                if regex(hostentry).match(hostname) is not None:
+                    return not negate
+        except MKGeneralException:
+            if cmk.utils.debug.enabled():
+                raise
 
-        return conditions
+    return False
 
 
-def get_tag_to_group_map(tag_config):
-    """The old rules only have a list of tags and don't know anything about the
-    tag groups they are coming from. Create a map based on the current tag config
+def hosttags_match_taglist(hosttags, required_tags):
+    """Check if a host fulfills the requirements of a tag list.
+
+    The host must have all tags in the list, except
+    for those negated with '!'. Those the host must *not* have!
+    A trailing + means a prefix match."""
+    for tag in required_tags:
+        negate, tag = _parse_negated(tag)
+        if tag and tag[-1] == '+':
+            tag = tag[:-1]
+            matches = False
+            for t in hosttags:
+                if t.startswith(tag):
+                    matches = True
+                    break
+
+        else:
+            matches = tag in hosttags
+
+        if matches == negate:
+            return False
+
+    return True
+
+
+def convert_pattern_list(patterns):
+    # type: (List[Text]) -> Optional[Pattern[Text]]
+    """Compiles a list of service match patterns to a single regex
+
+    Reducing the number of individual regex matches improves the performance dramatically.
+    This function assumes either all or no pattern is negated (like WATO creates the rules).
     """
-    tag_id_to_tag_group_id_map = {}
+    if not patterns:
+        return None
 
-    for aux_tag in tag_config.aux_tag_list.get_tags():
-        tag_id_to_tag_group_id_map[aux_tag.id] = aux_tag.id
+    pattern_parts = []
 
-    for tag_group in tag_config.tag_groups:
-        for grouped_tag in tag_group.tags:
-            tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
-    return tag_id_to_tag_group_id_map
+    for pattern in patterns:
+        negate, pattern = _parse_negated(pattern)
+        # Skip ALL_SERVICES from end of negated lists
+        if negate:
+            if pattern == ALL_SERVICES[0]:
+                continue
+            pattern_parts.append("(?!%s)" % pattern)
+        else:
+            pattern_parts.append("(?:%s)" % pattern)
+
+    return regex("(?:%s)" % "|".join(pattern_parts))
+
+
+def _parse_negated(pattern):
+    # Allow negation of pattern with prefix '!'
+    try:
+        negate = pattern[0] == '!'
+        if negate:
+            pattern = pattern[1:]
+    except IndexError:
+        negate = False
+
+    return negate, pattern

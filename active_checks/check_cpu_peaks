@@ -106,7 +106,7 @@ try:
         step_secs = data[0]
         #util_total = [ x for x in datasets[0] if x is not None ]
         util_total = [x for x in datasets[0]]
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         # looks like this is not a windows rrd...
@@ -144,8 +144,8 @@ try:
              time.strftime("%b %d %H:%M:%S", time.localtime(untiltime))) ]
 
     if cpu_peak:
-        info.append(
-            "Highest Peak of %d%% at %s" % (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
+        info.append("Highest Peak of %d%% at %s" %
+                    (cpu_peak, time.strftime("%b %d %H:%M:%S", peak_time)))
         state = 0
         if crit_level and cpu_peak <= crit_level:
             info.append("less than %d (!!)" % crit_level)
@@ -161,13 +161,13 @@ try:
         sys.stdout.write("%s\n" % ": ".join(info))
         sys.exit(state)
 
-except MKGeneralException, e:
+except MKGeneralException as e:
     if opt_debug:
         raise
     sys.stdout.write("OK - %s\n" % e)
     sys.exit(0)
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     # TODO: Exception handling could be improved.

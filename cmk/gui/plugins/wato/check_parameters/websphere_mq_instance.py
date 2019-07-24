@@ -61,24 +61,22 @@ class RulespecCheckgroupParametersWebsphereMqInstance(CheckParameterRulespecWith
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("map_instance_states",
-                 ListOf(
-                     Tuple(
-                         orientation="horizontal",
-                         elements=[
-                             DropdownChoice(
-                                 choices=[
-                                     ('active', _('Active')),
-                                     ('standby', _('Standby')),
-                                 ],),
-                             MonitoringState(),
-                         ],
-                     ),
-                     title=_('Map instance state'),
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("map_instance_states",
+             ListOf(
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         DropdownChoice(choices=[
+                             ('active', _('Active')),
+                             ('standby', _('Standby')),
+                         ],),
+                         MonitoringState(),
+                     ],
+                 ),
+                 title=_('Map instance state'),
+             )),
+        ],)
 
     @property
     def item_spec(self):

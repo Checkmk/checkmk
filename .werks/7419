@@ -1,0 +1,25 @@
+Title: Adapt help text to actual state and add log entry
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1558364151
+
+The notificationnumber for hosts and services of custom notifications
+was silently modified from '0' to '1' since at least June 2015. This
+was not shown in the help text of the conditions of notifiction rules,
+and the notify.log.
+
+This werk corrects the help text for the condition "Restrict to nth to
+mth notification", adds a default of '1' for the minimum value, and
+adds a log entry for the modification to the notify.log in debug mode.
+
+Rules with a value of '0' for the minimum value will still work, but
+have to be changed to at least '1' when the rule is saved again.
+
+Note that the "Show / hide notification context" option of the Analyze
+mode will still show values of '0' since it shows the raw notifications
+from the core and not the completed context.

@@ -68,12 +68,11 @@ def parse_aws_elbv2_application(info):
 
 def check_aws_elbv2_application_lcu(item, params, parsed):
     lcus = parsed['ConsumedLCUs']
-    yield check_levels(
-        lcus,
-        'aws_consumed_lcus',
-        params.get('levels'),
-        human_readable_func=int,
-        infoname="Consumed")
+    yield check_levels(lcus,
+                       'aws_consumed_lcus',
+                       params.get('levels'),
+                       human_readable_func=int,
+                       infoname="Consumed")
 
 
 check_info['aws_elbv2_application'] = {
@@ -120,8 +119,11 @@ def check_aws_elbv2_application_connections(item, params, parsed):
         conns = parsed.get(conn_ty)
         if conns is None:
             continue
-        yield check_levels(
-            conns, 'aws_%s_connections' % key, None, human_readable_func=int, infoname=title)
+        yield check_levels(conns,
+                           'aws_%s_connections' % key,
+                           None,
+                           human_readable_func=int,
+                           infoname=title)
 
 
 check_info['aws_elbv2_application.connections'] = {
@@ -167,12 +169,11 @@ def check_aws_elbv2_application_http_elb(item, params, parsed):
         except ZeroDivisionError:
             pass
         else:
-            yield check_levels(
-                http_errors_perc,
-                'http_%sxx_perc' % http_errors_nr,
-                params.get('levels_http_%sxx_perc' % http_errors_nr),
-                human_readable_func=get_percent_human_readable,
-                infoname="%sXX-Errors of total requests" % http_errors_nr)
+            yield check_levels(http_errors_perc,
+                               'http_%sxx_perc' % http_errors_nr,
+                               params.get('levels_http_%sxx_perc' % http_errors_nr),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%sXX-Errors of total requests" % http_errors_nr)
 
     http_backend_3xx = parsed.get('HTTPCode_ELB_3XX_Count')
     if http_backend_3xx is not None:
@@ -258,39 +259,35 @@ def inventory_aws_elbv2_application_statistics(parsed):
 def check_aws_elbv2_application_statistics(item, params, parsed):
     processed_bytes = parsed.get('ProcessedBytes')
     if processed_bytes is not None:
-        yield check_levels(
-            processed_bytes,
-            "aws_proc_bytes",
-            None,
-            human_readable_func=get_bytes_human_readable,
-            infoname="Processed bytes")
+        yield check_levels(processed_bytes,
+                           "aws_proc_bytes",
+                           None,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="Processed bytes")
 
     ipv6_processed_bytes = parsed.get('IPv6ProcessedBytes')
     if ipv6_processed_bytes is not None:
-        yield check_levels(
-            ipv6_processed_bytes,
-            "aws_ipv6_proc_bytes",
-            None,
-            human_readable_func=get_bytes_human_readable,
-            infoname="IPv6 Processed bytes")
+        yield check_levels(ipv6_processed_bytes,
+                           "aws_ipv6_proc_bytes",
+                           None,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="IPv6 Processed bytes")
 
     ipv6_requests = parsed.get('IPv6RequestCount')
     if ipv6_requests is not None:
-        yield check_levels(
-            ipv6_requests,
-            "aws_ipv6_requests",
-            None,
-            human_readable_func=int,
-            infoname="IPv6 requests")
+        yield check_levels(ipv6_requests,
+                           "aws_ipv6_requests",
+                           None,
+                           human_readable_func=int,
+                           infoname="IPv6 requests")
 
     rule_evaluations = parsed.get('RuleEvaluations')
     if rule_evaluations is not None:
-        yield check_levels(
-            rule_evaluations,
-            'aws_rule_evaluations',
-            None,
-            human_readable_func=int,
-            infoname="Rule evaluations")
+        yield check_levels(rule_evaluations,
+                           'aws_rule_evaluations',
+                           None,
+                           human_readable_func=int,
+                           infoname="Rule evaluations")
 
 
 check_info['aws_elbv2_application.statistics'] = {

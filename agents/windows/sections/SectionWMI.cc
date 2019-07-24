@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionWMI.h"
+
 #include <algorithm>
 #include <ctime>
 #include "Logger.h"
@@ -37,7 +38,9 @@
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-namespace {
+namespace wmi {
+constexpr const char kSeparator = kTabSeparator;
+constexpr const wchar_t *kWideSeparator = kWideTabSeparator;
 
 std::unique_ptr<SectionHeaderBase> makeHeader(bool subSection,
                                               const std::string &outputName,
@@ -45,18 +48,19 @@ std::unique_ptr<SectionHeaderBase> makeHeader(bool subSection,
     if (subSection)
         return std::make_unique<SubSectionHeader>(outputName, logger);
     else
-        return std::make_unique<SectionHeader<',', SectionBrackets>>(outputName,
-                                                                     logger);
+        return std::make_unique<
+            SectionHeader<wmi::kSeparator, SectionBrackets>>(outputName,
+                                                             logger);
 }
 
-}  // namespace
+}  // namespace wmi
 
 SectionWMI::SectionWMI(const std::string &outputName,
                        const std::string &configName, const Environment &env,
                        Logger *logger, const WinApiInterface &winapi,
                        bool asSubSection /*= false*/)
     : Section(configName, env, logger, winapi,
-              makeHeader(asSubSection, outputName, logger)) {}
+              wmi::makeHeader(asSubSection, outputName, logger)) {}
 
 SectionWMI *SectionWMI::withNamespace(const wchar_t *name) {
     _namespace = name;
@@ -86,7 +90,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
 
     // First use a local stream buffer...
     std::stringstream localStream;
-    localStream << Utf8(join(data.names(), L",")) << "\n";
+    localStream << Utf8(join(data.names(), wmi::kWideSeparator)) << "\n";
 
     // output data
     bool more = true;
@@ -97,7 +101,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
                        [&data](const std::wstring &name) {
                            return data.get<std::wstring>(name.c_str());
                        });
-        localStream << Utf8(join(values, L","));
+        localStream << Utf8(join(values, wmi::kWideSeparator));
 
         more = data.next();
 
@@ -218,7 +222,8 @@ bool SectionWMI::produceOutputInner(std::ostream &Out,
             result = _helper->getClass(_object.c_str());
         } else {
             std::wstringstream query;
-            query << L"SELECT " << join(_columns, L",") << L" FROM " << _object;
+            query << L"SELECT " << join(_columns, wmi::kWideSeparator)
+                  << L" FROM " << _object;
             result = _helper->query(query.str().c_str());
         }
 
@@ -249,7 +254,7 @@ bool SectionWMI::produceOutputInner(std::ostream &Out,
 
     // in cache we always have last valid data. Or nothing.
     // those cached data should be decorated with new column
-    auto modified = WmiPostProcess(cached_, exception_on, ',');
+    auto modified = WmiPostProcess(cached_, exception_on, wmi::kSeparator);
     if (modified.size()) Out << modified;
 
     return success;

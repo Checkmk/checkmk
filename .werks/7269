@@ -1,0 +1,12 @@
+Title: Increased LDAP user profile synchronisation timeout to remote sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563960270
+
+The timeout has been increased from 10s to 30s, since some setups were
+unable to sync the user profiles in time.

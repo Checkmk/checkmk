@@ -27,38 +27,34 @@
 # This is the WATO plugin to configure the active check check_flapping
 # via WATO. This plugin must be placed in web/plugins/wato directory.
 
-register_rule(
-    "activechecks",
-    "active_checks:flapping",
-    Tuple(
-        title=_("Check Flapping Services"),
-        help=_("Checks wether or not one or several services changed their states "
-               "too often in the given timeperiod."),
-        elements=[
-            TextUnicode(
-                title=_("Name"),
-                help=_("Will be used in the service description"),
-                allow_empty=False),
-            ListOfStrings(
-                title=_("Patterns to match services"),
-                orientation="horizontal",
-                valuespec=RegExp(size=30),
-            ),
-            Dictionary(
-                title=_("Optional parameters"),
-                elements=[("num_state_changes",
-                           Tuple(
-                               title=_("State change thresholds"),
-                               elements=[
-                                   Integer(title=_("Warning at"), default_value=2),
-                                   Integer(title=_("Critical at"), default_value=3),
-                               ])),
-                          (
-                              "timerange",
-                              Integer(
-                                  title=_("Timerange to check"),
-                                  unit=_('Minutes'),
-                                  default_value=60),
-                          )])
-        ]),
-    match='all')
+register_rule("activechecks",
+              "active_checks:flapping",
+              Tuple(title=_("Check Flapping Services"),
+                    help=_("Checks wether or not one or several services changed their states "
+                           "too often in the given timeperiod."),
+                    elements=[
+                        TextUnicode(title=_("Name"),
+                                    help=_("Will be used in the service description"),
+                                    allow_empty=False),
+                        ListOfStrings(
+                            title=_("Patterns to match services"),
+                            orientation="horizontal",
+                            valuespec=RegExp(size=30),
+                        ),
+                        Dictionary(title=_("Optional parameters"),
+                                   elements=[("num_state_changes",
+                                              Tuple(title=_("State change thresholds"),
+                                                    elements=[
+                                                        Integer(title=_("Warning at"),
+                                                                default_value=2),
+                                                        Integer(title=_("Critical at"),
+                                                                default_value=3),
+                                                    ])),
+                                             (
+                                                 "timerange",
+                                                 Integer(title=_("Timerange to check"),
+                                                         unit=_('Minutes'),
+                                                         default_value=60),
+                                             )])
+                    ]),
+              match='all')

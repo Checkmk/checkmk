@@ -3,41 +3,52 @@
 
 #include "pch.h"
 
+#include "test_tools.h"
+
 #include <filesystem>
 
+#include "cfg.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
+#include "glob_match.h"
+#include "test-utf-names.h"
 #include "tools/_misc.h"
 
-#include "cfg.h"
-#include "glob_match.h"
-#include "test_tools.h"
-#include "test-utf-names.h"
-
 namespace tst {
-void SafeCleanTempDir() {
-    namespace fs = std::filesystem;
-    auto temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir = temp_dir.find(L"\\temp", 0) != std::wstring::npos;
-    if (normal_dir) {
-        // clean
-        fs::remove_all(cma::cfg::GetTempDir());
-        fs::create_directory(temp_dir);
+
+void PrintNode(YAML::Node node, std::string_view S) {
+    if (tgt::IsDebug()) {
+        YAML::Emitter emit;
+        emit << node;
+        XLOG::l("{}:\n{}", S, emit.c_str());
     }
 }
 
-void SafeCleanTempDir(const std::string Sub) {
+void SafeCleanTempDir() {
     namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
-    auto normal_dir = temp_dir.find(L"\\temp", 0) != std::wstring::npos;
-    if (normal_dir) {
-        // clean
-        fs::path t_d = temp_dir;
-        fs::remove_all(t_d / Sub);
-        fs::create_directory(t_d / Sub);
-    } else {
+    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
+    if (!really_temp_dir) return;
+
+    // clean
+    fs::remove_all(cma::cfg::GetTempDir());
+    fs::create_directory(temp_dir);
+}
+
+void SafeCleanTempDir(std::string_view sub_dir) {
+    namespace fs = std::filesystem;
+    auto temp_dir = cma::cfg::GetTempDir();
+    auto really_temp_dir = temp_dir.find(L"\\tmp", 0) != std::wstring::npos;
+    if (!really_temp_dir) {
         XLOG::l("attempt to delete suspicious dir {}",
                 wtools::ConvertToUTF8(temp_dir));
+        return;
     }
+
+    // clean
+    fs::path t_d = temp_dir;
+    fs::remove_all(t_d / sub_dir);
+    fs::create_directory(t_d / sub_dir);
 }
 
 template <typename T, typename V>
@@ -420,6 +431,29 @@ TEST(LessTest, AllX) {
         EXPECT_TRUE(false == IsEqual("aa", "AAa"));
         EXPECT_TRUE(false == IsEqual("b", "A"));
         EXPECT_TRUE(true == IsEqual("b", "B"));
+    }
+}
+
+TEST(CmaTools, StringCache) {
+    {
+        tools::StringSet cache;
+        ASSERT_TRUE(cache.size() == 0);
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "aAaaa"));
+        ASSERT_TRUE(cache.size() == 1);
+        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+        ASSERT_TRUE(cache.size() == 1);
+
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd"));
+        ASSERT_TRUE(cache.size() == 2);
+        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd-1"));
+        ASSERT_TRUE(cache.size() == 3);
+        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+        ASSERT_TRUE(cache.size() == 3);
+
+        EXPECT_FALSE(tools::AddUniqStringToSetAsIs(cache, "AAAAA"));
+        ASSERT_TRUE(cache.size() == 3);
+        EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
+        ASSERT_TRUE(cache.size() == 4);
     }
 }
 

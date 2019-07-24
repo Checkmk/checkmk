@@ -84,8 +84,8 @@ class ModeBackgroundJobsOverview(WatoMode):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = html.makeuri_contextless([("mode", "background_jobs_overview")])
-        job_manager.show_status_of_job_classes(
-            gui_background_job.job_registry.values(), job_details_back_url=back_url)
+        job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(),
+                                               job_details_back_url=back_url)
 
         if any(
                 job_manager.get_running_job_ids(c)
@@ -115,7 +115,7 @@ class ModeBackgroundJobDetails(WatoMode):
             html.context_button(_("Back"), self._back_url(), "back")
 
     def _back_url(self):
-        return html.get_url_input("back_url")
+        return html.get_url_input("back_url", deflt="")
 
     def page(self):
         job_id = html.request.var("job_id")
@@ -135,7 +135,7 @@ class ModeBackgroundJobDetails(WatoMode):
 
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot)
-        if job_snapshot.is_running():
+        if job_snapshot.is_active():
             html.immediate_browser_redirect(1, "")
 
     def action(self):

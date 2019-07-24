@@ -27,7 +27,7 @@
 
 def parse_sap_hana_replication_status(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         inst = {}
         for line in lines:
             if line[0] == "mode:":
@@ -35,7 +35,7 @@ def parse_sap_hana_replication_status(info):
             elif line[0] == "systemReplicationStatus:":
                 inst["sys_repl_status"] = line[1]
         if inst:
-            parsed.setdefault((sid_instance, node), inst)
+            parsed.setdefault(sid_instance, inst)
     return parsed
 
 
@@ -51,25 +51,19 @@ SAP_HANA_REPL_STATUS_MAP = {
 
 
 def inventory_sap_hana_replication_status(parsed):
-    for (sid_instance, _node), data in parsed.iteritems():
+    for sid_instance, data in parsed.iteritems():
         if data["sys_repl_status"] != "10" and data.get("mode", "").lower() == "primary":
             yield sid_instance, {}
 
 
-def check_sap_hana_replication_status(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_replication_status(item, params, data):
+    sys_repl_status = data["sys_repl_status"]
+    state, state_readable = SAP_HANA_REPL_STATUS_MAP.get(sys_repl_status,
+                                                         (3, "unknown[%s]" % sys_repl_status))
+    yield state, "System replication: %s" % state_readable
 
-        if node:
-            yield 0, 'On node: %s' % node
-
-        sys_repl_status = data["sys_repl_status"]
-        state, state_readable = SAP_HANA_REPL_STATUS_MAP.get(sys_repl_status,
-                                                             (3, "unknown[%s]" % sys_repl_status))
-        yield state, "System replication: %s" % state_readable
-
-        yield 0, "Mode: %s" % data["mode"]
+    yield 0, "Mode: %s" % data["mode"]
 
 
 check_info['sap_hana_replication_status'] = {
@@ -78,5 +72,4 @@ check_info['sap_hana_replication_status'] = {
     'check_function': check_sap_hana_replication_status,
     'service_description': 'SAP HANA Replication Status %s',
     'includes': ['sap_hana.include'],
-    "node_info": True,
 }

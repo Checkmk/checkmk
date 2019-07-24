@@ -58,30 +58,29 @@ class RulespecCheckgroupParametersCitrixSessions(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("total",
-                 Tuple(
-                     title=_("Total number of Sessions"),
-                     elements=[
-                         Integer(title=_("warning at"), unit="Sessions"),
-                         Integer(title=_("critical at"), unit="Session"),
-                     ],
-                 )),
-                ("active",
-                 Tuple(
-                     title=_("Number of Active Sessions"),
-                     elements=[
-                         Integer(title=_("warning at"), unit="Sessions"),
-                         Integer(title=_("critical at"), unit="Session"),
-                     ],
-                 )),
-                ("inactive",
-                 Tuple(
-                     title=_("Number of Inactive Sessions"),
-                     elements=[
-                         Integer(title=_("warning at"), unit="Sessions"),
-                         Integer(title=_("critical at"), unit="Session"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("total",
+             Tuple(
+                 title=_("Total number of Sessions"),
+                 elements=[
+                     Integer(title=_("warning at"), unit="Sessions"),
+                     Integer(title=_("critical at"), unit="Session"),
+                 ],
+             )),
+            ("active",
+             Tuple(
+                 title=_("Number of Active Sessions"),
+                 elements=[
+                     Integer(title=_("warning at"), unit="Sessions"),
+                     Integer(title=_("critical at"), unit="Session"),
+                 ],
+             )),
+            ("inactive",
+             Tuple(
+                 title=_("Number of Inactive Sessions"),
+                 elements=[
+                     Integer(title=_("warning at"), unit="Sessions"),
+                     Integer(title=_("critical at"), unit="Session"),
+                 ],
+             )),
+        ],)

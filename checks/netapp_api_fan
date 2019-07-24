@@ -29,12 +29,19 @@
 # cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 3    rpm 3000    cooling-element-is-error false
 
+discovery_netapp_api_fan_rules = []
 
-def inventory_netapp_api_fan(parsed):
-    for key, values in parsed.items():
-        if values.get("cooling-element-is-not-installed") != "true":
-            item_name = "%s/%s" % tuple(key.split("."))
-            yield item_name, None
+
+def _format_item(key):
+    return key.replace('.', '/')
+
+
+def discovery_netapp_api_fan(parsed):
+    if _discover_single_items(discovery_netapp_api_fan_rules):
+        for key, values in parsed.items():
+            if values.get("cooling-element-is-not-installed") != "true":
+                item_name = _format_item(key)
+                yield item_name, None
 
 
 def check_netapp_api_fan(item, _no_params, parsed):
@@ -52,7 +59,50 @@ check_info["netapp_api_fan"] = {
     'check_function': check_netapp_api_fan,
     'parse_function': lambda info: netapp_api_parse_lines(
         info, custom_keys=["cooling-element-list", "cooling-element-number"]),
-    'inventory_function': inventory_netapp_api_fan,
+    'inventory_function': discovery_netapp_api_fan,
+    'service_description': 'Fan Shelf %s',
+    'includes': ["netapp_api.include"]
+}
+
+
+def discovery_netapp_api_fan_summary(parsed):
+    if _discover_single_items(discovery_netapp_api_fan_rules):
+        return
+    if _get_fans_with_cooling(parsed):
+        yield 'Summary', {}
+
+
+def _get_fans_with_cooling(fans):
+    return {
+        key: fan
+        for key, fan in fans.iteritems()
+        if fan.get("cooling-element-is-not-installed") != "true"
+    }
+
+
+def _get_failed_cooling_elements(fans):
+    erred_fans = []
+    for key, value in fans.iteritems():
+        if value["cooling-element-is-error"] == "true":
+            erred_fans.append(_format_item(key))
+    return erred_fans
+
+
+def check_netapp_api_fan_summary(item, _no_params, parsed):
+    fans = _get_fans_with_cooling(parsed)  #dictionary now
+    yield 0, "%d fans in total" % len(fans)
+
+    erred_fans = _get_failed_cooling_elements(fans)
+    if erred_fans:
+        erred_fans_names = ", ".join(erred_fans)
+        count = len(erred_fans)
+        yield 2, "%d fan%s in error state (%s)" % (count, "" if count == 1 else "s",
+                                                   erred_fans_names)
+
+
+check_info['netapp_api_fan.summary'] = {
+    'check_function': check_netapp_api_fan_summary,
+    'inventory_function': discovery_netapp_api_fan_summary,
     'service_description': 'Fan Shelf %s',
     'includes': ["netapp_api.include"]
 }

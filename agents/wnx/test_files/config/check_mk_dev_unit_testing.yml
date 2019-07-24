@@ -78,8 +78,8 @@ global:
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     logging:
-        # windows /logs/name or public/name, default is yes
-        public: yes
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
+        location: 
         # name of file log, default is check_mk.log
         file : 
         # log in file also internal debug messages, recommended when we have problems

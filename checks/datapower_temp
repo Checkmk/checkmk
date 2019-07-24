@@ -47,11 +47,11 @@ def check_datapower_temp(item, params, info):
                 dev_state, dev_state_txt = datapower_temp_status[status]
                 return dev_state, "device status: %s" % dev_state_txt
 
-            state, infotext, perfdata = check_temperature(
-                float(temp),
-                params,
-                "datapower_temp_%s" % item,
-                dev_levels=(float(upper_warn), float(upper_crit)))
+            state, infotext, perfdata = check_temperature(float(temp),
+                                                          params,
+                                                          "datapower_temp_%s" % item,
+                                                          dev_levels=(float(upper_warn),
+                                                                      float(upper_crit)))
 
             return state, infotext, perfdata
 

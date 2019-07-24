@@ -73,7 +73,6 @@ from cmk.utils.exceptions import MKGeneralException
 
 class StructuredDataTree(object):
     """Interface for structured data tree"""
-
     def __init__(self):
         super(StructuredDataTree, self).__init__()
         self._root = Container()
@@ -291,7 +290,6 @@ class StructuredDataTree(object):
 
 class NodeAttribute(object):
     """Interface for all node attributes"""
-
     def is_empty(self):
         raise NotImplementedError()
 
@@ -637,7 +635,6 @@ class Container(NodeAttribute):
 
 class Leaf(NodeAttribute):
     """Interface for all primitive nodes/leaves"""
-
     def normalize_nodes(self):
         pass
 
@@ -989,8 +986,9 @@ class Node(object):
             if self._children.get(child_type) is None \
                and foreign._children.get(child_type) is None:
                 continue
-            comparable_children.add((abs_path, self._children.get(child_type, child),
-                                     foreign._children.get(child_type, child)))
+            comparable_children.add(
+                (abs_path, self._children.get(child_type,
+                                              child), foreign._children.get(child_type, child)))
         return comparable_children
 
     def copy(self):

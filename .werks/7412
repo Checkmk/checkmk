@@ -1,0 +1,11 @@
+Title: esx_vsphere_hostsystem: Fixed crash if no servicetag is available
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1558691778
+
+This fixes the KeyError 'hardware.systemInfo.otherIdentifyingInfo.ServiceTag'.

@@ -20,7 +20,7 @@ namespace cma::cfg::cap {
 TEST(CapTest, Reinstall) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 
@@ -34,7 +34,7 @@ TEST(CapTest, Reinstall) {
 
     // absent source
     {
-        tst::CreateFile(target / name, "a");
+        tst::ConstructFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
@@ -42,30 +42,121 @@ TEST(CapTest, Reinstall) {
     tst::CreateInOut();
     // source without target
     {
-        tst::CreateFile(source / name, "a");
+        tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
 
     // target is newer than source
     {
-        tst::CreateFile(target / name, "a");
+        tst::ConstructFile(target / name, "a");
         EXPECT_FALSE(NeedReinstall(target / name, source / name));
     }
 
     // source is newer than target
     {
         cma::tools::sleep(100);
-        tst::CreateFile(source / name, "a");
+        tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
     tst::SafeCleanTempDir();
+}
+
+TEST(CapTest, InstallFileAsCopy) {
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    std::error_code ec;
+
+    std::wstring file_name = L"check_mk.copy.tmp";
+    auto target_file = target / file_name;
+    auto source_file = source / file_name;
+
+    fs::remove(target_file, ec);
+
+    // absent source and target
+    {
+        bool res = true;
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"", L"", L""));  //
+        EXPECT_FALSE(res);
+
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\"));  //
+        EXPECT_TRUE(res);
+
+        EXPECT_NO_THROW(
+            res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss", L"scc"));  //
+        EXPECT_FALSE(res);
+    }
+
+    // absent source
+    {
+        tst::ConstructFile(target_file, "1");
+        EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
+                                      source.wstring()));  //
+        ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
+    }
+
+    // target presented
+    {
+        tst::ConstructFile(source_file, "2");
+        EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
+                                      source.wstring()));  //
+        EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
+    }
+}
+
+TEST(CapTest, PackagedAgent) {
+    namespace fs = std::filesystem;
+
+    // check we have code compatible with instlalation
+    auto ini_path = fs::current_path();
+    ini_path /= "check_mk.ini";
+    std::error_code ec;
+    if (fs::exists(ini_path, ec)) {
+        EXPECT_TRUE(IsIniFileFromInstaller(ini_path));
+    } else
+        XLOG::SendStringToStdio(
+            fmt::format(
+                "Skipping Cap packagedAgen internal TEST, no file '{}'\n",
+                ini_path.string()),
+            XLOG::Colors::yellow);
+
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    EXPECT_FALSE(IsIniFileFromInstaller(""));
+    fs::path base = cma::cfg::GetTempDir();
+    fs::path from_bakery = base / "from_bakery.ini";
+    {
+        std::ofstream ofs(from_bakery);
+
+        ASSERT_TRUE(ofs) << "Can't open file " << from_bakery.u8string()
+                         << "error " << GetLastError() << "\n";
+        ofs << "# Created by Check_MK Agent Bakery.\n"
+               "# This file is managed via WATO, do not edit manually or you\n"
+               "# lose your changes next time when you update the agent.\n"
+               "[global] \n";
+    }
+
+    EXPECT_FALSE(IsIniFileFromInstaller(from_bakery));
+
+    fs::path valid_file = base / "valid_file.ini";
+    {
+        std::ofstream ofs(valid_file);
+
+        ASSERT_TRUE(ofs) << "Can't open file " << valid_file.u8string()
+                         << "error " << GetLastError() << "\n";
+        ofs << kIniFromInstallMarker << "\n";
+    }
+
+    EXPECT_TRUE(IsIniFileFromInstaller(valid_file));
 }
 
 TEST(CapTest, InstallIni) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
     tst::SafeCleanBakeryDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(); tst::SafeCleanBakeryDir(););
     std::error_code ec;
 
@@ -88,8 +179,8 @@ TEST(CapTest, InstallIni) {
 
     // absent source
     {
-        tst::CreateFile(bakery_yml, "1");
-        tst::CreateFile(ini_target, "1");
+        tst::ConstructFile(bakery_yml, "1");
+        tst::ConstructFile(ini_target, "1");
         EXPECT_TRUE(ReinstallIni(ini_target, ini_source));  //
         EXPECT_FALSE(fs::exists(bakery_yml, ec)) << "must be removed";
         EXPECT_FALSE(fs::exists(ini_target, ec)) << "must be removed";
@@ -107,7 +198,7 @@ TEST(CapTest, InstallIni) {
 TEST(CapTest, InstallCap) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
-    auto [target, source] = tst::CreateInOut();
+    auto [source, target] = tst::CreateInOut();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     std::error_code ec;
 
@@ -131,8 +222,8 @@ TEST(CapTest, InstallCap) {
 
     // absent source
     {
-        tst::CreateFile(plugin1, "1");
-        tst::CreateFile(plugin2, "2");
+        tst::ConstructFile(plugin1, "1");
+        tst::ConstructFile(plugin2, "2");
         fs::copy_file(cap_base, cap_out, ec);
         EXPECT_TRUE(ReinstallCaps(cap_out, cap_in));  //
         EXPECT_FALSE(fs::exists(cap_out, ec)) << "file must be deleted";
@@ -206,7 +297,7 @@ TEST(CapTest, CheckUnpack) {
     namespace fs = std::filesystem;
     fs::path p = GetUserPluginsDir();
     auto f_string = p.lexically_normal().wstring();
-    ASSERT_TRUE(f_string.find(L"ProgramData\\CheckMK\\Agent\\plugins"));
+    ASSERT_TRUE(f_string.find(L"ProgramData\\checkmk\\agent\\plugins"));
     for (auto& name : names) fs::remove(name, ec);
 
     fs::path cap = cma::cfg::GetUserDir();
@@ -231,7 +322,7 @@ TEST(CapTest, CheckRemove) {
     namespace fs = std::filesystem;
     fs::path p = GetUserPluginsDir();
     auto f_string = p.lexically_normal().wstring();
-    ASSERT_TRUE(f_string.find(L"ProgramData\\CheckMK\\Agent\\plugins"));
+    ASSERT_TRUE(f_string.find(L"ProgramData\\checkmk\\agent\\plugins"));
     for (auto& name : names) {
         EXPECT_TRUE(fs::exists(name, ec));
     }

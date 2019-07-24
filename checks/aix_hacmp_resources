@@ -45,7 +45,10 @@ def parse_aix_hacmp_resources(info):
         joined_line = " ".join(line)
         if 'There is no cluster definition' in joined_line or 'Status of the RSCT subsystems' in joined_line:
             continue
-        parsed.setdefault(line[0], []).append((line[2], line[1].lower()))
+        try:
+            parsed.setdefault(line[0], []).append((line[2], line[1].lower()))
+        except IndexError:
+            pass
     return parsed
 
 
@@ -61,10 +64,10 @@ def check_aix_hacmp_resources(item, params, data):
         expected_behaviour = params.get("expect_online_on", "first")
 
     resource_states = []
-    infotext = ""
+    infotext = []
     for node_name, resource_state in data:
         resource_states.append(resource_state)
-        infotext += "%s on node %s, " % (resource_state, node_name)
+        infotext.append("%s on node %s" % (resource_state, node_name))
 
     state = 0
     if expected_behaviour == "first":
@@ -74,7 +77,7 @@ def check_aix_hacmp_resources(item, params, data):
         if not any((resource_state == u"online" for resource_state in resource_states)):
             state = 2
 
-    return state, infotext[:-2]
+    return state, ", ".join(infotext)
 
 
 check_info['aix_hacmp_resources'] = {

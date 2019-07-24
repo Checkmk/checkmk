@@ -1,0 +1,11 @@
+Title: HW/SW Inventory System: Wrong sorted packages caused too many changes in inventory history
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1558968313
+
+

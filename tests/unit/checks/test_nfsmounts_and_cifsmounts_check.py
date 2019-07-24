@@ -14,9 +14,10 @@ pytestmark = pytest.mark.checks
         (  # no info
             [], [], (['', None, BasicCheckResult(3, ' not mounted', None)],)),
         (  # single mountpoint with data
-            [[u'/ABCshare', u'ok', u'491520', u'460182', u'460182', u'65536']], [('/ABCshare', {})],
-            [('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", None)),
-             ('/ZZZshare', {}, BasicCheckResult(3, "/ZZZshare not mounted", None))]),
+            [[u'/ABCshare', u'ok', u'491520', u'460182', u'460182', u'65536']], [
+                ('/ABCshare', {})
+            ], [('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", None)),
+                ('/ZZZshare', {}, BasicCheckResult(3, "/ZZZshare not mounted", None))]),
         (  # two mountpoints with empty data
             [[u'/AB', u'ok', u'-', u'-', u'-', u'-'], [u'/ABC', u'ok', u'-', u'-', u'-', u'-']], [
                 ('/AB', {}), ('/ABC', {})
@@ -30,22 +31,23 @@ pytestmark = pytest.mark.checks
                  ('/var/dbaexport', {},
                   BasicCheckResult(0, '15.2% used (931.48 GB of 6.00 TB)', None))]),
         (  # with perfdata
-            [[u'/PERFshare', u'ok', u'491520', u'460182', u'460182', u'65536']],
-            [('/PERFshare', {})], [('/PERFshare', {
+            [[u'/PERFshare', u'ok', u'491520', u'460182', u'460182', u'65536']
+            ], [('/PERFshare', {})], [('/PERFshare', {
                 'has_perfdata': True
             },
-                                    BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", [
-                                        PerfValue('fs_size', 491520 * 65536),
-                                        PerfValue('fs_used', 491520 * 65536 - 460182 * 65536)
-                                    ]))]),
+                                       BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", [
+                                           PerfValue('fs_size', 491520 * 65536),
+                                           PerfValue('fs_used', 491520 * 65536 - 460182 * 65536)
+                                       ]))]),
         (  # state == 'hanging'
-            [[u'/test', u'hanging', u'hanging', u'0', u'0', u'0', u'0']], [('/test hanging', {})],
-            [('/test hanging', {
+            [[u'/test', u'hanging', u'hanging', u'0', u'0', u'0', u'0']
+            ], [('/test hanging', {})], [('/test hanging', {
                 'has_perfdata': True
             }, BasicCheckResult(2, "Server not responding", None))]),
         (  # unknown state
-            [[u'/test', u'unknown', u'unknown', u'1', u'1', u'1', u'1']], [('/test unknown', {})],
-            [('/test unknown', {}, BasicCheckResult(2, "Unknown state", None))]),
+            [[u'/test', u'unknown', u'unknown', u'1', u'1', u'1', u'1']], [('/test unknown', {})], [
+                ('/test unknown', {}, BasicCheckResult(2, "Unknown state", None))
+            ]),
         (  # zero block size
             [[u'/test', u'perfdata', u'ok', u'0', u'460182', u'460182', u'0']],
             [('/test perfdata', {})],
@@ -63,12 +65,12 @@ def test_nfsmounts(check_manager, info, discovery_expected, check_expected):
     check_cifs = check_manager.get_check("cifsmounts")
 
     # assure that the code of both checks is identical
-    assert (check_nfs.info['parse_function'].func_code.co_code ==
-            check_cifs.info['parse_function'].func_code.co_code)
-    assert (check_nfs.info['inventory_function'].func_code.co_code ==
-            check_cifs.info['inventory_function'].func_code.co_code)
-    assert (check_nfs.info['check_function'].func_code.co_code ==
-            check_cifs.info['check_function'].func_code.co_code)
+    assert (check_nfs.info['parse_function'].__code__.co_code ==
+            check_cifs.info['parse_function'].__code__.co_code)
+    assert (check_nfs.info['inventory_function'].__code__.co_code ==
+            check_cifs.info['inventory_function'].__code__.co_code)
+    assert (check_nfs.info['check_function'].__code__.co_code ==
+            check_cifs.info['check_function'].__code__.co_code)
 
     parsed = check_nfs.run_parse(info)
 

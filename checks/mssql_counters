@@ -311,10 +311,10 @@ def check_mssql_counters_locks(item, params, parsed):
 
 
 check_info['mssql_counters.locks'] = {
-    'inventory_function': lambda parsed: inventory_mssql_counters_generic(
-        parsed,
-        ['number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'],
-        dflt={}),
+    'inventory_function': lambda parsed: inventory_mssql_counters_generic(parsed, [
+        'number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'
+    ],
+                                                                          dflt={}),
     'check_function': check_mssql_counters_locks,
     'service_description': "MSSQL %s Locks",
     'has_perfdata': True,

@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<splunk_license_usage>>>
+# 524288000 5669830
+
+SplunkLicenseUsage = collections.namedtuple("lcsusg", ["quota", "slaves_usage_bytes"])
+
+
+def parse_splunk_license_usage(info):
+    parsed = {}
+
+    for lcs_detail in info:
+        try:
+            quota, slaves_usage_bytes = lcs_detail
+
+            parsed.setdefault("License Usage",
+                              []).append(SplunkLicenseUsage(int(quota), int(slaves_usage_bytes)))
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+factory_settings["splunk_license_usage_default_levels"] = {
+    "usage_bytes": (80.0, 90.0),
+}
+
+
+def inventory_splunk_license_usage(parsed):
+    yield None, {}
+
+
+def check_splunk_license_usage(item, params, parsed):
+    data = parsed["License Usage"][0]
+
+    yield 0, "Quota: %s" % get_bytes_human_readable(data.quota)
+
+    warn, crit = params["usage_bytes"]
+
+    for value, infotext in [(data.slaves_usage_bytes, "Slaves usage")]:
+        if isinstance(warn, float):
+            warn = data.quota / 100 * warn
+            crit = data.quota / 100 * crit
+
+        yield check_levels(value,
+                           "splunk_slave_usage_bytes", (warn, crit),
+                           human_readable_func=get_bytes_human_readable,
+                           infoname=infotext)
+
+
+check_info["splunk_license_usage"] = {
+    "parse_function": parse_splunk_license_usage,
+    "check_function": check_splunk_license_usage,
+    "inventory_function": inventory_splunk_license_usage,
+    "service_description": "Splunk License Usage",
+    "group": "splunk_license_usage",
+    "default_levels_variable": "splunk_license_usage_default_levels",
+    "has_perfdata": True,
+}

@@ -26,8 +26,11 @@
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
 import ast
+import errno
 import os
 import time
+
+import pathlib2 as pathlib
 
 import cmk.utils
 import cmk.utils.store as store
@@ -45,7 +48,7 @@ import cmk.gui.watolib.sidebar_reload
 from cmk.gui.plugins.watolib import config_domain_registry
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-audit_log_path = var_dir + "log/audit.log"
+audit_log_path = pathlib.Path(var_dir, "log", "audit.log")
 
 
 def log_entry(linkinfo, action, message, user_id=None):
@@ -53,7 +56,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
     # escaped / allowed HTML and strings to be escaped.
-    message = cmk.utils.make_utf8(html.attrencode(message)).strip()
+    message = html.attrencode(message).strip()
 
     # TODO: Create a more generic referencing
     # linkinfo identifies the object operated on. It can be a Host or a Folder
@@ -61,24 +64,24 @@ def log_entry(linkinfo, action, message, user_id=None):
     # linkinfo is either a Folder, or a Host or a hostname or None
     if hasattr(linkinfo, "linkinfo"):
         link = linkinfo.linkinfo()
-    elif linkinfo is None:
-        link = "-"
     else:
         link = linkinfo
 
-    if user_id is None and config.user.id is not None:
-        user_id = config.user.id
-    elif user_id == '':
-        user_id = '-'
+    write_tokens = (
+        time.strftime("%s"),
+        link or "-",
+        user_id or config.user.id or "-",
+        action,
+        message.replace("\n", "\\n"),
+    )
 
-    if user_id:
-        user_id = user_id.encode("utf-8")
+    # TODO: once we know all of these are unicode, remove this line
+    write_tokens = (t if isinstance(t, unicode) else t.encode("utf-8") for t in write_tokens)
 
-    store.mkdir(os.path.dirname(audit_log_path))
-    with open(audit_log_path, "ab") as f:
-        os.chmod(f.name, 0660)
-        f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action,
-                                      message.replace("\n", "\\n")))
+    store.makedirs(audit_log_path.parent)
+    with audit_log_path.open(mode="a", encoding='utf-8') as f:
+        audit_log_path.chmod(0o660)
+        f.write(u" ".join(write_tokens) + u"\n")
 
 
 def log_audit(linkinfo, action, message, user_id=None):
@@ -165,7 +168,6 @@ class ActivateChangesWriter(object):
 
 class SiteChanges(object):
     """Manage persisted changes of a single site"""
-
     def __init__(self, site_id):
         super(SiteChanges, self).__init__()
         self._site_id = site_id
@@ -191,7 +193,7 @@ class SiteChanges(object):
                 if entry:
                     changes.append(ast.literal_eval(entry))
         except IOError as e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -219,7 +221,7 @@ class SiteChanges(object):
                 f.flush()
                 os.fsync(f.fileno())
 
-            os.chmod(path, 0660)
+            os.chmod(path, 0o660)
 
         except Exception as e:
             raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
@@ -231,7 +233,7 @@ class SiteChanges(object):
         try:
             os.unlink(self._site_changes_path())
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
             else:
                 raise

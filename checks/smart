@@ -76,6 +76,26 @@ def parse_smart_raw_values(info):
             if field != "Unknown_Attribute":
                 value = saveint(line[12])
                 disk[field] = value
+        # nvme
+        elif 3 <= len(line) <= 6:
+            if "/dev" in line[0]:
+                disk_name = line[0]
+                disk = {}
+                disks[disk_name] = disk
+
+            else:
+                field, value = [e.strip() for e in " ".join(line).split(":")]
+                value = value.replace("%", "").replace(".", "").replace(",", "")
+                if field == "Temperature":
+                    value = value.split()[0]
+                if field == "Critical Warning":
+                    value = int(value, 16)
+                if field == "Data Units Read":
+                    value = (int(value.split()[0]) * 512000)
+                if field == "Data Units Written":
+                    value = (int(value.split()[0]) * 512000)
+                disk[field.replace(" ", "_")] = saveint(value)
+
     return disks
 
 
@@ -92,7 +112,11 @@ def parse_smart_normalized_values(info):
 
             field = line[4]
             if field != "Unknown_Attribute":
-                value = int(line[6])
+                try:
+                    value = int(line[6])
+                except ValueError:
+                    disk[field] = None, None
+                    continue
                 if isinstance(line[8], int):
                     threshold = int(line[8])
                 else:
@@ -112,6 +136,8 @@ smart_stats_fields = [
     'Uncorrectable_Error_Cnt',
     'UDMA_CRC_Error_Count',
     'CRC_Error_Count',
+    #nvme
+    'Critical_Warning',
 ]
 
 
@@ -134,12 +160,8 @@ def check_smart_stats(item, params, info):
     normalized = parse_smart_normalized_values(info)
 
     if item not in disks:
-        return 3, "Disk not found"
+        return
     disk = disks[item]
-
-    state = 0
-    infos = []
-    perfdata = []
 
     for unit, field, descr in [
         (' hours', 'Power_On_Hours', 'Powered on'),
@@ -154,30 +176,56 @@ def check_smart_stats(item, params, info):
         ('', 'Uncorrectable_Error_Cnt', 'Uncorrectable errors'),
         ('', 'UDMA_CRC_Error_Count', 'UDMA CRC errors'),
         ('', 'CRC_Error_Count', 'UDMA CRC errors'),
+            #nvme
+        ('', 'Power_Cycles', 'Power cycles'),
+        ('', 'Critical_Warning', 'Critical warning'),
+        ('%', 'Available_Spare', 'Available spare'),
+        ('%', 'Percentage_Used', 'Percentage used'),
+        ('', 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors'),
+        ('', 'Error_Information_Log_Entries', 'Error information log entries'),
+        ('', 'Data_Units_Read', 'Data units read'),
+        ('', 'Data_Units_Written', 'Data units written'),
     ]:
-        if field in disk:
-            value = disk[field]
-            infos.append("%s: %d%s" % (descr, value, unit))
-            perfdata.append((field, value))
+        value = disk.get(field)
+        if value is None:
+            continue
 
-            if field in params:
-                ref_value = params[field]
+        if field.startswith("Data_Units_"):
+            infotext = "%s: %s%s" % (descr, get_bytes_human_readable(value), unit)
+        else:
+            infotext = "%s: %d%s" % (descr, value, unit)
 
-                # For reallocated event counts we experienced to many reported errors for disks
-                # which still seem to be OK. The raw value increased by a small amount but the
-                # aggregated value remained at it's initial/ok state. So we use the aggregated
-                # value now. Only for this field.
-                if field == "Reallocated_Event_Count":
-                    infos[-1] += " (was %d during discovery; normalized value looks OK)" % ref_value
-                    norm_value, norm_threshold = normalized[item][field]
-                    if norm_value <= norm_threshold:
-                        state = 2
+        if field == "Available_Spare":
+            ref_value = int(disk.get("Available_Spare_Threshold"))
+        else:
+            ref_value = params.get(field)
 
-                elif value > ref_value:
-                    state = 2
-                    infos[-1] += "(!!) (was %d during discovery)" % ref_value
+        if ref_value is None:
+            yield 0, infotext, [(field, value)]
+            continue
 
-    return state, ", ".join(infos), perfdata
+        if field == "Available_Spare":
+            state = 2 if value < ref_value else 0
+            hints = ["during discovery: %d (!!)" % ref_value] if value < ref_value else []
+        else:
+            state = 2 if value > ref_value else 0
+            hints = ["during discovery: %d (!!)" % ref_value] if value > ref_value else []
+
+        # For reallocated event counts we experienced to many reported errors for disks
+        # which still seem to be OK. The raw value increased by a small amount but the
+        # aggregated value remained at it's initial/ok state. So we use the aggregated
+        # value now. Only for this field.
+        if field == "Reallocated_Event_Count":
+            norm_value, norm_threshold = normalized[item][field]
+            if norm_value is None:
+                yield 0, infotext, [(field, value)]
+                continue
+            hints.append("normalized value: %d" % norm_value)
+            if norm_value <= norm_threshold:
+                state = 2
+                hints[-1] += " (!!)"
+
+        yield state, infotext + " (%s)" % ', '.join(hints) if hints else infotext, [(field, value)]
 
 
 check_info["smart.stats"] = {
@@ -192,17 +240,23 @@ def inventory_smart_temp(info):
     disks = parse_smart_raw_values(info)
     for disk_name, disk in disks.iteritems():
         if "Temperature_Celsius" in disk or \
-           "Temperature_Internal" in disk:
+           "Temperature_Internal" in disk or \
+           "Temperature" in disk:
             yield disk_name, {}
 
 
 def check_smart_temp(item, params, info):
     disks = parse_smart_raw_values(info)
+    data = disks.get(item)
+    if data is None:
+        return
 
-    if "Temperature_Celsius" in disks[item]:
-        temperature = disks[item]["Temperature_Celsius"]
-    elif "Temperature_Internal" in disks[item]:
-        temperature = disks[item]["Temperature_Internal"]
+    if "Temperature_Celsius" in data:
+        temperature = data["Temperature_Celsius"]
+    elif "Temperature_Internal" in data:
+        temperature = data["Temperature_Internal"]
+    elif "Temperature" in data:
+        temperature = data["Temperature"]
     else:
         return
 

@@ -121,7 +121,6 @@ def register(path):
 
     It is essentially a decorator that calls register_page_handler().
     """
-
     def wrap(wrapped_callable):
         cls_name = "PageClass%s" % path.title().replace(":", "")
         LegacyPageClass = type(cls_name, (Page,), {

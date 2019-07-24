@@ -37,6 +37,8 @@
 
 factory_settings["oracle_dataguard_stats"] = {
     "apply_lag": (3600, 14400),
+    "active_dataguard_option": 1,
+    "primary_broker_state": False,
 }
 
 
@@ -73,6 +75,18 @@ def parsed_oracle_dataguard_stats(info):
                 'fs_failover_observer_host': line[10],
                 'fs_failover_target': line[11],
                 'mrp_status': line[12],
+            })
+        if len(line) >= 14:
+            # new format with open_mode
+            instance.update({
+                'broker_state': line[6],
+                'protection_mode': line[7],
+                'fs_failover_status': line[8],
+                'fs_failover_observer_present': line[9],
+                'fs_failover_observer_host': line[10],
+                'fs_failover_target': line[11],
+                'mrp_status': line[12],
+                'open_mode': line[13],
             })
 
     return parsed
@@ -138,8 +152,13 @@ def check_oracle_dataguard_stats(item, params, parsed):
                                                'LOG SWITCH GAP'):
                 yield 0, "Switchover to standby possible"
             else:
-                yield 2, "Switchover to standby not possible! reason: %s" % dgdata[
-                    'switchover_status'].lower()
+                primary_broker_state = params.get("primary_broker_state")
+                if primary_broker_state or dgdata['broker_state'].lower() == 'enabled':
+                    # We need primary_broker_state False for Data-Guards without Broker
+                    yield 2, "Switchover to standby not possible! reason: %s"\
+                             % dgdata['switchover_status'].lower()
+                else:
+                    yield 0, "Switchoverstate ignored "
 
         elif dgdata['database_role'] == 'PHYSICAL STANDBY':
 
@@ -147,8 +166,8 @@ def check_oracle_dataguard_stats(item, params, parsed):
             if dgdata['switchover_status'] in ('SYNCHRONIZED', 'NOT ALLOWED', 'SESSIONS ACTIVE'):
                 yield 0, "Switchover to primary possible"
             else:
-                yield 2, "Switchover to primary not possible! reason: %s" % dgdata[
-                    'switchover_status']
+                yield 2, "Switchover to primary not possible! reason: %s"\
+                         % dgdata['switchover_status']
 
     if dgdata['database_role'] == 'PHYSICAL STANDBY':
 
@@ -157,6 +176,12 @@ def check_oracle_dataguard_stats(item, params, parsed):
             # todo: check against rule for automatic managed recovery
             if dgdata['mrp_status']:
                 yield 0, "Managed Recovery Process state %s" % dgdata['mrp_status'].lower()
+                try:
+                    if dgdata['open_mode'] == 'READ ONLY WITH APPLY':
+                        value = params.get("active_dataguard_option")
+                        yield value, 'Active Data-Guard found'
+                except KeyError:
+                    pass
             else:
                 yield 2, "Managed Recovery Process not started"
 

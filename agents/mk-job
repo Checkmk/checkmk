@@ -45,6 +45,8 @@ fi
 MYSELF=$(id -nu)
 OUTPUT_PATH=$MK_VARDIR/job/$MYSELF
 IDENT=$1
+RUNNING_FILE="$OUTPUT_PATH/$IDENT.$$running"
+
 shift
 
 if [ ! -d "$OUTPUT_PATH" ]; then
@@ -62,17 +64,17 @@ if ! type $1 >/dev/null 2>&1; then
     exit 1
 fi
 
-date +"start_time %s" > "$OUTPUT_PATH/$IDENT.running" 2>/dev/null
+date +"start_time %s" > "$RUNNING_FILE" 2>/dev/null
 
-if [ ! -w "$OUTPUT_PATH/$IDENT.running" ] ; then
+if [ ! -w "$RUNNING_FILE" ] ; then
   # Looks like we are lacking the permissions to create this file..
   # In this scenario no mk-job status file is created. We simply execute the command
   exec "$@"
 fi
 
 
-/usr/bin/time -o "$OUTPUT_PATH/$IDENT.running" --append \
+/usr/bin/time -o "$RUNNING_FILE" --append \
               -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" "$@"
 RC=$?
-mv "$OUTPUT_PATH/$IDENT.running" "$OUTPUT_PATH/$IDENT"
+mv "$RUNNING_FILE" "$OUTPUT_PATH/$IDENT"
 exit $RC

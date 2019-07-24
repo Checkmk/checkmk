@@ -36,11 +36,14 @@ import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
+from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.tags import (
     TagConfigFile,)
 from cmk.gui.watolib.groups import (
@@ -130,7 +133,7 @@ class APICallFolders(APICallCollection):
             folder_alias = os.path.basename(folder_path)
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
-        validate_host_attributes(folder_attributes)
+        validate_host_attributes(folder_attributes, new=True)
 
         # Check existance of parent folder, create it when configured
         create_parent_folders = bool(int(request.get("create_parent_folders", "1")))
@@ -156,7 +159,7 @@ class APICallFolders(APICallCollection):
             folder_alias = os.path.basename(folder_path)
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
-        validate_host_attributes(folder_attributes)
+        validate_host_attributes(folder_attributes, new=False)
 
         folder.edit(folder_alias, folder_attributes)
 
@@ -267,7 +270,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
-        validate_host_attributes(attributes)
+        validate_host_attributes(attributes, new=True)
 
         # Create folder(s)
         if not watolib.Folder.folder_exists(folder_path):
@@ -299,7 +302,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
-        validate_host_attributes(attributes)
+        validate_host_attributes(attributes, new=False)
 
         # Update existing attributes. Add new, remove unset_attributes
         current_attributes = host.attributes().copy()
@@ -634,7 +637,7 @@ class APICallRules(APICallCollection):
 
         ruleset_dict = {}
         for folder, _rule_index, rule in ruleset.get_rules():
-            ruleset_dict.setdefault(folder.path(), []).append(rule.to_dict_config())
+            ruleset_dict.setdefault(folder.path(), []).append(rule.to_web_api())
 
         return ruleset_dict
 
@@ -671,13 +674,19 @@ class APICallRules(APICallCollection):
                 rule_folder = watolib.Folder.folder(folder_path)
                 rule_folder.need_permission("write")
 
+        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
+
         # Verify all rules
-        rule_vs = watolib.Ruleset(ruleset_name).rulespec.valuespec
+        rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
+
+        # Binary rulesets currently don't have a valuespec attribute set.
+        if rule_vs is None:
+            rule_vs = Checkbox()
+
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
-                if "negate" in rule:
-                    continue  # ugly, rules with a boolean value have a different representation
                 value = rule["value"]
+
                 try:
                     rule_vs.validate_datatype(value, "test_value")
                     rule_vs.validate_value(value, "test_value")
@@ -690,20 +699,19 @@ class APICallRules(APICallCollection):
         for folder_path, rules in new_ruleset.items():
             folder = watolib.Folder.folder(folder_path)
 
-            new_ruleset = watolib.Ruleset(ruleset_name)
+            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
 
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
-                "edit-ruleset",
-                _("Set ruleset '%s' for '%s' with %d rules") % (
-                    new_ruleset.title(),
-                    folder.title(),
-                    len(rules),
-                ),
-                sites=folder.all_site_ids())
+            watolib.add_change("edit-ruleset",
+                               _("Set ruleset '%s' for '%s' with %d rules") % (
+                                   new_ruleset.title(),
+                                   folder.title(),
+                                   len(rules),
+                               ),
+                               sites=folder.all_site_ids())
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
 
@@ -714,15 +722,14 @@ class APICallRules(APICallCollection):
             folder_rulesets = watolib.FolderRulesets(folder)
             folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
-            watolib.add_change(
-                "edit-ruleset",
-                _("Deleted ruleset '%s' for '%s'") % (
-                    watolib.Ruleset(ruleset_name).title(),
-                    folder.title(),
-                ),
-                sites=folder.all_site_ids())
+            watolib.add_change("edit-ruleset",
+                               _("Deleted ruleset '%s' for '%s'") % (
+                                   watolib.Ruleset(ruleset_name, tag_to_group_map).title(),
+                                   folder.title(),
+                               ),
+                               sites=folder.all_site_ids())
 
-            new_ruleset = watolib.Ruleset(ruleset_name)
+            new_ruleset = watolib.Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
             folder_rulesets.set(ruleset_name, new_ruleset)
             folder_rulesets.save()
@@ -798,22 +805,23 @@ class APICallHosttags(APICallCollection):
             validate_config_hash(request["configuration_hash"], hosttags_dict)
             del request["configuration_hash"]
 
-        # Check for conflicts with existing configuration
-        # Tags may be either specified grouped in a host/folder configuration, e.g agent/cmk-agent,
-        # or specified as the plain id in rules. We need to check both variants..
-        used_tags = self._get_used_grouped_tags()
-        used_tags.update(self._get_used_rule_tags())
-
         changed_hosttags_config = cmk.utils.tags.TagConfig()
         changed_hosttags_config.parse_config(request)
         changed_hosttags_config.validate_config()
 
-        new_tags = changed_hosttags_config.get_tag_ids()
-        new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
+        self._verify_no_used_tags_missing(changed_hosttags_config)
 
-        # Remove the builtin hoststags from the list of used_tags
-        builtin_config = cmk.utils.tags.BuiltinTagConfig()
-        used_tags.discard(builtin_config.get_tag_ids_with_group_prefix())
+        tag_config_file.save(changed_hosttags_config.get_dict_format())
+        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
+
+    def _verify_no_used_tags_missing(self, changed_hosttags_config):
+        # Check for conflicts with existing configuration
+        used_tags = self._get_used_tags_from_hosts_and_folders()
+        used_tags.update(self._get_used_tags_from_rules())
+        # Skip builtin tags during validation
+        used_tags.difference_update(cmk.utils.tags.BuiltinTagConfig().get_tag_ids_by_group())
+
+        new_tags = changed_hosttags_config.get_tag_ids_by_group()
 
         missing_tags = used_tags - new_tags
         if missing_tags:
@@ -821,37 +829,39 @@ class APICallHosttags(APICallCollection):
                 None,
                 _("Unable to apply new hosttag configuration. The following tags "
                   "are still in use, but not mentioned in the updated "
-                  "configuration: %s") % ", ".join(missing_tags))
+                  "configuration: %s") % ", ".join([":".join(p) for p in missing_tags]))
 
-        tag_config_file.save(changed_hosttags_config.get_dict_format())
-        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
-
-    def _get_used_grouped_tags(self):
-        used_tags = set([])
+    def _get_used_tags_from_hosts_and_folders(self):
+        used_tags = set()
 
         # This requires a lot of computation power..
         for folder in watolib.Folder.all_folders().values():
             for attr_name, value in folder.attributes().items():
                 if attr_name.startswith("tag_"):
-                    used_tags.add("%s/%s" % (attr_name[4:], value))
+                    used_tags.add((attr_name[4:], value))
 
         for host in watolib.Host.all().values():
-            # NOTE: Do not use tags() function
             for attr_name, value in host.attributes().items():
                 if attr_name.startswith("tag_"):
-                    used_tags.add("%s/%s" % (attr_name[4:], value))
+                    used_tags.add((attr_name[4:], value))
         return used_tags
 
-    def _get_used_rule_tags(self):
+    def _get_used_tags_from_rules(self):
+        used_tags = set()
+
         all_rulesets = watolib.AllRulesets()
         all_rulesets.load()
-        used_tags = set()
         for ruleset in all_rulesets.get_rulesets().itervalues():
             for _folder, _rulenr, rule in ruleset.get_rules():
-                for tag_spec in rule.tag_specs:
-                    used_tags.add(tag_spec.lstrip("!"))
+                for tag_group_id, tag_spec in rule.conditions.host_tags.items():
+                    if isinstance(tag_spec, dict):
+                        if "$ne" in tag_spec:
+                            used_tags.add((tag_group_id, tag_spec["$ne"]))
+                            continue
+                        raise NotImplementedError()
 
-        used_tags.discard(None)
+                    used_tags.add((tag_group_id, tag_spec))
+
         return used_tags
 
 
@@ -1009,9 +1019,8 @@ class APICallBIAggregationState(APICallCollection):
         }
 
     def _get(self, request):
-        return bi.api_get_aggregation_state(
-            filter_names=request.get("filter", {}).get("names"),
-            filter_groups=request.get("filter", {}).get("groups"))
+        return bi.api_get_aggregation_state(filter_names=request.get("filter", {}).get("names"),
+                                            filter_groups=request.get("filter", {}).get("groups"))
 
 
 #.
@@ -1055,8 +1064,8 @@ class APICallOther(APICallCollection):
             # This is currently the only way to get some actual discovery statitics.
             # Start a dry-run -> Get statistics
             # Do an actual discovery on the nodes -> data is written
-            result = watolib.check_mk_automation(
-                host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
+            result = watolib.check_mk_automation(host_attributes.get("site"), "try-inventory",
+                                                 ["@scan"] + [hostname])
             counts = {"new": 0, "old": 0}
             for entry in result["check_table"]:
                 if entry[0] in counts:
@@ -1072,11 +1081,12 @@ class APICallOther(APICallCollection):
 
             # A cluster cannot fail, just the nodes. This information is currently discarded
             failed_hosts = None
-            watolib.check_mk_automation(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes())
+            watolib.check_mk_automation(host_attributes.get("site"), "inventory",
+                                        ["@scan", mode] + host.cluster_nodes())
         else:
-            counts, failed_hosts = watolib.check_mk_automation(
-                host_attributes.get("site"), "inventory", ["@scan", mode] + [hostname])
+            counts, failed_hosts = watolib.check_mk_automation(host_attributes.get("site"),
+                                                               "inventory",
+                                                               ["@scan", mode] + [hostname])
 
         if failed_hosts:
             if not host.discovery_failed():

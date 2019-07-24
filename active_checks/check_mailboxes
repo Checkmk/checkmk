@@ -322,7 +322,7 @@ if __name__ == "__main__":
     opts = parse_args()
     try:
         main(opts)
-    except Exception, e:
+    except Exception as e:
         output("An exception occured (Run in debug mode for details): %s" % e)
         if opts.debug:
             output(traceback.format_exc())

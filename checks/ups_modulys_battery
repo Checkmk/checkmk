@@ -38,7 +38,7 @@ def check_ups_modulys_battery(item, params, info):
         condition, elapsed_sec, capacity = [int(x) for x in (condition, elapsed_sec, capacity)]
         if elapsed_sec == 0:
             # not on battery so the it will not run out
-            remaining_min = sys.maxint
+            remaining_min = sys.maxsize
         elif not remaining_min:
             # The "remaining_min" value isn't always reported and we don't know why.
             # One theory is that it will be reported if on battery but we have no data to verify.
@@ -46,7 +46,7 @@ def check_ups_modulys_battery(item, params, info):
             # If the theory holds true, this branch is never taken. If it doesn't then its likely
             # the information is only available on some variants of the device or in some
             # configurations. We can still report useful data based on "capacity"
-            remaining_min = sys.maxint
+            remaining_min = sys.maxsize
         else:
             remaining_min = int(remaining_min)
 

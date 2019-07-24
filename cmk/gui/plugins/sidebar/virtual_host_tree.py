@@ -97,12 +97,11 @@ class VirtualHostTree(SidebarSnapin):
     def _show_tree_selection(self):
         html.begin_form("vtree")
 
-        html.dropdown(
-            "vtree",
-            self._tree_choices(),
-            deflt="%s" % self._current_tree_id,
-            onchange='virtual_host_tree_changed(this)',
-            style="width:210px" if self._current_tree_path else None)
+        html.dropdown("vtree",
+                      self._tree_choices(),
+                      deflt="%s" % self._current_tree_id,
+                      onchange='virtual_host_tree_changed(this)',
+                      style="width:210px" if self._current_tree_path else None)
 
         # Give chance to change one level up, if we are in a subtree
         if self._current_tree_path:
@@ -158,11 +157,10 @@ class VirtualHostTree(SidebarSnapin):
                     html.write(self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
                     if subtree.get("_svc_problems"):
                         url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
-                        html.icon_button(
-                            url,
-                            _("Show the service problems contained in this branch"),
-                            "svc_problems",
-                            target="main")
+                        html.icon_button(url,
+                                         _("Show the service problems contained in this branch"),
+                                         "svc_problems",
+                                         target="main")
                     html.write(node_title)
                     html.br()
             else:
@@ -313,7 +311,7 @@ function virtual_host_tree_enter(path)
 
         state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
 
-        tags = custom_variables.get("TAGS", []).split()
+        tags = set(custom_variables.get("TAGS", []).split())
 
         # Now go through the levels of the tree. Each level may either be
         # - a tag group id, or
@@ -415,7 +413,7 @@ function virtual_host_tree_enter(path)
                 topics.setdefault(tag_group.topic, []).append(tag_group)
             tag_groups[tag_group.id] = tag_group
 
-        return tag_groups, config
+        return tag_groups, topics
 
     def _get_all_hosts(self):
         try:

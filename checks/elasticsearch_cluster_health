@@ -110,11 +110,10 @@ def check_elasticsearch_cluster_health(no_item, params, parsed):
                 yield 0, "%s %s" % (infotext, value)
         else:
             warn, crit = params.get(info) or (None, None)
-            yield check_levels(
-                int(value),
-                info, (None, None, warn, crit),
-                human_readable_func=int,
-                infoname=infotext)
+            yield check_levels(int(value),
+                               info, (None, None, warn, crit),
+                               human_readable_func=int,
+                               infoname=infotext)
 
 
 def handle_cluster_state(parsed, line):
@@ -150,23 +149,20 @@ def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
         warn, crit = params.get(shard) or (None, None)
 
         if shard == "active_primary_shards" or shard == "active_shards":
-            yield check_levels(
-                int(value),
-                shard, (None, None, warn, crit),
-                human_readable_func=int,
-                infoname=infotext)
+            yield check_levels(int(value),
+                               shard, (None, None, warn, crit),
+                               human_readable_func=int,
+                               infoname=infotext)
         elif shard == "active_shards_percent_as_number":
-            yield check_levels(
-                float(value),
-                shard, (None, None, warn, crit),
-                human_readable_func=get_percent_human_readable,
-                infoname=infotext)
+            yield check_levels(float(value),
+                               shard, (None, None, warn, crit),
+                               human_readable_func=get_percent_human_readable,
+                               infoname=infotext)
         else:
-            yield check_levels(
-                int(value),
-                shard, (warn, crit, None, None),
-                human_readable_func=int,
-                infoname=infotext)
+            yield check_levels(int(value),
+                               shard, (warn, crit, None, None),
+                               human_readable_func=int,
+                               infoname=infotext)
 
 
 check_info["elasticsearch_cluster_health.shards"] = {

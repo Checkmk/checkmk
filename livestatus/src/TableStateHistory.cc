@@ -56,9 +56,13 @@
 #include "Host.h"     // IWYU pragma: keep
 #include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_OK 0
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_WARNING 1
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_CRITICAL 2
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
 #else
 #include <unordered_map>
@@ -68,10 +72,10 @@
 
 namespace {
 constexpr unsigned classmask_statehist =
-    (1u << static_cast<int>(LogEntry::Class::alert)) |    //
-    (1u << static_cast<int>(LogEntry::Class::program)) |  //
-    (1u << static_cast<int>(LogEntry::Class::state)) |    //
-    (1u << static_cast<int>(LogEntry::Class::text));
+    (1U << static_cast<int>(LogEntry::Class::alert)) |    //
+    (1U << static_cast<int>(LogEntry::Class::program)) |  //
+    (1U << static_cast<int>(LogEntry::Class::state)) |    //
+    (1U << static_cast<int>(LogEntry::Class::text));
 }  // namespace
 
 #ifndef CMC
@@ -246,19 +250,19 @@ public:
         if (fields.size() != 3) {
             throw std::invalid_argument("expected 3 arguments");
         }
-        _name = fields[0];
-        _from = std::stoi(fields[1]);
-        _to = std::stoi(fields[2]);
+        name_ = fields[0];
+        from_ = std::stoi(fields[1]);
+        to_ = std::stoi(fields[2]);
     }
 
-    std::string name() const { return _name; }
-    int from() const { return _from; }
-    int to() const { return _to; }
+    [[nodiscard]] std::string name() const { return name_; }
+    [[nodiscard]] int from() const { return from_; }
+    [[nodiscard]] int to() const { return to_; }
 
 private:
-    std::string _name;
-    int _from;
-    int _to;
+    std::string name_;
+    int from_;
+    int to_;
 };
 }  // namespace
 
@@ -561,8 +565,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     entry->_kind == LogEntryKind::state_host ||
                     entry->_kind == LogEntryKind::downtime_alert_host) {
                     if (state_changed != 0) {
-                        for (auto &_service : state->_services) {
-                            updateHostServiceState(query, entry, _service,
+                        for (auto &svc : state->_services) {
+                            updateHostServiceState(query, entry, svc,
                                                    only_update);
                         }
                     }
@@ -645,7 +649,7 @@ void TableStateHistory::answerQuery(Query *query) {
 int TableStateHistory::updateHostServiceState(Query *query,
                                               const LogEntry *entry,
                                               HostServiceState *hs_state,
-                                              const bool only_update) {
+                                              bool only_update) {
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored

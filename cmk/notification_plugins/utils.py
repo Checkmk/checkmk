@@ -27,19 +27,13 @@ import os
 import re
 import subprocess
 import sys
+# suppress missing import error from mypy
+from html import escape as html_escape  # type: ignore
 from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
 
 import requests
 
-try:
-    # First try python3
-    # suppress missing import error from mypy
-    from html import escape as html_escape  # type: ignore
-except ImportError:
-    # Default to python2
-    from cgi import escape as html_escape
-
-from cmk_base.notify import find_wato_folder
+from cmk.utils.notify import find_wato_folder
 import cmk.utils.password_store
 
 
@@ -94,8 +88,32 @@ def cmk_links(context):
     return None, None
 
 
+# There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
+# whether or not that function needs to be changed too
+# TODO(lm): Find a common place to unify this functionality.
+def format_plugin_output(output):
+    ok_marker = '<b class="stmarkOK">OK</b>'
+    warn_marker = '<b class="stmarkWARNING">WARN</b>'
+    crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
+    unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
+
+    output = output.replace("(!)", warn_marker) \
+              .replace("(!!)", crit_marker) \
+              .replace("(?)", unknown_marker) \
+              .replace("(.)", ok_marker)
+
+    return output
+
+
 def html_escape_context(context):
-    unescaped_variables = {'PARAMETER_INSERT_HTML_SECTION'}
+    unescaped_variables = {
+        'PARAMETER_INSERT_HTML_SECTION',
+        'PARAMETER_BULK_SUBJECT',
+        'PARAMETER_HOST_SUBJECT',
+        'PARAMETER_SERVICE_SUBJECT',
+        'PARAMETER_FROM',
+        'PARAMETER_REPLY_TO',
+    }
     for variable, value in context.iteritems():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
@@ -104,8 +122,7 @@ def html_escape_context(context):
 def add_debug_output(template, context):
     ascii_output = ""
     html_output = "<table class=context>\n"
-    elements = context.items()
-    elements.sort()
+    elements = sorted(context.items())
     for varname, value in elements:
         ascii_output += "%s=%s\n" % (varname, value)
         html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
@@ -256,6 +273,6 @@ def post_request(message_constructor, success_code=200):
     if r.status_code == success_code:
         sys.exit(0)
     else:
-        sys.stderr.write(
-            "Failed to send notification. Status: %i, Response: %s\n" % (r.status_code, r.text))
+        sys.stderr.write("Failed to send notification. Status: %i, Response: %s\n" %
+                         (r.status_code, r.text))
         sys.exit(2)

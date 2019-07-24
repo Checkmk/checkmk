@@ -30,7 +30,7 @@ def inventory_win_cpuusage(info):
         try:
             if line[0] == '238:6':
                 return [(None, {})]
-        except:
+        except Exception:
             pass
 
 
@@ -85,7 +85,7 @@ def inventory_win_diskstat(info):
         try:
             if line[0] == '2:16' or line[0] == '2:18':
                 return [(None, None, None)]
-        except:
+        except Exception:
             pass
     return []
 
@@ -108,17 +108,15 @@ def check_win_diskstat(item, params, info):
     try:
         read_per_sec = get_rate("diskstat.read", this_time, read_bytes_ctr)
         write_per_sec = get_rate("diskstat.write", this_time, write_bytes_ctr)
-    except MKCounterWrapped, e:
+    except MKCounterWrapped as e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
         get_rate("diskstat.write", this_time, write_bytes_ctr)
         raise e
 
     perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
-    return (
-        0,
-        "reading %.1f MB/s, writing %.1f MB/s" % (read_per_sec / 1048576, write_per_sec / 1048576),
-        perfdata)
+    return (0, "reading %.1f MB/s, writing %.1f MB/s" %
+            (read_per_sec / 1048576, write_per_sec / 1048576), perfdata)
 
 
 check_info["winperf.cpuusage"] = {

@@ -1,0 +1,10 @@
+Title: md: Do not crash if no information about #disks, #expected disks and #working disks is available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558355823
+Class: fix
+
+

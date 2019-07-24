@@ -45,18 +45,4 @@ def inv_perle_chassis(info):
 
 inv_info['perle_chassis'] = {
     'inv_function': inv_perle_chassis,
-    # If you change snmp info please adapt the related check plugin
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.1.1',
-        [
-            '2',  # PERLE-MCR-MGT-MIB::chassisModelName
-            '4',  # PERLE-MCR-MGT-MIB::chassisSerialNumber
-            '5',  # PERLE-MCR-MGT-MIB::chassisBootloaderVersion
-            '6',  # PERLE-MCR-MGT-MIB::chassisFirmwareVersion
-            '7',  # PERLE-MCR-MGT-MIB::chassisOutStandWarnAlarms
-            '8',  # PERLE-MCR-MGT-MIB::chassisDiagStatus
-            '9',  # PERLE-MCR-MGT-MIB::chassisTemperature
-        ]),
-    'snmp_scan_function': perle_scan_function,
-    'includes': ['perle.include'],
 }

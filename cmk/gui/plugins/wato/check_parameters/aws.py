@@ -54,65 +54,56 @@ from cmk.special_agents.agent_aws import (
 
 def _vs_s3_buckets():
     return ('bucket_size_levels',
-            Alternative(
-                title=_("Upper levels for the bucket size"),
-                style="dropdown",
-                elements=[
-                    Tuple(
-                        title=_("Set levels"),
+            Alternative(title=_("Upper levels for the bucket size"),
+                        style="dropdown",
                         elements=[
-                            Filesize(title=_("Warning at")),
-                            Filesize(title=_("Critical at")),
-                        ]),
-                    Tuple(
-                        title=_("No levels"),
-                        elements=[
-                            FixedValue(None, totext=""),
-                            FixedValue(None, totext=""),
-                        ]),
-                ]))
+                            Tuple(title=_("Set levels"),
+                                  elements=[
+                                      Filesize(title=_("Warning at")),
+                                      Filesize(title=_("Critical at")),
+                                  ]),
+                            Tuple(title=_("No levels"),
+                                  elements=[
+                                      FixedValue(None, totext=""),
+                                      FixedValue(None, totext=""),
+                                  ]),
+                        ]))
 
 
 def _vs_burst_balance():
     return ('burst_balance_levels_lower',
-            Alternative(
-                title=_("Lower levels for burst balance"),
-                style="dropdown",
-                elements=[
-                    Tuple(
-                        title=_("Set levels"),
+            Alternative(title=_("Lower levels for burst balance"),
+                        style="dropdown",
                         elements=[
-                            Percentage(title=_("Warning at or below")),
-                            Percentage(title=_("Critical at or below")),
-                        ]),
-                    Tuple(
-                        title=_("No levels"),
-                        elements=[
-                            FixedValue(None, totext=""),
-                            FixedValue(None, totext=""),
-                        ]),
-                ]))
+                            Tuple(title=_("Set levels"),
+                                  elements=[
+                                      Percentage(title=_("Warning at or below")),
+                                      Percentage(title=_("Critical at or below")),
+                                  ]),
+                            Tuple(title=_("No levels"),
+                                  elements=[
+                                      FixedValue(None, totext=""),
+                                      FixedValue(None, totext=""),
+                                  ]),
+                        ]))
 
 
 def _vs_cpu_credits_balance():
     return ('balance_levels_lower',
-            Alternative(
-                title=_("Lower levels for CPU balance"),
-                style="dropdown",
-                elements=[
-                    Tuple(
-                        title=_("Set levels"),
+            Alternative(title=_("Lower levels for CPU balance"),
+                        style="dropdown",
                         elements=[
-                            Integer(title=_("Warning at or below")),
-                            Integer(title=_("Critical at or below")),
-                        ]),
-                    Tuple(
-                        title=_("No levels"),
-                        elements=[
-                            FixedValue(None, totext=""),
-                            FixedValue(None, totext=""),
-                        ]),
-                ]))
+                            Tuple(title=_("Set levels"),
+                                  elements=[
+                                      Integer(title=_("Warning at or below")),
+                                      Integer(title=_("Critical at or below")),
+                                  ]),
+                            Tuple(title=_("No levels"),
+                                  elements=[
+                                      FixedValue(None, totext=""),
+                                      FixedValue(None, totext=""),
+                                  ]),
+                        ]))
 
 
 def _vs_elements_http_errors():
@@ -128,14 +119,13 @@ def _vs_elements_http_errors():
              ],
          )),
         ('levels_http_5xx_perc',
-         Tuple(
-             title=_("Upper percentual levels for HTTP 500 errors"),
-             help=_("Specify levels for HTTP 500 errors in percentage "
-                    "which refer to the total number of requests"),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ])),
+         Tuple(title=_("Upper percentual levels for HTTP 500 errors"),
+               help=_("Specify levels for HTTP 500 errors in percentage "
+                      "which refer to the total number of requests"),
+               elements=[
+                   Percentage(title=_("Warning at")),
+                   Percentage(title=_("Critical at")),
+               ])),
     ]
 
 
@@ -171,13 +161,12 @@ def _vs_limits(resource, default_limit, vs_limit_cls=None):
                     Percentage(title=_("Warning at"), default_value=80.0),
                     Percentage(title=_("Critical at"), default_value=90.0),
                 ]),
-            Tuple(
-                title=_("No levels"),
-                elements=[
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
-                    FixedValue(None, totext=""),
-                ]),
+            Tuple(title=_("No levels"),
+                  elements=[
+                      FixedValue(None, totext=""),
+                      FixedValue(None, totext=""),
+                      FixedValue(None, totext=""),
+                  ]),
         ])
 
 
@@ -264,131 +253,110 @@ class RulespecCheckgroupParametersAwsS3Requests(CheckParameterRulespecWithItem):
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('get_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for GET requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for GET requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('put_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for PUT requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for PUT requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('delete_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for DELETE requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for DELETE requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('head_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for HEAD requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for HEAD requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('post_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for POST requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for POST requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('select_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for SELECT requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for SELECT requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('list_requests_perc',
-             Alternative(
-                 title=_("Upper percentual levels for LIST requests"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper percentual levels for LIST requests"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property
@@ -482,12 +450,12 @@ class RulespecCheckgroupParametersAwsEc2CpuCredits(CheckParameterRulespecWithout
 
 def _vs_limits_inst_types():
     return ListOf(
-        CascadingDropdown(
-            orientation="horizontal",
-            choices=[(inst_type, inst_type,
-                      _vs_limits("%s instances" % inst_type,
-                                 AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0]))
-                     for inst_type in AWSEC2InstTypes]),
+        CascadingDropdown(orientation="horizontal",
+                          choices=[(inst_type, inst_type,
+                                    _vs_limits(
+                                        "%s instances" % inst_type,
+                                        AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0]))
+                                   for inst_type in AWSEC2InstTypes]),
         title=_("Set limits and levels for running on-demand instances"),
     )
 
@@ -540,7 +508,7 @@ class RulespecCheckgroupParametersAwsEc2Limits(CheckParameterRulespecWithoutItem
 
 
 @rulespec_registry.register
-class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithoutItem):
+class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithItem):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications
@@ -559,17 +527,20 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                'levels_unblended',
-                Tuple(
-                    title=_("Upper levels for unblended costs"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("USD per day")),
-                        Integer(title=_("Critical at"), unit=_("USD per day")),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            'levels_unblended',
+            Tuple(
+                title=_("Upper levels for unblended costs"),
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("USD per day")),
+                    Integer(title=_("Critical at"), unit=_("USD per day")),
+                ],
+            ),
+        )],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The service name"))
 
 
 #.
@@ -603,26 +574,24 @@ class RulespecCheckgroupParametersAwsElbStatistics(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('levels_surge_queue_length',
-                 Tuple(
-                     title=_("Upper levels for surge queue length"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-                ('levels_spillover',
-                 Tuple(
-                     title=_(
-                         "Upper levels for the number of requests that were rejected (spillover)"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('levels_surge_queue_length',
+             Tuple(
+                 title=_("Upper levels for surge queue length"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+            ('levels_spillover',
+             Tuple(
+                 title=_("Upper levels for the number of requests that were rejected (spillover)"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+        ],)
 
 
 @rulespec_registry.register
@@ -691,20 +660,19 @@ class RulespecCheckgroupParametersAwsElbHealthyHosts(CheckParameterRulespecWitho
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                'levels_overall_hosts_health_perc',
-                Tuple(
-                    title=_("Upper percentual levels for healthy hosts"),
-                    help=_("These levels refer to the total number of instances or hosts "
-                           "that are registered to the load balancer which is the sum of "
-                           "healthy and unhealthy instances."),
-                    elements=[
-                        Percentage(title=_("Warning at")),
-                        Percentage(title=_("Critical at")),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            'levels_overall_hosts_health_perc',
+            Tuple(
+                title=_("Upper percentual levels for healthy hosts"),
+                help=_("These levels refer to the total number of instances or hosts "
+                       "that are registered to the load balancer which is the sum of "
+                       "healthy and unhealthy instances."),
+                elements=[
+                    Percentage(title=_("Warning at")),
+                    Percentage(title=_("Critical at")),
+                ],
+            ),
+        )],)
 
 
 @rulespec_registry.register
@@ -727,17 +695,16 @@ class RulespecCheckgroupParametersAwsElbBackendConnectionErrors(CheckParameterRu
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                'levels_backend_connections_errors_rate',
-                Tuple(
-                    title=_("Upper levels for backend connection errors per second"),
-                    elements=[
-                        Float(title=_("Warning at")),
-                        Float(title=_("Critical at")),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            'levels_backend_connections_errors_rate',
+            Tuple(
+                title=_("Upper levels for backend connection errors per second"),
+                elements=[
+                    Float(title=_("Warning at")),
+                    Float(title=_("Critical at")),
+                ],
+            ),
+        )],)
 
 
 @rulespec_registry.register
@@ -838,12 +805,11 @@ class RulespecCheckgroupParametersAwsElbv2LCU(CheckParameterRulespecWithoutItem)
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('levels',
-             Tuple(
-                 title=_('Upper levels for load balancer capacity units'),
-                 elements=[
-                     Float(title=_('Warning at')),
-                     Float(title=_('Critical at')),
-                 ])),
+             Tuple(title=_('Upper levels for load balancer capacity units'),
+                   elements=[
+                       Float(title=_('Warning at')),
+                       Float(title=_('Critical at')),
+                   ])),
         ])
 
 
@@ -983,23 +949,20 @@ class RulespecCheckgroupParametersAwsRdsDiskUsage(CheckParameterRulespecWithItem
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('levels',
-             Alternative(
-                 title=_("Upper levels for disk usage"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels for disk usage"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property
@@ -1029,23 +992,20 @@ class RulespecCheckgroupParametersAwsRdsConnections(CheckParameterRulespecWithIt
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('levels',
-             Alternative(
-                 title=_("Upper levels for connections in use"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels for connections in use"),
+                         style="dropdown",
                          elements=[
-                             Integer(title=_("Warning at")),
-                             Integer(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Integer(title=_("Warning at")),
+                                       Integer(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property
@@ -1075,41 +1035,35 @@ class RulespecCheckgroupParametersAwsRdsReplicaLag(CheckParameterRulespecWithIte
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('lag_levels',
-             Alternative(
-                 title=_("Upper levels replica lag"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels replica lag"),
+                         style="dropdown",
                          elements=[
-                             Age(title=_("Warning at")),
-                             Age(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Age(title=_("Warning at")),
+                                       Age(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('slot_levels',
-             Alternative(
-                 title=_("Upper levels the oldest replication slot lag"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels the oldest replication slot lag"),
+                         style="dropdown",
                          elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Filesize(title=_("Warning at")),
+                                       Filesize(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property

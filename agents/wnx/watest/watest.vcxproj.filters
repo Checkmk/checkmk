@@ -122,6 +122,15 @@
     <ClCompile Include="test_tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_check_mk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-cma-tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test-cfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">
@@ -156,5 +165,16 @@
     </None>
     <None Include="..\wnxtest\wnxtest.vcxproj" />
     <None Include="packages.config" />
+    <None Include="..\test_files\unit_test\check_mk.hash.ini">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\test_files\unit_test\checkmk.hash.dat">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\test_files\unit_test\cmk-update-agent.state">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

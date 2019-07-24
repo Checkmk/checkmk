@@ -25,7 +25,7 @@ def test_htmllib_integration(register_builtin_html):
 def test_transaction_new_id(tm):
     assert tm._new_transids == []
     trans_id = tm.get()
-    assert type(trans_id) == str
+    assert isinstance(trans_id, str)
     assert tm._new_transids == [trans_id]
 
 

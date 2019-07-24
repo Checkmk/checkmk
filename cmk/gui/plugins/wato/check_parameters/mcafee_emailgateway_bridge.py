@@ -58,30 +58,29 @@ class RulespecCheckgroupParametersMcafeeEmailgatewayBridge(CheckParameterRulespe
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("tcp",
-                 Tuple(
-                     title=_("TCP packets"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_("packets/s")),
-                         Float(title=_("Critical at"), unit=_("packets/s")),
-                     ],
-                 )),
-                ("udp",
-                 Tuple(
-                     title=_("UDP packets"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_("packets/s")),
-                         Float(title=_("Critical at"), unit=_("packets/s")),
-                     ],
-                 )),
-                ("icmp",
-                 Tuple(
-                     title=_("ICMP packets"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_("packets/s")),
-                         Float(title=_("Critical at"), unit=_("packets/s")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("tcp",
+             Tuple(
+                 title=_("TCP packets"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_("packets/s")),
+                     Float(title=_("Critical at"), unit=_("packets/s")),
+                 ],
+             )),
+            ("udp",
+             Tuple(
+                 title=_("UDP packets"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_("packets/s")),
+                     Float(title=_("Critical at"), unit=_("packets/s")),
+                 ],
+             )),
+            ("icmp",
+             Tuple(
+                 title=_("ICMP packets"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_("packets/s")),
+                     Float(title=_("Critical at"), unit=_("packets/s")),
+                 ],
+             )),
+        ],)

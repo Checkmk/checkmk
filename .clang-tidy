@@ -39,15 +39,27 @@
 #
 #   * temporarily disabled:
 #       * clang-analyzer-optin.performance.Padding
-#       * cppcoreguidelines-special-member-functions
-#       * hicpp-special-member-functions
+#       * cppcoreguidelines-avoid-c-arrays / hicpp-avoid-c-arrays / modernize-avoid-c-arrays
+#       * cppcoreguidelines-avoid-magic-numbers / readability-magic-numbers
+#       * cppcoreguidelines-special-member-functions / hicpp-special-member-functions
 #       * modernize-use-default-member-init
 #
 #   * bug in toolchain/clang-tidy:
 #       * clang-analyzer-cplusplus.NewDeleteLeaks ("Potential leak of memory pointed to by field '_M_head_impl'") See https://bugs.llvm.org/show_bug.cgi?id=38176 ("clang-analyzer-cplusplus.NewDeleteLeaks false positive in C++17 mode only")
 #
-Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-fuchsia-statically-constructed-objects,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init,-clang-analyzer-cplusplus.NewDeleteLeaks'
+Checks: '*,-android-cloexec-fopen,-android-cloexec-open,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-default-arguments,-fuchsia-overloaded-operator,-fuchsia-statically-constructed-objects,-google-runtime-int,-google-runtime-references,-hicpp-member-init,-hicpp-no-array-decay,-hicpp-no-assembler,-hicpp-signed-bitwise,-hicpp-vararg,-llvm-header-guard,-llvm-include-order,-modernize-use-bool-literals,-clang-analyzer-optin.performance.Padding,-cppcoreguidelines-avoid-c-arrays,-hicpp-avoid-c-arrays,-modernize-avoid-c-arrays,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-special-member-functions,-hicpp-special-member-functions,-modernize-use-default-member-init,-clang-analyzer-cplusplus.NewDeleteLeaks'
+# Alas, readability-identifier-naming still has a few bugs. Nevertheless, we already configure a few things here...
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'
+  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
+  - key:             readability-identifier-naming.MemberCase
+    value:           'lower_case'
+  - key:             readability-identifier-naming.ProtectedMemberSuffix
+    value:           '_'
+  - key:             readability-identifier-naming.PrivateMemberSuffix
+    value:           '_'
+  - key:             readability-identifier-naming.VariableCase
+    value:           'lower_case'
 ...

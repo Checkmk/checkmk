@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersFireeyeQuarantine(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                "usage",
-                Tuple(
-                    title=_("Levels for Quarantine Usage"),
-                    elements=[
-                        Integer(title="Warning at", default_value=70, unit="%"),
-                        Integer(title="Critical at", default_value=80, unit="%"),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[(
+            "usage",
+            Tuple(
+                title=_("Levels for Quarantine Usage"),
+                elements=[
+                    Integer(title="Warning at", default_value=70, unit="%"),
+                    Integer(title="Critical at", default_value=80, unit="%"),
+                ],
+            ),
+        )],)

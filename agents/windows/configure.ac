@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([Check_MK Windows Agent], [1.6.0i1], [feedback@check-mk.org])
+AC_INIT([Check_MK Windows Agent], [1.7.0i1], [feedback@checkmk.com])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_COMMANDS([check_chroot], \
                    [[[ -z $CHROOT_NAME ]] && \

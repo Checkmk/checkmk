@@ -29,33 +29,30 @@
 # .1.3.6.1.4.1.1230.2.7.2.1.5.0 4394370 --> MCAFEE-MWG-MIB::stConnectionsBlocked.0
 
 
-def check_mcafee_webgateway(_no_item, params, info):
-    infections, connections = map(int, info[0])
+def parse_mcaffee_webgateway(info):
+    parsed = []
+    for index, key, label in ((0, 'infections', 'Infections'), (1, 'connections_blocked',
+                                                                'Connections blocked')):
+        try:
+            parsed.append((key, int(info[0][index]), label))
+        except (IndexError, ValueError):
+            pass
+    return parsed
 
+
+def check_mcafee_webgateway(_no_item, params, parsed):
     now = time.time()
-    for what, value, paramskey, perfkey in [
-        ("Infections", infections, "infections", "infections_rate"),
-        ("Connections blocked", connections, "connections_blocked", "connections_blocked_rate"),
-    ]:
-        rate = get_rate("check_mcafee_webgateway.%s" % paramskey, now, value)
-        state = 0
-        infotext = '%s: %s/s' % (what, rate)
-        warn, crit = params.get(paramskey, (None, None))
-        if paramskey and paramskey in params:
-            if rate >= crit:
-                state = 2
-            elif rate >= warn:
-                state = 1
-            if state:
-                infotext += ' (warn/crit at %.1f/%.1f)' % (warn, crit)
-        perfdata = []
-        if perfkey:
-            perfdata = [(perfkey, rate, warn, crit)]
-
-        yield state, infotext, perfdata
+    for key, value, label in parsed:
+        rate = get_rate("check_mcafee_webgateway.%s" % key, now, value)
+        yield check_levels(rate,
+                           '%s_rate' % key,
+                           params.get(key),
+                           human_readable_func=lambda f: "%.1f/s" % f,
+                           infoname=label)
 
 
 check_info['mcafee_webgateway'] = {
+    'parse_function': parse_mcaffee_webgateway,
     'inventory_function': inventory_mcafee_gateway_generic,
     'check_function': check_mcafee_webgateway,
     'service_description': 'Web gateway statistics',

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1534179606
 
 Werk #6556 introduced a new option "use all enabled datasource programs" that can

@@ -1,0 +1,21 @@
+properties([
+    pipelineTriggers([triggers: [upstream(upstreamProjects: "cmk_master/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
+])
+
+node('windows') {
+    stage('git checkout') {
+        checkout(scm)
+    }
+    stage('download artifacts') {
+        dir('artefacts') {
+            script {
+                step ([$class: 'CopyArtifact',
+                projectName: 'cmk_master/windows-agent-build',
+                ]);
+            }
+        }
+    }
+    stage('windows integration test') {
+        bat 'cd agents\\wnx && call call_integration_tests.cmd'
+    }
+}

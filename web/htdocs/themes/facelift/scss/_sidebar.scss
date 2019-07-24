@@ -257,7 +257,7 @@ div.snapin {
   div.head {
     height: auto;
     padding: 8px;
-    line-height: 20px;
+    line-height: 10px; /* affects height of snapin title bar */
     color: $theme-color-text-light;
     text-align: left;
     background: transparent;
@@ -282,9 +282,9 @@ div.snapin {
   div.closesnapin {
     float: right;
     width: 8px;
-    height: 8px;
+    height: 2px; /* vertical position of close button */
     padding: 0;
-    margin-top: 6px;
+    margin-top: 2px;
     margin-right: 6px;
     line-height: 0;
 
@@ -298,7 +298,7 @@ div.snapin {
     float: right;
     width: 8px;
     height: 8px;
-    margin: 6px 6px 0 0;
+    margin: 2px 6px 0 0; /* vertical position of minimize button */
     line-height: 0;
     cursor: pointer;
     background-image: url("images/icon_minisnapin.png");
@@ -307,22 +307,20 @@ div.snapin {
   div.content {
     top: 64px;
     width: 100%;
-    padding: 8px;
+    padding: 8px; /* Invisible spacing around hole snapin content */
     color: #fff;
     background-color: $theme-color-sidebar-background;
     box-sizing: border-box;
   }
 
-  /* TODO: No important styles */
   select {
     width: 100%;
     height: 100%;
-    padding: 8px !important;
+    padding: 8px;
     font-size: 11px;
     color: $theme-color-text;
-    background: $theme-color-white;
-    background-image: none !important;
-    border: 1px solid $theme-color-table-border;
+    background-color: $theme-color-white;
+    background-image: none;
     border-radius: $theme-border-radius;
     box-shadow: none;
   }
@@ -379,7 +377,7 @@ div.snapin {
 
   /* TODO: Reproduce this html element */
   textarea {
-    width: 100% !important;
+    width: 100%;
   }
 
   /* TODO: Reproduce this html element */
@@ -409,7 +407,7 @@ div.snapin {
 
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
-    margin-top: 5px;
+    margin-top: 0px;
     text-align: right;
 
     a {
@@ -477,13 +475,13 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 12px 0;
+  padding: 0 0;
   margin-right: 16px;
   margin-left: 0;
   font-size: $theme-font-size-small;
   font-weight: $theme-font-weight-bold;
   letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-main;
+  color: #13d389;
   text-transform: uppercase;
   background: transparent;
   border: none;

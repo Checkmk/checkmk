@@ -1,0 +1,10 @@
+Title: systemd_units: filter out disabled services from summary monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1562245533
+Class: fix
+
+This fix solves the permanent crit status of the systemd summary checkup. Disabled (explicit & implicit) services are now excluded from the summary but still mentioned in the overall message

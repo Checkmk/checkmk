@@ -1,0 +1,154 @@
+Title: Changed format of rules in rules.mk configuration files
+Level: 2
+Component: core
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1559663675
+Class: fix
+
+The internal data format of the Checkmk rules configured via WATO on the "Host-
+& Service parameters" pages has been changed.
+
+If you only use WATO for configuring Checkmk this change will not be relevant
+for you, since the data format will be changed automatically during update to
+1.6x.
+
+In case you edit rules.mk (or other .mk) files manually or via script, you will
+likely have to change your scripts.
+
+The format changes was needed to make more flexible rule conditions possible.
+The new conditions for 1.6 (select multiple choices of a tag group and labels)
+have not been added yet. They are nearly ready and will be added in one of the
+next beta releases.
+
+The automatic update mentioned before is done using the command
+<tt>cmk-update-config</tt> in the site. It's invoked during the <tt>omd
+update</tt> execution and currently simply loads all folder, host, tag and
+ruleset configuration files, executes the transform logic and saves again, just
+like you would do when working in WATO. In case your scripts created an "old
+style" WATO configuration file in an 1.6 site you could execute
+<tt>cmk-update-config</tt> another time, which would load, convert and save the
+configuration file. However, a better approach would be to update your scripts
+to write the configuration files in the new format.
+
+In Checkmk a ruleset is represented by a list of rules. In the past these rules
+were represented by tuples with different elements (depending on the ruleset type).
+The structure of a rule has now been changed to a dictionary.
+
+An example from the sample configuration:
+
+Old ruleset:
+
+F+:rules.mk
+host_contactgroups = [
+  ('all',
+   [],
+   ALL_HOSTS,
+   {
+       'description': u'Put all hosts into the contact group "all"'
+   }
+  ),
+] + host_contactgroups
+F-:
+
+New ruleset:
+
+F+:rules.mk
+host_contactgroups = [
+    {
+        'condition': {},
+        'value': 'all',
+        'options': {
+            'description': u'Put all hosts into the contact group "all"'
+        }
+    },
+] + host_contactgroups
+F-:
+
+This shows the rough structure of the new format. Inside the condition dictionary
+you can have multiple optional keys which trigger different host / service filters
+in Checkmk.
+
+The following examples of the <tt>condition</tt> dictionary are not covering
+all possible combinations, but should give you and idea of the new condition
+format. If you want to have a more detailed look, have a look at the tests below
+<tt>tests/unit/cmk/utils/rulesets/</tt> or create rules with WATO and have a look
+at the resulting rules.mk.
+
+<h2>Explicit host name conditions</h2>
+
+If you want to make a rule match on the hosts named <tt>host1</tt> and <tt>host2</tt>,
+you may use a condition like this:
+
+F+:rules.mk
+"condition": {
+    "host_name": ["host1", "host2"],
+}
+F-:
+
+The entries in the host list are ORed.
+
+<h2>Exclude hosts</h2>
+
+Match all hosts except <tt>HOST1</tt> and <tt>HOST2</tt>:
+
+F+:rules.mk
+"condition": {
+    "host_name": {
+        "$nor": ["HOST1", "HOST2"]
+    },
+},
+F-:
+
+<h2>Regex on host names</h2>
+
+Make a rule match on hosts by using a regular expression:
+
+F+:rules.mk
+"condition": {
+    "host_name": [{
+        "$regex": "abc[12]" # It's a case sensitive prefix match
+    },]
+},
+F-:
+
+<h2>Match using host tags</h2>
+
+Match all hosts that are <tt>test</tt> systems connected via <tt>wan</tt>
+
+F+:rules.mk
+"condition": {
+    "host_tags": {
+        "criticality": "test",
+        "networking": "wan",
+    },
+}
+F-:
+
+The single tag conditions are ANDed.
+
+<h2>Combine different conditions</h2>
+
+Match test hosts that start with <tt>abc</tt>:
+
+F+:rules.mk
+"condition": {
+    "host_name": [{"$regex": "abc"}],
+    "host_tags": {
+        "criticality": "test",
+    },
+}
+F-:
+
+Different types of conditions are ANDed.
+
+<h2>Service rulesets: Match on the description</h2>
+
+Same syntax as <tt>host_name</tt> condition, e.g. match all services starting with <tt>CPU</tt>:
+
+F+:rules.mk
+"condition": {
+    "service_description": [{"$regex": "CPU"}],
+}
+F-:

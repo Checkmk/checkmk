@@ -1,0 +1,11 @@
+Title: printer_input: Crash upon missing data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558518130
+Class: fix
+
+Missing snmp data lead to a crash of the generic check function
+check_printer_io() which affected several checks like e.g. check printer_input.

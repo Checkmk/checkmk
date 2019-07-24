@@ -15,6 +15,7 @@ import os
 import pprint
 import sys
 import time
+import inspect
 from contextlib import contextmanager
 
 import pymongo  # pylint: disable=import-error
@@ -35,10 +36,12 @@ def piggyback(info):
 
 
 def get_database_info(client):
-    try:
+    if inspect.ismethod(client.list_database_names):
         db_names = client.list_database_names()
-    except AttributeError:  # pymongo < 3.6
+    elif inspect.ismethod(client.database_names):
         db_names = client.database_names()
+    else:
+        db_names = []
 
     databases = {n: {} for n in db_names}
     for name in db_names:
@@ -53,20 +56,25 @@ def get_database_info(client):
 
 def section_instance(server_status):
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-    sys.stdout.write("version\t%s\n" % server_status["version"])
-    sys.stdout.write("pid\t%s\n" % server_status["pid"])
+    sys.stdout.write("version\t%s\n" % server_status.get("version", "n/a"))
+    sys.stdout.write("pid\t%s\n" % server_status.get("pid", "n/a"))
+
     repl_info = server_status.get("repl")
     if not repl_info:
         sys.stdout.write("mode\tSingle Instance\n")
         return
+
     if repl_info.get("ismaster"):
         sys.stdout.write("mode\tPrimary\n")
         return
+
     if repl_info.get("secondary"):
         sys.stdout.write("mode\tSecondary\n")
         return
+
     sys.stdout.write("mode\tArbiter\n")
-    sys.stdout.write("address\t%s\n" % repl_info["me"])
+    if repl_info.get("me"):
+        sys.stdout.write("address\t%s\n" % repl_info.get("me", "n/a"))
 
 
 def section_flushing(server_status):
@@ -75,9 +83,9 @@ def section_flushing(server_status):
     if flushing_info is None:
         return
     sys.stdout.write("<<<mongodb_flushing>>>\n")
-    sys.stdout.write("average_ms %s\n" % flushing_info["average_ms"])
-    sys.stdout.write("last_ms %s\n" % flushing_info["last_ms"])
-    sys.stdout.write("flushed %s\n" % flushing_info["flushes"])
+    sys.stdout.write("average_ms %s\n" % flushing_info.get("average_ms", "n/a"))
+    sys.stdout.write("last_ms %s\n" % flushing_info.get("last_ms", "n/a"))
+    sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
 
 
 def sections_replica(client, server_status):
@@ -85,12 +93,16 @@ def sections_replica(client, server_status):
     if not repl_info:
         return
     sys.stdout.write("<<<mongodb_replica:sep(9)>>>\n")
-    sys.stdout.write("primary\t%s\n" % repl_info.get("primary"))
-    sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
-    sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
+    sys.stdout.write("primary\t%s\n" % repl_info.get("primary", "n/a"))
+    if repl_info.get("hosts"):
+        sys.stdout.write("hosts\t%s\n" % " ".join(repl_info.get("hosts")))
+
+    if repl_info.get("arbiters"):
+        sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
     sys.stdout.write("<<<mongodb_replstatus>>>\n")
     sys.stdout.write(pprint.pformat(client.admin.command("replSetGetStatus")))
+    sys.stdout.write("\n")
 
 
 def section_chunks(client, databases):
@@ -104,7 +116,7 @@ def section_chunks(client, databases):
             sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
             for shard in shards:
                 matches = col.find({"ns": nsfilter, "shard": shard}).count()
-                sys.stdout.write("shardmatches %s#%s %s\n" % (nsfilter, shard, matches))
+                sys.stdout.write("shardmatches" " %s#%s %s\n" % (nsfilter, shard, matches))
 
 
 def section_locks(server_status):
@@ -213,9 +225,7 @@ def main():
         return
 
     section_instance(server_status)
-
     repl_info = server_status.get("repl")
-
     if repl_info and not repl_info.get("ismaster"):
         return
 
@@ -225,25 +235,15 @@ def main():
 
 def potentially_piggybacked_sections(client, server_status):
     sections_replica(client, server_status)
-
     section_by_keys("asserts", ("asserts",), server_status)
-
     section_by_keys("connections", ("connections",), server_status)
-
     databases = get_database_info(client)
-
     section_chunks(client, databases)
-
     section_locks(server_status)
-
     section_flushing(server_status)
-
     section_by_keys("mem", ("mem", "extra_info"), server_status)
-
     section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
-
     section_collections(databases)
-
     section_logwatch(client)
 
 

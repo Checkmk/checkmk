@@ -59,29 +59,28 @@ class RulespecCheckgroupParametersMqQueues(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("size",
-                 Tuple(
-                     title=_("Levels for the queue length"),
-                     help=_("Set the maximum and minimum length for the queue size"),
-                     elements=[
-                         Integer(title="Warning at a size of"),
-                         Integer(title="Critical at a size of"),
-                     ],
-                 )),
-                ("consumerCount",
-                 Tuple(
-                     title=_("Levels for the consumer count"),
-                     help=_("Consumer Count is the size of connected consumers to a queue"),
-                     elements=[
-                         Integer(title="Warning less then"),
-                         Integer(title="Critical less then"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("size",
+             Tuple(
+                 title=_("Levels for the queue length"),
+                 help=_("Set the maximum and minimum length for the queue size"),
+                 elements=[
+                     Integer(title="Warning at a size of"),
+                     Integer(title="Critical at a size of"),
+                 ],
+             )),
+            ("consumerCount",
+             Tuple(
+                 title=_("Levels for the consumer count"),
+                 help=_("Consumer Count is the size of connected consumers to a queue"),
+                 elements=[
+                     Integer(title="Warning less then"),
+                     Integer(title="Critical less then"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Queue Name"), help=_("The name of the queue like in the Apache queue manager"))
+        return TextAscii(title=_("Queue Name"),
+                         help=_("The name of the queue like in the Apache queue manager"))

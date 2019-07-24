@@ -99,10 +99,9 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         cell_size, cell_size_rest = divmod(cell_size, 1)
         style = 'width:%spx' % (snapin_width - n * cell_size_rest)
 
-        html.open_table(
-            class_=["content_center", "hostmatrix"],
-            cellspacing=0,
-            style=["border-collapse:collapse;", style])
+        html.open_table(class_=["content_center", "hostmatrix"],
+                        cellspacing=0,
+                        style=["border-collapse:collapse;", style])
         col = 1
         row = 1
         for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):
@@ -123,13 +122,12 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
             url = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(site),
                                                               html.urlencode(host))
             html.open_td(class_=["state", "state%s" % s])
-            html.a(
-                '',
-                href=url,
-                title=host,
-                target="main",
-                style=["width:%spx;" % cell_size,
-                       "height:%spx;" % cell_size])
+            html.a('',
+                   href=url,
+                   title=host,
+                   target="main",
+                   style=["width:%spx;" % cell_size,
+                          "height:%spx;" % cell_size])
             html.close_td()
 
             if col == n or (row == rows and n == lastcols):

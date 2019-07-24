@@ -72,11 +72,15 @@ def check_dell_om_fans(item, params, info):
             state, state_readable = translate_status[status]
             yield state, "Status: %s, Name: %s" % \
                             (state_readable, name)
-            if not params:
+            if params:
+                constructed_params = params
+            else:
                 lower, upper = _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower)
-                params['lower'] = lower
-                params['upper'] = upper
-            yield check_fan(int(value), params)
+                constructed_params = {
+                    'lower': lower,
+                    'upper': upper,
+                }
+            yield check_fan(int(value), constructed_params)
 
 
 check_info["dell_om_fans"] = {

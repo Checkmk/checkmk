@@ -105,7 +105,7 @@ long_options = [
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -283,7 +283,7 @@ def output_profile():
                "import pstats\n"
                "stats = pstats.Stats('%s')\n"
                "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-    os.chmod(show_profile, 0755)
+    os.chmod(show_profile, 0o755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
@@ -664,8 +664,7 @@ def output_mors(what, properties, direct=False):
             print '<<<<%s>>>>' % obj_name
 
         print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
-        items = data.items()
-        items.sort()
+        items = sorted(data.items())
         running_on = ''
         power_state = ''
         for name, value in items:
@@ -712,8 +711,8 @@ def output_datastores():
 
     # print inspect.getmembers(MORTypes)
     print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
-    rows = host._retrieve_properties_traversal(
-        property_names=property_names, obj_type=MORTypes.Datastore)
+    rows = host._retrieve_properties_traversal(property_names=property_names,
+                                               obj_type=MORTypes.Datastore)
     # if the user has no permission to host / datastores, rows is None, skip it then
     if rows:
         last_name = None

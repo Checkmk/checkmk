@@ -99,8 +99,11 @@ class Wiki(SidebarSnapin):
                 elif line.startswith("*"):
                     if start_ul:
                         if title:
-                            html.begin_foldable_container(
-                                "wikisnapin", title, True, title, indent=True)
+                            html.begin_foldable_container("wikisnapin",
+                                                          title,
+                                                          True,
+                                                          title,
+                                                          indent=True)
                         else:
                             html.open_ul()
                         start_ul = False
@@ -133,9 +136,9 @@ class Wiki(SidebarSnapin):
             if ul_started:
                 html.close_ul()
         except IOError:
-            sidebar = html.render_a(
-                "sidebar",
-                href="/%s/wiki/doku.php?id=%s" % (config.omd_site(), _("sidebar")),
-                target="main")
+            sidebar = html.render_a("sidebar",
+                                    href="/%s/wiki/doku.php?id=%s" %
+                                    (config.omd_site(), _("sidebar")),
+                                    target="main")
             html.write_html("<p>To get a navigation menu, you have to create a %s in your wiki first.</p>"\
                                                                                % sidebar)

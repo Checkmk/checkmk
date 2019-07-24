@@ -41,15 +41,13 @@ def check_cisco_nexus_cpu(_no_item, params, info):
 
 
 check_info['cisco_nexus_cpu'] = {
-    'inventory_function'        : inventory_cisco_nexus_cpu,
-    'check_function'            : check_cisco_nexus_cpu,
-    'service_description'       : 'CPU utilization',
-    'has_perfdata'              : True,
-    'snmp_info'                 : (".1.3.6.1.4.1.9.9.305.1.1.1.0", [ "" ]),
-    'snmp_scan_function'        : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                                     and "nx-os" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                                     and oid(".1.3.6.1.4.1.9.9.305.1.1.1.0"),
-    'group'                     : "cpu_utilization_os",
-    'includes'                  : [ "cpu_util.include" ],
-    'default_levels_variable'   : "cisco_nexus_cpu_default_levels",
+    'inventory_function': inventory_cisco_nexus_cpu,
+    'check_function': check_cisco_nexus_cpu,
+    'service_description': 'CPU utilization',
+    'has_perfdata': True,
+    'snmp_info': (".1.3.6.1.4.1.9.9.305.1.1.1.0", [""]),
+    'snmp_scan_function': snmp_scan_cisco_nexus_cpu,
+    'group': "cpu_utilization_os",
+    'includes': ["cpu_util.include", "cisco_cpu_scan_functions.include"],
+    'default_levels_variable': "cisco_nexus_cpu_default_levels",
 }

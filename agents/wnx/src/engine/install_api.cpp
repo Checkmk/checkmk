@@ -80,8 +80,7 @@ void BackupFile(const std::filesystem::path& File,
         return;
     }
 
-    if (File.empty() || !fs::exists(File, ec) ||
-        !fs::is_regular_file(File, ec)) {
+    if (File.empty() || !cma::tools::IsValidRegularFile(File)) {
         XLOG::l("Backup of the '{}' impossible", File.u8string());
         return;
     }
@@ -180,11 +179,25 @@ bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
     // msiexecs' parameters below are not fixed unfortunately
     // documentation is scarce and method of installation in MK
     // is not a special standard
-    command += L" /i " + msi_to_install.wstring() +
-               L" REINSTALL=ALL REINSTALLMODE=amus ";
+    command += L" /i " + msi_to_install.wstring();
+
+    std::wstring log_file_name = cma::cfg::GetLogDir();
+    log_file_name += L"\\agent_msi.log";
+    if (fs::exists(log_file_name, ec)) {
+        XLOG::l.i("File '{0}' exists, backing up to '{0}.bak'",
+                  wtools::ConvertToUTF8(log_file_name));
+
+        auto success = MvFile(log_file_name, log_file_name + L".bak");
+
+        if (!success) XLOG::d("Backing up failed");
+    }
 
     if (Update == UpdateType::exec_quiet)  // this is only normal method
-        command += L" /quiet";             // but MS doesn't care at all :)
+    {
+        command += L" /qn";  // but MS doesn't care at all :)
+        command += L" /L*V ";
+        command += log_file_name;
+    }
 
     XLOG::l.i("File '{}' exists\n Command is '{}'", msi_to_install.u8string(),
               wtools::ConvertToUTF8(command.c_str()));

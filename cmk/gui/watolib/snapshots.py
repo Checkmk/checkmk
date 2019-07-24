@@ -90,7 +90,7 @@ def _do_create_snapshot(data):
             tarinfo.mtime = time.time()
             tarinfo.uid = 0
             tarinfo.gid = 0
-            tarinfo.mode = 0644
+            tarinfo.mode = 0o644
             tarinfo.type = tarfile.REGTYPE
             return tarinfo
 
@@ -118,13 +118,12 @@ def _do_create_snapshot(data):
                 "tar", "czf", path_subtar, "--ignore-failed-read", "--force-local", "-C", prefix
             ] + paths
 
-            proc = subprocess.Popen(
-                command,
-                stdin=None,
-                close_fds=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=prefix)
+            proc = subprocess.Popen(command,
+                                    stdin=None,
+                                    close_fds=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    cwd=prefix)
             _stdout, stderr = proc.communicate()
             exit_code = proc.wait()
             # Allow exit codes 0 and 1 (files changed during backup)

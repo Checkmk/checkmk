@@ -1,0 +1,12 @@
+Title: tsm_scratch: Prevent crash due to unusual agent output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558356681
+Class: fix
+
+It is know that the agent output may contain warnings resulting from queries of
+the tape monitored storage device. This lead to crashes of the check during
+discovery. This werk fixes this issue.

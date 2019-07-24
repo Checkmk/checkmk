@@ -23,7 +23,11 @@
 # Boston, MA 02110-1301 USA.
 
 # TODO(sp) We should really use autotools here...
-ifneq ($(shell which g++-8 2>/dev/null),)
+ifneq ($(shell which g++-9 2>/dev/null),)
+        CXX := g++-9 -std=c++17
+else ifneq ($(shell which clang++-8 2>/dev/null),)
+        CXX := clang++-8 -std=c++17
+else ifneq ($(shell which g++-8 2>/dev/null),)
         CXX := g++-8 -std=c++17
 else ifneq ($(shell which clang++-7 2>/dev/null),)
         CXX := clang++-7 -std=c++17

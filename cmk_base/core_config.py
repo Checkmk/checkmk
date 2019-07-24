@@ -38,6 +38,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.ip_lookup as ip_lookup
+from cmk_base.check_utils import Service  # pylint: disable=unused-import
 
 
 class MonitoringCore(object):
@@ -145,27 +146,22 @@ def host_check_command(config_cache,
         return "check-mk-host-tcp!" + str(value[1])
 
     if value[0] == "custom":
-        try:
+        if custom_commands_to_define is not None:
             custom_commands_to_define.add("check-mk-custom")
-        except:
-            pass  # not needed and not available with CMC
         return "check-mk-custom!" + autodetect_plugin(value[1])
 
-    raise MKGeneralException(
-        "Invalid value %r for host_check_command of host %s." % (value, host_config.hostname))
+    raise MKGeneralException("Invalid value %r for host_check_command of host %s." %
+                             (value, host_config.hostname))
 
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
     if command_line[0] not in ['$', '/']:
-        try:
-            for directory in ["/local", ""]:
-                path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
-                if os.path.exists(path + plugin_name):
-                    command_line = path + command_line
-                    break
-        except:
-            pass
+        for directory in ["/local", ""]:
+            path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
+            if os.path.exists(path + plugin_name):
+                command_line = path + command_line
+                break
     return command_line
 
 
@@ -291,8 +287,8 @@ def active_check_arguments(hostname, description, args):
     if not isinstance(args, (str, unicode, list)):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname,
-                                                                               description))
+            "string of the concatenated arguments (Host: %s, Service: %s)." %
+            (hostname, description))
 
     return config.prepare_check_command(args, hostname, description)
 
@@ -310,12 +306,12 @@ def active_check_arguments(hostname, description, args):
 #   '----------------------------------------------------------------------'
 
 
-def get_cmk_passive_service_attributes(config_cache, host_config, description, checkname, params,
-                                       check_mk_attrs):
-    attrs = get_service_attributes(host_config.hostname, description, config_cache, checkname,
-                                   params)
+def get_cmk_passive_service_attributes(config_cache, host_config, service, check_mk_attrs):
+    # type: (config.ConfigCache, config.HostConfig, Service, Dict) -> Dict
+    attrs = get_service_attributes(host_config.hostname, service.description, config_cache,
+                                   service.check_plugin_name, service.parameters)
 
-    value = host_config.snmp_check_interval(config_cache.section_name_of(checkname))
+    value = host_config.snmp_check_interval(config_cache.section_name_of(service.check_plugin_name))
     if value is not None:
         attrs["check_interval"] = value
     else:
@@ -327,6 +323,12 @@ def get_cmk_passive_service_attributes(config_cache, host_config, description, c
 def get_service_attributes(hostname, description, config_cache, checkname=None, params=None):
     attrs = _extra_service_attributes(hostname, description, config_cache, checkname, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
+
+    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
+                                     "LABEL"))
+    attrs.update(
+        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
+                            "LABELSOURCE"))
     return attrs
 
 
@@ -575,10 +577,10 @@ def replace_macros(s, macros):
         # TODO: Clean this up
         try:
             s = s.replace(key, value)
-        except:  # Might have failed due to binary UTF-8 encoding in value
+        except Exception:  # Might have failed due to binary UTF-8 encoding in value
             try:
                 s = s.replace(key, value.decode("utf-8"))
-            except:
+            except Exception:
                 # If this does not help, do not replace
                 if cmk.utils.debug.enabled():
                     raise

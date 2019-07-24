@@ -97,7 +97,7 @@ etherbox_info = [
 def check_etherbox_temp(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "1", info)
-    except Exception, error:
+    except Exception as error:
         return 3, error.message
 
     uom = {"0": "c", "1": "f", "2": "k"}[info[0][0][0]]
@@ -131,7 +131,7 @@ check_info["etherbox.temp"] = {
 def check_etherbox_humidity(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "3", info)
-    except Exception, error:
+    except Exception as error:
         return 3, error.message
 
     state, infotext, perfdata = check_humidity(int(value) / 10.0, params)
@@ -163,7 +163,7 @@ check_info["etherbox.humidity"] = {
 def check_etherbox_switch_contact(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "4", info)
-    except Exception, error:
+    except Exception as error:
         return 3, error.message
 
     state = 0
@@ -205,7 +205,7 @@ check_info["etherbox.switch"] = {
 def check_etherbox_smoke(item, no_params, info):
     try:
         name, value = etherbox_get_sensor(item, "6", info)
-    except Exception, error:
+    except Exception as error:
         return 3, error.message
 
     state = 0

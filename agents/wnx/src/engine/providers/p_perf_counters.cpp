@@ -2,30 +2,28 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/p_perf_counters.h"
+
 #include <iostream>
 #include <string>
 
-#include "tools/_raii.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
+#include "common/wtools.h"
 #include "logger.h"
-
-#include "providers/p_perf_counters.h"
+#include "tools/_raii.h"
 
 namespace cma {
 
 namespace provider {
 
-std::string UptimeSync::makeBody() const {
+std::string UptimeSync::makeBody() {
     auto count = GetTickCount64();
     count /= 1000;  // time in milliseconds
     std::string s = std::to_string(count);
     return s;
 }
 
-std::string Uptime::makeBody() const {
+std::string Uptime::makeBody() {
     auto count = GetTickCount64();
     count /= 1000;  // time in milliseconds
     std::string s = std::to_string(count);
@@ -48,11 +46,11 @@ std::string MakeWinPerfStamp(uint32_t KeyIndex) {
 }
 
 // <<<winperf_something>>>
-std::string MakeWinPerfHeader(const std::wstring& Prefix,
-                              const std::wstring& Name) {
-    auto name_string = wtools::ConvertToUTF8(Name);
+std::string MakeWinPerfHeader(std::wstring_view prefix,
+                              std::wstring_view name) {
+    auto name_string = wtools::ConvertToUTF8(name);
 
-    return cma::section::MakeHeader(wtools::ConvertToUTF8(Prefix) + "_" +
+    return cma::section::MakeHeader(wtools::ConvertToUTF8(prefix) + "_" +
                                     name_string);
 }
 
@@ -67,7 +65,7 @@ const wchar_t* GetNextMultiSz(const std::vector<wchar_t>& Data,
 
     if ((len == 0) ||  // end of data
         (Offset + (len * sizeof(wchar_t)) >
-         Data.size())) {  // regsitry is corrupted
+         Data.size())) {  // registry is corrupted
         return nullptr;
     }
 
@@ -141,7 +139,7 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* Object,
     using namespace wtools;
 
     if (Object == nullptr) {
-        XLOG::t("Object is null for index {}", KeyIndex);
+        XLOG::t("Object is null for index [{}]", KeyIndex);
         return {};
     }
 
@@ -185,16 +183,15 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* Object,
 // builds a section
 // empty string on error
 // Also this is good example how to use our Perf API
-std::string BuildWinPerfSection(const std::wstring& Prefix,
-                                const std::wstring& Name,
-                                const std::wstring& Key) {
+std::string BuildWinPerfSection(std::wstring_view prefix,
+                                std::wstring_view name, std::wstring_view key) {
     using namespace std;
     using namespace wtools;
 
     // read counter into temp structure
     // Attention: data block read have to be available during processing
     uint32_t key_index = 0;
-    auto result = details::LoadWinPerfData(Key, key_index);
+    auto result = details::LoadWinPerfData(std::wstring(key), key_index);
 
     auto object = wtools::perf::FindPerfObject(result, key_index);
     if (!object) return {};
@@ -203,7 +200,7 @@ std::string BuildWinPerfSection(const std::wstring& Prefix,
 
     string accu;
     // header <<<winperf_?????>>>
-    auto header = details::MakeWinPerfHeader(Prefix, Name);
+    auto header = details::MakeWinPerfHeader(prefix, name);
     accu += header;
 
     // time

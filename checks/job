@@ -53,26 +53,39 @@ factory_settings["job_default_levels"] = {
 }
 
 
-def parse_job(info):
-    def job_parse_real_time(s):
-        parts = s.split(':')
-        min_sec, hour_sec = 0, 0
-        if len(parts) == 3:
-            hour_sec = int(parts[0]) * 60 * 60
-        if len(parts) >= 2:
-            min_sec = int(parts[-2]) * 60
-        return float(parts[-1]) + min_sec + hour_sec
+def _job_parse_real_time(s):
+    parts = s.split(':')
+    min_sec, hour_sec = 0, 0
+    if len(parts) == 3:
+        hour_sec = int(parts[0]) * 60 * 60
+    if len(parts) >= 2:
+        min_sec = int(parts[-2]) * 60
+    return float(parts[-1]) + min_sec + hour_sec
 
+
+def _job_parse_key_values(line):
+    key, val = line
+    if key == 'real_time':
+        return key, _job_parse_real_time(val)
+    if key in ('user_time', 'system_time'):
+        return key, float(val)
+    if key in ('max_res_kbytes', 'avg_mem_kbytes'):
+        return key.replace('kbytes', 'bytes'), int(val) * 1000
+    return key, int(val)
+
+
+def parse_job(info):
     parsed = {}
-    job = None
+    job = {}
     prefix = None
     for line in info:
         node_info = line[0]
         line = line[1:]
         if line[0] == "==>" and line[-1] == "<==":
             jobname = " ".join(line[1:-1])
-            if jobname.endswith(".running"):
-                jobname, jobstate = jobname.rsplit(".", 1)
+            if jobname.endswith("running"):
+                jobstate = "running"
+                jobname = jobname.rsplit(".", 1)[0]
                 prefix = "running_"
             else:
                 jobstate = None
@@ -81,22 +94,12 @@ def parse_job(info):
                 "state": jobstate,
             })
 
-        elif job is not None and prefix is not None and len(line) == 2:
-            key, val = line
-            # Convert several keys/values
-            if key == 'real_time':
-                val = job_parse_real_time(val)
-            elif key in ['user_time', 'system_time']:
-                val = float(val)
-            elif key in [
-                    'exit_code', 'invol_context_switches', 'vol_context_switches', 'start_time'
-            ]:
-                val = int(val)
-            elif key in ['max_res_kbytes', 'avg_mem_kbytes']:
-                key = key.replace('kbytes', 'bytes')
-                val = int(val) * 1000
-            # TODO: Fix the code and remove the pragma below!
-            job[prefix + key] = val  # pylint: disable=unsupported-assignment-operation
+        elif job and prefix is not None and len(line) == 2:
+            key, val = _job_parse_key_values(line)
+            if prefix:
+                job.setdefault(prefix + key, []).append(val)
+            else:
+                job[key] = val
 
     return parsed
 
@@ -108,93 +111,81 @@ def inventory_job(parsed):
                 yield jobname, {}
 
 
-@get_parsed_item_data
-def check_job(item, params, nodes):
-    def process_start_time(value, state, warn, crit):
-        display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
-        job_age = time.time() - value
-        if crit > 0 and job_age >= crit:
-            state = max(state, 2)
-            display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
-        elif warn > 0 and job_age >= warn:
-            state = max(state, 1)
-            display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
-        return state, display_value
+def _process_start_time(value, warn, crit):
+    display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
+    job_age = time.time() - value
+    if crit and job_age >= crit:
+        return 2, display_value + "(!!) (more than %s ago)" % get_age_human_readable(crit)
+    if warn and job_age >= warn:
+        return 1, display_value + "(!!) (more than %s ago)" % get_age_human_readable(warn)
+    return 0, display_value
 
-    states = []
-    warn, crit = params.get('age')
+
+def _process_job_stats(job, age_levels):
+    txt = 'Exit-Code: %d' % job['exit_code']
+    state = 0
+    if job['exit_code'] != 0:
+        state = 2
+        txt += ' (!!)'
+    output = [txt]
+    perfdata = []
+
+    for key, title in (
+        ('start_time', 'Started'),
+        ('real_time', 'Real-Time'),
+        ('user_time', 'User-Time'),
+        ('system_time', 'System-Time'),
+        ('reads', 'Filesystem Reads'),
+        ('writes', 'Filesystem Writes'),
+        ('max_res_bytes', 'Max. Memory'),
+        ('avg_mem_bytes', 'Avg. Memory'),
+        ('vol_context_switches', 'Vol. Context Switches'),
+        ('invol_context_switches', 'Invol. Context Switches'),
+    ):
+        value = job.get(key)
+        if value is None:
+            continue
+
+        if key in ['max_res_bytes', 'avg_mem_bytes']:
+            display_value = get_bytes_human_readable(value, 1000)
+        elif key in ['real_time', 'user_time', 'system_time']:
+            display_value = get_age_human_readable(value)
+        elif key == 'start_time':
+            sub_state, display_value = _process_start_time(value, *age_levels)
+            state = max(sub_state, state)
+        else:
+            display_value = str(value)
+
+        output.append('%s: %s' % (title, display_value))
+        perfdata.append((key, value))
+
+    return state, ', '.join(output), perfdata
+
+
+@get_parsed_item_data
+def check_job(_no_item, params, nodes):
+    warn, crit = params['age']
     results = []
     for node_info, job in nodes.iteritems():
-        if node_info:
-            node_infotext = "[%s] " % node_info
-        else:
-            node_infotext = ""
+        prefix = "[%s] " % node_info if node_info else ""
 
         if job.get("exit_code") is None:
-            results.append((3, '%sGot incomplete information for this job' % node_infotext))
-            states.append(3)
+            results.append((3, '%sGot incomplete information for this job' % prefix))
             continue
 
-        state = 0
-        output = []
-        perfdata = []
-
+        state, text, perfdata = _process_job_stats(job, (warn, crit))
         if 'running_start_time' in job:
-            output.append('%sCurrently running' % node_infotext)
-            state, display_value = process_start_time(job['running_start_time'], state, warn, crit)
-            output.append('(Started: %s)' % display_value)
-            results.append((state, ' '.join(output)))
-            states.append(state)
-            continue
-
-        txt = '%sExit-Code: %d' % (node_infotext, job['exit_code'])
-        if job['exit_code'] != 0:
-            state = max(state, 2)
-            txt += ' (!!)'
-        output.append(txt)
-
-        for key, title in [
-            ('start_time', 'Started'),
-            ('real_time', 'Real-Time'),
-            ('user_time', 'User-Time'),
-            ('system_time', 'System-Time'),
-            ('reads', 'Filesystem Reads'),
-            ('writes', 'Filesystem Writes'),
-            ('max_res_bytes', 'Max. Memory'),
-            ('avg_mem_bytes', 'Avg. Memory'),
-            ('vol_context_switches', 'Vol. Context Switches'),
-            ('invol_context_switches', 'Invol. Context Switches'),
-        ]:
-            value_str = job.get(key)
-            if value_str is None:
-                continue
-
-            if key in ['max_res_bytes', 'avg_mem_bytes']:
-                value = int(value_str)
-                display_value = get_bytes_human_readable(value, 1000)
-            elif key in ['real_time', 'user_time', 'system_time']:
-                value = float(value_str)
-                display_value = get_age_human_readable(value)
-            elif key == 'start_time':
-                value = float(value_str)
-                state, display_value = process_start_time(value, state, warn, crit)
-            else:
-                display_value = value_str
-                value = float(value_str)
-
-            output.append('%s: %s' % (title, display_value))
-            perfdata.append((key, value))
-        results.append((state, ', '.join(output), perfdata))
-        states.append(state)
+            running_start_time = min(job['running_start_time'])
+            state, display_value = _process_start_time(running_start_time, warn, crit)
+            prefix = '%sCurrently running (started: %s), Previous result (considered OK): ' \
+                     % (prefix, display_value)
+        results.append((state, '%s%s' % (prefix, text), perfdata))
 
     if params.get("outcome_on_cluster", "worst") == "best":
-        infotexts = []
-        perfdata = []
-        for result in results:
-            infotexts.append(result[1])
-            if len(result) > 2:
-                perfdata += result[2]
-        yield min(states), ", ".join(infotexts), perfdata
+        state = min(state for state, _text, _metrics in results)
+        text = ", ".join(text for _state, text, _metrics in results)
+        perfdata = sum((metrics for _state, _text, metrics in results), [])
+        yield state, text, perfdata
     else:
         for result in results:
             yield result

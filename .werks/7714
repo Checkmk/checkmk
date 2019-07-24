@@ -1,0 +1,18 @@
+Title: Windows Agent provides MSI Installation Log for update routine
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561390579
+Class: feature
+
+Now Windows Agent creates MSI Installation Log file for every 
+automatically installed check_mk_agent.msi.
+
+Automatical Installation is performed by Update Plugin or it may be performed
+manually if check_mk_agent.msi is copied to c:\ProgramData\CheckMK\Agent
+\update folder 
+
+The name of the log file is C:\Users\Public\agent_msi.log
+Previous log file is backed up in C:\Users\Public\agent_msi.log.bak

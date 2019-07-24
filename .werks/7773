@@ -1,0 +1,11 @@
+Title: Fix 1.6 compatibility with Checkmk Appliance
+Level: 1
+Component: distros
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560157261
+
+The Checkmk 1.6.0b1 package could not be installed on Checkmk Appliances.

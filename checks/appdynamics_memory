@@ -108,8 +108,8 @@ def check_appdynamics_memory(item, params, info):
                 yield state, 'Used: %s' % get_bytes_human_readable(used), perfdata
 
             if max_available > 0:
-                perfdata = [('mem_%s_committed' % mem_type, committed, None, None, 0,
-                             max_available)]
+                perfdata = [('mem_%s_committed' % mem_type, committed, None, None, 0, max_available)
+                           ]
             else:
                 perfdata = [('mem_%s_committed' % mem_type, committed)]
             yield 0, 'Committed: %s' % get_bytes_human_readable(committed), perfdata

@@ -56,9 +56,8 @@ Boston, MA 02110-1301 USA.
     border-radius: 0;
   }
 
-  /* TODO: No important styles */
   tr {
-    background-color: transparent !important;
+    background-color: transparent;
   }
 
   /* TODO: Reproduce this html element */
@@ -103,41 +102,6 @@ Boston, MA 02110-1301 USA.
 }
 
 /* WATO configuration forms */
-/* TODO: Reproduce all table.form elements */
-.wato table.form {
-  width: 100%;
-  margin-left: 0;
-
-  td {
-    &.legend i, &.title i {
-      margin-top: 13px;
-    }
-
-    &.legend {
-      width: 300px;
-
-      h3 {
-        padding: 0;
-        margin: 0 0 5px;
-        font-size: 12px;
-        font-weight: normal;
-      }
-    }
-
-    /* Foldable sections in host properties */
-    &.title i {
-      padding-bottom: 8px;
-      font-weight: normal;
-      border-top-style: solid;
-    }
-
-    &.checkbox {
-      width: 20px;
-      text-align: center;
-    }
-  }
-}
-
 .wato form.new_rule {
   margin: 10px 0;
 }
@@ -386,13 +350,11 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: -6px;
       z-index: 200;
       height: auto;
-      padding: 2px 0 2px 4px;
       margin: 0;
       font-size: 12px;
       font-weight: normal;
       color: #fff;
-      background: $theme-color-white;
-      border: 1px solid $theme-color-table-border;
+      background-color: $theme-color-white;
       box-shadow: none;
     }
 
@@ -402,7 +364,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       }
 
       select {
-        background: $theme-color-table-background;
+        background-color: $theme-color-table-background;
       }
     }
 
@@ -473,7 +435,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 24px;
     overflow: hidden;
 
-    .infos .infos_content {
+    .infos_content {
       right: 0;
       left: 0;
       overflow: hidden;
@@ -680,6 +642,24 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     padding: 0;
     margin: 0;
   }
+
+  tags {
+    display: inline-block;
+    padding: 0 2px;
+
+    &.tagify.display[readonly] tag {
+      padding: 0;
+
+      div {
+        margin: 0;
+      }
+    }
+  }
+
+  .label_operator {
+    display: inline-block;
+    padding: 0 2px;
+  }
 }
 
 .wato form.rule_editor {
@@ -701,13 +681,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   padding: 0;
   margin: 0;
 }
-
-/* This style destroys many other td styles since
-   it is too specific or too unspecific */
-/* .wato table.form td.content td {
-  padding: 0;
-  vertical-align: middle;
-}*/
 
 .wato table.data.ruleset tr.disabled td * {
   color: #999;
@@ -734,33 +707,6 @@ form#form_timeperiod td.vlof_content {
 
 /* Value editor */
 /* TODO: Reproduce this html element */
-.wato table.data.globalvars {
-  td {
-    vertical-align: top;
-    }
-
-  /* TODO: Reproduce this html element */
-  img.iconbutton {
-    width: 60px;
-    height: 16px;
-  }
-}
-
-.wato div.globalvars .toggle_switch a,
-.wato div.globalvars .toggle_switch body.main .popup_menu span,
-body.main .popup_menu .wato div.globalvars .toggle_switch span {
-  height: 16px;
-  font-size: 8px;
-  font-weight: $theme-font-weight-bold;
-  line-height: 16px;
-  letter-spacing: $theme-letter-spacing-table;
-  text-transform: uppercase;
-  border: none;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-/* TODO: Reproduce this html element */
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
@@ -779,22 +725,21 @@ form.search, div.filter_buttons {
   color: $theme-color-text;
 }
 
-.wato div.mainmenu a,
-.wato div.mainmenu body.main .popup_menu span,
-body.main .popup_menu .wato div.mainmenu span {
-  display: block;
-  height: 104px;
-  margin: 0 8px 8px 0;
-  background: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
-  box-shadow: none;
-
-  &:hover {
-    background: $theme-color-table-background;
-  }
-}
-
 .wato div.mainmenu {
+  a, body.main .popup_menu span, body.main .popup_menu & span {
+    display: block;
+    width: 330px;
+    height: 80px;
+    margin: 0 8px 8px 0;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    box-shadow: none;
+
+    &:hover {
+      background: $theme-color-table-background;
+    }
+  }
+
   a {
     position: relative;
     float: left;
@@ -816,9 +761,9 @@ body.main .popup_menu .wato div.mainmenu span {
 
     &.subtitle {
       position: absolute;
-      top: 32px;
+      top: 22px;
       left: 72px;
-      width: 237px;
+      width: 234px;
       padding: 16px 0;
       overflow: hidden;
       font-size: $theme-font-size-small;
@@ -836,31 +781,6 @@ body.main .popup_menu .wato div.mainmenu span {
     left: 16px;
     width: 48px;
     height: 48px;
-  }
-}
-
-/* Special styles for roles editor (permissions) */
-/* TODO: Reproduce these table.form elements
- * It seems these are of class .nform now */
-.wato table.form table.permissions {
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-
-  td {
-    padding-top: 2px;
-
-    &.select {
-      width: 120px;
-    }
-
-    &.descr {
-      vertical-align: middle;
-    }
-  }
-
-  select {
-    width: 110px;
   }
 }
 
@@ -924,10 +844,6 @@ body.main .popup_menu .wato div.mainmenu span {
   }
 }
 
-input.toggle_timespecific_parameter {
-  margin-top: 5px;
-}
-
 /* Page edit_ruleset */
 /* TODO: Check whether this is still needed
  * with white color it wasn't visible anyways */
@@ -936,639 +852,709 @@ div.varname {
   color: #fff;
 }
 
-///* page "global settings*/
-//.wato div.globalvars a {
-//    text-decoration: none;
-//    color: black;
-//}
-//.wato div.globalvars a:hover {
-//    text-decoration: underline;
-//}
-//
-//.wato div.globalvars td.simple a.modified,
-//.wato div.globalvars td.simple div.toggle_switch_container.modified,
-//.wato div.globalvars td.content a.modified > table {
-//    border-radius: 5px 5px 5px 5px;
-//    border: 1px solid #cdf;
-//    box-shadow: 3px 3px 5px #eee inset;
-//    margin-left: -4px;
-//    padding-bottom: 18px;
-//    padding: 1px 4px 2px 4px;
-//}
-//
-//.wato div.globalvars td.simple a.modified.globally,
-//.wato div.globalvars td.simple div.toggle_switch_container.modified.globally,
-//.wato div.globalvars td.content a.modified.globally > table {
-//    box-shadow: 3px 3px 5px #8bc7e5 inset;
-//}
-//
-//.wato div.globalvars td.simple div.toggle_switch_container {
-//    width: 56px;
-//}
-//
-//.wato div.globalvars a.modified table.vs_dict_text {
-//    border-collapse: separate;
-//}
-//
-//.wato div.globalvars div.title a.modified {
-//    box-shadow: none;
-//    border: none;
-//    /* font-weight: bold; */
-//}
-//
-//.wato div.globalvars td.content img.iconbutton {
-//    width: 60px;
-//    height: 16px;
-//}
-//
-//.wato div.globalvars td.legend {
-//    padding-top: 0px;
-//}
-//
-//.wato div.globalvars td.legend {
-//    width: 350px;
-//}
-//
-//.wato div.globalvars td.legend div.title {
-//    max-width: 350px;
-//}
-//
-///*.wato div.globalvars td {
-//    height: 20px;
-//}*/
-//
-///* Table in page "Global variables" */
-//.wato table.data.globalvars {
-//    width: 100%;
-//}
-//.wato table.data.globalvars td.title {
-//    width: 430px;
-//}
-//.wato table.data.globalvars td.varname {
-//    width: 300px;
-//}
-//
-//.wato table.changes tr.foreign td {
-//    text-decoration: italic;
-//}
-//
-///* activation */
-//
-//.wato table.data.activation a.disabled {
-//    pointer-events: none;
-//}
-//
-//.wato table.changes tr.foreign.not_permitted td {
-//    color: #f00;
-//}
-//
-//.wato table.changes {
-//    width: 100%;
-//}
-//
-//.wato table.data div.act_success {
-//}
-//
-//.wato table.data div.act_success img {
-//    width: 18px;
-//    height: 18px;
-//    vertical-align: middle;
-//}
-//
-///* Replication */
-//.wato table.data td.repprogress {
-//    width: 160px;
-//    position: relative;
-//    padding: 0;
-//    margin: 0;
-//}
-//
-//.wato td.repprogress div.msg {
-//    position: absolute;
-//    z-index: 20;
-//    width: 160px;
-//    text-align: center;
-//    top: 6px;
-//    left: 0;
-//    height: 16px;
-//}
-//
-//.wato td.repprogress div.progress {
-//    position: absolute;
-//    top: 0;
-//    left: 0;
-//    z-index: 0;
-//    top: 3px;
-//
-//    height: 16px;
-//
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#00bfe2+0,5dddf5+57,05c1e3+74,00bee0+100 */
-//    background: #00bfe2; /* Old browsers */
-//    background: -moz-linear-gradient(top, #00bfe2 0%, #5dddf5 57%, #05c1e3 74%, #00bee0 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00bfe2', endColorstr='#00bee0',GradientType=0 ); /* IE6-9 */
-//
-//    padding-top: 4px;
-//    font-size: 8pt;
-//    box-shadow: 0.5px 0.5px 1px #224466 inset;
-//    color: black;
-//}
-//
-//.wato td.repprogress div.progress.state_success {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-//    background: #bfd255; /* Old browsers */
-//    background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 51%, #9ecb2d 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#9ecb2d',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.repprogress div.progress.state_error {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-//    background: #f3c5bd; /* Old browsers */
-//    background: -moz-linear-gradient(top, #f3c5bd 0%, #e86c57 50%, #ea2803 51%, #ff6600 75%, #c72200 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f3c5bd', endColorstr='#c72200',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.repprogress div.progress.state_warning {
-//    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-//    background: #fceabb; /* Old browsers */
-//    background: -moz-linear-gradient(top, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%); /* FF3.6-15 */
-//    background: -webkit-linear-gradient(top, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* Chrome10-25,Safari5.1-6 */
-//    background: linear-gradient(to bottom, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-//    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 ); /* IE6-9 */
-//}
-//
-//.wato td.details,
-//.wato th.header_details,
-//.wato td.repprogress,
-//.wato th.header_repprogress {
-//    display: none;
-//}
-//
-//.wato td.tag-ellipsis {
-//    max-width: 300px;
-//}
-//
-//.wato td#repmsg_local {
-//    width: 280px;
-//}
-//
-//tr.hidden {
-//    display: none;
-//}
-//
-//table.data tr.notification_context table {
-//    margin: 5px;
-//}
-//
-//table.data tr.notification_context table th,
-//table.data tr.notification_context table td {
-//    font-family: monospace;
-//}
-//
-//table.data tr.data.dcd_log_entries > td {
-//    font-family: monospace, sans-serif;
-//    background-color: #000000;
-//    color: #ffffff;
-//}
-//
-//table.data tr.data.dcd_log_entries pre {
-//    overflow-y: scroll;
-//    resize:both;
-//    max-height: 300px;
-//    text-overflow: ellipsis;
-//}
-//
-///*-------------------------------------------------------------------------.
-//|               ____                                                       |
-//|              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |
-//|              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|                   |
-//|              |  __/| | | (_) | (_| | | |  __/\__ \__ \                   |
-//|              |_|   |_|  \___/ \__, |_|  \___||___/___/                   |
-//|                               |___/                                      |
-//+--------------------------------------------------------------------------+
-//| Interactive progress bar, e.g. used in bulk inventory.                   |
-//'-------------------------------------------------------------------------*/
-//
-//.wato table.progress {
-//    background-color: rgba(255, 255, 255, 0.3);
-//    width: 50%;
-//    border: 1px solid #000;
-//    color: black;
-//}
-//
-//.wato table.progress th {
-//    background-color: #fff;
-//    padding: 3px 0px;
-//}
-//
-///* Log window */
-//.wato table.progress td.log > div {
-//    background-color: rgba(255, 255, 255, 0.3);
-//    border: 1px solid #fff;
-//    padding: 5px;
-//    height: 250px;
-//    overflow: auto;
-//    text-align: left;
-//}
-//
-//.wato table.progress td.log {
-//    font-family: monospace, sans-serif;
-//    padding: 12px 12px 0px 12px;
-//}
-//
-//.wato table.progress td.log div.exc {
-//    border: 1px solid #ff0000;
-//    margin: 10px;
-//    padding: 5px;
-//}
-//
-///* progress bar */
-//.wato table.progress td.bar {
-//    padding: 0 12px 0 12px;
-//    height: 46px;
-//}
-//
-//.wato table.progress td.bar table {
-//    position: relative;
-//    top: 12px;
-//    width: 100%;
-//    height: 22px;
-//    background-color: #fff;
-//    border-spacing: 1px 2px;
-//}
-//
-//.wato table.progress td.bar #progress_title {
-//    position: relative;
-//    top: -6px;
-//    left: 0px;
-//    width: 100%;
-//    height: 0px;
-//    text-align: center;
-//    white-space: nowrap;
-//    float: left;
-//    z-index: 40;
-//    font-weight: bold;
-//}
-//
-//.wato table.progress td.bar img.glass {
-//    position: relative;
-//    top: -10px;
-//    width: 100%;
-//    height: 22px;
-//    z-index: 30;
-//}
-//
-//.wato table.progress td.bar td.left {
-//    background-color: #4080ff;
-//    width: 0%;
-//}
-//.wato table.progress td.bar td.right {
-//    width: 100%;
-//}
-//
-//.wato #progress_bar.finished td.left {
-//    background-color: #80ff00;
-//    padding: 0px;
-//}
-//.wato #progress_bar.finished td.right {
-//    width: 0px;
-//}
-//
-///* Statistics table */
-//.wato table.progress td.stats {
-//    padding: 0px 12px 12px 12px;
-//}
-//.wato table.progress td.stats table {
-//    border-collapse: collapse;
-//    border-spacing: 0px;
-//    border: 1px solid #fff;
-//}
-//.wato table.progress td.stats th {
-//    text-align: left;
-//    background-color: transparent;
-//    padding-right: 3em;
-//    padding-left: 6px;
-//}
-//.wato table.progress td.stats th, .wato table.progress td.stats td {
-//    border-bottom: 1px solid #fff;
-//    padding-top: 3px;
-//    padding-bottom: 3px;
-//}
-//
-//.wato table.progress td.stats td {
-//    background-color: rgba(255, 255, 255, 0.3);
-//    text-align: right;
-//    width: 4em;
-//    padding-right: 6px;
-//}
-//
-///* Buttons */
-//.wato table.progress td.buttons {
-//    padding: 0px 12px 12px 12px;
-//    text-align: right;
-//    vertical-align: bottom;
-//}
-//
-//.wato div.error div.err {
-//    background-color: yellow;
-//    color: #000;
-//    font-weight: bold;
-//    width: 100%;
-//    margin: 2px;
-//    padding: 2px 5px;
-//    float: left;
-//    border-radius: 3px;
-//    position: relative;
-//    left: -8px;
-//    opacity: 0.90;
-//}
-//
-///* Logwatch pattern editor */
-//
-//.logwatch_try input.match {
-//    width: 99%;
-//}
-//
-//table.logwatch tr.noreason {
-//    color: #898989;
-//}
-//
-//table.logwatch span.match {
-//    border: 1px solid #49768B;
-//    border-radius: 4px;
-//    background-color: #fff;
-//    padding: 0 2px 2px 2px;
-//}
-//
-//table.multisite_conn_method td {
-//    padding: 0px;
-//    height: 22px;
-//    vertical-align: top;
-//}
-//table.multisite_conn_method td input {
-//    height: 18px;
-//}
-//
-///* BI Editor */
-//
-//table.data td.bi_rule_tree b.treeangle {
-//    color: black;
-//    font-weight: normal;
-//}
-//
-//table.data td.bi_rule_tree ul.treeangle {
-//    margin: 1px 6px;
-//}
-//
-//table.data td.bi_rule_tree ul.treeangle li {
-//    margin: 0px 0px 0px 1px;
-//    padding-left: 5px;
-//    list-style: inside disc;
-//    display: list-item;
-//}
-//
-//table.data td.bi_rule_tree > li {
-//    margin: 0px 0px 0px 1px;
-//    padding-left: 5px;
-//    list-style: inside none;
-//    display: list-item;
-//}
-//
-//
-///*-Host Diag-----------------------------------------------------------.
-//|              _   _           _     ____  _                           |
-//|             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
-//|             | |_| |/ _ \/ __| __| | | | | |/ _` |/ _` |              |
-//|             |  _  | (_) \__ \ |_  | |_| | | (_| | (_| |              |
-//|             |_| |_|\___/|___/\__| |____/|_|\__,_|\__, |              |
-//|                                                  |___/               |
-//+---------------------------------------------------------------------*/
-//
-//.wato .diag_host div.success {
-//    margin-top: 0;
-//}
-//
-//.wato .diag_host td > h3 {
-//    margin-top: 0;
-//}
-//
-//.wato .diag_host table.nform {
-//    width: 212px;
-//}
-//
-//.wato .diag_host .test {
-//    margin-bottom:15px;
-//}
-//
-//.wato .diag_host .log,
-//.backup_job .log {
-//    height: 113px;
-//    width: 700px;
-//    font-family: monospace, sans-serif;
-//    box-shadow: 1px 1px 3px #888 inset;
-//    overflow-y: scroll;
-//    padding: 5px 5px;
-//    vertical-align: top;
-//    background-color: #fff;
-//    /* below resize option is css3 */
-//    resize:both;
-//}
-//.backup_job .log pre {
-//    margin: 2px;
-//}
-//.wato .diag_host .log.diag_success {
-//    background-color: #efe;
-//}
-//.wato .diag_host .log.diag_failed {
-//    background-color: #fee;
-//}
-//
-//.wato .diag_host table.test td {
-//    padding: 0;
-//}
-//
-//.wato .diag_host table.test td.icons {
-//    padding: 2px;
-//}
-//
-//.wato .diag_host td.icons div {
-//    position: relative;
-//    width: 22px;
-//    height: 120px;
-//}
-//
-//.wato .diag_host td.icons div img {
-//    margin-left: 2px;
-//}
-//
-//.wato .diag_host td.icons img.retry {
-//    position: absolute;
-//    bottom: 0;
-//    left: 0;
-//}
-//
-///*--Settings---------------------------------------------------------------.
-//|                ____       _   _   _                                      |
-//|               / ___|  ___| |_| |_(_)_ __   __ _ ___                      |
-//|               \___ \ / _ \ __| __| | '_ \ / _` / __|                     |
-//|                ___) |  __/ |_| |_| | | | | (_| \__ \                     |
-//|               |____/ \___|\__|\__|_|_| |_|\__, |___/                     |
-//|                                           |___/                          |
-//+--------------------------------------------------------------------------+
-//| Settings for hosts and services (rule analysis)                          |
-//'-------------------------------------------------------------------------*/
-//table.setting td.reason {
-//    float: none;
-//    width: 180px;
-//    display: inline-block;
-//    color: white;
-//    font-style: italic;
-//}
-//
-//table.setting td.reason i { /* default value */
-//    color: #b6c8d1;
-//}
-//
-//table.setting td.reason a {
-//    text-decoration: none;
-//}
-//table.setting td.reason a:hover {
-//    text-decoration: underline;
-//}
-//
-//table.setting td.settingvalue.used {
-//}
-//td.settingvalue.unused, td.settingvalue.unused td {
-//    font-style: italic;
-//    color: #256;
-//}
-//.wato table.nform div.title a {
-//    color: black;
-//    text-decoration: none;
-//}
-//.wato table.nform div.title a:hover {
-//    text-decoration: underline;
-//}
-//
-//table.nform.rulesettings td.legend {
-//    width: 300px;
-//}
-//table.nform.rulesettings td.legend div.title {
-//    max-width: 300px;
-//}
-//
-///*--Profile Repl-----------------------------------------------------------.
-//|          ____             __ _ _        ____            _                |
-//|         |  _ \ _ __ ___  / _(_) | ___  |  _ \ ___ _ __ | |               |
-//|         | |_) | '__/ _ \| |_| | |/ _ \ | |_) / _ \ '_ \| |               |
-//|         |  __/| | | (_) |  _| | |  __/ |  _ <  __/ |_) | |               |
-//|         |_|   |_|  \___/|_| |_|_|\___| |_| \_\___| .__/|_|               |
-//|                                                  |_|                     |
-//'-------------------------------------------------------------------------*/
-//
-//#profile_repl .site {
-//    margin: 0 5px 5px 0;
-//    padding: 2px;
-//    border-radius: 1ex;
-//    box-shadow: 0 0 3px #444;
-//    background-color: #9dbecd;
-//    border-color: #080;
-//
-//    width: 158px;
-//    text-overflow: ellipsis;
-//}
-//
-//#profile_repl div.site div, #profile_repl div.site span {
-//    vertical-align: middle;
-//    display: inline-block;
-//}
-//
-//#profile_repl div.repl_status {
-//    background-size: contain;
-//}
-//
-//#profile_repl div.repl_locked {
-//    background-image: url(images/icon_repl_locked.png);
-//}
-//
-//#profile_repl div.repl_pending {
-//    background-image: url(images/icon_repl_pending.png);
-//}
-//
-//#profile_repl div.repl_failed {
-//    background-image: url(images/icon_repl_failed.png);
-//}
-//
-//#profile_repl div.repl_25 {
-//    background-image: url(images/icon_repl_25.png);
-//}
-//
-//#profile_repl div.repl_50 {
-//    background-image: url(images/icon_repl_50.png);
-//}
-//
-//#profile_repl div.repl_75 {
-//    background-image: url(images/icon_repl_75.png);
-//}
-//
-//#profile_repl div.repl_success {
-//    background-image: url(images/icon_success.png);
-//}
-//
-//.wato table.data.check_catalog td.title {
-//    width: 500px;
-//}
-//
-//.wato table.data.check_catalog td.name {
-//    width: 200px;
-//}
-//
-//.wato table.data.check_catalog td.agents {
-//    width: 200px;
-//}
-//
-///*--Best practices---------------------------------------------------------.
-// |   ____            _                          _   _                       |
-// |  | __ )  ___  ___| |_   _ __  _ __ __ _  ___| |_(_) ___ ___  ___         |
-// |  |  _ \ / _ \/ __| __| | '_ \| '__/ _` |/ __| __| |/ __/ _ \/ __|        |
-// |  | |_) |  __/\__ \ |_  | |_) | | | (_| | (__| |_| | (_|  __/\__ \        |
-// |  |____/ \___||___/\__| | .__/|_|  \__,_|\___|\__|_|\___\___||___/        |
-// |                        |_|                                               |
-// '-------------------------------------------------------------------------*/
-//
-//.wato table.data.analyze_config {
-//    width: 100%;
-//}
-//
-//.wato table.data.analyze_config td.state div {
-//    position: relative;
-//    line-height: 20px;
-//}
-//
-//.wato table.data.analyze_config th.header_state {
-//    width: 100px;
-//}
-//
-//.wato table.data.analyze_config td.state a {
-//    background: transparent;
-//    position: absolute;
-//    right: 0;
-//}
-//
-//.wato table.data.analyze_config td.state.acknowledged {
-//    background-image: url("images/white_60percent.png");
-//    background-repeat: repeat;
-//}
-//
-//.wato table.data.analyze_config tr.ac_test_details td a {
-//    text-decoration: underline;
-//}
-//
-//.wato table.data.analyze_config tr.ac_test_details td a:hover {
-//    text-decoration: none;
-//}
+/* page "global settings*/
+.wato div.globalvars {
+  a {
+    color: #000;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  td.simple a.modified,
+  td.simple div.toggle_switch_container.modified,
+  td.content a.modified > table {
+    padding: 1px 4px 2px;
+    margin-left: -4px;
+    border: 1px solid #cdf;
+    border-radius: 5px;
+    box-shadow: 3px 3px 5px #eee inset;
+  }
+
+  td.simple a.modified.globally,
+  td.simple div.toggle_switch_container.modified.globally,
+  td.content a.modified.globally > table {
+    box-shadow: 3px 3px 5px #8bc7e5 inset;
+  }
+
+  td.simple div.toggle_switch_container {
+    width: 56px;
+  }
+
+  /* TODO: Reproduce this html class "vs_dict_text" */
+  a.modified table.vs_dict_text {
+    border-collapse: separate;
+  }
+
+  div.title a.modified {
+    border: none;
+    box-shadow: none;
+  }
+
+  /* TODO: Reproduce this html element */
+  td.content img.iconbutton {
+    width: 60px;
+    height: 16px;
+  }
+
+  td.legend {
+    width: 320px;
+    padding-top: 0;
+
+    div.title {
+      max-width: 284px;
+    }
+  }
+}
+
+/* Table in page "Global variables" */
+/* TODO: Reproduce these table.data.globalvars html elements */
+.wato table.data.globalvars {
+  width: 100%;
+
+  td {
+    vertical-align: top;
+
+    &.title {
+      width: 430px;
+    }
+
+    &.varname {
+      width: 300px;
+    }
+  }
+
+  img.iconbutton {
+    width: 60px;
+    height: 16px;
+  }
+}
+
+/* activation */
+.wato table.data.activation a.disabled {
+  pointer-events: none;
+}
+
+.wato table.changes {
+  width: 100%;
+
+  tr.foreign.not_permitted td {
+    color: #f00;
+  }
+}
+
+/* TODO: Reproduce this html element */
+.wato table.data div.act_success img {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+/* Replication */
+.wato table.data td.repprogress {
+  position: relative;
+  width: 160px;
+  padding: 0;
+  margin: 0;
+}
+
+.wato td.repprogress {
+  div.msg {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    z-index: 20;
+    width: 160px;
+    height: 16px;
+    text-align: center;
+  }
+
+  div.progress {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    z-index: 0;
+    height: 24px;
+    padding-top: 10px;
+    font-size: 11px;
+    color: $theme-color-black;
+    background: $theme-color-state-6-background;
+    border: 1px solid $theme-color-nuance-17;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+    box-sizing: border-box;
+
+    &.state_success {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
+      background: $theme-color-state-success-background;
+      border-color: $theme-color-state-success-border;
+    }
+
+    &.state_error {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
+      background: $theme-color-state-2-background;
+      border-color: $theme-color-state-2-border;
+    }
+
+    &.state_warning {
+      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
+      background: $theme-color-main;
+      border-color: $theme-color-state-warning-border;
+    }
+  }
+}
+
+/* TODO: Either remove this style or remove all repprogress styles from above */
+.wato td.details,
+.wato th.header_details,
+.wato td.repprogress,
+.wato th.header_repprogress {
+  display: none;
+}
+
+.wato td.tag-ellipsis {
+  max-width: 300px;
+}
+
+/* TODO: Reproduce this html element */
+.wato td#repmsg_local {
+  width: 280px;
+}
+
+table.data tr.notification_context table {
+  margin: 5px;
+  border: 1px solid $theme-color-table-border;
+  box-shadow: none;
+
+  th, td {
+    font-family: monospace;
+  }
+
+  th {
+    padding: 2px 4px;
+    color: $theme-color-text;
+    background-color: #f5f5f5;
+    border: 1px solid $theme-color-table-border;
+  }
+
+  td {
+    padding: 2px 4px;
+    background-color: $theme-color-table-background;
+    border: 1px solid $theme-color-table-border;
+  }
+}
+
+/* TODO: Reproduce this dcd_log_entries html class */
+table.data tr.data.dcd_log_entries {
+  > td {
+    font-family: monospace, sans-serif;
+    color: #fff;
+    background-color: #000;
+  }
+
+  pre {
+    max-height: 300px;
+    overflow-y: scroll;
+    text-overflow: ellipsis;
+    resize: both;
+  }
+}
+
+/*-------------------------------------------------------------------------.
+|               ____                                                       |
+|              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |
+|              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|                   |
+|              |  __/| | | (_) | (_| | | |  __/\__ \__ \                   |
+|              |_|   |_|  \___/ \__, |_|  \___||___/___/                   |
+|                               |___/                                      |
++--------------------------------------------------------------------------+
+| Interactive progress bar, e.g. used in bulk inventory.                   |
+'-------------------------------------------------------------------------*/
+
+.wato table.progress {
+  width: 50%;
+  color: #000;
+  background: $theme-color-white;
+  border: 1px solid $theme-color-table-border;
+  border-radius: $theme-border-radius;
+
+  th {
+    padding: 3px 0;
+    background-color: #fff;
+  }
+
+  td {
+    /* Log window */
+    &.log {
+      padding: 12px 12px 0;
+      font-family: monospace, sans-serif;
+
+      > div {
+        height: 250px;
+        padding: 8px 16px;
+        margin: 16px;
+        overflow: auto;
+        font-family: monospace;
+        font-weight: $theme-font-weight-global;
+        color: $theme-color-lightgrey;
+        text-align: left;
+        background: $theme-color-sidebar-background;
+        border: 1px solid $theme-color-table-border-dark;
+        border-radius: $theme-border-radius;
+        box-shadow: none;
+      }
+
+      div.exc {
+        padding: 5px;
+        margin: 10px;
+        border: 1px solid #ff0000;
+      }
+    }
+
+    /* progress bar */
+    /* TODO: Reproduce these td.bar and #progress_bar elements */
+    &.bar {
+      height: 46px;
+      padding: 0 12px;
+
+      table {
+        position: relative;
+        top: 12px;
+        width: 100%;
+        height: 22px;
+        background-color: #fff;
+        border-spacing: 1px 2px;
+      }
+
+      #progress_title {
+        position: relative;
+        top: -6px;
+        left: 0;
+        z-index: 40;
+        float: left;
+        width: 100%;
+        height: 0;
+        font-weight: bold;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      img.glass {
+        position: relative;
+        top: -10px;
+        z-index: 30;
+        width: 100%;
+        height: 22px;
+      }
+
+      td.left {
+        width: 0%;
+        background-color: #4080ff;
+      }
+
+      td.right {
+        width: 100%;
+      }
+    }
+
+    /* Statistics table */
+    /* TODO: Reproduce these td.stats elements */
+    &.stats {
+      padding: 24px 12px 18px;
+
+      table {
+        border: 1px solid #fff;
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+
+      th, td {
+        padding: 6px 0;
+        border-bottom: 1px solid #fff;
+        border-color: $theme-color-table-border;
+      }
+
+      th {
+        text-align: left;
+        background-color: transparent;
+      }
+
+      td {
+        width: 4em;
+        text-align: right;
+        background-color: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    /* Buttons */
+    /* TODO: Reproduce this html element */
+    &.buttons {
+      padding: 0 12px 12px;
+      text-align: right;
+      vertical-align: bottom;
+    }
+  }
+}
+
+.wato #progress_bar.finished {
+  td.left {
+    padding: 0;
+    background-color: $theme-color-state-success-background;
+    box-shadow: none;
+  }
+
+  td.right {
+    width: 0;
+  }
+}
+
+/* TODO: Reproduce this html element */
+.wato div.error div.err {
+  position: relative;
+  left: -8px;
+  float: left;
+  width: 100%;
+  padding: 2px 5px;
+  margin: 2px;
+  font-weight: bold;
+  color: #000;
+  background-color: #ff0;
+  border-radius: 3px;
+  opacity: 0.9;
+}
+
+/* Logwatch pattern editor */
+/* TODO: Reproduce this html element */
+.logwatch_try input.match {
+  width: 99%;
+}
+
+/* TODO: Reproduce these table.logwatch elements */
+table.logwatch {
+  tr.noreason {
+    color: #898989;
+  }
+
+  span.match {
+    padding: 0 2px 2px;
+    background-color: #fff;
+    border: 1px solid #49768b;
+    border-radius: 4px;
+  }
+}
+
+/* TODO: Reproduce these .multisite_conn_method elements */
+table.multisite_conn_method td {
+  height: 22px;
+  padding: 0;
+  vertical-align: top;
+
+  input {
+    height: 18px;
+  }
+}
+
+/* BI Editor */
+table.data td.bi_rule_tree {
+  b.treeangle {
+    font-weight: normal;
+    color: #000;
+  }
+
+  ul.treeangle {
+    margin: 1px 6px;
+
+    li {
+      display: list-item;
+      padding-left: 5px;
+      margin: 0 0 0 1px;
+      list-style: inside disc;
+    }
+  }
+
+  > li {
+    display: list-item;
+    padding-left: 5px;
+    margin: 0 0 0 1px;
+    list-style: inside none;
+  }
+}
+
+
+/*-Host Diag-----------------------------------------------------------.
+|              _   _           _     ____  _                           |
+|             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
+|             | |_| |/ _ \/ __| __| | | | | |/ _` |/ _` |              |
+|             |  _  | (_) \__ \ |_  | |_| | | (_| | (_| |              |
+|             |_| |_|\___/|___/\__| |____/|_|\__,_|\__, |              |
+|                                                  |___/               |
++---------------------------------------------------------------------*/
+
+.wato .diag_host .log,
+.backup_job .log {
+  width: 700px;
+  height: 113px;
+  padding: 5px;
+  overflow-y: scroll;
+  font-family: monospace, sans-serif;
+  vertical-align: top;
+  background-color: #fff;
+  box-shadow: 1px 1px 3px #888 inset;
+  /* below resize option is css3 */
+  resize: both;
+}
+
+.backup_job .log pre {
+  margin: 2px;
+}
+
+.wato .diag_host {
+  div.success {
+    margin-top: 0;
+  }
+
+  td > h3 {
+    margin-top: 0;
+  }
+
+  table.nform {
+    width: 212px;
+  }
+
+  .test {
+    margin-bottom: 15px;
+  }
+
+  .log {
+    padding: 8px;
+    margin: 8px;
+    border: 1px solid $theme-color-table-border;
+    border-radius: $theme-border-radius;
+    box-shadow: none;
+
+    &.diag_success {
+      background-color: #efe;
+    }
+    &.diag_failed {
+      background-color: #fee;
+    }
+  }
+
+  table.test td {
+    padding: 0;
+
+    &.icons {
+      padding: 2px;
+    }
+  }
+
+  td.icons {
+    div {
+      position: relative;
+      width: 22px;
+      height: 120px;
+
+      img {
+        margin-left: 2px;
+      }
+    }
+
+    img.retry {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+  }
+}
+
+div.diag_host > table > tbody > tr > td {
+  vertical-align: unset;
+}
+
+/*--Settings---------------------------------------------------------------.
+|                ____       _   _   _                                      |
+|               / ___|  ___| |_| |_(_)_ __   __ _ ___                      |
+|               \___ \ / _ \ __| __| | '_ \ / _` / __|                     |
+|                ___) |  __/ |_| |_| | | | | (_| \__ \                     |
+|               |____/ \___|\__|\__|_|_| |_|\__, |___/                     |
+|                                           |___/                          |
++--------------------------------------------------------------------------+
+| Settings for hosts and services (rule analysis)                          |
+'-------------------------------------------------------------------------*/
+
+table.setting td.reason {
+  display: inline-block;
+  float: none;
+  width: 180px;
+  font-style: italic;
+  color: #fff;
+
+  i { /* default value */
+    color: #b6c8d1;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+td.settingvalue.unused, td.settingvalue.unused td {
+  font-style: italic;
+  color: #256;
+}
+
+.wato table.nform div.title a {
+  color: #000;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+table.nform.rulesettings td.legend {
+  width: 300px;
+
+  div.title {
+    max-width: 300px;
+  }
+}
+
+/*--Profile Repl-----------------------------------------------------------.
+|          ____             __ _ _        ____            _                |
+|         |  _ \ _ __ ___  / _(_) | ___  |  _ \ ___ _ __ | |               |
+|         | |_) | '__/ _ \| |_| | |/ _ \ | |_) / _ \ '_ \| |               |
+|         |  __/| | | (_) |  _| | |  __/ |  _ <  __/ |_) | |               |
+|         |_|   |_|  \___/|_| |_|_|\___| |_| \_\___| .__/|_|               |
+|                                                  |_|                     |
+'-------------------------------------------------------------------------*/
+
+#profile_repl {
+  .site {
+    width: 158px;
+    padding: 2px;
+    margin: 0 5px 5px 0;
+    text-overflow: ellipsis;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    border-radius: 6px;
+    box-shadow: none;
+
+    div, span {
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+
+  div {
+    &.repl_status {
+      background-size: contain;
+    }
+
+    &.repl_locked {
+      background-image: url("images/icon_repl_locked.png");
+    }
+
+    &.repl_pending {
+      background-image: url("images/icon_repl_pending.png");
+    }
+
+    &.repl_failed {
+      background-image: url("images/icon_repl_failed.png");
+    }
+
+    &.repl_25 {
+      background-image: url("images/icon_repl_25.png");
+    }
+
+    &.repl_50 {
+      background-image: url("images/icon_repl_50.png");
+    }
+
+    &.repl_75 {
+      background-image: url("images/icon_repl_75.png");
+    }
+
+    &.repl_success {
+      background-image: url("images/icon_success.png");
+    }
+  }
+}
+
+.wato table.data.check_catalog td {
+  &.title {
+    display: table-cell;
+    width: 500px;
+  }
+
+  &.name {
+    width: 200px;
+  }
+
+  &.agents {
+    width: 200px;
+  }
+}
+
+/*--Best practices---------------------------------------------------------.
+ |   ____            _                          _   _                       |
+ |  | __ )  ___  ___| |_   _ __  _ __ __ _  ___| |_(_) ___ ___  ___         |
+ |  |  _ \ / _ \/ __| __| | '_ \| '__/ _` |/ __| __| |/ __/ _ \/ __|        |
+ |  | |_) |  __/\__ \ |_  | |_) | | | (_| | (__| |_| | (_|  __/\__ \        |
+ |  |____/ \___||___/\__| | .__/|_|  \__,_|\___|\__|_|\___\___||___/        |
+ |                        |_|                                               |
+ '-------------------------------------------------------------------------*/
+
+.wato table.data.analyze_config {
+  width: 100%;
+
+  td.state div {
+    position: relative;
+    line-height: 20px;
+  }
+
+  th.header_state {
+    width: 100px;
+  }
+
+  td.state a {
+    position: absolute;
+    right: 0;
+    background: transparent;
+  }
+
+  td.state.acknowledged {
+    background-image: url("images/white_60percent.png");
+    background-repeat: repeat;
+  }
+
+  tr.ac_test_details td a {
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+table.data.analyze_config td.buttons {
+  min-width: 25px;
+}
+
+/* Left over wato styles from former _main.scss */
+.wato .search {
+  display: block;
+}
+
+.wato h3 {
+  font-size: $theme-font-table-header;
+  font-weight: $theme-font-weight-global;
+  letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-text;
+}

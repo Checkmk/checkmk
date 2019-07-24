@@ -223,13 +223,12 @@ def check_security_master_temperature(item, params, parsed):
     if sensor_value is None:
         return 3, "Sensor value is not in SNMP-WALK"
 
-    return check_temperature(
-        reading=sensor_value,
-        unique_name=item,
-        params=params,
-        dev_unit="c",
-        dev_levels=sensor['levels'],
-        dev_levels_lower=sensor['levels_low'])
+    return check_temperature(reading=sensor_value,
+                             unique_name=item,
+                             params=params,
+                             dev_unit="c",
+                             dev_levels=sensor['levels'],
+                             dev_levels_lower=sensor['levels_low'])
 
 
 check_info['security_master.temp'] = {

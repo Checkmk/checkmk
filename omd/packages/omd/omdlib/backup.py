@@ -105,7 +105,6 @@ def _backup_site_files_to_tarfile(site, tar, options):
 class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
-
     def __init__(self, name, mode, fileobj, **kwargs):
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
@@ -196,7 +195,7 @@ class BackupTarFile(tarfile.TarFile):
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024)
         except socket.error as e:
-            if e.errno == 32:  # Broken pipe
+            if e.errno == errno.EPIPE:
                 self._sock = None
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (broken pipe)\n")
@@ -233,7 +232,7 @@ def get_site_and_version_from_backup(tar):
     # type: (tarfile.TarFile) -> Tuple[str, str]
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
-    site_tarinfo = tar.next()
+    site_tarinfo = next(tar)
     if site_tarinfo is None:
         raise Exception("Failed to detect version of backed up site.")
 

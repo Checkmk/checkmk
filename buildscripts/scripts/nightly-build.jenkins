@@ -10,7 +10,9 @@ if(JOB_BASE_NAME == 'nightly_build_containerized') {
 properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_STR, description: 'List of targeted distros' ),
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' )
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' )
   ])
 ])
 
@@ -20,27 +22,35 @@ def AGENT_BUILDS= [:]
 
 DISTRO_LIST = DISTROS.split(' ');
 
-println("Building for the following Distros:")
-println(DISTRO_LIST)
+println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
 
 def DOCKER_BUILDS = [:]
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
 def date = new Date()
-def CMK_VERS = dateFormat.format(date)
-def DAILY_DATA = ''
+def BRANCH = scm.branches[0].name.replaceAll("/","-")
+def CMK_VERS = ''
+if(BRANCH == 'master' && VERSION == 'daily') {
+    CMK_VERS = dateFormat.format(date)
+} else if (VERSION == 'daily') {
+    CMK_VERS = BRANCH + '-' + dateFormat.format(date)
+} else {
+    CMK_VERS = VERSION
+}
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 
 def ARCHIVE_DIR = ''
-if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
+def OMD_MAKE_VARS = ''
+if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
     DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {
     DAILY_DATA = '/var/jenkins_home/daily-data/testbuild/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = DAILY_DATA + '/download'
+    OMD_MAKE_VARS = 'PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
 def mount_overlay(LOWER_DIR, UPPER_DIR) {
@@ -60,12 +70,22 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 -v /var/jenkins_home/daily-data/:/var/jenkins_home/daily-data/ --network ci_local-infra') {
+        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/jenkins_home/daily-data/:/var/jenkins_home/daily-data/ --network ci_local-infra') {
             stage('checkout sources') {
                 sh "rm -rf ${DAILY_DATA}"
                 sh 'rm -rf *'
                 dir("${DAILY_DATA}/git") {
-                    checkout(scm)
+                    if (VERSION == 'daily') {
+                        checkout(scm)
+                    } else {
+                        checkout([
+                            $class: 'GitSCM',
+                            userRemoteConfigs: scm.userRemoteConfigs,
+                            branches: [
+                                [name: 'refs/tags/v' + VERSION]
+                            ]
+                        ])
+                    }
 
                     switch(EDITION) {
                         case 'raw':
@@ -90,10 +110,14 @@ node {
                             '''
                             break
                     }
+                    if (DEMO == 'yes;') {
+                        sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'".demo/" defines.make'''
+                        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+                        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,State}.cc'''
+                    }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
                     
                     stash name: 'WinDep', include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
-                  
                 }
             }
         }
@@ -108,7 +132,7 @@ AGENT_LIST.each { AGENT ->
                 unstash name: 'WinDep'
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {
-                    stash name: 'WinMSI', includes: 'check_mk_agent*'
+                    stash name: 'WinMSI', includes: 'check_mk_agent*,check_mk.user.yml'
                 }
             }
         }
@@ -116,7 +140,7 @@ AGENT_LIST.each { AGENT ->
             node {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image('agent-builder-' + AGENT).pull()
-                    docker.image('agent-builder-' + AGENT).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
+                    docker.image('agent-builder-' + AGENT).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
                         stage('build agent ' + AGENT) {
                             if (AGENT == 'linux-64bit') {
                                 AGENT = ''
@@ -172,12 +196,12 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --network ci_local-infra") {
+        docker.image(IMAGE).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --network ci_local-infra") {
             stage('create tarball') {
                sh 'rm -rf *'
-               sh "pip install backports.functools_lru_cache"
                unstash name: 'WinMSI'
                sh "mv check_mk_agent* ${DAILY_DATA}/agents/"
+               sh "mv check_mk.user.yml ${DAILY_DATA}/agents/"
                dir("${DAILY_DATA}/git") {
                     if(EDITION != 'raw') {
                         sh "cp ${DAILY_DATA}/agents/cmk-update-agent enterprise/agents/plugins/"
@@ -186,6 +210,7 @@ node {
                     }
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.msi agents/windows"
                     sh "cp ${DAILY_DATA}/agents/check_mk_agent*.exe agents/windows"
+                    sh "cp ${DAILY_DATA}/agents/check_mk.user.yml agents/windows"
                     sh 'make dist || cat /root/.npm/_logs/*-debug.log'
                 }
             }
@@ -193,88 +218,96 @@ node {
     }
 }
 
-DISTRO_LIST.each { DISTRO ->
-    PACKAGE_BUILDS[DISTRO] = {
-        node {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(DISTRO).pull()
-                docker.image(DISTRO).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
-                    stage('build' + DISTRO + ' package') {
-                        sh 'rm -rf *'
-                        sh 'mkdir work dest'
-                        mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
-                        dir('dest') {
-                            sh """
-                                case $DISTRO in
-                                    centos*|rh*|sles*|opensuse*)
-                                        make -C omd rpm
-                                        ;;
-                                    cma*)
-                                        make -C omd cma
-                                        ;;
-                                    *)
-                                        DEBFULLNAME='Check_MK Team' DEBEMAIL='feedback@check-mk.org' make -C omd deb
-                                        ;;
-                                esac
-                            """
+try {
+    DISTRO_LIST.each { DISTRO ->
+        PACKAGE_BUILDS[DISTRO] = {
+            node {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image(DISTRO).pull()
+                    docker.image(DISTRO).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
+                        stage('build' + DISTRO + ' package') {
+                            sh 'rm -rf *'
+                            sh 'mkdir work dest'
+                            mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
+                            dir('dest') {
+                                sh """
+                                    case $DISTRO in
+                                        centos*|rh*|sles*|opensuse*)
+                                            make ${OMD_MAKE_VARS} -C omd rpm
+                                            ;;
+                                        cma*)
+                                            make ${OMD_MAKE_VARS} -C omd cma
+                                            ;;
+                                        *)
+                                            DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make ${OMD_MAKE_VARS} -C omd deb
+                                            ;;
+                                    esac
+                                """
+                            }
+                            unmount_overlay('dest')
+                            sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,dest-work}"
+                            sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
+                            sh "mv dest-work ${DAILY_DATA}/${DISTRO}-dest-work"
+                            sh "ls -lah ${DAILY_DATA}"
                         }
-                        unmount_overlay('dest')
-                        sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,dest-work}"
-                        sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
-                        sh "mv dest-work ${DAILY_DATA}/${DISTRO}-dest-work"
-                        sh "ls -lah ${DAILY_DATA}"
                     }
                 }
             }
         }
     }
-}
-parallel PACKAGE_BUILDS
-
-node {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        IMAGE = 'ubuntu-18.04-common'
-        docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside("-u 0:0 -v ${DAILY_DATA}:${DAILY_DATA} -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro --network ci_local-infra") {
-            stage('Sign artifacts') {
+    parallel PACKAGE_BUILDS
+} finally {
+    node {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            IMAGE = 'ubuntu-18.04-common'
+            docker.image(IMAGE).pull()
+            docker.image(IMAGE).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro --network ci_local-infra") {
+                stage('Copy artifacts') {
                     sh """
                         mkdir -p ${ARCHIVE_DIR}
                         cd ${ARCHIVE_DIR}
+                        echo "${CMK_VERS}" > VERSION.cmk
                         cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*_amd64.deb . || true
                         cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*.x86_64.rpm . || true
                         cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*x86_64.cma . || true
-                        cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.cee.tar.gz . || true
+                        cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c*e.tar.gz . || true
                     """
+                }
+                stage('Sign artifacts') {
                     withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                         sh """
                             cd ${ARCHIVE_DIR}
                             ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
                         """
                     }
-            stage('Packaging Tests') {
-                try {
-                    dir("${DAILY_DATA}/git/tests") {
-                        withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'", "EDITION=cee"]) {
-                            sh "make test-packaging"
-                        }
-                    }
-                } finally {
-                    step([$class: 'JUnitResultArchiver', testResults: 'junit.xml'])
                 }
-            }
-            stage('Archive Artifacts') {
-                // Only master builds should end up on the Website
-                if (scm.branches[0].name == 'master' && JOB_BASE_NAME == 'nightly_build_containerized') {
-                    sh """
-                        cd ${ARCHIVE_DIR}
-                        rsync -av -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
-	                        ${PACKAGE_DIR}/${CMK_VERS} \
-	                        bauwelt@mathias-kettner.de:${PACKAGE_DIR}
-                    """
-                } else {
-                        dir(ARCHIVE_DIR) {
-                            archiveArtifacts "*"
+                stage('Packaging Tests') {
+                    try {
+                        dir("${DAILY_DATA}/git/tests") {
+                            withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'"]) {
+                                sh "make VERSION=${CMK_VERS} test-packaging"
+                            }
                         }
+                    } finally {
+                        step([$class: 'JUnitResultArchiver', testResults: 'junit.xml'])
+                    }
+                }
+                stage('Upload artifacts') {
+                    // Only 'official' builds should end up on the Website
+                    if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
+                        sh """
+                            cd ${ARCHIVE_DIR}
+                            rsync -av \
+                                --exclude '*dbgsym*.deb' \
+                                -e "ssh -o StrictHostKeyChecking=no \
+                                -i ${RELEASE_KEY_DIR}" \
+    	                        ${PACKAGE_DIR}/${CMK_VERS} \
+    	                        bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                        """
+                    } else {
+                            dir(ARCHIVE_DIR) {
+                                archiveArtifacts "*"
+                            }
                     }
                 }
             }

@@ -67,22 +67,26 @@ function postgres_instances() {
     if [ ! -z "${1}" ]; then
         echo "[[[${1}]]]"
     fi
-    pgrep -laf bin/postgres
+
+    # shellcheck disable=SC2009
+    # The pgrep command would be different for older distros. Newer distros
+    # need the -a option, but older ones need the -f option. The first idea
+    # was to use:
+    #   pgrep -af bin/postgres 2>/dev/null || pgrep -lf bin/postgres
+    # but SLES 11 returns the exit code 0 for a wrong command line.
+    ps -eo pid,command | grep bin/postgres | grep -vE '^[ ]*[0-9]+ grep '
 }
 
 
 function postgres_sessions() {
-    # Postgres 9.2 uses 'query' instead of 'current_query'
     local OUTPUT
+
+    # In postgresql 9.2 the column state was introduced, which has to be queried to
+    # find the state of the sessions. The column state can be NULL.
+    CONDITION="$ROW = $IDLE"
     OUTPUT="$(echo "\echo '<<<postgres_sessions>>>${INSTANCE_SECTION}'
-                    SELECT (
-                        SELECT column_name
-                        FROM information_schema.columns
-                        WHERE table_name='pg_stat_activity' AND column_name in ('query', 'current_query')
-                    ) = '<IDLE>' as query, count(*)
-                    FROM pg_stat_activity
-                    GROUP BY (query = '<IDLE>');" |\
-              su - "$DBUSER" -c "$export_PGPASSFILE $psql -X --variable ON_ERROR_STOP=1 -d $PGDATABASE ${EXTRA_ARGS} -A -t -F' '" 2>/dev/null)"
+              SELECT $CONDITION, count(*) FROM pg_stat_activity WHERE $ROW IS NOT NULL GROUP BY ($CONDITION);" |\
+              su - "$DBUSER" -c "$export_PGPASSFILE $psql -X --variable ON_ERROR_STOP=1 ${EXTRA_ARGS} -A -t -F' '" 2>/dev/null)"
 
     echo "$OUTPUT"
     # line with number of idle sessions is sometimes missing on Postgres 8.x. This can lead
@@ -107,23 +111,17 @@ function postgres_simple_queries() {
     # We need to output the databases, too.
     # This query does not report databases without an active query
     local CONNECTIONS_QUERY
-    if compare_version_greater_equal "$POSTGRES_VERSION" "9.2" ; then
-        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-          d.datname
+
+    # Here the order of the columns did not match with what the server side expects,
+    # with the result, that there was never any active connection shown in the
+    # web-gui.
+    CONDITION="$ROW <> $IDLE"
+    CONNECTIONS_QUERY="SELECT d.datname, COUNT(datid) AS current,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc
         FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE state <> 'idle'
-        GROUP BY 2,3
+        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE $CONDITION
+        GROUP BY 1
         ORDER BY datname;"
-    else
-        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-          d.datname
-        FROM pg_database d
-        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE current_query <> '<IDLE>'
-        GROUP BY 2,3
-        ORDER BY datname;"
-    fi
 
     echo "\pset footer off
           \echo '<<<postgres_stat_database:sep(59)>>>${INSTANCE_SECTION}'
@@ -146,7 +144,7 @@ function postgres_simple_queries() {
           $ECHO_DATABASES
           \echo '[databases_end]'
           $CONNECTIONS_QUERY" \
-        | su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -q -A -F';'"
+        | su - "$DBUSER" -c "$export_PGPASSFILE $psql -X ${EXTRA_ARGS} -q -A -F';'"
 }
 
 
@@ -192,7 +190,7 @@ function postgres_version() {
     # Postgres version an connection time
     echo -e "<<<postgres_version:sep(1)>>>${INSTANCE_SECTION}"
     (TIMEFORMAT='%3R'; time echo "SELECT version() AS v" |\
-    su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'; echo -e '<<<postgres_conn_time>>>${INSTANCE_SECTION}'") 2>&1
+    su - "$DBUSER" -c "$export_PGPASSFILE $psql -X ${EXTRA_ARGS} -t -A -F';'; echo -e '<<<postgres_conn_time>>>${INSTANCE_SECTION}'") 2>&1
 }
 
 
@@ -204,12 +202,12 @@ function postgres_bloat() {
     if compare_version_greater_equal "$POSTGRES_VERSION" "9.0" ; then
         BLOAT_QUERY="SELECT
           current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          ROUND(CASE WHEN sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE (sml.relpages-otta::numeric)/sml.relpages END,3) AS tbloat,
           CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
           CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
           CASE WHEN relpages < otta THEN 0 ELSE (bs*(relpages-otta))::bigint END AS wastedsize,
           iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          ROUND(CASE WHEN ipages=0 OR ipages<=iotta THEN 0.0 ELSE (ipages-iotta::numeric)/ipages END,3) AS ibloat,
           CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
           CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
           CASE WHEN ipages < iotta THEN 0 ELSE (bs*(ipages-iotta))::bigint END AS wastedisize,
@@ -275,12 +273,12 @@ function postgres_bloat() {
     else
         BLOAT_QUERY="SELECT
           current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          ROUND(CASE WHEN sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE (sml.relpages-otta::numeric)/sml.relpages END,3) AS tbloat,
           CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
           CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
           CASE WHEN relpages < otta THEN '0 bytes'::text ELSE (bs*(relpages-otta))::bigint || ' bytes' END AS wastedsize,
           iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          ROUND(CASE WHEN ipages=0 OR ipages<=iotta THEN 0.0 ELSE (ipages-iotta::numeric)/ipages END,3) AS ibloat,
           CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
           CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
           CASE WHEN ipages < iotta THEN '0 bytes' ELSE (bs*(ipages-iotta))::bigint || ' bytes' END AS wastedisize,
@@ -396,6 +394,9 @@ function postgres_main() {
     if [ ! -z "$PGUSER" ]; then
         EXTRA_ARGS=$EXTRA_ARGS" -U $PGUSER"
     fi
+    if [ ! -z "$PGDATABASE" ]; then
+        EXTRA_ARGS=$EXTRA_ARGS" -d $PGDATABASE"
+    fi
     if [ ! -z "$PGPORT" ]; then
         EXTRA_ARGS=$EXTRA_ARGS" -p $PGPORT"
     fi
@@ -405,16 +406,43 @@ function postgres_main() {
     fi
 
     DATABASES="$(echo "SELECT datname FROM pg_database WHERE datistemplate = false;" |\
-                 su - "$DBUSER" -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
+                 su - "$DBUSER" -c "$export_PGPASSFILE $psql -X ${EXTRA_ARGS} -t -A -F';'")"
+    # shellcheck disable=SC2001
+    # DATABASES contains one database per line. To print each database in the psql terminal
+    # we have to prefix each line with '\echo '. ${varialbe//search/replace} is not
+    # sufficient in this case.
     ECHO_DATABASES="$(echo "$DATABASES" | sed 's/^/\\echo /')"
 
-    POSTGRES_VERSION=$(su - "$DBUSER" -c "$psql -X -V -d $PGDATABASE ${EXTRA_ARGS} | egrep -o '[0-9]{1,}\.[0-9]{1,}'")
-
+    postgres_check_server_version
     postgres_sessions
     postgres_simple_queries
     postgres_stats
     postgres_version
     postgres_bloat
+}
+
+
+function postgres_check_server_version() {
+    # Query the server version from the server. Originally the version of the
+    # client tools was taken, but what really matters is the version of the server.
+    # Terminate the script if the server can not be queried.
+    # We want $(su ...) to be
+    # shellcheck disable=SC2046
+    set -- $(su - "$DBUSER" -c "$psql -A -t -X ${EXTRA_ARGS} -c 'SHOW server_version;'" | tr '.' ' ')
+    test $# -eq 0 && exit 0
+    POSTGRES_VERSION="$1.$2"
+    postgres_set_condition_vars
+}
+
+
+function postgres_set_condition_vars() {
+    if compare_version_greater_equal "$POSTGRES_VERSION" "9.2" ; then
+        ROW=state
+        IDLE="'idle'"
+    else
+        ROW=current_query
+        IDLE="'<IDLE>'"
+    fi
 }
 
 
@@ -424,8 +452,9 @@ if [ -e "$MK_CONFFILE" ]; then
     postgres_instances
 
     DBUSER=$(grep DBUSER "$MK_CONFFILE" | sed 's/.*=//g')
-    cat "$MK_CONFFILE" | while read line
-    do
+
+    # read -r: we do not want to interpret backslashes before spaces and line feeds
+    while read -r line; do
         case $line in
             INSTANCE*)
                 instance=$line
@@ -436,6 +465,8 @@ if [ -e "$MK_CONFFILE" ]; then
         esac
 
         if [ ! -z "$instance" ]; then
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             instance_path=$(echo "$instance" | sed 's/.*=\(.*\):.*:.*$/\1/g')
             instance_name=$(echo "$instance_path" | sed -e 's/.*\/\(.*\)/\1/g' -e 's/\.env$//g')
             if [ ! -z "$instance_name" ]; then
@@ -447,7 +478,11 @@ if [ -e "$MK_CONFFILE" ]; then
             psql="/$DBUSER/$(grep "^export PGVERSION=" "$instance_path" |
                  sed -e 's/.*=//g' -e 's/\s*#.*$//g')/bin/psql"
 
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             PGUSER=$(echo "$instance" | sed 's/.*=.*:\(.*\):.*$/\1/g')
+            # Too complicated for ${variable//search/replace}
+            # shellcheck disable=SC2001
             PGPASSFILE="$(echo "$instance" | sed 's/.*=.*:.*:\(.*\)$/\1/g')"
             PGDATABASE=$(grep "^export PGDATABASE=" "$instance_path" |
                          sed -e 's/.*=//g' -e 's/\s*#.*$//g')
@@ -456,14 +491,14 @@ if [ -e "$MK_CONFFILE" ]; then
 
             # Fallback
             if [ ! -f "$psql" ]; then
-                psql="$(cat $instance_path | grep "^export PGHOME=" |
+                psql="$(grep "^export PGHOME=" "$instance_path" |
                      sed -e 's/.*=//g' -e 's/\s*#.*$//g')/psql"
             fi
 
             postgres_main
 
         fi
-    done
+    done < "$MK_CONFFILE"
 
 else
 
@@ -474,12 +509,12 @@ else
     else
         exit 0
     fi
+
+    PGDATABASE=postgres
     INSTANCE_SECTION=""
+    psql="psql"
 
     postgres_instances "$DBUSER"
-
-    psql="psql"
-    PGDATABASE=postgres
     postgres_main
 
 fi

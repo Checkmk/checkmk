@@ -1,10 +1,10 @@
 CHECK_MK := check_mk
-DISTNAME := $(CHECK_MK)-$(CMK_VERSION)
+CHECK_MK_DIR := $(CHECK_MK)-$(CMK_VERSION)
 
-CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(DISTNAME)-build
-CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(DISTNAME)-install
-CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(DISTNAME)-skel
-CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(DISTNAME)-patching
+CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-build
+CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
+CHECK_MK_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-skel
+CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 
 .PHONY: $(CHECK_MK) $(CHECK_MK)-install $(CHECK_MK)-skel $(CHECK_MK)-clean
 
@@ -15,20 +15,20 @@ $(CHECK_MK)-skel: $(CHECK_MK_SKEL)
 
 # This step creates a tar archive containing the sources
 # which are need for the build step
-$(REPO_PATH)/$(DISTNAME).tar.gz:
-	    $(MAKE) -C $(REPO_PATH) $(DISTNAME).tar.gz ; \
+$(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
+	    $(MAKE) -C $(REPO_PATH) $(CHECK_MK_DIR).tar.gz ; \
 
 # The build step just extracts the archive
 # which was created in the step before
-$(CHECK_MK_BUILD): $(REPO_PATH)/$(DISTNAME).tar.gz
+$(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(MAKE) -C $(REPO_PATH)/locale all
-	$(TAR_GZ) $(REPO_PATH)/$(DISTNAME).tar.gz
-	cd $(DISTNAME) ; \
+	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
+	cd $(CHECK_MK_DIR) ; \
 	  $(MKDIR) bin ; \
 	  cd bin ; \
 	  $(TAR_GZ) ../bin.tar.gz ; \
 	  $(MAKE)
-	cd $(DISTNAME) ; \
+	cd $(CHECK_MK_DIR) ; \
 	  $(MKDIR) active_checks ; \
 	  cd active_checks ; \
 	  $(TAR_GZ) ../active_checks.tar.gz ; \
@@ -74,21 +74,21 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	export nagios_auth_name='Nagios Access' ; \
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
-	cd $(DISTNAME) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
+	cd $(CHECK_MK_DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
 
 	# Delete files we do not want to package
 	$(RM) -r $(DESTDIR)/REMOVE
 	$(RM) $(DESTDIR)$(OMD_ROOT)/skel/etc/check_mk/*-*.mk
 
 	# Binaries
-	install -m 755 $(DISTNAME)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(CHECK_MK_DIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
 	# Install the diskspace cleanup plugin
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
 
 	# Install active checks
-	install -m 755 $(DISTNAME)/active_checks/* \
+	install -m 755 $(CHECK_MK_DIR)/active_checks/* \
 	    $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
@@ -109,8 +109,11 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
+
 	# GUI-Test (in doc/helpers)
-	#$(TAR_GZ) $(DISTNAME)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
+	#$(TAR_GZ) $(CHECK_MK_DIR)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
 	#    --strip-components 1 helpers/guitest
 	#chmod +x $(DESTDIR)$(OMD_ROOT)/bin/*
 	$(TOUCH) $@

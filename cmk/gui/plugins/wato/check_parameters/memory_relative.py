@@ -54,12 +54,13 @@ class RulespecCheckgroupParametersMemoryRelative(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return OptionalDropdownChoice(
-            title=_("Memory usage"),
-            choices=[(None, _("Do not impose levels"))],
-            otherlabel=_("Percentual levels ->"),
-            explicit=Tuple(
-                elements=[
-                    Integer(title=_("Warning at"), default_value=85, unit="%"),
-                    Integer(title=_("Critical at"), default_value=90, unit="%"),
-                ],))
+        return OptionalDropdownChoice(title=_("Memory usage"),
+                                      choices=[(None, _("Do not impose levels"))],
+                                      otherlabel=_("Percentual levels ->"),
+                                      explicit=Tuple(elements=[
+                                          Integer(title=_("Warning at"), default_value=85,
+                                                  unit="%"),
+                                          Integer(title=_("Critical at"),
+                                                  default_value=90,
+                                                  unit="%"),
+                                      ],))

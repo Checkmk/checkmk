@@ -16,13 +16,12 @@ def testfile():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(
-    params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
-            ('wmi_webservices', False)],
-    ids=[
-        'sections=webservices', 'sections=wmi_webservices', 'sections=webservices_systemtime',
-        'sections=wmi_webservices_systemtime'
-    ])
+@pytest.fixture(params=[('webservices', True), ('wmi_webservices', True), ('webservices', False),
+                        ('wmi_webservices', False)],
+                ids=[
+                    'sections=webservices', 'sections=wmi_webservices',
+                    'sections=webservices_systemtime', 'sections=wmi_webservices_systemtime'
+                ])
 def testconfig(request, config):
     Globals.alone = request.param[1]
     if Globals.alone:
@@ -35,17 +34,19 @@ def testconfig(request, config):
 
 @pytest.fixture
 def expected_output():
-    re_str = (r'^\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b')
+    re_str = (
+        r'^\d+,\d+,\d+,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+        r'\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,[^,]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
+        r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(
+            ',', '\t')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     re_str += r'$'
     return chain([
-        re.escape(r'<<<wmi_webservices:sep(44)>>>'),
+        re.escape(r'<<<wmi_webservices:sep(9)>>>'),
         (r'AnonymousUsersPersec,BytesReceivedPersec,BytesSentPersec,'
          r'BytesTotalPersec,Caption,CGIRequestsPersec,'
          r'ConnectionAttemptsPersec,CopyRequestsPersec,'
@@ -87,10 +88,25 @@ def expected_output():
          r'TotalPropfindRequests,TotalProppatchRequests,TotalPutRequests,'
          r'TotalRejectedAsyncIORequests,TotalSearchRequests,'
          r'TotalTraceRequests,TotalUnlockRequests,TraceRequestsPersec,'
-         r'UnlockRequestsPersec,WMIStatus')
+         r'UnlockRequestsPersec,WMIStatus').replace(',', '\t')
     ], repeat(re_str))
 
 
 def test_section_wmi_webservices(request, testconfig, expected_output, actual_output, testfile):
-    # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile, request.node.name)
+
+    # special case wmi may timeout
+    ac = actual_output
+    required_lines = 3
+    if not Globals.alone:
+        required_lines += 2
+    name = 'webservices'
+
+    if ac is None:
+        pytest.skip('"%s" Data is absent' % name)
+        return
+
+    if len(ac) < required_lines:
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
+        return
+
+    remotetest(expected_output, ac, testfile, request.node.name)

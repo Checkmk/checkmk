@@ -1,0 +1,14 @@
+Title: Correct upgrade of Legacy Windows Agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b3
+Date: 1561477844
+Class: fix
+
+Now automatic upgrade procedure in Windows Agent 1.6.0 correctly upgrades 
+legacy Windows Agents 1.5.0 configuration even if update plugin 1.5.0 installed.
+
+The routine skips incompatible files from 1.5.0, i.e. cmk-agent-update.exe. 
+Additionally the upgrade routine doesn't override already existing files. 

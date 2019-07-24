@@ -30,37 +30,1748 @@ Boston, MA 02110-1301 USA.
    styles are not used in the sidebar and in Mobile. */
 
 
+/*-------------------------------------------------------------------------.
+|                   ____                           _                       |
+|                  / ___| ___ _ __   ___ _ __ __ _| |                      |
+|                 | |  _ / _ \ '_ \ / _ \ '__/ _` | |                      |
+|                 | |_| |  __/ | | |  __/ | | (_| | |                      |
+|                  \____|\___|_| |_|\___|_|  \__,_|_|                      |
+|                                                                          |
++--------------------------------------------------------------------------+
+| General styles used in the pages                                         |
+'-------------------------------------------------------------------------*/
+
+h1, h2, h3, h4 {
+  color: $theme-color-text;
+}
+
+h3 {
+  margin-bottom: 2px;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+/*-------------------------------------------------------------------------.
+|                                       _                                  |
+|                       _ __ ___   __ _(_)_ __                             |
+|                      | '_ ` _ \ / _` | | '_ \                            |
+|                      | | | | | | (_| | | | | |                           |
+|                      |_| |_| |_|\__,_|_|_| |_|                           |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for the main frame (its body, header, footer, etc.)               |
+'-------------------------------------------------------------------------*/
+
+
+body {
+  color: #fff;
+
+  a, a:link, a:visited {
+    color: #fff;
+  }
+
+  &.hidden:after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .5);
+    content: "";
+  }
+
+  &.main {
+    padding: 68px 32px;
+    margin: 0;
+    font-family: arial, helvetica, sans-serif;
+    font-size: $theme-font-size-main;
+    font-weight: $theme-font-weight-global;
+    color: $theme-color-text;
+    background: $theme-color-background;
+
+    /* Can be toggled with N/n display option */
+    &.inline {
+      padding: 0;
+      background: none;
+    }
+
+    /* Special mode for creating screenshots of single elements. Omit background.
+       This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
+       on the URL */
+    &.screenshotmode {
+      background-color: #fff;
+      background-image: url("");
+    }
+
+    /* TODO: Reproduce this div.main element */
+    div.main {
+      padding-left: 10px;
+      border-left: 1px solid #f00;
+    }
+
+    /* The content page header containing the title, user, date */
+    table.header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: 100%;
+      height: 64px;
+      max-width: 100%;
+      padding: 8px 32px;
+      margin: 0 0 5px;
+      color: #fff;
+      background: $theme-color-white;
+      border-bottom: 1px solid $theme-color-table-border;
+      border-spacing: 0;
+    }
+
+    table.header td {
+      overflow: hidden;
+      color: #fff;
+      text-overflow: ellipsis;
+      -o-text-overflow: ellipsis;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    table.header td.heading {
+      height: 31px;
+      max-width: 100px;
+      padding-left: 0;
+      font-size: 21px;
+    }
+
+    table.header td.heading img {
+      width: 24px;
+      height: 24px;
+      margin-right: 3px;
+      vertical-align: middle;
+    }
+
+    table.header td.heading a,
+    table.header td.heading a:hover {
+      text-decoration: none;
+    }
+
+    table.header td.heading a,
+    table.header td.heading .popup_menu span,
+    .popup_menu table.header td.heading span {
+      color: $theme-color-text;
+    }
+
+    table.header td.right {
+      width: 1%;
+      font-size: 13px;
+      color: $theme-color-text;
+      text-align: right;
+    }
+
+    table.header td.right img {
+      width: 19px;
+      height: 19px;
+      vertical-align: middle;
+    }
+
+    table.header td.right a.head_logo img {
+      width: 20px;
+      height: 23px;
+      margin: 0 0 1px 5px;
+    }
+
+    table.header td.right a.head_logo img:hover {
+      opacity: 0.5;
+      filter: alpha(opacity=50);
+    }
+
+    table.header td.right * {
+      color: $theme-color-text;
+    }
+
+    hr.header {
+      position: absolute;
+      top: 42px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      padding: 0;
+      margin: 0;
+      color: #fff;
+      background-color: #fff;
+      border: none;
+    }
+
+    /* TODO: Reproduce this html element */
+    div.urldebug {
+      position: relative;
+      top: -14px;
+      width: 100%;
+      font-family: monospace;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    /* The content page footer containing optional status icons */
+    table.footer,
+    table.footer .popup_menu a,
+    table.footer .popup_menu span {
+      color: $theme-color-text;
+    }
+
+    table.footer {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    table.footer td.left   { text-align: left; }
+    table.footer td.middle { text-align: center; }
+    table.footer td.right  { text-align: right; }
+    table.footer a { color: #246; }
+  }
+}
+
+/* TODO: Check out whether this style and the respective span element within the
+ *       header are still needed */
+#headinfo {
+  margin-right: 10px;
+}
+
+div#foot_refresh, div#foot_refresh_time {
+  display: inline-block;
+}
+
+/* TODO: Reproduce all these pause styles */
+#reload_pause {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 40;
+  display: block;
+  width: 90px;
+  height: 90px;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  background-color: #111;
+  border-radius: 5px;
+  opacity: 0.8;
+  filter: alpha(opacity=80); /* For IE8 and earlier */
+}
+
+.pause_bar {
+  display: inline-block;
+  width: 20px;
+  height: 60px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border-radius: 5px;
+  opacity: 0.9;
+  filter: alpha(opacity=90); /* For IE8 and earlier */
+
+  &.p1 {
+    margin-right: 5px;
+    margin-left: 15px;
+  }
+
+  &.p2 {
+    margin-right: 15px;
+    margin-left: 5px;
+  }
+}
+
+#reload_pause_counter {
+  font-size: 120%;
+  font-weight: bold;
+  color: $theme-color-lightgrey;
+  text-align: center;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+
+/*-------------------------------------------------------------------------.
+|         ____            _            _   _ _       _                     |
+|        / ___|___  _ __ | |_ _____  _| |_| (_)_ __ | | _____              |
+|       | |   / _ \| '_ \| __/ _ \ \/ / __| | | '_ \| |/ / __|             |
+|       | |__| (_) | | | | ||  __/>  <| |_| | | | | |   <\__ \             |
+|        \____\___/|_| |_|\__\___/_/\_\\__|_|_|_| |_|_|\_\___/             |
+|                                                                          |
++--------------------------------------------------------------------------+
+| The blue buttons at the top of the screen used for navigation.           |
+'-------------------------------------------------------------------------*/
+/* TODO: Consolidate button styling with other buttons (e.g. sidebar button) */
+
+div.contextlinks {
+  margin-top: 8px;
+  margin-bottom: 5px;
+
+  .end {
+    clear: left;
+  }
+}
+
+div.contextlink,
+div.togglebutton {
+  position: relative;
+  float: left;
+  width: 158px;
+  height: 36px;
+  margin-right: 5px;
+  margin-bottom: -3px;
+  overflow: hidden;
+  font-size: $theme-font-size-small;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border: none;
+  border-radius: $theme-border-radius;
+  box-sizing: border-box;
+
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
+    position: relative;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: block;
+    height: 28px; /* $theme-button-height; */
+    padding: 5px;
+    overflow: hidden;
+    font-size: $theme-font-size-global;
+    font-weight: $theme-font-weight-global;
+    line-height: 18px;
+    letter-spacing: $theme-letter-spacing;
+    color: $theme-color-text;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+    border-radius: 5px;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  &:hover,
+  &:active,
+  &:focus {
+    a,
+    body.main .popup_menu span,
+    body.main .popup_menu & span {
+      position: relative;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: 5px;
+      font-size: $theme-font-size-global;
+      font-weight: $theme-font-weight-global;
+      letter-spacing: $theme-letter-spacing;
+      color: $theme-color-text;
+      text-decoration: none;
+      background: $theme-button-background;
+      border: 1px solid $theme-color-table-border;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+}
+
+div.contextlink.down,
+div.down.togglebutton {
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
+    background-color: $theme-color-text-light;
+    border-color: $theme-button-border;
+    box-shadow: none;
+
+    &:hover {
+      background-color: $theme-button-border;
+      border-color: #ccc;
+    }
+  }
+}
+
+/* Specific context link styles */
+div.contextlink {
+  &.short {
+    width: 38px;
+  }
+
+  &.hot a {
+    background-color: $theme-color-state-3-background;
+    border-color: $theme-color-nuance-16;
+  }
+
+  img {
+    position: relative;
+    top: -1px;
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+  }
+}
+
+/* Specific toggle button styles */
+div.togglebutton {
+  width: 35.75px;
+  height: $theme-button-height;
+
+  &.off {
+    border: none;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+
+    a,
+    body.main .popup_menu span,
+    body.main .popup_menu & span {
+      &, &:hover {
+        display: block;
+        overflow: hidden;
+        line-height: 18px;
+        color: $theme-color-text;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        cursor: default;
+        background: $theme-color-white;
+        border-radius: 5px;
+        box-shadow: none;
+      }
+
+      & {
+        font-size: $theme-font-size-global;
+        font-weight: $theme-font-weight-global;
+        letter-spacing: $theme-letter-spacing;
+        cursor: auto;
+        border: none;
+      }
+    }
+  }
+
+  img {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:active:not(.off) img,
+  &.down:not(.off) img {
+    position: relative;
+    left: 1px;
+  }
+}
+
+/*-------------------------------------------------------------------------.
+|            ____        _          _____     _     _                      |
+|           |  _ \  __ _| |_ __ _  |_   _|_ _| |__ | | ___                 |
+|           | | | |/ _` | __/ _` |   | |/ _` | '_ \| |/ _ \                |
+|           | |_| | (_| | || (_| |   | | (_| | |_) | |  __/                |
+|           |____/ \__,_|\__\__,_|   |_|\__,_|_.__/|_|\___|                |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styles for table that shows rows of data. Such tables are used in the    |
+| Status-GUI, in WATO and in custom modules that use similar tables.       |
+'-------------------------------------------------------------------------*/
+
+table.data {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  color: $theme-color-text;
+  border-spacing: 0 2px;
+  empty-cells: show;
+
+  .checkbox_hover {
+    background-attachment: fixed;
+    background-image: url("images/checkbox_hover_bg.png");
+  }
+
+  th {
+    padding: 0 8px;
+    font-size: $theme-font-size-main;
+    font-weight: $theme-font-weight-bold;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-text;
+    text-align: left;
+    text-transform: uppercase;
+    background: transparent;
+    border: none;
+
+    &:first-child {
+      padding-left: 0; /* left align first column header with group header */
+    }
+
+    /* TODO: Check whether this style is redundant due to a .last_col style in
+     *       _views.scss */
+    &:last-child {
+      border-right-style: none;
+    }
+
+    /* Table header links (For sorting) */
+    &.sort:hover {
+      color: #000;
+      cursor: pointer;
+      background-color: inherit;
+    }
+
+    /* TODO: Reproduce this html element */
+    &.tablegap {
+      background-color: transparent; /* none; */
+    }
+  }
+
+  td {
+    padding: 4px 8px;
+    font-size: $theme-font-size-main;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: $theme-letter-spacing;
+    color: $theme-color-text;
+    border: none;
+
+    &.buttons {
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    /* TODO: Reproduce this html element */
+    &.count {
+      font-family: sans-serif;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    &.number {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    &.nobr {
+      white-space: nowrap;
+    }
+
+    &.center {
+      text-align: center;
+    }
+
+    &.unused {
+      color: #888;
+      text-shadow: 1px 1px 0.5px #fff;
+    }
+  }
+
+  &.oddeven > tbody > tr:nth-child(odd),
+  &.oddeven > tbody > tr:nth-child(even),
+  &.oddeven > tbody > tr.groupheader {
+    background-color: transparent;
+  }
+
+  /* Two-lined header, for example in WATO: ChangeLog->Site Status */
+  /* TODO: Reproduce this html element */
+  tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+  }
+
+  tr.data {
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: all .15s ease-in;
+
+    > td {
+      height: 26px;
+      padding: 2px 8px; /* spacing in every row */
+      vertical-align: middle;
+      background-color: $theme-color-white;
+      border-top: 1px solid $theme-color-table-border;
+      border-right: none;
+      border-bottom: 1px solid $theme-color-table-border;
+
+      &:first-child {
+        border-left: 1px solid $theme-color-table-border;
+        border-radius: $theme-border-radius 0 0 4px;
+      }
+
+      &:last-child,
+      &.last_col {
+        border-right: 1px solid $theme-color-table-border;
+        border-radius: 0 4px 4px 0;
+      }
+
+      &:only-child {
+        border: 1px solid $theme-color-table-border;
+        border-radius: $theme-border-radius;
+      }
+    }
+
+    td.checkbox {
+      width: 20px;
+      text-align: center;
+
+      input {
+        margin: 0;
+      }
+    }
+  }
+
+  tr td.gap, tr td.fillup {
+    background: $theme-color-background;
+    border: 1px solid $theme-color-background;
+  }
+
+  a {
+    color: $theme-color-text;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  th input.checkgroup {
+    width: 16px;
+    height: 16px;
+    padding: 4px;
+    margin: 0;
+    margin-left: 11px;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 5px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+  }
+
+  /* TODO: Reproduce this html element */
+  td.host {
+    padding-top: 1ex;
+    padding-left: 0;
+    font-size: 120%;
+    font-weight: bold;
+    border-style: none;
+  }
+
+  td.singleicon {
+    width: 16px;
+    text-align: center;
+
+    /* Link to object in the classic nagios GUI */
+    /* TODO: Reproduce these singleicon elements */
+    img {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  tr.actions {
+    td {
+      padding: 5px;
+    }
+
+    div {
+      display: inline-block;
+    }
+
+    td div.search input[type="text"] {
+      margin-right: 2px;
+    }
+
+    &.no_match td {
+      padding: 5px;
+    }
+  }
+
+  tr th {
+    vertical-align: baseline;
+  }
+
+  tr div.toggle_actions {
+    position: relative;
+    padding-left: 14px;
+  }
+
+  tr a.toggle_actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+
+    img {
+      position: relative;
+      top: 2px;
+      width: 12px;
+      height: 13px;
+      padding: 0;
+      vertical-align: top;
+    }
+  }
+
+  tr th a.toggle_actions img,
+  tr th body.main .popup_menu span.toggle_actions img,
+  body.main .popup_menu & tr th span.toggle_actions img {
+    filter: invert(100%);
+  }
+
+  tr.groupheader,
+  tr.groupheader.td {
+    background-color: transparent;
+  }
+}
+
+table.data .popup_menu, body.main table.data .popup_menu {
+  color: $theme-color-text;
+}
+
+
+/* TODO: Check whether these narrow and wide styles are deprecated */
+td.narrow {
+  width: 10px;
+}
+
+td.wide {
+  width: 100%;
+}
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+  padding: 6px 0 3px;
+  margin: 0;
+  border: none;
+}
+
+tr.groupheader a:hover {
+  text-decoration: underline;
+}
+
+/* TODO: Reproduce these .grouped_row_header elements */
+tr.data.grouped_row_header {
+  td {
+    cursor: pointer;
+  }
+
+  img.treeangle {
+    margin-left: 0;
+  }
+}
+
+tr.data.group_end {
+  border-bottom: 2px solid #ccc;
+}
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid #000;
+  border-radius: 5px;
+  box-shadow: 1px 1px 2px #444;
+}
+
+tr.groupheader {
+  td {
+    padding: 0;
+    margin: 0;
+    font-weight: bold;
+    color: $theme-color-text;
+    background: transparent;
+    border-style: none;
+
+    &.groupheader .groupheader tbody tr td {
+      display: inline-block;
+      padding: 12px 0 4px;
+      font-size: $theme-font-table-header;
+      font-weight: $theme-font-weight-global;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-text;
+      vertical-align: baseline;
+
+      &.state {
+        width: auto;
+        padding: 0 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        box-shadow: none;
+      }
+
+      a,
+      body.main .popup_menu span,
+      body.main .popup_menu & span {
+        display: inline-block;
+        font-size: $theme-font-table-header;
+        font-weight: $theme-font-weight-global;
+        letter-spacing: $theme-letter-spacing-table;
+        color: $theme-color-text;
+      }
+
+      &.state a,
+      &.state body.main .popup_menu span,
+      body.main .popup_menu &.state span {
+        font-size: 14px;
+        text-transform: uppercase;
+      }
+
+      &.state.hstate1 a,
+      &.state.hstate1 body.main .popup_menu span,
+      body.main .popup_menu &.state.hstate1 span {
+        color: $theme-color-lightgrey;
+      }
+    }
+  }
+
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
+    color: $theme-color-text;
+    text-decoration: none;
+  }
+}
+
+img.iconbutton {
+  width: 20px;
+  height: 20px;
+  padding: 0 2px;
+
+  &:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+  }
+
+  &.reload_failed {
+    filter: sepia(100%);
+    -webkit-filter: sepia(100%);
+  }
+}
+
+/* TODO: Reproduce this html item */
+.wato a.checkbox img.iconbutton {
+  width: 60px;
+  height: 16px;
+}
+
+/* reschedule check icon */
+/* TODO: Reproduce these reloading/reload html elements */
+img.iconbutton.reloading,
+img.icon.reloading {
+  animation: spin 1s linear infinite;
+  -webkit-animation: spin 1s linear infinite;
+  -moz-animation: spin 1s linear infinite;
+}
+
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+
+/* Table with captions on the left side. Used e.g. for man pages and werks */
+table.data.headerleft {
+    border-spacing: 0;
+
+  th {
+    text-align: left;
+  }
+
+  tbody tr th,
+  tbody tr td {
+    &:nth-child(odd),
+    &:nth-child(even) {
+      padding: 5px 16px;
+      vertical-align: top;
+      background: $theme-color-white;
+      border-top: 1px solid $theme-color-table-border;
+      border-bottom: none;
+      border-left: 1px solid $theme-color-table-border;
+      border-radius: 0;
+    }
+  }
+
+  tbody tr th {
+    text-transform: none;
+    border-right: none;
+  }
+
+  tbody tr td {
+    border-right: 1px solid $theme-color-table-border;
+
+    &.nowiki p {
+        margin: 0;
+    }
+  }
+
+  tbody tr:last-of-type td,
+  tbody tr:last-of-type th {
+    border-bottom: 1px solid $theme-color-table-border;
+  }
+}
+
+/*-------------------------------------------------------------------------.
+|                    _____                                                 |
+|                   |  ___|__  _ __ _ __ ___  ___                          |
+|                   | |_ / _ \| '__| '_ ` _ \/ __|                         |
+|                   |  _| (_) | |  | | | | | \__ \                         |
+|                   |_|  \___/|_|  |_| |_| |_|___/                         |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Input forms (e.g. Filters, Commands, WATO)                               |
+'-------------------------------------------------------------------------*/
+
+input:not(.button), input[type=text], input[type=password],
+select, textarea, div.snapin textarea, #mk_side_search_field {
+  height: auto;
+  padding: 3px 6px;
+  color: $theme-color-text;
+  background: $theme-color-white;
+  background-image: none;
+  border: 1px solid $theme-color-table-border;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
+}
+
+input[type=text], textarea {
+  position: relative;
+}
+
+input[type=text], input[type=password] {
+  vertical-align: middle;
+}
+
+input[type=password] {
+  box-shadow: 0.1px 1.2px 1.8px 0 #800 inset;
+}
+
+select {
+  vertical-align: middle;
+}
+
+input[type=radio],
+input[type=checkbox] {
+  margin-left: 0;
+}
+
+input, select, textarea, div.snapin select, div.snapin textarea,
+#mk_side_search_field {
+  &.number {
+    text-align: left;
+  }
+
+  &.button {
+    display: inline-block;
+    width: auto;
+    margin-top: 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    margin-left: 0;
+    font-size: $theme-font-size-main;
+    letter-spacing: $theme-letter-spacing-table;
+    color: #fff;
+    background-color: #13d389;
+    box-shadow: none;
+  }
+
+  &[type=radio] {
+    width: auto;
+    margin-bottom: 0;
+  }
+}
+
+input.button {
+  &:not([type=text]), &:not([type=password]) {
+    padding: 4px 8px;
+    border: 1px solid #13d389;
+
+    &:hover, &:active {
+      border: 1px solid #11bd7b;
+    }
+  }
+}
+
+input, select, textarea, #mk_side_search_field {
+  &.button:hover, &.button:active {
+    background-color: #11bd7b;
+  }
+}
+
+select, textarea, div.snapin select, div.snapin textarea,
+#mk_side_search_field {
+  &.toggle_timespecific_parameter {
+    display: block;
+  }
+}
+
+input.toggle_timespecific_parameter {
+  margin-top: 5px;
+}
+
+/* TODO: Reproduce this html element */
+td.content hr {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-style: none;
+}
+
+/* TODO: Reproduce these html elements (also have a look at .tab and .tabactive
+ *       elemenets in _logwatch.scss)
+ */
+input.tab#results, input.tabactive#results { background-color: #fe6; }
+input.date, input.time {
+  font-family: monospace;
+}
+
+/* TODO: Reproduce .inputerror elements */
+.inputerror {
+  input, select, textarea, div.snapin select, div.snapin & select,
+  div.snapin textarea, div.snapin & textarea, #mk_side_search_field,
+  span.checkbox, > select {
+    background-color: $theme-color-nuance-15;
+  }
+
+  span.checkbox {
+    display: block;
+    float: left;
+    height: 17px;
+    margin-right: 2px;
+
+    input {
+      margin: 1px;
+    }
+  }
+}
+
+span.checkbox {
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.checkbox label::before {
+  border: 1px solid $theme-color-table-border-dark;
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+/* Next-Generation forms */
+table.nform {
+  width: 100%;
+  padding: 0;
+  margin: 5px 0;
+  background: $theme-color-white;
+  border: 1px solid $theme-color-table-border;
+  border-spacing: 7px 5px;
+  border-radius: $theme-border-radius;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  empty-cells: show;
+
+  body.main.screenshotmode & {
+    background-color: #fff;
+    background-image: none;
+  }
+
+  tr.closed {
+    display: none;
+  }
+
+  tr.heading {
+    height: auto;
+    background: $theme-color-white;
+
+    > td {
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 5px 5px 0 0;
+    }
+
+    td {
+      height: auto;
+      padding: 3px 4px 0 ;
+      font-size: $theme-font-size-global;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-table-text;
+      text-transform: uppercase;
+    }
+
+    img.treeangle.nform {
+      margin: 0 8px 0 0;
+      filter: invert(100%);
+    }
+  }
+
+  > tbody > tr td {
+    color: #000;
+  }
+
+  > tbody > tr > td {
+    vertical-align: middle;
+
+    &.simple {
+      line-height: 20px;
+    }
+  }
+
+  tr.open td.legend {
+    width: 320px;
+    min-width: 320px;
+    padding-right: 8px;
+    padding-left: 10px;
+    overflow: hidden;
+    line-height: 28px;
+    text-align: left;
+    word-wrap: break-word;
+    vertical-align: baseline;
+
+    div.title {
+      float: left;
+      max-width: 278px;
+      padding: 0 8px 0 0;
+      overflow: hidden;
+      font-weight: $theme-font-weight-bold;
+      white-space: nowrap;
+
+      .dots {
+        opacity: .2;
+      }
+
+      &.withcheckbox {
+        max-width: 278px;
+        margin: 5px 6px 5px 0;
+      }
+    }
+
+    div.checkbox {
+      float: left;
+      margin-top: 3px;
+      margin-left: 6px;
+    }
+  }
+
+  td.legend.simple {
+    padding-top: 5px;
+  }
+
+  &.narrow td.legend {
+    height: 18px;
+  }
+
+  .dots {
+    margin-left: 5px;
+    color: #444;
+  }
+
+  td.content {
+    padding-right: 10px;
+    padding-left: 10px;
+
+    &.simple {
+      padding-bottom: 0;
+    }
+  }
+
+  &.narrow td.content {
+    height: 18px;
+    padding-bottom: 2px;
+  }
+
+  tr.top {
+    height: 0; /* deflate vert space after heading */
+
+    td {
+      height: 0; /* deflate top vert space */
+    }
+  }
+
+  tr.bottom td {
+    height: 0; /* deflate bottom vert space */
+  }
+
+  td.reason {
+    padding: 8px 4px;
+  }
+
+  input, select, textarea, #mk_side_search_field {
+    & {
+      margin: 0;
+    }
+
+    &.button {
+      margin: 1px 5px 0 0;
+    }
+  }
+
+  hr {
+    margin: 8px 0;
+    background-color: #e5e5e5;
+  }
+
+  .ruleset {
+    margin-bottom: 8px;
+  }
+
+  tr.open td.content .checkbox {
+    display: inline-block;
+    margin-right: 8px;
+    margin-left: 4px;
+  }
+
+  .listchoice td {
+    height: 24px;
+    vertical-align: middle;
+  }
+
+  .title {
+    color: $theme-color-text;
+  }
+
+  #view_p_options_tbl {
+    border-spacing: 4px;
+  }
+}
+
+/*-------------------------------------------------------------------------.
+|                     _        _   _                                       |
+|                    / \   ___| |_(_) ___  _ __  ___                       |
+|                   / _ \ / __| __| |/ _ \| '_ \/ __|                      |
+|                  / ___ \ (__| |_| | (_) | | | \__ \                      |
+|                 /_/   \_\___|\__|_|\___/|_| |_|___/                      |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Confirmation dialogs, success and error messages when performing actions |
+'-------------------------------------------------------------------------*/
+div.really, div.success, div.error, div.message, div.warning {
+  padding: 1em 2em;
+  margin: 2em 0;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
+
+  h1 {
+    margin-bottom: 5px;
+    margin-left: 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+  }
+}
+
+div.message {
+  color: #000;
+}
+
+div.really, div.success {
+  color: #000;
+}
+
+/* TODO: Reproduce this html element */
+form.confirm {
+  position: relative;
+  left: -1px;
+  margin-top: 8px;
+}
+
+/*-------------------------------------------------------------------------.
+|                         _   _      _                                     |
+|                        | | | | ___| |_ __                                |
+|                        | |_| |/ _ \ | '_ \                               |
+|                        |  _  |  __/ | |_) |                              |
+|                        |_| |_|\___|_| .__/                               |
+|                                     |_|                                  |
++--------------------------------------------------------------------------+
+|                                                                          |
+'-------------------------------------------------------------------------*/
+
+body.main table.header td.right a#helpbutton img {
+  margin: 1px 5px;
+}
+
+a#helpbutton.passive {
+  filter: #808080;
+  -webkit-filter: grayscale(1);
+}
+
+div.help {
+  display: inline-block;
+  width: auto;
+  padding: 8px 16px;
+  margin: 8px 0;
+  font-size: 12px;
+  font-weight: normal;
+  color: #000;
+  text-align: left;
+  background-color: #ffc;
+  background-image: none;
+  border-radius: 5px;
+  box-shadow: none;
+
+  &:before {
+    display: inline-block;
+    height: 100%;
+    margin-right: 12px;
+    font-family: serif;
+    font-size: 16px;
+    font-style: italic;
+    font-weight: $theme-font-weight-bold;
+    content: "i";
+  }
+
+  a {
+    color: $theme-color-text;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  table.help {
+    border-collapse: collapse;
+    empty-cells: show;
+  }
+
+  table.help td {
+    vertical-align: top;
+    border: 1px solid #000;
+  }
+
+  table.help td.tt {
+    font-family: courier, monospace;
+  }
+
+  tt {
+    font-family: courier, monospace;
+    color: #009;
+  }
+}
+
+table.data div.help {
+  box-shadow: 0 0 3px #000;
+}
+
+/*--Popupmenu--------------------------------------------------------------.
+|       ____                                                               |
+|      |  _ \ ___  _ __  _   _ _ __  _ __ ___   ___ _ __  _   _            |
+|      | |_) / _ \| '_ \| | | | '_ \| '_ ` _ \ / _ \ '_ \| | | |           |
+|      |  __/ (_) | |_) | |_| | |_) | | | | | |  __/ | | | |_| |           |
+|      |_|   \___/| .__/ \__,_| .__/|_| |_| |_|\___|_| |_|\__,_|           |
+|                 |_|         |_|                                          |
+'-------------------------------------------------------------------------*/
+
+body.main .popup_menu {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 50;
+  min-width: 300px;
+  color: #fff;
+  white-space: normal;
+  background-color: $theme-color-white;
+  border: 1px solid $theme-color-table-border;
+  border-radius: 5px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+
+  div.wrapper {
+    position: relative;
+  }
+
+  div.content {
+    padding: 5px 8px;
+  }
+
+  /* TODO: Reproduce these .resizable html elements */
+  &.resizable {
+    div.resizer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 15px;
+      height: 15px;
+      pointer-events: none;
+      cursor: se-resize;
+      background-color: #508aa1;
+    }
+
+    div.content {
+      min-width: 312px;
+      min-height: 150px;
+      overflow: auto;
+      resize: both;
+    }
+  }
+
+  img {
+    width: 12px;
+    height: auto;
+    margin-right: 3px;
+    vertical-align: bottom;
+  }
+
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  span {
+    padding-left: 0;
+    margin-top: 8px;
+    font-weight: bold;
+  }
+
+  li:first-child span {
+    margin-top: 0;
+  }
+}
+
+body.main .popup_menu a,
+body.main table.footer .popup_menu a,
+body.main .popup_menu span {
+  display: block;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  color: $theme-color-text;
+  text-align: left;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+#popup_menu .icons {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 312px;
+  min-height: 150px;
+
+  ul {
+    height: 21px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  li {
+    float: left;
+
+    a {
+      display: block;
+      height: 21px;
+      padding: 0 5px;
+      line-height: 21px;
+      border-right: 1px solid #fff;
+
+      &:hover {
+        color: #fff;
+        text-decoration: none;
+        background-color: #629bb1;
+      }
+    }
+
+    &.active a {
+      color: #000;
+      border-bottom: 1px solid #508aa1;
+    }
+  }
+
+  div.icon_container {
+    position: absolute;
+    top: 26px;
+    right: 0;
+    bottom: 38px;
+    left: 0;
+    padding: 5px;
+    overflow-y: auto;
+  }
+
+  a.icon {
+    display: inline-block;
+    cursor: pointer;
+
+    span {
+      display: none;
+    }
+  }
+
+  &.show_names a.icon {
+    width: 100px;
+
+    span {
+      display: inline-block;
+      width: 62px;
+      margin: 0;
+      overflow: hidden;
+      font-weight: normal;
+      line-height: 19px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  img.icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  div.buttons {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+/*--Various----------------------------------------------------------------.
+|                __     __         _                                       |
+|                \ \   / /_ _ _ __(_) ___  _   _ ___                       |
+|                 \ \ / / _` | '__| |/ _ \| | | / __|                      |
+|                  \ V / (_| | |  | | (_) | |_| \__ \                      |
+|                   \_/ \__,_|_|  |_|\___/ \__,_|___/                      |
+|                                                                          |
+'-------------------------------------------------------------------------*/
+
+/* TODO: Reproduce div.keysym */
+div.keysym {
+  display: inline-block;
+  padding: 2px 5px;
+  margin: 0 1px;
+  color: #fff; /* font-style: italic; */
+  text-align: center;
+  background-color: #333;
+  border-color: #888 #444 #000 #666;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 4px;
+  box-shadow: 0.5px 0.5px 1px #000;
+
+  /* Contextlinks with embedded keyboard button */
+  div.contextlink & {
+    position: absolute;
+    top: 4px;
+    right: 5px;
+    padding: 1px 5px;
+    font-size: 8px;
+    background-color: #467;
+    border-color: #8ab #245 #134 #79a;
+    border-width: 2px;
+  }
+}
+
+div.contextlink.button a {
+  width: 135px;
+}
+
+div.log_output, .crash_report pre {
+  padding: 8px 16px;
+  margin: 16px;
+  font-family: monospace;
+  font-weight: $theme-font-weight-global;
+  color: $theme-color-lightgrey;
+  background: $theme-color-sidebar-background;
+  border: 1px solid $theme-color-table-border-dark;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
+}
+
+div.log_output {
+  overflow-x: scroll;
+  vertical-align: top;
+
+  pre {
+    font-family: monospace;
+    font-size: $theme-font-size-global;
+    color: $theme-color-lightgrey;
+  }
+}
+
+a.element_dragger {
+  cursor: move;
+
+  &:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+  }
+}
+
+.dragging {
+  cursor: move;
+  transform: scale(1.005);
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
+  -webkit-transform: scale(1.005);
+  -moz-transform: scale(1.005);
+  -ms-transform: scale(1.005);
+  -o-transform: scale(1.005);
+}
+
+
+/*-------------------------------------------------------------------------.
+|         ____       _                                                     |
+|        |  _ \  ___| |__  _   _  __ _  __   ____ _ _ __ ___               |
+|        | | | |/ _ \ '_ \| | | |/ _` | \ \ / / _` | '__/ __|              |
+|        | |_| |  __/ |_) | |_| | (_| |  \ V / (_| | |  \__ \              |
+|        |____/ \___|_.__/ \__,_|\__, |   \_/ \__,_|_|  |___/              |
+|                                |___/                                     |
++--------------------------------------------------------------------------+
+| html.debug_vars() outputs the variables in the current URL.              |
+'-------------------------------------------------------------------------*/
+
+/* TODO: Reproduce this table.debug_vars */
+table.debug_vars {
+  border-collapse: collapse;
+
+  th {
+    font-weight: bold;
+    background-color: #8c8;
+    border: 1px solid #080;
+  }
+
+  td {
+    padding: 2px 6px;
+    font-family: courier, monospace;
+    border: 1px solid #050;
+
+    &.left {
+      font-weight: bold;
+      color: #fff;
+      background-color: #395;
+    }
+
+    &.right {
+      font-weight: bold;
+      color: #000;
+      background-color: #8fc;
+    }
+  }
+}
+
+/* Popup for adding to visuals (Dashboard, Reports */
+/* TODO: Reproduce div.pnp_graph */
+div.pnp_graph, div.popup_trigger {
+  position: relative;
+}
+
+div.popup_trigger {
+  display: inline-block;
+
+  img.iconbutton {
+    padding: 0;
+  }
+}
+
+div.pnp_graph a.popup_trigger {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url("images/icon_menu.png");
+  background-size: contain;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+td.job_state {
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0.5px 0.5px 2px #000 inset;
+}
+
+table.data > tbody > tr > td.job_state {
+  &.job_finished {
+    background-color: $theme-color-state-success-background;
+    box-shadow: none;
+  }
+
+  &.job_exception {
+    background-color: $theme-color-state-3-background;
+    box-shadow: none;
+  }
+
+  &.job_running {
+    background-color: $theme-color-state-9-background;
+    box-shadow: none;
+  }
+
+  &.job_initialized {
+    color: $theme-color-black;
+    background-color: #ccc;
+  }
+}
+
+table.data.job_details > tbody > tr > th {
+  width: 150px;
+}
+
+table.data.job_details div.log_output > pre {
+  margin: 0;
+}
+
+/* Fixed job columns */
+table.data.job_table > tbody > tr > td {
+  &.job_actions {
+    width: 50px;
+  }
+
+  &.job_state {
+    width: 50px;
+  }
+
+
+  &.job_started {
+    width: 160px;
+  }
+
+  &.job_pid{
+    width: 40px;
+    text-align: right;
+  }
+}
+
+/* Tags */
 .tagify {
   $self: &;
-  $tagMargin: 0 0 2px 5px;
-  $tagPad: .1em .3em;
 
   border: none;
 
   #{ $self }__input {
-    padding: $tagPad;
-    margin: $tagMargin;
+    padding: $tag-padding;
+    margin: $tag-margin;
   }
 
   &[readonly] {
     tag > div {
-      padding: $tagPad;
+      padding: $tag-padding;
     }
   }
 
   tag {
-    margin: 0 0 2px 5px;
+    margin: 0 5px 2px 0;
 
     > div {
-      padding: $tagPad;
-      padding-right: nth($tagPad, 2) * 5;
-      margin: $tagMargin;
+      padding: $tag-padding;
+      padding-right: nth($tag-padding, 2) * 5;
+      margin: $tag-margin;
       color: #fff;
     }
 
     x {
       top: 45%;
-      right: 2px;
+      right: 7px;
       font-size: 10px;
       line-height: 14px;
     }
@@ -73,7 +1784,20 @@ Boston, MA 02110-1301 USA.
       opacity: 0.5;
       box-shadow: none;
     }
+  }
 
+  // Display input always non-colored
+  &:not([readonly]) tag {
+    > div::before {
+      background: #cccfdb;
+    }
+
+    > div {
+      color: #000;
+    }
+  }
+
+  tag, &[readonly] tag {
     > div::before {
       top: 0;
       right: 0;
@@ -104,4 +1828,9 @@ Boston, MA 02110-1301 USA.
   a tag {
     cursor: pointer;
   }
+}
+
+.tagify.display[readonly] tag {
+    padding: 1px 0px;
+    margin: 0px 0px;
 }

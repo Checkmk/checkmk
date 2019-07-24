@@ -259,7 +259,7 @@ def inv_dmidecode_parse_mem_device(lines):
     if node:
         try:
             array = node[int(index) - 1]
-        except:
+        except Exception:
             array = node[-1]
     else:
         array = {"devices": []}
@@ -289,7 +289,7 @@ def inv_dmidecode_parse_generic(node, lines, keyinfo):
 
 
 def dmidecode_parse_size(v):  # into Bytes (int)
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
 
     parts = v.split()
@@ -305,7 +305,7 @@ def dmidecode_parse_size(v):  # into Bytes (int)
 
 
 def dmidecode_parse_speed(v):  # into Hz (float)
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
 
     parts = v.split()
@@ -320,7 +320,7 @@ def dmidecode_parse_speed(v):  # into Hz (float)
 
 
 def dmidecode_parse_voltage(v):
-    if v == "Unknown":
+    if not v or v == "Unknown":
         return None
     return float(v.split()[0])
 

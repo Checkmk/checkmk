@@ -89,7 +89,7 @@ TEST(SectionProviderMrpe, SmallApi) {
 
     {
         auto [user, path] =
-            cma::provider::parseIncludeEntry("sk = @data\\mrpe_checks.cfg");
+            cma::provider::parseIncludeEntry("sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
         EXPECT_EQ(path.u8string(),
                   wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
@@ -112,17 +112,17 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 2)
-            << "check that yml is ok";  // include and check
+        EXPECT_EQ(entries.size(), 0)
+            << "no mrpe expected";  // include and check
     }
 
     replaceYamlSeq(
         groups::kMrpe, vars::kMrpeConfig,
         {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
-         "include sk = @data\\mrpe_checks.cfg",  // reference
-         "Include=@data\\mrpe_checks.cfg",       // valid without space
-         "includes = @data\\mrpe_checks.cfg",    // invalid
-         "includ = @data\\mrpe_checks.cfg",      // invalid
+         "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
+         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",       // valid without space
+         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
+         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",      // invalid
          "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
          "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
 
@@ -132,8 +132,8 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     ASSERT_EQ(mrpe.includes_.size(), 2);
     mrpe.parseConfig();
     ASSERT_EQ(mrpe.includes_.size(), 2);
-    EXPECT_EQ(mrpe.includes_[0], "sk = @data\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes_[1], "=@data\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
     ASSERT_EQ(mrpe.checks_.size(), 2);
     EXPECT_EQ(mrpe.checks_[0],
               "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");
@@ -158,7 +158,7 @@ TEST(SectionProviderMrpe, YmlCheck) {
     auto enabled = GetVal(groups::kMrpe, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
     auto paths = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(paths.size(), 2);
+    EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
 }
 
 TEST(SectionProviderMrpe, Run) {
@@ -176,7 +176,7 @@ TEST(SectionProviderMrpe, Run) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 2)
+        ASSERT_EQ(entries.size(), 0)
             << "check that yml is ok";  // include and check
     }
 

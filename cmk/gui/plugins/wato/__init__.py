@@ -160,8 +160,12 @@ from cmk.gui.plugins.wato.utils import (
     ConfigHostname,
     SiteBackupJobs,
     HostTagCondition,
+    DictHostTagCondition,
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
+    get_check_information,
+    SampleConfigGenerator,
+    sample_config_generator_registry,
 )
 
 #.

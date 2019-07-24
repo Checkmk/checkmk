@@ -179,8 +179,8 @@ def check_supermicro_sensors(item, _no_params, info):
                 else:
                     perfdata = [(perfvar, reading)]
 
-            return (worst_status(status_high, status_low, dev_status), "%s%s" % (reading, unit),
-                    perfdata)
+            return (worst_status(status_high, status_low,
+                                 dev_status), "%s%s" % (reading, unit), perfdata)
 
 
 check_info['supermicro.sensors'] = {

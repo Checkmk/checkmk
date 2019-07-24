@@ -65,14 +65,14 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
     }
 
     const auto filename = Path.filename().string();
-    const int max_age = isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
+    const int max_age = 0 != isdigit(filename[0]) ? atoi(filename.c_str()) : -1;
 
     if (max_age >= 0) {
         // extremely stupid
         // different clocks no conversion between clocks
         // only in C++ 20
         auto ftime = fs::last_write_time(Path, ec);
-        if (ec.value()) {
+        if (ec.value() != 0) {
             XLOG::l("Crazy file{} gives ec : {}", Path.u8string(), ec.value());
             return false;
         }
@@ -92,7 +92,7 @@ bool IsSpoolFileValid(const std::filesystem::path &Path) {
     return true;
 }
 
-std::string SpoolProvider::makeBody() const {
+std::string SpoolProvider::makeBody() {
     namespace fs = std::filesystem;
     XLOG::t(XLOG_FUNC + " entering");
 
@@ -120,7 +120,7 @@ std::string SpoolProvider::makeBody() const {
         auto data = cma::tools::ReadFileInVector(path);
         if (data) {
             auto add_size = data->size();
-            if (!add_size) continue;
+            if (0 == add_size) continue;
 
             auto old_size = out.size();
             try {

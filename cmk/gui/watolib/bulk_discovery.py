@@ -26,6 +26,8 @@
 
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
+import cmk.utils.store as store
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -39,13 +41,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
-from cmk.gui.watolib.utils import exclusive_lock
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.wato import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
+DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
                                              ("host_name", str)])
-DiscoveryTask = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
+DiscoveryTask = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
                                              ("host_names", list)])
 
 
@@ -57,15 +58,15 @@ def get_tasks(hosts_to_discover, bulk_size):
     mainly done to reduce the overhead of site communication and loading/saving of files
     """
     current_site_and_folder = None
-    tasks = []
+    tasks = []  # type: List[DiscoveryTask]
 
-    for site_id, folder, host_name in sorted(hosts_to_discover):
-        if not tasks or (site_id, folder) != current_site_and_folder or \
+    for site_id, folder_path, host_name in sorted(hosts_to_discover):
+        if not tasks or (site_id, folder_path) != current_site_and_folder or \
            len(tasks[-1].host_names) >= bulk_size:
-            tasks.append(DiscoveryTask(site_id, folder.path(), [host_name]))
+            tasks.append(DiscoveryTask(site_id, folder_path, [host_name]))
         else:
             tasks[-1].host_names.append(host_name)
-        current_site_and_folder = site_id, folder
+        current_site_and_folder = site_id, folder_path
     return tasks
 
 
@@ -81,8 +82,8 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         selection_elements = []
 
     selection_elements += [
-        Checkbox(
-            label=_("Only include hosts that failed on previous discovery"), default_value=False),
+        Checkbox(label=_("Only include hosts that failed on previous discovery"),
+                 default_value=False),
         Checkbox(label=_("Only include hosts with a failed discovery check"), default_value=False),
         Checkbox(label=_("Exclude hosts where the agent is unreachable"), default_value=False),
     ]
@@ -105,18 +106,16 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
              )),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
             ("performance",
-             Tuple(
-                 title=_("Performance options"),
-                 elements=[
-                     Checkbox(label=_("Use cached data if present"), default_value=True),
-                     Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
-                     Integer(label=_("Number of hosts to handle at once"), default_value=10),
-                 ])),
+             Tuple(title=_("Performance options"),
+                   elements=[
+                       Checkbox(label=_("Use cached data if present"), default_value=True),
+                       Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
+                       Integer(label=_("Number of hosts to handle at once"), default_value=10),
+                   ])),
             ("error_handling",
-             Checkbox(
-                 title=_("Error handling"),
-                 label=_("Ignore errors in single check plugins"),
-                 default_value=True)),
+             Checkbox(title=_("Error handling"),
+                      label=_("Ignore errors in single check plugins"),
+                      default_value=True)),
         ],
         optional_keys=[],
     )
@@ -201,21 +200,24 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         timeout = html.request.request_timeout - 2
 
-        counts, failed_hosts = check_mk_automation(
-            task.site_id, "inventory", arguments, timeout=timeout)
+        counts, failed_hosts = check_mk_automation(task.site_id,
+                                                   "inventory",
+                                                   arguments,
+                                                   timeout=timeout)
 
         return counts, failed_hosts
 
     def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
         # The following code updates the host config. The progress from loading the WATO folder
         # until it has been saved needs to be locked.
-        with exclusive_lock():
+        with store.lock_checkmk_configuration():
             Folder.invalidate_caches()
             folder = Folder.folder(task.folder_path)
             for hostname in task.host_names:
                 self._process_service_counts_for_host(counts[hostname])
-                msg = self._process_discovery_result_for_host(
-                    folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
+                msg = self._process_discovery_result_for_host(folder.host(hostname),
+                                                              failed_hosts.get(hostname, False),
+                                                              counts[hostname])
                 job_interface.send_progress_update("%s: %s" % (hostname, msg))
 
     def _process_service_counts_for_host(self, host_counts):

@@ -1,3 +1,6 @@
+BRANCH_NAME = scm.branches[0].name
+FOLDER_ID = BRANCH_NAME.replaceAll('\\.','')
+
 properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' ),
@@ -10,18 +13,18 @@ properties([
 
 node: {
     stage('Build Packages') {
-        build job: 'cmk_master/nightly_build_containerized',
+        build job: "cmk_${FOLDER_ID}/nightly_build_containerized",
         parameters: [
             [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
             [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
         ]
     }
     stage('Build CMK Container') {
-        build job: 'cmk_master/nightly_cmk_container'
+        build job: "cmk_${FOLDER_ID}/nightly_cmk_container"
     }
     parallel 'Integration Test for Packages': {
         stage('Integration Test for Packages') {
-            build job: 'cmk_master/nightly_test_integration-pipeline',
+            build job: "cmk_${FOLDER_ID}/nightly_test_integration-pipeline",
             parameters: [
                 [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
                 [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
@@ -29,7 +32,7 @@ node: {
         }
     }, 'Integration Test for Docker Container': {
         stage('Integration Test for Docker Container') {
-            build job: 'cmk_master/docker_integration'
+            build job: "cmk_${FOLDER_ID}/docker_integration"
         }
     }
 }

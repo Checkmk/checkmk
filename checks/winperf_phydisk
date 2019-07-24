@@ -67,7 +67,7 @@ def winperf_phydisk_convert(info):
     # In case disk performance counters are not enabled, the agent sends
     # an almost empty section, where the second line is missing completely
     def disk_perfcounters_disabled(info):
-        nodes = set([l[0] for l in info])
+        nodes = {l[0] for l in info}
         return len(nodes) == len(info)
 
     if disk_perfcounters_disabled(info):
@@ -97,7 +97,7 @@ def winperf_phydisk_convert(info):
     current_node = ""
     try:
         while True:
-            line = lines.next()
+            line = next(lines)
             if line[2] == "instances:":
                 if current_node != "":
                     entries.extend(finalize_block(current_node))

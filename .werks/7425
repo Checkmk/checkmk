@@ -1,0 +1,20 @@
+Title: mk_postgres, postgres_instances: fix plugin output for older operating systems
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560520836
+
+mk_postgres used the pgrep command to find the running
+PostgreSQL instances. Unfortunately, version 1.5.0p3
+added a command line argument that is not supported on
+older operating systems like e.g. SLES 11, but only on
+newer ones like e.g. SLES 12. As a result Checkmk did
+not find any PostgreSQL instances on older operating
+systems.
+
+To resolve the issue, the fixed version of the mk_postgres
+plugin has to be deployed on the affected hosts.

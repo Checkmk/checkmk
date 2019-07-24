@@ -5,16 +5,11 @@
 #ifndef p_perf_counters_h__
 #define p_perf_counters_h__
 
-#include <chrono>
-#include <condition_variable>
-#include <mutex>
 #include <string>
-
-#include "carrier.h"
-
-#include "section_header.h"
+#include <string_view>
 
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -27,7 +22,7 @@ public:
         : Synchronous(Name, Separator) {}
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 };
 
 class Uptime : public Asynchronous {
@@ -38,7 +33,7 @@ public:
         : Asynchronous(Name, Separator) {}
 
 protected:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 };
 
 // too simple for class object!
@@ -53,15 +48,13 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& Key,
 // first line
 std::string MakeWinPerfStamp(uint32_t KeyIndex);
 // header
-std::string MakeWinPerfHeader(const std::wstring& Prefix,
-                              const std::wstring& Name);
+std::string MakeWinPerfHeader(std::wstring_view prefix, std::wstring_view name);
 std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* Object,
                                  uint32_t KeyIndex);
 }  // namespace details
 
-std::string BuildWinPerfSection(const std::wstring& Prefix,
-                                const std::wstring& Name,
-                                const std::wstring& Key);
+std::string BuildWinPerfSection(std::wstring_view prefix,
+                                std::wstring_view name, std::wstring_view key);
 
 }  // namespace provider
 

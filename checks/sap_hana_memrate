@@ -29,7 +29,7 @@ factory_settings["sap_hana_memrate_default_levels"] = {"levels": ('perc_used', (
 
 def parse_sap_hana_memrate(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         inst_data = {}
         for line in lines:
             if len(line) < 3 or line[0] != 'mem_rate':
@@ -41,24 +41,18 @@ def parse_sap_hana_memrate(info):
                 except ValueError:
                     pass
         if inst_data:
-            parsed.setdefault((sid_instance, node), inst_data)
+            parsed.setdefault(sid_instance, inst_data)
     return parsed
 
 
 def inventory_sap_hana_memrate(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_memrate(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
-
-        if node:
-            yield 0, 'On node: %s' % node
-
-        yield check_memory_simple(data['used'], data['total'], params)
+@get_parsed_item_data
+def check_sap_hana_memrate(item, params, data):
+    yield check_memory_simple(data['used'], data['total'], params)
 
 
 check_info['sap_hana_memrate'] = {
@@ -68,7 +62,6 @@ check_info['sap_hana_memrate'] = {
     'service_description': 'SAP HANA Memory %s',
     'includes': ['sap_hana.include', 'memory.include'],
     "has_perfdata": True,
-    "node_info": True,
     'group': 'sap_hana_memory',
     'default_levels_variable': 'sap_hana_memrate_default_levels',
 }

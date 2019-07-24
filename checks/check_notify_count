@@ -27,16 +27,18 @@
 
 def check_notify_count_arguments(params):
     _description, interval, settings = params
-    args = '-r %d' % interval
+    args = ["-r", interval]
 
     if "num_per_contact" in settings:
-        args += ' -w %s -c %s' % settings['num_per_contact']
+        warn, crit = settings["num_per_contact"]
+        args += ["-w", warn]
+        args += ["-c", crit]
 
     return args
 
 
-active_check_info['notify_count'] = {
-    "command_line": '$USER1$/check_notify_count $ARG1$',
+active_check_info["notify_count"] = {
+    "command_line": "$USER1$/check_notify_count $ARG1$",
     "argument_function": check_notify_count_arguments,
     "service_description": lambda params: "Notify %s" % params[0],
     "has_perfdata": True,

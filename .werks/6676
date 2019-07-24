@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1541587658
 
 In addition to the already returned keys <tt>aux_tags</tt>, <tt>tag_groups</tt> and <tt>configuration_hash</tt>,

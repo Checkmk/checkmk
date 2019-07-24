@@ -62,12 +62,11 @@ def parse_aws_elbv2_network(info):
 
 def check_aws_elbv2_network_lcu(item, params, parsed):
     lcus = parsed['ConsumedLCUs']
-    yield check_levels(
-        lcus,
-        'aws_consumed_lcus',
-        params.get('levels'),
-        human_readable_func=int,
-        infoname="Consumed")
+    yield check_levels(lcus,
+                       'aws_consumed_lcus',
+                       params.get('levels'),
+                       human_readable_func=int,
+                       infoname="Consumed")
 
 
 check_info['aws_elbv2_network'] = {
@@ -114,8 +113,11 @@ def check_aws_elbv2_network_connections(item, params, parsed):
         conns = parsed.get(conn_ty)
         if conns is None:
             continue
-        yield check_levels(
-            conns, 'aws_%s_connections' % key, None, human_readable_func=int, infoname=title)
+        yield check_levels(conns,
+                           'aws_%s_connections' % key,
+                           None,
+                           human_readable_func=int,
+                           infoname=title)
 
 
 check_info['aws_elbv2_network.connections'] = {
@@ -165,12 +167,11 @@ def check_aws_elbv2_network_healthy_hosts(item, params, parsed):
             perc = None
 
         if perc is not None:
-            yield check_levels(
-                perc,
-                'aws_overall_hosts_health_perc',
-                params.get('levels_overall_hosts_health_perc'),
-                human_readable_func=get_percent_human_readable,
-                infoname="Proportion of healthy hosts")
+            yield check_levels(perc,
+                               'aws_overall_hosts_health_perc',
+                               params.get('levels_overall_hosts_health_perc'),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="Proportion of healthy hosts")
 
 
 check_info['aws_elbv2_network.healthy_hosts'] = {
@@ -219,12 +220,11 @@ def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
         handshake = parsed.get(handshake_ty)
         if handshake is None:
             continue
-        yield check_levels(
-            handshake,
-            'aws_failed_tls_%s_handshake' % key,
-            None,
-            human_readable_func=int,
-            infoname=title)
+        yield check_levels(handshake,
+                           'aws_failed_tls_%s_handshake' % key,
+                           None,
+                           human_readable_func=int,
+                           infoname=title)
 
 
 check_info['aws_elbv2_network.tls_handshakes'] = {
@@ -301,21 +301,19 @@ def inventory_aws_elbv2_network_statistics(parsed):
 def check_aws_elbv2_network_statistics(item, params, parsed):
     processed_bytes = parsed.get('ProcessedBytes')
     if processed_bytes is not None:
-        yield check_levels(
-            processed_bytes,
-            'aws_proc_bytes',
-            None,
-            human_readable_func=get_bytes_human_readable,
-            infoname="Processed bytes")
+        yield check_levels(processed_bytes,
+                           'aws_proc_bytes',
+                           None,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="Processed bytes")
 
     processed_bytes_tls = parsed.get('ProcessedBytes_TLS')
     if processed_bytes_tls is not None:
-        yield check_levels(
-            processed_bytes_tls,
-            'aws_proc_bytes_tls',
-            None,
-            human_readable_func=get_bytes_human_readable,
-            infoname="Processed bytes TLS")
+        yield check_levels(processed_bytes_tls,
+                           'aws_proc_bytes_tls',
+                           None,
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="Processed bytes TLS")
 
 
 check_info['aws_elbv2_network.statistics'] = {

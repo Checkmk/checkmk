@@ -66,6 +66,22 @@ def test_cfg():
                 ],
                 'title': u'Networking Segment',
             },
+            {
+                'id': 'none_choice',
+                'tags': [
+                    {
+                        'aux_tags': ['bla'],
+                        'id': None,
+                        'title': u'None'
+                    },
+                    {
+                        'aux_tags': [],
+                        'id': 'none_val',
+                        'title': u'None value'
+                    },
+                ],
+                'title': u'None choice',
+            },
         ],
     })
     return cfg
@@ -127,11 +143,12 @@ def test_iadd_tag_config(test_cfg):
 
     test_cfg += cfg2
 
-    assert len(test_cfg.tag_groups) == 4
+    assert len(test_cfg.tag_groups) == 5
     assert test_cfg.tag_groups[0].id == "criticality"
     assert test_cfg.tag_groups[1].id == "networking"
-    assert test_cfg.tag_groups[2].id == "tgid3"
-    assert test_cfg.tag_groups[2].title == "titlor"
+    assert test_cfg.tag_groups[2].id == "none_choice"
+    assert test_cfg.tag_groups[3].id == "tgid3"
+    assert test_cfg.tag_groups[3].title == "titlor"
 
     aux_tags = test_cfg.get_aux_tags()
     assert len(aux_tags) == 2
@@ -144,13 +161,14 @@ def test_tag_config_get_topic_choices(test_cfg):
     assert sorted(test_cfg.get_topic_choices()) == sorted([
         ("Blubberei", "Blubberei"),
         ("Bluna", "Bluna"),
+        ("Tags", "Tags"),
     ])
 
 
 def test_tag_groups_by_topic(test_cfg):
     expected_groups = {
         u"Blubberei": ["criticality"],
-        u'Tags': ["networking"],
+        u'Tags': ["networking", "none_choice"],
     }
 
     actual_groups = dict(test_cfg.get_tag_groups_by_topic())
@@ -184,6 +202,7 @@ def test_tag_config_get_tag_group_choices(test_cfg):
     assert test_cfg.get_tag_group_choices() == [
         ('criticality', u'Blubberei / Criticality'),
         ('networking', u'Networking Segment'),
+        ('none_choice', u'None choice'),
     ]
 
 
@@ -193,6 +212,8 @@ def test_tag_config_get_aux_tags(test_cfg):
 
 def test_tag_config_get_aux_tags_by_tag(test_cfg):
     assert test_cfg.get_aux_tags_by_tag() == {
+        None: ['bla'],
+        'none_val': [],
         'critical': [],
         'dmz': [],
         'lan': [],
@@ -217,21 +238,33 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg):
 
 
 def test_tag_config_get_tag_ids(test_cfg):
-    assert test_cfg.get_tag_ids() == set(
-        ['bla', 'critical', 'dmz', 'lan', 'offline', 'prod', 'test', 'wan'])
+    assert test_cfg.get_tag_ids() == {
+        None,
+        'none_val',
+        'bla',
+        'critical',
+        'dmz',
+        'lan',
+        'offline',
+        'prod',
+        'test',
+        'wan',
+    }
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_with_group_prefix() == set([
-        'bla',
-        'criticality/critical',
-        'criticality/offline',
-        'criticality/prod',
-        'criticality/test',
-        'networking/dmz',
-        'networking/lan',
-        'networking/wan',
-    ])
+    assert test_cfg.get_tag_ids_by_group() == {
+        ('bla', 'bla'),
+        ('criticality', 'critical'),
+        ('criticality', 'offline'),
+        ('criticality', 'prod'),
+        ('criticality', 'test'),
+        ('networking', 'dmz'),
+        ('networking', 'lan'),
+        ('networking', 'wan'),
+        ('none_choice', None),
+        ('none_choice', 'none_val'),
+    }
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg):
@@ -324,13 +357,23 @@ def test_tag_config_update_tag_group(test_cfg):
         test_cfg.validate_config()
 
     test_cfg.update_tag_group(tags.TagGroup(("networking", "title", [("tgid2", "tagid2", [])])))
-    assert test_cfg.tag_groups[-1].title == "title"
+    assert test_cfg.tag_groups[-2].title == "title"
     test_cfg.validate_config()
 
 
 def test_tag_group_get_tag_group_config(test_cfg):
     tg = test_cfg.get_tag_group("criticality")
     assert tg.get_tag_group_config("prod") == {'bla': 'bla', 'criticality': 'prod'}
+
+
+def test_tag_group_get_tag_group_config_none_choice(test_cfg):
+    tg = test_cfg.get_tag_group("none_choice")
+    assert tg.get_tag_group_config(None) == {'bla': 'bla'}
+
+
+def test_tag_group_get_tag_group_config_none_val(test_cfg):
+    tg = test_cfg.get_tag_group("none_choice")
+    assert tg.get_tag_group_config('none_val') == {'none_choice': 'none_val'}
 
 
 def test_tag_group_get_tag_group_config_unknown_choice(test_cfg):

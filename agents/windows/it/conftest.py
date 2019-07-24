@@ -2,9 +2,10 @@
 # -*- coding: utf-8; py-indent-offset: 4 -*-
 import glob
 import os
+import subprocess
+import sys
 import pytest
 from remote import (assert_subprocess, remote_ip, remotedir, remoteuser, run_subprocess, sshopts)
-import sys
 
 localdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -70,8 +71,14 @@ def rm_rf_testfiles():
         pytest.skip(stderr)
 
 
+def verify_remote_ip_reachable():
+    if subprocess.call(["ping", "-c", "1", remote_ip]) != 0:
+        raise Exception("Test VM %s is not reachable via ping" % remote_ip)
+
+
 @pytest.fixture(scope='session', autouse=True)
 def session_scope():
+    verify_remote_ip_reachable()
     try:
         acquire_lock()
         scp_agent_exe()

@@ -20,7 +20,7 @@ def _prepare_mock_errpt(tmpdir, errpt_output):
     errpt_script = ''.join(['#!/bin/sh\n'] + ['echo "%s"\n' % line for line in errpt_output])
     with open(errpt_name, 'w') as errpt_file:
         errpt_file.write(errpt_script)
-    os.chmod(errpt_name, 0777)  # nosec
+    os.chmod(errpt_name, 0o777)  # nosec
 
 
 def _get_env(tmpdir):

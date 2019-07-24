@@ -31,7 +31,7 @@ RUN yum -y --enablerepo=extras install \
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && scl enable python27 'python get-pip.py'
 RUN scl enable python27 'pip install --upgrade setuptools virtualenv' \
-    && scl enable python27 'pip install git+https://github.com/pypa/pipenv.git'
+    && scl enable python27 'pip install git+https://github.com/svenpanne/pipenv.git@41f30d7ac848fdfe3eb548ddd19b731bfa8c331a'
 RUN yum -y install \
     $PACKAGES \
     && yum clean all

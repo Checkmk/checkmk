@@ -40,12 +40,11 @@ def check_cmc_temp(item, params, info):
     offset = int(item) - 1
     current_temp = int(info[0][0][offset])
     dev_high, dev_low = map(int, info[1][0][offset * 2:][:2])
-    return check_temperature(
-        current_temp,
-        params,
-        "cmc_temp_%s" % item,
-        dev_levels=(dev_high, dev_high),
-        dev_levels_lower=(dev_low, dev_low))
+    return check_temperature(current_temp,
+                             params,
+                             "cmc_temp_%s" % item,
+                             dev_levels=(dev_high, dev_high),
+                             dev_levels_lower=(dev_low, dev_low))
 
 
 check_info['cmc_temp'] = {

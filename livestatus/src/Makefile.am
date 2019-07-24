@@ -22,7 +22,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-CLANG_VERSION ?= 7
+CLANG_VERSION ?= 8
 
 CPPCHECK ?= cppcheck
 DOXYGEN ?= doxygen
@@ -44,6 +44,7 @@ liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
+        Average.cc \
         BlobColumn.cc \
         ClientQueue.cc \
         Column.cc \
@@ -188,11 +189,11 @@ iwyu: compile_commands.json
 
 # NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
 cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc
 
 # We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
 cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
+	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> cppcheck-result.xml
 	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" cppcheck-result.xml
 
 documentation:

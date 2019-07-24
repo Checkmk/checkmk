@@ -43,7 +43,7 @@ def check_db2_backup(item, params, parsed):
 
     try:
         last_backup = time.mktime(time.strptime(db[0][0][:19], "%Y-%m-%d-%H.%M.%S"))
-    except:
+    except Exception:
         if db[0][0] == "-":
             yield 1, "No backup available"
         else:

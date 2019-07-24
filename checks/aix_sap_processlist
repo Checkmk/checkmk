@@ -102,8 +102,8 @@ def check_aix_sap_processlist(item, _no_params, parsed):
             start = time.strftime("%c", start_time)
             elapsed = time.time() - time.mktime(start_time)
             perfdata = [("runtime", elapsed)]
-            infotexts.append(
-                "Start Time: %s, Elapsed Time: %s" % (start, get_age_human_readable(elapsed)))
+            infotexts.append("Start Time: %s, Elapsed Time: %s" %
+                             (start, get_age_human_readable(elapsed)))
 
         if status == "GREEN":
             state = 0

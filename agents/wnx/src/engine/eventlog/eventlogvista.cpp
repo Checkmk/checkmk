@@ -198,9 +198,7 @@ public:
         // null character within the required buffer size! Later, this would
         // cause the socket output to be cut at the 1st null character, so
         // we need to trim trailing null away here.
-        while (!result.empty() && result.back() == L'\0') {
-            result.pop_back();
-        }
+        while (!result.empty() && result.back() == L'\0') result.pop_back();
 
         std::replace_if(
             result.begin(), result.end(),

@@ -1,0 +1,10 @@
+Title: informix_status: Display server version or port if available - avoid crash if not
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560322671
+Class: fix
+
+

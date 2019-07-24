@@ -1,34 +1,37 @@
 # pylint: disable=redefined-outer-name
 import re
+import os
 import ast
 import subprocess
 import pytest  # type: ignore
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 
+import cmk_base.autochecks as autochecks
+import cmk.utils.paths
+
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host(
-        "modes-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "modes-test-host2", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host3", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        })
-    web.add_host(
-        "modes-test-host4", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "offline",
-        })
+    web.add_host("modes-test-host", attributes={
+        "ipaddress": "127.0.0.1",
+    })
+    web.add_host("modes-test-host2",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host3",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "test",
+                 })
+    web.add_host("modes-test-host4",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "tag_criticality": "offline",
+                 })
 
     site.write_file(
         "etc/check_mk/conf.d/modes-test-host.mk",
@@ -96,11 +99,10 @@ def _execute_automation(site,
         args = ["--"] + args
 
     print ["cmk", "--automation", cmd] + args
-    p = site.execute(
-        ["cmk", "--automation", cmd] + args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE)
+    p = site.execute(["cmk", "--automation", cmd] + args,
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE,
+                     stdin=subprocess.PIPE)
 
     stdout, stderr = p.communicate(stdin)
 
@@ -144,8 +146,9 @@ def test_automation_discovery_single_host(test_cfg, site):
 
 
 def test_automation_discovery_multiple_hosts(test_cfg, site):
-    data = _execute_automation(
-        site, "inventory", args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
+    data = _execute_automation(site,
+                               "inventory",
+                               args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
 
     assert isinstance(data, tuple)
     assert len(data) == 2
@@ -215,38 +218,33 @@ def test_automation_try_discovery_host(test_cfg, site):
     assert isinstance(data["check_table"], list)
 
 
-def test_automation_get_autochecks_unknown_host(test_cfg, site):
-    data = _execute_automation(site, "get-autochecks", args=["unknown-host"])
-    assert data == []
-
-
-def test_automation_get_autochecks_known_host(test_cfg, site):
-    data = _execute_automation(site, "get-autochecks", args=["modes-test-host"])
-
-    assert isinstance(data, list)
-    for entry in data:
-        assert len(entry) == 4
-        checktype, item, _resolved_paramstring, paramstring = entry
-        assert isinstance(checktype, str)
-        assert item is None or isinstance(item, unicode)
-        assert isinstance(paramstring, str)
-
-
 def test_automation_set_autochecks(test_cfg, site):
     new_items = {
-        ("df", "xxx"): "'bla'",
-        ("uptime", None): None,
+        ("df", "xxx"): ("'bla'", {
+            u"xyz": u"123"
+        }),
+        ("uptime", None): (None, {}),
     }
 
     try:
-        data = _execute_automation(
-            site, "set-autochecks", args=["blablahost"], stdin=repr(new_items))
+        data = _execute_automation(site,
+                                   "set-autochecks",
+                                   args=["blablahost"],
+                                   stdin=repr(new_items))
         assert data is None
 
-        data = _execute_automation(site, "get-autochecks", args=["blablahost"])
+        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, "blablahost")
+        assert os.path.exists(autochecks_file)
 
-        assert sorted(data) == sorted([('df', u'xxx', 'bla', "'bla'"), ('uptime', None, None,
-                                                                        'None')])
+        data = autochecks.parse_autochecks_file("blablahost")
+        services = [((s.check_plugin_name, s.item), s.parameters_unresolved,
+                     s.service_labels.to_dict()) for s in data]
+        assert sorted(services) == [
+            (('df', u'xxx'), "'bla'", {
+                u"xyz": u"123"
+            }),
+            (('uptime', None), 'None', {}),
+        ]
 
         assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
     finally:
@@ -432,8 +430,7 @@ def test_automation_get_service_configurations(test_cfg, site):
     assert isinstance(data, dict)
     assert data["checkgroup_of_checks"]
     assert data["hosts"]["modes-test-host"]
-    print data["hosts"]["modes-test-host"]
-    assert data["hosts"]["modes-test-host"]["checks"][("cpu.loads", None)][1] == "CPU load"
+    assert ('cpu.loads', u'CPU load', (5.0, 10.0)) in data["hosts"]["modes-test-host"]["checks"]
 
 
 # TODO: rename-hosts

@@ -397,7 +397,7 @@ bool Commander::randomizeBuffer(void *Buffer, size_t BufferSize) const {
 std::unique_ptr<Commander> MakeCrypt() {
     auto pass = cma::cfg::groups::global.getPasword();
     if (!pass) {
-        XLOG::t.t("Nothing");
+        XLOG::t.t("Nothing.. ..");
         return {};
     }
 

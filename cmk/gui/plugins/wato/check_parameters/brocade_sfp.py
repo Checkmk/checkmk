@@ -58,29 +58,28 @@ class RulespecCheckgroupParametersBrocadeSfp(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("rx_power",
-                 Tuple(
-                     title=_("Rx power level"),
-                     elements=[
-                         Float(title=_("Critical below"), unit=_("dBm")),
-                         Float(title=_("Warning below"), unit=_("dBm")),
-                         Float(title=_("Warning at"), unit=_("dBm")),
-                         Float(title=_("Critical at"), unit=_("dBm"))
-                     ],
-                 )),
-                ("tx_power",
-                 Tuple(
-                     title=_("Tx power level"),
-                     elements=[
-                         Float(title=_("Critical below"), unit=_("dBm")),
-                         Float(title=_("Warning below"), unit=_("dBm")),
-                         Float(title=_("Warning at"), unit=_("dBm")),
-                         Float(title=_("Critical at"), unit=_("dBm"))
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("rx_power",
+             Tuple(
+                 title=_("Rx power level"),
+                 elements=[
+                     Float(title=_("Critical below"), unit=_("dBm")),
+                     Float(title=_("Warning below"), unit=_("dBm")),
+                     Float(title=_("Warning at"), unit=_("dBm")),
+                     Float(title=_("Critical at"), unit=_("dBm"))
+                 ],
+             )),
+            ("tx_power",
+             Tuple(
+                 title=_("Tx power level"),
+                 elements=[
+                     Float(title=_("Critical below"), unit=_("dBm")),
+                     Float(title=_("Warning below"), unit=_("dBm")),
+                     Float(title=_("Warning at"), unit=_("dBm")),
+                     Float(title=_("Critical at"), unit=_("dBm"))
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

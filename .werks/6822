@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1544193574
 
 Some FSC devices report the operational status and type of the interfaces as a

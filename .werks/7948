@@ -1,0 +1,16 @@
+Title: mk_logwatch: process new files from the beginning
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562570170
+
+If a new logfile is found we usually skip to its end to avoid processing ancient log messages.
+You can now configure mk_logwatch to start processing the file from the beginning and see all
+messages that may already be present.
+
+To enable this behaviour, either set the corresponding flag in the agent bakery rule, or add
+'fromstart=True' to your configuration file.

@@ -39,6 +39,8 @@ def pagerduty_event_type(event):
         "PROBLEM": "trigger",
         "ACKNOWLEDGEMENT": "acknowledge",
         "RECOVERY": "resolve",
+        "FLAPPINGSTART": "trigger",
+        "FLAPPINGSTOP": "resolve",
     }[event]
 
 
@@ -79,7 +81,8 @@ def pagerduty_msg(context):
         "dedup_key": incident_key,
         "payload": {
             "summary": incident,
-            "source": context.get('HOSTADDRESS'),
+            "source": context.get('HOSTADDRESS',
+                                  context.get('HOSTNAME', 'Undeclared Host identifier')),
             "severity": pagerduty_severity(state),
             "custom_details": {
                 "info": output,

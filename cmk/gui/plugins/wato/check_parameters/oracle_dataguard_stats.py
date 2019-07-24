@@ -30,6 +30,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
     Tuple,
+    MonitoringState,
+    Checkbox,
 )
 
 from cmk.gui.plugins.wato import (
@@ -65,6 +67,20 @@ class RulespecCheckgroupParametersOracleDataguardStats(CheckParameterRulespecWit
               "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
               "The apply and transport lag can be configured with this rule."),
             elements=[
+                ("active_dataguard_option",
+                 MonitoringState(
+                     title=_("State in case of Active Data-Guard Option is active: "),
+                     help=_("The Active Data-Guard Option needs an addional License from Oracle."),
+                     default_value=1,
+                 )),
+                ("primary_broker_state",
+                 Checkbox(
+                     title=_("Check State of Broker on Primary: "),
+                     default_value=False,
+                     help=_(
+                         "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
+                         "the Switchoverstate on Primary."),
+                 )),
                 ("apply_lag",
                  Tuple(
                      title=_("Apply Lag Maximum Time"),

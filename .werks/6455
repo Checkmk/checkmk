@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1535400789
 
 Since 1.5.0b2 (#5986) the user synchronization is executed as background

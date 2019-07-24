@@ -75,11 +75,7 @@ class Table(object):
         table_id = table_id if table_id is not None else html.myfile
 
         # determine row limit
-        try:
-            limit = config.table_row_limit
-        except:
-            limit = None
-        limit = kwargs.get('limit', limit)
+        limit = kwargs.get('limit', config.table_row_limit)
         if html.request.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
             limit = None
 
@@ -175,12 +171,12 @@ class Table(object):
 
         if self.title:
             if self.options["foldable"]:
-                html.begin_foldable_container(
-                    treename="table",
-                    id_=self.id,
-                    isopen=True,
-                    indent=False,
-                    title=html.render_h3(self.title, class_=["treeangle", "title"]))
+                html.begin_foldable_container(treename="table",
+                                              id_=self.id,
+                                              isopen=True,
+                                              indent=False,
+                                              title=html.render_h3(self.title,
+                                                                   class_=["treeangle", "title"]))
             else:
                 html.open_h3()
                 html.write(self.title)
@@ -277,7 +273,9 @@ class Table(object):
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id
-        num_cols = len(self.headers)
+
+        num_cols = self._get_num_cols(rows)
+
         empty_columns = self._get_empty_columns(rows, num_cols)
         num_cols -= len([v for v in empty_columns if v])
 
@@ -340,15 +338,15 @@ class Table(object):
 
             oddeven_name = "even" if (nr - 1) % 2 == 0 else "odd"
 
-            html.open_tr(
-                class_=["data", "%s%d" % (oddeven_name, state), css if css else None], **attrs)
+            html.open_tr(class_=["data",
+                                 "%s%d" % (oddeven_name, state), css if css else None],
+                         **attrs)
             for col_index, (cell_content, css_classes, colspan) in enumerate(row_spec):
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:
                     continue
 
-                html.open_td(
-                    class_=css_classes if css_classes else None,
-                    colspan=colspan if colspan else None)
+                html.open_td(class_=css_classes if css_classes else None,
+                             colspan=colspan if colspan else None)
                 html.write(cell_content)
                 html.close_td()
             html.close_tr()
@@ -360,7 +358,17 @@ class Table(object):
 
         html.close_table()
 
+    def _get_num_cols(self, rows):
+        if self.headers:
+            return len(self.headers)
+        elif self.rows:
+            return len(self.rows[0])
+        return 0
+
     def _get_empty_columns(self, rows, num_cols):
+        if not num_cols:
+            return []
+
         empty_columns = [True] * num_cols
         for row_spec, _css, state, _fixed, _attrs in rows:
             if state == "header":
@@ -426,10 +434,9 @@ class Table(object):
                         reverse = 1 if sort_reverse == 0 else 0
 
                 action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
-                html.open_th(
-                    class_=["sort", css_class],
-                    title=_("Sort by %s") % text,
-                    onclick="location.href='%s'" % action_uri)
+                html.open_th(class_=["sort", css_class],
+                             title=_("Sort by %s") % text,
+                             onclick="location.href='%s'" % action_uri)
 
             # Add the table action link
             if first_col:
@@ -446,11 +453,10 @@ class Table(object):
                         help_txt = _('Display table actions')
                         img = 'table_actions_off'
                     html.open_div(class_=["toggle_actions"])
-                    html.icon_button(
-                        html.makeuri([('_%s_actions' % table_id, state)]),
-                        help_txt,
-                        img,
-                        cssclass='toggle_actions')
+                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                                     help_txt,
+                                     img,
+                                     cssclass='toggle_actions')
                     html.open_span()
                     html.write(header)
                     html.close_span()
@@ -496,10 +502,9 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # sorting. This gives the user the chance to change the sorting and
     # see the table in the first place.
     try:
-        rows.sort(
-            cmp=lambda a, b: utils.cmp_num_split(
-                html.strip_tags(a[0][sort_col][0]), html.strip_tags(b[0][sort_col][0])),
-            reverse=sort_reverse == 1)
+        rows.sort(cmp=lambda a, b: utils.cmp_num_split(html.strip_tags(a[0][sort_col][0]),
+                                                       html.strip_tags(b[0][sort_col][0])),
+                  reverse=sort_reverse == 1)
     except IndexError:
         pass
 

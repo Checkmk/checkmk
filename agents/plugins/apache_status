@@ -85,7 +85,15 @@ def try_detect_servers(ssl_ports):
         to_replace = re.compile('^.*/')
         proc = to_replace.sub('', proc)
 
-        procs = ['apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker', 'httpd.worker', 'fcgi-pm']
+        procs = [
+            'apache2',
+            'httpd',
+            'httpd-prefork',
+            'httpd2-prefork',
+            'httpd2-worker',
+            'httpd.worker',
+            'fcgi-pm',
+        ]
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here

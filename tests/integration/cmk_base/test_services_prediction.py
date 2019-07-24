@@ -62,16 +62,14 @@ custom_checks = [
     pytest.param("2018-11-10 12", "UTC", "day", (1800, 48), id='30 min resolution in day query'),
     pytest.param(
         "2018-06-10 12", "UTC", "hour", (21600, 4), id='6hrs resolution in day query, in UTC'),
-    pytest.param(
-        "2018-06-10 12",
-        "Europe/Berlin",
-        "hour", (21600, 5),
-        id='6hrs resolution in day query, in Berlin'),
-    pytest.param(
-        "2018-06-10 12",
-        "America/New_York",
-        "hour", (21600, 5),
-        id='6hrs resolution in day query, in New_York'),
+    pytest.param("2018-06-10 12",
+                 "Europe/Berlin",
+                 "hour", (21600, 5),
+                 id='6hrs resolution in day query, in Berlin'),
+    pytest.param("2018-06-10 12",
+                 "America/New_York",
+                 "hour", (21600, 5),
+                 id='6hrs resolution in day query, in New_York'),
 ])
 def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
 
@@ -195,6 +193,10 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 
     path = "%s/tests/integration/cmk_base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
     reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
+    data_points = data_for_pred.pop('points')
+    ref_points = reference.pop('points')
+    for cal, ref in zip(data_points, ref_points):
+        assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
     assert data_for_pred == reference
 
 
@@ -226,7 +228,8 @@ def test_get_rrd_data_fails(cfg_setup):
                                           from_time, until_time)
 
     # Empty response, because non-existent perf_data variable
-    timeseries = cmk.utils.prediction.get_rrd_data(
-        'test-prediction', 'CPU load', 'untracked_prefdata', 'MAX', from_time, until_time)
+    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load',
+                                                   'untracked_prefdata', 'MAX', from_time,
+                                                   until_time)
 
     assert timeseries == cmk.utils.prediction.TimeSeries([0, 0, 0])

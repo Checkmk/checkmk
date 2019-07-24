@@ -19,7 +19,7 @@ import cmk_base.snmp as snmp
         ("cp437", [(['\x81'], "string")], [[u"ü"]]),
     ])
 def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
-    ts = Scenario().add_host("localhost", tags=[])
+    ts = Scenario().add_host("localhost")
     ts.set_ruleset("snmp_character_encodings", [
         (encoding, [], config.ALL_HOSTS, {}),
     ])
@@ -33,6 +33,8 @@ def test_is_bulkwalk_host(monkeypatch):
     ts = Scenario().set_ruleset("bulkwalk_hosts", [
         ([], ["localhost"], {}),
     ])
+    ts.add_host("abc")
+    ts.add_host("localhost")
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config("abc").snmp_config("").is_bulkwalk_host is False
     assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True

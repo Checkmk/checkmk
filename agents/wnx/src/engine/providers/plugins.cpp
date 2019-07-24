@@ -26,46 +26,105 @@ bool PluginsProvider::isAllowedByCurrentConfig() const {
     return allowed;
 }
 
+static bool IsPluginRequiredType(const PluginEntry& plugin,
+                                 PluginType need_type) {
+    switch (need_type) {
+        case PluginType::async:
+            return plugin.isRealAsync();
+
+        case PluginType::sync:
+            return !plugin.isRealAsync();
+
+        case PluginType::all:
+            return true;
+    }
+
+    // safety check: warning disabled and enum changed
+    XLOG::l.bp(XLOG_FUNC + " input is unknown [{}], return true by default");
+
+    return true;
+}
+
+// scans plugin map by criteria to  find MAX timeout
+// returns 0 on lack plugin entries
+int FindMaxTimeout(const cma::PluginMap& pm, PluginType need_type) {
+    int timeout = 0;
+    for (const auto& [path, plugin] : pm) {
+        if (IsPluginRequiredType(plugin, need_type))
+            timeout = std::max(timeout, plugin.timeout());
+    }
+
+    return timeout;
+}
+
+// scans for sync plugins max timeout and set this max
+// if timeout is too big, than set default from the max_wait
+void PluginsProvider::updateTimeout() noexcept {
+    using namespace cma::cfg;
+    timeout_ = FindMaxTimeout(pm_, PluginType::sync);
+
+    auto config_max_wait =
+        GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);
+
+    if (timeout_ > config_max_wait) {
+        // too high timeout and bad plugin in config may break agent fully
+        XLOG::d("Timeout is corrected from [{}] to [{}]", timeout_,
+                config_max_wait);
+        timeout_ = config_max_wait;
+        return;
+    }
+
+    if (timeout_)
+        XLOG::t("Timeout for '{}' is updated to [{}]", cfg_name_, timeout_);
+}
+
+static void LogExecuteExtensions(std::string_view title,
+                                 const std::vector<std::string>& arr) {
+    std::string formatted_string = "[";
+    for (const auto& s : arr) {
+        formatted_string += s;
+        formatted_string += ",";
+    }
+    if (arr.size()) formatted_string.pop_back();
+    formatted_string += "]";
+
+    XLOG::d.i("{} {}", title, formatted_string);
+}
+
 void PluginsProvider::loadConfig() {
     using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
+    XLOG::t(XLOG_FUNC + " entering '{}'", uniq_name_);
+
+    // this is a copy...
+    auto folder_vector =
+        local_ ? groups::localGroup.folders() : groups::plugins.folders();
 
     PathVector pv;
-    if (local_) {
-        for (auto& folder : groups::localGroup.folders()) {
-            pv.emplace_back(folder);
-        }
-    } else {
-        for (auto& folder : groups::plugins.folders()) {
-            pv.emplace_back(folder);
-        }
+    for (auto& folder : folder_vector) {
+        pv.emplace_back(folder);
     }
-    auto files = cma::GatherAllFiles(pv);
 
+    // linking all files, execute and extensions
+    auto files = cma::GatherAllFiles(pv);
+    XLOG::t("Found [{}] files to execute", files.size());
     auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
+    LogExecuteExtensions("Allowed Extensions:", execute);
+    if (execute.size() == 0) XLOG::l("No allowed extensions. This is strange.");
 
     cma::FilterPathByExtension(files, execute);
+    XLOG::d.t("Left [{}] files to execute", files.size());
 
     auto yaml_units =
         GetArray<YAML::Node>(cfg_name_, cma::cfg::vars::kPluginsExecution);
+
+    // linking exe units with all plugins in map
     std::vector<Plugins::ExeUnit> exe_units;
-    cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-
+    LoadExeUnitsFromYaml(exe_units, yaml_units);
     UpdatePluginMap(pm_, local_, files, exe_units, true);
-    timeout_ = 0;
-    for (auto& entry : pm_) {
-        auto current_timeout = entry.second.timeout();
-        if (current_timeout > timeout_) timeout_ = current_timeout;
-    }
+    XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
-    auto configured_timeout =
-        GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);
-
-    if (configured_timeout < timeout_) {
-        XLOG::d("Timeout is corrected from {} to {}", timeout_,
-                configured_timeout);
-        timeout_ = configured_timeout;
-    }
+    // calculating timeout(may change in every kick)
+    updateTimeout();
 }
 
 void PluginsProvider::gatherAllData(std::string& Out) {
@@ -86,25 +145,43 @@ void PluginsProvider::preStart() noexcept {
     RunAsyncPlugins(pm_, last_count, true);
 }
 
+void PluginsProvider::detachedStart() noexcept {
+    loadConfig();
+    int last_count = 0;
+    RunDetachedPlugins(pm_, last_count);
+}
+
 // empty body empty
 void PluginsProvider::updateSectionStatus() {
-    XLOG::d.t(XLOG_FUNC + " !");
     std::string out = cma::section::MakeEmptyHeader();
     gatherAllData(out);
     out += cma::section::MakeEmptyHeader();
     section_last_output_ = out;
 }
 
+namespace config {
+// set behavior of the output
+// i future may be controlled using yml
+bool G_LocalNoSendIfEmptyBody = true;
+bool G_LocalSendEmptyAtEnd = false;
+};  // namespace config
 // local body empty
 void LocalProvider::updateSectionStatus() {
-    XLOG::d.t(XLOG_FUNC + " !");
+    std::string body;
+    gatherAllData(body);
+
+    if (config::G_LocalNoSendIfEmptyBody && body.empty()) {
+        section_last_output_ = "";
+        return;
+    }
+
     std::string out = cma::section::MakeLocalHeader();
-    gatherAllData(out);
-    out += cma::section::MakeEmptyHeader();
+    out += body;
+    if (config::G_LocalSendEmptyAtEnd) out += cma::section::MakeEmptyHeader();
     section_last_output_ = out;
 }
 
-std::string PluginsProvider::makeBody() const {
+std::string PluginsProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering {} processed", last_count_);
 

@@ -28,65 +28,68 @@
 def check_mail_loop_arguments(params):
     args = []
 
-    if 'smtp_server' in params:
-        args += ['--smtp-server=%s' % params['smtp_server']]
+    if "smtp_server" in params:
+        args.append("--smtp-server=%s" % params["smtp_server"])
     else:
-        args += ['--smtp-server=$HOSTADDRESS$']
+        args.append("--smtp-server=$HOSTADDRESS$")
 
-    if 'imap_tls' in params:
-        args += ['--imap-tls']
+    if "imap_tls" in params:
+        args.append("--imap-tls")
 
-    if 'smtp_tls' in params:
-        args += ['--smtp-tls']
+    if "smtp_tls" in params:
+        args.append("--smtp-tls")
 
-    if 'smtp_port' in params:
-        args += ['--smtp-port=%d' % params['smtp_port']]
+    if "smtp_port" in params:
+        args.append("--smtp-port=%d" % params["smtp_port"])
 
-    if 'smtp_auth' in params:
-        args += ['--smtp-username=%s' % params['smtp_auth'][0]]
-        args += [passwordstore_get_cmdline("--smtp-password=%s", params['smtp_auth'][1])]
+    if "smtp_auth" in params:
+        username, password = params["smtp_auth"]
+        args.append("--smtp-username=%s" % username)
+        args.append(passwordstore_get_cmdline("--smtp-password=%s", password))
 
-    fetch_proto, fetch_params = params['fetch']
-    args += ['--fetch-protocol=%s' % fetch_proto]
+    fetch_proto, fetch_params = params["fetch"]
+    args.append("--fetch-protocol=%s" % fetch_proto)
 
-    if 'server' in fetch_params:
-        args += ['--fetch-server=%s' % fetch_params['server']]
+    if "server" in fetch_params:
+        args.append("--fetch-server=%s" % fetch_params["server"])
     else:
-        args += ['--fetch-server=$HOSTADDRESS$']
+        args.append("--fetch-server=$HOSTADDRESS$")
 
-    fetch_use_ssl, fetch_port = fetch_params['ssl']
+    fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:
-        args += ['--fetch-ssl']
+        args.append("--fetch-ssl")
     if fetch_port is not None:
-        args += ['--fetch-port=%d' % fetch_port]
+        args.append("--fetch-port=%d" % fetch_port)
 
-    args += ['--fetch-username=%s' % fetch_params['auth'][0]]
-    args += [passwordstore_get_cmdline("--fetch-password=%s", fetch_params['auth'][1])]
+    username, password = fetch_params["auth"]
+    args.append("--fetch-username=%s" % username)
+    args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
-    args += ['--mail-from=%s' % params['mail_from']]
-    args += ['--mail-to=%s' % params['mail_to']]
+    args.append("--mail-from=%s" % params["mail_from"])
+    args.append("--mail-to=%s" % params["mail_to"])
 
-    if 'connect_timeout' in params:
-        args += ['--connect-timeout=%d' % params['connect_timeout']]
+    if "connect_timeout" in params:
+        args.append("--connect-timeout=%d" % params["connect_timeout"])
 
-    if 'delete_messages' in params:
-        args += ['--delete-messages']
+    if "delete_messages" in params:
+        args.append("--delete-messages")
 
-    args += ['--status-suffix=%s' % (host_name() + '-' + params['item'])]
+    args.append("--status-suffix=%s" % (host_name() + "-" + params["item"]))
 
-    if 'duration' in params:
-        args += ['--warning=%d' % params['duration'][0]]
-        args += ['--critical=%d' % params['duration'][1]]
+    if "duration" in params:
+        warning, critical = params["duration"]
+        args.append("--warning=%d" % warning)
+        args.append("--critical=%d" % critical)
 
-    if 'subject' in params:
-        args += ['--subject=%s' % params['subject']]
+    if "subject" in params:
+        args.append("--subject=%s" % params["subject"])
 
     return args
 
 
-active_check_info['mail_loop'] = {
-    "command_line": '$USER1$/check_mail_loop $ARG1$',
+active_check_info["mail_loop"] = {
+    "command_line": "$USER1$/check_mail_loop $ARG1$",
     "argument_function": check_mail_loop_arguments,
-    "service_description": lambda params: "Mail Loop %s" % params['item'],
+    "service_description": lambda params: "Mail Loop %s" % params["item"],
     "has_perfdata": True,
 }

@@ -24,9 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
-import cmk.utils.paths
+import collections
+
+from pathlib2 import Path
+
 import cmk.utils.debug
+import cmk.utils.paths
 
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
@@ -56,6 +61,87 @@ logwatch_spool_dir = cmk.utils.paths.var_dir + '/logwatch_spool'
 #   '----------------------------------------------------------------------'
 
 
+def _extract_error_message(node, line):
+    '''Check line for error message
+    Return (False, None) if no error message is found,
+    (True, error_message) otherwise
+    '''
+    if not line.startswith("CANNOT READ CONFIG FILE: "):
+        return False, None
+    error_msg = line[25:]
+    if node is None:
+        return True, "Error in agent configuration: %s" % error_msg
+    return True, "Error in agent configuration on node %s: %s" % (node, error_msg)
+
+
+def _extract_item_attribute(line):
+    '''Check line for next item subsection
+    Return (None, None) if no item subsection is found,
+    (item, attribute) otherwise
+    '''
+    if line[:3] != "[[[" or line[-3:] != "]]]":
+        return None, None
+    logfile_name = line[3:-3]
+    if logfile_name.endswith(':missing') or logfile_name.endswith(':cannotopen'):
+        return logfile_name.rsplit(':', 1)
+    return logfile_name, 'ok'
+
+
+def parse_logwatch(info):
+
+    parsed = {'errors': [], 'logfiles': {}}
+    item_data = {}  # should never be used
+
+    for line in info:
+        node = line[0]
+        line = " ".join(line[1:])
+
+        is_error, error_msg = _extract_error_message(node, line)
+        if is_error:
+            parsed['errors'].append(error_msg)
+            continue
+
+        item, attribute = _extract_item_attribute(line)
+        if item is not None:
+            if item not in parsed['logfiles']:
+                parsed['logfiles'][item] = {
+                    node: {
+                        'attr': attribute,
+                        'lines': []
+                    },
+                }
+            item_data = parsed['logfiles'][item]
+            continue
+
+        if node not in item_data:
+            item_data[node] = {'attr': attribute, 'lines': []}
+
+        item_data[node]['lines'].append(line)
+
+    return parsed
+
+
+_CACHE_IS_CACHE_NEW = {}
+
+
+def _logwatch_cachefile_path(node):
+    return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
+
+
+def _logwatch_is_cache_new(last_run, node):
+    if node is None:
+        return True
+
+    if node in _CACHE_IS_CACHE_NEW:
+        return _CACHE_IS_CACHE_NEW[node]
+
+    path = _logwatch_cachefile_path(node)
+    if not os.path.exists(path):
+        raise MKGeneralException("cache not found: %s" % path)
+
+    return _CACHE_IS_CACHE_NEW.setdefault(node, os.stat(path).st_mtime > last_run)
+
+
 def logwatch_ec_forwarding_enabled(params, item):
     if 'restrict_logfiles' not in params:
         return True  # matches all logs on this host
@@ -68,32 +154,27 @@ def logwatch_ec_forwarding_enabled(params, item):
     return False
 
 
+def _logwatch_discoverable_items(parsed):
+    '''only consider files which are 'ok' on at least one node'''
+    return sorted(item for item, item_data in parsed['logfiles'].iteritems()
+                  if any(node_data['attr'] == 'ok' for node_data in item_data.itervalues()))
+
+
 # Splits the number of existing logfiles into
 # forwarded (to ec) and not forwarded. Returns a
 # pair of forwarded and not forwarded logs.
-def logwatch_select_forwarded(info):
-    forwarded_logs = []
-    not_forwarded_logs = []
-
+def _logwatch_select_forwarded(discoverable_items):
     forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
+    # Is forwarding enabled in general?
+    if not (forward_settings and forward_settings[0]):
+        return [], discoverable_items
 
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" \
-           and ':missing' not in line and ':cannotopen' not in line:
-            logfile_name = line[3:-3]
-
-            # Is forwarding enabled in general?
-            if forward_settings and forward_settings[0]:
-                if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
-                    forwarded_logs.append(logfile_name)
-                else:
-                    not_forwarded_logs.append(logfile_name)
-
-            # No forwarding rule configured
-            else:
-                not_forwarded_logs.append(logfile_name)
+    forwarded_logs, not_forwarded_logs = [], []
+    for item in discoverable_items:
+        if logwatch_ec_forwarding_enabled(forward_settings[0], item):
+            forwarded_logs.append(item)
+        else:
+            not_forwarded_logs.append(item)
 
     return forwarded_logs, not_forwarded_logs
 
@@ -115,38 +196,6 @@ def logwatch_select_forwarded(info):
 #
 
 
-def logwatch_state(state):
-    if state == 1:
-        return "WARN"
-    elif state != 0:
-        return "CRIT"
-    return "OK"
-
-
-def logwatch_level_name(level):
-    if level == 'O':
-        return 'OK'
-    elif level == 'W':
-        return 'WARN'
-    elif level == 'u':
-        return 'WARN'  # undefined states are treated as warning
-    elif level == 'C':
-        return 'CRIT'
-    return 'IGN'
-
-
-def logwatch_level_worst(worst, level):
-    if level == 'O':
-        return max(worst, 0)
-    elif level == 'W':
-        return max(worst, 1)
-    elif level == 'u':
-        return max(worst, 1)
-    elif level == 'C':
-        return max(worst, 2)
-    return worst
-
-
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, _unused):
@@ -158,21 +207,17 @@ def logwatch_precompile(hostname, item, _unused):
 
     for rule in rules:
         if isinstance(rule, dict):
-            params["reclassify_patterns"].extend(x for x in rule.get("reclassify_patterns"))
+            params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:
-                # NOTE: This key cannot be set unless it contains a valid entry.
-                #       The check does not care either way, but the GUI's validation fails
-                #       if it is passed to it with an empty dict.
-                params.setdefault("reclassify_states", {})
                 params["reclassify_states"] = rule["reclassify_states"]
         else:
-            params["reclassify_patterns"].extend(x for x in rule)
+            params["reclassify_patterns"].extend(rule)
 
     return params
 
 
 def logwatch_reclassify(counts, patterns, text, old_level):
-    new_level = None
+    new_level = old_level
 
     # Reclassify state to another state
     change_state_paramkey = ("%s_to" % old_level).lower()
@@ -183,7 +228,7 @@ def logwatch_reclassify(counts, patterns, text, old_level):
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(pattern)
+        reg = regex(pattern, re.UNICODE)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and
@@ -202,34 +247,33 @@ def logwatch_reclassify(counts, patterns, text, old_level):
     return new_level
 
 
-def logwatch_parse_line(line):
-    parts = line.split(None, 1)
-    level = parts[0]
-    if len(parts) > 1:
-        text = parts[1]
-    else:
-        text = ""
-    return level, text
-
-
-def inventory_logwatch_common(info, case):
-    _forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+def inventory_logwatch_single(parsed):
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
     inventory_groups = host_extra_conf(host_name(), logwatch_groups)
-    inventory = []
 
     for logfile in not_forwarded_logs:
-        found_groups = {}
+        if not any(
+                logwatch_groups_of_logfile(group_patterns, logfile)
+                for group_patterns in inventory_groups):
+            yield logfile, None  # file was in no group
+
+
+def inventory_logwatch_groups(parsed):
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    _forwarded_logs, not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    inventory_groups = host_extra_conf(host_name(), logwatch_groups)
+    inventory = {}
+
+    for logfile in not_forwarded_logs:
         for group_patterns in inventory_groups:
-            found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
+            newly_found = logwatch_groups_of_logfile(group_patterns, logfile)
+            for group_name, pattern_set in newly_found.iteritems():
+                inventory.setdefault(group_name, set()).update(pattern_set)
 
-        if not found_groups and case == "single":
-            inventory.append((logfile, None))
-
-        elif found_groups and case == "group":
-            for group_name, patterns in found_groups.items():
-                inventory.append((group_name, {"group_patterns": patterns}))
-
-    return inventory
+    for group_name, patterns in inventory.iteritems():
+        # Convert pattern containers to lists (sets are not possible in autochecks)
+        yield group_name, {"group_patterns": sorted(patterns)}
 
 
 #.
@@ -245,58 +289,33 @@ def inventory_logwatch_common(info, case):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_logwatch(info):
-    return inventory_logwatch_common(info, "single")
-
-
 # In case of a precompiled check, params contains the precompiled
 # logwatch patterns for the logfile we deal with. If using check_mk
 # without precompiled checks, the params must be None an will be
 # ignored.
-def check_logwatch(item, params, info):
-    def cachefile_path(node):
-        return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
+def check_logwatch(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
     set_item_state("logwatch_last_run_%s" % item, now)
-    cache_new = {}
 
-    def is_cache_new(node):
-        if node is None:
-            return True
-        if node not in cache_new:
-            path = cachefile_path(node)
-            if not os.path.exists(path):
-                raise MKGeneralException("cache not found: %s" % path)
-            else:
-                cache_new[node] = os.stat(path).st_mtime > last_run
-        return cache_new[node]
+    item_data = parsed['logfiles'].get(item, {})
 
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
-
-    found = False
-    right_block = False
     loglines = []
-    for l in info:
-        node = l[0]
-        line = " ".join(l[1:])
-        if line == "[[[%s]]]" % item:
-            found = right_block = True
-        elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
-            right_block = False
-        elif right_block and is_cache_new(node):
-            loglines.append(line)
+    for node, node_data in item_data.iteritems():
+        if _logwatch_is_cache_new(last_run, node):
+            loglines.extend(node_data['lines'])
 
-    return check_logwatch_generic(item, params, loglines, found)
+    found = item in _logwatch_discoverable_items(parsed)
+    yield check_logwatch_generic(item, params, loglines, found)
 
 
 check_info['logwatch'] = {
+    'parse_function': parse_logwatch,
+    'inventory_function': inventory_logwatch_single,
     'check_function': check_logwatch,
-    'inventory_function': inventory_logwatch,
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
@@ -331,114 +350,90 @@ def logwatch_group_precompile(hostname, item, params):
     return precomped
 
 
+def _logwatch_instantiate_matched(match, group_name, inclusion):
+    num_perc_s = group_name.count("%s")
+    matches = [g or "" for g in match.groups()]
+
+    if len(matches) < num_perc_s:
+        raise MKGeneralException(
+            "Invalid entry in inventory_logwatch_groups: "
+            "group name '%s' contains %d times '%%s', but regular expression "
+            "'%s' contains only %d subexpression(s)." % \
+            (group_name, num_perc_s, inclusion, len(matches)))
+
+    if not matches:
+        return group_name, inclusion
+
+    for num, group in enumerate(matches):
+        inclusion = instantiate_regex_pattern_once(inclusion, group)
+        group_name = group_name.replace("%%%d" % (num + 1), group)
+    return group_name % tuple(matches[:num_perc_s]), inclusion
+
+
 def logwatch_groups_of_logfile(group_patterns, filename):
     found_these_groups = {}
-    for group_name, pattern in group_patterns:
-        inclusion, exclusion = pattern
-        inclusion_is_regex = False
-        exclusion_is_regex = False
+    for group_name, (inclusion, exclusion) in group_patterns:
+        inclusion_is_regex = inclusion.startswith("~")
+        exclusion_is_regex = exclusion.startswith("~")
 
-        if inclusion.startswith("~"):
-            inclusion_is_regex = True
-            inclusion = inclusion[1:]
-        if exclusion.startswith("~"):
-            exclusion_is_regex = True
-            exclusion = exclusion[1:]
-
-        matches = []
-        num_perc_s = 0
         if inclusion_is_regex:
-            reg = regex(inclusion)
+            reg = regex(inclusion[1:])
             incl_match = reg.match(filename)
             if incl_match:
-                num_perc_s = group_name.count("%s")
-                matches = [g and g or "" for g in incl_match.groups()]
+                group_name, inclusion = _logwatch_instantiate_matched(incl_match, group_name,
+                                                                      inclusion)
         else:
             incl_match = fnmatch.fnmatch(filename, inclusion)
 
         if exclusion_is_regex:
-            reg = regex(exclusion)
+            reg = regex(exclusion[1:])
             excl_match = reg.match(filename)
         else:
             excl_match = fnmatch.fnmatch(filename, exclusion)
 
-        if len(matches) < num_perc_s:
-            raise MKGeneralException("Invalid entry in inventory_logwatch_groups: "
-                  "group name '%s' contains %d times '%%s', but regular expression "
-                  "'%s' contains only %d subexpression(s)." % \
-                  (group_name, num_perc_s, inclusion, len(matches)))
-
-        this_group_name = None
         if incl_match and not excl_match:
-            if matches:
-                for nr, group in enumerate(matches):
-                    inclusion = instantiate_regex_pattern_once(inclusion, group)
-                    group_name = group_name.replace("%%%d" % (nr + 1), group)
+            found_these_groups.setdefault(group_name, set())
+            found_these_groups[group_name].add((inclusion, exclusion))
 
-                this_group_name = group_name % tuple(matches[:num_perc_s])
-                this_pattern = ("~%s" % inclusion, exclusion)
-
-            else:
-                this_group_name = group_name
-                this_pattern = pattern
-
-        if this_group_name is not None:
-            found_these_groups.setdefault(this_group_name, set())
-            found_these_groups[this_group_name].add(this_pattern)
-
-    # Convert pattern containers to lists (sets are not possible in autochecks)
-    return dict([(k, list(v)) for k, v in found_these_groups.items()])
+    return found_these_groups
 
 
-def inventory_logwatch_groups(info):
-    return inventory_logwatch_common(info, "group")
+def _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+
+    inclusion_is_regex = inclusion.startswith("~")
+    if inclusion_is_regex:
+        incl_match = regex(inclusion[1:]).match(logfile_name)
+    else:
+        incl_match = fnmatch.fnmatch(logfile_name, inclusion)
+    if not incl_match:
+        return False
+
+    exclusion_is_regex = exclusion.startswith("~")
+    if exclusion_is_regex:
+        excl_match = regex(exclusion[1:]).match(logfile_name)
+    else:
+        excl_match = fnmatch.fnmatch(logfile_name, exclusion)
+    return not excl_match
 
 
-def check_logwatch_groups(item, params, info):
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+def check_logwatch_groups(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
 
     group_patterns = set(params.get("pre_comp_group_patterns", []))
     for entry in params.get('group_patterns', []):
         group_patterns.add(entry)
 
-    logfile = None
-    logfiles = []
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        if line.startswith('[[['):
-            logfile = line[3:-3]
+    loglines = []
+    for logfile_name, item_data in parsed['logfiles'].iteritems():
+        for inclusion, exclusion in group_patterns:
+            if _logwatch_match_group_patterns(logfile_name, inclusion, exclusion):
+                # node info ignored (only used in regular logwatch check)
+                for node_data in item_data.itervalues():
+                    loglines.extend(node_data['lines'])
+                break
 
-        elif logfile is not None:
-            for pattern in group_patterns:
-                inclusion, exclusion = pattern
-                inclusion_is_regex = False
-                exclusion_is_regex = False
-
-                if inclusion.startswith("~"):
-                    inclusion_is_regex = True
-                    inclusion = inclusion[1:]
-                if exclusion.startswith("~"):
-                    exclusion_is_regex = True
-                    exclusion = exclusion[1:]
-
-                if inclusion_is_regex:
-                    incl_match = regex(inclusion).match(logfile)
-                else:
-                    incl_match = fnmatch.fnmatch(logfile, inclusion)
-
-                if exclusion_is_regex:
-                    excl_match = regex(exclusion).match(logfile)
-                else:
-                    excl_match = fnmatch.fnmatch(logfile, exclusion)
-
-                if incl_match and not excl_match:
-                    logfiles.append(line)
-
-    return check_logwatch_generic(item, params, logfiles, True, True)
+    yield check_logwatch_generic(item, params, loglines, True)
 
 
 check_info['logwatch.groups'] = {
@@ -456,12 +451,11 @@ precompile_params['logwatch.groups'] = logwatch_group_precompile
 
 
 # truncate a file near the specified offset while keeping lines intact
-def truncate_by_line(filename, offset):
-    f = open(filename, 'r+')
-    f.seek(offset)
-    f.readline()  # ensures we don't cut inside a line
-    f.truncate()
-    f.close()
+def truncate_by_line(file_path, offset):
+    with file_path.open('r+') as handle:
+        handle.seek(offset)
+        handle.readline()  # ensures we don't cut inside a line
+        handle.truncate()
 
 
 def logwatch_username():
@@ -469,27 +463,104 @@ def logwatch_username():
     return getpass.getuser()
 
 
-def check_logwatch_generic(item, params, loglines, found, groups=False):
-    import hashlib
-    logdir = logwatch_dir + "/" + host_name()
-
-    # Create directories, if neccessary
+def _makedirs_exist_ok(directory):
     try:
-        os.makedirs(logdir)
-    except OSError, e:
-        if e.errno == 17:
-            pass  # Exists
-        else:
+        os.makedirs(directory)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
             raise
 
-    logfile = logdir + "/" + item.replace("/", "\\")
+
+class LogwatchBlock(object):
+
+    CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
+    STATE_TO_STR = {0: "OK", 1: "WARN"}
+
+    def __init__(self, header, patterns):
+        self._timestamp = header.strip("<>").rsplit(None, 1)[0]
+        self.worst = -1
+        self.lines = []
+        self.last_worst_line = ''
+        self.counts = {}  # counting matches of a certain pattern
+        self.states_counter = collections.Counter()  # counting lines with a certain state
+        self._patterns = patterns or {}
+
+    def finalize(self):
+        state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
+        header = u"<<<%s %s>>>\n" % (self._timestamp, state_str)
+        return [header] + self.lines
+
+    def add_line(self, line, skip_reclassification):
+
+        try:
+            level, text = line.split(None, 1)
+        except ValueError:
+            level, text = line.strip(), ""
+
+        if not skip_reclassification:
+            level = logwatch_reclassify(self.counts, self._patterns, text, level)
+
+        state = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
+        self.worst = max(state, self.worst)
+
+        # Save the last worst line of this block
+        if max(state, 0) == self.worst:
+            self.last_worst_line = text
+
+        # Count the number of lines by state
+        if level != '.':
+            self.states_counter[level] += 1
+
+        if not skip_reclassification and level != "I":
+            self.lines.append(u"%s %s\n" % (level, text))
+
+
+class LogwatchBlockCollector(object):
+    def __init__(self):
+        self.worst = 0
+        self.last_worst_line = ""
+        self._output_lines = []
+        self._states_counter = collections.Counter()
+
+    @property
+    def size(self):
+        return sum(len(line.encode('utf-8')) for line in self._output_lines)
+
+    def __call__(self, block):
+        if not block or block.worst <= -1:
+            return
+
+        self._states_counter += block.states_counter
+
+        self._output_lines.extend(block.finalize())
+        if block.worst >= self.worst:
+            self.worst = block.worst
+            self.last_worst_line = block.last_worst_line
+
+    def clear_lines(self):
+        self._output_lines = []
+
+    def get_lines(self):
+        return self._output_lines
+
+    def get_count_info(self):
+        expanded_levels = {"O": "OK", "W": "WARN", "u": "WARN", "C": "CRIT"}
+        count_txt = ("%d %s" % (count, expanded_levels.get(level, "IGN"))
+                     for level, count in self._states_counter.iteritems())
+        return "%s messages" % ', '.join(count_txt)
+
+
+def check_logwatch_generic(item, params, loglines, found):
+    import hashlib
+    logmsg_dir = Path(logwatch_dir, host_name())
+
+    logmsg_dir.mkdir(parents=True, exist_ok=True)
+
+    logmsg_file_path = logmsg_dir / item.replace("/", "\\")
 
     # Logfile (=item) section not found and no local file found. This usually
     # means, that the corresponding logfile also vanished on the target host.
-    if isinstance(logfile, unicode):
-        logfile = logfile.encode("utf-8")
-
-    if not found and not os.path.exists(logfile):
+    if not found and not logmsg_file_path.exists():
         return (3, "log not present anymore")
 
     # Get the patterns (either compile or reuse the precompiled ones)
@@ -498,105 +569,44 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # list when no ruless/patterns are defined. In case of the logwatch.groups
     # checks, params are a tuple with the normal logwatch parameters on the first
     # and the grouping patterns on the second position
-    if params not in ('', None):
-        if groups:
-            patterns = params
-        else:
-            patterns = params  # patterns already precompiled
-    else:
-        patterns = logwatch_precompile(host_name(), item, None)
+    patterns = logwatch_precompile(host_name(), item, None) if params in ('', None) else params
 
-    state_counts = {}  # for counting number of blocks with a certain state
-
-    class LogwatchBlock(object):
-        def __init__(self, header):
-            self.worst = -1
-            self.header = header
-            self.lines = []
-            self.last_worst_line = ''
-            self.counts = {}  # for counting number of matches of a certain pattern
-
-        def __reclassify_line(self, patterns, text, level):
-            if patterns:
-                newlevel = logwatch_reclassify(self.counts, patterns, text, level)
-                if newlevel is not None:
-                    level = newlevel
-            return level
-
-        def finalize(self):
-            start = " ".join(self.header.split(' ')[0:2])
-            return [start + " %s>>>\n" % logwatch_state(self.worst)] + self.lines
-
-        def add_line(self, line, skip_reclassification):
-            old_level, text = logwatch_parse_line(line)
-
-            if skip_reclassification:
-                level = old_level
-            else:
-                level = self.__reclassify_line(patterns, text, old_level)
-
-            self.worst = logwatch_level_worst(self.worst, level)
-
-            # Save the last worst line of this block
-            if logwatch_level_worst(0, level) == self.worst:
-                self.last_worst_line = text
-
-            # Count the number of lines by state
-            if level != '.':
-                state_counts[level] = state_counts.get(level, 0) + 1
-
-            if not skip_reclassification and level != "I":
-                self.lines.append(level + " " + text + "\n")
-
-    def collect_block(block):
-        if block and block.worst > -1:
-            collect_block.output_lines += block.finalize()
-
-            if block.worst >= collect_block.worst:
-                collect_block.worst = block.worst
-                collect_block.last_worst_line = block.last_worst_line
-
-    collect_block.worst = 0
-    collect_block.last_worst_line = ''
-    collect_block.output_lines = []
-
+    block_collector = LogwatchBlockCollector()
     current_block = None
 
-    log_exists = os.path.exists(logfile)
+    logmsg_file_exists = logmsg_file_path.exists()
+    mode = 'r+' if logmsg_file_exists else 'w'
     try:
-        if log_exists:
-            logwatch_file = open(logfile, 'r+')
-        else:
-            logwatch_file = open(logfile, 'w')
-    except Exception, e:
-        raise MKGeneralException(
-            "User %s cannot open file for writing: %s" % (logwatch_username(), e))
+        logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
+    except IOError as exc:
+        raise MKGeneralException("User %s cannot open file for writing: %s" %
+                                 (logwatch_username(), exc))
 
-    pattern_hash = hashlib.sha256(repr(patterns)).hexdigest()
+    pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
     # parse cached log lines
-    if log_exists:
+    if logmsg_file_exists:
         # new format contains hash of patterns on the first line so we only reclassify if they
         # changed
-        initline = logwatch_file.readline().rstrip('\n')
+        initline = logmsg_file_handle.readline().rstrip('\n')
         if initline.startswith('[[[') and initline.endswith(']]]'):
             old_pattern_hash = initline[3:-3]
             skip_reclassification = old_pattern_hash == pattern_hash
         else:
-            logwatch_file.seek(0)
+            logmsg_file_handle.seek(0)
             skip_reclassification = False
 
-        logfile_size = os.path.getsize(logfile)
+        logfile_size = logmsg_file_path.stat().st_size
         if skip_reclassification and logfile_size > logwatch_max_filesize:
             # early out: without reclassification the file wont shrink and if it is already at
             # the maximum size, all input is dropped anyway
             if logfile_size > logwatch_max_filesize * 2:
                 # if the file is far too large, truncate it
-                truncate_by_line(logfile, logwatch_max_filesize)
+                truncate_by_line(logmsg_file_path, logwatch_max_filesize)
             return (2, "unacknowledged messages have exceeded max size, "
                     "new messages are dropped (limit %d Bytes)" % logwatch_max_filesize)
 
-        for line in logwatch_file:
+        for line in logmsg_file_handle:
             line = line.rstrip('\n')
             # Skip empty lines
             if not line:
@@ -604,55 +614,56 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
             elif line.startswith('<<<') and line.endswith('>>>'):
                 # The section is finished here. Add it to the list of reclassified lines if the
                 # state of the block is not "I" -> "ignore"
-                collect_block(current_block)
-                current_block = LogwatchBlock(line)
+                block_collector(current_block)
+                current_block = LogwatchBlock(line, patterns)
             elif current_block is not None:
                 current_block.add_line(line, skip_reclassification)
                 net_lines += 1
 
         # The last section is finished here. Add it to the list of reclassified lines if the
         # state of the block is not "I" -> "ignore"
-        collect_block(current_block)
+        block_collector(current_block)
 
         if skip_reclassification:
-            output_size = logwatch_file.tell()
+            output_size = logmsg_file_handle.tell()
             # when skipping reclassification, output lines contains only headers anyway
-            collect_block.output_lines = []
+            block_collector.clear_lines()
         else:
-            output_size = sum([len(line) for line in collect_block.output_lines])
+            output_size = block_collector.size
     else:
         output_size = 0
         skip_reclassification = False
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
+    header = header.decode('utf-8')
 
     # process new input lines - but only when there is some room left in the file
     if output_size < logwatch_max_filesize:
-        current_block = LogwatchBlock(header)
+        current_block = LogwatchBlock(header, patterns)
         for line in loglines:
-            current_block.add_line(line.encode("utf-8"), False)
+            current_block.add_line(line, False)
             net_lines += 1
-            output_size += len(line)
+            output_size += len(line.encode('utf-8'))
             if output_size >= logwatch_max_filesize:
                 break
-        collect_block(current_block)
+        block_collector(current_block)
 
     # when reclassifying, rewrite the whole file, outherwise append
-    if not skip_reclassification and collect_block.output_lines:
-        logwatch_file.seek(0)
-        logwatch_file.truncate()
-        logwatch_file.write("[[[%s]]]\n" % pattern_hash)
+    if not skip_reclassification and block_collector.get_lines():
+        logmsg_file_handle.seek(0)
+        logmsg_file_handle.truncate()
+        logmsg_file_handle.write(u"[[[%s]]]\n" % pattern_hash)
 
-    if collect_block.output_lines:
-        logwatch_file.writelines(collect_block.output_lines)
+    for line in block_collector.get_lines():
+        logmsg_file_handle.write(line)
     # correct output size
-    logwatch_file.close()
-    if net_lines == 0 and log_exists:
-        os.unlink(logfile)
+    logmsg_file_handle.close()
+    if net_lines == 0 and logmsg_file_exists:
+        logmsg_file_path.unlink()
 
     # if logfile has reached maximum size, abort with critical state
-    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
+    if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > logwatch_max_filesize:
         return (2, "unacknowledged messages have exceeded max size, "
                 "new messages are lost (limit %d Bytes)" % logwatch_max_filesize)
 
@@ -660,16 +671,14 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Render output
     #
 
-    if collect_block.worst <= 0:
+    if block_collector.worst <= 0:
         return (0, "no error messages")
 
-    count_txt = []
-    for level, num in state_counts.iteritems():
-        count_txt.append('%d %s' % (num, logwatch_level_name(level)))
+    info = block_collector.get_count_info()
     if logwatch_service_output == 'default':
-        return (collect_block.worst, "%s messages (Last worst: \"%s\")" %
-                (', '.join(count_txt), collect_block.last_worst_line))
-    return (collect_block.worst, "%s messages" % ', '.join(count_txt))
+        info += ' (Last worst: "%s")' % block_collector.last_worst_line
+
+    return block_collector.worst, info
 
 
 #.
@@ -702,75 +711,67 @@ def logwatch_to_prio(level):
     return 4
 
 
-def inventory_logwatch_ec(info, one_svc_per_log):
-    forwarded_logs, _not_forwarded_logs = logwatch_select_forwarded(info)
+def _logwatch_inventory_mode_rules():
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
 
-    if forwarded_logs:
-        forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters(
-            'logwatch_ec', []))
+    merged_rules = {}
+    for rule in forward_settings[-1::-1]:
+        if isinstance(rule, dict):
+            for key, value in rule.items():
+                merged_rules[key] = value
+        elif isinstance(rule, str):
+            return "no", {}  # Configured "no forwarding"
 
-        merged_rules = {}
-        for rule in forward_settings[-1::-1]:
-            if isinstance(rule, dict):
-                for key, value in rule.items():
-                    merged_rules[key] = value
-            elif isinstance(rule, str):
-                return  # Configured "no forwarding"
-
-        separate_checks = merged_rules.get("separate_checks", False)
-        if separate_checks != one_svc_per_log:
-            return
-
-        if separate_checks:
-            single_log_params = {}
-            for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
-                if key in merged_rules:
-                    single_log_params[key] = merged_rules[key]
-            for log in forwarded_logs:
-                single_log_params["expected_logfiles"] = [log]
-                yield log, single_log_params.copy()
-        else:
-            yield None, {"expected_logfiles": forwarded_logs}
+    mode = "single" if merged_rules.get("separate_checks", False) else "groups"
+    return mode, merged_rules
 
 
-def check_logwatch_ec(item, params, info):
-    if len(info) == 1:
-        line = " ".join(info[0][1:])
-        if line.startswith("CANNOT READ CONFIG FILE"):
-            yield 3, "Error in agent configuration: %s" % " ".join(info[0][5:])
-            return
+def inventory_logwatch_ec(parsed, use_mode):
+    discoverable_items = _logwatch_discoverable_items(parsed)
+    forwarded_logs, _not_forwarded_logs = _logwatch_select_forwarded(discoverable_items)
+    if not forwarded_logs:
+        return
 
-    # 1. Parse lines in info and separate by logfile
-    logs = {}
-    logfile = None
-    for l in info:
-        # node info ignored (only used in regular logwatch check)
-        line = " ".join(l[1:])
-        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
-            # new logfile, extract name
-            logfile = line[3:-3]
-            logs.setdefault(logfile, [])
+    mode, merged_rules = _logwatch_inventory_mode_rules()
+    if mode != use_mode:
+        return
 
-        elif logfile and line:
-            # new regular line, skip context lines and ignore lines
-            if line[0] not in ['.', 'I']:
-                logs[logfile].append(line)
+    if mode == "groups":
+        yield None, {"expected_logfiles": forwarded_logs}
+        return
 
-    # 2. Maybe filter logfiles if some should be excluded
-    if 'restrict_logfiles' in params:
-        # FIXME: Do not modify the dict while iterating over it.
-        for logfile in list(logs.keys()):
-            if not logwatch_ec_forwarding_enabled(params, logfile):
-                del logs[logfile]
+    single_log_params = {}
+    for key in ["method", "facility", "monitor_logfilelist", "logwatch_reclassify"]:
+        if key in merged_rules:
+            single_log_params[key] = merged_rules[key]
+    for log in forwarded_logs:
+        single_log_params["expected_logfiles"] = [log]
+        yield log, single_log_params.copy()
 
-    # 3. If this check has an item (logwatch.ec_single), only forward the information from this log
+
+def _logwatch_filter_accumulated_lines(item_data):
+    # node info ignored (only used in regular logwatch check)
+    for node_data in item_data.itervalues():
+        for line in node_data['lines']:
+            # skip context lines and ignore lines
+            if line[0] not in ('.', 'I'):
+                yield line
+
+
+def check_logwatch_ec(item, params, parsed):
+    for error_msg in parsed['errors']:
+        yield 3, error_msg
+
     if item:
-        if item not in logs.keys():
+        # If this check has an item (logwatch.ec_single), only forward the information from this log
+        if item not in parsed['logfiles'] or not logwatch_ec_forwarding_enabled(params, item):
             return
-        else:
-            single_logs = {}
-            single_logs[item] = logs[item]
-            logs = single_logs
+        used_logfiles = [item]
+    else:
+        # Filter logfiles if some should be excluded
+        used_logfiles = [
+            name for name in parsed['logfiles'] if logwatch_ec_forwarding_enabled(params, name)
+        ]
 
     # Check if the number of expected files matches the actual one
     if params.get('monitor_logfilelist'):
@@ -779,22 +780,16 @@ def check_logwatch_ec(item, params, info):
                      "You need to redo service discovery."
         else:
             expected = params['expected_logfiles']
-            missing = []
-            for f in expected:
-                if f not in logs:
-                    missing.append(f)
+            missing = [f for f in expected if f not in used_logfiles]
             if missing:
                 yield 1, "Missing logfiles: %s" % (", ".join(missing))
 
-            exceeding = []
-            for f in logs:
-                if f not in expected:
-                    exceeding.append(f)
+            exceeding = [f for f in used_logfiles if f not in expected]
             if exceeding:
                 yield 1, "Newly appeared logfiles: %s" % (", ".join(exceeding))
 
     # 3. create syslog message of each line
-    # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
+    # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
     # <facility+priority> timestamp hostname logfile: message
     facility = params.get('facility', 17) << 3  # default to "local1"
     messages = []
@@ -802,16 +797,12 @@ def check_logwatch_ec(item, params, info):
 
     forwarded_logfiles = set([])
 
-    # Get the logwatch patterns if they are not already precompiled
-    # The precompile feature is not required when using the cmc as core
-    if not is_cmc() and "logwatch_settings" not in params:
-        params = logwatch_ec_precompile(host_name(), item, params)
-
     # Keep track of reclassifed lines
     rclfd_total = 0
     rclfd_to_ignore = 0
 
     logfile_reclassify_settings = {}
+    service_level = get_effective_service_level()
 
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
@@ -822,21 +813,17 @@ def check_logwatch_ec(item, params, info):
         else:  # legacy configuration
             logfile_reclassify_settings["reclassify_patterns"].extend(x for x in settings)
 
-    for logfile, lines in logs.items():
+    for logfile in used_logfiles:
+        lines = _logwatch_filter_accumulated_lines(parsed['logfiles'][logfile])
+
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}
+
         # Determine logwatch patterns specifically for this logfile
-        if is_cmc():
+        if params.get("logwatch_reclassify"):
             logfile_settings = service_extra_conf(host_name(), logfile, logwatch_rules)
             for settings in logfile_settings:
                 add_reclassify_settings(settings)
-        else:
-            for entry in params["logwatch_settings"]:
-                settings, log_items = entry
-                for log_item in log_items:
-                    reg = regex(log_item)
-                    if reg.search(logfile):
-                        add_reclassify_settings(settings)
 
         for line in lines:
             rclfd_level = None
@@ -844,7 +831,7 @@ def check_logwatch_ec(item, params, info):
                 counts = {}  # unused...
                 old_level, _text = line.split(" ", 1)
                 level = logwatch_reclassify(counts, logfile_reclassify_settings, line[2:],
-                                            old_level) or old_level
+                                            old_level)
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level
@@ -853,8 +840,7 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s;%d;; %s %s: %s' % (cur_time, params.get("service_level", 0), host_name(),
-                                           logfile, line[2:])
+            msg += '@%s;%d;; %s %s: %s' % (cur_time, service_level, host_name(), logfile, line[2:])
 
             messages.append(msg)
             forwarded_logfiles.add(logfile)
@@ -878,10 +864,10 @@ def check_logwatch_ec(item, params, info):
         if result.num_dropped:
             yield 2, "Dropped %d messages%s" % (result.num_dropped, exc_txt)
 
-    except Exception, e:
+    except Exception as exc:
         if cmk.utils.debug.enabled():
             raise
-        yield (2, 'Failed to forward messages (%s). Lost %d messages.' % (e, len(messages)))
+        yield (2, 'Failed to forward messages (%s). Lost %d messages.' % (exc, len(messages)))
 
     if rclfd_total:
         yield 0, 'Reclassified %d messages through logwatch patterns (%d to IGNORE)' % \
@@ -941,10 +927,10 @@ def logwatch_forward_spool_directory(method, item, messages):
         return LogwatchFordwardResult()
 
     spool_path = method[6:]
-    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '',
-                              time.time())
-    if not os.path.exists(spool_path):
-        os.makedirs(spool_path)
+    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or
+                              '', time.time())
+    _makedirs_exist_ok(spool_path)
+
     file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')
     os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
@@ -972,8 +958,8 @@ def logwatch_forward_tcp(method, new_messages):
 
     try:
         logwatch_forward_send_tcp(method, message_chunks, result)
-    except Exception, e:
-        result.exception = e
+    except Exception as exc:
+        result.exception = exc
 
     if logwatch_shall_spool_messages(method):
         logwatch_spool_messages(message_chunks, result)
@@ -1011,8 +997,8 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
                 sock.send(message.encode("utf-8") + "\n")
                 message_chunk.pop(0)  # remove sent message
                 result.num_forwarded += 1
-    except Exception, e:
-        result.exception = e
+    except Exception as exc:
+        result.exception = exc
     finally:
         sock.close()
 
@@ -1022,13 +1008,7 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
 def logwatch_spool_messages(message_chunks, result):
     path = logwatch_spool_path()
 
-    try:
-        os.makedirs(path)
-    except OSError, e:
-        if e.errno == 17:
-            pass  # Exists
-        else:
-            raise
+    _makedirs_exist_ok(path)
 
     # Now write updated/new and delete emtpy spool files
     for time_spooled, num_already_spooled, message_chunk in message_chunks:
@@ -1039,19 +1019,19 @@ def logwatch_spool_messages(message_chunks, result):
             try:
                 os.unlink(spool_file_path)
                 continue
-            except OSError, e:
-                if e.errno == 2:
+            except OSError as exc:
+                if exc.errno == errno.ENOENT:
                     continue
                 else:
                     raise
 
         try:
             # Partially processed chunks or the new one
-            with open(spool_file_path, "w") as f:
-                f.write(repr(message_chunk))
+            with open(spool_file_path, "w") as handle:
+                handle.write(repr(message_chunk))
 
             result.num_spooled += len(message_chunk)
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
 
@@ -1066,8 +1046,8 @@ def logwatch_load_spooled_messages(method, result):
 
     try:
         spool_files = sorted(os.listdir(logwatch_spool_path()))
-    except OSError, e:
-        if e.errno == 2:  # No such file or directory
+    except OSError as exc:
+        if exc.errno == errno.ENOENT:
             return []
         else:
             raise
@@ -1115,8 +1095,8 @@ def logwatch_load_spooled_messages(method, result):
 
         try:
             messages = ast.literal_eval(open(path).read())
-        except IOError, e:
-            if e.errno == 2:  # No such file or directory
+        except IOError as exc:
+            if exc.errno == errno.ENOENT:
                 continue
             else:
                 raise
@@ -1140,65 +1120,9 @@ def logwatch_spool_path():
     return logwatch_spool_dir + "/" + host_name()
 
 
-def logwatch_ec_precompile(hostname, item, params):
-    params = params.copy()
-
-    params["service_level"] = get_effective_service_level()
-
-    if (is_cmc() or not params.get("logwatch_reclassify")):
-        params.update({"logwatch_settings": []})
-        return params
-
-    params.update(
-        {"logwatch_settings": _precompile_ec_logwatch_settings(hostname, params, logwatch_rules)})
-    return params
-
-
-def _precompile_ec_logwatch_settings(hostname, params, logwatch_rules):
-    """The following code is used for creating the params of precompiled checks
-    and when Check_MK is called on the command line.
-    Check_MK in keepalive mode (in a running cmc) should never reach this code..."""
-
-    # Bring the logwatch_rules structure in a host ruleset structure to be able
-    # to use the generic host_extra_conf rule matching function
-    host_rules = []
-    for rule in logwatch_rules:
-        rule, rule_options = get_rule_options(rule)
-
-        if len(rule) == 3:
-            settings, hostlist, servlist = rule
-            tags = []
-        elif len(rule) == 4:
-            settings, tags, hostlist, servlist = rule
-        else:
-            continue
-
-        host_rules.append(((settings, servlist), tags, hostlist, rule_options))
-
-    ruleset = host_extra_conf(hostname, host_rules)
-
-    # Do not use rules with configured items where no item matches the
-    # "restrict_logfiles" condition (if applicable)
-    logwatch_settings = []
-    for rule in ruleset:
-        settings, rule_items = rule
-        if params.get("restrict_logfiles"):
-            for rule_item in rule_items:
-                if rule_item == "" or logwatch_ec_forwarding_enabled(params, rule_item):
-                    logwatch_settings.append((settings, rule_items))
-                    break
-        else:
-            logwatch_settings.append((settings, rule_items))
-
-    return logwatch_settings
-
-
-precompile_params['logwatch.ec'] = logwatch_ec_precompile
-precompile_params['logwatch.ec_single'] = logwatch_ec_precompile
-
 check_info['logwatch.ec'] = {
+    'inventory_function': lambda parsed: inventory_logwatch_ec(parsed, "groups"),
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, False),
     'service_description': "Log Forwarding",
     'group': 'logwatch_ec',
     'node_info': True,
@@ -1206,8 +1130,8 @@ check_info['logwatch.ec'] = {
 }
 
 check_info['logwatch.ec_single'] = {
+    'inventory_function': lambda parsed: inventory_logwatch_ec(parsed, "single"),
     'check_function': check_logwatch_ec,
-    'inventory_function': lambda info: inventory_logwatch_ec(info, True),
     'service_description': "Log %s",
     'node_info': True,
     'has_perfdata': True,

@@ -11,8 +11,6 @@ description:
  Upper default levels for the usage are set to 70, 80 percent. These
  levels are configurable, both percentual and absolute levels.
 
- This check is also cluster-aware.
-
 item:
  The instance name
 

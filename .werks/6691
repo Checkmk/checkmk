@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1542890636
 
 The background job doing the user synchronization contacted one site after

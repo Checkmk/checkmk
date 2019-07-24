@@ -27,6 +27,7 @@
 
 #include <limits.h>
 #include <stdint.h>
+
 #include <experimental/filesystem>
 #include <functional>
 #include <iostream>
@@ -36,7 +37,6 @@
 #include <vector>
 
 #include "common/wtools.h"
-
 #include "logger.h"
 
 #if (__SIZEOF_POINTER__ == 8 || defined(_WIN64))
@@ -52,8 +52,6 @@
 #ifndef INVALID_HANDLE_VALUE
 #define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
 #endif  // INVALID_HANDLE_VALUE
-
-namespace fs = std::experimental::filesystem;
 
 class script_statistics_t {
 public:
@@ -94,7 +92,8 @@ template <>
 std::string from_string<std::string>(const std::string &value);
 
 template <>
-fs::path from_string<fs::path>(const std::string &value);
+std::experimental::filesystem::path
+from_string<std::experimental::filesystem::path>(const std::string &value);
 
 // Needed for only_from
 struct ipspec {

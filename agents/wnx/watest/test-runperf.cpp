@@ -11,25 +11,19 @@
 #include <future>
 #include <string_view>
 
-#include "tools/_raii.h"
-
+#include "carrier.h"
+#include "cfg.h"
+#include "cfg_details.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/wtools.h"
-
-#include "read_file.h"
-
 #include "logger.h"
-
-#include "cfg.h"
-#include "cfg_details.h"
-
-#include "carrier.h"
-#include "cma_core.h"
-#include "service_processor.h"
-
 #include "providers/p_perf_counters.h"
 #include "providers/perf_counters_cl.h"
+#include "read_file.h"
+#include "service_processor.h"
+#include "tools/_raii.h"
 
 constexpr const wchar_t* kUniqueTestId = L"0345246";
 struct TestStorage {
@@ -132,12 +126,12 @@ TEST(SectionPerf, Runner) {
     auto ret = RunPerf(prefix, L"12345", port_param, 20, counters);
     ASSERT_EQ(ret, 0);
     for (int i = 0; i < 20; i++) {
-        xlog::sendStringToStdio(".", xlog::internal::kYellow);
+        xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
         if (S_Storage.delivered_) break;
         cma::tools::sleep(200);
     }
 
-    xlog::sendStringToStdio("\n", xlog::internal::kYellow);
+    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
 
     auto data = S_Storage.buffer_.data();
     auto data_end = data + S_Storage.buffer_.size();

@@ -26,24 +26,27 @@
 
 
 def check_traceroute_arguments(params):
-    args = ""
+    args = []
+
     if not params["dns"]:
-        args += "-n "
+        args.append("-n")
     method = params["method"]
     if method == "icmp":
-        args += "-I "
+        args.append("-I")
     elif method == "tcp":
-        args += "-T "
+        args.append("-T")
     # else: None -> default method
 
     for router, state in params["routers"]:
-        args += "-%s %s " % (state, quote_shell_string(router))
-    args += '"$HOSTADDRESS$"'
+        args += ["-%s" % state, router]
+
+    args.append('"$HOSTADDRESS$"')
+
     return args
 
 
-active_check_info['traceroute'] = {
-    "command_line": '$USER1$/check_traceroute $ARG1$',
+active_check_info["traceroute"] = {
+    "command_line": "$USER1$/check_traceroute $ARG1$",
     "argument_function": check_traceroute_arguments,
     "service_description": lambda params: "Routing",
 }

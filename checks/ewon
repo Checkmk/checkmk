@@ -214,7 +214,7 @@ def inventory_ewon(parsed):
 
     yield "eWON Status", {"device": deviceName}
 
-    if deviceName in set(["oxyreduct"]):
+    if deviceName in {"oxyreduct"}:
         for res in globals()["inventory_%s" % deviceName](parsed):
             item, params = res
             params["device"] = deviceName
@@ -228,7 +228,7 @@ def check_ewon(item, params, parsed):
         return 0, "Configured for %s" % params["device"]
 
     deviceName = params["device"]
-    if deviceName in set(["oxyreduct"]):
+    if deviceName in {"oxyreduct"}:
         return globals()["check_%s" % deviceName](item, params.get(deviceName, {}), parsed)
 
 

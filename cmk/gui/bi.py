@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
+import errno
 import hashlib
 import re
 import pprint
@@ -440,6 +442,8 @@ class JobWorker(multiprocessing.Process):
             raise MKConfigError("Aggregation groups mismatch")
 
         aggr_options, aggr = aggr[0], aggr[1:]
+        #        aggregation_id = aggr_options.get("id", "")
+        use_layout_id = aggr_options.get("use_layout_id", "")
         use_hard_states = aggr_options.get("hard_states")
         downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
 
@@ -452,6 +456,8 @@ class JobWorker(multiprocessing.Process):
 
         for this_entry in new_entries:
             remove_empty_nodes(this_entry)
+            #            this_entry["aggregation_id"] = aggregation_id
+            this_entry["use_layout_id"] = use_layout_id
             this_entry["use_hard_states"] = use_hard_states
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
@@ -552,7 +558,7 @@ class BILock(object):
         lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
         lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
 
-        self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0660)
+        self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0o660)
         lock_info = []
         lock_info.append(self._shared and "SHARED" or "EXCLUSIVE")
         lock_info.append(self._blocking and "BLOCKING" or "NON-BLOCKING")
@@ -737,8 +743,9 @@ class BISitedataManager(object):
             except (IndexError, IOError):
                 try:
                     os.unlink(filepath)
-                except:
-                    pass
+                except OSError as e:
+                    if e.errno != errno.ENOENT:
+                        raise
 
     def _query_data(self, only_sites):
         try:
@@ -975,9 +982,8 @@ class BIJobManager(object):
         g_bi_cache_manager.generate_cachefiles()
 
     def _compile_jobs_parallel(self):
-        with BILock(
-                "%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(),
-                blocking=False) as compilation_lock:
+        with BILock("%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(),
+                    blocking=False) as compilation_lock:
             if not compilation_lock.has_lock():
                 log("Did not get compilation lock")
                 return False  # Someone else is compiling
@@ -1366,7 +1372,7 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
     rows = []
     missing_sites = set()
     missing_bi_aggr = set()
-    online_sites = set([x[0] for x in get_current_sitestats()["online_sites"]])
+    online_sites = {x[0] for x in get_current_sitestats()["online_sites"]}
 
     def is_tree_required(tree):
         aggr_name = tree.get("title")
@@ -1550,12 +1556,16 @@ def compile_rule_node(aggr_type, calllist, lvl):
         for (hostname, hostalias), matchgroups in matches:
             args = substitute_matches(arglist, hostname, hostalias, matchgroups)
             if tuple(args) not in handled_args:
-                new_elements += compile_aggregation_rule(aggr_type, rule, args, lvl)
+                new_elements += compile_aggregation_rule(aggr_type,
+                                                         rule,
+                                                         args,
+                                                         lvl,
+                                                         rulename=rulename)
                 handled_args.add(tuple(args))
 
         return new_elements
 
-    return compile_aggregation_rule(aggr_type, rule, arglist, lvl)
+    return compile_aggregation_rule(aggr_type, rule, arglist, lvl, rulename=rulename)
 
 
 def find_matching_services(aggr_type, what, calllist):
@@ -1777,7 +1787,7 @@ def node_is_empty(node):
 
 # Precompile one aggregation rule. This outputs a list of trees.
 # The length of this list is current either 0 or 1
-def compile_aggregation_rule(aggr_type, rule, args, lvl):
+def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     # When compiling root nodes we essentially create
     # complete top-level aggregations. In that case we
     # need to deal with REMAINING-entries
@@ -1874,8 +1884,8 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                         handled_args.add(tuple(args) + matchgroups)
             else:
                 # This is a plain leaf node with just host/service
-                new_elements = compile_leaf_node(
-                    subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
+                new_elements = compile_leaf_node(subst_vars(node[0], arginfo),
+                                                 subst_vars(node[1], arginfo))
 
         else:
             # substitute our arguments in rule arguments
@@ -1913,6 +1923,8 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     if icon:
         aggregation["icon"] = icon
+
+    aggregation["rule_id"] = [_rule_to_pack_lookup[rulename], rulename, funcname]
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -2137,6 +2149,8 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 # the states of all nodes
 def execute_tree(tree, status_info=None):
     aggregation_options = {
+        #        "aggregation_id": tree["aggregation_id"],
+        "use_layout_id": tree["use_layout_id"],
         "use_hard_states": tree["use_hard_states"],
         "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }
@@ -2256,8 +2270,8 @@ def execute_rule_node(node, status_info, aggregation_options):
     func = config.aggregation_functions.get(funcname)
     if not func:
         raise MKConfigError(
-            _("Undefined aggregation function '%s'. Available are: %s") % (funcname, ", ".join(
-                config.aggregation_functions.keys())))
+            _("Undefined aggregation function '%s'. Available are: %s") %
+            (funcname, ", ".join(config.aggregation_functions.keys())))
 
     # prepare information for aggregation function
     subtrees = []
@@ -2466,8 +2480,7 @@ def state_weight(s):
 
 
 def x_best_state(l, x):
-    ll = [(state_weight(s), s) for s in l]
-    ll.sort()
+    ll = sorted([(state_weight(s), s) for s in l])
     if x < 0:
         ll.reverse()
     n = abs(x)
@@ -2642,8 +2655,20 @@ def ajax_render_tree():
     reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
     aggr_title = html.get_unicode_input("title")
     omit_root = bool(html.request.var("omit_root"))
-    boxes = bool(html.request.var("boxes"))
     only_problems = bool(html.request.var("only_problems"))
+
+    # TODO: Cleanup the renderer to use a class registry for lookup
+    renderer_class_name = html.request.var("renderer")
+    if renderer_class_name == "FoldableTreeRendererTree":
+        renderer_cls = FoldableTreeRendererTree
+    elif renderer_class_name == "FoldableTreeRendererBoxes":
+        renderer_cls = FoldableTreeRendererBoxes
+    elif renderer_class_name == "FoldableTreeRendererBottomUp":
+        renderer_cls = FoldableTreeRendererBottomUp
+    elif renderer_class_name == "FoldableTreeRendererTopDown":
+        renderer_cls = FoldableTreeRendererTopDown
+    else:
+        raise NotImplementedError()
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
@@ -2657,8 +2682,8 @@ def ajax_render_tree():
     # Now look for our aggregation
     if aggr_group not in g_tree_cache["forest"]:
         raise MKGeneralException(
-            _("Unknown BI Aggregation group %s. Available are: %s") % (aggr_group, ", ".join(
-                g_tree_cache["forest"].keys())))
+            _("Unknown BI Aggregation group %s. Available are: %s") %
+            (aggr_group, ", ".join(g_tree_cache["forest"].keys())))
 
     trees = g_tree_cache["forest"][aggr_group]
     for tree in trees:
@@ -2668,18 +2693,12 @@ def ajax_render_tree():
                 continue  # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
 
-            if boxes:
-                renderer_cls = FoldableTreeRendererBoxes
-            else:
-                renderer_cls = FoldableTreeRendererTree
-
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
-            renderer = renderer_cls(
-                row,
-                omit_root=omit_root,
-                expansion_level=load_ex_level(),
-                only_problems=only_problems,
-                lazy=False)
+            renderer = renderer_cls(row,
+                                    omit_root=omit_root,
+                                    expansion_level=load_ex_level(),
+                                    only_problems=only_problems,
+                                    lazy=False)
             html.write(renderer.render())
             return
 
@@ -2765,7 +2784,9 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-class FoldableTreeRenderer(object):
+class ABCFoldableTreeRenderer(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root
@@ -2783,6 +2804,7 @@ class FoldableTreeRenderer(object):
             html.set_tree_states('bi', self._treestate)
             html.save_tree_states()
 
+    @abc.abstractmethod
     def css_class(self):
         raise NotImplementedError()
 
@@ -2810,6 +2832,7 @@ class FoldableTreeRenderer(object):
         self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
         html.close_div()
 
+    @abc.abstractmethod
     def _show_subtree(self, tree, path, show_host):
         raise NotImplementedError()
 
@@ -2857,6 +2880,7 @@ class FoldableTreeRenderer(object):
     def _get_mousecode(self, path):
         return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
 
+    @abc.abstractmethod
     def _toggle_js_function(self):
         raise NotImplementedError()
 
@@ -2892,6 +2916,7 @@ class FoldableTreeRenderer(object):
             else:
                 html.a(service.replace(" ", "&nbsp;"), href=service_url)
 
+    @abc.abstractmethod
     def _show_node(self, tree, show_host, mousecode=None, img_class=None):
         raise NotImplementedError()
 
@@ -2924,7 +2949,7 @@ class FoldableTreeRenderer(object):
         }.get(state, _("??"))
 
 
-class FoldableTreeRendererTree(FoldableTreeRenderer):
+class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def css_class(self):
         return "aggrtree"
 
@@ -2952,19 +2977,17 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
                 html.write("&nbsp;")
 
             if tree[2].get("docu_url"):
-                html.icon_button(
-                    tree[2]["docu_url"],
-                    _("Context information about this rule"),
-                    "url",
-                    target="_blank")
+                html.icon_button(tree[2]["docu_url"],
+                                 _("Context information about this rule"),
+                                 "url",
+                                 target="_blank")
                 html.write("&nbsp;")
 
             html.write_text(tree[2]["title"])
 
         if not is_empty:
-            html.open_ul(
-                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                class_=["subtree", css_class])
+            html.open_ul(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                         class_=["subtree", css_class])
 
             if not self._omit_content(path):
                 for node in tree[3]:
@@ -2998,10 +3021,9 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(
-                    src=html.theme_url("images/tree_black_closed.png"),
-                    class_=["treeangle", img_class],
-                    onclick=mousecode)
+                html.img(src=html.theme_url("images/tree_black_closed.png"),
+                         class_=["treeangle", img_class],
+                         onclick=mousecode)
 
             html.open_span(class_=["content", "name"])
 
@@ -3035,8 +3057,8 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
 
             html.close_span()
 
-        output = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"], shall_escape=config.escape_plugin_output)
+        output = cmk.gui.view_utils.format_plugin_output(effective_state["output"],
+                                                         shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -3045,7 +3067,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         html.span(output, class_=["content", "output"])
 
 
-class FoldableTreeRendererBoxes(FoldableTreeRenderer):
+class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
     def css_class(self):
         return "aggrtree_box"
 
@@ -3080,10 +3102,9 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
 
         omit = self._omit_root and len(path) == 1
         if not omit:
-            html.open_span(
-                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                class_=classes,
-                onclick=mc)
+            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                           class_=classes,
+                           onclick=mc)
 
             if is_leaf:
                 self._show_leaf(tree, show_host)
@@ -3093,9 +3114,8 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
             html.close_span()
 
         if not is_leaf and not self._omit_content(path):
-            html.open_span(
-                class_="bibox",
-                style="display: none;" if not self._is_open(path) and not omit else "")
+            html.open_span(class_="bibox",
+                           style="display: none;" if not self._is_open(path) and not omit else "")
             for node in tree[3]:
                 new_path = path + [node[2]["title"]]
                 self._show_subtree(node, new_path, show_host)
@@ -3109,7 +3129,7 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
         return  # No assume icon with boxes
 
 
-class FoldableTreeRendererTable(FoldableTreeRendererTree):
+class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
     def css_class(self):
@@ -3174,11 +3194,11 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-class FoldableTreeRendererBottomUp(FoldableTreeRendererTable):
+class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable):
     pass
 
 
-class FoldableTreeRendererTopDown(FoldableTreeRendererTable):
+class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
     _mirror = True
 
 
@@ -3305,32 +3325,45 @@ def table(view, columns, query, only_sites, limit, all_active_filters):
 
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
+            if cmk.gui.view_utils.row_limit_exceeded(len(rows), limit):
+                cmk.gui.view_utils.query_limit_exceeded_warn(limit, config.user)
+                del rows[limit:]
                 return rows
     return rows
 
 
 def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
-    return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=True,
+                            bygroup=False)
 
 
 def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=True,
+                            bygroup=True)
 
 
 def host_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(
-        view,
-        columns,
-        query,
-        only_sites,
-        limit,
-        all_active_filters,
-        joinbyname=False,
-        bygroup=False)
+    return singlehost_table(view,
+                            columns,
+                            query,
+                            only_sites,
+                            limit,
+                            all_active_filters,
+                            joinbyname=False,
+                            bygroup=False)
 
 
 def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
@@ -3366,8 +3399,8 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 
     if config.bi_precompile_on_demand:
         log("* Compiling forest on demand...")
-        compile_forest(
-            only_groups=only_groups, only_hosts=[(h['site'], h['name']) for h in hostrows])
+        compile_forest(only_groups=only_groups,
+                       only_hosts=[(h['site'], h['name']) for h in hostrows])
     else:
         log("* Compiling forest...")
         compile_forest()
@@ -3464,7 +3497,9 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
             row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
-            if not cmk.gui.view_utils.check_limit(rows, limit, config.user):
+            if cmk.gui.view_utils.row_limit_exceeded(len(rows), limit):
+                cmk.gui.view_utils.query_limit_exceeded_warn(limit, config.user)
+                del rows[limit:]
                 return rows
 
     log("* Assembled %d rows." % len(rows))
@@ -3528,12 +3563,19 @@ def get_state_name(node):
     return _service_state_names()[node[0]['state']]
 
 
+_rule_to_pack_lookup = {}
+
+
 def migrate_bi_configuration():
     converted_host_aggregations = []
     converted_aggregations = []
     converted_aggregation_rules = {}
     if config.bi_packs:
-        for pack in config.bi_packs.values():
+        global _rule_to_pack_lookup
+        _rule_to_pack_lookup = {}
+        for packname, pack in config.bi_packs.iteritems():
+            for rule_id in pack["rules"]:
+                _rule_to_pack_lookup[rule_id] = packname
             converted_host_aggregations += map(_convert_aggregation, pack["host_aggregations"])
             converted_aggregations += map(_convert_aggregation, pack["aggregations"])
             converted_aggregation_rules.update(pack["rules"])

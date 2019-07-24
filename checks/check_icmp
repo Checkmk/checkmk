@@ -27,19 +27,20 @@
 
 def check_icmp_arguments(params):
     args = []
+
     rta = 200, 500
     loss = 80, 100
     for key, value in params.items():
         if key == "timeout":
-            args.append("-t %d" % value)
+            args += ["-t", value]
         elif key == "packets":
-            args.append("-n %d" % value)
+            args += ["-n", value]
         elif key == "rta":
             rta = value
         elif key == "loss":
             loss = value
-    args.append("-w %.2f,%d%%" % (rta[0], loss[0]))
-    args.append("-c %.2f,%d%%" % (rta[1], loss[1]))
+    args += ["-w", "%.2f,%d%%" % (rta[0], loss[0])]
+    args += ["-c", "%.2f,%d%%" % (rta[1], loss[1])]
 
     target = params.get("address", "address")
     if target == "address":
@@ -68,10 +69,14 @@ def check_icmp_arguments(params):
 
     else:  # custom
         args.append(quote_shell_string(target[1]))
-    return " ".join(args)
+
+    return args
 
 
 def check_icmp_description(params):
+    if "description" in params:
+        return params["description"]
+
     description = "PING"
     target = params.get("address", "address")
     if target[0] == "indexed_ipv4address":

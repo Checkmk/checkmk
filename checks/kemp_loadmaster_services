@@ -69,7 +69,7 @@ def parse_kemp_loadmaster_services(info):
 def inventory_kemp_loadmaster_services(parsed):
     for item, iteminfo in parsed.items():
         if iteminfo["device_state"] not in ["4", ""]:
-            yield item, kemp_loadmaster_service_default_levels
+            yield item, "kemp_loadmaster_service_default_levels"
 
 
 def check_kemp_loadmaster_services(item, _no_params, parsed):

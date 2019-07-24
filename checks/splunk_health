@@ -1,0 +1,100 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public health  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public health for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# health along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<splunk_health>>>
+# Overall_state red
+# File_monitor_input red
+# File_monitor_input Tailreader-0 red
+# File_monitor_input Batchreader-0 green
+# Data_forwarding red
+# Data_forwarding Splunk-2-splunk_forwarding red
+# Index_processor green
+# Index_processor Index_optimization green
+# Index_processor Buckets green
+# Index_processor Disk_space green
+
+factory_settings["splunk_health_default_levels"] = {
+    "green": 0,
+    "yellow": 1,
+    "red": 2,
+}
+
+
+def parse_splunk_health(info):
+    parsed = {}
+
+    for state_detail in info:
+        try:
+            if len(state_detail) == 2:
+                name, health = state_detail
+                parsed[name.replace("_", " ")] = {"health": health, "feature": {}}
+            else:
+                name, feature, feature_health = state_detail
+                parsed[name.replace("_", " ")]["feature"].update({feature: feature_health})
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+def inventory_splunk_health(parsed):
+    yield None, {}
+
+
+def check_splunk_health(no_item, params, parsed):
+    long_output = ""
+
+    for key in [
+        ("Overall state"),
+        ("File monitor input"),
+        ("Index processor"),
+        ("Data forwarding"),
+    ]:
+        try:
+            # some functions may be missing, eg. Data forwarding in OK states
+            health = parsed[key]["health"]
+        except KeyError:
+            continue
+
+        yield params[health], "%s: %s" % (key, health)
+
+        for name in sorted(parsed[key]["feature"]):
+            if name != "Overall state":
+                long_output += "%s - State: %s\n" % (name.replace(
+                    "_", " "), parsed[key]["feature"][name])
+
+    yield 0, "\n%s" % long_output
+
+
+check_info["splunk_health"] = {
+    "parse_function": parse_splunk_health,
+    "check_function": check_splunk_health,
+    "inventory_function": inventory_splunk_health,
+    "service_description": "Splunk Health",
+    "group": "splunk_health",
+    "default_levels_variable": "splunk_health_default_levels",
+}

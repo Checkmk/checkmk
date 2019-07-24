@@ -58,9 +58,9 @@ class RulespecCheckgroupParametersMssqlInstance(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("map_connection_state",
-                       MonitoringState(title=_("Connection status"), default_value=2))],)
+        return Dictionary(elements=[("map_connection_state",
+                                     MonitoringState(title=_("Connection status"),
+                                                     default_value=2))],)
 
     @property
     def item_spec(self):

@@ -7,9 +7,8 @@
 
 #include <string>
 
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -22,7 +21,7 @@ public:
         : Synchronous(Name, Separator) {}
 
 private:
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 };
 
 }  // namespace provider

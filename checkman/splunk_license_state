@@ -1,0 +1,16 @@
+title: Splunk: License
+agents: splunk
+catalog: app/splunk
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of splunk licenses.
+ You can check for the state (VALID/EXPIRED) and the time
+ until the license will expire.
+
+inventory:
+ One service for each license will be created
+
+item:
+ one item named "Splunk License License_name" will be created
+

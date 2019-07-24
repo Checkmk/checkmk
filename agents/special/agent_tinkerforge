@@ -238,31 +238,27 @@ def main():
 
     settings = read_config(os.environ)
     parser = OptionParser()
-    parser.add_option(
-        "--host",
-        dest="host",
-        default=settings['host'],
-        help="host/ipaddress of the tinkerforge device",
-        metavar="ADDRESS")
-    parser.add_option(
-        "--port",
-        dest="port",
-        default=settings['port'],
-        type=int,
-        help="port of the tinkerforge device",
-        metavar="PORT")
-    parser.add_option(
-        "--segment_display_uid",
-        dest="uid",
-        default=settings['segment_display_uid'],
-        help="uid of the bricklet which will be displayed in the 7-segment display",
-        metavar="UID")
-    parser.add_option(
-        "--segment_display_brightness",
-        type=int,
-        dest="brightness",
-        default=settings['segment_display_brightness'],
-        help="brightness of the 7-segment display (0-7)")
+    parser.add_option("--host",
+                      dest="host",
+                      default=settings['host'],
+                      help="host/ipaddress of the tinkerforge device",
+                      metavar="ADDRESS")
+    parser.add_option("--port",
+                      dest="port",
+                      default=settings['port'],
+                      type=int,
+                      help="port of the tinkerforge device",
+                      metavar="PORT")
+    parser.add_option("--segment_display_uid",
+                      dest="uid",
+                      default=settings['segment_display_uid'],
+                      help="uid of the bricklet which will be displayed in the 7-segment display",
+                      metavar="UID")
+    parser.add_option("--segment_display_brightness",
+                      type=int,
+                      dest="brightness",
+                      default=settings['segment_display_brightness'],
+                      help="brightness of the 7-segment display (0-7)")
 
     options, _args = parser.parse_args()
 

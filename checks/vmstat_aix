@@ -44,7 +44,7 @@ def check_vmstat_aix(item, params, info):
                         ('wa', "%d%%" % wa, '', '', '0', '100')]
             return (0, "%d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id_, wa), perfdata)
         return (3, "item %s not defined" % item)
-    except:
+    except Exception:
         return (3, "invalid output from plugin")
 
 

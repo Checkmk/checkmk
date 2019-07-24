@@ -28,8 +28,6 @@
 import re
 import time
 
-from pathlib2 import Path
-
 import cmk.utils.render as render
 
 import cmk.gui.config as config
@@ -54,7 +52,7 @@ from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
-    log_path = Path(watolib.changes.audit_log_path)
+    log_path = watolib.changes.audit_log_path
 
     @classmethod
     def name(cls):
@@ -78,8 +76,8 @@ class ModeAuditLog(WatoMode):
            and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
             html.context_button(_("Download"), html.makeactionuri([("_action", "csv")]), "download")
             if config.user.may("wato.edit"):
-                html.context_button(
-                    _("Clear Log"), html.makeactionuri([("_action", "clear")]), "trash")
+                html.context_button(_("Clear Log"), html.makeactionuri([("_action", "clear")]),
+                                    "trash")
 
     def _log_exists(self):
         return self.log_path.exists()
@@ -133,15 +131,16 @@ class ModeAuditLog(WatoMode):
 
         if display_options.enabled(display_options.T):
             html.h3(
-                _("Audit log for %s and %d days ago") % (render.date(self._get_start_date()),
-                                                         self._options["display"][1]))
+                _("Audit log for %s and %d days ago") %
+                (render.date(self._get_start_date()), self._options["display"][1]))
 
         self._display_log(log)
 
     def _display_log(self, log):
-        with table_element(
-                css="data wato auditlog audit", limit=None, sortable=False,
-                searchable=False) as table:
+        with table_element(css="data wato auditlog audit",
+                           limit=None,
+                           sortable=False,
+                           searchable=False) as table:
             for t, linkinfo, user, _action, text in log:
                 table.row()
                 table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
@@ -166,8 +165,8 @@ class ModeAuditLog(WatoMode):
         if self._options["start"] == "now":
             st = time.localtime()
             return int(
-                time.mktime(
-                    time.struct_time((st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
+                time.mktime(time.struct_time(
+                    (st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
         return int(self._options["start"][1])
 
     def _get_multiple_days_log_entries(self, log):
@@ -229,22 +228,20 @@ class ModeAuditLog(WatoMode):
             ]
 
         if next_log_time is not None:
-            html.icon_button(
-                html.makeactionuri([
-                    ("options_p_start_sel", "0"),
-                ]), _("Most recent events"), "start")
+            html.icon_button(html.makeactionuri([
+                ("options_p_start_sel", "0"),
+            ]), _("Most recent events"), "start")
 
-            html.icon_button(
-                html.makeactionuri(time_url_args(next_log_time)),
-                "%s: %s" % (_("Newer events"), render.date(next_log_time)), "back")
+            html.icon_button(html.makeactionuri(time_url_args(next_log_time)),
+                             "%s: %s" % (_("Newer events"), render.date(next_log_time)), "back")
         else:
             html.empty_icon_button()
             html.empty_icon_button()
 
         if previous_log_time is not None:
-            html.icon_button(
-                html.makeactionuri(time_url_args(previous_log_time)),
-                "%s: %s" % (_("Older events"), render.date(previous_log_time)), "forth")
+            html.icon_button(html.makeactionuri(time_url_args(previous_log_time)),
+                             "%s: %s" % (_("Older events"), render.date(previous_log_time)),
+                             "forth")
         else:
             html.empty_icon_button()
 
@@ -309,8 +306,8 @@ class ModeAuditLog(WatoMode):
         )
 
     def _clear_audit_log_after_confirm(self):
-        c = wato_confirm(
-            _("Confirm deletion of audit log"), _("Do you really want to clear the audit log?"))
+        c = wato_confirm(_("Confirm deletion of audit log"),
+                         _("Do you really want to clear the audit log?"))
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
@@ -361,11 +358,11 @@ class ModeAuditLog(WatoMode):
         html.set_output_format("csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-%s_%s.csv" % (render.date(time.time()),
-                                                    render.time_of_day(time.time()))
+            filename = "wato-auditlog-%s_%s.csv" % (render.date(
+                time.time()), render.time_of_day(time.time()))
         else:
-            filename = "wato-auditlog-%s_%s_days.csv" % (render.date(time.time()),
-                                                         self._options["display"][1])
+            filename = "wato-auditlog-%s_%s_days.csv" % (render.date(
+                time.time()), self._options["display"][1])
         html.write(filename)
 
         html.response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename

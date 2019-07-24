@@ -41,15 +41,15 @@ public:
     ECTableConnection(MonitoringCore *mc, std::string command)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
-        , _command(std::move(command)) {}
-    std::string getResult() const { return _result; }
+        , command_(std::move(command)) {}
+    [[nodiscard]] std::string getResult() const { return result_; }
 
 private:
-    void sendRequest(std::ostream &os) override { os << _command; }
-    void receiveReply(std::istream &is) override { std::getline(is, _result); }
+    void sendRequest(std::ostream &os) override { os << command_; }
+    void receiveReply(std::istream &is) override { std::getline(is, result_); }
 
-    const std::string _command;
-    std::string _result;
+    std::string command_;
+    std::string result_;
 };
 
 class ReplicationColumn : public BlobColumn {
@@ -59,15 +59,15 @@ public:
                       int extra_extra_offset, int offset)
         : BlobColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset, offset)
-        , _blob(std::move(blob)) {}
+        , blob_(std::move(blob)) {}
 
-    std::unique_ptr<std::vector<char>> getValue(
+    [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row /* unused */) const override {
-        return std::make_unique<std::vector<char>>(_blob.begin(), _blob.end());
+        return std::make_unique<std::vector<char>>(blob_.begin(), blob_.end());
     };
 
 private:
-    const std::string _blob;
+    std::string blob_;
 };
 }  // namespace
 

@@ -26,7 +26,7 @@
 
 
 # executed after solaris_addresses which provides some information
-def inv_statgrab_net(info, params):
+def inv_statgrab_net(info, params, inventory_tree):
     usage_port_types = params.get(
         "usage_port_types",
         ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
@@ -51,7 +51,7 @@ def inv_statgrab_net(info, params):
                 "port_type": int(if_type),
             })
 
-    node = inv_tree_list("networking.interfaces:")
+    node = inventory_tree.get_list("networking.interfaces:")
     for entry in node:
         descr = entry.get("description")
         phys_addr = entry.get("phys_address")
@@ -67,7 +67,7 @@ def inv_statgrab_net(info, params):
     for entry in parsed.values():
         node.append(entry)
 
-    node = inv_tree("networking.")
+    node = inventory_tree.get_dict("networking.")
     node["total_ethernet_ports"] = total_ethernet_ports
     node["total_interfaces"] = len(info)
 

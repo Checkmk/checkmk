@@ -88,6 +88,5 @@ class RulespecCheckgroupParametersDb2Counters(CheckParameterRulespecWithItem):
 
     @property
     def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+        return TextAscii(title=_("Instance"),
+                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

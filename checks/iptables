@@ -90,8 +90,11 @@ def check_iptables(_no_item, params, parsed):
 
     reference_config = item_state["config"].splitlines()
     actual_config = parsed.splitlines()
-    diff = difflib.context_diff(
-        reference_config, actual_config, fromfile="before", tofile="after", lineterm="")
+    diff = difflib.context_diff(reference_config,
+                                actual_config,
+                                fromfile="before",
+                                tofile="after",
+                                lineterm="")
     diff_output = "\n".join(diff)
 
     return 2, "\r\n".join(["changes in filters table detected", diff_output])

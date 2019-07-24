@@ -1,0 +1,14 @@
+Title: mk_logwatch: Consider 'Do not deploy' in bakery
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560507086
+
+When setting up a logwatch rule in the agent bakery, you can choose 'Do not deploy the Logwatch plugin'.
+This option has not been effective so far.
+
+Now, when creating the logwatch sections, all configured sections in the hierarchy used, until a 'Do not deploy the Logwatch plugin' or 'Deploy the Logwatch plugin without configuration' rule is met, at which point all sections defined upwards in the folder hierarchy are ignored.

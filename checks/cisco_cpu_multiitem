@@ -50,31 +50,35 @@ def parse_cisco_cpu_multiitem(info):
 def check_cisco_cpu_multiitem(_no_item, params, data):
     warn, crit = params['levels']
     value = data['util']
-    state, infotext = check_levels(
-        value,
-        None, (warn, crit),
-        human_readable_func=get_percent_human_readable,
-        infoname="Utilization in the last 5 minutes")[:2]
+    state, infotext = check_levels(value,
+                                   None, (warn, crit),
+                                   human_readable_func=get_percent_human_readable,
+                                   infoname="Utilization in the last 5 minutes")[:2]
     yield state, infotext, [("util", value, warn, crit, 0, 100)]
 
 
 check_info["cisco_cpu_multiitem"] = {
-    'parse_function'          : parse_cisco_cpu_multiitem,
-    'check_function'          : check_cisco_cpu_multiitem,
-    'inventory_function'      : discover(),
-    "group"                   : "cpu_utilization_multiitem",
-    "default_levels_variable" : "cisco_cpu_multiitem_default_levels",
-    'service_description'     : 'CPU utilization %s',
-    'has_perfdata'            : True,
-    'snmp_info'               : [
-        ('.1.3.6.1.4.1.9.9.109.1.1.1', [
-            '1.2', # cpmCPUTotalPhysicalIndex
-            '1.8', # cpmCPUTotal5minRev
-        ]),
-        ('.1.3.6.1.2.1.47.1.1.1', [
-            OID_END, #OID index
-            '1.7', # entPhysicalName
-        ])],
-    'snmp_scan_function'      : lambda oid: 'cisco' in oid('.1.3.6.1.2.1.1.1.0').lower() and \
-                                       oid('.1.3.6.1.4.1.9.9.109.1.1.1.*') is None,
+    'parse_function': parse_cisco_cpu_multiitem,
+    'check_function': check_cisco_cpu_multiitem,
+    'inventory_function': discover(),
+    "group": "cpu_utilization_multiitem",
+    "default_levels_variable": "cisco_cpu_multiitem_default_levels",
+    'service_description': 'CPU utilization %s',
+    'has_perfdata': True,
+    'snmp_info': [
+        (
+            '.1.3.6.1.4.1.9.9.109.1.1.1',
+            [
+                '1.2',  # cpmCPUTotalPhysicalIndex
+                '1.8',  # cpmCPUTotal5minRev
+            ]),
+        (
+            '.1.3.6.1.2.1.47.1.1.1',
+            [
+                OID_END,  #OID index
+                '1.7',  # entPhysicalName
+            ])
+    ],
+    'snmp_scan_function': snmp_scan_cisco_cpu_multiitem,
+    'includes': ["cisco_cpu_scan_functions.include"],
 }

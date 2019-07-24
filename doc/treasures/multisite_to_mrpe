@@ -92,7 +92,7 @@ if omd_site:
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n\n" % err)
     usage()
     sys.exit(1)
@@ -184,7 +184,7 @@ try:
         bail_out("Invalid response from Multisite: %s\n" % answer)
 
     services = convert_from_multisite(eval(answer))
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out("Cannot call Multisite URL: %s" % e)
@@ -194,6 +194,7 @@ sys.stdout.write('<<<mrpe>>>\n')
 for service in services:
     state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
     if state is not None:  # skip pending services
-        sys.stdout.write("(%s) %s %d %s|%s\n" % (service["svc_check_command"].replace(
-            " ", "_"), service["service_description"].replace(
+        sys.stdout.write(
+            "(%s) %s %d %s|%s\n" %
+            (service["svc_check_command"].replace(" ", "_"), service["service_description"].replace(
                 " ", "_"), state, service["svc_plugin_output"], service["svc_perf_data"]))

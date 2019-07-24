@@ -10,18 +10,23 @@
 #include <string_view>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
 namespace provider {
+namespace config {
+// set behavior of the output
+// i future may be controlled using yml
+extern bool G_LocalNoSendIfEmptyBody;
+extern bool G_LocalSendEmptyAtEnd;
+};  // namespace config
 
 class PluginsProvider : public Asynchronous {
 public:
     PluginsProvider() : Asynchronous(cma::section::kPlugins) {
-        headerless_ = true;
+        setHeaderless();
         timeout_ = 0;
         local_ = false;
         cfg_name_ = cma::cfg::groups::kPlugins;
@@ -29,7 +34,7 @@ public:
 
     PluginsProvider(const std::string_view& Name, char Separator)
         : Asynchronous(Name, Separator) {
-        headerless_ = true;
+        setHeaderless();
         timeout_ = 0;
         local_ = false;
         cfg_name_ = cma::cfg::groups::kPlugins;
@@ -43,6 +48,10 @@ public:
 
     void preStart() noexcept override;
 
+    void detachedStart() noexcept;
+
+    void updateTimeout() noexcept;
+
 protected:
     void gatherAllData(std::string& Out);
     std::string cfg_name_;
@@ -50,7 +59,7 @@ protected:
     cma::PluginMap pm_;
     std::string section_last_output_;
     int last_count_;
-    virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class FileInfoTest;
@@ -60,12 +69,15 @@ protected:
 
 class LocalProvider : public PluginsProvider {
 public:
-    LocalProvider() : PluginsProvider(cma::section::kLocalGroup, '\0') {
+    LocalProvider() : PluginsProvider(cma::section::kLocal, '\0') {
         local_ = true;
-        cfg_name_ = cma::cfg::groups::kLocalGroup;
+        cfg_name_ = cma::cfg::groups::kLocal;
     }
     virtual void updateSectionStatus();
 };
+
+enum class PluginType { all, sync, async };
+int FindMaxTimeout(const cma::PluginMap& pm, PluginType type);
 
 }  // namespace provider
 

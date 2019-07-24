@@ -83,8 +83,7 @@ class RulespecCheckgroupParametersMsxInfoStore(CheckParameterRulespecWithItem):
                            title=_("Maximum number of client type requests per second"),
                            elements=[
                                Integer(title=_("Warning at"), unit=_('requests'), default_value=60),
-                               Integer(
-                                   title=_("Critical at"), unit=_('requests'), default_value=70)
+                               Integer(title=_("Critical at"), unit=_('requests'), default_value=70)
                            ],
                        ))],
             optional_keys=[],

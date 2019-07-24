@@ -5,7 +5,7 @@ def DAILY_DATA = '/var/jenkins_home/daily-data'
 DISTRO_LIST.each { DISTRO ->
     BUILDS[DISTRO] = {
         node {
-            docker.image(DISTRO).inside('--cap-add=SYS_ADMIN -u 0:0 --network local-infra') {
+            docker.image(DISTRO).inside('--cap-add=SYS_ADMIN -u 0:0 --ulimit nofile=1024:1024  --network local-infra') {
                 stage(DISTRO + 'cleanup') {
                     cleanWs()
                     sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${DAILY_DATA}/${DISTRO}-dest,workdir=${DAILY_DATA}/${DISTRO}-work ${DAILY_DATA}/${DISTRO}-dest"

@@ -45,6 +45,7 @@
 #              import ...
 #
 
+import errno
 import os
 import sys
 from types import ModuleType
@@ -153,7 +154,7 @@ def _find_local_web_plugins():
     try:
         plugin_dirs = os.listdir(basedir)
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             return
         else:
             raise

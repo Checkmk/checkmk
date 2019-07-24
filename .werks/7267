@@ -1,0 +1,11 @@
+Title: Multisite commands: Fixed empty followup page when pressing "Back to view"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562849186
+
+

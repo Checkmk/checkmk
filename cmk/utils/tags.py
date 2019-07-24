@@ -124,6 +124,12 @@ class AuxTag(ABCTag):
             response["topic"] = self.topic
         return response
 
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
 
 class AuxTagList(object):
     def __init__(self):
@@ -140,13 +146,10 @@ class AuxTagList(object):
         return self._tags
 
     def append(self, aux_tag):
-        # TODO: Reenable this!
-        #if is_builtin_aux_tag(aux_tag.id):
-        #    raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
         self._append(aux_tag)
 
     def _append(self, aux_tag):
-        if self.has_aux_tag(aux_tag):
+        if self.exists(aux_tag.id):
             raise MKUserError("tag_id",
                               _("This tag id does already exist in the list "
                                 "of auxiliary tags."))
@@ -168,15 +171,18 @@ class AuxTagList(object):
         seen = set()
         for aux_tag in self._tags:
             aux_tag.validate()
+
+            builtin_config = BuiltinTagConfig()
+            if builtin_config.aux_tag_list.exists(aux_tag.id):
+                raise MKUserError("tag_id", _("You can not override a builtin auxiliary tag."))
+
             if aux_tag.id in seen:
                 raise MKUserError("tag_id", _("Duplicate tag id in auxilary tags: %s") % aux_tag.id)
+
             seen.add(aux_tag.id)
 
-    def has_aux_tag(self, aux_tag):
-        for tmp_aux_tag in self._tags:
-            if aux_tag.id == tmp_aux_tag.id:
-                return True
-        return False
+    def exists(self, aux_tag_id):
+        return self.get_aux_tag(aux_tag_id) is not None
 
     def get_aux_tag(self, aux_tag_id):
         for aux_tag in self._tags:
@@ -295,7 +301,10 @@ class TagGroup(object):
 
     def get_tag_group_config(self, value):
         """Return the set of tag groups which should be set for a host based on the given value"""
-        tag_groups = {self.id: value}
+        tag_groups = {}
+
+        if value is not None:
+            tag_groups[self.id] = value
 
         # add optional aux tags
         for grouped_tag in self.tags:
@@ -308,7 +317,6 @@ class TagGroup(object):
 class TagConfig(object):
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
-
     def __init__(self):
         super(TagConfig, self).__init__()
         self._initialize()
@@ -329,13 +337,14 @@ class TagConfig(object):
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
-            topic = tag_group.topic
+            topic = tag_group.topic or _('Tags')
             if topic:
                 names.add((topic, topic))
 
         for aux_tag in self.aux_tag_list.get_tags():
-            if aux_tag.topic:
-                names.add((aux_tag.topic, aux_tag.topic))
+            topic = aux_tag.topic or _('Tags')
+            if topic:
+                names.add((topic, topic))
 
         return sorted(list(names), key=lambda x: x[1])
 
@@ -390,12 +399,14 @@ class TagConfig(object):
         response.update(self.aux_tag_list.get_tag_ids())
         return response
 
-    def get_tag_ids_with_group_prefix(self):
+    def get_tag_ids_by_group(self):
+        """Returns a set of (tag_group_id, tag_id) pairs"""
         response = set()
         for tag_group in self.tag_groups:
-            response.update(["%s/%s" % (tag_group.id, tag) for tag in tag_group.get_tag_ids()])
+            response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
-        response.update(self.aux_tag_list.get_tag_ids())
+        response.update([(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()
+                        ])
         return response
 
     def get_tag_or_aux_tag(self, tag_id):
@@ -430,9 +441,6 @@ class TagConfig(object):
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):
-        # TODO: re-enable this!
-        #if is_builtin_host_tag_group(tag_group.id):
-        #    raise MKUserError("tag_id", _("You can not override a builtin tag group."))
         self._insert_tag_group(tag_group)
 
     def _insert_tag_group(self, tag_group):
@@ -478,6 +486,10 @@ class TagConfig(object):
         if tag_group.id == "site":
             raise MKUserError("tag_id",
                               _("The tag group %s is reserved for internal use.") % tag_group.id)
+
+        builtin_config = BuiltinTagConfig()
+        if builtin_config.tag_group_exists(tag_group.id):
+            raise MKUserError("tag_id", _("You can not override a builtin tag group."))
 
         if not tag_group.title:
             raise MKUserError("title", _("Please specify a title for your tag group."))
@@ -546,17 +558,17 @@ class BuiltinTagConfig(TagConfig):
                 'tags': [
                     {
                         'id': 'cmk-agent',
-                        'title': _('Contact either Check_MK Agent or use datasource program'),
+                        'title': _('Normal Checkmk agent, or special agent if configured'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'all-agents',
-                        'title': _('Contact Check_MK agent and all enabled datasource programs'),
+                        'title': _('Normal Checkmk agent, all configured special agents'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'special-agents',
-                        'title': _('Use all enabled datasource programs'),
+                        'title': _('No Checkmk agent, all configured special agents'),
                         'aux_tags': ['tcp'],
                     },
                     {
@@ -573,17 +585,17 @@ class BuiltinTagConfig(TagConfig):
                 'tags': [
                     {
                         "id": "auto-piggyback",
-                        "title": _("Legacy: Automatically detect piggyback usage"),
+                        "title": _("Use piggyback data from other hosts if present"),
                         "aux_tags": []
                     },
                     {
                         "id": "piggyback",
-                        "title": _("Use piggyback data"),
+                        "title": _("Always use and expect piggyback data"),
                         "aux_tags": [],
                     },
                     {
                         "id": "no-piggyback",
-                        "title": _("Do not use piggyback data"),
+                        "title": _("Never use piggyback data"),
                         "aux_tags": [],
                     },
                 ],

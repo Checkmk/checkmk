@@ -10,16 +10,22 @@
 #include <string_view>
 
 #include "cma_core.h"
-#include "section_header.h"
-
 #include "providers/internal.h"
 #include "providers/wmi.h"
+#include "section_header.h"
 
 namespace cma::provider {
-std::filesystem::path GetOhmCliPath();
 
-constexpr std::string_view kOpenHardwareMonitorCli =
-    "OpenHardwareMonitorCLI.exe";
+std::filesystem::path GetOhmCliPath(const std::filesystem::path& dir) noexcept;
+std::filesystem::path GetOhmCliPath() noexcept;
+
+namespace ohm {
+constexpr std::string_view kExeModule = "OpenHardwareMonitorCLI.exe";
+constexpr std::wstring_view kExeModuleWide = L"OpenHardwareMonitorCLI.exe";
+constexpr std::wstring_view kDriverNameWide = L"winring0_1_2_0";
+constexpr std::wstring_view kResetCommand =
+    LR"(-command "Get-WmiObject -query \"Select * From __Namespace Where Name='OpenHardwareMonitor'\" -Namespace \"root\" | Remove-WmiObject")";
+};  // namespace ohm
 
 // openhardwaremonitor:
 class OhmProvider : public Wmi {
@@ -32,7 +38,7 @@ public:
     virtual void updateSectionStatus();
 
 protected:
-    // virtual std::string makeBody() const override;
+    std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class OhmTest;

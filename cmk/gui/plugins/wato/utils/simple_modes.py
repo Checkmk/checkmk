@@ -33,6 +33,7 @@ b) A edit mode which can be used to create and edit an object.
 """
 
 import abc
+import copy
 from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
 
 from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
@@ -147,16 +148,14 @@ class SimpleWatoModeBase(WatoMode):
     def _add_change(self, action, entry, text):
         # type: (str, dict, str) -> None
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change(
-            "%s-%s" % (action, self._mode_type.type_name()),
-            text,
-            domains=self._mode_type.affected_config_domains(),
-            sites=self._mode_type.affected_sites(entry))
+        watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
+                           text,
+                           domains=self._mode_type.affected_config_domains(),
+                           sites=self._mode_type.affected_sites(entry))
 
 
 class SimpleListMode(SimpleWatoModeBase):
     """Base class for list modes"""
-
     @abc.abstractmethod
     def _table_title(self):
         # type: () -> str
@@ -256,6 +255,12 @@ class SimpleListMode(SimpleWatoModeBase):
         ])
         html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
 
+        clone_url = html.makeuri_contextless([
+            ("mode", self._mode_type.edit_mode_name()),
+            ("clone", ident),
+        ])
+        html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
+
         delete_url = watolib.make_action_link([
             ("mode", self._mode_type.list_mode_name()),
             ("_action", "delete"),
@@ -276,7 +281,6 @@ class SimpleEditMode(SimpleWatoModeBase):
 
     def _from_vars(self):
         ident = html.get_ascii_input("ident")
-
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -287,10 +291,24 @@ class SimpleEditMode(SimpleWatoModeBase):
             self._new = False
             self._ident = ident
             self._entry = entry
-        else:
+            return
+
+        clone = html.get_ascii_input("clone")
+        if clone is not None:
+            try:
+                entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]
+            except KeyError:
+                raise MKUserError("clone",
+                                  _("This %s does not exist.") % self._mode_type.name_singular())
+
             self._new = True
             self._ident = None
-            self._entry = {}
+            self._entry = copy.deepcopy(entry)
+            return
+
+        self._new = True
+        self._ident = None
+        self._entry = {}
 
     def title(self):
         if self._new:
@@ -298,9 +316,9 @@ class SimpleEditMode(SimpleWatoModeBase):
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def buttons(self):
-        html.context_button(
-            _("Back"), html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
-            "back")
+        html.context_button(_("Back"),
+                            html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
+                            "back")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()

@@ -1,0 +1,11 @@
+Title: aws_rds.disk_io: Fixed crash if any value is missing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558344517
+Class: fix
+
+One or more of the following values may be missing: ReadIOPS, WriteIOPS,
+ReadThroughput, WriteThroughput, ReadLatency or WriteLatency

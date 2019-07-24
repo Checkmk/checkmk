@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <string_view>
 
@@ -14,9 +15,11 @@
 namespace cma {
 // set only when executable works as a service
 bool IsService();
+bool IsTest();
 }  // namespace cma
 
 namespace cma::cfg {
+constexpr std::string_view kBuidlHashValue = "DEFADEFADEFA";
 // bit mask
 enum LoadCfgStatus {
     kAllFailed = -2,    // root config not found
@@ -32,11 +35,6 @@ enum Error {
 
 };
 
-namespace dirs {
-constexpr const wchar_t* kCapInstallDir = L"install";
-constexpr const wchar_t* kMsiInstallDir = L"install";
-}  // namespace dirs
-
 namespace files {
 
 // names of file
@@ -45,13 +43,19 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
+constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
+
+constexpr std::wstring_view kDatFile = L"checkmk.dat";
+constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";
 
 // extensions
 constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
 constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 
 // special
-constexpr const std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
+constexpr std::string_view kInstallProtocol = "install.protocol";
+constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
@@ -80,8 +84,7 @@ std::vector<std::wstring> DefaultConfigArray(AppType Type);
 // must be called o program start.
 // and check done too
 [[nodiscard]] bool InitializeMainConfig(
-    const std::vector<std::wstring>& ConfigFileNames, bool LoadCacheOnFailure,
-    bool UseAggregation);
+    const std::vector<std::wstring>& config_filenames, YamlCacheOp cache_op);
 
 // *******************************************************
 // Internal API
@@ -94,6 +97,8 @@ std::vector<std::wstring> DefaultConfigArray(AppType Type);
 // this function gets parse yaml to get information into known groups
 void ProcessKnownConfigGroups();
 void SetupEnvironmentFromGroups();
+
+bool ReloadConfigAutomatically();
 
 // sometimes we have to reload config without
 
@@ -116,19 +121,21 @@ std::string GetPathOfLoadedConfigAsString() noexcept;
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
+std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
+std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
 std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
+std::wstring GetAuStateDir() noexcept;
 std::wstring GetPluginConfigDir() noexcept;
-std::wstring GetUpdateDir() noexcept;
-std::wstring GetMsiBackupDir() noexcept;  // storage for MSI installed
+std::wstring GetUpdateDir() noexcept;       // for incoming MSI
+std::wstring GetUserInstallDir() noexcept;  // storage for installed files
 std::wstring GetSpoolDir() noexcept;
 std::wstring GetTempDir() noexcept;
 std::wstring GetLogDir() noexcept;
 std::string GetHostName() noexcept;
-std::wstring GetWorkingDir() noexcept;
 std::wstring GetWorkingDir() noexcept;
 std::wstring GetMsiExecPath() noexcept;
 
@@ -140,6 +147,8 @@ bool IsLoadedConfigOk() noexcept;
 bool StoreUserYamlToCache() noexcept;
 
 std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept;
+
+int RemoveInvalidNodes(YAML::Node node);
 
 // std::wstring GetUserYamlFromCache() noexcept;
 
@@ -161,9 +170,9 @@ enum FallbackPolicy {
 };
 
 // YAML API is here
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName, int Fallback,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName, int Fallback,
                                 int* ErrorCodePtr = nullptr) noexcept;
-YAML::Node LoadAndCheckYamlFile(const std::wstring FileName,
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
                                 int* ErrorCodePtr = nullptr) noexcept;
 
 // ***********************************************************
@@ -172,7 +181,7 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring FileName,
 // usage auto x = GetVal("global", "name", false);
 template <typename T>
 T GetVal(std::string Section, std::string Name, T Default,
-         int* ErrorOut = 0) noexcept {
+         int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -194,7 +203,7 @@ T GetVal(std::string Section, std::string Name, T Default,
 
 // usage auto x = GetVal("global", "name");
 inline YAML::Node GetNode(std::string Section, std::string Name,
-                          int* ErrorOut = 0) noexcept {
+                          int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -231,7 +240,7 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 // safe method yo extract value from the yaml
 template <typename T>
 T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
-         int* ErrorOut = 0) noexcept {
+         int* ErrorOut = nullptr) noexcept {
     if (Yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
         return Default;
@@ -310,7 +319,7 @@ inline StringPairArray ConvertNode2StringPairArray(
 
 template <typename T>
 std::vector<T> GetArray(const std::string& Section, const std::string& Name,
-                        int* ErrorOut = 0) noexcept {
+                        int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
@@ -321,10 +330,10 @@ std::vector<T> GetArray(const std::string& Section, const std::string& Name,
         auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2Sequence<T>(val);
-        else
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
-                      val.Type());
+
+        // this is OK when nothing inside
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                  val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
@@ -338,10 +347,11 @@ std::vector<T> GetArray(const std::string& Section, const std::string& Name,
 // sequences of maps  '- name: value'
 inline StringPairArray GetPairArray(const std::string& Section,
                                     const std::string& Name,
-                                    int* ErrorOut = 0) noexcept {
+                                    int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
+
         return {};
     }
     try {
@@ -349,10 +359,10 @@ inline StringPairArray GetPairArray(const std::string& Section,
         auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2StringPairArray(val);
-        else
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
-                      val.Type());
+
+        // this is OK when nothing inside
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                  val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
@@ -361,110 +371,41 @@ inline StringPairArray GetPairArray(const std::string& Section,
     return {};
 }
 
-inline std::vector<std::string> StringToTable(const std::string& WholeValue) {
-    auto table = cma::tools::SplitString(WholeValue, " ");
-
-    for (auto& value : table) {
-        cma::tools::AllTrim(value);
-    }
-
-    return table;
-}
-
 // gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(const YAML::Node& Yaml,
-                                                 const std::string& Name,
-                                                 int* ErrorOut = 0) noexcept {
-    try {
-        auto val = Yaml[Name];
-        if (val.IsDefined() && val.IsScalar()) {
-            auto str = val.as<std::string>();
-            return StringToTable(str);
-        } else {
-            // this is OK when nothing inside
-            XLOG::d.t("Absent/Empty node '{}' type is {}", Name, val.Type());
-        }
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
-    }
-    return {};
-}
-
-// gets string from the yaml and split it in table using space as divider
-inline std::vector<std::string> GetInternalArray(const std::string& Section,
-                                                 const std::string& Name,
-                                                 int* ErrorOut = 0) noexcept {
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return {};
-    }
-
-    try {
-        auto section = yaml[Section];
-        return GetInternalArray(section, Name, ErrorOut);
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}.{}' code:{}",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
-    }
-    return {};
-}
+std::vector<std::string> GetInternalArray(const std::string& Section,
+                                          const std::string& Name,
+                                          int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
-inline void PutInternalArray(YAML::Node Yaml, const std::string& Name,
-                             std::vector<std::string>& Arr,
-                             int* ErrorOut = 0) noexcept {
-    try {
-        auto section = Yaml[Name];
-        if (Arr.empty()) {
-            section.remove(Name);
-            return;
-        }
-
-        auto result = cma::tools::JoinVector(Arr, " ");
-        if (result.back() == ' ') result.pop_back();
-        Yaml[Name] = result;
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}' code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
-    }
-}
+void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
-inline void PutInternalArray(const std::string& Section,
-                             const std::string& Name,
-                             std::vector<std::string>& Arr,
-                             int* ErrorOut = 0) noexcept {
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return;
-    }
-    try {
-        auto section = yaml[Section];
-        PutInternalArray(section, Name, Arr, ErrorOut);
-    } catch (const std::exception& e) {
-        XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
-                e.what());
-    }
-}
+// used ONLY for testing
+void PutInternalArray(const std::string& Section, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
+
+// gets string from the yaml and split it in table using space as divider
+std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
+                                          const std::string& name) noexcept;
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
-                        int* ErrorOut = 0) noexcept {
+std::vector<T> GetArray(const YAML::Node& Yaml, const std::string& Name,
+                        int* ErrorOut = nullptr) noexcept {
     if (Yaml.size() == 0) {
         if (ErrorOut) *ErrorOut = Error::kEmpty;
         return {};
     }
     try {
         auto val = Yaml[Name];
-        if (val.IsDefined() && val.IsSequence())
-            return ConvertNode2Sequence<T>(val);
+        if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
+
+        if (!val.IsDefined() || val.IsNull())
+            XLOG::t("Node '{}' is not defined/empty,return empty array", Name);
         else
-            XLOG::d("Probably wrong something with {}", Name);
+            XLOG::d("Node '{}' has bad type [{}]", Name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
@@ -472,28 +413,34 @@ std::vector<T> GetArray(const YAML::Node& Yaml, std::string Name,
     return {};
 }
 
-/*
-// deprecated
-inline YAML::Node GetRootSection(std::string Section, int* Error = 0) noexcept {
-    using namespace cma::cfg;
+void LogNodeAsBad(YAML::Node node, std::string_view comment);
 
-    auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (Error) *Error = Error::kEmpty;
-        return {};
-    }
+template <typename T>
+std::vector<T> GetArray(YAML::Node node) noexcept {
     try {
-        return yaml[Section];
-    } catch (const exception& e) {
-        XLOG::l("Cannot read section {} in yml file {} .{} code:{}",
-                Section,                                         //
-                wtools::ConvertToUTF8(GetPathOfLoadedConfig()),  //
-                e.what());
-        if (Error) *Error = Error::kNotFound;
-        return {};
+        if (node.IsDefined() && node.IsSequence())
+            return ConvertNode2Sequence<T>(node);
+        LogNodeAsBad(node, "Invalid Node");
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read node '{}'", e.what());
     }
+    return {};
 }
-*/
+
+// Merging API. Used to help merge our config files correctly, normally it is
+// internal.
+// API uses std::string because of YAML has no good support for
+// string_view Merges sequence target_group[name] <--- source_group[name] if
+// name exists in target no action
+bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
+                         const std::string& name) noexcept;
+// Merges map target_group[name] <--- source_group[name] using key
+// if entry with key exists in target no action
+bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
+                      const std::string& name, const std::string& key) noexcept;
+// ***********************************************************
+
+std::string GetMapNodeName(YAML::Node node);
 
 namespace details {
 void KillDefaultConfig();
@@ -628,9 +575,9 @@ public:
         return realtime_encrypt_ ? password_ : "";
     }
 
-    bool publicLog() const {
+    std::filesystem::path logPath() const {
         std::lock_guard lk(lock_);
-        return public_log_;
+        return yaml_log_path_;
     }
     int debugLogLevel() const {
         std::lock_guard lk(lock_);
@@ -654,11 +601,11 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        if (cma::tools::Find(disabled_sections_, std::string(Name)))
+        if (cma::tools::find(disabled_sections_, std::string(Name)))
             return false;
 
-        if (enabled_sections_.size()) {
-            return cma::tools::Find(enabled_sections_, std::string(Name));
+        if (!enabled_sections_.empty()) {
+            return cma::tools::find(enabled_sections_, std::string(Name));
         }
 
         // default: both entries are empty,  section is enabled
@@ -669,7 +616,7 @@ public:
         std::lock_guard lk(lock_);
 
         // most important is disabled
-        return cma::tools::Find(disabled_sections_, Name);
+        return cma::tools::find(disabled_sections_, Name);
     }
 
     bool isIpAddressAllowed(std::string_view Ip) const {
@@ -700,9 +647,12 @@ public:
         return {};
     }
 
+    void updateLogNamesByDefault();
+
 private:
     // called from ctor or loader
     void calcDerivatives();
+    void updateLogNames(std::filesystem::path log_path);
     void setDefaults();
 
     // check contents of only_from from the yml and fills array correct
@@ -775,11 +725,11 @@ private:
     int realtime_port_;
     std::vector<std::string> realtime_sections_;
 
-    // wmi hlobal
+    // wmi global
     int wmi_timeout_;
 
     // log
-    bool public_log_;
+    std::filesystem::path yaml_log_path_;
     int debug_level_;  // 0, 1, 2
 
     bool windbg_;
@@ -800,7 +750,7 @@ private:
 struct WinPerf : public Group {
 public:
     struct Counter {
-        Counter() {}
+        Counter() = default;
         Counter(const std::string Id, const std::string Name)
             : id_(Id), name_(Name) {}
         auto name() const noexcept { return name_; }
@@ -897,42 +847,91 @@ timeout.
     timeout : 240
 */
 
-// @core -> c:\Program Files (x86)\check_mk_service\plugins
-// @user -> c:\ProgramData\CheckMK\agent\plugins
-// @data ->c:\ProgramData\CheckMK\agent
-std::string ReplacePredefinedMarkers(const std::string Path);
-// mini tool
-bool ReplaceInString(std::string& InOut, const std::string Marker,
-                     const std::string Replace);
+// $BUILTIN_PLUGINS_PATH$ -> c:\Program Files (x86)\checkmk\service\plugins
+// $CUSTOM_PLUGINS_PATH$ -> c:\ProgramData\checkmk\agent\plugins
+// $CUSTOM_AGENT_PATH$ ->c:\ProgramData\checkmk\agent
+std::string ReplacePredefinedMarkers(std::string_view work_path);
 
-struct PluginInfo {
+// replaces one value with other
+bool ReplaceInString(std::string& InOut, std::string_view Marker,
+                     std::string_view Replace);
+
+bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
+                       const std::string& key_name,
+                       std::string_view subkey_name, std::string_view marker);
+class PluginInfo {
+public:
     PluginInfo() {}
-    PluginInfo(bool Async, int Timeout, int Age, int Retry)
-        : async_(Async), timeout_(Timeout), cache_age_(Age), retry_(Retry) {}
-    auto async() const { return async_; }
-    auto timeout() const { return timeout_; }
-    auto cacheAge() const { return cache_age_; }
-    auto retry() const { return retry_; }
+
+    // Async:
+    PluginInfo(int timeout, int age, int retry)
+        : async_(true)
+        , timeout_(timeout)
+        , cache_age_(age)
+        , retry_(retry)
+        , defined_(true) {
+        // validation
+    }
+
+    // Sync:
+    PluginInfo(int timeout, int retry)
+        : async_(false)
+        , timeout_(timeout)
+        , cache_age_(0)
+        , retry_(retry)
+        , defined_(true) {}
+    bool async() const noexcept { return async_; }
+    int timeout() const noexcept { return timeout_; }
+    int cacheAge() const noexcept { return cache_age_; }
+    int retry() const noexcept { return retry_; }
+    bool defined() const noexcept { return defined_; }
 
 protected:
-    bool async_;
+    // used only during testing
+    void debugInit(bool async_value, int timeout_value, int cache_age,
+                   int retry) {
+        async_ = async_value;
+        timeout_ = timeout_value;
+        cache_age_ = cache_age;
+        retry_ = retry;
+        defined_ = true;
+    }
 
-    int timeout_;    // from the config file, #TODO use chrono
-    int cache_age_;  // from the config file, #TODO use chrono
+    bool defined_ = false;
+    bool async_ = false;
 
-    int retry_;
+    int timeout_ = 0;    // from the config file, #TODO use chrono
+    int cache_age_ = 0;  // from the config file, #TODO use chrono
+
+    int retry_ = 0;
 };
 
 struct Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
-        ExeUnit() {}
-        ExeUnit(const std::string Pattern, bool Async, int Timeout, int Age,
-                int Retry, bool Run)
-            : PluginInfo(Async, Timeout, Age, Retry)  //
-            , pattern_(Pattern)                       //
+        ExeUnit() = default;
+        // Sync
+        ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
+            : PluginInfo(Timeout, Retry)  //
+            , pattern_(Pattern)           //
+            , run_(Run) {}
+
+        // Async
+        ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
+                bool Run)
+            : PluginInfo(Timeout, Age, Retry)  //
+            , pattern_(Pattern)                //
             , run_(Run) {
+            validateAndFix();
+        }
+
+        // Only For Testing Automation with Initializer Lists
+        ExeUnit(std::string_view Pattern, bool Async, int Timeout, int Age,
+                int Retry, bool Run)
+            : pattern_(Pattern)  //
+            , run_(Run) {
+            debugInit(Async, Timeout, Age, Retry);
             // validation
             if (!async_ && cache_age_ != 0) {
                 XLOG::d(
@@ -940,18 +939,25 @@ public:
                     pattern_, async_, cache_age_);
                 async_ = true;
             }
-            if (async_ && cache_age_ < kMinimumCacheAge) {
-                XLOG::t(
-                    "Plugin Entry {} has too low cache_age: {}. Setting at {}",
-                    pattern_, cache_age_, kMinimumCacheAge);
-                cache_age_ = kMinimumCacheAge;
-            }
+            validateAndFix();
         }
 
-        auto pattern() const { return pattern_; }
-        auto run() const { return run_; }
+        auto pattern() const noexcept { return pattern_; }
+        auto run() const noexcept { return run_; }
 
     private:
+        void validateAndFix() {
+            if (cacheAge() >= kMinimumCacheAge) return;
+            if (cacheAge() == 0) return;  // this is special case
+
+            if (!async_ && cacheAge() == 0) return;
+
+            XLOG::t(
+                "Plugin Entry '{}' has too low cache_age: [{}]. Setting at [{}]",
+                pattern_, cacheAge(), kMinimumCacheAge);
+            cache_age_ = kMinimumCacheAge;
+        }
+
         const std::string pattern_;
         bool run_;
     };
@@ -1023,10 +1029,13 @@ private:
 };
 
 void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
-                          const std::vector<YAML::Node>& Yaml);
+                          const std::vector<YAML::Node>& Yaml) noexcept;
 
 // used to setup on start and forever. These environment variables are stable
 void SetupPluginEnvironment();
+
+void ProcessPluginEnvironment(
+    std::function<void(std::string_view name, std::string_view value)>);
 
 // called on every connect from monitoring site.
 void SetupRemoteHostEnvironment(const std::string& IpAddress);
@@ -1041,6 +1050,20 @@ extern Plugins localGroup;
 inline bool LogPluginOutput() { return false; }
 inline bool LogMrpeOutput() { return false; }
 
+}  // namespace cma::cfg
+
+namespace cma::cfg {
+constexpr std::string_view kIniFromInstallMarker =
+    "# Created by Check_MK Agent Installer";
+
+bool IsIniFileFromInstaller(const std::filesystem::path& filename);
+
+enum class InstallationType { packaged, wato, unknown };
+InstallationType DetermineInstallationType() noexcept;
+void SetTestInstallationType(cma::cfg::InstallationType installation_type);
+std::filesystem::path ConstructInstallFileName(
+    const std::filesystem::path& dir) noexcept;
+std::string GetTimeString();
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

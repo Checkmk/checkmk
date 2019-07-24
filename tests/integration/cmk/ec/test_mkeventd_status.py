@@ -35,7 +35,7 @@ class FakeStatusSocket(object):
 
     def get_response(self):
         response = ast.literal_eval(self._response)
-        assert type(response) == list
+        assert isinstance(response, list)
         return response
 
 
@@ -81,17 +81,17 @@ def event_status(settings, config, perfcounters, history):
 @pytest.fixture(scope="function")
 def event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                  event_status):
-    return cmk.ec.main.EventServer(
-        logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters,
-        lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config,
+                                   slave_status, perfcounters, lock_configuration, history,
+                                   event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
 def status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                   event_status, event_server):
-    return cmk.ec.main.StatusServer(
-        logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status,
-        perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
+    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings,
+                                    config, slave_status, perfcounters, lock_configuration, history,
+                                    event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):
@@ -223,9 +223,9 @@ def test_status_table_via_core(site, ec, core):
     ]:
         assert column_name in status
 
-    assert type(status["status_event_limit_host"]) == int
-    assert type(status["status_event_limit_rule"]) == int
-    assert type(status["status_event_limit_overall"]) == int
+    assert isinstance(status["status_event_limit_host"], int)
+    assert isinstance(status["status_event_limit_rule"], int)
+    assert isinstance(status["status_event_limit_overall"], int)
 
 
 # core is None means direct query to status socket
@@ -239,7 +239,7 @@ def test_rules_table_via_core(site, ec, core):
     else:
         result = live.query_table_assoc("GET eventconsolerules\n")
 
-    assert type(result) == list
+    assert isinstance(result, list)
     #assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing
     # keys and types in the result set

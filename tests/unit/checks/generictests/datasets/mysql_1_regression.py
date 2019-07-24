@@ -21,6 +21,10 @@ info = [['[[mysql]]'],
         ['Threads_connected', '42'],
         ['Connections', '2'],
         ['Threads_running', '23'],
+        ['Innodb_data_read', '1024'],
+        ['Innodb_data_written', '2048'],
+        ['Max_used_connections', '2'],
+        ['max_connections', '4'],
         ['0', '0'],
         ['1', '1'],
         ['2', '2'],
@@ -213,17 +217,56 @@ info = [['[[mysql]]'],
         ['189', '189']]
 
 
-discovery = {'': [('mysql', {})],
-             'connections': [],
-             'innodb_io': [],
-             'sessions': [('mysql', {})]}
+discovery = {
+    '': [
+        ('mysql', {}),
+    ],
+    'connections': [
+        ('mysql', {}),
+    ],
+    'innodb_io': [
+        ('mysql', {}),
+    ],
+    'sessions': [
+        ('mysql', {}),
+    ],
+}
 
 
-checks = {'': [('mysql', {}, [(0, 'Version: Cheesgrater Edition', [])])],
-          'sessions': [('mysql',
-                        {},
-                        [(0,
-                          '42 total, 23 running, 0.00 connections/s',
-                          [('total_sessions', 42, None, None, None, None),
-                           ('running_sessions', 23, None, None, None, None),
-                           ('connect_rate', 0.0, None, None, None, None)])])]}
+checks = {
+    '': [
+        ('mysql', {}, [
+            (0, 'Version: Cheesgrater Edition', []),
+        ])
+    ],
+    'connections': [
+        ('mysql', {}, [
+            (0, 'Max. parallel Connections: 2 (Max.: 4): 50.00%', [
+                ('connections_max_used', 2.0, None, None, None, None),
+                ('connections_max', 4.0, None, None, None, None),
+                ('connections_perc_used', 50.0, None, None, None, None),
+            ]),
+        ])
+    ],
+    'innodb_io': [
+        ('mysql', {}, [
+            (0, 'read: 0.00 B/s, write: 0.00 B/s', [
+                ('read', 0.0, None, None, None, None),
+                ('write', 0.0, None, None, None, None),
+            ]),
+        ])
+    ],
+    'sessions': [
+        ('mysql', {}, [
+            (0, '42 total', [
+                ('total_sessions', 42, None, None, None, None),
+            ]),
+            (0, '23 running', [
+                ('running_sessions', 23, None, None, None, None),
+            ]),
+            (0, '0.00 connections/s', [
+                ('connect_rate', 0.0, None, None, None, None),
+            ]),
+        ]),
+    ],
+}

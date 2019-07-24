@@ -117,12 +117,11 @@ def check_omd_apache(item, _no_params, parsed):
     ]:
         total = 0
         for key, value in sorted(stats[ty].items(), key=lambda k_v: k_v[1], reverse=True):
-            rate = get_rate(
-                "omd_apache.%s.%s.%s" % (item, ty, key),
-                this_time,
-                value,
-                onwrap=SKIP,
-                is_rate=True)
+            rate = get_rate("omd_apache.%s.%s.%s" % (item, ty, key),
+                            this_time,
+                            value,
+                            onwrap=SKIP,
+                            is_rate=True)
             total += rate
             yield 0, '', [(ty + '_' + key, rate)]
 

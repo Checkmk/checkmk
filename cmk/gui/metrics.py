@@ -64,7 +64,8 @@ from cmk.gui.plugins.metrics.utils import (  # pylint: disable=unused-import
     TB, PB, m, K, M, G, T, P, evaluate, get_graph_range, replace_expressions,
     generic_graph_template, scale_symbols, hsv_to_hexrgb, render_color, parse_color,
     parse_color_into_hexrgb, render_color_icon, darken_color, get_palette_color_by_index,
-    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates,
+    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates, MAX_CORES,
+    indexed_color,
 )
 
 #   .--Plugins-------------------------------------------------------------.
@@ -293,7 +294,7 @@ class Perfometers(object):
         for req in perfometer["_required"]:
             try:
                 evaluate(req, translated_metrics)
-            except:
+            except Exception:
                 return False
 
         if "condition" in perfometer:
@@ -301,7 +302,7 @@ class Perfometers(object):
                 value, _color, _unit = evaluate(perfometer["condition"], translated_metrics)
                 if value == 0.0:
                     return False
-            except:
+            except Exception:
                 return False
 
         return True
@@ -325,7 +326,6 @@ class Perfometers(object):
 class MetricometerRenderer(object):
     __metaclass__ = abc.ABCMeta
     """Abstract base class for all metricometer renderers"""
-
     @classmethod
     def type_name(cls):
         raise NotImplementedError()
@@ -582,20 +582,6 @@ class MetricometerRendererDual(MetricometerRenderer):
 
         return max(*sub_sort_numbers)
 
-
-#.
-#   .--Graphs--------------------------------------------------------------.
-#   |                    ____                 _                            |
-#   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
-#   |                  | |  _| '__/ _` | '_ \| '_ \/ __|                   |
-#   |                  | |_| | | | (_| | |_) | | | \__ \                   |
-#   |                   \____|_|  \__,_| .__/|_| |_|___/                   |
-#   |                                  |_|                                 |
-#   +----------------------------------------------------------------------+
-#   |  Implementation of time graphs - basic code, not the rendering       |
-#   |  Rendering of the graphs is done by PNP4Nagios, we just create PHP   |
-#   |  templates for PNP here.                                             |
-#   '----------------------------------------------------------------------'
 
 #.
 #   .--PNP Templates-------------------------------------------------------.
@@ -873,7 +859,7 @@ def cmk_graphs_possible(site_id=None):
         return not config.force_pnp_graphing \
            and browser_supports_canvas() \
            and site_is_running_cmc(site_id)
-    except:
+    except Exception:
         return False
 
 
@@ -1027,10 +1013,9 @@ def render_metrics_table(translated_metrics, host_name, service_description):
         if cmk_graphs_possible():
             output += "<td>"
             output += html.render_popup_trigger(
-                html.render_icon(
-                    "custom_graph",
-                    title=_("Add this metric to a custom graph"),
-                    cssclass="iconbutton"),
+                html.render_icon("custom_graph",
+                                 title=_("Add this metric to a custom graph"),
+                                 cssclass="iconbutton"),
                 ident="add_metric_to_graph_" + host_name + ";" + service_description,
                 what="add_metric_to_custom_graph",
                 url_vars=[

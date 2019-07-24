@@ -64,7 +64,7 @@ opt_timeout = 10
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -153,7 +153,7 @@ try:
     status = {}
     try:
         status.update(get_allnet_ip_sensoric_info())
-    except:
+    except Exception:
         if opt_debug:
             raise
 
@@ -161,7 +161,7 @@ try:
     for key, value in sorted(status.items()):
         sys.stdout.write('%s;%s\n' % (key, value))
 
-except:
+except Exception:
     if opt_debug:
         raise
     sys.stderr.write('Unhandled error: %s' % traceback.format_exc())

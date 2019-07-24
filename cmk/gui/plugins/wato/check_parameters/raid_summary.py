@@ -57,15 +57,14 @@ class RulespecCheckgroupParametersRaidSummary(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("use_device_states",
-                 DropdownChoice(
-                     title=_("Use device states and overwrite expected status"),
-                     choices=[
-                         (False, _("Ignore")),
-                         (True, _("Use device states")),
-                     ],
-                     default_value=True,
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("use_device_states",
+             DropdownChoice(
+                 title=_("Use device states and overwrite expected status"),
+                 choices=[
+                     (False, _("Ignore")),
+                     (True, _("Use device states")),
+                 ],
+                 default_value=True,
+             )),
+        ],)

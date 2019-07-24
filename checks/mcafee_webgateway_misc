@@ -30,11 +30,15 @@
 
 
 def check_mcafee_webgateway_misc(_no_item, params, info):
-    clients, sockets = map(int, info[0])
-    for what, value, paramskey, perfkey in [
-        ("Clients", clients, "clients", "connections"),
-        ("Open network sockets", sockets, "network_sockets", "open_network_sockets"),
+    clients_str, sockets_str = info[0]
+    for what, value_str, paramskey, perfkey in [
+        ("Clients", clients_str, "clients", "connections"),
+        ("Open network sockets", sockets_str, "network_sockets", "open_network_sockets"),
     ]:
+        try:
+            value = int(value_str)
+        except ValueError:
+            continue
         state = 0
         infotext = '%s: %d' % (what, value)
         warn, crit = params.get(paramskey, (None, None))

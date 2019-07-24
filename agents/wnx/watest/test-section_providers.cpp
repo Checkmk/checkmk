@@ -3,12 +3,8 @@
 //
 #include "pch.h"
 
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-
 #include "cfg.h"
-
+#include "common/wtools.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/internal.h"
@@ -21,8 +17,9 @@
 #include "providers/services.h"
 #include "providers/skype.h"
 #include "providers/wmi.h"
-
 #include "service_processor.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
 
 namespace cma::provider {
 
@@ -33,7 +30,7 @@ TEST(SectionProvider, Construction) {
     EXPECT_EQ(plugins.getUniqName(), cma::section::kPlugins);
 
     LocalProvider local;
-    EXPECT_EQ(local.getUniqName(), cma::section::kLocalGroup);
+    EXPECT_EQ(local.getUniqName(), cma::section::kLocal);
 }
 
 TEST(SectionProviders, BasicUptime) {

@@ -35,10 +35,10 @@ extern servicegroup *servicegroup_list;
 
 namespace {
 struct servicebygroup {
-    service _service;
+    service svc;
     // cppcheck is too dumb to see usage in the DANGEROUS_OFFSETOF macro
     // cppcheck-suppress unusedStructMember
-    servicegroup *_servicegroup;
+    servicegroup *service_group;
 };
 }  // namespace
 
@@ -46,7 +46,7 @@ TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
     TableServices::addColumns(this, "", -1, true);
     TableServiceGroups::addColumns(
         this, "servicegroup_",
-        DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));
+        DANGEROUS_OFFSETOF(servicebygroup, service_group));
 }
 
 std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
@@ -74,6 +74,6 @@ void TableServicesByGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
-    auto svc = &rowData<servicebygroup>(row)->_service;
+    auto svc = &rowData<servicebygroup>(row)->svc;
     return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }

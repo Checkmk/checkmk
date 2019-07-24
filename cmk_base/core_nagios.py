@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Code for support of Nagios (and compatible) cores"""
 
+import base64
 import os
 import sys
 import py_compile
@@ -64,7 +65,7 @@ class NagiosCore(core_config.MonitoringCore):
                     prefix=".%s.new" % os.path.basename(cmk.utils.paths.nagios_objects_file),
                     delete=False) as tmp:
                 tmp_path = tmp.name
-                os.chmod(tmp.name, 0660)
+                os.chmod(tmp.name, 0o660)
                 create_config(tmp, hostnames=None)
                 os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
 
@@ -279,58 +280,49 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
         return result
 
-    host_checks = check_table.get_check_table(hostname, remove_duplicates=True).items()
-    host_checks.sort()  # Create deterministic order
+    services = check_table.get_check_table(hostname, remove_duplicates=True).values()
     have_at_least_one_service = False
     used_descriptions = {}
-    for ((checkname, item), (params, description, deps)) in host_checks:
-        if checkname not in config.check_info:
+    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
+        if service.check_plugin_name not in config.check_info:
             continue  # simply ignore missing checks
 
-        description = config.get_final_service_description(hostname, description)
         # Make sure, the service description is unique on this host
-        if description in used_descriptions:
-            cn, it = used_descriptions[description]
-            core_config.warning("ERROR: Duplicate service description '%s' for host '%s'!\n"
-                                " - 1st occurrance: checktype = %s, item = %r\n"
-                                " - 2nd occurrance: checktype = %s, item = %r\n" %
-                                (description, hostname, cn, it, checkname, item))
+        if service.description in used_descriptions:
+            cn, it = used_descriptions[service.description]
+            core_config.warning(
+                "ERROR: Duplicate service description '%s' for host '%s'!\n"
+                " - 1st occurrance: checktype = %s, item = %r\n"
+                " - 2nd occurrance: checktype = %s, item = %r\n" %
+                (service.description, hostname, cn, it, service.check_plugin_name, service.item))
             continue
 
         else:
-            used_descriptions[description] = (checkname, item)
-        if config.check_info[checkname].get("has_perfdata", False):
+            used_descriptions[service.description] = (service.check_plugin_name, service.item)
+        if config.check_info[service.check_plugin_name].get("has_perfdata", False):
             template = config.passive_service_template_perf
         else:
             template = config.passive_service_template
 
-        # Services Dependencies
-        for dep in deps:
-            outfile.write(
-                _format_nagios_object(
-                    "servicedependency", {
-                        "use": config.service_dependency_template,
-                        "host_name": hostname,
-                        "service_description": dep,
-                        "dependent_host_name": hostname,
-                        "dependent_service_description": description,
-                    }).encode("utf-8"))
+        # Services Dependencies for autochecks
+        outfile.write(get_dependencies(hostname, service.description).encode("utf-8"))
 
         service_spec = {
             "use": template,
             "host_name": hostname,
-            "service_description": description,
-            "check_command": "check_mk-%s" % checkname,
+            "service_description": service.description,
+            "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
         service_spec.update(
-            core_config.get_cmk_passive_service_attributes(config_cache, host_config, description,
-                                                           checkname, params, check_mk_attrs))
-        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, description))
+            core_config.get_cmk_passive_service_attributes(config_cache, host_config, service,
+                                                           check_mk_attrs))
+        service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname,
+                                                   service.description))
 
         outfile.write(_format_nagios_object("service", service_spec).encode("utf-8"))
 
-        cfg.checknames_to_define.add(checkname)
+        cfg.checknames_to_define.add(service.check_plugin_name)
         have_at_least_one_service = True
 
     # Active check for check_mk
@@ -366,8 +358,8 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
             # compute argument, and quote ! and \ for Nagios
             args = core_config.active_check_arguments(
-                hostname, description, act_info["argument_function"](params)).replace(
-                    "\\", "\\\\").replace("!", "\\!")
+                hostname, description,
+                act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -562,6 +554,14 @@ def _add_ping_service(cfg, config_cache, host_config, ipaddress, family, descr, 
 def _format_nagios_object(object_type, object_spec):
     cfg = ["define %s {" % object_type]
     for key, val in sorted(object_spec.iteritems(), key=lambda x: x[0]):
+        # Use a base16 encoding for names and values of tags, labels and label
+        # sources to work around the syntactic restrictions in Nagios' object
+        # configuration files.
+        if key[0] == "_":  # quick pre-check: custom variable?
+            for prefix in ("__TAG_", "__LABEL_", "__LABELSOURCE_"):
+                if key.startswith(prefix):
+                    key = prefix + base64.b16encode(key[len(prefix):])
+                    val = base64.b16encode(val)
         cfg.append("  %-29s %s" % (key, val))
     cfg.append("}")
 
@@ -581,12 +581,11 @@ def _create_nagios_config_hostgroups(cfg):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Host groups (controlled by define_hostgroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        hgs = list(cfg.hostgroups_to_define)
-        hgs.sort()
+        hgs = sorted(cfg.hostgroups_to_define)
         for hg in hgs:
             try:
                 alias = config.define_hostgroups[hg]
-            except:
+            except KeyError:
                 alias = hg
 
             outfile.write(
@@ -611,12 +610,11 @@ def _create_nagios_config_servicegroups(cfg):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Service groups (controlled by define_servicegroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        sgs = list(cfg.servicegroups_to_define)
-        sgs.sort()
+        sgs = sorted(cfg.servicegroups_to_define)
         for sg in sgs:
             try:
                 alias = config.define_servicegroups[sg]
-            except:
+            except KeyError:
                 alias = sg
 
             outfile.write(
@@ -701,8 +699,7 @@ def _create_nagios_config_timeperiods(cfg):
         cfg.outfile.write("\n# ------------------------------------------------------------\n")
         cfg.outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
         cfg.outfile.write("# ------------------------------------------------------------\n\n")
-        tpnames = config.timeperiods.keys()
-        tpnames.sort()
+        tpnames = sorted(config.timeperiods.keys())
         for name in tpnames:
             tp = config.timeperiods[name]
             timeperiod_spec = {
@@ -730,8 +727,7 @@ def _create_nagios_config_contacts(cfg, hostnames):
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
         outfile.write("# ------------------------------------------------------------\n\n")
-        cnames = config.contacts.keys()
-        cnames.sort()
+        cnames = sorted(config.contacts.keys())
         for cname in cnames:
             contact = config.contacts[cname]
             # Create contact groups in nagios, even when they are empty. This is needed
@@ -912,7 +908,6 @@ def stripped_python_file(filename):
 
 
 def _precompile_hostcheck(config_cache, hostname):
-    import cmk_base.check_table as check_table
     host_config = config_cache.get_host_config(hostname)
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
@@ -924,13 +919,12 @@ def _precompile_hostcheck(config_cache, hostname):
     for fname in [compiled_filename, source_filename]:
         try:
             os.remove(fname)
-        except:
-            pass
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
-    # check table, enriched with addition precompiled information.
-    host_check_table = check_table.get_precompiled_check_table(
-        hostname, filter_mode="include_clustered", skip_ignored=False)
-    if not host_check_table:
+    needed_check_plugin_names = _get_needed_check_plugin_names(host_config)
+    if not needed_check_plugin_names:
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -995,8 +989,6 @@ if '-d' in sys.argv:
 
 """)
 
-    needed_check_plugin_names = _get_needed_check_plugin_names(host_config, host_check_table)
-
     output.write("config.load_checks(check_api.get_check_api_context, %r)\n" %
                  _get_needed_check_file_names(needed_check_plugin_names))
 
@@ -1004,19 +996,6 @@ if '-d' in sys.argv:
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
     output.write("config.load_packed_config()\n")
-
-    # handling of clusters
-    if host_config.is_cluster:
-        cluster_nodes = host_config.nodes
-        output.write("config.is_cluster = lambda h: h == %r\n" % hostname)
-
-        nodes_of_map = {hostname: cluster_nodes}
-        for node in host_config.nodes:
-            nodes_of_map[node] = None
-        output.write("config.nodes_of = lambda h: %r[h]\n" % nodes_of_map)
-    else:
-        output.write("config.is_cluster = lambda h: False\n")
-        output.write("config.nodes_of = lambda h: None\n")
 
     # IP addresses
     needed_ipaddresses, needed_ipv6addresses, = {}, {}
@@ -1032,13 +1011,13 @@ if '-d' in sys.argv:
         try:
             if host_config.is_ipv4_host:
                 needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(hostname)
-        except:
+        except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
                 needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(hostname)
-        except:
+        except Exception:
             pass
     else:
         if host_config.is_ipv4_host:
@@ -1049,28 +1028,6 @@ if '-d' in sys.argv:
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
-
-    # datasource programs. Is this host relevant?
-
-    # I think this is not needed anymore. Keep it here for reference
-    #
-    ## Parameters for checks: Default values are defined in checks/*. The
-    ## variables might be overridden by the user in main.mk. We need
-    ## to set the actual values of those variables here. Otherwise the users'
-    ## settings would get lost. But we only need to set those variables that
-    ## influence the check itself - not those needed during inventory.
-    #for var in config.check_config_variables:
-    #    output.write("%s = %r\n" % (var, getattr(config, var)))
-
-    ## The same for those checks that use the new API
-    #for check_type in needed_check_types:
-    #    # Note: check_type might not be in config.check_info. This is
-    #    # the case, if "mem" has been added to "extra_sections" and thus
-    #    # to "needed_check_types" - despite the fact that only subchecks
-    #    # mem.* exist
-    #    if check_type in config.check_info:
-    #        for var in config.check_info[check_type].get("check_config_variables", []):
-    #            output.write("%s = %r\n" % (var, getattr(config, var)))
 
     # perform actual check with a general exception handler
     output.write("try:\n")
@@ -1109,7 +1066,7 @@ if '-d' in sys.argv:
     os.rename(source_filename + ".new", source_filename)
     if not config.delay_precompile:
         py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-        os.chmod(compiled_filename, 0755)
+        os.chmod(compiled_filename, 0o755)
     else:
         if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
             os.remove(compiled_filename)
@@ -1118,9 +1075,8 @@ if '-d' in sys.argv:
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _get_needed_check_plugin_names(host_config, host_check_table):
+def _get_needed_check_plugin_names(host_config):
     import cmk_base.check_table as check_table
-
     needed_check_plugin_names = set([])
 
     # In case the host is monitored as special agent, the check plugin for the special agent needs
@@ -1131,11 +1087,9 @@ def _get_needed_check_plugin_names(host_config, host_check_table):
             needed_check_plugin_names.add(source.special_agent_plugin_file_name)
 
     # Collect the needed check plugin names using the host check table
-    for check_plugin_name, _unused_item, _unused_param, _descr in host_check_table:
-        if check_plugin_name not in config.check_info:
-            sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_plugin_name)
-            continue
-
+    for check_plugin_name in check_table.get_needed_check_names(host_config.hostname,
+                                                                filter_mode="include_clustered",
+                                                                skip_ignored=False):
         if config.check_info[check_plugin_name].get("extra_sections"):
             for section_name in config.check_info[check_plugin_name]["extra_sections"]:
                 if section_name in config.check_info:
@@ -1148,7 +1102,7 @@ def _get_needed_check_plugin_names(host_config, host_check_table):
     if host_config.is_cluster:
         for node in host_config.nodes:
             needed_check_plugin_names.update(
-                [e[0] for e in check_table.get_precompiled_check_table(node, skip_ignored=False)])
+                check_table.get_needed_check_names(node, skip_ignored=False))
 
     return needed_check_plugin_names
 

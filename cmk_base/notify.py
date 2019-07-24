@@ -1723,17 +1723,7 @@ def notify_bulk(dirname, uuids):
             unhandled_uuids.append((mtime, uuid))
             continue
 
-        part_block = []
-        part_block.append("\n")
-        for varname, value in context.items():
-            part_block.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
-        bulk_context.append(part_block)
-
-        # Do not forget to add this to the monitoring log. We create
-        # a single entry for each notification contained in the bulk.
-        # It is important later to have this precise information.
-        plugin_name = "bulk " + (plugin or "plain email")
-        core_notification_log(plugin_name, context)
+        bulk_context.append(context)
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1742,12 +1732,20 @@ def notify_bulk(dirname, uuids):
         if type(old_params) == dict and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
-        # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]
-        bulk_context = [x for y in bulk_context for x in y]
+        context_lines = create_bulk_parameter_context(old_params)
+        for context in bulk_context:
+            # Do not forget to add this to the monitoring log. We create
+            # a single entry for each notification contained in the bulk.
+            # It is important later to have this precise information.
+            plugin_name = "bulk " + (plugin or "plain email")
+            core_notification_log(plugin_name, context)
 
-        parameter_context = create_bulk_parameter_context(old_params)
-        context_text = "".join(parameter_context + bulk_context)
-        call_bulk_notification_script(plugin, context_text)
+            context_lines.append("\n")
+            for varname, value in context.iteritems():
+                line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
+                context_lines.append(line)
+
+        call_bulk_notification_script(plugin, context_lines)
     else:
         notify_log("No valid notification file left. Skipping this bulk.")
 
@@ -1772,7 +1770,7 @@ def notify_bulk(dirname, uuids):
             notify_log("Warning: cannot remove directory %s: %s" % (dirname, e))
 
 
-def call_bulk_notification_script(plugin, context_text):
+def call_bulk_notification_script(plugin, context_lines):
     path = path_to_notification_script(plugin)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin)
@@ -1788,7 +1786,7 @@ def call_bulk_notification_script(plugin, context_text):
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              stdin=subprocess.PIPE, close_fds=True)
 
-        stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
+        stdout_txt, stderr_txt = p.communicate("".join(context_lines).encode("utf-8"))
         exitcode = p.returncode
 
         clear_notification_timeout()

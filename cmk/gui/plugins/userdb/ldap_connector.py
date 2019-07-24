@@ -2764,7 +2764,7 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     results = []
     start_time = time.time()
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 30:
         for job in jobs[:]:
             try:
                 results.append(job.get(timeout=0.5))

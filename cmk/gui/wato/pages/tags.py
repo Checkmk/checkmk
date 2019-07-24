@@ -34,7 +34,11 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKAuthException,
+    MKGeneralException,
+)
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -142,7 +146,10 @@ class ModeTags(ABCTagMode):
 
         if message:
             self._tag_config.remove_tag_group(del_id)
-            self._tag_config.validate_config()
+            try:
+                self._tag_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
@@ -172,7 +179,10 @@ class ModeTags(ABCTagMode):
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
-            self._tag_config.validate_config()
+            try:
+                self._tag_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
@@ -184,7 +194,10 @@ class ModeTags(ABCTagMode):
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
 
-        self._tag_config.validate_config()
+        try:
+            self._tag_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
         self._tag_config_file.save(self._tag_config.get_dict_format())
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
@@ -309,19 +322,18 @@ class ABCEditTagMode(ABCTagMode):
     def _is_new_tag(self):
         return html.request.var("edit") is None
 
-    def _basic_elements(self):
+    def _basic_elements(self, id_title):
         if self._new:
             vs_id = ID(
-                title=_("Tag ID"),
+                title=id_title,
                 size=60,
                 allow_empty=False,
-                help=_("The internal ID of the tag is used as it's unique identifier "
-                       "It cannot be changed later."),
+                help=_("This ID is used as it's unique identifier. It cannot be changed later."),
             )
         else:
             vs_id = FixedValue(
                 self._id,
-                title=_("Tag ID"),
+                title=id_title,
             )
 
         return [
@@ -394,7 +406,10 @@ class ModeEditAuxtag(ABCEditTagMode):
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
             changed_hosttags_config.aux_tag_list.update(self._id, self._aux_tag)
-        changed_hosttags_config.validate_config()
+        try:
+            changed_hosttags_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
@@ -414,7 +429,7 @@ class ModeEditAuxtag(ABCEditTagMode):
     def _valuespec(self):
         return Dictionary(
             title=_("Basic settings"),
-            elements=self._basic_elements(),
+            elements=self._basic_elements(_("Tag ID")),
             render="form",
             form_narrow=True,
             optional_keys=[],
@@ -467,14 +482,20 @@ class ModeEditTagGroup(ABCEditTagMode):
         if self._new:
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
-            changed_hosttags_config.validate_config()
+            try:
+                changed_hosttags_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
             self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "tags", _("Created new host tag group '%s'") % changed_tag_group.title
 
         # Updates and verifies changed tag group
         changed_hosttags_config.update_tag_group(changed_tag_group)
-        changed_hosttags_config.validate_config()
+        try:
+            changed_hosttags_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
 
         remove_tag_ids, replace_tag_ids = [], {}
         new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
@@ -518,7 +539,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         html.end_form()
 
     def _valuespec(self):
-        basic_elements = self._basic_elements()
+        basic_elements = self._basic_elements(_("Tag group ID"))
         tag_choice_elements = self._tag_choices_elements()
 
         return Dictionary(

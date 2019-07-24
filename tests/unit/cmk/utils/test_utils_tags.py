@@ -3,7 +3,7 @@
 
 import pytest  # type: ignore
 
-from cmk.gui.exceptions import MKUserError
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.utils.tags as tags
 
@@ -285,13 +285,13 @@ def test_tag_config_insert_tag_group_twice(cfg):
     cfg.insert_tag_group(tags.TagGroup(("tgidX", "Topics/titlor", [("tgid2", "tagid2", [])])))
     cfg.validate_config()
 
-    with pytest.raises(MKUserError, match="is used twice"):
+    with pytest.raises(MKGeneralException, match="is used twice"):
         cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid3", "tagid3", [])])))
         cfg.validate_config()
 
 
 def test_tag_config_insert_tag_group_missing_id(cfg):
-    with pytest.raises(MKUserError, match="Please specify"):
+    with pytest.raises(MKGeneralException, match="Please specify"):
         tg = tags.TagGroup()
         tg.id = ""
         cfg.insert_tag_group(tg)
@@ -299,7 +299,7 @@ def test_tag_config_insert_tag_group_missing_id(cfg):
 
 
 def test_tag_config_insert_tag_group_missing_title(cfg):
-    with pytest.raises(MKUserError, match="Please specify"):
+    with pytest.raises(MKGeneralException, match="Please specify"):
         tg = tags.TagGroup()
         tg.id = "abc"
         tg.title = ""
@@ -308,7 +308,7 @@ def test_tag_config_insert_tag_group_missing_title(cfg):
 
 
 def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg):
-    with pytest.raises(MKUserError, match="Only one tag may be empty"):
+    with pytest.raises(MKGeneralException, match="Only one tag may be empty"):
         tg = tags.TagGroup(("tgid3", "Topics/titlor", [
             (None, "tagid2", []),
             ("", "tagid3", []),
@@ -318,7 +318,7 @@ def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg):
 
 
 def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg):
-    with pytest.raises(MKUserError, match="must be unique"):
+    with pytest.raises(MKGeneralException, match="must be unique"):
         tg = tags.TagGroup(("tgid4", "Topics/titlor", [
             ("ding", "tagid2", []),
             ("ding", "tagid3", []),
@@ -335,7 +335,7 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg):
     cfg.insert_tag_group(tg)
     cfg.validate_config()
 
-    with pytest.raises(MKUserError, match="is used twice"):
+    with pytest.raises(MKGeneralException, match="is used twice"):
         tg = tags.TagGroup(("bla", "Topics/titlor", [
             ("tagid2", "tagid2", []),
         ]))
@@ -344,14 +344,14 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg):
 
 
 def test_tag_config_insert_tag_group_no_tag(cfg):
-    with pytest.raises(MKUserError, match="at least one tag"):
+    with pytest.raises(MKGeneralException, match="at least one tag"):
         tg = tags.TagGroup(("tgid7", "Topics/titlor", []))
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
 def test_tag_config_update_tag_group(test_cfg):
-    with pytest.raises(MKUserError, match="Unknown tag group"):
+    with pytest.raises(MKGeneralException, match="Unknown tag group"):
         test_cfg.update_tag_group(
             tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
         test_cfg.validate_config()

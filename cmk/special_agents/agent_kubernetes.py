@@ -48,8 +48,9 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from dateutil.parser import parse as parse_time
-from kubernetes import client
-from kubernetes.client.rest import ApiException
+# We currently have no typeshed for kubernetes
+from kubernetes import client  # type: ignore
+from kubernetes.client.rest import ApiException  # type: ignore
 
 import cmk.utils.profile
 import cmk.utils.password_store

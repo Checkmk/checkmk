@@ -46,7 +46,11 @@ import time
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk.utils.debug
-from cmk.utils.notify import find_wato_folder, notification_message
+from cmk.utils.notify import (
+    find_wato_folder,
+    notification_message,
+    notification_result_message,
+)
 from cmk.utils.regex import regex
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -1750,7 +1754,16 @@ def notify_bulk(dirname, uuids):
                 line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
                 context_lines.append(line)
 
-        call_bulk_notification_script(plugin, context_lines)
+        exitcode, output_lines = call_bulk_notification_script(plugin, context_lines)
+
+        for context in bulk_context:
+            _log_to_history(
+                notification_result_message(
+                    "bulk " + (plugin or "plain email"),
+                    context,
+                    exitcode,
+                    output_lines,
+                ))
     else:
         notify_log("No valid notification file left. Skipping this bulk.")
 
@@ -1806,8 +1819,12 @@ def call_bulk_notification_script(plugin, context_lines):
 
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
-    for line in (stdout_txt + stderr_txt).splitlines():
+
+    output_lines = (stdout_txt + stderr_txt).splitlines()
+    for line in output_lines:
         notify_log("%s: %s" % (plugin, line.rstrip()))
+
+    return exitcode, output_lines
 
 
 #.

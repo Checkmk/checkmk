@@ -40,7 +40,7 @@ endif
 # Check_MK Edition specific
 MODULES += simplejson-3.15.0.tar.gz
 
-ifeq ($(DISTRO_CODE),sles15)
+ifneq ($(filter $(DISTRO_CODE),sles15 buster),)
     # Partial backport of 716eebb7de600a32300cc391ac9ecb67dd1aabf6 (specific for sles15)
     # Since 1.6 all distros use mysqlclient. Better keep the old module for the other
     # distros to reduce risk of breaking things

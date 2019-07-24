@@ -1,0 +1,11 @@
+Title: Unified rendering of percentage values in service details, graphs and other places
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1563974330
+
+Improvement of display of percentage values in the GUI. Very small or very large percent values are no longer displayed as scientific notation. This also improved the percantage values display in graph for very small/large values.

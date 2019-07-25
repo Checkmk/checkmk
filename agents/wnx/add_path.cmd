@@ -6,4 +6,4 @@ powershell Write-Host "path exists" -Foreground Green
 exit 0
 :set_path
 CHOICE /C YN /M "Press Y for Yes, N for No." 
-if %errorlevel%==1 powershell Write-Host "path exists" -Foreground Green && setx path %path%;%np% && exit 0
+if %errorlevel%==1 powershell Write-Host "path exists" -Foreground Green && setx path %path%;%np% && exit /b 0

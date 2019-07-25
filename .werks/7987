@@ -1,0 +1,14 @@
+Title: Fix xinetd.conf conflict on "omd mv/cp"
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564040119
+Class: fix
+
+When performing an omd cp or omd mv to copy or rename a site, this resulted
+in a conflict with the xinetd.conf configuration file of Livestatus, when
+it was enabled to listen via TCP.
+
+This issue affected all previous 1.6 releases.

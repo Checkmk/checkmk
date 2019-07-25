@@ -1606,6 +1606,7 @@ def prepare_and_populate_tmpfs(site):
     if not os.listdir(site.tmp_dir):
         create_skeleton_files(site, "tmp")
         chown_tree(site.tmp_dir, site.name)
+    _create_livestatus_tcp_socket_link(site)
 
     ok()
 
@@ -3337,6 +3338,15 @@ def initialize_livestatus_tcp_tls_after_update(site):
         return
 
     config_set_value(site, {}, "LIVESTATUS_TCP_TLS", value="off", save=True)
+
+
+def _create_livestatus_tcp_socket_link(site):
+    """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
+    link_path = site.tmp_dir + "/run/live-tcp"
+    target = "live-tls" if site.conf["LIVESTATUS_TCP"] == "on" else "live"
+    if os.path.lexists(link_path):
+        os.unlink(link_path)
+    os.symlink(target, link_path)
 
 
 def _get_edition(omd_version):

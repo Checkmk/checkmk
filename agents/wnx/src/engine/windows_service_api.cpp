@@ -415,10 +415,6 @@ int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono;
     using namespace cma::install;
     XLOG::setup::ColoredOutputOnStdio(true);
-    if (stdio_log == StdioLog::yes)
-        XLOG::setup::EnableTraceLog(false);
-    else
-        XLOG::setup::EnableTraceLog(true);
     XLOG::SendStringToStdio(
         "Adhoc/Exec Mode,"
         "press any key to stop execution\n",

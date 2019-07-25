@@ -165,7 +165,7 @@ def write_config(testconfig):
 @pytest.fixture
 def wait_agent():
     def inner():
-        pass
+        return False
 
     return inner
 

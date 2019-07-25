@@ -84,7 +84,8 @@ TEST(AgentConfig, MainYaml) {
     EXPECT_TRUE(load[groups::kGlobal].IsMap());
     EXPECT_TRUE(load[groups::kFileInfo].IsMap());
     EXPECT_TRUE(load[groups::kLocal].IsMap());
-    EXPECT_TRUE(load[groups::kLogFiles].IsMap());
+    EXPECT_FALSE(load[groups::kLogFiles].IsDefined()) << "logfiles"
+                                                         " not supported";
     EXPECT_TRUE(load[groups::kLogWatchEvent].IsMap());
     EXPECT_TRUE(load[groups::kMrpe].IsMap());
     EXPECT_TRUE(load[groups::kPlugins].IsMap());

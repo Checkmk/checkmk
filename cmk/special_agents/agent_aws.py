@@ -446,8 +446,6 @@ AWSEC2LimitsSpecial = {
 }
 
 #.
-
-#.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -509,12 +507,19 @@ AWSSectionResult = NamedTuple("AWSSectionResult", [
     ("content", Any),
 ])
 
-AWSLimit = NamedTuple("AWSLimit", [
-    ("key", AWSStrings),
-    ("title", AWSStrings),
-    ("limit", int),
-    ("amount", int),
-])
+# ToDo:
+# after migration to python 3.7 change this to:
+# class AWSLimit(NamedTuple):
+#     key: AWSStrings
+#     title: AWSStrings
+#     limit: int
+#     amount: int
+#     region: AWSStrings = "global"
+AWSLimit = NamedTuple("AWSLimit", [("key", AWSStrings), ("title", AWSStrings), ("limit", int),
+                                   ("amount", int)])
+AWSRegionLimit = NamedTuple("AWSRegionLimit", [("key", AWSStrings), ("title", AWSStrings),
+                                               ("limit", int), ("amount", int),
+                                               ("region", AWSStrings)])
 
 AWSColleagueContents = NamedTuple("AWSColleagueContents", [
     ("content", Any),
@@ -558,6 +563,10 @@ class AWSSection(DataCache):
         We use interval property for cached section.
         """
         pass
+
+    @property
+    def region(self):
+        return self._region
 
     @property
     def period(self):
@@ -610,8 +619,9 @@ class AWSSection(DataCache):
                 continue
 
             assert isinstance(
-                result.piggyback_hostname, (unicode, str)
-            ), "%s: Piggyback hostname of created result must be of type 'unicode' or 'str'" % self.name
+                result.piggyback_hostname,
+                (unicode,
+                 str)), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
 
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results, except for labels sections.
@@ -710,7 +720,12 @@ class AWSSectionLimits(AWSSection):
 
     def _add_limit(self, piggyback_hostname, limit):
         assert isinstance(limit, AWSLimit), "%s: Limit must be of type 'AWSLimit'" % self.name
-        self._limits.setdefault(piggyback_hostname, []).append(limit)
+        self._limits.setdefault(piggyback_hostname, []).append(
+            AWSRegionLimit(key=limit.key,
+                           title=limit.title,
+                           limit=limit.limit,
+                           amount=limit.amount,
+                           region=self.region))
 
     def _create_results(self, computed_content):
         return [
@@ -941,12 +956,20 @@ class EC2Limits(AWSSectionLimits):
                 inst_type, AWSEC2LimitsDefault)
             self._add_limit(
                 "",
-                AWSLimit("running_ondemand_instances_%s" % inst_type,
-                         "Running On-Demand %s Instances" % inst_type, ondemand_limit, count))
+                AWSLimit(
+                    "running_ondemand_instances_%s" % inst_type,
+                    "Running On-Demand %s Instances" % inst_type,
+                    ondemand_limit,
+                    count,
+                ))
         self._add_limit(
             "",
-            AWSLimit("running_ondemand_instances_total", "Total Running On-Demand Instances",
-                     dflt_ondemand_limit, total_instances))
+            AWSLimit(
+                "running_ondemand_instances_total",
+                "Total Running On-Demand Instances",
+                dflt_ondemand_limit,
+                total_instances,
+            ))
 
     def _get_inst_limits(self, instances, spot_inst_requests):
         spot_instance_ids = [inst['InstanceId'] for inst in spot_inst_requests]
@@ -988,9 +1011,19 @@ class EC2Limits(AWSSectionLimits):
             elif domain == "standard":
                 std_addresses += 1
         self._add_limit(
-            "", AWSLimit("vpc_elastic_ip_addresses", "VPC Elastic IP Addresses", 5, vpc_addresses))
+            "", AWSLimit(
+                "vpc_elastic_ip_addresses",
+                "VPC Elastic IP Addresses",
+                5,
+                vpc_addresses,
+            ))
         self._add_limit("",
-                        AWSLimit("elastic_ip_addresses", "Elastic IP Addresses", 5, std_addresses))
+                        AWSLimit(
+                            "elastic_ip_addresses",
+                            "Elastic IP Addresses",
+                            5,
+                            std_addresses,
+                        ))
 
     def _add_security_group_limits(self, instances, security_groups):
         # Security groups for EC2-Classic per instance
@@ -1008,14 +1041,22 @@ class EC2Limits(AWSSectionLimits):
             sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
                 inst_id,
-                AWSLimit("vpc_sec_group_rules",
-                         "Rules of VPC security group %s" % sec_group['GroupName'], 50,
-                         len(sec_group['IpPermissions'])))
+                AWSLimit(
+                    "vpc_sec_group_rules",
+                    "Rules of VPC security group %s" % sec_group['GroupName'],
+                    50,
+                    len(sec_group['IpPermissions']),
+                ))
 
         for (inst_id, vpc_id), count in sgs_per_vpc.iteritems():
             self._add_limit(
-                inst_id, AWSLimit("vpc_sec_groups", "Security Groups of VPC %s" % vpc_id, 500,
-                                  count))
+                inst_id,
+                AWSLimit(
+                    "vpc_sec_groups",
+                    "Security Groups of VPC %s" % vpc_id,
+                    500,
+                    count,
+                ))
 
     def _get_inst_assignment(self, instances, key, assignment):
         for inst in instances.itervalues():
@@ -1032,8 +1073,12 @@ class EC2Limits(AWSSectionLimits):
             self._add_limit(
                 _get_ec2_piggyback_hostname(inst, self._region),
                 AWSLimit(
-                    "if_vpc_sec_group", "VPC security groups of elastic network interface %s" %
-                    iface['NetworkInterfaceId'], 5, len(iface['Groups'])))
+                    "if_vpc_sec_group",
+                    "VPC security groups of elastic network interface %s" %
+                    iface['NetworkInterfaceId'],
+                    5,
+                    len(iface['Groups']),
+                ))
 
     def _add_spot_inst_limits(self, spot_inst_requests):
         count_spot_inst_reqs = 0
@@ -1041,7 +1086,12 @@ class EC2Limits(AWSSectionLimits):
             if spot_inst_req['State'] in ['open', 'active']:
                 count_spot_inst_reqs += 1
         self._add_limit(
-            "", AWSLimit('spot_inst_requests', 'Spot Instance Requests', 20, count_spot_inst_reqs))
+            "", AWSLimit(
+                'spot_inst_requests',
+                'Spot Instance Requests',
+                20,
+                count_spot_inst_reqs,
+            ))
 
     def _add_spot_fleet_limits(self, spot_fleet_requests):
         active_spot_fleet_requests = 0
@@ -1055,12 +1105,20 @@ class EC2Limits(AWSSectionLimits):
 
         self._add_limit(
             "",
-            AWSLimit('active_spot_fleet_requests', 'Active Spot Fleet Requests', 1000,
-                     active_spot_fleet_requests))
+            AWSLimit(
+                'active_spot_fleet_requests',
+                'Active Spot Fleet Requests',
+                1000,
+                active_spot_fleet_requests,
+            ))
         self._add_limit(
             "",
-            AWSLimit('spot_fleet_total_target_capacity',
-                     'Spot Fleet Requests Total Target Capacity', 5000, total_target_cap))
+            AWSLimit(
+                'spot_fleet_total_target_capacity',
+                'Spot Fleet Requests Total Target Capacity',
+                5000,
+                total_target_cap,
+            ))
 
 
 class EC2Summary(AWSSectionGeneric):
@@ -1354,27 +1412,58 @@ class EBSLimits(AWSSectionLimits):
         # These are total limits and not instance specific
         # Space values are in TiB.
         self._add_limit(
-            "", AWSLimit('block_store_snapshots', 'Block store snapshots', 100000, len(snapshots)))
+            "", AWSLimit(
+                'block_store_snapshots',
+                'Block store snapshots',
+                100000,
+                len(snapshots),
+            ))
         self._add_limit(
             "",
-            AWSLimit('block_store_space_standard', 'Magnetic volumes space', 300,
-                     vol_storage_standard))
-        self._add_limit(
-            "", AWSLimit('block_store_space_io1', 'Provisioned IOPS SSD space', 300,
-                         vol_storage_io1))
-        self._add_limit(
-            "",
-            AWSLimit('block_store_iops_io1', 'Provisioned IOPS SSD IO operations per second',
-                     300000, vol_storage_io1))
-        self._add_limit(
-            "", AWSLimit('block_store_space_gp2', 'General Purpose SSD space', 300,
-                         vol_storage_gp2))
-        self._add_limit("", AWSLimit('block_store_space_sc1', 'Cold HDD space', 300,
-                                     vol_storage_sc1))
+            AWSLimit(
+                'block_store_space_standard',
+                'Magnetic volumes space',
+                300,
+                vol_storage_standard,
+            ))
         self._add_limit(
             "",
-            AWSLimit('block_store_space_st1', 'Throughput Optimized HDD space', 300,
-                     vol_storage_st1))
+            AWSLimit(
+                'block_store_space_io1',
+                'Provisioned IOPS SSD space',
+                300,
+                vol_storage_io1,
+            ))
+        self._add_limit(
+            "",
+            AWSLimit(
+                'block_store_iops_io1',
+                'Provisioned IOPS SSD IO operations per second',
+                300000,
+                vol_storage_io1,
+            ))
+        self._add_limit(
+            "", AWSLimit(
+                'block_store_space_gp2',
+                'General Purpose SSD space',
+                300,
+                vol_storage_gp2,
+            ))
+        self._add_limit("",
+                        AWSLimit(
+                            'block_store_space_sc1',
+                            'Cold HDD space',
+                            300,
+                            vol_storage_sc1,
+                        ))
+        self._add_limit(
+            "",
+            AWSLimit(
+                'block_store_space_st1',
+                'Throughput Optimized HDD space',
+                300,
+                vol_storage_st1,
+            ))
         return AWSComputedContent(volumes, raw_content.cache_timestamp)
 
 
@@ -1553,6 +1642,26 @@ class EBS(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
+class S3BucketHelper(object):
+    """
+    Helper Class for S3
+    """
+    @staticmethod
+    def list_buckets(client):
+        """
+        Get all buckets with LocationConstraint
+        """
+        bucket_list = client.list_buckets()
+        for bucket in bucket_list['Buckets']:
+            bucket_name = bucket['Name']
+
+            # request additional LocationConstraint information
+            response = client.get_bucket_location(Bucket=bucket_name)
+            if response and response['LocationConstraint']:
+                bucket['LocationConstraint'] = response['LocationConstraint']
+        return bucket_list['Buckets'] if bucket_list else []
+
+
 class S3Limits(AWSSectionLimits):
     @property
     def name(self):
@@ -1570,8 +1679,8 @@ class S3Limits(AWSSectionLimits):
         There's no API method for getting account limits thus we have to
         fetch all buckets.
         """
-        response = self._client.list_buckets()
-        return self._get_response_content(response, 'Buckets')
+        bucket_list = S3BucketHelper.list_buckets(self._client)
+        return bucket_list
 
     def _compute_content(self, raw_content, colleague_contents):
         self._add_limit("", AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)))
@@ -1603,14 +1712,6 @@ class S3Summary(AWSSectionGeneric):
         for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
 
-            # We can request buckets globally but if a bucket is located in
-            # another region we do not get any results
-            response = self._client.get_bucket_location(Bucket=bucket_name)
-            location = self._get_response_content(response, 'LocationConstraint', dflt="")
-            if location != self._region:
-                continue
-            bucket['LocationConstraint'] = location
-
             #TODO
             # Why do we get the following error while calling these methods:
             #_response = self._client.get_public_access_block(Bucket=bucket_name)
@@ -1630,15 +1731,16 @@ class S3Summary(AWSSectionGeneric):
         return found_buckets
 
     def _list_buckets(self, colleague_contents):
-        if self._tags is None and self._names is not None:
-            if colleague_contents.content:
-                return [
-                    bucket for bucket in colleague_contents.content if bucket['Name'] in self._names
-                ]
-            return [{'Name': n} for n in self._names]
+        # use previous fetched data or fetch it now
+        if colleague_contents.content:
+            bucket_list = colleague_contents.content
+        else:
+            bucket_list = S3BucketHelper.list_buckets(self._client)
 
-        response = self._client.list_buckets()
-        return self._get_response_content(response, 'Buckets')
+        # filter buckets by name if there is a filter
+        if self._tags is None and self._names is not None:
+            return [bucket for bucket in bucket_list if bucket['Name'] in self._names]
+        return bucket_list
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -1788,6 +1890,156 @@ class S3Requests(AWSSectionCloudwatch):
 
 
 #.
+#   .--Glacier-------------------------------------------------------------.
+#   |                    ____ _            _                               |
+#   |                   / ___| | __ _  ___(_) ___ _ __                     |
+#   |                  | |  _| |/ _` |/ __| |/ _ \ '__|                    |
+#   |                  | |_| | | (_| | (__| |  __/ |                       |
+#   |                   \____|_|\__,_|\___|_|\___|_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class GlacierLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "glacier_limits"
+
+    @property
+    def cache_interval(self):
+        return 86400
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, colleague_contents):
+        """
+        There's no API method for getting account limits thus we have to
+        fetch all vaults.
+        """
+        response = self._client.list_vaults()
+        return self._get_response_content(response, 'VaultList')
+
+    def _compute_content(self, raw_content, colleague_contents):
+        self._add_limit("", AWSLimit(
+            'number_of_vaults',
+            'Vaults',
+            1000,
+            len(raw_content.content),
+        ))
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+
+class GlacierSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(GlacierSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['glacier_names']
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config['glacier_tags'])
+
+    @property
+    def name(self):
+        return "glacier_summary"
+
+    @property
+    def cache_interval(self):
+        return 86400
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('glacier_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, colleague_contents):
+        """
+        1. get all vaults from AWS Glacier.
+        2. filter vaults by their name.
+        3. get tags for the filtered vaults
+        :param colleague_contents:
+        :return: filtered list of vaults with their tags
+        """
+        found_vaults = []
+        for vault in self._filter_vaults_by_names(self._list_vaults(colleague_contents)):
+            vault_name = vault['VaultName']
+
+            try:
+                response = self._client.list_tags_for_vault(vaultName=vault_name)
+            except botocore.exceptions.ClientError as e:
+                # If there are no tags attached to a bucket we receive a 'ClientError'
+                logging.warning("%s/%s: Exception, %s", self.name, vault_name, e)
+                response = {}
+
+            tagging = self._get_response_content(response, 'Tags')
+            if self._matches_tag_conditions(tagging):
+                vault['Tagging'] = tagging
+                found_vaults.append(vault)
+        return found_vaults
+
+    def _filter_vaults_by_names(self, vault_list):
+        """
+        filter vaults by their VaultName
+        :param vault_list: list of all vaults
+        :return: filtered list of dicts
+        """
+        if not self._names:
+            return vault_list
+
+        return [vault for vault in vault_list if vault['VaultName'] in self._names]
+
+    def _list_vaults(self, colleague_contents):
+        """
+        get list of vaults from previous call or get it now
+        :param colleague_contents:
+        :return:
+        """
+        if colleague_contents and colleague_contents.content:
+            return colleague_contents.content
+        return self._get_response_content(self._client.list_vaults(), 'VaultList')
+
+    def _matches_tag_conditions(self, tagging):
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", None)]
+
+
+class Glacier(AWSSectionGeneric):
+    @property
+    def name(self):
+        return "glacier"
+
+    @property
+    def cache_interval(self):
+        return 86400
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('glacier_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def get_live_data(self, colleague_contents):
+        pass
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(colleague_contents.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+#.
 #   .--ELB-----------------------------------------------------------------.
 #   |                          _____ _     ____                            |
 #   |                         | ____| |   | __ )                           |
@@ -1829,19 +2081,31 @@ class ELBLimits(AWSSectionLimits):
 
         self._add_limit(
             "",
-            AWSLimit("load_balancers", "Load balancers", limits['classic-load-balancers'],
-                     len(load_balancers)))
+            AWSLimit(
+                "load_balancers",
+                "Load balancers",
+                limits['classic-load-balancers'],
+                len(load_balancers),
+            ))
 
         for load_balancer in load_balancers:
             dns_name = load_balancer['DNSName']
             self._add_limit(
                 dns_name,
-                AWSLimit("load_balancer_listeners", "Listeners", limits['classic-listeners'],
-                         len(load_balancer['ListenerDescriptions'])))
+                AWSLimit(
+                    "load_balancer_listeners",
+                    "Listeners",
+                    limits['classic-listeners'],
+                    len(load_balancer['ListenerDescriptions']),
+                ))
             self._add_limit(
                 dns_name,
-                AWSLimit("load_balancer_registered_instances", "Registered instances",
-                         limits['classic-registered-instances'], len(load_balancer['Instances'])))
+                AWSLimit(
+                    "load_balancer_registered_instances",
+                    "Registered instances",
+                    limits['classic-registered-instances'],
+                    len(load_balancer['Instances']),
+                ))
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
@@ -2145,19 +2409,24 @@ class ELBv2Limits(AWSSectionLimits):
                 title = 'Application'
                 self._add_limit(
                     lb_dns_name,
-                    AWSLimit("application_load_balancer_rules", "Application Load Balancer Rules",
-                             limits['rules-per-application-load-balancer'],
-                             len(load_balancer.get('Rules', []))))
+                    AWSLimit(
+                        "application_load_balancer_rules",
+                        "Application Load Balancer Rules",
+                        limits['rules-per-application-load-balancer'],
+                        len(load_balancer.get('Rules', [])),
+                    ))
 
                 self._add_limit(
                     lb_dns_name,
                     AWSLimit(
                         "application_load_balancer_certificates",
-                        "Application Load Balancer Certificates", 25,
+                        "Application Load Balancer Certificates",
+                        25,
                         len([
                             cert for cert in load_balancer.get('Certificates', [])
                             if not cert['IsDefault']
-                        ])))
+                        ]),
+                    ))
 
             elif lb_type == "network":
                 nlb_count += 1
@@ -2169,29 +2438,48 @@ class ELBv2Limits(AWSSectionLimits):
 
             self._add_limit(
                 lb_dns_name,
-                AWSLimit("%s_load_balancer_listeners" % key, "%s Load Balancer Listeners" % title,
-                         limits['listeners-per-%s-load-balancer' % key], lb_listeners_count))
+                AWSLimit(
+                    "%s_load_balancer_listeners" % key,
+                    "%s Load Balancer Listeners" % title,
+                    limits['listeners-per-%s-load-balancer' % key],
+                    lb_listeners_count,
+                ))
 
             self._add_limit(
                 lb_dns_name,
-                AWSLimit("%s_load_balancer_target_groups" % key,
-                         "%s Load Balancer Target Groups" % title,
-                         limits['targets-per-%s-load-balancer' % key], lb_target_groups_count))
+                AWSLimit(
+                    "%s_load_balancer_target_groups" % key,
+                    "%s Load Balancer Target Groups" % title,
+                    limits['targets-per-%s-load-balancer' % key],
+                    lb_target_groups_count,
+                ))
 
         self._add_limit(
             "",
-            AWSLimit("application_load_balancers", "Application Load balancers",
-                     limits['application-load-balancers'], alb_count))
+            AWSLimit(
+                "application_load_balancers",
+                "Application Load balancers",
+                limits['application-load-balancers'],
+                alb_count,
+            ))
 
         self._add_limit(
             "",
-            AWSLimit("network_load_balancers", "Network Load balancers",
-                     limits['network-load-balancers'], nlb_count))
+            AWSLimit(
+                "network_load_balancers",
+                "Network Load balancers",
+                limits['network-load-balancers'],
+                nlb_count,
+            ))
 
         self._add_limit(
             "",
-            AWSLimit("load_balancer_target_groups", "Load balancers Target Groups",
-                     limits['target-groups'], target_groups_count))
+            AWSLimit(
+                "load_balancer_target_groups",
+                "Load balancers Target Groups",
+                limits['target-groups'],
+                target_groups_count,
+            ))
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
 
 
@@ -2474,7 +2762,12 @@ class RDSLimits(AWSSectionLimits):
             if key is None or title is None:
                 logging.info("%s: Unhandled account quota name: '%s'", self.name, quota_name)
                 continue
-            self._add_limit("", AWSLimit(key, title, int(limit['Max']), int(limit['Used'])))
+            self._add_limit("", AWSLimit(
+                key,
+                title,
+                int(limit['Max']),
+                int(limit['Used']),
+            ))
         return AWSComputedContent(None, 0.0)
 
 
@@ -2622,7 +2915,12 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
 
     def _compute_content(self, raw_content, colleague_contents):
         self._add_limit(
-            "", AWSLimit('cloudwatch_alarms', 'Cloudwatch Alarms', 5000, len(raw_content.content)))
+            "", AWSLimit(
+                'cloudwatch_alarms',
+                'Cloudwatch Alarms',
+                5000,
+                len(raw_content.content),
+            ))
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
@@ -2781,23 +3079,47 @@ class AWSSectionsUSEast(AWSSections):
     """
     Some clients like CostExplorer only work with US East region:
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
+    US East is the AWS Standard region.
+
+    Note that for buckets created in the US Standard region, us-east-1, the value of LocationConstraint will be null.
     """
     def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
+        cloudwatch_client = self._init_client('cloudwatch')
+        s3_client = self._init_client('s3')
+
         #---distributors----------------------------------------------------
+        s3_limits_distributor = ResultDistributor()
+        s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
+        s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
+        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client, region, config)
 
+        s3 = S3(cloudwatch_client, region, config)
+        s3_requests = S3Requests(cloudwatch_client, region, config)
+
         #---register sections to distributors-------------------------------
+        s3_limits_distributor.add(s3_summary)
+        s3_summary_distributor.add(s3)
+        s3_summary_distributor.add(s3_requests)
 
         #---register sections for execution---------------------------------
         if 'ce' in services:
             self._sections.append(ce)
+
+        if 's3' in services:
+            if config.service_config.get('s3_limits'):
+                self._sections.append(s3_limits)
+            self._sections.append(s3_summary)
+            self._sections.append(s3)
+            if config.service_config['s3_requests']:
+                self._sections.append(s3_requests)
 
 
 class AWSSectionsGeneric(AWSSections):
@@ -2806,7 +3128,8 @@ class AWSSectionsGeneric(AWSSections):
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
         elbv2_client = self._init_client('elbv2')
-        s3_client = self._init_client('s3')
+
+        glacier_client = self._init_client('glacier')
         rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
 
@@ -2823,8 +3146,8 @@ class AWSSectionsGeneric(AWSSections):
         ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
 
-        s3_limits_distributor = ResultDistributor()
-        s3_summary_distributor = ResultDistributor()
+        glacier_limits_distributor = ResultDistributor()
+        glacier_summary_distributor = ResultDistributor()
 
         rds_summary_distributor = ResultDistributor()
 
@@ -2851,8 +3174,9 @@ class AWSSectionsGeneric(AWSSections):
                                           elbv2_summary_distributor,
                                           resource='elbv2')
 
-        s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
-        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
+        glacier_limits = GlacierLimits(glacier_client, region, config, glacier_limits_distributor)
+        glacier_summary = GlacierSummary(glacier_client, region, config,
+                                         glacier_summary_distributor)
 
         rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
 
@@ -2875,11 +3199,10 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_application = ELBv2Application(cloudwatch_client, region, config)
         elbv2_network = ELBv2Network(cloudwatch_client, region, config)
 
-        s3 = S3(cloudwatch_client, region, config)
-        s3_requests = S3Requests(cloudwatch_client, region, config)
-
         rds_limits = RDSLimits(rds_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
+
+        glacier = Glacier(cloudwatch_client, region, config)
 
         cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
 
@@ -2904,9 +3227,8 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_summary_distributor.add(elbv2_application)
         elbv2_summary_distributor.add(elbv2_network)
 
-        s3_limits_distributor.add(s3_summary)
-        s3_summary_distributor.add(s3)
-        s3_summary_distributor.add(s3_requests)
+        glacier_limits_distributor.add(glacier_summary)
+        glacier_summary_distributor.add(glacier)
 
         rds_summary_distributor.add(rds)
 
@@ -2945,13 +3267,11 @@ class AWSSectionsGeneric(AWSSections):
             #self._sections.append(elbv2_application)
             #self._sections.append(elbv2_network)
 
-        if 's3' in services:
-            if config.service_config.get('s3_limits'):
-                self._sections.append(s3_limits)
-            self._sections.append(s3_summary)
-            self._sections.append(s3)
-            if config.service_config['s3_requests']:
-                self._sections.append(s3_requests)
+        if 'glacier' in services:
+            if config.service_config.get('glacier_limits'):
+                self._sections.append(glacier_limits)
+            self._sections.append(glacier_summary)
+            self._sections.append(glacier)
 
         if 'rds' in services:
             if config.service_config.get('rds_limits'):
@@ -3006,6 +3326,12 @@ AWSServices = [
                          limits=True),
     AWSServiceAttributes(key="s3",
                          title="Simple Storage Service (S3)",
+                         global_service=True,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="glacier",
+                         title="Simple Storage Service Glacier (Glacier)",
                          global_service=False,
                          filter_by_names=True,
                          filter_by_tags=True,
@@ -3040,6 +3366,7 @@ AWSServices = [
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
+
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("--verbose",
                         action="store_true",
@@ -3049,7 +3376,6 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
-
     parser.add_argument("--access-key-id",
                         required=True,
                         help="The access key ID for your AWS account.")
@@ -3060,18 +3386,27 @@ def parse_arguments(argv):
                         nargs='+',
                         help="Regions to use:\n%s" %
                         "\n".join(["%-15s %s" % e for e in AWSRegions]))
-
     parser.add_argument(
         "--global-services",
         nargs='+',
         help="Global services to monitor:\n%s" %
         "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if e.global_service]))
-
     parser.add_argument(
         "--services",
         nargs='+',
         help="Services per region to monitor:\n%s" %
         "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]))
+    parser.add_argument(
+        "--s3-requests",
+        action="store_true",
+        help="You have to enable requests metrics in AWS/S3 console. This is a paid feature.")
+    parser.add_argument("--cloudwatch-alarms", nargs='*')
+    parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
+    parser.add_argument('--overall-tag-values',
+                        nargs='+',
+                        action='append',
+                        help="Overall tag values")
+    parser.add_argument("--hostname", required=True)
 
     for service in AWSServices:
         if service.filter_by_names:
@@ -3092,20 +3427,6 @@ def parse_arguments(argv):
                                 action="store_true",
                                 help="Monitor limits for %s" % service.title)
 
-    parser.add_argument(
-        "--s3-requests",
-        action="store_true",
-        help="You have to enable requests metrics in AWS/S3 console. This is a paid feature.")
-
-    parser.add_argument("--cloudwatch-alarms", nargs='*')
-
-    parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
-    parser.add_argument('--overall-tag-values',
-                        nargs='+',
-                        action='append',
-                        help="Overall tag values")
-
-    parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
 
 
@@ -3162,6 +3483,47 @@ class AWSConfig(object):
         self.service_config.setdefault(key, value)
 
 
+def sort_services(g_services, r_services):
+    """
+    sort service keys into global and regional services by checking the service configuration of AWSServices.
+    this abstracts the AWS structure from the GUI configuration.
+    :param g_services: all services in --global-services
+    :param r_services: all services in --services
+    :return: two lists of global and regional services
+    """
+    global_services = []
+    regional_services = []
+    for service_key in merge_to_set(g_services, r_services):
+        if service_key:
+            if is_global_service(service_key):
+                global_services.append(service_key)
+            else:
+                regional_services.append(service_key)
+    return global_services, regional_services
+
+
+def merge_to_set(list1, list2):
+    """
+    merges two lists in one set
+    :param list1: list A, can be None
+    :param list2: List B, can be None
+    :return: set
+    """
+    return set(list1 if list1 else [] + list2 if list2 else [])
+
+
+def is_global_service(service_key):
+    """
+    checks AWSServices if service is a global service
+    :param service_key: key of the AWS Service
+    :return: true if service is a global service
+    """
+    for service_attribute in AWSServices:
+        if service_attribute.key == service_key and service_attribute.global_service:
+            return True
+    return False
+
+
 def main(args=None):
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -3176,6 +3538,8 @@ def main(args=None):
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
+        ("glacier", args.glacier_names, (args.glacier_tag_key, args.glacier_tag_values),
+         args.glacier_limits),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
         ("elbv2", args.elbv2_names, (args.elbv2_tag_key, args.elbv2_tag_values), args.elbv2_limits),
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
@@ -3188,9 +3552,13 @@ def main(args=None):
     aws_config.add_single_service_config("cloudwatch_alarms", args.cloudwatch_alarms)
 
     has_exceptions = False
+
+    # services are sorted into global and regional services
+    global_services, regional_services = sort_services(args.global_services, args.services)
+
     for aws_services, aws_regions, aws_sections in [
-        (args.global_services, ["us-east-1"], AWSSectionsUSEast),
-        (args.services, args.regions, AWSSectionsGeneric),
+        (global_services, ["us-east-1"], AWSSectionsUSEast),
+        (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
             continue

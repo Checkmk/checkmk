@@ -147,6 +147,30 @@ class InstanceBuilder(object):
 #   .--S3-------------------------------------------------------------------
 
 
+class GlacierListVaultsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str('VaultARN'),
+            Str('VaultName'),
+            Str('CreationDate'),
+            Str('LastInventoryDate'),
+            Int('NumberOfArchives'),
+            Int('SizeInBytes')
+        ]
+
+
+class GlacierVaultTaggingIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str('Key'),
+            Str('Value'),
+        ]
+
+
+#.
+#   .--S3-------------------------------------------------------------------
+
+
 class S3ListBucketsIB(InstanceBuilder):
     def _fill_instance(self):
         return [
@@ -560,7 +584,7 @@ class ELBDescribeInstanceHealthIB(InstanceBuilder):
     def _fill_instance(self):
         return [
             Str('InstanceId'),
-            Choice('State', ["InService", "OutOfServic", "Unknown"]),
+            Choice('State', ["InService", "OutOfService", "Unknown"]),
             Choice('ReasonCode', ["ELB", "Instance", "N/A"]),
             Str('Description'),
         ]

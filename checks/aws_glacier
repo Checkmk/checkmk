@@ -1,0 +1,130 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at https://checkmk.com/.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_aws_glacier(info):  # pylint: disable=function-redefined
+    parsed = parse_aws(info)
+    parsed_by_vault = {}
+    for vault in parsed:
+        parsed_by_vault[vault["VaultName"]] = vault
+    return parsed_by_vault
+
+
+#.
+#   .--Glacier archives----------------------------------------------------.
+#   |                    ____ _            _                               |
+#   |                   / ___| | __ _  ___(_) ___ _ __                     |
+#   |                  | |  _| |/ _` |/ __| |/ _ \ '__|                    |
+#   |                  | |_| | | (_| | (__| |  __/ |                       |
+#   |                   \____|_|\__,_|\___|_|\___|_|                       |
+#   |                               _     _                                |
+#   |                 __ _ _ __ ___| |__ (_)_   _____  ___                 |
+#   |                / _` | '__/ __| '_ \| \ \ / / _ \/ __|                |
+#   |               | (_| | | | (__| | | | |\ V /  __/\__ \                |
+#   |                \__,_|_|  \___|_| |_|_| \_/ \___||___/                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_aws_glacier(parsed):
+    for vault_name in parsed:
+        yield vault_name, {}
+
+
+@get_parsed_item_data
+def check_aws_glacier_archives(item, params, parsed):
+    vault_size = parsed.get('SizeInBytes', 0)
+    yield check_levels(vault_size,
+                       "aws_glacier_vault_size",
+                       params.get('vault_size_levels', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname='Vault size')
+
+    num_archives = parsed.get('NumberOfArchives', 0)
+    yield 0, 'Number of archives: %s' % int(num_archives), [('aws_glacier_num_archives',
+                                                             num_archives)]
+
+    tag_infos = []
+    for key, value in parsed.get('Tagging', {}).items():
+        tag_infos.append("%s: %s" % (key, value))
+    if tag_infos:
+        yield 0, '[Tags]: %s' % ", ".join(tag_infos)
+
+
+check_info['aws_glacier'] = {
+    'parse_function': parse_aws_glacier,
+    'inventory_function': inventory_aws_glacier,
+    'check_function': check_aws_glacier_archives,
+    'service_description': 'AWS/Glacier Vault: %s',
+    'has_perfdata': True,
+    'includes': ['aws.include'],
+    'group': 'aws_glacier_vault_archives',
+}
+
+#.
+#   .--Glacier summary-----------------------------------------------------.
+#   |                    ____ _            _                               |
+#   |                   / ___| | __ _  ___(_) ___ _ __                     |
+#   |                  | |  _| |/ _` |/ __| |/ _ \ '__|                    |
+#   |                  | |_| | | (_| | (__| |  __/ |                       |
+#   |                   \____|_|\__,_|\___|_|\___|_|                       |
+#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
+#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
+#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
+#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
+#   |                                                    |___/             |
+#   '----------------------------------------------------------------------
+
+
+def check_aws_glacier_summary(item, params, parsed):
+    sum_size = 0
+    largest_vault = None
+    largest_vault_size = 0
+    for vault_name in parsed:
+        vault_size = parsed.get(vault_name).get('SizeInBytes', 0)
+        sum_size += vault_size
+        if vault_size >= largest_vault_size:
+            largest_vault = vault_name
+            largest_vault_size = vault_size
+    yield check_levels(sum_size,
+                       "aws_glacier_total_vault_size",
+                       params.get('vault_size_levels', (None, None)),
+                       human_readable_func=get_bytes_human_readable,
+                       infoname='Total size')
+
+    if largest_vault:
+        yield 0, 'Largest vault: %s (%s)' % \
+                 (largest_vault, get_bytes_human_readable(largest_vault_size)), [('aws_glacier_largest_vault_size', \
+                                                                                  largest_vault_size)]
+
+
+check_info['aws_glacier.summary'] = {
+    'inventory_function': discover_single,
+    'check_function': check_aws_glacier_summary,
+    'service_description': 'AWS/Glacier Summary',
+    'has_perfdata': True,
+    'group': 'aws_glacier_vaults',
+}

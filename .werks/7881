@@ -1,0 +1,10 @@
+Title: keepalived: New check to monitor the state of keepalived VRRP instances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564063755
+Class: feature
+
+

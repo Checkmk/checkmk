@@ -20,30 +20,18 @@
 namespace cma::cfg::details {
 
 // tool to get ImagePath value from Registry
-inline std::wstring FindServiceImagePath(const std::wstring ServiceValidName) {
-    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
-    key_path += ServiceValidName;
-    std::wstring service_path_new =
-        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
+std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 
-    // check for very short strings
-    if (service_path_new.length() < 2) return {};
-
-    if (auto back = service_path_new.back(); back == L'\"')
-        service_path_new.pop_back();
-    if (auto front = service_path_new.front(); front == L'\"')
-        service_path_new.erase(0, 1);
-
-    return service_path_new;
-}
+std::filesystem::path ExtractPathFromServiceName(
+    std::wstring_view service_name) noexcept;
 
 class Folders {
 public:
     // if ServiceValidName set, then we MUST find path
     // otherwise look for WorkFolder
     // otherwise current path to current exe
-    bool setRoot(const std::wstring& ServiceValidName,  // look in registry
-                 const std::wstring& WorkFolder);       // look in disk
+    bool setRoot(const std::wstring& service_name,  // look in registry
+                 const std::wstring& preset_root);  // look in disk
 
     void createDataFolderStructure(const std::wstring& AgentDataFolder);
 

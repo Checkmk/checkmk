@@ -177,4 +177,30 @@ TEST(CmaCfg, InstallationTypeCheck) {
     // fs::remove(install_ini, ec);
 }
 
+namespace details {
+TEST(CmaToolsDetails, FindServiceImage) {
+    EXPECT_TRUE(FindServiceImagePath(L"").empty());
+    auto x = FindServiceImagePath(L"check_mk_agent");
+    if (x.empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is not installed, test is not full",
+            XLOG::Colors::yellow);
+    } else {
+        EXPECT_TRUE(std::filesystem::exists(x));
+    }
+}
+TEST(CmaToolsDetails, ExtractPathFromServiceName) {
+    auto x = ExtractPathFromServiceName(L"check_mk_agent");
+    if (x.empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is not installed, test is not full",
+            XLOG::Colors::yellow);
+    } else {
+        EXPECT_TRUE(std::filesystem::exists(x));
+        EXPECT_TRUE(cma::tools::IsEqual(x.u8string(),
+                                        "c:\\Program Files (x86)\\check_mk"));
+    }
+}
+}  // namespace details
+
 }  // namespace cma::cfg

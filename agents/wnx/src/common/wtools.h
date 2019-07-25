@@ -993,7 +993,7 @@ bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
 std::wstring GetRegistryValue(const std::wstring& Key,
                               const std::wstring& Value,
                               const std::wstring& Default) noexcept;
-
+std::wstring GetArgv(uint32_t index) noexcept;
 }  // namespace wtools
 
 #endif  // wtools_h__

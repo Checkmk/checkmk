@@ -322,5 +322,10 @@ TEST(Wtools, Perf2) {
         EXPECT_EQ(index, 4);
     }
 }
-
+TEST(Wtools, GetArgv2) {
+    std::filesystem::path val = GetArgv(0);
+    EXPECT_TRUE(cma::tools::IsEqual(val.extension().wstring(), L".exe"));
+    std::filesystem::path val1 = GetArgv(10);
+    EXPECT_TRUE(val1.empty());
+}
 }  // namespace wtools

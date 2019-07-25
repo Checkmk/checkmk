@@ -15,7 +15,7 @@ node {
                 doGenerateSubmoduleConfigurations: false,
                 extensions: [[
                     $class: 'CloneOption',
-                    honorRefspec: true,
+                    //honorRefspec: true,
                     //reference: '/home/gerrit/gerrit_data/git/check_mk.git',
                     noTags: true,
                     shallow: false

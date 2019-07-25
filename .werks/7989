@@ -1,0 +1,10 @@
+Title: Add build support for Debian Buster
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.5.0p20
+Date: 1564048400
+Class: feature
+
+

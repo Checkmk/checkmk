@@ -203,7 +203,6 @@ AsioSession::s_ptr ExternalPort::getSession() {
 void ExternalPort::timedWaitForSession() {
     using namespace std::chrono;
     std::unique_lock lk(wake_lock_);
-    XLOG::t("Waiting for next connection");
     wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
                             [this]() { return !session_queue_.empty(); });
 }

@@ -36,12 +36,20 @@ from __future__ import (
     print_function,
 )
 
+try:
+    from pathlib import Path  # type: ignore # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
+
 from typing import List  # pylint: disable=unused-import
 import argparse
 import logging  # pylint: disable=unused-import
 from werkzeug.test import create_environ
 
+import cmk_base.autochecks
+
 import cmk.utils.log
+import cmk.utils.paths
 import cmk.utils
 import cmk.gui.watolib.tags
 import cmk.gui.watolib.hosts_and_folders
@@ -83,6 +91,7 @@ class UpdateConfig(object):
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
+            (self._rewrite_autochecks, "Rewriting autochecks"),
         ]
 
     def _rewrite_wato_tag_config(self):
@@ -95,6 +104,12 @@ class UpdateConfig(object):
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
         root_folder.save()
         root_folder.rewrite_hosts_files()
+
+    def _rewrite_autochecks(self):
+        for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
+            hostname = autocheck_file.stem
+            autochecks = cmk_base.autochecks.parse_autochecks_file(hostname)
+            cmk_base.autochecks.save_autochecks_file(hostname, autochecks)
 
     def _rewrite_wato_rulesets(self):
         all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()

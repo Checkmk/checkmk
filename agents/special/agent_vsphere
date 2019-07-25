@@ -51,7 +51,7 @@ from pathlib2 import Path
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.special_agents.agent_vsphere import ESXSession
+from cmk.special_agents.agent_vsphere import ESXSession, SoapTemplates
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
@@ -62,648 +62,6 @@ class MKQueryServerException(Exception):
 
 # Great article how to get additional information
 # http://www.veeam.com/kb1007
-
-telegram_list = {
-       "systeminfo":
-         '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'\
-         '<ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:RetrieveServiceContent>',
-
-       "login":
-         '<ns1:Login xsi:type="ns1:LoginRequestType"><ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this>'\
-         '<ns1:userName>%(username)s</ns1:userName><ns1:password>%(password)s</ns1:password></ns1:Login>',
-
-       "systemtime":
-         '<ns1:CurrentTime xsi:type="ns1:CurrentTimeRequestType">'\
-         '<ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:CurrentTime>',
-
-       "hostsystems":
-         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
-         '<ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>name</ns1:pathSet></ns1:propSet>'\
-         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
-           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
-         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-         '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-         '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
-           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "datastores":
-         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
-         '<ns1:propSet><ns1:type>Datastore</ns1:type><ns1:pathSet>name</ns1:pathSet>'\
-         '<ns1:pathSet>summary.freeSpace</ns1:pathSet>'\
-         '<ns1:pathSet>summary.capacity</ns1:pathSet>'\
-         '<ns1:pathSet>summary.uncommitted</ns1:pathSet>'\
-         '<ns1:pathSet>summary.url</ns1:pathSet>'\
-         '<ns1:pathSet>summary.accessible</ns1:pathSet>'\
-         '<ns1:pathSet>summary.type</ns1:pathSet>'\
-         '<ns1:pathSet>summary.maintenanceMode</ns1:pathSet></ns1:propSet>'\
-         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
-           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
-           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "licensesused": """
-        <ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">
-          <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>
-          <ns1:specSet>
-            <ns1:propSet>
-              <ns1:type>LicenseManager</ns1:type>
-              <all>0</all>
-              <ns1:pathSet>licenses</ns1:pathSet>
-            </ns1:propSet>
-            <ns1:objectSet>
-              <ns1:obj type="LicenseManager">%(licenseManager)s</ns1:obj>
-            </ns1:objectSet>
-          </ns1:specSet>
-          <ns1:options/>
-        </ns1:RetrievePropertiesEx>
-    """,
-
-     "perfcountersummary":
-         '<ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType">'\
-         '<ns1:_this type="PerformanceManager">%(perfManager)</ns1:_this>'\
-         '<ns1:entity type="HostSystem">%(esxhost)s</ns1:entity></ns1:QueryPerfProviderSummary>',
-
-     "perfcountersyntax":
-         '<ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType">'\
-         '<ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>%(counters)s</ns1:QueryPerfCounter>',
-
-     "perfcounteravail":
-         '<ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType">'\
-         '<ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'\
-         '<ns1:entity type="HostSystem">%(esxhost)s</ns1:entity>'\
-         '<ns1:intervalId>20</ns1:intervalId></ns1:QueryAvailablePerfMetric>',
-
-     "perfcounterdata":
-         '<ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'\
-         '<ns1:querySpec><ns1:entity type="HostSystem">%(esxhost)s</ns1:entity><ns1:maxSample>%(samples)s</ns1:maxSample>%(counters)s'\
-         '<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf>',
-
-     "networksystem":
-         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
-         '<ns1:propSet><ns1:type>HostNetworkSystem</ns1:type><all>0</all>'\
-         '<ns1:pathSet>networkInfo</ns1:pathSet></ns1:propSet>'\
-         '<ns1:objectSet><ns1:obj type="HostNetworkSystem">networkSystem</ns1:obj>'\
-         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "esxhostdetails":
-         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
-         '<ns1:type>HostSystem</ns1:type>'\
-         '<ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuPkg</ns1:pathSet>'\
-#         '<ns1:pathSet>hardware.pciDevice</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.powerState</ns1:pathSet>'\
-         '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.biosInfo.biosVersion</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.biosInfo.releaseDate</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
-         '<ns1:pathSet>config.storageDevice.multipathInfo</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.systemInfo.model</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.systemInfo.uuid</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.systemInfo.otherIdentifyingInfo</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.systemInfo.vendor</ns1:pathSet>'\
-         '<ns1:pathSet>name</ns1:pathSet>'\
-         '<ns1:pathSet>overallStatus</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo</ns1:pathSet>'\
-         '<ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet>'\
-         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
-           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-           '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
-           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "vmdetails":
-         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
-         '<ns1:type>VirtualMachine</ns1:type>'\
-           '<ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet>'\
-           '<ns1:pathSet>config.hardware.numCPU</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet>'\
-           '<ns1:pathSet>runtime.host</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet>'\
-           '<ns1:pathSet>config.hardware.memoryMB</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet>'\
-           '<ns1:pathSet>runtime.powerState</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
-           '<ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet>'\
-           '<ns1:pathSet>config.hardware.device</ns1:pathSet>'\
-           '<ns1:pathSet>config.template</ns1:pathSet>'\
-           '<ns1:pathSet>guest.toolsVersion</ns1:pathSet>'\
-           '<ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'\
-           '<ns1:pathSet>name</ns1:pathSet>'\
-           '<ns1:pathSet>summary.guest.hostName</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet>'\
-           '<ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet>'\
-           '<ns1:pathSet>snapshot.rootSnapshotList</ns1:pathSet>'\
-           '<ns1:pathSet>config.datastoreUrl</ns1:pathSet>'\
-           '<ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet>'\
-         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
-           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
-           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
-           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec">'\
-           '<ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
-           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
-           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
-         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
-         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
-         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "continuetoken":
-         '<ns1:ContinueRetrievePropertiesEx xsi:type="ns1:ContinueRetrievePropertiesExRequestType">'\
-         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:token>%(token)s</ns1:token></ns1:ContinueRetrievePropertiesEx>',
-
-     "datacenters": """
-  <ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">
-    <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>
-    <ns1:specSet>
-      <ns1:propSet>
-        <ns1:type>Datacenter</ns1:type>
-        <ns1:pathSet>name</ns1:pathSet>
-      </ns1:propSet>
-      <ns1:objectSet>
-        <ns1:obj type="Folder">%(rootFolder)s</ns1:obj>
-        <ns1:skip>false</ns1:skip>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>visitFolders</ns1:name>
-          <ns1:type>Folder</ns1:type>
-          <ns1:path>childEntity</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToHf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToVmf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToH</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToDs</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>hToVm</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToVmf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>vmFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToDs</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>datastore</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToHf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>hostFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToH</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>host</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToRp</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToRp</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>hToVm</ns1:name>
-          <ns1:type>HostSystem</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToVm</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-      </ns1:objectSet>
-    </ns1:specSet>
-    <ns1:options/>
-  </ns1:RetrievePropertiesEx>""",
-
-     "clustersofdatacenter": """
-  <ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">
-    <ns1:_this type="PropertyCollector">propertyCollector</ns1:_this>
-    <ns1:specSet>
-      <ns1:propSet>
-        <ns1:type>ClusterComputeResource</ns1:type>
-        <ns1:pathSet>name</ns1:pathSet>
-      </ns1:propSet>
-      <ns1:objectSet>
-        <ns1:obj type="Datacenter">%(datacenter)s</ns1:obj>
-        <ns1:skip>false</ns1:skip>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>visitFolders</ns1:name>
-          <ns1:type>Folder</ns1:type>
-          <ns1:path>childEntity</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToHf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToVmf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToH</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToDs</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>hToVm</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToVmf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>vmFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToDs</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>datastore</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToHf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>hostFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToH</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>host</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToRp</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToRp</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>hToVm</ns1:name>
-          <ns1:type>HostSystem</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToVm</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-      </ns1:objectSet>
-    </ns1:specSet>
-    <ns1:options/>
-  </ns1:RetrievePropertiesEx>""",
-
-     "esxhostsofcluster":
-  """<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">
-    <ns1:_this type="PropertyCollector">propertyCollector</ns1:_this>
-    <ns1:specSet>
-      <ns1:propSet>
-        <ns1:type>HostSystem</ns1:type>
-        <ns1:pathSet>name</ns1:pathSet>
-      </ns1:propSet>
-      <ns1:objectSet>
-        <ns1:obj type="ClusterComputeResource">%(clustername)s</ns1:obj>
-        <ns1:skip>false</ns1:skip>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>visitFolders</ns1:name>
-          <ns1:type>Folder</ns1:type>
-          <ns1:path>childEntity</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToHf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToVmf</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToH</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>crToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>dcToDs</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>hToVm</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToVmf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>vmFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToDs</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>datastore</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>dcToHf</ns1:name>
-          <ns1:type>Datacenter</ns1:type>
-          <ns1:path>hostFolder</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToH</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>host</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>crToRp</ns1:name>
-          <ns1:type>ComputeResource</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToRp</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>resourcePool</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>rpToRp</ns1:name>
-          </ns1:selectSet>
-          <ns1:selectSet>
-            <ns1:name>rpToVm</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>hToVm</ns1:name>
-          <ns1:type>HostSystem</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-          <ns1:selectSet>
-            <ns1:name>visitFolders</ns1:name>
-          </ns1:selectSet>
-        </ns1:selectSet>
-        <ns1:selectSet xsi:type="ns1:TraversalSpec">
-          <ns1:name>rpToVm</ns1:name>
-          <ns1:type>ResourcePool</ns1:type>
-          <ns1:path>vm</ns1:path>
-          <ns1:skip>false</ns1:skip>
-        </ns1:selectSet>
-      </ns1:objectSet>
-    </ns1:specSet>
-    <ns1:options/>
-  </ns1:RetrievePropertiesEx>"""
-}
 
 REQUESTED_COUNTERS_KEYS = (
     'disk.numberRead',
@@ -907,7 +265,7 @@ class ESXConnection(object):
             "osType",
         ]
 
-        reply_data = self.query_server(telegram_list["systeminfo"])
+        reply_data = self.query_server(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
             element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
             if element:
@@ -946,7 +304,7 @@ class ESXConnection(object):
             if not token:
                 break
             payload_params.update({"token": token[0]})
-            payload = telegram_list["continuetoken"] % payload_params
+            payload = SoapTemplates.continuetoken % payload_params
 
         respose_text = "".join(response_data)
         if self.tracefile:
@@ -984,9 +342,8 @@ class ESXConnection(object):
             self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
-        payload = telegram_list["login"]
         payload_params = {"username": encode_url(user), "password": encode_url(password)}
-        payload, _payload_params = self.prepare_soapdata(payload, payload_params)
+        payload, _payload_params = self.prepare_soapdata(SoapTemplates.login, payload_params)
         response = self._session.postsoap(payload)
 
         server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
@@ -1022,7 +379,7 @@ class ESXConnection(object):
 def fetch_available_counters(connection, hostsystems):
     counters_available_by_host = {}
     for host in hostsystems:
-        counter_avail_response = connection.query_server(telegram_list["perfcounteravail"],
+        counter_avail_response = connection.query_server(SoapTemplates.perfcounteravail,
                                                          payload_params={"esxhost": host})
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
                                counter_avail_response)
@@ -1039,7 +396,7 @@ def fetch_counters_syntax(connection, counter_ids):
     counters_list = ["<ns1:counterId>%s</ns1:counterId>" % id_ for id_ in counter_ids]
 
     counters_syntax_response = connection.query_server(
-        telegram_list["perfcountersyntax"], payload_params={"counters": "".join(counters_list)})
+        SoapTemplates.perfcountersyntax, payload_params={"counters": "".join(counters_list)})
 
     elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
                            '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', counters_syntax_response)
@@ -1061,7 +418,7 @@ def fetch_extra_interface_counters(connection, opt):
         return []
 
     net_extra_info = []
-    networksystem_response = connection.query_server(telegram_list["networksystem"])
+    networksystem_response = connection.query_server(SoapTemplates.networksystem)
     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
     for nic in nic_objects:
         nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
@@ -1089,7 +446,7 @@ def fetch_counters(connection, host, counters_selected):
             "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
             % (entry, instance) for instance in instances)
 
-    counter_data_response = connection.query_server(telegram_list["perfcounterdata"],
+    counter_data_response = connection.query_server(SoapTemplates.perfcounterdata,
                                                     payload_params={
                                                         "esxhost": host,
                                                         "counters": "".join(counter_data),
@@ -1258,7 +615,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems):
 
 def get_section_systemtime(connection, opt):
     try:
-        response = connection.query_server(telegram_list["systemtime"])
+        response = connection.query_server(SoapTemplates.systemtime)
         elements = get_pattern('<returnval>(.*)</returnval>', response)
         if elements:
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -1337,7 +694,7 @@ def eval_datastores(info, datastores):
 
 
 def fetch_host_systems(connection):
-    hostsystems_response = connection.query_server(telegram_list["hostsystems"])
+    hostsystems_response = connection.query_server(SoapTemplates.hostsystems)
     elements = get_pattern(
         '<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
         hostsystems_response)
@@ -1354,7 +711,7 @@ def fetch_host_systems(connection):
 
 
 def fetch_datastores(connection):
-    datastores_response = connection.query_server(telegram_list["datastores"])
+    datastores_response = connection.query_server(SoapTemplates.datastores)
     elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                            datastores_response)
     datastores = {}
@@ -1463,7 +820,7 @@ def get_section_datastores(datastores):
 
 
 def fetch_hostsystem_data(connection):
-    esxhostdetails_response = connection.query_server(telegram_list["esxhostdetails"])
+    esxhostdetails_response = connection.query_server(SoapTemplates.esxhostdetails)
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
     eval_functions = {
@@ -1526,7 +883,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 def get_section_licenses(connection):
     section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
-    licenses_response = connection.query_server(telegram_list["licensesused"])
+    licenses_response = connection.query_server(SoapTemplates.licensesused)
     root_node = minidom.parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
@@ -1543,7 +900,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     vms, vm_esx_host = {}, {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-    vmdetails_response = connection.query_server(telegram_list["vmdetails"])
+    vmdetails_response = connection.query_server(SoapTemplates.vmdetails)
 
     elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
     for entry in elements:
@@ -1587,18 +944,18 @@ def get_section_vm(vms, opt):
 
 def get_sections_clusters(connection, vm_esx_host):
     section_lines = []
-    response = connection.query_server(telegram_list["datacenters"])
+    response = connection.query_server(SoapTemplates.datacenters)
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
     for datacenter in datacenters:
-        response = connection.query_server(telegram_list["clustersofdatacenter"],
+        response = connection.query_server(SoapTemplates.clustersofdatacenter,
                                            payload_params={"datacenter": datacenter})
         clusters = get_pattern(
-            '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val></propSet></objects>',
-            response)
+            '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val>'
+            '</propSet></objects>', response)
 
         section_lines.append("<<<esx_vsphere_clusters:sep(9)>>>")
         for cluster in clusters:
-            response = connection.query_server(telegram_list["esxhostsofcluster"],
+            response = connection.query_server(SoapTemplates.esxhostsofcluster,
                                                payload_params={"clustername": cluster[0]})
             cluster_vms = []
             hosts = get_pattern(

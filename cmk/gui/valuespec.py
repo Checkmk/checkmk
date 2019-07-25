@@ -4870,6 +4870,7 @@ def MetricName():
     """Factory of a Dropdown menu from all known metric names"""
     return DropdownChoice(
         title=_("Metric Name"),
+        sorted=True,
         choices=[
             (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
         ])

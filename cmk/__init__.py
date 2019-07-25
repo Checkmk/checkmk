@@ -29,7 +29,7 @@
 This library is currently handled as internal module of Check_MK and
 does not offer stable APIs. The code may change at any time."""
 
-__version__ = "1.5.0p20"
+__version__ = "1.5.0p21"
 
 import os
 

@@ -82,12 +82,23 @@ class ABCTagMode(WatoMode):
     def __init__(self):
         super(ABCTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
+        self._load_effective_config()
 
     def _save_tags_and_update_hosts(self, tag_config):
         self._tag_config_file.save(tag_config)
         config.load_config()
         watolib.Folder.invalidate_caches()
         watolib.Folder.root_folder().rewrite_hosts_files()
+
+    def _load_effective_config(self):
+        self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
+
+        self._tag_config = cmk.utils.tags.TagConfig()
+        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
+
+        self._effective_config = cmk.utils.tags.TagConfig()
+        self._effective_config.parse_config(self._tag_config.get_dict_format())
+        self._effective_config += self._builtin_config
 
 
 @mode_registry.register
@@ -99,17 +110,6 @@ class ModeTags(ABCTagMode):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
-
-    def __init__(self):
-        super(ModeTags, self).__init__()
-        self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
-
-        self._tag_config = cmk.utils.tags.TagConfig()
-        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
-
-        self._effective_config = cmk.utils.tags.TagConfig()
-        self._effective_config.parse_config(self._tag_config.get_dict_format())
-        self._effective_config += self._builtin_config
 
     def title(self):
         return _("Tag groups")
@@ -199,6 +199,7 @@ class ModeTags(ABCTagMode):
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
         self._tag_config_file.save(self._tag_config.get_dict_format())
+        self._load_effective_config()
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
     def page(self):
@@ -214,10 +215,10 @@ class ModeTags(ABCTagMode):
             ]).show()
             return
 
-        self._render_tag_list()
+        self._render_tag_group_list()
         self._render_aux_tag_list()
 
-    def _render_tag_list(self):
+    def _render_tag_group_list(self):
         with table_element("tags",
                            _("Tag groups"),
                            help=(_("Tags are the basis of Check_MK's rule based configuration. "
@@ -304,14 +305,6 @@ class ABCEditTagMode(ABCTagMode):
 
     def __init__(self):
         super(ABCEditTagMode, self).__init__()
-        self._tag_config_file = TagConfigFile()
-        self._untainted_hosttags_config = cmk.utils.tags.TagConfig()
-        self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
-
-        self._effective_config = cmk.utils.tags.TagConfig()
-        self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
-        self._effective_config += cmk.utils.tags.BuiltinTagConfig()
-
         self._id = self._get_id()
         self._new = self._is_new_tag()
 
@@ -370,14 +363,13 @@ class ModeEditAuxtag(ABCEditTagMode):
         if self._new:
             self._aux_tag = cmk.utils.tags.AuxTag()
         else:
-            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(self._id)
+            self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
     def _get_id(self):
         if not html.request.has_var("edit"):
             return None
 
-        return html.get_item_input(
-            "edit", dict(self._untainted_hosttags_config.aux_tag_list.get_choices()))[1]
+        return html.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
     def title(self):
         if self._new:
@@ -445,12 +437,11 @@ class ModeEditTagGroup(ABCEditTagMode):
     def __init__(self):
         super(ModeEditTagGroup, self).__init__()
 
-        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._id)
+        self._untainted_tag_group = self._tag_config.get_tag_group(self._id)
         if not self._untainted_tag_group:
             self._untainted_tag_group = cmk.utils.tags.TagGroup()
 
-        self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._id) or cmk.utils.tags.TagGroup()
+        self._tag_group = self._tag_config.get_tag_group(self._id) or cmk.utils.tags.TagGroup()
 
     def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))

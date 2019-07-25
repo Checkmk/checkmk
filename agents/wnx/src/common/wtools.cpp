@@ -1912,6 +1912,19 @@ int FindProcess(std::wstring_view process_name) noexcept {
     return count;
 }
 
+std::wstring GetArgv(uint32_t index) noexcept {
+    int n_args = 0;
+    auto argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
+
+    if (argv == nullptr) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(argv));
+
+    if (index < static_cast<uint32_t>(n_args)) return argv[index];
+
+    return {};
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

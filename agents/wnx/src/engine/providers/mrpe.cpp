@@ -48,7 +48,7 @@ void MrpeEntry::loadFromString(const std::string &value) {
     // remove last space
     if (argv.size()) argv.pop_back();
     auto p = cma::cfg::ReplacePredefinedMarkers(tokens[1]);
-    removeQuotes(p);
+    p = cma::tools::RemoveQuotes(p);
     fs::path exe_full_path = p;
     if (exe_full_path.is_relative()) {
         exe_full_path = cma::cfg::GetUserDir() / exe_full_path;
@@ -62,7 +62,7 @@ void MrpeEntry::loadFromString(const std::string &value) {
     if (!argv.empty()) command_line_ += " " + argv;
 
     description_ = tokens[0];
-    removeQuotes(description_);
+    description_ = cma::tools::RemoveQuotes(description_);
 }
 
 void MrpeProvider::addParsedConfig() {

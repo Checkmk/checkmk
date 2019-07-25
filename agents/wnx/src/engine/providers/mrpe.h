@@ -39,13 +39,6 @@ inline std::vector<std::string> TokenizeString(const std::string &val,
             std::sregex_token_iterator{}};
 }
 
-inline void removeQuotes(std::string &val) {
-    if (val.size() < 2) return;
-
-    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
-    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
-}
-
 struct MrpeEntry {
     MrpeEntry(const std::string &run_as_user,  // only from cfg
               const std::string &cmd_line,     // parsed

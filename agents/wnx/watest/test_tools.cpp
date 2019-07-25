@@ -8,6 +8,7 @@
 #include <filesystem>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "glob_match.h"
@@ -357,7 +358,7 @@ TEST(CmaTools, Misc) {
     }
 }
 
-TEST(JoinVectorTest, All) {
+TEST(Misc, JoinVectorTest) {
     using namespace std;
     {
         vector<wstring> vws = {L"a", L"", L"c"};
@@ -375,9 +376,30 @@ TEST(JoinVectorTest, All) {
         ret = JoinVector({}, ".");
         EXPECT_EQ(ret, "");
     }
+    { EXPECT_EQ(cma::tools::RemoveQuotes("''"), ""); }
 }
 
-TEST(LowerUpper, All) {
+TEST(Misc, RemoveQuotes) {
+    //
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"(")"), "\"");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"("''")"), "''");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"("aa")"), "aa");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"("__')"), "__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"('__")"), "__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"('__')"), "__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(R"("aa")"), "aa");
+
+    //
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"(")"), L"\"");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("''")"), L"''");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("aa")"), L"aa");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("__')"), L"__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"('__")"), L"__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"('__')"), L"__");
+    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("aa")"), L"aa");
+}
+
+TEST(Misc, LowerUpper) {
     {
         std::wstring w = test_cyrillic;
         cma::tools::WideUpper(w);
@@ -403,7 +425,7 @@ TEST(LowerUpper, All) {
     }
 }
 
-TEST(LessTest, AllX) {
+TEST(Misc, LessTest) {
     {
         EXPECT_TRUE(false == IsLess("a", ""));
         EXPECT_TRUE(false == IsLess("aa", "a"));

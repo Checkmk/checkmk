@@ -92,7 +92,7 @@ def check_esx_vsphere_counters_diskio(item, params, parsed):
             values['%s_throughput' % what] = int(esx_vsphere_get_average(parsed["disk.%s" % what][""][0][0]) * 1024)
 
         for instance, info in parsed["disk.number%s" % what.title()].items():
-            values["%s_ios" % what] += int(esx_vsphere_get_average(info[0][0]))
+            values["%s_ios" % what] += int(esx_vsphere_get_average(info[0][0])) / 20.
 
     if "disk.deviceLatency" in parsed:
         highest_latency = 0

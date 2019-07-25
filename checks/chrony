@@ -39,7 +39,7 @@
 # <<<chrony>>>
 # 506 Cannot talk to daemon
 
-ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset
+ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 
 factory_settings["ntp_time_default_levels"] = {
     "ntp_levels": ntp_default_levels,
@@ -76,8 +76,23 @@ def parse_chrony(info):
 
     for line in info:
         if ":" in line:
-            key, value = " ".join(line).split(":", 1)
-            parsed[key.strip()] = value.strip()
+            key, value = [e.strip() for e in " ".join(line).split(":", 1)]
+            if key == "Reference ID":
+                parsed[key] = value
+                try:
+                    parsed['address'] = value.split(' ')[1]
+                except IndexError:
+                    pass
+            elif key == "System time":
+                try:
+                    parsed[key] = float(value.split(' ')[0]) * 1000
+                except ValueError:
+                    pass
+            elif key == "Stratum":
+                try:
+                    parsed[key] = int(value)
+                except ValueError:
+                    pass
     return parsed
 
 
@@ -89,11 +104,11 @@ def check_chrony(_item, params, parsed):
     """
     check if agent returned error message
     check if chrony can reach NTP servers
-    check if sys_time_offset is in range
+    check if sys_time_offset_offset is in range
     check if stratum is too high
 
     :param _item: <not used>
-    :param params: stratum and sys_time_offset limits
+    :param params: stratum and sys_time_offset_offset limits
     :param parsed: dictionary
     :return: status
     """
@@ -108,27 +123,30 @@ def check_chrony(_item, params, parsed):
         }
     crit_stratum, warn, crit = params["ntp_levels"]
 
-    ref_id = parsed.get("Reference ID", "")
-    address = ref_id.split(' ')[1]
-    sys_time_offset = float(parsed.get("System time").split(' ')[0]) * 1000  # ms
-    stratum = int(parsed.get("Stratum"))
+    ref_id = parsed.get("Reference ID")
+    address = parsed.get("address")
+    sys_time_offset = parsed.get("System time")
+    stratum = parsed.get("Stratum")
 
-    if len(address) <= 2:
+    if address in [None, "", "()"]:
         # Check reference id: if brackets are empty, NTP servers are unreachable
         yield 1, "NTP servers unreachable. Reference ID: %s" % ref_id
         return
 
-    yield check_levels(stratum,
-                       None, (crit_stratum, crit_stratum),
-                       human_readable_func=lambda v: "%d" % v,
-                       infoname="Stratum")
+    if stratum is not None:
+        yield check_levels(stratum,
+                           None, (crit_stratum, crit_stratum),
+                           human_readable_func=lambda v: "%d" % v,
+                           infoname="Stratum")
 
-    yield check_levels(abs(sys_time_offset),
-                       "offset", (warn, crit),
-                       human_readable_func=lambda x: "%.4f ms" % x,
-                       infoname="Offset")
+    if sys_time_offset is not None:
+        yield check_levels(abs(sys_time_offset),
+                           "offset", (warn, crit),
+                           human_readable_func=lambda x: "%.4f ms" % x,
+                           infoname="Offset")
 
-    yield 0, "Reference ID: %s" % ref_id
+    if ref_id is not None:
+        yield 0, "Reference ID: %s" % ref_id
 
 
 check_info["chrony"] = {

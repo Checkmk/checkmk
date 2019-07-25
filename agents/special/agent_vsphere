@@ -1065,7 +1065,6 @@ def fetch_extra_interface_counters(connection):
 
 
 def fetch_counters(connection, host, samples, counters_selected):
-    ### TODO: try to get esx hosts perfdata from vCenter
     counter_data = []
     for entry, instances in counters_selected:
         counter_data.extend(

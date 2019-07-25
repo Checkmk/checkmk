@@ -1,0 +1,16 @@
+Title: Service labels can be used as rule conditions
+Level: 2
+Component: core
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1564037648
+
+The service labels, that are introduced with Checkmk 1.6 can now be used as
+conditions in service rulesets (Host & Service Parameters). These conditions
+can be configured like the host labels.
+
+The labels can not be used in the rulesets "Service labels", because that
+could result in a hen egg problem.

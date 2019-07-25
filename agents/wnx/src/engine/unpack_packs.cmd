@@ -31,6 +31,6 @@ set first=0
 goto recheck
 ) else (
 echo failed to unpack, check your repo 
-exit \b 1
+ exit /b 1
 )
 :end

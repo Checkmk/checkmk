@@ -3,8 +3,8 @@ call prepare_to_tests.cmd
 set root=%cd%\..\..\artefacts
 set REMOTE_MACHINE=%root%
 
-if "%1" == "SIMULATE_OK" powershell Write-Host "Unit test SUCCESS" -Foreground Green  && exit 0
-if "%1" == "SIMULATE_FAIL" powershell Write-Host "Unit test FAIL" -Foreground Red && del %REMOTE_MACHINE%\check_mk_service.msi && exit 100
+if "%1" == "SIMULATE_OK" powershell Write-Host "Unit test SUCCESS" -Foreground Green  && exit /b 0
+if "%1" == "SIMULATE_FAIL" powershell Write-Host "Unit test FAIL" -Foreground Red && del %REMOTE_MACHINE%\check_mk_service.msi && exit /b 100
 if NOT "%1" == "" set param=--gtest_filter=%1
 set sec_param=%2
 if "%param%" == "" powershell Write-Host "Full and Looooooong test was requested." -Foreground Cyan && set sec_param=both
@@ -24,10 +24,8 @@ if not %errorlevel% == 0 goto error
 popd
 powershell Write-Host "This is end of testing. FULL test was requested." -Foreground Cyan
 :success
-powershell Write-Host "Unit test SUCCESS" -Foreground Green
-goto end
+powershell Write-Host "Unit test SUCCESS" -Foreground Green && exit /b 0
 :error
 popd
-powershell Write-Host "Unit test failed" -Foreground Red 
-exit 100
+powershell Write-Host "Unit test failed" -Foreground Red && exit /b 78
 :end

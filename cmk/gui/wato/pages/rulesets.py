@@ -525,7 +525,7 @@ class ModeEditRuleset(WatoMode):
             if html.request.has_var("service"):
                 try:
                     self._service = watolib.mk_eval(html.request.var("service"))
-                except:
+                except Exception:
                     pass
 
         if self._hostname and self._rulespec.item_type == "item" and not self._service:

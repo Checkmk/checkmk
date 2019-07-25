@@ -125,7 +125,7 @@ class AutochecksManager(object):
             cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
             autochecks_raw = eval(
                 file(filepath).read().decode("utf-8"), check_config,
-                check_config)  # type: List[Tuple[CheckPluginName, Item, CheckParameters]]
+                check_config)  # type: List[Dict]
         except SyntaxError as e:
             cmk_base.console.verbose("Syntax error in file %s: %s\n",
                                      filepath,
@@ -141,49 +141,32 @@ class AutochecksManager(object):
             return
 
         for entry in autochecks_raw:
-            if isinstance(entry, tuple):
-                check_plugin_name, item, discovered_parameters = self._load_pre_16_tuple_autocheck(
-                    entry)
-                service_labels = DiscoveredServiceLabels()
-            else:
-                check_plugin_name, item, discovered_parameters, service_labels = self._load_dict_autocheck(
-                    entry)
+            labels = DiscoveredServiceLabels()
+            for label_id, label_value in entry["service_labels"].items():
+                labels.add_label(ServiceLabel(label_id, label_value))
 
             # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
             # items from existing autocheck files for compatibility. TODO remove this one day
+            item = entry["item"]
             if isinstance(item, str):
                 item = config.decode_incoming_string(item)
 
-            if not isinstance(check_plugin_name, six.string_types):
+            if not isinstance(entry["check_plugin_name"], six.string_types):
                 raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
                                          "The check type must be a string." % (entry, hostname))
 
             try:
-                description = config.service_description(hostname, check_plugin_name, item)
+                description = config.service_description(hostname, entry["check_plugin_name"], item)
             except Exception:
                 continue  # ignore
 
             yield Service(
-                check_plugin_name=check_plugin_name,
+                check_plugin_name=str(entry["check_plugin_name"]),
                 item=item,
                 description=description,
-                parameters=discovered_parameters,
-                service_labels=service_labels,
+                parameters=entry["parameters"],
+                service_labels=labels,
             )
-
-    def _load_pre_16_tuple_autocheck(self, entry):
-        # type: (Tuple[CheckPluginName, Item, CheckParameters]) -> Tuple[CheckPluginName, Item, CheckParameters]
-        if len(entry) == 4:  # old format where hostname is at the first place
-            entry = entry[1:]  # type: ignore
-        check_plugin_name, item, parameters = entry
-        return check_plugin_name, item, parameters
-
-    def _load_dict_autocheck(self, entry):
-        # type: (Dict) -> Tuple[CheckPluginName, Item, CheckParameters, DiscoveredServiceLabels]
-        labels = DiscoveredServiceLabels()
-        for label_id, label_value in entry["service_labels"].items():
-            labels.add_label(ServiceLabel(label_id, label_value))
-        return entry["check_plugin_name"], entry["item"], entry["parameters"], labels
 
 
 def resolve_paramstring(check_plugin_name, parameters_unresolved):

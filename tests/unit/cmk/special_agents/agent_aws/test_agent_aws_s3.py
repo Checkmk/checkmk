@@ -1,6 +1,6 @@
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest, json
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     S3ListBucketsIB,
@@ -74,7 +74,7 @@ def get_s3_sections():
 
 
 s3_params = [
-    (None, (None, None), 3),
+    (None, (None, None), 4),
     (['Name-0'], (None, None), 1),
     (['Name-0', 'Name-1'], (None, None), 2),
     (['Name-0', 'Name-1', 'Name-2'], (None, None), 3),
@@ -162,20 +162,20 @@ def test_agent_aws_s3(get_s3_sections, names, tags, amount_buckets):
     _s3_limits_results = s3_limits.run().results
     _s3_summary_results = s3_summary.run().results
     s3_results = s3.run().results
-
     assert s3.cache_interval == 86400
     assert s3.name == "s3"
 
     if amount_buckets:
-        assert len(s3_results) == 1
 
+        assert len(s3_results) == 1
         s3_result = s3_results[0]
         assert s3_result.piggyback_hostname == ''
 
         # Y (len results) == 4 (metrics) * X (buckets)
         assert len(s3_result.content) == 4 * amount_buckets
         for row in s3_result.content:
-            assert row.get('LocationConstraint') == 'region'
+            if row.get('Name') in ['Name-0', 'Name-1', 'Name-2']:
+                assert row.get('LocationConstraint') == 'region'
             assert 'Tagging' in row
 
 
@@ -198,7 +198,8 @@ def test_agent_aws_s3_requests(get_s3_sections, names, tags, amount_buckets):
         # Y (len results) == 16 (metrics) * X (buckets)
         assert len(s3_requests_result.content) == 16 * amount_buckets
         for row in s3_requests_result.content:
-            assert row.get('LocationConstraint') == 'region'
+            if row.get('Name') in ['Name-0', 'Name-1', 'Name-2']:
+                assert row.get('LocationConstraint') == 'region'
             assert 'Tagging' in row
 
 
@@ -209,7 +210,6 @@ def test_agent_aws_s3_summary_without_limits(get_s3_sections, names, tags, amoun
 
     assert s3_summary.cache_interval == 86400
     assert s3_summary.name == "s3_summary"
-
     assert s3_summary_results == []
 
 
@@ -224,14 +224,14 @@ def test_agent_aws_s3_without_limits(get_s3_sections, names, tags, amount_bucket
 
     if amount_buckets:
         assert len(s3_results) == 1
-
         s3_result = s3_results[0]
         assert s3_result.piggyback_hostname == ''
 
         # Y (len results) == 4 (metrics) * X (buckets)
         assert len(s3_result.content) == 4 * amount_buckets
         for row in s3_result.content:
-            assert row.get('LocationConstraint') == 'region'
+            if row.get('Name') in ['Name-0', 'Name-1', 'Name-2']:
+                assert row.get('LocationConstraint') == 'region'
             assert 'Tagging' in row
 
 
@@ -253,5 +253,6 @@ def test_agent_aws_s3_requests_without_limits(get_s3_sections, names, tags, amou
         # Y (len results) == 16 (metrics) * X (buckets)
         assert len(s3_requests_result.content) == 16 * amount_buckets
         for row in s3_requests_result.content:
-            assert row.get('LocationConstraint') == 'region'
+            if row.get('Name') in ['Name-0', 'Name-1', 'Name-2']:
+                assert row.get('LocationConstraint') == 'region'
             assert 'Tagging' in row

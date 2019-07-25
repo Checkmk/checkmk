@@ -1,0 +1,16 @@
+title: AWS/Glacier Vault
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the archives of AWS/Glacier vaults and reports
+ the number of archives and size of the vault.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ There are no default levels set for the vault size. Upper
+ levels are configurable.
+
+inventory:
+ One service per vault will be created.

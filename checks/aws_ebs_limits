@@ -37,7 +37,7 @@ factory_settings['aws_ebs_limits_default_levels'] = {
 
 def parse_aws_ebs_limits(info):
     parsed = []
-    for resource_key, resource_title, limit, amount in parse_aws(info):
+    for resource_key, resource_title, limit, amount, region in parse_aws(info):
         if resource_key in [
                 "block_store_space_standard",
                 "block_store_space_io1",
@@ -53,7 +53,7 @@ def parse_aws_ebs_limits(info):
             human_readable_func = lambda x: "%s/s" % x
         else:
             human_readable_func = int
-        parsed.append((resource_key, resource_title, limit, amount, human_readable_func))
+        parsed.append((resource_key, resource_title, limit, amount, region, human_readable_func))
     return parsed
 
 

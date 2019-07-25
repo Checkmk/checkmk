@@ -45,7 +45,7 @@ factory_settings['aws_rds_limits_default_levels'] = {
 
 def parse_aws_rds_limits(info):
     parsed = []
-    for resource_key, resource_title, limit, amount in parse_aws(info):
+    for resource_key, resource_title, limit, amount, region in parse_aws(info):
         if resource_key == "allocated_storage":
             # Allocated Storage has unit TiB
             factor = 1024**4 / 1000
@@ -54,7 +54,7 @@ def parse_aws_rds_limits(info):
             human_readable_f = get_bytes_human_readable
         else:
             human_readable_f = int
-        parsed.append((resource_key, resource_title, limit, amount, human_readable_f))
+        parsed.append((resource_key, resource_title, limit, amount, region, human_readable_f))
     return parsed
 
 

@@ -1942,12 +1942,10 @@ class RulespecSpecialAgentsAws(HostRulespec):
                 ("global_services",
                  Dictionary(
                      title=_("Global services to monitor"),
-                     elements=[
-                         ("ce",
-                          FixedValue(None,
-                                     totext=_("Monitor costs and usage"),
-                                     title=_("Costs and usage (CE)"))),
-                     ],
+                     elements=[("ce",
+                                FixedValue(None,
+                                           totext=_("Monitor costs and usage"),
+                                           title=_("Costs and usage (CE)")))],
                  )),
                 ("regions",
                  ListChoice(
@@ -1997,6 +1995,16 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               optional_keys=["limits", "requests"],
                               default_keys=["limits"],
                           )),
+                         ("glacier",
+                          Dictionary(
+                              title=_("Amazon S3 Glacier (Glacier)"),
+                              elements=[
+                                  _vs_element_aws_service_selection(),
+                                  _vs_element_aws_limits(),
+                              ],
+                              optional_keys=["limits"],
+                              default_keys=["limits"],
+                          )),
                          ("elb",
                           Dictionary(
                               title=_("Classic Load Balancing (ELB)"),
@@ -2044,7 +2052,9 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               default_keys=["alarms", "limits"],
                           )),
                      ],
-                     default_keys=["ec2", "ebs", "s3", "elb", "elbv2", "rds", "cloudwatch"],
+                     default_keys=[
+                         "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch"
+                     ],
                  )),
                 ("overall_tags",
                  _vs_aws_tags(_("Restrict monitoring services by one of these tags"))),

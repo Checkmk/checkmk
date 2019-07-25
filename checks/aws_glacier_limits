@@ -7,11 +7,11 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
+# The official homepage is at https://checkmk.com/.
 #
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -24,35 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings['aws_elbv2_limits_default_levels'] = {
-    'application_load_balancers': (None, 80.0, 90.0),
-    'application_load_balancer_rules': (None, 80.0, 90.0),
-    'application_load_balancer_listeners': (None, 80.0, 90.0),
-    'application_load_balancer_target_groups': (None, 80.0, 90.0),
-    'application_load_balancer_certificates': (None, 80.0, 90.0),
-    'network_load_balancers': (None, 80.0, 90.0),
-    'network_load_balancer_listeners': (None, 80.0, 90.0),
-    'network_load_balancer_target_groups': (None, 80.0, 90.0),
-    'load_balancer_target_groups': (None, 80.0, 90.0),
+#.
+#   .--Glacier limits------------------------------------------------------.
+#   |       ____ _            _             _ _           _ _              |
+#   |      / ___| | __ _  ___(_) ___ _ __  | (_)_ __ ___ (_) |_ ___        |
+#   |     | |  _| |/ _` |/ __| |/ _ \ '__| | | | '_ ` _ \| | __/ __|       |
+#   |     | |_| | | (_| | (__| |  __/ |    | | | | | | | | | |_\__ \       |
+#   |      \____|_|\__,_|\___|_|\___|_|    |_|_|_| |_| |_|_|\__|___/       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings['aws_glacier_limits_default_levels'] = {
+    'number_of_vaults': (None, 80.0, 90.0),
 }
 
 
-def parse_aws_elbv2_limits(info):
+def parse_aws_glacier_limits(info):  # pylint: disable=function-redefined
     return [(resource_key, resource_title, limit, amount, region, None)
             for resource_key, resource_title, limit, amount, region in parse_aws(info)]
 
 
-def check_aws_elbv2_limits(item, params, parsed):
-    return check_aws_limits("elbv2", params, parsed)
+def check_aws_glacier_limits(item, params, parsed):
+    return check_aws_limits("glacier", params, parsed)
 
 
-check_info['aws_elbv2_limits'] = {
-    'parse_function': parse_aws_elbv2_limits,
+check_info['aws_glacier_limits'] = {
+    'parse_function': parse_aws_glacier_limits,
     'inventory_function': discover_single,
-    'check_function': check_aws_elbv2_limits,
-    'service_description': 'AWS/ELBv2 Limits',
+    'check_function': check_aws_glacier_limits,
+    'service_description': 'AWS/Glacier Limits',
     'includes': ['aws.include'],
-    'group': 'aws_elbv2_limits',
-    'default_levels_variable': 'aws_elbv2_limits_default_levels',
+    'group': 'aws_glacier_limits',
+    'default_levels_variable': 'aws_glacier_limits_default_levels',
     'has_perfdata': True,
 }

@@ -4971,8 +4971,38 @@ metric_info['aws_costs_unblended'] = {
     'color': '11/a',
 }
 
+metric_info['aws_glacier_number_of_vaults'] = {
+    'title': _('Number of vaults'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_glacier_num_archives'] = {
+    'title': _('Number of archives'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_glacier_vault_size'] = {
+    'title': _('Vault size'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_glacier_total_vault_size'] = {
+    'title': _('Total size of all vaults'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_glacier_largest_vault_size'] = {
+    'title': _('Largest vault size'),
+    'unit': 'bytes',
+    'color': '21/a',
+}
+
 metric_info['aws_num_objects'] = {
-    'title': _('Numer of objects'),
+    'title': _('Number of objects'),
     'unit': 'count',
     'color': '21/a',
 }

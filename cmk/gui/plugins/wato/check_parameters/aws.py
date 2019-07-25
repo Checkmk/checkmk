@@ -70,6 +70,24 @@ def _vs_s3_buckets():
                         ]))
 
 
+def _vs_glacier_vaults():
+    return ('vault_size_levels',
+            Alternative(title=_("Upper levels for the vault size"),
+                        style="dropdown",
+                        elements=[
+                            Tuple(title=_("Set levels"),
+                                  elements=[
+                                      Filesize(title=_("Warning at")),
+                                      Filesize(title=_("Critical at")),
+                                  ]),
+                            Tuple(title=_("No levels"),
+                                  elements=[
+                                      FixedValue(None, totext=""),
+                                      FixedValue(None, totext=""),
+                                  ]),
+                        ]))
+
+
 def _vs_burst_balance():
     return ('burst_balance_levels_lower',
             Alternative(title=_("Lower levels for burst balance"),
@@ -168,6 +186,90 @@ def _vs_limits(resource, default_limit, vs_limit_cls=None):
                       FixedValue(None, totext=""),
                   ]),
         ])
+
+
+#.
+#   .--Glacier-------------------------------------------------------------.
+#   |                    ____ _            _                               |
+#   |                   / ___| | __ _  ___(_) ___ _ __                     |
+#   |                  | |  _| |/ _` |/ __| |/ _ \ '__|                    |
+#   |                  | |_| | | (_| | (__| |  __/ |                       |
+#   |                   \____|_|\__,_|\___|_|\___|_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsGlacierVaultArchives(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_glacier_vault_archives"
+
+    @property
+    def title(self):
+        return _("AWS/Glacier Vault Objects")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_glacier_vaults()])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The vault name"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsGlacierVaults(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_glacier_vaults"
+
+    @property
+    def title(self):
+        return _("AWS/Glacier Vaults")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_glacier_vaults()])
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsGlacierLimits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_glacier_limits"
+
+    @property
+    def title(self):
+        return _("AWS/Glacier Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[('number_of_vaults', _vs_limits("Vaults", 1000))])
 
 
 #.

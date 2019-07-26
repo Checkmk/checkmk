@@ -3,11 +3,12 @@
 
 import os
 import sys
-import pytest
 import tempfile
 import shutil
+import pytest
 
-from testlib import cmk_path, cmc_path, cme_path, repo_path
+from testlib import cmk_path, cmc_path, repo_path
+#from testlib import cmk_path, cmc_path, cme_path, repo_path
 import testlib.pylint_cmk as pylint_cmk
 
 
@@ -75,7 +76,7 @@ def test_pylint(pylint_test_dir):
 #    ]
 
     # We use our own search logic to find scripts without python extension
-    search_paths = [
+#    search_paths = [
 #        "omd/packages/omd.bin",
 #        "bin",
 #        "notifications",
@@ -85,7 +86,7 @@ def test_pylint(pylint_test_dir):
 #        "enterprise/agents/plugins",
 #        "enterprise/bin",
 #        "enterprise/misc",
-    ]
+#    ]
 
 #    for path in search_paths:
 #        abs_path = cmk_path() + "/" + path

@@ -362,8 +362,13 @@ def test_wato_rules(check_manager):
 ])
 def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, result):
     check = check_manager.get_check("ps")
-    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
-                                            ps_pattern, user_pattern) == result
+    process_attributes_match = check.context["process_attributes_match"]
+    process_matches = check.context["process_matches"]
+
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern)
+    matches_proc = process_matches(ps_line[1:], ps_pattern)
+
+    assert (matches_attr and matches_proc) == result
 
 
 @pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, match_groups, result", [
@@ -376,8 +381,13 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
 def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern,
                                       match_groups, result):
     check = check_manager.get_check("ps")
-    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
-                                            ps_pattern, user_pattern, match_groups) == result
+    process_attributes_match = check.context["process_attributes_match"]
+    process_matches = check.context["process_matches"]
+
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern)
+    matches_proc = process_matches(ps_line[1:], ps_pattern, match_groups)
+
+    assert (matches_attr and matches_proc) == result
 
 
 @pytest.mark.parametrize("attribute, pattern, result", [

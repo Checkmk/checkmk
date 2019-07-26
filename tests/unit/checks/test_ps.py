@@ -380,6 +380,22 @@ def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_p
                                             ps_pattern, user_pattern, match_groups) == result
 
 
+@pytest.mark.parametrize("user, pattern, result", [
+    ("user", "~user", None),
+    ("user", "user", None),
+    ("user", "~foo", False),
+    ("user", "foo", False),
+    ("user", "~u.er", None),
+    ("user", "u.er", False),
+    ("users", "~user", None),
+    ("users", "user", False),
+])
+def test_ps_match_user(check_manager, user, pattern, result):
+    check = check_manager.get_check("ps")
+    match_function = check.context["match_user"]
+    assert match_function(user, pattern) == result
+
+
 @pytest.mark.parametrize("text, result", [
     ("12:17", 737),
     ("55:12:17", 198737),

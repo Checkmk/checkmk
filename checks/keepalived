@@ -23,12 +23,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 factory_settings['keepalived_default_levels'] = {
-        'master'  : '0',
-        'unknown' : '3',
-        'init'    : '0',
-        'backup'  : '0',
-        'fault'   : '2',
+    'master': '0',
+    'unknown': '3',
+    'init': '0',
+    'backup': '0',
+    'fault': '2',
 }
+
 
 def hex2ip(hexstr):
     """
@@ -36,33 +37,36 @@ def hex2ip(hexstr):
     17 20 16 00 00 01
     """
     hexstr = hexstr.replace(' ', '')
-    blocks = (''.join(block) for block in zip(*[iter(hexstr)]*2))
+    blocks = (''.join(block) for block in zip(*[iter(hexstr)] * 2))
     blocks = (int(block, 16) for block in blocks)
     return '.'.join(str(block) for block in blocks)
 
+
 def inventory_keepalived(info):
     for entry in info[0]:
-        vrrp_id=entry[0]
+        vrrp_id = entry[0]
         yield vrrp_id, None
 
-def check_keepalived(item,params,info):
+
+def check_keepalived(item, params, info):
     map_state = {
-        "0" : "init",
-        "1" : "backup",
-        "2" : "master",
-        "3" : "fault",
-        "4" : "unknown",
+        "0": "init",
+        "1": "backup",
+        "2": "master",
+        "3": "fault",
+        "4": "unknown",
     }
     status = 3
     infotext = "Item not found in output"
-    for id,entry in enumerate(info[0]):
-        vrrp_id=entry[0]
-        address=info[1][id][0]
-        hexaddr=address.encode("latin-1").encode("hex")
+    for id_, entry in enumerate(info[0]):
+        vrrp_id = entry[0]
+        address = info[1][id_][0]
+        hexaddr = address.encode("latin-1").encode("hex")
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
-            infotext = "This node is %s. IP Address: %s" %(map_state[str(entry[1])],hex2ip(hexaddr))
-    yield int(status),infotext
+            infotext = "This node is %s. IP Address: %s" % (map_state[str(
+                entry[1])], hex2ip(hexaddr))
+    yield int(status), infotext
 
 check_info['keepalived'] = {
     'inventory_function'      : inventory_keepalived,

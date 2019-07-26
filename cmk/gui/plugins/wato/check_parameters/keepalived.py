@@ -27,9 +27,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    Float,
     TextAscii,
-    Tuple,
+    MonitoringState,
 )
 
 from cmk.gui.plugins.wato import (
@@ -59,40 +58,28 @@ class RulespecCheckgroupParametersGenericRate(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements = [
-                ("master",
-                 MonitoringState(
-                    title = _("master"),
-                    default_value = 0,
-                 )
-                ),
-                ("unknown",
-                  MonitoringState(
-                    title = _("unknown"),
-                    default_value = 3,
-                 )
-                ),
-                ("init",
-                 MonitoringState(
-                    title = _("init"),
-                    default_value = 0,
-                 )
-                ),
-                ("backup",
-                 MonitoringState(
-                    title = _("backup"),
-                    default_value = 0,
-                 )
-                ),
-                ("fault",
-                 MonitoringState(
-                    title = _("fault"),
-                    default_value = 2,
-                 )
-                ),
-            ]
-        )
+        return Dictionary(elements=[
+            ("master", MonitoringState(
+                title=_("master"),
+                default_value=0,
+            )),
+            ("unknown", MonitoringState(
+                title=_("unknown"),
+                default_value=3,
+            )),
+            ("init", MonitoringState(
+                title=_("init"),
+                default_value=0,
+            )),
+            ("backup", MonitoringState(
+                title=_("backup"),
+                default_value=0,
+            )),
+            ("fault", MonitoringState(
+                title=_("fault"),
+                default_value=2,
+            )),
+        ])
 
     @property
     def item_spec(self):

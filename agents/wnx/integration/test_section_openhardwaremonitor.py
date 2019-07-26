@@ -75,5 +75,11 @@ def manage_ohm_binaries():
 
 
 def test_section_openhardwaremonitor(request, testconfig, expected_output, actual_output, testfile):
+    required_lines = 2
+    name = 'openhardwaremonitor'
+
+    if not it_utils.check_actual_input(name, required_lines, Globals.alone, actual_output):
+        return
+
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

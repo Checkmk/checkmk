@@ -82,6 +82,10 @@ class SimpleModeType(object):
         """
         raise NotImplementedError()
 
+    def site_valuespec(self):
+        # type: () -> SiteChoice
+        return SiteChoice()
+
     @abc.abstractmethod
     def can_be_disabled(self):
         # type: () -> bool
@@ -364,7 +368,7 @@ class SimpleEditMode(SimpleWatoModeBase):
 
         if self._mode_type.is_site_specific():
             site_attr = [
-                ("site", SiteChoice()),
+                ("site", self._mode_type.site_valuespec()),
             ]
         else:
             site_attr = []

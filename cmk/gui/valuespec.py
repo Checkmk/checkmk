@@ -4822,7 +4822,6 @@ def ListOfCAs(**args):
 class SiteChoice(DropdownChoice):
     def __init__(self, **kwargs):
         kwargs.setdefault("title", _("Site"))
-        kwargs.setdefault("help", _("Specify the site of your choice"))
         kwargs.setdefault("default_value", self._site_default_value)
         kwargs.setdefault("invalid_choice_error",
                           _("The configured site is not known to this site."))

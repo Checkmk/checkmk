@@ -131,20 +131,19 @@ def replace_service_description(service_description, match_groups, pattern):
 
 
 def match_user(user, user_pattern):
-    if user_pattern:
-        if user_pattern.startswith('~'):
-            if not regex(user_pattern[1:]).match(user):
-                return False
+    if not user_pattern:
+        return True
 
-        elif user_pattern != user:
-            return False
-    return None
+    if user_pattern.startswith('~'):
+        return bool(regex(user_pattern[1:]).match(user))
+
+    return user_pattern == user
 
 
 def process_matches(process_line, process_pattern, user_pattern, match_groups=None):
-    user, command_line = process_line[0].user, process_line[1:]
+    process_info, command_line = process_line[0], process_line[1:]
 
-    if match_user(user, user_pattern) is False:
+    if not match_user(process_info.user, user_pattern):
         return False
 
     if not process_pattern:

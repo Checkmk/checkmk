@@ -12,6 +12,7 @@ module.exports = {
         themes: [
             "./web/htdocs/themes/facelift/theme.scss",
             "./web/htdocs/themes/classic/theme.scss",
+            "./web/htdocs/themes/modern-dark/theme.scss",
         ],
     },
     output: {

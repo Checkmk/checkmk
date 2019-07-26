@@ -2,7 +2,7 @@ Title: netscaler_vserver: Discovers readable names
 Level: 1
 Component: checks
 Class: fix
-Compatible: compat
+Compatible: incomp
 Edition: cre
 State: unknown
 Version: 1.5.0p5

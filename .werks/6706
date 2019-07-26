@@ -1,4 +1,4 @@
-Title: BI availability no longer creates N/A periods if a element within the BI was not known at the time
+Title: BI availability no longer creates N/A periods if an element within the BI was not known at the time
 Level: 1
 Component: multisite
 Compatible: compat

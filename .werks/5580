@@ -1,4 +1,4 @@
-Title: Host event limit can now be configured individuall per Host & service ruleset
+Title: Introduce per-host event limit
 Level: 1
 Component: ec
 Compatible: compat
@@ -7,6 +7,6 @@ Version: 1.5.0i2
 Date: 1513088405
 Class: feature
 
-The host event limit can now be customized per host & service parameter ruleset.
-There is a new ruleset named "Host event limit" available to configure the host
-event limit individually for overriding the global limit.
+A per-host event limit can now be configured via the new "Host & Service
+Parameters" ruleset "Host event limit". It overrides the host event limit
+configured globally in the event console.

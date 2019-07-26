@@ -35,7 +35,7 @@ def pylint_test_dir():
     shutil.rmtree(test_dir)
 
 
-def test_pylint(pylint_test_dir):
+def test_pylint(pylint_test_dir): #pylint: disable=redefined-outer-name
     # Only specify the path to python packages or modules here
     modules_or_packages = [
         # OMD
@@ -99,7 +99,7 @@ def test_pylint(pylint_test_dir):
     assert exit_code == 0, "PyLint found an error"
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
+def _compile_check_and_inventory_plugins(pylint_test_dir): #pylint: disable=redefined-outer-name
     with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
 
         # Fake data structures where checks register (See cmk_base/checks.py)
@@ -148,7 +148,7 @@ def inv_tree(path, default_value=None):
             pylint_cmk.add_file(f, path)
 
 
-def _compile_bakery_plugins(pylint_test_dir):
+def _compile_bakery_plugins(pylint_test_dir): #pylint: disable=redefined-outer-name
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
 
         pylint_cmk.add_file(

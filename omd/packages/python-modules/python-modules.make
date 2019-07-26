@@ -286,7 +286,6 @@ python-modules-dump-Pipfile:
 	@echo 'astroid = "*"  # used by testlib.pylint_checker_localization'
 	@echo 'bandit = "*"  # used by test/Makefile'"'"'s test-bandit target'
 	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
-	@echo 'bson = "*"  # used by test_mk_mongodb unit test'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
 	@echo 'freezegun = "*"  # used by various unit tests'

@@ -1042,8 +1042,6 @@ class WebSession(requests.Session):
         super(WebSession, self).__init__()
 
     def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):
-        url = self.url(proto, path)
-
         response = self.get(path, expected_code=expected_code, allow_redirects=False)
         if expected_target:
             if response.headers['Location'] != expected_target:
@@ -1051,10 +1049,14 @@ class WebSession(requests.Session):
                                      (response.headers['Location'], expected_target))
             assert response.headers['Location'] == expected_target
 
-    def get(self, *args, **kwargs):
+    # Was built this way before inheriting from requests.Session, which also implements
+    # these methods. We never use them here, so we can ignore that for the moment.
+    def get(self, *args, **kwargs):  # pylint: disable=arguments-differ
         return self._request("get", *args, **kwargs)
 
-    def post(self, *args, **kwargs):
+    # Was built this way before inheriting from requests.Session, which also implements
+    # these methods. We never use them here, so we can ignore that for the moment.
+    def post(self, *args, **kwargs):  # pylint: disable=arguments-differ
         return self._request("post", *args, **kwargs)
 
     def _request(self,
@@ -1219,6 +1221,9 @@ class WebSession(requests.Session):
                 pass
 
         return urls
+
+    def url(self, proto, path):
+        raise NotImplementedError()
 
     def login(self, username=None, password=None):
         raise NotImplementedError()

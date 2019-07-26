@@ -83,6 +83,7 @@ def test_03_pip_interpreter_version(site):
     "werkzeug",
     "boto3",
     "kubernetes",
+    "numpy",
 ])
 def test_python_modules(site, module_name):
     import importlib

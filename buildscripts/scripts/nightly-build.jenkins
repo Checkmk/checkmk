@@ -94,24 +94,24 @@ node {
                             sh 'rm -rf enterprise managed'
                             // Workaround since scss does not support conditional includes
                             THEME_LIST.each { THEME ->
-                                sh '''
+                                sh """
                                     rm -rf web/htdocs/themes/${THEME}/scss/{cme,cee}
                                     mkdir -p web/htdocs/themes/${THEME}/scss/{cme,cee}
                                     echo '@mixin graphs {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs.scss
                                     echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
                                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                                '''
+                                """
                             }
                             break
                         case 'enterprise':
                             sh 'rm -rf  managed'
                             // Workaround since scss does not support conditional includes
                             THEME_LIST.each { THEME ->
-                                sh '''
+                                sh """
                                     rm -rf web/htdocs/themes/${THEME}/scss/cme
                                     mkdir -p web/htdocs/themes/${THEME}/scss/cme
                                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                                '''
+                                """
                             }
                             break
                     }

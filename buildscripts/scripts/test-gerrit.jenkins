@@ -35,6 +35,8 @@ node {
         GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
         CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         print "Changed python files: ${CHANGED_PYTHON_FILES}"
+        CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
@@ -82,13 +84,13 @@ node {
             }
         }
         
-        stage("Python linting") {
+        stage("Python3 linting") {
                 dir('tests-py3') {
                     sh 'make test-pylint'
                 }
         }
 
-        stage("Python Unit tests") {
+        stage("Python unit tests") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
                     withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
@@ -99,7 +101,19 @@ node {
                 println "No python files changed. Skipping."
             }
         }
-        
+
+        stage("Python3 unit tests") {
+            if (CHANGED_PYTHON3_FILES != "") {
+                dir('tests-py3') {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit.xml'\""]) {
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit"
+                    }
+                }
+            } else {
+                println "No python3 files changed. Skipping."
+            }
+        }
+
         stage("Shell format") {
             dir('tests') {
                 sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"

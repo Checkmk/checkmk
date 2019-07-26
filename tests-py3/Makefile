@@ -14,6 +14,7 @@ include ../defines.make
 help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 	@echo "test-pylint               - Run pylint based tests"
+	@echo "test-unit                 - Run unit tests"
 
 # These target need to be phony so it is run every time because only the other
 # makefile can determine that there's nothing to be done.
@@ -25,3 +26,7 @@ $(VENV):
 
 test-pylint: $(VENV)
 	$(PYTEST) -T pylint pylint
+
+test-unit: $(VENV)
+	$(PYTEST) -T unit git unit
+

@@ -293,7 +293,7 @@ check_info['ps'] = {
     "inventory_function": inventory_ps,
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "ps_lnx.include", "mem.include"],
+    "includes": ["ps_lnx.include", "ps.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",
@@ -306,7 +306,7 @@ check_info['ps'] = {
 check_info['ps.perf'] = {
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "ps_lnx.include", "mem.include"],
+    "includes": ["ps_lnx.include", "ps.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",

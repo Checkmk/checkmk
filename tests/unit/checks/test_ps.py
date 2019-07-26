@@ -381,13 +381,13 @@ def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_p
 
 
 @pytest.mark.parametrize("user, pattern, result", [
-    ("user", "~user", None),
-    ("user", "user", None),
+    ("user", "~user", True),
+    ("user", "user", True),
     ("user", "~foo", False),
     ("user", "foo", False),
-    ("user", "~u.er", None),
+    ("user", "~u.er", True),
     ("user", "u.er", False),
-    ("users", "~user", None),
+    ("users", "~user", True),
     ("users", "user", False),
 ])
 def test_ps_match_user(check_manager, user, pattern, result):

@@ -1,0 +1,10 @@
+Title: netstat: something
+Level: 1 
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564142952
+Class: feature
+
+Addition of netstat functionality for solaris

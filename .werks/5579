@@ -1,4 +1,4 @@
-Title: Rule event limit can now be configured individually per rule
+Title: Introduce per-rule event limit
 Level: 1
 Component: ec
 Compatible: compat
@@ -7,6 +7,6 @@ Version: 1.5.0i2
 Date: 1513083425
 Class: feature
 
-The rule event limit can now be customized per rule. There is a new
-option "Custom rule event limit" available in the EC rule editor
-that can be used for this purpose.
+A per-rule event limit can now be configured via the new "Custom rule event
+limit" option available in the event console's rule editor. It overrides the
+rule event limit configured globally in the event console.

@@ -1,0 +1,34 @@
+@import "~select2/dist/css/select2";
+@import "~@yaireo/tagify/dist/tagify";
+
+@import "scss/_variables.scss";
+@import "../facelift/scss/_main.scss";
+@import "../facelift/scss/_pages.scss";
+@import "../facelift/scss/_status.scss";
+@import "../facelift/scss/_bi.scss";
+@import "../facelift/scss/_dashboard.scss";
+@import "../facelift/scss/_login.scss";
+@import "../facelift/scss/_logwatch.scss";
+@import "../facelift/scss/_prediction.scss";
+@import "../facelift/scss/_views.scss";
+@import "../facelift/scss/_wato.scss";
+@import "../facelift/scss/_mobile.scss";
+@import "../facelift/scss/_sidebar.scss";
+@import "../facelift/scss/_snapins.scss";
+@import "../facelift/scss/_node_visualization.scss";
+
+// CEE specific files. Would love to add some kind of conditional import here,
+// but that is simply not possible at the moment using SCSS. Hack around this
+// using symlinks in the git during development and replace the links with empty
+// files during the build procedure of other editions.
+@import "../facelift/scss/cee/_graphs.scss";
+@import "../facelift/scss/cee/_reporting.scss";
+@if $ENTERPRISE = "yes" {
+  @include graphs;
+  @include reporting;
+}
+
+@import "../facelift/scss/cme/_managed.scss";
+@if $MANAGED = "yes" {
+  @include managed;
+}

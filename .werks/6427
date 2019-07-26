@@ -1,4 +1,4 @@
-Title: Raw Edition: Fixed broken Event Console rule editing
+Title: Raw Edition: Fixed broken Event Console rule editing (1.5 regression)
 Level: 2
 Component: ec
 Class: fix

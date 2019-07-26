@@ -294,10 +294,10 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, {
+    ("smss", "~smss.exe", None, (None, False), {
         'cpu_rescale_max': None
     }),
-    ("svchost", "svchost.exe", None, {
+    ("svchost", "svchost.exe", None, (None, False), {
         "cpulevels": (90.0, 98.0),
         'cpu_rescale_max': None,
         "handle_count": (1000, 2000),
@@ -308,11 +308,11 @@ PS_DISCOVERY_SPECS = [
         "single_cpulevels": (90.0, 98.0),
         "virtual_levels": (1073741824000, 2147483648000),
     }),
-    ("firefox is on %s", "~.*(fire)fox", None, {
+    ("firefox is on %s", "~.*(fire)fox", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("emacs %u", "emacs", False, {
+    ("emacs %u", "emacs", False, (None, False), {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "process_info": "html",
@@ -321,24 +321,24 @@ PS_DISCOVERY_SPECS = [
         "resident_levels": (1024**3, 2 * 1024**3),
         "icon": "emacs.png",
     }),
-    ("cron", "~.*cron", "root", {
+    ("cron", "~.*cron", "root", (None, False), {
         "max_age": (3600, 7200),
         'cpu_rescale_max': None,
         "resident_levels_perc": (25.0, 50.0),
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, {
+    ("sshd", "~.*sshd", None, (None, False), {
         'cpu_rescale_max': None
     }),
-    ('PS counter', None, 'zombie', {
+    ('PS counter', None, 'zombie', (None, False), {
         'cpu_rescale_max': None
     }),
-    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, {
+    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, {
+    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
@@ -365,7 +365,7 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
     process_attributes_match = check.context["process_attributes_match"]
     process_matches = check.context["process_matches"]
 
-    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern)
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
     matches_proc = process_matches(ps_line[1:], ps_pattern)
 
     assert (matches_attr and matches_proc) == result
@@ -384,7 +384,7 @@ def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_p
     process_attributes_match = check.context["process_attributes_match"]
     process_matches = check.context["process_matches"]
 
-    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern)
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
     matches_proc = process_matches(ps_line[1:], ps_pattern, match_groups)
 
     assert (matches_attr and matches_proc) == result
@@ -473,6 +473,7 @@ PS_DISCOVERED_ITEMS = [
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("firefox is on fire", {
         "process": "~.*(fire)fox",
@@ -480,6 +481,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('fire',),
+        'cgroup': (None, False),
     }),
     ("Checkhelpers heute", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
@@ -487,6 +489,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('heute',),
+        'cgroup': (None, False),
     }),
     ("Checkhelpers Overall", {
         "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
@@ -494,6 +497,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'match_groups': (),
         'cpu_rescale_max': None,
+        'cgroup': (None, False),
     }),
     ("Checkhelpers twelve", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
@@ -501,18 +505,21 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('twelve',),
+        'cgroup': (None, False),
     }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("PS counter", {
         'cpu_rescale_max': None,
         'process': None,
         'user': 'zombie',
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -527,12 +534,14 @@ PS_DISCOVERED_ITEMS = [
         "virtual_levels": (1073741824000, 2147483648000),
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("smss", {
         "process": "~smss.exe",
         "user": None,
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
 ]
 
@@ -786,6 +795,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main',),
             'user': None,
+            'cgroup': (None, False),
         }),
         ('main_dev', {
             'cpu_rescale_max': True,
@@ -793,6 +803,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main_dev',),
             'user': None,
+            'cgroup': (None, False),
         }),
         ('main_test', {
             'cpu_rescale_max': True,
@@ -800,6 +811,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main_test',),
             'user': None,
+            'cgroup': (None, False),
         }),
     ]
 

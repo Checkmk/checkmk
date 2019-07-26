@@ -1,0 +1,18 @@
+Title: ps: Allow to filter discovery by cgroup (Linux only)
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1564421006
+
+The checkmk agent for Linux hosts now also sends the <i>cgroup</i>
+information proveded by the ps command. This allows users to filter
+processes by their control group during discovery.
+
+For instance you can use this to exclude processes running in Docker
+containers.
+
+See the help of the discovery rule "Discover Processes" for details.

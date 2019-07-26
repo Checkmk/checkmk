@@ -51,8 +51,8 @@ def ps_wato_configured_inventory_rules(invrules):
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None
 
-        inventory_specs.append(
-            (value['descr'], value.get('match'), value.get('user'), default_params))
+        inventory_specs.append((value['descr'], value.get('match'), value.get('user'),
+                                value.get('cgroup', (None, False)), default_params))
 
     return inventory_specs
 
@@ -62,10 +62,10 @@ def inventory_ps_common(invrules, parsed):
 
     inventory = []
     for line in parsed:
-        for servicedesc, pattern, userspec, default_params in inventory_specs:
+        for servicedesc, pattern, userspec, cgroupspec, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
             process_info, command_line = line[1], line[2:]
-            if not process_attributes_match(process_info, userspec):
+            if not process_attributes_match(process_info, userspec, cgroupspec):
                 continue
             matches = process_matches(command_line, pattern)
             if not matches:
@@ -90,6 +90,7 @@ def inventory_ps_common(invrules, parsed):
                 "process": pattern,
                 "match_groups": match_groups,
                 "user": i_userspec,
+                "cgroup": cgroupspec,
             }
 
             # default_params is either a clean dict with optional
@@ -142,9 +143,13 @@ def match_attribute(attribute, pattern):
     return pattern == attribute
 
 
-def process_attributes_match(process_info, user_pattern):
+def process_attributes_match(process_info, userspec, cgroupspec):
 
-    if not match_attribute(process_info.user, user_pattern):
+    cgroup_pattern, invert = cgroupspec
+    if process_info.cgroup and (match_attribute(process_info.cgroup, cgroup_pattern) is invert):
+        return False
+
+    if not match_attribute(process_info.user, userspec):
         return False
 
     return True
@@ -594,11 +599,14 @@ def check_ps_process_capture(parsed, params, cpu_cores):
 
     ps_aggregator = ProcessAggregator(cpu_cores, params)
 
+    userspec = params.get("user")
+    cgroupspec = params.get("cgroup", (None, False))
+
     for line in parsed:
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if not process_attributes_match(process_info, params.get("user")):
+        if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
 
         if not process_matches(command_line, params.get("process"), params.get('match_groups')):

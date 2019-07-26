@@ -1117,6 +1117,9 @@ class AutomationDiagHost(Automation):
         snmp_config = host_config.snmp_config(ipaddress)
 
         try:
+            if not ipaddress:
+                raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+
             if test == 'ping':
                 base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
                 p = subprocess.Popen([base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],

@@ -30,8 +30,8 @@ public:
     // if ServiceValidName set, then we MUST find path
     // otherwise look for WorkFolder
     // otherwise current path to current exe
-    bool setRoot(const std::wstring& service_name,    // look in registry
-                 const std::wstring& preset_root);    // look in disk
+    bool setRoot(const std::wstring& service_name,  // look in registry
+                 const std::wstring& preset_root);  // look in disk
     // deprecated API
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
@@ -106,8 +106,6 @@ public:
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
-    // #TODO gtest?
-    // #TODO into ConfigInfo
     std::filesystem::path makeDefaultDataFolder(
         std::wstring_view AgentDataFolder);
     std::filesystem::path root_;          // where is root
@@ -363,6 +361,8 @@ public:
     bool loadDirect(const std::filesystem::path& FullPath);
 
 private:
+    void fillExePaths(std::filesystem::path root);
+    void fillConfigDirs();
     std::vector<YamlData> buildYamlData(
         const std::wstring& ConfigFileName) const noexcept;
     void loadYamlDataWithMerge(YAML::Node Config,
@@ -410,12 +410,14 @@ private:
 
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, LogFileLocation);
+    FRIEND_TEST(CmaCfg, InitEnvironment);
 #endif
 };
 extern ConfigInfo G_ConfigInfo;
 
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);
 std::filesystem::path GetDefaultLogPath();
-
+std::wstring FindMsiExec() noexcept;
+std::string FindHostName() noexcept;
 }  // namespace details
 }  // namespace cma::cfg

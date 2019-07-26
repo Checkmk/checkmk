@@ -1022,7 +1022,7 @@ TEST(AgentConfig, FunctionalityCheck) {
         delete_required = true;
         file_to_delete = user_f;
     }
-    OnStart(AppType::test, cma::YamlCacheOp::update);
+    OnStart(AppType::test);
     auto expected_name =
         details::G_ConfigInfo.getCacheDir() / source_name.filename();
     std::error_code ec;
@@ -1092,12 +1092,17 @@ TEST(AgentConfig, GlobalTest) {
 
     Global g;
     g.loadFromMainConfig();
-    g.yaml_log_path_ = "C:\\Windows\\Logs\\";
-    g.calcDerivatives();
+    g.setLogFolder("C:\\Windows\\Logs\\");
     auto fname = g.fullLogFileNameAsString();
     EXPECT_EQ(fname, std::string("C:\\Windows\\Logs\\") + kDefaultLogFileName);
+
+    // empty string is ignored
+    g.setLogFolder("");
+    fname = g.fullLogFileNameAsString();
+    EXPECT_EQ(fname, std::string("C:\\Windows\\Logs\\") + kDefaultLogFileName);
+
     if (cma::tools::win::IsElevated()) {
-        g.setupEnvironment();
+        g.setupLogEnvironment();
         fs::path logf = fname;
         fs::remove(logf);
         XLOG::l("TEST WINDOWS LOG");
@@ -1119,9 +1124,10 @@ TEST(AgentConfig, GlobalTest) {
     } else {
         xlog::l("skipping write test: program is not elevated");
     }
-    g.yaml_log_path_ = "";
-    g.calcDerivatives();
-    g.setupEnvironment();
+
+    fs::path p = GetUserDir();
+    g.setLogFolder(p / dirs::kLog);
+    g.setupLogEnvironment();
     fname = g.fullLogFileNameAsString();
     std::filesystem::path dir = GetUserDir();
     dir /= dirs::kLog;

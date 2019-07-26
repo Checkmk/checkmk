@@ -442,7 +442,7 @@ std::filesystem::path G_SolutionPath = SOLUTION_DIR;
 
 void LoadGlobal() {
     groups::global.loadFromMainConfig();
-    groups::global.setupEnvironment();
+    groups::global.setupLogEnvironment();
 }
 
 // test and reset function
@@ -650,9 +650,9 @@ bool Folders::setRootEx(
     return true;
 }  // namespace cma::cfg::details
 
-void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
+void Folders::createDataFolderStructure(const std::wstring& proposed_folder) {
     try {
-        std::filesystem::path folder = AgentDataFolder;
+        std::filesystem::path folder = proposed_folder;
         data_ = makeDefaultDataFolder(folder.lexically_normal().wstring());
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
@@ -661,10 +661,10 @@ void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
 }
 
 void Folders::cleanAll() {
-    root_ = L"";
-    data_ = L"";
-    public_logs_ = L"";
-    private_logs_ = L"";
+    root_.clear();
+    data_.clear();
+    public_logs_.clear();
+    private_logs_.clear();
 }
 
 //
@@ -722,23 +722,25 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
         if (ret == 0) return app_data;
-        XLOG::l("Failed to access ProgramData Folder {}", ret);
+        XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
 
-        // Public, usually during testing
-        app_data_folder = win::GetSomeSystemFolder(FOLDERID_Public);
-        app_data = draw_folder(app_data_folder);
-        ret = CreateTree(app_data);
-        if (ret == 0) return app_data;
-        XLOG::l("Failed to access Public Folder {}", ret);
-        return {};
-    } else {
-        // testing path
-        auto app_data = draw_folder(AgentDataFolder);
-        auto ret = CreateTree(app_data);
-        if (ret == 0) return app_data;
-        XLOG::l("Failed to access Public Folder {}", ret);
+        if constexpr (false) {
+            // Public fallback
+            app_data_folder = win::GetSomeSystemFolder(FOLDERID_Public);
+            app_data = draw_folder(app_data_folder);
+            ret = CreateTree(app_data);
+            if (ret == 0) return app_data;
+            XLOG::l.crit("Failed to access Public Folder {}", ret);
+        }
         return {};
     }
+
+    // testing path
+    auto app_data = draw_folder(AgentDataFolder);
+    auto ret = CreateTree(app_data);
+    if (ret == 0) return app_data;
+    XLOG::l.bp("Failed to access Public Folder {}", ret);
+    return {};
 }
 
 }  // namespace cma::cfg::details
@@ -809,7 +811,7 @@ void ProcessKnownConfigGroups() {
 
 // API take loaded config and use it!
 void SetupEnvironmentFromGroups() {
-    groups::global.setupEnvironment();  // at the moment only global
+    groups::global.setupLogEnvironment();  // at the moment only global
 }
 
 bool ReloadConfigAutomatically() { return true; }
@@ -1148,46 +1150,62 @@ void UpdateInstallProtocolFile(bool exists_install_protocol,
 
     if (ofs) {
         ofs << "Installed:\n";
-        ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
+        ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
     }
 }
 
-void ConfigInfo::initAll(
-    const std::wstring& ServiceValidName,  // look in registry
-    const std::wstring& RootFolder,        // look in disk
-    const std::wstring& AgentDataFolder)   // look in dis
-{
-    initEnvironment();
-    folders_.setRoot(ServiceValidName, RootFolder);
-    auto root = folders_.getRoot();
-    auto [exists_install_protocol, install_file] =
-        IsInstallProtocolExists(root);
+void ConfigInfo::fillExePaths(std::filesystem::path root) {
+    constexpr const wchar_t* dir_tails[] = {
+        dirs::kAgentPlugins, dirs::kAgentProviders, dirs::kAgentUtils};
 
-    folders_.createDataFolderStructure(AgentDataFolder);
-
-    if (folders_.getData().empty())
-        XLOG::l.crit("Data folder is empty.This is bad.");
-    else
-        UpdateInstallProtocolFile(exists_install_protocol, install_file);
-
-    // exe
-    root = folders_.getRoot();
-    constexpr const wchar_t* dir_tails[] = {dirs::kUserBin, dirs::kAgentPlugins,
-                                            dirs::kAgentProviders,
-                                            dirs::kAgentUtils};
-    for (auto& d : dir_tails) exe_command_paths_.emplace_back((root / d));
+    for (auto& d : dir_tails) exe_command_paths_.emplace_back(root / d);
     exe_command_paths_.emplace_back(root);
+}
 
-    // all paths where we are looking for config files
+void ConfigInfo::fillConfigDirs() {
+    config_dirs_.clear();
     config_dirs_.emplace_back(folders_.getRoot());
     config_dirs_.emplace_back(folders_.getBakery());
     config_dirs_.emplace_back(folders_.getUser());
 }
 
+// not thread safe, but called only on program start
+void ConfigInfo::initAll(
+    const std::wstring& ServiceValidName,  // look in registry
+    const std::wstring& RootFolder,        // look in disk
+    const std::wstring& AgentDataFolder)   // look in dis
+{
+    folders_.createDataFolderStructure(AgentDataFolder);
+
+    // This is not very good idea, but we want
+    // to start logging as early as possible
+    XLOG::setup::ChangeDebugLogLevel(LogLevel::kLogDebug);
+    groups::global.setLogFolder(folders_.getData() / dirs::kLog);
+    groups::global.setupLogEnvironment();
+
+    initEnvironment();
+
+    folders_.setRoot(ServiceValidName, RootFolder);
+    auto root = folders_.getRoot();
+
+    if (folders_.getData().empty())
+        XLOG::l.crit("Data folder is empty.This is bad.");
+    else {
+        auto [exists_install_protocol, install_file] =
+            IsInstallProtocolExists(root);
+        UpdateInstallProtocolFile(exists_install_protocol, install_file);
+    }
+
+    // exe
+    fillExePaths(root);
+
+    // all paths where we are looking for config files
+    fillConfigDirs();
+}
+
 // normally used to reload configs or testing
 void ConfigInfo::cleanAll() {
     std::lock_guard lk(lock_);
-    XLOG::t(XLOG_FUNC + " !");
     exe_command_paths_.resize(0);  // root/utils, root/plugins etc
     config_dirs_.resize(0);        // root und data
 
@@ -1202,31 +1220,37 @@ void ConfigInfo::cleanAll() {
     ok_ = false;
 }
 
-void ConfigInfo::initEnvironment() {
-    namespace fs = std::filesystem;
+std::wstring FindMsiExec() noexcept {
+    std::filesystem::path p = cma::tools::win::GetSystem32Folder();
+    p /= "msiexec.exe";
+
+    std::error_code ec;
+    if (std::filesystem::exists(p, ec)) {
+        XLOG::t.i("Found msiexec {}", p.u8string());
+        return p.wstring();
+    }
+
+    XLOG::l.crit(
+        "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
+        p.u8string(), ec.value(), ec.message());
+    return {};
+}
+
+std::string FindHostName() noexcept {
     // host name
     char host_name[256] = "";
     auto ret = ::gethostname(host_name, 256);
     if (ret != 0) {
-        XLOG::l("Can\'t call gethostname, error [{}]", ret);
+        XLOG::l("Can't call gethostname, error [{}]", ret);
+        return {};
     }
-    host_name_ = host_name;
+    return host_name;
+}
 
-    // working directory
-    cwd_ = fs::current_path().wstring();
-
-    // msi exec
-    path_to_msi_exec_.clear();
-    fs::path p = cma::tools::win::GetSystem32Folder();
-    p /= "msiexec.exe";
-    std::error_code ec;
-    if (fs::exists(p, ec)) {
-        XLOG::t.i("Found msiexec {}", p.u8string());
-        path_to_msi_exec_ = p.wstring();
-    } else
-        XLOG::l.crit(
-            "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
-            p.u8string(), ec.value(), ec.message());
+void ConfigInfo::initEnvironment() {
+    host_name_ = FindHostName();
+    cwd_ = std::filesystem::current_path().wstring();
+    path_to_msi_exec_ = FindMsiExec();
 }
 
 // probably global in the future
@@ -1723,7 +1747,7 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
 }
 
 // generates standard agent time string
-std::string GetTimeString() {
+std::string ConstructTimeString() {
     using namespace std::chrono;
     auto cur_time = system_clock::now();
     auto in_time_t = system_clock::to_time_t(cur_time);
@@ -1814,8 +1838,9 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 }
 
 // converts "any/relative/path" into
-// "$CUSTOM_PLUGINS_PATH$\\any\\relative\\path" return false if yaml is not
-// suitable for patching
+// "marker\\any\\relative\\path"
+// return false if yaml is not suitable for patching
+// normally used only by cvt
 bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
                        const std::string& key_name,
                        std::string_view subkey_name, std::string_view marker) {

@@ -160,7 +160,7 @@ TEST(CvtTest, LogFilesSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -209,7 +209,7 @@ TEST(CvtTest, LogWatchSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -260,7 +260,7 @@ TEST(CvtTest, MrpeSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -301,7 +301,7 @@ TEST(CvtTest, PluginsLocalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -373,7 +373,7 @@ TEST(CvtTest, PsSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -407,7 +407,7 @@ TEST(CvtTest, FileInfoSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -445,7 +445,7 @@ TEST(CvtTest, WinPerfSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
@@ -487,7 +487,7 @@ TEST(CvtTest, GlobalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, cma::YamlCacheOp::nothing, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {

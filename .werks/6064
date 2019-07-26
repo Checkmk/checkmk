@@ -1,5 +1,5 @@
 Title: Fixed possible hanging updates from 1.5 versions
-Level: 1
+Level: 2
 Component: omd
 Class: fix
 Compatible: compat

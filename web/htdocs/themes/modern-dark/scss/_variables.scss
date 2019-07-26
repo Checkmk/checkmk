@@ -1,0 +1,138 @@
+// New variables in dark theme preparation
+
+// Background colors
+$main-primary-bg-color:			    #323232;
+$main-secondary-bg-color:		    #2f2f2f;
+$side-primary-bg-color:			    #323232;
+$side-secondary-bg-color:		    #212121;
+
+// Border colors
+$main-tile-border-color:		    #222;
+$main-tile-border-color:		    $side-secondary-bg-color;
+
+// Table colors
+$table-row-even-color:			    $side-secondary-bg-color;
+$table-row-odd-color:			    #2e2e2e;
+
+// Text colors
+
+
+
+// General
+
+$theme-color-black:                         #000; // black
+$theme-color-white:                         #fff; // white
+$theme-color-lightgrey:                     #f8f8f8; // light grey
+$theme-color-darkgrey:                      #838383; // dark grey
+
+$theme-color-main:                          #ffd703; // yellow
+
+$theme-color-text:                          #1a243d; // dark
+$theme-color-background:                    #f0f2f4; // light grey
+
+$theme-color-text-light:                    #e6e6e6; // light grey
+
+$theme-border-radius:                       4px;
+
+
+// Buttons
+
+$theme-button-background:                   #f7f7f7;
+$theme-button-border:                       #d9d9d9;
+$theme-button-hover:                        #ffe350;
+$theme-button-height:                       28px;
+
+
+// States
+
+$theme-color-state-2-background:            #e85555;
+$theme-color-state-2-border:                #e53f3f;
+
+$theme-color-state-3-background:            #fcb97b;
+$theme-color-state-3-border:                #fbac62;
+
+$theme-color-state-4-background:            #888;
+$theme-color-state-4-border:                #7b7b7b;
+
+$theme-color-state-5-background:            #48cbf0;
+
+$theme-color-state-6-background:            #b9ecfa;
+
+$theme-color-state-7-background:            #e9806e;
+
+$theme-color-state-8-background:            #f1aea2;
+
+$theme-color-state-9-background:            #bf5abf;
+
+$theme-color-state-warning-border:          #e9c400; // yellow
+
+$theme-color-state-error-border:            #e22828; // red
+
+$theme-color-state-success-background:      #aae199; // green
+$theme-color-state-success-border:          #9adb85; // green
+
+
+// Tables
+
+$theme-color-table-border:                  #cccfdb; // grey
+$theme-color-table-background:              #fafafa; // light grey
+
+$theme-color-table-border-dark:             #0d0f0f; // dark grey
+$theme-color-table-background-dark:         #1c2528; // dark grey
+
+$theme-color-table-border-dark-2:           #313638; // dark grey
+
+$theme-font-table-header:                   18px;
+
+$theme-color-table-text:                    #2a2a2a; // dark grey
+$theme-color-table-header-text:             #2a2a2a80; // half transparent
+
+
+// Sidebar
+
+$theme-color-sidebar-background:            #25292a; // dark grey
+$theme-color-sidebar-border:                #3d4346; // dark grey
+
+$theme-snapin-width:                        230px;
+
+
+// Nuances (Colors only used once)
+
+$theme-color-nuance-1:                      #afb2c6; // blue grey
+$theme-color-nuance-2:                      #afb; // light green
+$theme-color-nuance-3:                      #8288a6; // dark grey
+$theme-color-nuance-4:                      #f6f7f8; // light grey
+$theme-color-nuance-5:                      #c5c5c5; // grey
+$theme-color-nuance-6:                      #ffeb83; // yellow
+$theme-color-nuance-7:                      #333; // dark grey
+$theme-color-nuance-8:                      #d7d7d7; // grey
+$theme-color-nuance-9:                      #cfcfcf; // grey
+$theme-color-nuance-10:                     #191c1d; // grey
+$theme-color-nuance-11:                     #222f33; // dark grey
+$theme-color-nuance-12:                     #9ee273; // green
+$theme-color-nuance-13:                     #f3f4f6; // light grey
+$theme-color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
+$theme-color-nuance-15:                     #f7c5c5; // light red
+$theme-color-nuance-16:                     #fb9f49; // orange
+$theme-color-nuance-17:                     #a1e6f8; // light blue
+
+
+// Fonts
+
+$theme-font:                                "Lato", "Roboto", Helvetica, Arial, sans-serif;
+
+$theme-font-size-global:                    12px;
+$theme-font-size-main:                      11px;
+$theme-font-size-small:                     10px;
+
+$theme-font-weight-global:                  400;
+$theme-font-weight-bold:                    700;
+
+$theme-letter-spacing:                      .5px;
+$theme-letter-spacing-table:                1px;
+
+
+// Tags
+
+$tag-margin:                                0 5px 2px 0;
+$tag-padding:                               .1em .3em;

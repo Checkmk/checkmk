@@ -82,6 +82,12 @@ node {
             }
         }
         
+        stage("Python linting") {
+                dir('tests-py3') {
+                    sh 'make test-pylint'
+                }
+        }
+
         stage("Python Unit tests") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {

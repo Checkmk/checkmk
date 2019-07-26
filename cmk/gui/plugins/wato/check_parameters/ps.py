@@ -31,6 +31,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Alternative,
+    Checkbox,
     Dictionary,
     DropdownChoice,
     Filesize,
@@ -383,6 +384,46 @@ def user_match_options(extra_elements=None):
     )
 
 
+def cgroup_match_options():
+    return Tuple(
+        title=_("Operating system control group information"),
+        elements=[
+            Alternative(
+                style="dropdown",
+                elements=[
+                    TextAscii(title=_("Exact content of the operating system control group info"),
+                              label=_("Control group:"),
+                              size=50),
+                    Transform(
+                        RegExp(
+                            size=50,
+                            mode=RegExp.prefix,
+                        ),
+                        title=_("Regular expression matching control group info"),
+                        help=_("This regex must match the <i>beginning</i> of the complete "
+                               "control group information"),
+                        forth=lambda x: x[1:],  # remove ~
+                        back=lambda x: "~" + x,  # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext="",
+                        title=_("Match all control groups"),
+                    )
+                ],
+                match=match_alt,
+                help=
+                _('<p>The control group information is currently only specified by the linux agent'
+                  ' (cgroup). If it is present and this rule is set, the inventory will only trigger'
+                  ' if the control group of the corresponding process matches.'
+                  ' For instance: you can use this rule to exclude all processes belonging to'
+                  ' a docker container by specifying the expression "%s" (without the quotes),'
+                  ' and selecting "%s".</p>') % (r'.*/docker/', _("Invert matching"))),
+            Checkbox(label=_("Invert matching"), default_value=False),
+        ],
+    )
+
+
 # Rule for discovered process checks
 @rulespec_registry.register_without_manual_check_rulespec
 class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
@@ -406,7 +447,7 @@ class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
     def parameter_valuespec(self):
         return Transform(
             Dictionary(elements=process_level_elements(),
-                       ignored_keys=["match_groups"],
+                       ignored_keys=["match_groups", "cgroup"],
                        required_keys=["cpu_rescale_max"]),
             forth=ps_convert_inventorized_from_singlekeys,
         )
@@ -529,6 +570,7 @@ class RulespecInventoryProcessesRules(HostRulespec):
                                'user - your would create duplicate services with the same description '
                                'otherwise.'))
                      ])),
+                    ("cgroup", cgroup_match_options()),
                     ('default_params',
                      Dictionary(
                          title=_("Default parameters for detected services"),

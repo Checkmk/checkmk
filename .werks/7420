@@ -8,6 +8,9 @@ State: unknown
 Version: 1.6.0b3
 Date: 1558598280
 
+<b>Note:</b> This Werk is no longer up to date. Please refer to Werk #7958
+for the new behaviour.
+
 On hosts which run Docker the ps section contained processes which belong
 to Docker containers. This Werk omits these container processes and only
 shows processes which do not belong to a Docker container. If the agent

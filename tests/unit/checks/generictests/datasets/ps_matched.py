@@ -12,7 +12,7 @@ info = [
 
 discovery = {
     '': [
-        ('NTP', {'process': '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*', 'cpu_rescale_max': None, 'match_groups': (None, 'NTP'), 'user': None})],
+        ('NTP', {'process': '~.*STS\\\\Service.*(SIGTimeService).exe$|C:\\\\Program\\sFiles\\s\\(x86\\)\\\\(NTP)\\\\bin\\\\ntpd\\.exe.*', 'cpu_rescale_max': None, 'match_groups': (None, 'NTP'), 'user': None, 'cgroup': (None, False)})],
     'perf': [],
 }
 

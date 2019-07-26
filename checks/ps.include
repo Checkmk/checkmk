@@ -64,14 +64,16 @@ def inventory_ps_common(invrules, parsed):
     for line in parsed:
         for servicedesc, pattern, userspec, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
-            process_line = line[1:]
-            matches = process_matches(process_line, pattern, userspec)
+            process_info, command_line = line[1], line[2:]
+            if not process_attributes_match(process_info, userspec):
+                continue
+            matches = process_matches(command_line, pattern)
             if not matches:
                 continue  # skip not matched lines
 
             # User capturing on rule
             if userspec == GRAB_USER:
-                i_userspec = process_line[0].user
+                i_userspec = process_info.user
             else:
                 i_userspec = userspec
 
@@ -140,17 +142,21 @@ def match_attribute(attribute, pattern):
     return pattern == attribute
 
 
-def process_matches(process_line, process_pattern, user_pattern, match_groups=None):
-    process_info, command_line = process_line[0], process_line[1:]
+def process_attributes_match(process_info, user_pattern):
 
     if not match_attribute(process_info.user, user_pattern):
         return False
+
+    return True
+
+
+def process_matches(command_line, process_pattern, match_groups=None):
 
     if not process_pattern:
         # Process name not relevant
         return True
 
-    elif process_pattern.startswith("~"):
+    if process_pattern.startswith("~"):
         # Regex for complete process command line
         reg = regex(process_pattern[1:])  # skip "~"
         m = reg.match(" ".join(command_line))
@@ -592,8 +598,10 @@ def check_ps_process_capture(parsed, params, cpu_cores):
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if not process_matches(process_line, params.get("process"), params.get("user"),
-                               params.get('match_groups')):
+        if not process_attributes_match(process_info, params.get("user")):
+            continue
+
+        if not process_matches(command_line, params.get("process"), params.get('match_groups')):
             continue
 
         process = []

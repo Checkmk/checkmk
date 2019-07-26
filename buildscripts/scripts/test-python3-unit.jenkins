@@ -18,11 +18,12 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image('ubuntu-19.04-os-image').pull()
         docker.image('ubuntu-19.04-os-image').inside("-u 0:0 --ulimit nofile=1024:1024 --init --privileged") {
-           stage('test python3 linting') {
+           stage('test python3 unit') {
                dir ('tests-py3') {
-                   sh "make test-pylint"
+                   sh "make test-unit"
                }
            }
         }
     }
 }
+

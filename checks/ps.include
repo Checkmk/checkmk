@@ -591,28 +591,30 @@ def check_ps_process_capture(parsed, params, cpu_cores):
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if process_matches(process_line, params.get("process"), params.get("user"),
-                           params.get('match_groups')):
-            process = []
+        if not process_matches(process_line, params.get("process"), params.get("user"),
+                               params.get('match_groups')):
+            continue
 
-            if node_name is not None:
-                ps_aggregator.running_on_nodes.add(node_name)
+        process = []
 
-            if command_line:
-                process.append(("name", (command_line[0], "")))
+        if node_name is not None:
+            ps_aggregator.running_on_nodes.add(node_name)
 
-            # extended performance data: virtualsize, residentsize, %cpu
-            if all(process_info[1:4]):
-                process.append(("user", (process_info.user, "")))
-                process.append(("virtual size", (int(process_info.virtual), "kB")))
-                process.append(("resident size", (int(process_info.physical), "kB")))
+        if command_line:
+            process.append(("name", (command_line[0], "")))
 
-                ps_aggregator.virtual_size += int(process_info.virtual)  # kB
-                ps_aggregator.resident_size += int(process_info.physical)  # kB
+        # extended performance data: virtualsize, residentsize, %cpu
+        if all(process_info[1:4]):
+            process.append(("user", (process_info.user, "")))
+            process.append(("virtual size", (int(process_info.virtual), "kB")))
+            process.append(("resident size", (int(process_info.physical), "kB")))
 
-                ps_aggregator.lifetimes(process_info, process)
-                ps_aggregator.cpu_usage(process_info, process)
+            ps_aggregator.virtual_size += int(process_info.virtual)  # kB
+            ps_aggregator.resident_size += int(process_info.physical)  # kB
 
-            ps_aggregator.append(process)
+            ps_aggregator.lifetimes(process_info, process)
+            ps_aggregator.cpu_usage(process_info, process)
+
+        ps_aggregator.append(process)
 
     return ps_aggregator

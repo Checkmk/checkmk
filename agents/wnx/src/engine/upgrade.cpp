@@ -766,7 +766,7 @@ bool CreateProtocolFile(const std::filesystem::path& dir,
 
         if (ofs) {
             ofs << "Upgraded:\n";
-            ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
+            ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
             if (!OptionalContent.empty()) {
                 ofs << OptionalContent;
                 ofs << "\n";

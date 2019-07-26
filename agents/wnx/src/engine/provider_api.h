@@ -41,7 +41,7 @@ inline int MainFunctionCore(int argc, wchar_t const* argv[]) {
     argv += 2;
 
     // no cache updating
-    cma::OnStart(cma::AppType::srv, cma::YamlCacheOp::nothing);
+    cma::OnStart(cma::AppType::srv);
     ON_OUT_OF_SCOPE(cma::OnExit());
 
     // check and call:

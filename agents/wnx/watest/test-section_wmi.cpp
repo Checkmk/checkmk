@@ -22,13 +22,6 @@ namespace wtools {
 TEST(WmiWrapper, EnumeratorOnly) {
     using namespace std;
     {
-        wtools::InitWindowsCom();
-        if (!wtools::IsWindowsComInitialized()) {
-            XLOG::l.crit("COM faaaaaaaiiled");
-            return;
-        }
-        ON_OUT_OF_SCOPE(wtools::CloseWindowsCom());
-
         WmiWrapper wmi;
         wmi.open();
         wmi.connect(L"ROOT\\CIMV2");
@@ -55,13 +48,6 @@ TEST(WmiWrapper, EnumeratorOnly) {
 TEST(WmiWrapper, TablePostProcess) {
     using namespace std;
     {
-        wtools::InitWindowsCom();
-        if (!wtools::IsWindowsComInitialized()) {
-            XLOG::l.crit("COM faaaaaaaiiled");
-            return;
-        }
-        ON_OUT_OF_SCOPE(wtools::CloseWindowsCom());
-
         {
             const std::string s = "name,val\nzeze,5\nzeze,5\n";
 
@@ -161,13 +147,6 @@ TEST(WmiWrapper, TablePostProcess) {
 TEST(WmiWrapper, Table) {
     using namespace std;
     {
-        wtools::InitWindowsCom();
-        if (!wtools::IsWindowsComInitialized()) {
-            XLOG::l.crit("COM faaaaaaaiiled");
-            return;
-        }
-        ON_OUT_OF_SCOPE(wtools::CloseWindowsCom());
-
         WmiWrapper wmi;
         wmi.open();
         wmi.connect(L"ROOT\\CIMV2");
@@ -216,6 +195,7 @@ TEST(WmiProviderTest, WmiBadName) {  //
 }
 
 TEST(WmiProviderTest, WmiOhm) {
+    cma::OnStart(cma::AppType::test);
     {
         Wmi ohm(kOhm, ohm::kSepChar);
         EXPECT_EQ(ohm.object(), L"Sensor");

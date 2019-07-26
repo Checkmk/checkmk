@@ -81,7 +81,7 @@ class ModeFolder(WatoMode):
         global_buttons()
         if not self._folder.is_disk_folder():
             html.context_button(_("Back"), self._folder.parent().url(), "back")
-            html.context_button(_("Refine Search"), self._folder.url([("mode", "search")]),
+            html.context_button(_("Refine search"), self._folder.url([("mode", "search")]),
                                 "search")
             return
 
@@ -89,11 +89,11 @@ class ModeFolder(WatoMode):
             html.context_button(_("Rulesets"),
                                 watolib.folder_preserving_link([("mode", "ruleeditor")]),
                                 "rulesets")
-            html.context_button(_("Manual Checks"),
+            html.context_button(_("Manual checks"),
                                 watolib.folder_preserving_link([("mode", "static_checks")]),
                                 "static_checks")
         if self._folder.may("read"):
-            html.context_button(_("Folder Properties"),
+            html.context_button(_("Folder properties"),
                                 self._folder.edit_url(backfolder=self._folder), "edit")
         if not self._folder.locked_subfolders() and config.user.may(
                 "wato.manage_folders") and self._folder.may("write"):
@@ -124,13 +124,13 @@ class ModeFolder(WatoMode):
                                 "parentscan")
         folder_status_button()
         if config.user.may("wato.random_hosts"):
-            html.context_button(_("Random Hosts"), self._folder.url([("mode", "random_hosts")]),
+            html.context_button(_("Random hosts"), self._folder.url([("mode", "random_hosts")]),
                                 "random")
         html.context_button(_("Search"), watolib.folder_preserving_link([("mode", "search")]),
                             "search")
 
         if config.user.may("wato.dcd_connections"):
-            html.context_button(_("Dynamic configuration"),
+            html.context_button(_("Dynamic config"),
                                 watolib.folder_preserving_link([("mode", "dcd_connections")]),
                                 "dcd_connections")
 

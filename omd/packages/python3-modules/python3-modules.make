@@ -111,6 +111,7 @@ python3-modules-dump-Pipfile:
 	@echo 'mock = "*"  # used in checktestlib in unit tests'
 	@echo 'mockldap = "*"  # used in test_userdb_ldap_connector unit test'
 	@echo 'pylint = "*"  # used by test/Makefile'"'"'s test-pylint target'
+	@echo 'mypy = "*"  # used by test/static/Makefile'"'"'s test-mypy target'
 	@echo 'pymongo = "*"  # used by mk_mongodb agent plugin'
 	@echo 'pytest = "*"  # used by various test/Makefile targets'
 	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'

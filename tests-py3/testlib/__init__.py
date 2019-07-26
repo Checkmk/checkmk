@@ -76,7 +76,7 @@ def current_branch_name():
 def get_cmk_download_credentials():
     cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(file(cred).read().strip().split(":"))
+        return tuple(open(cred).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
@@ -142,7 +142,7 @@ def SiteActionLock():
 
 
 # It's ok to make it currently only work on debian based distros
-class CMKVersion(object):
+class CMKVersion:
     DEFAULT = "default"
     DAILY = "daily"
     GIT = "git"
@@ -173,12 +173,11 @@ class CMKVersion(object):
     def _get_short_edition(self, edition):
         if edition == "raw":
             return "cre"
-        elif edition == "enterprise":
+        if edition == "enterprise":
             return "cee"
-        elif edition == "managed":
+        if edition == "managed":
             return "cme"
-        else:
-            raise NotImplementedError("Unknown edition: %s" % edition)
+        raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self):
         if os.path.exists("/etc/alternatives/omd"):
@@ -218,9 +217,9 @@ class CMKVersion(object):
     def edition(self):
         if self.edition_short == CMKVersion.CRE:
             return "raw"
-        elif self.edition_short == CMKVersion.CEE:
+        if self.edition_short == CMKVersion.CEE:
             return "enterprise"
-        elif self.edition_short == CMKVersion.CME:
+        if self.edition_short == CMKVersion.CME:
             return "managed"
 
     def is_managed_edition(self):
@@ -296,7 +295,7 @@ class CMKVersion(object):
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
-        file(temp_package_path, "w").write(response.content)
+        open(temp_package_path, "w").write(response.content)
         return temp_package_path
 
     def _install_package(self, package_path):
@@ -318,7 +317,7 @@ class CMKVersion(object):
         assert self.is_installed()
 
 
-class Site(object):
+class Site:
     def __init__(self,
                  site_id,
                  reuse=True,
@@ -535,8 +534,7 @@ class Site(object):
             if p.wait() != 0:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
             return p.stdout.read()
-        else:
-            return open(self.path(rel_path)).read()
+        return open(self.path(rel_path)).read()
 
     def delete_file(self, rel_path):
         if not self._is_running_as_site_user():
@@ -1468,8 +1466,7 @@ class CMKWebSession(WebSession):
         except AssertionError as e:
             if "No such host" in "%s" % e:
                 return False
-            else:
-                raise
+            raise
 
         assert isinstance(result, dict)
         return "hostname" in result
@@ -1520,8 +1517,7 @@ class CMKWebSession(WebSession):
         except AssertionError as e:
             if "does not exist" in "%s" % e:
                 return False
-            else:
-                raise
+            raise
 
         assert isinstance(result, dict)
         return "folder" in result
@@ -1722,7 +1718,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, unicode)
+        assert isinstance(result, str)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -1860,7 +1856,7 @@ class CMKEventConsole(CMKWebSession):
     def _config(self):
         cfg = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec (content, {}, cfg)
+        exec(content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):
@@ -1942,7 +1938,7 @@ class CMKEventConsole(CMKWebSession):
         return event
 
 
-class CMKEventConsoleStatus(object):
+class CMKEventConsoleStatus:
     def __init__(self, address):
         self._address = address
 
@@ -1977,7 +1973,7 @@ class CMKEventConsoleStatus(object):
         return self.query(query)[0][0]
 
 
-class WatchLog(object):
+class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, rel_path, default_timeout=5):
         self._site = site
@@ -2065,7 +2061,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.
@@ -2081,7 +2077,7 @@ def create_linux_test_host(request, web, site, hostname):
 #   '----------------------------------------------------------------------'
 
 
-class CheckManager(object):
+class CheckManager:
     def load(self, file_names=None):
         """Load either all check plugins or the given file_names"""
         import cmk_base.config as config
@@ -2115,7 +2111,7 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(object):
+class BaseCheck:
     """Abstract base class for Check and ActiveCheck"""
     __metaclass__ = abc.ABCMeta
 
@@ -2214,7 +2210,7 @@ class ActiveCheck(BaseCheck):
         return self.info['service_description'](params)
 
 
-class SpecialAgent(object):
+class SpecialAgent:
     def __init__(self, name):
         import cmk_base.config as config
         super(SpecialAgent, self).__init__()

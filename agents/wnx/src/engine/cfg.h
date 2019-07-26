@@ -75,7 +75,7 @@ constexpr const wchar_t* kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
 // we have to init folders depending from start type
 // test, exe or service
 // This is done once for whole life-cycle
-bool DetermineWorkingFolders(AppType Type);
+bool FindAndPrepareWorkingFolders(AppType Type);
 
 // 2. Prepare List of possible config names
 std::vector<std::wstring> DefaultConfigArray(AppType Type);
@@ -487,7 +487,7 @@ public:
 
     // #TODO move somewhere!
     // transfer global data into app environment
-    void setupEnvironment();
+    void setupLogEnvironment();
 
     // accessors
     bool ipv6() const {
@@ -646,13 +646,12 @@ public:
         if (encrypt_) return password_;
         return {};
     }
-
-    void updateLogNamesByDefault();
+    void setLogFolder(const std::filesystem::path& forced_path);
 
 private:
+    void updateLogNames();
+
     // called from ctor or loader
-    void calcDerivatives();
-    void updateLogNames(std::filesystem::path log_path);
     void setDefaults();
 
     // check contents of only_from from the yml and fills array correct
@@ -1063,7 +1062,7 @@ InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
     const std::filesystem::path& dir) noexcept;
-std::string GetTimeString();
+std::string ConstructTimeString();
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

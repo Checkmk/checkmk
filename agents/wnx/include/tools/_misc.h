@@ -315,6 +315,11 @@ std::basic_string<T> GetEnv(const std::basic_string<T>& Name) noexcept {
     return GetEnv(Name.c_str());
 }
 
+template <typename T>
+std::basic_string<T> GetEnv(const std::basic_string_view<T>& Name) noexcept {
+    return GetEnv(Name.data());
+}
+
 // #TODO check do we really need this.
 inline ULONGLONG __stdcall PreVistaGetTickCount64() {
     LARGE_INTEGER freq;

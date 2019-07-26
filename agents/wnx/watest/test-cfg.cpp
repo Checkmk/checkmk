@@ -54,6 +54,23 @@ std::string wato_ini =
 extern void SetTestInstallationType(InstallationType);
 
 namespace details {
+TEST(CmaCfg, InitEnvironment) {
+    auto msi = FindMsiExec();
+    auto host = FindHostName();
+
+    ConfigInfo ci;
+    EXPECT_TRUE(ci.getCwd().empty());
+    EXPECT_TRUE(ci.getMsiExecPath().empty());
+    EXPECT_TRUE(ci.getHostName().empty());
+    ci.initEnvironment();
+    EXPECT_EQ(ci.getCwd(), std::filesystem::current_path().wstring());
+    EXPECT_EQ(ci.getMsiExecPath(), msi);
+    EXPECT_EQ(ci.getHostName(), host);
+
+    cma::OnStartTest();
+    EXPECT_FALSE(cma::cfg::GetUserDir().empty());
+}
+
 TEST(CmaCfg, LogFileLocation) {
     namespace fs = std::filesystem;
     //
@@ -108,7 +125,7 @@ TEST(CmaCfg, LogFileLocation) {
 }  // namespace details
 
 TEST(CmaCfg, SmallFoos) {
-    auto s = GetTimeString();
+    auto s = ConstructTimeString();
     EXPECT_TRUE(!s.empty());
 }
 
@@ -202,5 +219,19 @@ TEST(CmaToolsDetails, ExtractPathFromServiceName) {
     }
 }
 }  // namespace details
+
+TEST(Cma, OnStart) {
+    {
+        auto [r, d] = cma::FindAlternateDirs(L"");
+        EXPECT_TRUE(r.empty());
+        EXPECT_TRUE(d.empty());
+    }
+    {
+        auto [r, d] = cma::FindAlternateDirs(kRemoteMachine);
+        EXPECT_EQ(r, cma::tools::win::GetEnv(kRemoteMachine));
+        EXPECT_EQ(d,
+                  cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
+    }
+}
 
 }  // namespace cma::cfg

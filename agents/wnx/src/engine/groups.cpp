@@ -19,8 +19,7 @@ namespace cma::cfg {
 Global::Global() {
     XLOG::l.t("Global init");
     setDefaults();
-    calcDerivatives();
-    setupEnvironment();
+    setupLogEnvironment();
 }
 
 // loader of yaml is going here
@@ -78,8 +77,9 @@ void Global::loadFromMainConfig() {
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
 
+        // we must reuse already set location
         auto yml_log_location =
-            GetVal(logging, vars::kLogLocation, std::string());
+            GetVal(logging, vars::kLogLocation, yaml_log_path_.u8string());
         yaml_log_path_ =
             cma::cfg::details::ConvertLocationToLogPath(yml_log_location);
 
@@ -100,8 +100,7 @@ void Global::loadFromMainConfig() {
         event_log_ = GetVal(logging, vars::kLogEvent, true);
 
         log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
-
-        calcDerivatives();
+        updateLogNames();
     }
     // UNLOCK HERE
 }
@@ -136,39 +135,55 @@ void Global::setDefaults() {
     log_file_name_ = kDefaultLogFileName;
 }
 
-void Global::updateLogNames(std::filesystem::path log_path) {
-    if (log_path.empty()) XLOG::d.i("log_path is empty");
+static std::filesystem::path CheckAndCreateLogPath(
+    const std::filesystem::path& forced_path) {
+    namespace fs = std::filesystem;
+    try {
+        std::error_code ec;
+        if (fs::exists(forced_path, ec)) return forced_path;
+
+        fs::create_directories(forced_path, ec);
+        if (fs::exists(forced_path, ec)) return forced_path;
+
+        XLOG::l.bp("Failed to create [{}' folder as log",
+                   forced_path.u8string());
+
+    } catch (const std::exception& e) {
+        XLOG::l.bp("Failed to use [{}' folder as log, exception is '{}'",
+                   forced_path.u8string(), e.what());
+    }
+    return details::GetDefaultLogPath();
+}
+
+// should be called to keep invariant
+void Global::updateLogNames() {
+    auto yaml_path = yaml_log_path_.u8string();
+
+    auto log_path = details::ConvertLocationToLogPath(yaml_path);
+
+    auto yaml_file = log_file_name_;
+    if (yaml_file.empty()) log_file_name_ = kDefaultLogFileName;
 
     logfile_dir_ = log_path;
-
-    logfile_dir_ =
-        cma::cfg::details::ConvertLocationToLogPath(logfile_dir_.u8string());
-
-    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
 
     logfile_ = logfile_dir_ / log_file_name_;
     logfile_as_string_ = logfile_.u8string();
     logfile_as_wide_ = logfile_.wstring();
 }
 
-// may be called only during start
-void Global::updateLogNamesByDefault() {
-    //
-    updateLogNames({});
-}
-// optimization
-void Global::calcDerivatives() {
-#if 0
-    auto rfid = public_log_ ? cma::cfg::kPublicFolderId : kWindowsFolderId;
-    const auto dir = cma::tools::win::GetSomeSystemFolder(rfid);
-    logfile_dir_ = dir;
-    if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
-#endif
-    updateLogNames(yaml_log_path_);
+// empty string does nothing
+// used to set values during start
+void Global::setLogFolder(const std::filesystem::path& forced_path) {
+    std::unique_lock lk(lock_);
+    if (forced_path.empty()) return;
+
+    yaml_log_path_ = CheckAndCreateLogPath(forced_path);
+
+    updateLogNames();
 }
 
 // transfer global data into app environment
-void Global::setupEnvironment() {
+void Global::setupLogEnvironment() {
     using namespace XLOG;
 
     setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);

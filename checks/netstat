@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -73,11 +73,10 @@ def parse_netstat(info):
             if connstate == "LISTEN":
                 connstate = "LISTENING"
 
-        if len(line) == 5:  # handles UDP listeners
+        if len(line) == 5:
             proto, _recv_q, _send_q, local, remote = line
-            if proto.startswith("udp"):
-                proto = "UDP"
-                connstate = "LISTENING"
+            proto = "UDP"
+            connstate = "LISTENING"
 
         connections.append((proto, split_ip_address(local), split_ip_address(remote), connstate))
     return connections

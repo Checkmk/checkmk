@@ -48,7 +48,6 @@ def _edition_short_from_pkg_path(pkg_path):
     ("cma", 251658240, 275469661),
     ("tar.gz", 402653184, 462422016),
 ])
-@pytest.mark.skip(reason="Added Python3")
 def test_package_sizes(version_path, what, min_size, max_size):
     sizes = []
     for pkg in _get_package_paths(version_path, what):

@@ -43,19 +43,24 @@ def _edition_short_from_pkg_path(pkg_path):
 
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 167 * 1024 * 1024, 201 * 1024 * 1024),
-    ("deb", 133 * 1024 * 1024, 145 * 1024 * 1024),
-    ("cma", 240 * 1024 * 1024, 250 * 1024 * 1024),
-    ("tar.gz", 384 * 1024 * 1024, 441 * 1024 * 1024),
+    ("rpm", 175112192, 210763776),
+    ("deb", 139460608, 152043520),
+    ("cma", 251658240, 262144000),
+    ("tar.gz", 402653184, 462422016),
 ])
 @pytest.mark.skip(reason="Added Python3")
 def test_package_sizes(version_path, what, min_size, max_size):
+    sizes = []
+    for pkg in _get_package_paths(version_path, what):
+        if os.path.basename(pkg).startswith("check-mk-enterprise-"):
+            sizes.append(os.stat(pkg).st_size)
+
     for pkg in _get_package_paths(version_path, what):
         if os.path.basename(pkg).startswith("check-mk-enterprise-"):
             size = os.stat(pkg).st_size
             assert min_size <= size <= max_size, \
-                "Package %s size %s not between %s and %s bytes." % \
-                (pkg, size, min_size, max_size)
+                "Package %s size %s not between %s and %s bytes (smallest is %s and largest is %s)." % \
+                (pkg, size, min_size, max_size, min(sizes), max(sizes))
 
 
 @pytest.mark.parametrize("what", [

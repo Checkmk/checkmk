@@ -117,3 +117,16 @@ export function get_bounding_rect(list_of_coords) {
     return rect
 }
 
+export function get_bounding_rect_of_rotated_vertices(vertices, rotation_in_rad) {
+    let cos_x = Math.cos(rotation_in_rad)
+    let sin_x = Math.sin(rotation_in_rad)
+    let rotated_vertices = []
+    vertices.forEach(coords=>{
+        rotated_vertices.push({
+            x: cos_x * coords.x + sin_x * coords.y,
+            y: cos_x * coords.y + sin_x * coords.x,
+        })
+    })
+    return get_bounding_rect(rotated_vertices)
+}
+

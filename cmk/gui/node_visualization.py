@@ -81,29 +81,35 @@ class AjaxFetchAggregationData(AjaxPage):
             data["groups"] = row["groups"]
             data["data_timestamp"] = int(time.time())
 
-            if not forced_layout_id:
+            layout = {}
+            if forced_layout_id:
+                layout["enforced_id"] = aggr_name
+                layout["origin_type"] = "globally_enforced"
+                layout["origin_info"] = _("Globally enforced")
+                layout["use_layout"] = BILayoutManagement.load_bi_template_layout(forced_layout_id)
+            else:
                 if aggr_name in aggregation_layouts:
-                    data["use_layout_id"] = aggr_name
-                    data["use_layout"] = aggregation_layouts[aggr_name]
-                    data["layout_origin"] = _("Explicit set")
+                    layout["origin_type"] = "explicit"
+                    layout["origin_info"] = _("Explicit set")
+                    layout["explicit_id"] = aggr_name
+                    layout["config"] = aggregation_layouts[aggr_name]
                 else:
                     template_layout_id = row["tree"]["aggr_tree"]["use_layout_id"]
                     if template_layout_id and template_layout_id in BILayoutManagement.get_all_bi_template_layouts(
                     ):
-                        data["template_layout_id"] = template_layout_id
-                        data["use_layout"] = BILayoutManagement.load_bi_template_layout(
+                        layout["origin_type"] = "template"
+                        layout["origin_info"] = _("Template: %s" % template_layout_id)
+                        layout["template_id"] = template_layout_id
+                        layout["config"] = BILayoutManagement.load_bi_template_layout(
                             template_layout_id)
-                        data["layout_origin"] = _("Template: %s" % template_layout_id)
                     else:
-                        data["use_default_layout"] = config.default_bi_layout
-                        data["layout_origin"] = _("Default layout: %s" %
+                        layout["origin_type"] = "default_template"
+                        layout["origin_info"] = _("Default layout: %s" %
                                                   config.default_bi_layout.title())
+                        layout["default_id"] = config.default_bi_layout
+            data["layout"] = layout
 
             aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
-
-        if forced_layout_id:
-            aggregation_info["use_layout"] = BILayoutManagement.load_bi_template_layout(
-                forced_layout_id)
 
         html.set_output_format("json")
         return aggregation_info

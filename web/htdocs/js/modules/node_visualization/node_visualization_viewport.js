@@ -164,6 +164,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
     _load_layers() {
         this._add_layer(new node_visualization_viewport_layers.LayeredRuleIconOverlay(this))
+        this._add_layer(new node_visualization_viewport_layers.LayeredCustomOverlay(this))
 
         this._add_layer(new node_visualization_viewport_layers.LayeredDebugLayer(this))
 
@@ -184,7 +185,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
     }
 
     update_active_overlays() {
-        let overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
+        let overlay_config = this.layout_manager.get_overlay_config()
         let active_overlays = {}
         for (let idx in overlay_config) {
             let overlay = overlay_config[idx]
@@ -294,7 +295,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.update_layers()
 
         if (this._chunks_changed)
-            this.layout_manager.layout_applier.apply_all_layouts(this.data_to_show.use_layout)
+            this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list())
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {
@@ -306,10 +307,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         //   links:              links between nodes
         //                       These are either provided in the rawdata or
         //                       automatically computed out of the hierarchy layout
-        //   layout:             active_layout
-        //   use_default_layout: fallback layout to use in case no specific layout is set
-        //   template_layout_id: used template id
-        //   layout_origin:      explicit set, based on template or generic
+        //   layout:             layout configuration
         // }
         let chunk = {}
 
@@ -328,16 +326,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         chunk.tree = hierarchy
         chunk.nodes = chunk.tree.descendants()
 
-        if (chunk_rawdata.template_layout_id) {
-            chunk.template_layout_id = chunk_rawdata.template_layout_id
-        }
-
-        // Determine layout
-        if (chunk_rawdata.use_layout)
-            chunk.use_layout = chunk_rawdata.use_layout
-        else if (chunk_rawdata.use_default_layout)
-            chunk.use_default_layout = chunk_rawdata.use_default_layout
-        chunk.layout_origin = chunk_rawdata.layout_origin
+        // Use layout info
+        chunk.layout_settings = chunk_rawdata.layout
 
         chunk.id = chunk.nodes[0].data.id
 
@@ -503,7 +493,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                 })
 
                 if (!this.layout_manager.allow_layout_updates)
-                    new_chunk.layout = existing_chunk.layout
+                    new_chunk.layout_instance = existing_chunk.layout_instance
 
                 new_chunk.coords = existing_chunk.coords
                 new_chunk.nodes.forEach((node, idx)=>{

@@ -129,6 +129,16 @@ class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem
                           title=_("Monitoring state if service is active"),
                           default_value=0,
                       )),
+                     ("inactive",
+                      MonitoringState(
+                          title=_("Monitoring state if service is inactive"),
+                          default_value=0,
+                      )),
+                     ("failed",
+                      MonitoringState(
+                          title=_("Monitoring state if service is failed"),
+                          default_value=2,
+                      )),
                  ],
              )),
             ("states_default",

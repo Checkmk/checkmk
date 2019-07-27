@@ -289,7 +289,7 @@ try {
                 stage('Packaging Tests') {
                     try {
                         dir("${DAILY_DATA}/git/tests") {
-                            withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'"]) {
+                            withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml --maxfail=300'"]) {
                                 sh "make VERSION=${CMK_VERS} test-packaging"
                             }
                         }

@@ -194,16 +194,17 @@ div.node_vis .node_element.focus circle{
   stroke-width: 6;
 }
 
+
 div.node_vis .state0 {
-    fill: #0b3;
+    fill: #13d389;
 }
 
 div.node_vis .state1 {
-    fill: #f8f800;
+    fill: #fffe44;
 }
 
 div.node_vis .state2 {
-    fill: #f00;
+    fill: #ff3232;
 }
 
 div.node_vis .state3 {
@@ -284,11 +285,12 @@ text.style_indicator {
 }
 
 .style_overlay {
-  opacity: 0.3;
+  opacity: 0.2;
   fill: none;
-  stroke: black;
+  stroke: darkgrey;
   stroke-width: 6px;
   stroke-linejoin: round;
+  pointer-events: none;
 }
 
 div.node_vis .style_infotext {

@@ -7,6 +7,8 @@ import * as node_visualization_utils from "node_visualization_utils"
 import * as node_visualization_layouting from "node_visualization_layouting";
 import * as node_visualization_viewport from "node_visualization_viewport";
 
+import * as d3_flextree from "d3-flextree";
+
 
 export class AbstractLayoutStyle {
     constructor(layout_manager, style_config, node, selection) {
@@ -99,15 +101,36 @@ export class AbstractLayoutStyle {
         let table = this.options_selection.selectAll("table").data([null])
         table = table.enter().append("table").merge(table)
 
-        let rows = table.selectAll("tr").data(style_options)
+
+        this._render_range_options(table, style_options, varprefix)
+        this._render_checkbox_options(table, style_options, varprefix)
+
+
+        this.options_selection.selectAll("input.reset_options").data([null]).enter()
+                             .append("input")
+                               .attr("type", "button")
+                               .classed("button", true)
+                               .classed("reset_options", true)
+                               .attr("value", "Reset default values")
+                               .on("click", d=>{
+                                    this.reset_default_options()
+                                })
+        this.options_selection.selectAll("div.clear_float").data([null]).enter()
+                            .append("div")
+                            .classed("clear_float", true)
+                            .style("clear", "right")
+    }
+
+    _render_range_options(table, style_options, varprefix) {
+        let rows = table.selectAll("tr.range_option").data(style_options.filter(d=>d.option_type=="range"))
         rows.exit().remove()
-        let rows_enter = rows.enter().append("tr")
+        let rows_enter = rows.enter().append("tr").classed("range_option", true)
         rows_enter.append("td").text(d=>d.text)
                             .classed("style_infotext", true)
         rows_enter.append("td").append("input")
                             .classed("range", true)
                             .attr("id", d=>d.id)
-                            .attr("name", d=>varprefix + d.id)
+                            .attr("name", d=>varprefix + "_type_value_" + d.id)
                             .attr("type", "range")
                             .attr("step", 1)
                             .attr("min", d=>d.values.min)
@@ -125,20 +148,26 @@ export class AbstractLayoutStyle {
 
         rows.select("td input.range").property("value",d=>d.value)
         rows.select("td.text").text(d=>d.value)
+    }
 
-        this.options_selection.selectAll("input.reset_options").data([null]).enter()
-                             .append("input")
-                               .attr("type", "button")
-                               .classed("button", true)
-                               .classed("reset_options", true)
-                               .attr("value", "Reset default values")
-                               .on("click", d=>{
-                                    this.reset_default_options()
-                                })
-        this.options_selection.selectAll("div.clear_float").data([null]).enter()
-                            .append("div")
-                            .classed("clear_float", true)
-                            .style("clear", "right")
+    _render_checkbox_options(table, style_options, varprefix) {
+        let rows = table.selectAll("tr.checkbox_option").data(style_options.filter(d=>d.option_type=="checkbox"))
+        rows.exit().remove()
+        let rows_enter = rows.enter().append("tr").classed("checkbox_option", true)
+        rows_enter.append("td").text(d=>d.text)
+                            .classed("style_infotext", true)
+        rows_enter.append("td").append("input")
+                            .classed("checkbox", true)
+                            .attr("id", d=>d.id)
+                            .attr("name", d=>varprefix + "_type_checkbox_" + d.id)
+                            .attr("type", "checkbox")
+                            .property("checked", d=>d.value)
+                            .on("input", ()=>{
+                                this.option_changed_in_input_field()
+                                this.changed_options()
+                            })
+        rows_enter.append("td").classed("text", true)
+        rows = rows_enter.merge(rows)
     }
 
     reset_default_options() {
@@ -154,7 +183,10 @@ export class AbstractLayoutStyle {
         let style_options = this.get_style_options()
         for (let idx in style_options) {
             let option = style_options[idx]
-            this.style_config.options[option.id] = +this.options_selection.select("#" + option.id).property("value")
+            if (option.option_type == "range")
+                this.style_config.options[option.id] = +this.options_selection.select("#" + option.id).property("value")
+            else if (option.option_type == "checkbox")
+                this.style_config.options[option.id] = +this.options_selection.select("#" + option.id).property("checked")
         }
     }
 
@@ -170,6 +202,33 @@ export class AbstractLayoutStyle {
         this._layout_manager.viewport.update_data_of_layers()
         this._layout_manager.viewport.update_gui_of_layers()
     }
+
+    get_size() {
+        let vertices = []
+        this._style_root_node_offsets.forEach(offset=>vertices.push({x: offset[1], y: offset[2]}))
+        let bounding_rect = node_visualization_utils.get_bounding_rect(vertices)
+        return [bounding_rect.width * 1.1 + 100, bounding_rect.height * 1.1 + 100]
+    }
+
+    get_rotation() {
+        let rotation = this.style_config.options.rotation
+        if (this.style_config.options.include_parent_rotation == true) {
+            let style_parent = this._find_parent_with_style(this.style_root_node)
+            if (style_parent)
+                rotation += style_parent.data.use_style.get_rotation()
+        }
+        return rotation
+    }
+
+    _find_parent_with_style(node) {
+        if (!node.parent)
+            return
+        if (node.parent.data.use_style)
+            return node.parent
+        else
+            return this._find_parent_with_style(node.parent)
+    }
+
 
     style_color() {}
 
@@ -289,7 +348,7 @@ export class AbstractLayoutStyle {
                                 .classed("box", true)
                                 .attr("src", element.image)
                                 .style("background", "white")
-                                .style("opacity", "0.7")
+                                .style("opacity", "0.9")
                                 .style("position", "absolute")
                                 .style("pointer-events", "all")
                                 .each((d, idx, nodes)=>{
@@ -329,10 +388,6 @@ export class AbstractLayoutStyle {
         let hull = into_selection.selectAll("path.style_overlay").data([d3.polygonHull(hull_vertices)])
         hull = hull.enter().append("path")
                     .classed("style_overlay", true)
-                    .style("vector-effect", "non-scaling-stroke")
-                    .style("stroke", "black")
-                    .style("stroke-width", "4px")
-                    .attr("pointer-events", "none")
                 .merge(hull)
         hull.interrupt()
         this.add_optional_transition(hull.attr("d", function(d) {return "M" + d.join("L") + "Z";}));
@@ -383,23 +438,23 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
     get_matcher() {}
 
     get_style_options() {
-        return [{id: "center_force", values: {default: 5, min: 0, max: 100},
+        return [{id: "center_force", values: {default: 5, min: 0, max: 100}, option_type:"range",
                  text: "Center force strength", value: this.style_config.options.center_force},
-                {id: "maxdistance", values: {default: 800, min: 10, max: 2000},
+                {id: "maxdistance", values: {default: 800, min: 10, max: 2000}, option_type:"range",
                  text: "Max force distance", value: this.style_config.options.maxdistance},
-                {id: "force_node", values: {default: -300, min: -1000, max: 50},
+                {id: "force_node", values: {default: -300, min: -1000, max: 50}, option_type:"range",
                  text: "Repulsion force leaf", value: this.style_config.options.force_node},
-                {id: "force_aggregator", values: {default: -300, min: -1000, max: 50},
+                {id: "force_aggregator", values: {default: -300, min: -1000, max: 50}, option_type:"range",
                  text: "Repulsion force branch", value: this.style_config.options.force_aggregator},
-                {id: "link_force_node", values: {default: 30, min: -10, max: 300},
+                {id: "link_force_node", values: {default: 30, min: -10, max: 300}, option_type:"range",
                  text: "Link distance leaf", value: this.style_config.options.link_force_node},
-                {id: "link_force_aggregator", values: {default: 30, min: -10, max: 300},
+                {id: "link_force_aggregator", values: {default: 30, min: -10, max: 300}, option_type:"range",
                  text: "Link distance branches", value: this.style_config.options.link_force_aggregator},
-                {id: "link_strength", values: {default: 30, min: 0, max: 300},
+                {id: "link_strength", values: {default: 30, min: 0, max: 300}, option_type:"range",
                  text: "Link strength", value: this.style_config.options.link_strength},
-                {id: "collision_force_node", values: {default: 15, min: 0, max: 150},
+                {id: "collision_force_node", values: {default: 15, min: 0, max: 150}, option_type:"range",
                  text: "Collision box leaf", value: this.style_config.options.collision_force_node},
-                {id: "collision_force_aggregator", values: {default: 15, min:0, max:150},
+                {id: "collision_force_aggregator", values: {default: 15, min:0, max:150}, option_type:"range",
                  text: "Collision box branch", value: this.style_config.options.collision_force_aggregator}]
     }
 
@@ -563,6 +618,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._compute_node_offsets()
         this.force_style_translation()
 
+
         this._reset_hierarchy_filter(this.style_root_node)
 
         // Reapply old coords
@@ -570,16 +626,17 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
             node.x = old_coords[node.data.id].x
             node.y = old_coords[node.data.id].y
         })
-
-        // Fixate this.style_root_node till the layout gets applied
-        // Otherwise the force layout tends to move this.style_root_node
-        this.fix_node(this.style_root_node)
     }
 
 
     // Removes nodes (and their childs) with other explicit styles set
+    // A style starts at the root node and ends
+    // - At a leaf
+    // - At a child node with another explicit style set.
+    //    The child node with the style is also included for positioning computing, unless its detached from the parent
     _set_hierarchy_filter(node, first_node=false) {
-        if (!first_node && node.data.use_style)
+        if (!first_node && node.parent.data.use_style && node.parent != this.style_root_node || 
+            (!first_node && node.data.use_style && node.data.use_style.style_config.options.detach_from_parent))
             return []
 
         if (node.children) {
@@ -664,23 +721,60 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     }
 
     style_color() {
-        return "#98FB98"
+        return "#9c9c9c"
     }
 
     get_style_options() {
-        return [{id: "rotation", values: {default: 270, min: 0, max: 359}, text: "Rotation", value: this.style_config.options.rotation},
-                {id: "layer_height", values: {default: 80, min: 20, max: 500}, text: "Layer height", value: this.style_config.options.layer_height},
-                {id: "node_size", values: {default: 25, min: 15, max: 100}, text: "Node size", value: this.style_config.options.node_size}]
+        return [
+                {id: "layer_height", values: {default: 80, min: 20, max: 500}, text: "Layer height",
+                    value: this.style_config.options.layer_height, option_type:"range"},
+                {id: "node_size", values: {default: 25, min: 15, max: 100}, text: "Node size",
+                    value: this.style_config.options.node_size, option_type:"range"},
+                {id: "rotation", values: {default: 270, min: 0, max: 359}, text: "Rotation",
+                    value: this.style_config.options.rotation, option_type:"range"},
+                {id: "include_parent_rotation", option_type:"checkbox", values: {default: false}, text: "Include parent rotation",
+                      value: this.style_config.options.include_parent_rotation},
+                {id: "detach_from_parent", option_type:"checkbox", values: {default: false}, text: "Detach from parent",
+                      value: this.style_config.options.detach_from_parent},
+        ]
     }
 
     _compute_node_offsets() {
         let coords = this.get_hierarchy_size()
-        d3.tree().nodeSize([this.style_config.options.node_size,this.style_config.options.layer_height])(this.style_root_node)
 
-        this._node_positions = []
+        let rad = this.get_rotation() / 180 * Math.PI
+        let cos_x = Math.cos(rad)
+        let sin_x = Math.sin(rad)
+
+        cmk.d3_flextree.flextree().nodeSize(node=>{
+            if (node.data.use_style && node != this.style_root_node) {
+                if (node.data.use_style.style_config.options.include_parent_rotation) {
+                    let rad = node.data.use_style.style_config.options.rotation / 180 * Math.PI
+                    let bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, rad)
+                    return [bounding_rect.height * 1.1 + 100, bounding_rect.width * 1.1 + 100]
+                }
+
+
+                let node_rad = node.data.use_style.style_config.options.rotation / 180 * Math.PI
+                node_rad = node_rad + Math.PI - rad
+                let bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, node_rad)
+
+                let extra_width = 0
+                if (node.data.use_style.type() == "hierarchy")
+                    extra_width = Math.abs(bounding_rect.height * Math.sin(node_rad)) * 0.5
+                return [extra_width + bounding_rect.height * 1.1 + 100, bounding_rect.width * 1.1 + 100]
+            }
+            return [this.style_config.options.node_size,this.style_config.options.layer_height]
+        })(this.style_root_node)
+
+        this._style_root_node_offsets = []
+        this._no_rotation_vertices = []
         for (let idx in this.filtered_descendants) {
             let node = this.filtered_descendants[idx]
-            this._node_positions.push([node.x - this.style_root_node.x, node.y - this.style_root_node.y])
+            this._no_rotation_vertices.push({y: node.x, x: node.y})
+            let x = node.x * sin_x + node.y * cos_x
+            let y = node.x * cos_x - node.y * sin_x
+            this._style_root_node_offsets.push([node, x, y])
         }
     }
 
@@ -692,32 +786,40 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
             return
         }
 
-        let rad = this.style_config.options.rotation  / 180 * Math.PI
-
-        let cos_x = Math.cos(rad)
-        let sin_x = Math.sin(rad)
+        let rad = this.get_rotation() / 180 * Math.PI
         let text_positioning = this.get_text_positioning(rad)
 
         this._vertices = []
-        for (let idx in nodes) {
-            let node = nodes[idx]
+        this._vertices.push([this.style_root_node.x, this.style_root_node.y])
 
-            let node_positioning = this._layout_manager.get_node_positioning(nodes[idx])
+        let sub_nodes_with_explicit_style = []
+        for (let idx in this._style_root_node_offsets) {
+            let entry = this._style_root_node_offsets[idx]
+            let node = entry[0]
+            let x = entry[1]
+            let y = entry[2]
 
-            let force = this.get_default_node_force(node)
-            let node_position = this._node_positions[idx]
-            let node_coords = {
-                y: node_position[0] * cos_x - node_position[1] * sin_x,
-                x: node_position[0] * sin_x + node_position[1] * cos_x,
+            if ((node == this.style_root_node && this.style_config.options.detach_from_parent) ||
+                node != this.style_root_node || !this.style_root_node.parent) {
+                let force = this.get_default_node_force(node)
+                force.fx = this.style_root_node.x + x
+                force.fy = this.style_root_node.y + y
+                force.text_positioning = text_positioning
+                force.use_transition = this.use_transition
+                this._vertices.push([force.fx, force.fy])
             }
-            force.fx = coords.x + node_coords.x
-            force.fy = coords.y + node_coords.y
-            force.use_transition = this.use_transition
-            nodes[idx].force = -500
 
-            this._vertices.push([force.fx, force.fy])
-            force.text_positioning = text_positioning
+            if (node != this.style_root_node && node.data.use_style) {
+                sub_nodes_with_explicit_style.push(node)
+            }
+            node.force = -500
         }
+
+        // Retranslate styles which's position got shifted
+        sub_nodes_with_explicit_style.forEach(node=>{
+            this._layout_manager.compute_node_position(node)
+            node.data.use_style.translate_coords()
+        })
 
         this.generate_overlay()
 
@@ -799,7 +901,6 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                     max_elements_per_layer[node.depth] = 0
 
                 max_elements_per_layer[node.depth] += node.children.length
-//                max_elements_per_layer = Math.max(max_elements_per_layer, node.children.length)})
         })
         this.layer_count = this.max_depth - this.style_root_node.depth + 2
 
@@ -830,38 +931,47 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
     }
 
     style_color() {
-        return "#4682B4"
+        return "#3cc2ff"
     }
 
     get_style_options() {
-        return [{id: "radius",   values: {default: 120, min: 30, max: 300}, text: "Radius", value: this.style_config.options.radius},
-                {id: "rotation", values: {default: 0, min: 0, max: 359}, text: "Rotation", value: this.style_config.options.rotation},
-                {id: "degree",   values: {default: 360, min: 10, max: 360}, text: "Degree", value: this.style_config.options.degree}]
+        return [{id: "radius", option_type:"range", values: {default: 120, min: 30, max: 300}, text: "Radius", value: this.style_config.options.radius},
+                {id: "degree", option_type:"range", values: {default: 360, min: 10, max: 360}, text: "Degree", value: this.style_config.options.degree},
+                {id: "rotation", option_type:"range", values: {default: 0, min: 0, max: 359}, text: "Rotation", value: this.style_config.options.rotation},
+                {id: "include_parent_rotation", option_type:"checkbox", values: {default: false}, text: "Include parent rotation",
+                      value: this.style_config.options.include_parent_rotation},
+                {id: "detach_from_parent", option_type:"checkbox", values: {default: false}, text: "Detach from parent",
+                      value: this.style_config.options.detach_from_parent},
+        ]
     }
 
     _compute_node_offsets() {
         let radius = this.style_config.options.radius * (this.max_depth - this.style_root_node.depth + 1)
-        let rotation_rad = this.style_config.options.rotation / 360 * 2 * Math.PI
+        let rad = this.get_rotation() / 180 * Math.PI
         let tree = d3.cluster().size([(this.style_config.options.degree/360 * 2*Math.PI), radius])
 
-        this.style_root_node_offsets = []
-
+        this._style_root_node_offsets = []
+        this._no_rotation_vertices = []
         if (this.filtered_descendants.length == 1)
-            this.style_root_node_offsets.push([this.style_root_node, 0, 0, 0])
+            this._style_root_node_offsets.push([this.style_root_node, 0, 0, 0])
         else {
             tree(this.style_root_node)
             for (let idx in this.filtered_descendants) {
                 let node = this.filtered_descendants[idx]
+
                 let radius_reduction = 0
                 if (!node.children) {
                     radius_reduction = this.style_config.options.radius * 1
                 }
+                this._no_rotation_vertices.push({x: Math.cos(node.x) * (node.y - radius_reduction),
+                                           y: -Math.sin(node.x) * (node.y - radius_reduction)})
 
-                let x = Math.cos(node.x + rotation_rad) * (node.y - radius_reduction)
-                let y = -Math.sin(node.x + rotation_rad) * (node.y - radius_reduction)
-                this.style_root_node_offsets.push([node, x, y, (node.x + rotation_rad) % (2 * Math.PI)])
+                let x = Math.cos(node.x + rad) * (node.y - radius_reduction)
+                let y = -Math.sin(node.x + rad) * (node.y - radius_reduction)
+                this._style_root_node_offsets.push([node, x, y, (node.x + rad) % (2 * Math.PI)])
             }
         }
+
     }
 
     translate_coords() {
@@ -873,31 +983,34 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         offsets.x = this.style_root_node.x
         offsets.y = this.style_root_node.y
 
-        for (let idx in this.style_root_node_offsets) {
-            let entry = this.style_root_node_offsets[idx]
+        let retranslate_styled_sub_nodes = []
+
+        for (let idx in this._style_root_node_offsets) {
+            let entry = this._style_root_node_offsets[idx]
             let node = entry[0]
             let x = entry[1]
             let y = entry[2]
-            let node_rad = entry[3]
 
-            let node_positioning = this._layout_manager.get_node_positioning(node)
-            let force = node_positioning[this.id()] = {}
-
-            force.weight = this.positioning_weight()
-            let node_coords = {}
-            node_coords.x = offsets.x + x
-            node_coords.y = offsets.y + y
-
-            force.fx = node_coords.x
-            force.fy = node_coords.y
-
-            if (node != this.style_root_node)
+            if ((node == this.style_root_node && this.style_config.options.detach_from_parent) ||
+                node != this.style_root_node || !this.style_root_node.parent) {
+                let force = this.get_default_node_force(node)
+                force.fx = offsets.x + x
+                force.fy = offsets.y + y
                 force.text_positioning = this.get_text_positioning(entry)
+                force.use_transition = this.use_transition
+            }
 
-            force.use_transition = this.use_transition
-            this.filtered_descendants[idx].force = -500
-
+            if (node != this.style_root_node && node.data.use_style) {
+                retranslate_styled_sub_nodes.push(node)
+            }
+            node.force = -500
         }
+
+        // Retranslate styles which's position got shifted
+        retranslate_styled_sub_nodes.forEach(node=>{
+            this._layout_manager.compute_node_position(node)
+            node.data.use_style.translate_coords()
+        })
 
         this.generate_overlay()
         this.use_transition = false
@@ -944,7 +1057,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         if (!this._layout_manager.edit_layout)
             return
         let degree = Math.min(360, Math.max(0, this.style_config.options.degree))
-        let end_angle = degree / 360 * 2 * Math.PI
+        let end_angle = degree / 180 * Math.PI
 
         let arc = d3.arc()
                     .innerRadius(25)
@@ -963,14 +1076,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                                       .classed("rotation_overlay", true)
                                     .merge(rotation_overlay)
         translation_overlay.attr("transform", "translate(" + this.style_root_node.x + "," + this.style_root_node.y + ")")
-        rotation_overlay.attr("transform", "rotate(" + (-this.style_config.options.rotation) +")")
+        rotation_overlay.attr("transform", "rotate(" + (-this.get_rotation()) +")")
 
         // Arc
         let path = rotation_overlay.selectAll("path").data([null])
-        path = path.enter().append("path")
-                    .classed("style_overlay", true)
-                    .style("vector-effect", "non-scaling-stroke")
-                    .attr("pointer-events", "none")
+        path = path.enter().append("path").classed("style_overlay", true)
             .merge(path)
         this.add_optional_transition(path).attr("d", arc)
 
@@ -1059,14 +1169,14 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         let width = parseInt(Math.sqrt(this.style_root_node.children.length)) * node_width
         let max_cols = parseInt(width/node_width)
 
-        this.style_root_node_offsets = []
+        this._style_root_node_offsets = []
         for (let idx in this.style_root_node.children) {
             let node = this.style_root_node.children[idx]
             if (node._children)
                 continue
             let row_no = parseInt(idx / max_cols) + 1
             let col_no = idx % max_cols + 1
-            this.style_root_node_offsets.push([node, -width/2 + node_width/2 + col_no * node_width, row_no * node_width/2])
+            this._style_root_node_offsets.push([node, -width/2 + node_width/2 + col_no * node_width, row_no * node_width/2])
         }
     }
 
@@ -1087,27 +1197,24 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         this._vertices = []
         this._vertices.push([this.style_root_node.x, this.style_root_node.y])
 
-        for (let idx in this.style_root_node_offsets) {
-            let entry = this.style_root_node_offsets[idx]
+        let offsets = {}
+        offsets.x = this.style_root_node.x
+        offsets.y = this.style_root_node.y
+        for (let idx in this._style_root_node_offsets) {
+            let entry = this._style_root_node_offsets[idx]
             let node = entry[0]
             let x = entry[1]
             let y = entry[2]
-            let node_positioning = this._layout_manager.get_node_positioning(node)
-            let force = node_positioning[this.id()] = {}
 
-            force.weight = this.positioning_weight()
-            let node_coords = {}
-            node_coords.x = this.style_root_node.x + x
-            node_coords.y = this.style_root_node.y + y
-
-            force.fx = node_coords.x
-            force.fy = node_coords.y
-
-            this._vertices.push([force.fx, force.fy])
-
-            force.use_transition = this.use_transition
-            force.text_positioning = (selection, radius)=>selection.attr("transform", "translate("+(radius)+","+(radius+4)+") rotate(45)")
-            force.hide_node_link = true
+            if (node != this.style_root_node || !this.style_root_node.parent) {
+                let force = this.get_default_node_force(node)
+                force.fx = offsets.x + x
+                force.fy = offsets.y + y
+                force.use_transition = this.use_transition
+                force.hide_node_link = true
+                force.text_positioning = (selection, radius)=>selection.attr("transform", "translate("+(radius)+","+(radius+4)+") rotate(45)")
+                this._vertices.push([force.fx, force.fy])
+            }
             node.force = -500
         }
 
@@ -1122,9 +1229,6 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
     }
 
     generate_overlay() {
-        if (!this._layout_manager.edit_layout)
-            return
-
         if (this._vertices.length < 2)
             return
 
@@ -1145,7 +1249,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
                     .classed("children_boundary", true)
                     .style("vector-effect", "non-scaling-stroke")
                     .style("fill", "none")
-                    .style("stroke", "grey")
+                    .style("stroke", "darkgrey")
                     .style("stroke-width", "2px")
                     .attr("stroke-linejoin", "round")
                     .attr("pointer-events", "none")
@@ -1195,7 +1299,7 @@ export class LayoutStyleExampleGenerator {
                                     .attr("width", this._viewport_width)
                                     .attr("height", this._viewport_height)
         this._example_options = {
-            total_nodes: {id: "total_nodes", values: {default: 5, min: 1, max: 50}, text: "Sample nodes", value: 5},
+            total_nodes: {id: "total_nodes", values: {default: 5, min: 1, max: 50}, text: "Sample nodes", value: 20},
             depth: {id: "depth", values: {default: 1, min: 1, max: 5}, text: "Maximum depth", value: 2}
         }
 
@@ -1234,29 +1338,30 @@ export class LayoutStyleExampleGenerator {
         this._render_style_choice(this._style_choice_selection)
         this._update_viewport_visibility()
         this._create_example_hierarchy(this._example_options)
+
+        let style_config = {options: this._style_settings.style_config}
+        let style_class = null
         switch (this._style_settings.style_type) {
             case "none": {
                 return
             }
             case LayoutStyleHierarchy.prototype.type(): {
-                this._style_instance = new LayoutStyleHierarchy(this._layout_manager, this._style_settings.style_config,
-                                                                this._style_hierarchy.descendants()[0],
-                                                                this._viewport_zoom)
+                style_class = LayoutStyleHierarchy
                 break
             }
             case LayoutStyleRadial.prototype.type(): {
-                this._style_instance = new LayoutStyleRadial(this._layout_manager, this._style_settings.style_config,
-                                                             this._style_hierarchy.descendants()[0],
-                                                             this._viewport_zoom)
+                style_class = LayoutStyleRadial
                 break
             }
             case LayoutStyleBlock.prototype.type(): {
-                this._style_instance = new LayoutStyleBlock(this._layout_manager, this._style_settings.style_config,
-                                                             this._style_hierarchy.descendants()[0],
-                                                             this._viewport_zoom)
+                style_class = LayoutStyleBlock
                 break
             }
+
         }
+        this._style_instance = new style_class(this._layout_manager, style_config,
+                                               this._style_hierarchy.descendants()[0],
+                                               this._viewport_zoom)
         this._update_example()
     }
 

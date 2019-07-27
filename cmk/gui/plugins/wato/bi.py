@@ -2171,8 +2171,10 @@ class NodeVisualizationLayoutStyle(ValueSpec):
                 clean_key = key[len(varprefix):]
                 if clean_key == "style_type":
                     value[clean_key] = val
-                else:
-                    value["style_config"][clean_key] = int(val)
+                elif clean_key.startswith("_type_value_"):
+                    value["style_config"][clean_key[12:]] = int(val)
+                elif clean_key.startswith("_type_checkbox_"):
+                    value["style_config"][clean_key[15:]] = val == "on"
         return value
 
     def default_value(self):

@@ -53,6 +53,7 @@ import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
 import * as d3 from "d3";
+import * as d3_flextree from "d3-flextree";
 import * as node_visualization from "node_visualization";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport from "node_visualization_viewport";
@@ -107,5 +108,6 @@ export default {
         node_visualization_viewport: node_visualization_viewport,
         node_visualization_layout_styles: node_visualization_layout_styles,
         d3: d3,
+        d3_flextree: d3_flextree,
     }
 };

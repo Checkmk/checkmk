@@ -52,6 +52,10 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     }
 
+    get_overlay_config() {
+        return this.layout_applier.current_layout_group.overlay_config
+    }
+
     add_active_style(style) {
         this._active_styles[style.id()] = style
     }
@@ -111,9 +115,23 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.toolbar_plugin.update_content()
         this.force_style.update_data()
 
-        for (var idx in this._active_styles) {
-            this._active_styles[idx].update_data()
+
+        let sorted_styles = []
+        for (let idx in this._active_styles) {
+            sorted_styles.push([this._active_styles[idx].style_root_node.depth, this._active_styles[idx]])
         }
+
+        // Sort styles, ordering them from leaf to root
+        // Style in leaf need be be computed first, since they have a size-impact on any parent style
+        sorted_styles.sort(function(a,b) {
+            if (a[0] > b[0])
+                return -1
+            if (a[0] < b[0])
+                return 1
+            return 0
+        })
+        sorted_styles.forEach(sorted_style=>sorted_style[1].update_data())
+
 
         this.translate_layout()
         this.compute_node_positions()
@@ -122,12 +140,9 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     update_gui() {
-        this.force_style.update_gui()
-
         for (var idx in this._active_styles) {
             this._active_styles[idx].update_gui()
         }
-
         this.update_style_indicators()
     }
 
@@ -141,11 +156,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
                     node.data.use_style.update_style_indicator(this.edit_layout)
             })
         )
-    }
-
-    compute_layout() {
-        this.compute_tree_layout()
-        this.compute_node_layout()
     }
 
     translate_layout() {
@@ -934,6 +944,13 @@ class LayoutingMouseEventsOverlay {
         this.layout_manager.compute_node_position(this._dragged_node)
         if (this._dragged_node.data.use_style)
             this._dragged_node.data.use_style.force_style_translation()
+
+
+        // TODO: EXPERIMENTAL, will be removed in later commit
+        for (var idx in this.layout_manager._active_styles) {
+            this.layout_manager._active_styles[idx].update_data()
+        }
+
         this.layout_manager.translate_layout()
         this.layout_manager.compute_node_positions()
         this.layout_manager.viewport.update_gui_of_layers()
@@ -999,7 +1016,7 @@ class LayoutApplier{
     }
 
     _convert_node(node, style_class) {
-        let chunk_layout = node.data.chunk.layout
+        let chunk_layout = node.data.chunk.layout_instance
         let current_style = node.data.use_style
 
         // Do nothing on same style
@@ -1025,15 +1042,15 @@ class LayoutApplier{
     _convert_all(style_class) {
         let current_style = null
         this.layout_manager.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            node_chunk.layout.clear_styles()
+            node_chunk.layout_instance.clear_styles()
             if (style_class == node_visualization_layout_styles.LayoutStyleFixed) {
                 node_chunk.nodes.forEach(node=>{
-                    node_chunk.layout.save_style(this.layout_style_factory.instantiate_style_class(style_class, node).style_config)
+                    node_chunk.layout_instance.save_style(this.layout_style_factory.instantiate_style_class(style_class, node).style_config)
                 })
             }
             else if (style_class != node_visualization_layout_styles.LayoutStyleForce) {
                 current_style = this.layout_style_factory.instantiate_style_class(style_class, node_chunk.nodes[0])
-                node_chunk.layout.save_style(current_style.style_config)
+                node_chunk.layout_instance.save_style(current_style.style_config)
             }
         })
 
@@ -1044,70 +1061,66 @@ class LayoutApplier{
     }
 
     apply_layout_id(layout_id) {
-        let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport, layout_id)
-        if (layout_id != "") {
-            let config = JSON.parse(JSON.stringify(this.layouts[layout_id]))
-            config.id = layout_id
-            new_layout.deserialize(config)
-        }
-        this.apply(new_layout)
-    }
-
-    apply(new_layout) {
-        this._apply_force_style_options(new_layout)
-
-        let node_matcher = new node_visualization_utils.NodeMatcher(this.layout_manager.viewport.get_hierarchy_list())
-        let nodes_with_style = this.find_nodes_for_layout(new_layout, node_matcher)
-        this._update_node_specific_styles(nodes_with_style)
-
-        this.current_layout_group = new_layout
-
         this.layout_manager.viewport.get_hierarchy_list().forEach(chunk=>{
-            chunk.layout = new_layout
+            let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport, layout_id)
+            if (layout_id != "") {
+                let config = JSON.parse(JSON.stringify(this.layouts[layout_id]))
+                config.id = layout_id
+                new_layout.deserialize(config)
+            }
+            chunk.layout_instance = new_layout
         })
-
-        this.viewport.update_active_overlays()
+        this.apply_multiple_layouts()
     }
 
-    apply_all_layouts(global_layout_config=null) {
-        this.apply_multiple_layouts(this.viewport.get_hierarchy_list(), global_layout_config)
+    apply_all_layouts() {
+        this.apply_multiple_layouts(this.viewport.get_hierarchy_list())
     }
 
-    apply_multiple_layouts(node_chunk_list, global_layout_config) {
+    apply_multiple_layouts(node_chunk_list) {
         let nodes_with_style = []
         let skip_layout_alignment = false
 
         let used_layout_id = null
 
         node_chunk_list.forEach(node_chunk=>{
+            let layout_settings = node_chunk.layout_settings
             let node_matcher = new node_visualization_utils.NodeMatcher([node_chunk])
-            // TODO: When removing an explicit layout, the new layout should replace the explict one
-            if (!node_chunk.layout) {
-                node_chunk.layout = new node_visualization_layout.NodeVisualizationLayout(this)
-
-                if (global_layout_config) {
-                    // A layout which may span over multiple chunks has been set
-                    // Each chunk gets its own layout config instance, since config-wise chunks are still separated after all..
-                    let enforced_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport)
-                    enforced_layout.deserialize(global_layout_config)
-                    node_chunk.layout = enforced_layout
-                } else if (node_chunk.use_layout) {
-                    node_chunk.layout.deserialize(node_chunk.use_layout)
+            // TODO: When removing an explicit layout, the new layout should replace the explicit one
+            if (!node_chunk.layout_instance) {
+                node_chunk.layout_instance = new node_visualization_layout.NodeVisualizationLayout(this)
+                if (layout_settings.config) {
+                    node_chunk.layout_instance.deserialize(layout_settings.config)
                     // TODO: fix id handling
                     if (node_chunk.template_layout_id)
                         used_layout_id = node_chunk.template_layout_id
                 }
-                else if (node_chunk.use_default_layout && node_chunk.use_default_layout != "force") {
+                else if (layout_settings.origin_type == "default_template" &&
+                         layout_settings.default_id != node_visualization_layout_styles.LayoutStyleForce.prototype.type()) {
                     let default_style = this.layout_style_factory.instantiate_style_name(node_chunk.use_default_layout, node_chunk.tree)
                     default_style.style_config.position = {x: 50, y: 50}
-                    node_chunk.layout.save_style(default_style.style_config)
+                    node_chunk.layout_instance.save_style(default_style.style_config)
                 }
             }
             else
                 skip_layout_alignment = true
 
-            nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout, node_matcher))
-            this._apply_force_style_options(node_chunk.layout)
+            nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout_instance, node_matcher))
+
+            // Add styles from aggregation rules. TODO: Introduce option to ignore rule styles
+            node_chunk.nodes.forEach(node=>{
+                if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
+                    let style_name = node.data.rule_layout_style.style_type
+                    let style_options = node.data.rule_layout_style.style_config
+                    let new_style = this.layout_style_factory.instantiate_style_name(style_name, node)
+                    new_style.style_config.options = style_options
+                    nodes_with_style.push({node: node, style: new_style.style_config})
+                }
+            })
+
+
+            // TODO: rework. global force style
+            this._apply_force_style_options(node_chunk.layout_instance)
         })
         this._update_node_specific_styles(nodes_with_style, skip_layout_alignment)
 
@@ -1124,19 +1137,10 @@ class LayoutApplier{
 
     align_layouts(nodes_with_style) {
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            let box = {x_min: 50000, x_max: -50000, y_min: 50000, y_max: -50000}
-            node_chunk.nodes.forEach(node=>{
-                box.x_min = Math.min(box.x_min, node.x)
-                box.x_max = Math.max(box.x_max, node.x)
-                box.y_min = Math.min(box.y_min, node.y)
-                box.y_max = Math.max(box.y_max, node.y)
-            })
-
-            let box_width = box.x_max - box.x_min
-            let box_height = box.y_max - box.y_min
+            let bounding_rect = node_visualization_utils.get_bounding_rect(node_chunk.nodes)
             let translate_perc = {
-                x: -((box.x_min - (node_chunk.coords.width - box_width)/2)/node_chunk.coords.width) * 100,
-                y: -((box.y_min - (node_chunk.coords.height - box_height)/2)/node_chunk.coords.height) * 100,
+                x: -((bounding_rect.x_min - (node_chunk.coords.width - bounding_rect.width)/2)/node_chunk.coords.width) * 100,
+                y: -((bounding_rect.y_min - (node_chunk.coords.height - bounding_rect.height)/2)/node_chunk.coords.height) * 100,
             }
 
             node_chunk.nodes.forEach(node=>{
@@ -1245,9 +1249,9 @@ class LayoutApplier{
         let style_configs = []
         let chunk_layout = null
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            chunk_layout = node_chunk.layout.serialize()
+            chunk_layout = node_chunk.layout_instance.serialize()
             for (let idx in chunk_layout.style_configs)
-                if (chunk_layout.style_configs[idx].type != "force")
+                if (chunk_layout.style_configs[idx].type != node_visualization_layout_styles.LayoutStyleForce.prototype.type())
                     style_configs.push(chunk_layout.style_configs[idx])
         })
         chunk_layout.style_configs = style_configs

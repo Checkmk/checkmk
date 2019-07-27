@@ -26,7 +26,8 @@ export class Toolbar {
         this._setup_toolbar_plugins()
         this.update_toolbar_plugins()
 
-//        setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
+        // Kept for debug purposes. This opens the layout toolbar a second later
+        //  setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
     }
 
     _setup_toolbar_plugins() {

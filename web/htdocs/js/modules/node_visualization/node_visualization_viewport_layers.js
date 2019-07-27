@@ -955,7 +955,11 @@ class BIAggregatorNode extends AbstractGUINode {
            img: theme_prefix + "/images/icon_edit.png"})
 
         if (this.node.children != this.node._children)
-            elements.push({text: "Below this node, expand all nodes", on: ()=>{d3.event.stopPropagation(); this.expand_node()}, href: "",
+            elements.push({text: "Below this node, expand all nodes", on: ()=>{d3.event.stopPropagation();
+                                                                              this.expand_node_including_children(this.node)
+                                                                              this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
+                                                                              this.viewport.update_layers()
+            }, href: "",
                             img: theme_prefix + "/images/icons/icons8-expand-48.png"})
         else
             elements.push({text: "Collapse this node", on: ()=>{d3.event.stopPropagation(); this.collapse_node()}, href: "",
@@ -1007,25 +1011,26 @@ class NodeLink {
 
         let coords = this.nodes_layer.viewport.scale_to_zoom({x: spawn_point_x, y: spawn_point_y})
 
-        if (this.use_diagonal) {
-            this.selection = selection
-                .append("path")
-                   .classed("link_element", true)
-                   .attr("stroke-width", 2)
-                   .attr("fill", "none")
-                   .attr("stroke-width", function (d) { return Math.max(4, 2-d.depth);})
-                   .style("stroke", "grey")
-        } else {
+        if (this.nodes_layer._use_line_style == "line")
             this.selection = selection.append("line")
                 .classed("link_element", true)
                 .attr("marker-end", "url(#triangle)")
-                .attr("x1", coords.x)
-                .attr("y1", coords.y)
-                .attr("x2", coords.x)
-                .attr("y2", coords.y)
+//                .attr("x1", coords.x)
+//                .attr("y1", coords.y)
+//                .attr("x2", coords.x)
+//                .attr("y2", coords.y)
                 .attr("stroke-width", function (d) { return Math.max(1, 2-d.depth);})
-                .style("stroke", "grey")
-            }
+                .style("stroke", "darkgrey")
+        else
+            this.selection = selection
+                .append("path")
+                   .classed("link_element", true)
+//                   .classed("dashed", true)
+                   .attr("fill", "none")
+                   .attr("stroke-width", 1)
+//                   .attr("stroke-width", function (d) { return Math.max(8, 2-d.depth*2);})
+//                   .attr("stroke-width", d=>{d.source.count(); return d.source.value})
+                   .style("stroke", "darkgrey")
     }
 
 
@@ -1048,17 +1053,26 @@ class NodeLink {
         let x2 = target.data.target_coords.x
         let y2 = target.data.target_coords.y
 
-        if (this.use_diagonal) {
-            this.add_optional_transition(this.selection).attr("d", (d) => this.diagonal_line(x1,y1,x2,y2))
-        }
-        else {
+        if (this.nodes_layer._use_line_style == "line")
             this.add_optional_transition(this.selection)
                     .attr("x1", x1)
                     .attr("y1", y1)
                     .attr("x2", x2)
                     .attr("y2", y2)
-       }
+        else {
+            if (this.nodes_layer._use_line_style == "diagonal")
+                this.add_optional_transition(this.selection).attr("d", (d) => this.diagonal_line(x1,y1,x2,y2))
+            else
+                this.add_optional_transition(this.selection).attr("d", (d) => this.elbow(x1,y1,x2,y2))
+        }
     }
+
+
+    elbow(source_x, source_y, target_x, target_y) {
+      return "M" + source_x + "," + source_y
+          + "V" + target_y + "H" + target_x;
+    }
+
 
     // Creates a curved (diagonal) path from parent to the child nodes
     diagonal_line(source_x, source_y, target_x, target_y) {
@@ -1119,7 +1133,39 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
                                 .attr("name", "viewport_layered_nodes")
                                 .attr("id", "nodes")
 
+
+        this._use_line_style = "diagonal"
+        this._render_line_style()
     }
+
+    _render_line_style() {
+        var select = this.div_selection.selectAll("select").data([null])
+        select = select.enter().append("div")
+                        .style("position", "absolute")
+                        .style("top", "50px")
+                        .style("pointer-events", "all")
+                        .append("select").merge(select)
+                        .style("width", "200px")
+
+        var options = select.on("change", ()=>this._line_style())
+               .selectAll("option")
+               .data(["line", "diagonal", "elbow"])
+        options.exit().remove()
+        options = options.enter().append("option").merge(options)
+
+        options.property("value", d=>d)
+               .property("selected", d=>d=="diagonal")
+               .text(d=>d)
+    }
+
+    _line_style() {
+        this._use_line_style = d3.select(d3.event.target).property("value")
+
+        this.links_selection.selectAll(".link_element").each(link_data=>this._remove_link(link_data)).remove()
+        this.update_data()
+        this.update_gui(true)
+    }
+
 
     zoomed() {
         let transform_text = "translate(" + this.viewport.last_zoom.x + "," + this.viewport.last_zoom.y + ")"

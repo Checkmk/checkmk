@@ -4306,10 +4306,12 @@ class Labels(ValueSpec):
         RULESET = "ruleset"
         DISCOVERED = "discovered"
 
-    def __init__(self, world, label_source=None, **kwargs):
+    def __init__(self, world, label_source=None, max_labels=None, **kwargs):
         self._world = world
         # Set this source to mark the labels that have no explicit label source set
         self._label_source = label_source
+        # Set to positive integer to limit the number of labels to add to this field
+        self._max_labels = max_labels
         kwargs.setdefault("help", "")
         kwargs["help"] += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
                             "For example <tt>os:windows</tt>.")
@@ -4347,7 +4349,14 @@ class Labels(ValueSpec):
                         attrs={
                             "placeholder": _("Add some label"),
                             "data-world": self._world.value,
+                            "data-max-labels": self._max_labels,
                         })
+
+
+class SingleLabel(Labels):
+    """Input element for a single label"""
+    def __init__(self, world, label_source=None, **kwargs):
+        super(SingleLabel, self).__init__(world, label_source=None, max_labels=1, **kwargs)
 
 
 @page_registry.register_page("ajax_autocomplete_labels")

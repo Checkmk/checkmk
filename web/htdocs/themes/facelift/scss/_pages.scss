@@ -1753,6 +1753,10 @@ table.data.job_table > tbody > tr > td {
     margin: $tag-margin;
   }
 
+  &.hasMaxTags #{ $self }__input {
+    display: none;
+  }
+
   &[readonly] {
     tag > div {
       padding: $tag-padding;

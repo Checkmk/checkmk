@@ -45,7 +45,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
-    TextUnicode,
+    SingleLabel,
     Transform,
     Checkbox,
     ListChoice,
@@ -1672,12 +1672,7 @@ class LabelCondition(Transform):
                             ("is", _("has")),
                             ("is_not", _("has not")),
                         ],),
-                        TextUnicode(
-                            regex=r"^[^:]+:[^:]+$",
-                            regex_error=
-                            _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>."
-                             ),
-                        ),
+                        SingleLabel(world=SingleLabel.World.CONFIG,),
                     ],
                     show_titles=False,
                 ),
@@ -1701,15 +1696,17 @@ class LabelCondition(Transform):
     def _single_label_to_valuespec(self, label_id, label_value):
         if isinstance(label_value, dict):
             if "$ne" in label_value:
-                return ("is_not", "%s:%s" % (label_id, label_value["$ne"]))
+                return ("is_not", {label_id: label_value["$ne"]})
             raise NotImplementedError()
-        return ("is", "%s:%s" % (label_id, label_value))
+        return ("is", {label_id: label_value})
 
     def _from_valuespec(self, valuespec_value):
         label_conditions = {}
         for operator, label in valuespec_value:
-            label_id, label_value = label.split(":", 1)
-            label_conditions[label_id] = self._single_label_from_valuespec(operator, label_value)
+            if label:
+                label_id, label_value = label.items()[0]
+                label_conditions[label_id] = self._single_label_from_valuespec(
+                    operator, label_value)
         return label_conditions
 
     def _single_label_from_valuespec(self, operator, label_value):

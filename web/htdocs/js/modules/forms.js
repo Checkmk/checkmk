@@ -59,20 +59,35 @@ function enable_label_input_fields(container) {
             return;
         }
 
-        let ajax_obj;
-        let tagify = new Tagify(element, {
-            pattern: /^[^:]+:[^:]+$/,
-        });
-
+        let max_labels = element.getAttribute("data-max-labels");
         let world = element.getAttribute("data-world");
 
-        tagify.on("invalid", function() {
+        let ajax_obj;
+        let tagify_args = {
+            pattern: /^[^:]+:[^:]+$/,
+        };
+
+        if (max_labels !== null) {
+            tagify_args["maxTags"] = max_labels;
+        }
+
+        let tagify = new Tagify(element, tagify_args);
+
+        tagify.on("invalid", function(e) {
+            let message;
+            if (e.type == "invalid" && e.detail.message == "number of tags exceeded") {
+                message = "Only one tag allowed";
+            } else {
+                message = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+            }
+
             $("div.label_error").remove(); // Remove all previous errors
 
             // Print a validation error message
             var msg = document.createElement("div");
             msg.classList.add("message", "error", "label_error");
-            msg.innerHTML = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+
+            msg.innerHTML = message;
             element.parentNode.insertBefore(msg, element.nextSibling);
         });
 

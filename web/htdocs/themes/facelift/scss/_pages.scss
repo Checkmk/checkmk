@@ -921,7 +921,7 @@ table.data.headerleft {
 '-------------------------------------------------------------------------*/
 
 input:not(.button), input[type=text], input[type=password],
-select, textarea, div.snapin textarea, #mk_side_search_field {
+select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
   color: $theme-color-text;

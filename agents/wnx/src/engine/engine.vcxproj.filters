@@ -204,6 +204,9 @@
     <ClInclude Include="..\common\cfg_yaml.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="commander.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -417,6 +420,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="realtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="commander.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

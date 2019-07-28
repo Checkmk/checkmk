@@ -205,11 +205,12 @@ class ConfigInfo {
     };
 
 public:
-    void initAll(const std::wstring& ServiceValidName,  // look in registry
-                 const std::wstring& RootFolder,        // look in disk
-                 const std::wstring& AgentDataFolder);  // look in disk
+    void initFolders(const std::wstring& ServiceValidName,  // look in registry
+                     const std::wstring& RootFolder,        // look in disk
+                     const std::wstring& AgentDataFolder);  // look in disk
 
-    void cleanAll();
+    void cleanFolders();
+    void cleanConfig();
 
     // not so heavy operation, use free
     // #TODO probably replace with shared_ptr

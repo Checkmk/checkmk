@@ -446,7 +446,7 @@ void LoadGlobal() {
 }
 
 // test and reset function
-void KillDefaultConfig() { details::G_ConfigInfo.cleanAll(); }
+void KillDefaultConfig() { details::G_ConfigInfo.cleanConfig(); }
 
 //
 // creates predefined list of folders where we are going to search for a files
@@ -470,10 +470,14 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     // filling
     vector<path> full;
     {
-        auto remote_machine_string = cma::tools::win::GetEnv(L"REMOTE_MACHINE");
+        auto remote_machine_string =
+            cma::tools::win::GetEnv(cma::kRemoteMachine);
 
         // development deployment
-        if (remote_machine_string[0]) full.emplace_back(remote_machine_string);
+        if (!remote_machine_string.empty()) {
+            XLOG::l.i("THIS IS DEVELOPMENT MACHINE");
+            full.emplace_back(remote_machine_string);
+        }
 
         // tests
         if (!cur_dir.empty()) full.emplace_back(cur_dir);
@@ -814,7 +818,7 @@ void SetupEnvironmentFromGroups() {
     groups::global.setupLogEnvironment();  // at the moment only global
 }
 
-bool ReloadConfigAutomatically() { return true; }
+bool ReloadConfigAutomatically() { return false; }
 
 // Find any file, usually executable on one of the our paths
 // for execution
@@ -1170,11 +1174,12 @@ void ConfigInfo::fillConfigDirs() {
 }
 
 // not thread safe, but called only on program start
-void ConfigInfo::initAll(
+void ConfigInfo::initFolders(
     const std::wstring& ServiceValidName,  // look in registry
     const std::wstring& RootFolder,        // look in disk
     const std::wstring& AgentDataFolder)   // look in dis
 {
+    cleanFolders();
     folders_.createDataFolderStructure(AgentDataFolder);
 
     // This is not very good idea, but we want
@@ -1203,13 +1208,18 @@ void ConfigInfo::initAll(
     fillConfigDirs();
 }
 
-// normally used to reload configs or testing
-void ConfigInfo::cleanAll() {
+// normally used only during start
+void ConfigInfo::cleanFolders() {
     std::lock_guard lk(lock_);
     exe_command_paths_.resize(0);  // root/utils, root/plugins etc
     config_dirs_.resize(0);        // root und data
 
     folders_.cleanAll();
+}
+
+// normally used to reload configs and/or testing
+void ConfigInfo::cleanConfig() {
+    std::lock_guard lk(lock_);
 
     yaml_.reset();
     root_yaml_path_ = L"";
@@ -1317,9 +1327,8 @@ constexpr Combine GetCombineMode(std::string_view name) {
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node source_value, Combine combine) {
     if (source_value.IsScalar()) {
-        XLOG::d(
-            XLOG_FLINE + " overriding seq with scalar '{}' this is temporary",
-            name);  // may happen when with empty sequence sections
+        XLOG::d.t("Overriding seq named '{}' with scalar, this is allowed",
+                  name);  // may happen when with empty sequence sections
         target_value = source_value;
         return;
     }

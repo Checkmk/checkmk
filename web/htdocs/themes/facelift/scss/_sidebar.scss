@@ -278,9 +278,9 @@ div.snapin {
     }
   }
 
-  /* close button on header */
   div.closesnapin {
-    float: right;
+    position: absolute;
+    right: 5px;
     width: 8px;
     height: 2px; /* vertical position of close button */
     padding: 0;
@@ -295,7 +295,8 @@ div.snapin {
   }
 
   div.minisnapin {
-    float: right;
+    position: absolute;
+    right: 15px;
     width: 8px;
     height: 8px;
     margin: 2px 6px 0 0; /* vertical position of minimize button */

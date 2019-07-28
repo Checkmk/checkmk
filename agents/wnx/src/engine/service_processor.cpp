@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
+#include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "external_port.h"
@@ -372,7 +373,12 @@ void ServiceProcessor::sendDebugData() {
 // called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      cma::rt::Device& rt_device) {
-    cma::OnStartApp();
+    auto value = cma::tools::win::GetEnv(cma::kAutoReload);
+
+    if (cma::cfg::ReloadConfigAutomatically() ||
+        cma::tools::IsEqual(value, L"yes"))
+        cma::ReloadConfig();
+
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
     ohm_started_ = conditionallyStartOhm();  // start may happen when
                                              // config changed
@@ -498,7 +504,7 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
             {
                 std::string to_log;
                 if (dt->data()) {
-                    auto data = (const char*)dt->data();
+                    auto data = static_cast<const char*>(dt->data());
                     to_log.assign(data, data + dt->length());
                     XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(),
                                              to_log);
@@ -530,6 +536,15 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
         case cma::carrier::DataType::kYaml:
             XLOG::l.bp(XLOG_FUNC + " NOT SUPPORTED now");
             break;
+
+        case cma::carrier::DataType::kCommand: {
+            std::string cmd(static_cast<const char*>(dt->data()),
+                            static_cast<size_t>(dt->length()));
+            std::string peer(cma::commander::kMainPeer);
+            cma::commander::RunCommand(peer, cmd);
+
+            break;
+        }
     }
 
     return true;

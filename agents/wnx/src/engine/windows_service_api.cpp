@@ -12,6 +12,7 @@
 
 #include "cap.h"
 #include "cfg.h"
+#include "commander.h"
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
@@ -483,6 +484,36 @@ int ExecPatchHash() {
     XLOG::l.i("Patching...");
     cma::cfg::upgrade::PatchOldFilesWithDatHash();
     XLOG::l.i("End of!");
+    return 0;
+}
+
+static void InformPort(std::string_view mail_slot) {
+    cma::carrier::CoreCarrier cc;
+
+    using namespace cma::carrier;
+    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto ret = cc.establishCommunication(internal_port);
+    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+
+    cc.shutdownCommunication();
+}
+
+int ExecReloadConfig() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::SendStringToStdio("Reloading configuration...\n",
+                            XLOG::Colors::white);
+    cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
+    cma::MailSlot mailbox_test(cma::cfg::kTestingMailSlot, 0);
+    using namespace cma::carrier;
+
+    XLOG::l.i("Asking for reload service");
+    InformPort(mailbox_service.GetName());
+
+    XLOG::l.i("Asking for reload executable");
+    InformPort(mailbox_test.GetName());
+
+    XLOG::SendStringToStdio("Done.", XLOG::Colors::white);
     return 0;
 }
 

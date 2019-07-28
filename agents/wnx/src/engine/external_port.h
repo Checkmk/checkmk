@@ -48,13 +48,17 @@ public:
     using s_ptr = std::shared_ptr<AsioSession>;
 
     AsioSession(asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
+    virtual ~AsioSession() { XLOG::t("destroy connection"); }
 
     void start(cma::world::ReplyFunc Reply) {
         // typical functionality of current agent
         // accept connection, get data, write data, close connection
         auto send_back = Reply(getCurrentRemoteIp());
 
-        if (send_back.empty()) return;
+        if (send_back.empty()) {
+            XLOG::l.i("No data to send");
+            return;
+        }
 
         auto crypt = cma::encrypt::MakeCrypt();
         do_write(send_back.data(), send_back.size(), crypt.get());

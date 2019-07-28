@@ -140,7 +140,7 @@ try {
                                 sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                                 sh 'ls -lah'
                                 dir (DISTRO + '-dest') {
-                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/${OMD_SITE}/junit.xml -o junit_suite_name=$DISTRO --maxfail 300' make -C tests EDITION=${EDITION} VERSION=${CMK_VERSION} OMD_SITE=${OMD_SITE} test-integration"
+                                    sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/${OMD_SITE}/junit.xml -o junit_suite_name=$DISTRO' make -C tests EDITION=${EDITION} VERSION=${CMK_VERSION} OMD_SITE=${OMD_SITE} test-integration"
                                 }
                             }
                         }

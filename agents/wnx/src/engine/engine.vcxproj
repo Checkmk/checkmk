@@ -249,6 +249,7 @@
     <ClInclude Include="cfg.h" />
     <ClInclude Include="cfg_details.h" />
     <ClInclude Include="cma_core.h" />
+    <ClInclude Include="commander.h" />
     <ClInclude Include="cvt.h" />
     <ClInclude Include="encryption.h" />
     <ClInclude Include="eventlog\eventlogbase.h" />
@@ -465,6 +466,7 @@
     <ClCompile Include="carrier.cpp" />
     <ClCompile Include="cfg.cpp" />
     <ClCompile Include="cma_core.cpp" />
+    <ClCompile Include="commander.cpp" />
     <ClCompile Include="cvt.cpp" />
     <ClCompile Include="encryption.cpp" />
     <ClCompile Include="eventlog\eventlogbase.cpp" />

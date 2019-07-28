@@ -213,19 +213,21 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
         // we must to catch exception in every thread, even so simple one
         try {
             // processing block
-            auto as = getSession();
+            {
+                auto as = getSession();
 
-            if (as) {
-                const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
-                XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
+                if (as) {
+                    const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
+                    XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
-                // only_from checking
-                if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
-                    as->start(reply);
-                } else {
-                    XLOG::d(
-                        "Address '{}' is not allowed, this call should happen",
-                        ip);
+                    // only_from checking
+                    if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                        as->start(reply);
+                    } else {
+                        XLOG::d(
+                            "Address '{}' is not allowed, this call should happen",
+                            ip);
+                    }
                 }
             }
 

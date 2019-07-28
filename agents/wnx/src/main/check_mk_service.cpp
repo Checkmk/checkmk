@@ -41,11 +41,12 @@ void PrintMain() {
             "\t{1} <{2}|{3}|{4}>\n"
             "\t{2:<{0}} - generates test output\n"
             "\t{3:<{0}} - version of the Agent\n"
-            "\t{4:<{0}} - usage\n",
+            "\t{4:<{0}} - reload configuration files of the Agent\n"
+            "\t{5:<{0}} - usage\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
-            kLegacyTestParam, kVersionParam, kHelpParam);
+            kLegacyTestParam, kVersionParam, kReloadConfigParam, kHelpParam);
     });
 }
 
@@ -494,6 +495,11 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
                 ? cma::srv::StdioLog::yes
                 : cma::srv::StdioLog::no;
         return cma::srv::ExecSection(section, delay, diag);
+    }
+
+    if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
+        cma::srv::ExecReloadConfig();
+        return 0;
     }
 
     if (param == wtools::ConvertToUTF16(kHelpParam)) {

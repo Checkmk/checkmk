@@ -56,20 +56,21 @@ void LogFolders() {
 bool FindAndPrepareWorkingFolders(AppType Type) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
+
     switch (Type) {
         case AppType::exe:  // main exe
         {
             auto [r, d] = FindAlternateDirs(kTemporaryRoot);
-            details::G_ConfigInfo.initAll(L"", r.wstring(), d.wstring());
+            details::G_ConfigInfo.initFolders(L"", r.wstring(), d.wstring());
             break;
         }
         case AppType::srv:
-            details::G_ConfigInfo.initAll(cma::srv::kServiceName, L"", L"");
+            details::G_ConfigInfo.initFolders(cma::srv::kServiceName, L"", L"");
             break;
         case AppType::test:  // only watest
         {
             auto [r, d] = FindAlternateDirs(kRemoteMachine);
-            details::G_ConfigInfo.initAll(L"", r.wstring(), d.wstring());
+            details::G_ConfigInfo.initFolders(L"", r.wstring(), d.wstring());
             break;
         }
         case AppType::automatic:
@@ -85,27 +86,21 @@ bool FindAndPrepareWorkingFolders(AppType Type) {
 
 }  // namespace cfg
 
-// must be called on start
-bool OnStart(AppType Type, const std::wstring& ConfigFile) {
-    if (Type == AppType::automatic) Type = AppDefaultType();
+static AppType CalcAppType(AppType Type) {
+    if (Type == AppType::automatic) return AppDefaultType();
     if (Type == AppType::test) cma::details::G_Test = true;
 
-    using namespace std;
-    using namespace cma::cfg;
+    return Type;
+}
 
-    auto already_loaded = S_OnStartCalled.exchange(true);
+bool ReloadConfig() {
+    //
 
-    bool load_config = !already_loaded || cma::cfg::ReloadConfigAutomatically();
+    return LoadConfig(AppDefaultType(), {});
+}
 
-    if (load_config) {
-        cfg::details::KillDefaultConfig();
-        if (!cfg::FindAndPrepareWorkingFolders(Type)) return false;
-    }
-
-    if (!already_loaded) wtools::InitWindowsCom();
-
-    if (!load_config) return true;
-
+bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
+    cfg::details::KillDefaultConfig();
     // load config is here
     auto cfg_files = cfg::DefaultConfigArray(Type);
     if (!ConfigFile.empty()) {
@@ -121,7 +116,33 @@ bool OnStart(AppType Type, const std::wstring& ConfigFile) {
     }
 
     XLOG::l.i("Loaded start config {}",
-              wtools::ConvertToUTF8(GetPathOfLoadedConfig()));
+              wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+    return true;
+}
+
+bool OnStartCore(AppType type, const std::wstring& config_file) {
+    if (!cfg::FindAndPrepareWorkingFolders(type)) return false;
+    wtools::InitWindowsCom();
+
+    return LoadConfig(type, config_file);
+}
+
+// must be called on start
+bool OnStart(AppType proposed_type, const std::wstring& config_file) {
+    auto type = CalcAppType(proposed_type);
+
+    auto already_loaded = S_OnStartCalled.exchange(true);
+
+    if (!already_loaded) return OnStartCore(type, config_file);
+
+    if (AppDefaultType() == AppType::test) {
+        XLOG::d.i("Second call of OnStart in test mode");
+        return OnStartCore(type, config_file);
+    }
+
+    XLOG::l.crit(
+        "Second call of OnStart, this may happen ONLY in test environment");
+
     return true;
 }
 

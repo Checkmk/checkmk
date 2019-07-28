@@ -8,16 +8,16 @@
 
 #include "common/cfg_info.h"  // default logfile name
 #include "common/mailslot_transport.h"
+#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
-
-#include "logger.h"
 
 namespace cma::carrier {
 enum DataType {
     kLog = 0,
     kSegment = 1,
-    kYaml = 2  // future use
+    kYaml = 2,  // future use
+    kCommand = 3
 };
 
 // must 4-byte length
@@ -136,7 +136,7 @@ private:
     // DATA IS STARTED HERE ****************************************
     char provider_id_[kMaxNameLen + 1];
     uint64_t data_id_;  // find correct answer
-    uint64_t type_;     // flags, cached, etc
+    uint64_t type_;     //
     uint64_t info_;     // flags, cached, etc
     uint32_t reserved_[16];
 
@@ -162,6 +162,7 @@ public:
     bool sendData(const std::string& PeerName, uint64_t Marker,
                   const void* Data, size_t Length);
     bool sendLog(const std::string& PeerName, const void* Data, size_t Length);
+    bool sendCommand(std::string_view peer_name, std::string_view command);
     void shutdownCommunication();
 
     // Helper API #TODO gtest
@@ -186,6 +187,19 @@ public:
                     wtools::ConvertToUTF8(Id));
             return false;
         }
+    }
+
+    // Helper API #TODO gtest
+    template <typename T>
+    static bool FireCommand(const std::wstring& Name, const T& Port,
+                            const void* Data, size_t Length) {
+        CoreCarrier cc;
+        std::string port(Port.begin(), Port.end());
+        cc.establishCommunication(port);
+
+        cc.sendLog(cma::tools::ConvertToString(Name), Data, Length);
+        cc.shutdownCommunication();
+        return true;
     }
 
     // Helper API #TODO gtest

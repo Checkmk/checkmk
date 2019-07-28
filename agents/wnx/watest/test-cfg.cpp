@@ -7,11 +7,13 @@
 
 #include "cfg.h"
 #include "cfg_details.h"
+#include "commander.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "providers/mrpe.h"
 #include "read_file.h"
+#include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
@@ -25,6 +27,74 @@ extern bool G_Service;
 extern bool G_Test;
 }  // namespace details
 }  // namespace cma
+
+namespace cma::commander {
+
+static bool GetEnabledFlag(bool dflt) {
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    return cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+}
+
+static void SetEnabledFlag(bool flag) {
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    yaml_global[cma::cfg::vars::kEnabled] = flag;
+}
+
+TEST(Cma, Commander) {
+    using namespace std::chrono;
+    //
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
+    auto enabled =
+        cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, false);
+    ASSERT_TRUE(enabled);
+    SetEnabledFlag(false);
+    enabled = cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+    ASSERT_FALSE(enabled);
+    cma::commander::RunCommand("a", cma::commander::kReload);
+    EXPECT_FALSE(enabled);
+    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    EXPECT_NO_THROW(cma::commander::RunCommand("", ""));
+    cma::commander::RunCommand(cma::commander::kMainPeer,
+                               cma::commander::kReload);
+    enabled = GetEnabledFlag(false);
+    EXPECT_TRUE(enabled);
+    SetEnabledFlag(false);
+
+    cma::MailSlot mailbox("WinAgentTestLocal", 0);
+    using namespace cma::carrier;
+    auto internal_port =
+        BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
+    cma::srv::ServiceProcessor processor;
+    mailbox.ConstructThread(cma::srv::SystemMailboxCallback, 20, &processor);
+    ON_OUT_OF_SCOPE(mailbox.DismantleThread());
+    cma::tools::sleep(100ms);
+
+    cma::carrier::CoreCarrier cc;
+    // "mail"
+    auto ret = cc.establishCommunication(internal_port);
+    EXPECT_TRUE(ret);
+    cc.sendCommand(cma::commander::kMainPeer, "a");
+    cma::tools::sleep(100ms);
+    enabled = GetEnabledFlag(true);
+    EXPECT_FALSE(enabled);
+    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+    cma::tools::sleep(100ms);
+
+    enabled = GetEnabledFlag(false);
+    EXPECT_TRUE(enabled);
+
+    cc.shutdownCommunication();
+}
+}  // namespace cma::commander
 
 namespace cma::cfg {
 

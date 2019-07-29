@@ -42,7 +42,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.plugins.wato import WatoBackgroundJob
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
                                              ("host_name", str)])

@@ -69,7 +69,6 @@ from cmk.gui.plugins.wato import (
     may_edit_ruleset,
     mode_registry,
     WatoMode,
-    WatoBackgroundJob,
 )
 
 from cmk.gui.plugins.wato.utils.context_buttons import changelog_button
@@ -406,7 +405,7 @@ def execute_discovery_job(request):
 
 
 @job_registry.register
-class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
+class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
     job_prefix = "service_discovery"
     housekeeping_max_age_sec = 86400  # 1 day
@@ -424,7 +423,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             "stoppable": True,
             "host_name": host_name,
         }
-        last_job_status = WatoBackgroundJob(job_id).get_status()
+        last_job_status = watolib.WatoBackgroundJob(job_id).get_status()
         if "duration" in last_job_status:
             kwargs["estimated_duration"] = last_job_status["duration"]
 

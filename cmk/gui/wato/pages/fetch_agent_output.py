@@ -35,7 +35,6 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
-import cmk.gui.plugins.wato.utils
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -247,7 +246,7 @@ def get_fetch_agent_job_status(request):
 
 
 @gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
+class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
     job_prefix = "agent-output-"
 

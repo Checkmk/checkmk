@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e -o pipefail
 
+HOOKROOT=/docker-entrypoint.d
+
+function exec_hook() {
+    HOOKDIR=$HOOKROOT/$1
+    if pushd "$HOOKDIR" > /dev/null 2>&1; then 
+        for hook in ./*; do
+            echo "### Running $HOOKDIR/$hook"
+           ./"$hook"
+        done
+    fi
+    popd > /dev/null 2>&1
+}
+
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
     exit 1
@@ -34,6 +47,7 @@ fi
 # site tmpfs below tmp.
 if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
+    exec_hook pre-create
     omd create --no-tmpfs -u 1000 -g 1000 --admin-password "$CMK_PASSWORD" "$CMK_SITE_ID"
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0
     omd config "$CMK_SITE_ID" set APACHE_TCP_PORT 5000
@@ -41,7 +55,9 @@ if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on
     fi
+    exec_hook post-create
 fi
+
 
 # In case of an update (see update procedure docs) the container is started
 # with the data volume mounted (the site is not re-created). In this
@@ -64,7 +80,9 @@ fi
 # to life.
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     echo "### UPDATING SITE"
+    exec_hook pre-update
     omd -f update --conflict=install "$CMK_SITE_ID"
+    exec_hook post-update
 fi
 
 # When a command is given via "docker run" use it instead of this script
@@ -73,7 +91,9 @@ if [ -n "$1" ]; then
 fi
 
 echo "### STARTING SITE"
+exec_hook pre-start
 omd start "$CMK_SITE_ID"
+exec_hook post-start
 
 echo "### STARTING CRON"
 cron -f &

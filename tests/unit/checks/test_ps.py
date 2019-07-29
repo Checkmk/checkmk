@@ -180,7 +180,7 @@ input_ids = [
 def test_parse_ps(check_manager, capture, result):
     check = check_manager.get_check("ps")
 
-    parsed = check.run_parse(capture)
+    parsed = check.context['parse_ps'](capture)
     assert parsed[0] == result[0]  # cpu_cores
     for out, ref in izip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
@@ -514,7 +514,7 @@ PS_DISCOVERED_ITEMS = [
 def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     info = sum(generate_inputs(), [])
-    parsed = check.run_parse(info)[1]
+    parsed = check.context['parse_ps'](info)[1]
     assert sorted(check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
                                                 parsed)) == sorted(PS_DISCOVERED_ITEMS)
 
@@ -632,7 +632,7 @@ check_results = [
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
-    parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
+    parsed = sum([check.context['parse_ps'](info)[1] for info in generate_inputs()], [])
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     monkeypatch.setattr('time.time', lambda: 1540375342)
     factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -678,7 +678,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 
     def time_info(agent_info, check_time, cputime, cpu_cores):
         monkeypatch.setattr('time.time', lambda: check_time)
-        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
         return CheckResult(check.context["check_ps_common"](
             inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
@@ -721,7 +721,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 def test_check_ps_common_count(check_manager, levels, reference):
     check = check_manager.get_check("ps")
 
-    parsed = check.run_parse(splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
+    parsed = check.context['parse_ps'](splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
 
     params = {
         "process": "~test",
@@ -737,7 +737,7 @@ def test_subset_patterns(check_manager):
 
     check = check_manager.get_check("ps")
 
-    parsed = check.run_parse(
+    parsed = check.context['parse_ps'](
         splitter("""(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
@@ -813,7 +813,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
         return CheckResult(check.context["check_ps_common"](
             'firefox', params, parsed, cpu_cores=cpu_cores))

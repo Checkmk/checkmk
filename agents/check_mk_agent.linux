@@ -475,17 +475,14 @@ grep ^/dev </proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-if [ -z "$IS_DOCKERIZED" ] && [ -e /sys/fs/cgroup ]; then
-    # Omit processes with "/docker/" in the control group, because
-    # they belong to docker containers.
-    ps ax -o cgroup:32,user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
-        sed -e 1d -e '/^[^ ]*\/docker\/[^ ]* /d' \
-            -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5\/\6,\7) /'
-else
-    ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 |
-        sed -e 1d \
-            -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
+echo 'dummy section -- refer to section ps_lnx'
+echo '<<<ps_lnx>>>'
+CGROUP=""
+if [ -e /sys/fs/cgroup ]; then
+    CGROUP="cgroup:512,"
 fi
+echo -n '[header] '
+ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
 
 # Memory usage
 section_mem

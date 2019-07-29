@@ -31,7 +31,7 @@ factory_settings["ps_default_levels"] = {
 
 ps_info = collections.namedtuple(
     "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
-                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime'))
+                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)
 

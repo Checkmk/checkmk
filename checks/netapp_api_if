@@ -173,7 +173,7 @@ def check_netapp_api_if(item, params, parsed):
         if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
             if ifDescr in extra_info:
                 vif_group = extra_info[ifDescr]
-                for member_name, member_state in vif_group["grouped_if"]:
+                for member_name, member_state in sorted(vif_group["grouped_if"]):
                     if member_state is None or member_name == ifDescr:
                         continue  # Not a real member or the grouped interface itself
 

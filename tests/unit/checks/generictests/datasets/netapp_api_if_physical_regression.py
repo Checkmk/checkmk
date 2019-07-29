@@ -58,11 +58,11 @@ info = [[u'interface e0a',
          u'recv_data 412332323639']]
 
 
-discovery = {'': [('5', "{'state': ['1'], 'speed': 1000000000}")]}
+discovery = {'': [('5', repr({'state': ['1'], 'speed': 1000000000}))]}
 
 
 checks = {'': [('5',
                 {'errors': (0.01, 0.1), 'speed': 1000000000, 'state': ['1']},
                 [(0, u'[ifgrp_sto] (up) MAC: 01:B0:89:22:DF:02, 1 Gbit/s', []),
-                 (0, u'Physical interfaces: e0d(up)', []),
-                 (0, u'e0c(up)', [])])]}
+                 (0, u'Physical interfaces: e0c(up)', []),
+                 (0, u'e0d(up)', [])])]}

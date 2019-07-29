@@ -77,8 +77,8 @@ info = [[u'interface GTB1020-2-CL_mgmt',
          u'recv_data 122333190']]
 
 
-discovery = {'': [('1', "{'state': ['1'], 'speed': 1000000000}"),
-                  ('2', "{'state': ['1'], 'speed': 1000000000}")]}
+discovery = {'': [('1', repr({'speed': 1000000000, 'state': ['1']})),
+                  ('2', repr({'speed': 1000000000, 'state': ['1']}))]}
 
 
 checks = {'': [('1',

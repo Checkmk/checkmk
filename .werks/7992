@@ -1,0 +1,11 @@
+Title: Add DATE_YEAR, DATE_MONTH, DATE_DAY report scheduler macros
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.6.0b5
+Date: 1564409217
+Class: feature
+
+These macros can now be used e.g. in the names of the generated PDF report files
+when storing them locally on the Checkmk server.

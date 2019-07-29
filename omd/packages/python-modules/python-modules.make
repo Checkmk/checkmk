@@ -187,8 +187,6 @@ PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
 PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
-# Has been added for percentile metric transformation
-PYTHON_MODULES_LIST += numpy-1.16.4.zip
 
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH

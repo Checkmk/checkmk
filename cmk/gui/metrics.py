@@ -929,7 +929,7 @@ def page_host_service_graph_popup():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):
-        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs
         graphs.host_service_graph_popup_cmk(site_id, host_name, service_description)
     else:
         host_service_graph_popup_pnp(site_id, host_name, service_description)
@@ -977,7 +977,7 @@ def page_graph_dashlet():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible():
-        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs
         graphs.host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
     elif graph_identification[0] == "template":
         host_service_graph_dashlet_pnp(graph_identification)
@@ -1028,10 +1028,10 @@ def render_metrics_table(translated_metrics, host_name, service_description):
             output += "<td>"
             output += html.render_popup_trigger(
                 html.render_icon("custom_graph",
-                                 title=_("Add this metric to a custom graph"),
+                                 title=_("Add this metric to dedicated graph"),
                                  cssclass="iconbutton"),
                 ident="add_metric_to_graph_" + host_name + ";" + service_description,
-                what="add_metric_to_custom_graph",
+                what="add_metric_to_graph",
                 url_vars=[
                     ("host", host_name),
                     ("service", service_description),

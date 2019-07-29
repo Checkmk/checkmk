@@ -9,6 +9,6 @@ Version: 1.7.0i1
 Date: 1564395852
 
 Checks like <tt>if</tt> and <tt>ps</tt> detect additional information during the service discovery.
-This information is stored in the <tt>~/var/check/autochecks/{hostname}.mk</tt> for the corresponding host.
+This information is stored in the <tt>~/var/check_mk/autochecks/{hostname}.mk</tt> for the corresponding host.
 Due to a bug this information was discarded, whenever this check had some timespecific parameters set.
 

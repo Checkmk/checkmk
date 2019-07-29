@@ -1,0 +1,14 @@
+Title: Timespecific parameters: Some checks no longer loose discovered check parameters
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p21
+Date: 1564395852
+
+Checks like <tt>if</tt> and <tt>ps</tt> detect additional information during the service discovery.
+This information is stored in the <tt>~/var/check_mk/autochecks/{hostname}.mk</tt> for the corresponding host.
+Due to a bug this information was discarded, whenever this check had some timespecific parameters set.
+

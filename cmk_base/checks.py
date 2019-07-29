@@ -757,7 +757,7 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
         if _has_timespecific_params(entries):
             # some parameters include timespecific settings
             # these will be executed just before the check execution
-            return TimespecificParamList(entries)
+            return TimespecificParamList(entries + [params])
 
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:

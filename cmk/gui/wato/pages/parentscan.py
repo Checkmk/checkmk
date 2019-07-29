@@ -41,7 +41,6 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
-    WatoBackgroundJob,
     get_hosts_from_checkboxes,
 )
 
@@ -52,7 +51,7 @@ ParentScanResult = collections.namedtuple("ParentScanResult",
 
 # TODO: This job should be executable multiple times at once
 @gui_background_job.job_registry.register
-class ParentScanBackgroundJob(WatoBackgroundJob):
+class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod

@@ -48,7 +48,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
-import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -2211,19 +2210,6 @@ def get_hosts_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     folder = watolib.Folder.current()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
-
-
-class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
-    def initialize_environment(self):
-        super(WatoBackgroundProcess, self).initialize_environment()
-
-        if self._jobstatus.get_status_from_file().get("lock_wato"):
-            cmk.utils.store.release_all_locks()
-            cmk.utils.store.lock_exclusive()
-
-
-class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
-    _background_process_class = WatoBackgroundProcess
 
 
 class FullPathFolderChoice(DropdownChoice):

@@ -272,7 +272,7 @@ from cmk.gui.watolib.utils import (
     has_agent_bakery,
     site_neutral_path,
 )
-
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 

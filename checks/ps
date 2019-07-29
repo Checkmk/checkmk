@@ -214,21 +214,24 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def ps_parse_process_entries(parsed):
+def ps_parse_process_entries(pre_parsed):
+    parsed = []
     # line[0] = node
     # line[1] = process_info OR (if no process info available) = process name
-    for line in parsed:
+    for line in pre_parsed:
         process_info = ps_info_tuple(line[1])
         if process_info:
-            line[1] = process_info
+            parsed_line = [line[0], process_info] + line[2:]
         else:
             # Make number of columns in line consistent for discovery/check
-            line.insert(1, ps_info())
+            parsed_line = [line[0], ps_info()] + line[1:]
 
-    # Filter out any lines where no process command line is available, e.g.
-    # [None, u'(<defunct>,,,)']
-    # [None, u'(<defunct>,,,)', u'']
-    parsed = [x for x in parsed if len(x) > 2 and x[2]]
+        # Filter out any lines where no process command line is available, e.g.
+        # [None, u'(<defunct>,,,)']
+        # [None, u'(<defunct>,,,)', u'']
+        if len(parsed_line) > 2 and parsed_line[2]:
+            parsed.append(parsed_line)
+
     return parsed
 
 

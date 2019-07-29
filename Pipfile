@@ -7,7 +7,7 @@ name = "pypi"
 [dev-packages]
 astroid = "*"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
-"beautifulsoup4" = "==4.7.1"  # used by the GUI crawler and various tests
+"beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "*"  # used by test_docker test and mk_docker agent plugin
 freezegun = "*"  # used by various unit tests
@@ -102,7 +102,6 @@ fancycompleter = "==0.8"
 wmctrl = "==0.3"
 pdbpp = "==0.10.0"
 PySnooper = "==0.0.31"
-numpy = "==1.16.4" # Has been added for percentile metric transformation
 
 [requires]
 python_version = "2.7"

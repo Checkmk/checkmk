@@ -1015,10 +1015,6 @@ class NodeLink {
             this.selection = selection.append("line")
                 .classed("link_element", true)
                 .attr("marker-end", "url(#triangle)")
-//                .attr("x1", coords.x)
-//                .attr("y1", coords.y)
-//                .attr("x2", coords.x)
-//                .attr("y2", coords.y)
                 .attr("stroke-width", function (d) { return Math.max(1, 2-d.depth);})
                 .style("stroke", "darkgrey")
         else
@@ -1028,8 +1024,6 @@ class NodeLink {
 //                   .classed("dashed", true)
                    .attr("fill", "none")
                    .attr("stroke-width", 1)
-//                   .attr("stroke-width", function (d) { return Math.max(8, 2-d.depth*2);})
-//                   .attr("stroke-width", d=>{d.source.count(); return d.source.value})
                    .style("stroke", "darkgrey")
     }
 

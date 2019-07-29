@@ -433,6 +433,8 @@ def page_list(what,
         html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
     if pagetypes.has_page_type("custom_graph"):
         html.context_button(_("Custom graphs"), "custom_graphs.py", "custom_graph")
+    if pagetypes.has_page_type("forecast_graph"):
+        html.context_button(_("Forecast Graphs"), "forecast_graphs.py", "forecast_graph")
     if pagetypes.has_page_type("graph_tuning"):
         html.context_button(_("Graph tunings"), "graph_tunings.py", "graph_tuning")
     if pagetypes.has_page_type("sla_configuration"):

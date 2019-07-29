@@ -112,11 +112,13 @@ class GraphDashlet(Dashlet):
 
         import cmk.gui.metrics as metrics
         if metrics.cmk_graphs_possible():
-            import cmk.gui.cee.plugins.metrics.graphs as graphs
+            from cmk.gui.cee.plugins.metrics.html_render import default_dashlet_graph_render_options
+            from cmk.gui.cee.plugins.metrics.valuespecs import vs_graph_render_options
+
             elements += [
                 ("graph_render_options",
-                 graphs.vs_graph_render_options(
-                     default_values=graphs.default_dashlet_graph_render_options,
+                 vs_graph_render_options(
+                     default_values=default_dashlet_graph_render_options,
                      exclude=[
                          "show_time_range_previews",
                      ],

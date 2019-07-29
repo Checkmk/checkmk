@@ -298,26 +298,31 @@ def perfvar_translation(perfvar_name, check_command):
     }
 
 
+def scalar_bounds(perfvar_bounds, scale):
+    """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
+
+    Return "None" entries if no performance data and hence no scalars are available
+    """
+
+    scalars = {}
+    for name, value in zip(("warn", "crit", "min", "max"), perfvar_bounds):
+        if value is not None:
+            scalars[name] = float(value) * scale
+    return scalars
+
+
 def normalize_perf_data(perf_data, check_command):
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry = {
         "orig_name": perf_data[0],
         "value": perf_data[1] * translation_entry["scale"],
-        "scalar": {},
+        "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
         "scale": translation_entry["scale"],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
     }
 
-    # Add warn, crit, min, max
-    for perf_value, name in zip(perf_data[3:], ["warn", "crit", "min", "max"]):
-        if perf_value is not None:
-            try:
-                new_entry["scalar"][name] = float(perf_value) * translation_entry["scale"]
-            except Exception as exc:
-                if config.debug:
-                    raise exc
     return translation_entry["name"], new_entry
 
 
@@ -360,10 +365,6 @@ def translate_metrics(perf_data, check_command):
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
         translated_metrics[metric_name] = new_entry
-        # TODO: warn, crit, min, max
-        # if entry[2]:
-        #     # TODO: lower and upper levels
-        #     translated_metrics[metric_name]["warn"] = float(entry[2])
     return translated_metrics
 
 

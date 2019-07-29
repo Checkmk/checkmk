@@ -289,6 +289,10 @@ def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
+def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
+    return get_url_raw(url, insecure, auth, data, files, timeout).json()
+
+
 def do_site_login(site_id, name, password):
     sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]

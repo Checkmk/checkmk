@@ -10,6 +10,13 @@ def patch_omd_site(monkeypatch):
     monkeypatch.setattr(cmk, "omd_site", lambda: "NO_SITE")
 
 
+# Unit tests should not be executed in site.
+# -> Disabled site fixture for them
+@pytest.fixture(scope="session")
+def site(request):
+    pass
+
+
 # TODO: This fixes our unit tests when executing the tests while the local
 # resolver uses a search domain which uses wildcard resolution. e.g. in a
 # network where mathias-kettner.de is in the domain search list and

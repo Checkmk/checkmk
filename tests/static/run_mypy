@@ -4,7 +4,7 @@ cd $(dirname $0)
 
 VENV_PATH=../../virtual-envs/3.7/.venv
 
-make --silent $VENV_PATH
+make -C ../.. --silent virtual-envs/3.7/.venv
 
 if [ ! -f $VENV_PATH/bin/mypy ]; then
     for LAST_ARG; do :; done

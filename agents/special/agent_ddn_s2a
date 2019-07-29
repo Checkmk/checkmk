@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import socket
 import argparse
 
@@ -73,8 +74,8 @@ sections = [
 ]
 
 for command, section in sections:
-    print "<<<%s>>>" % section
+    print("<<<%s>>>" % section)
     sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
     sock.connect((ip_address, port))
-    print query(sock, commandstring(command, username, password))
+    print(query(sock, commandstring(command, username, password)))
     sock.close()

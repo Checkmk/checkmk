@@ -45,10 +45,10 @@ def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 def ARCHIVE_DIR = ''
 def OMD_MAKE_VARS = ''
 if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
-    DAILY_DATA = '/var/jenkins_home/daily-data/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
+    DAILY_DATA = '/var/jenkins_home/daily-data/' + BRANCH + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {
-    DAILY_DATA = '/var/jenkins_home/daily-data/testbuild/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
+    DAILY_DATA = '/var/jenkins_home/daily-data/testbuild/' + BRANCH + '/' + CMK_VERS
     ARCHIVE_DIR = DAILY_DATA + '/download'
     OMD_MAKE_VARS = 'PYTHON_ENABLE_OPTIMIZATIONS=""'
 }

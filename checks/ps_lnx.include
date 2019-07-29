@@ -1,0 +1,51 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_ps_lnx(info):
+    if not info:
+        return []
+
+    parsed = []
+    # info[0]: $Node [header] user ... pid command
+    # we rely on the command being the last one!
+    attrs = tuple(word.lower() for word in info[0][2:-1])
+    cmd_idx = len(attrs) + 1  # +1 for the node info!
+
+    for line in info[1:]:
+        # read all but 'command' into dict
+        ps_raw = dict(zip(attrs, line[1:]))
+        ps_info_obj = ps_info(
+            user=ps_raw['user'],
+            virtual=ps_raw['vsz'],
+            physical=ps_raw['rss'],
+            cputime="%s/%s" % (ps_raw['time'], ps_raw['elapsed']),
+            process_id=ps_raw['pid'],
+            cgroup=ps_raw.get('cgroup'),
+        )
+        parsed.append([line[0], ps_info_obj] + line[cmd_idx:])
+
+    return parsed

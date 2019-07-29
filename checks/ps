@@ -254,13 +254,22 @@ def parse_ps(info):
 
 
 def inventory_ps(info):
-    _cpu_cores, parsed = info[0]
+    ps_info, ps_lnx_info = info[:2]
+    if ps_lnx_info:
+        parsed = parse_ps_lnx(ps_lnx_info)
+    else:
+        _cpu_cores, parsed = parse_ps(ps_info)
     return inventory_ps_common(inventory_processes_rules, parsed)
 
 
 def check_ps(item, params, info):
-    (cpu_cores,
-     parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info
+    ps_info, ps_lnx_info = info[:2]
+    if ps_lnx_info:
+        cpu_cores, parsed = 1, parse_ps_lnx(ps_lnx_info)
+    else:
+        cpu_cores, parsed = parse_ps(ps_info)
+
+    mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info[2:]
 
     # cpu_info for non windows systems
     if cpu_info and len(cpu_info[0]) == 6:
@@ -281,16 +290,15 @@ def check_ps(item, params, info):
 
 
 check_info['ps'] = {
-    "parse_function": parse_ps,
     "inventory_function": inventory_ps,
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "mem.include"],
+    "includes": ["ps.include", "ps_lnx.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",
     "default_levels_variable": "ps_default_levels",
-    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
+    "extra_sections": ["ps_lnx", "mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }
 
 # NOTE: This check is deprecated and will be removed any decade now. ps now
@@ -298,10 +306,10 @@ check_info['ps'] = {
 check_info['ps.perf'] = {
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "mem.include"],
+    "includes": ["ps.include", "ps_lnx.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",
     "default_levels_variable": "ps_default_levels",
-    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
+    "extra_sections": ["ps_lnx", "mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }

@@ -3240,12 +3240,6 @@ metric_info["checkpoint_age"] = {
     "color": "#006040",
 }
 
-metric_info["checkpoint_age"] = {
-    "title": _("Time since last checkpoint"),
-    "unit": "s",
-    "color": "#006040",
-}
-
 metric_info["file_age_oldest"] = {
     "title": _("Oldest file"),
     "unit": "s",

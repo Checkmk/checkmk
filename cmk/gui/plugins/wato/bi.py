@@ -68,6 +68,7 @@ from cmk.gui.valuespec import (
     Optional,
     ID,
     DropdownChoice,
+    OptionalDropdownChoice,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -267,7 +268,7 @@ class BIManagement(object):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
             ("ID", None),
-            ("use_layout_id", ""),
+            ("node_visualization", ""),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
@@ -892,10 +893,37 @@ class ModeBI(WatoMode, BIManagement):
                          "data of more than one host!"),
                  ),
              ),
-             ("use_layout_id",
-              DropdownChoice(title=_("Use visualization layout"),
-                             choices=visualization_choices,
-                             default_value=None))])
+             ("node_visualization",
+              Dictionary(title=_("BI Visualization"),
+                         elements=[
+                             ("layout",
+                              OptionalDropdownChoice(
+                                  title=_("Base layout"),
+                                  choices=[
+                                      ("default", _("Default (%s)") % config.default_bi_layout),
+                                      ("force", _("Free-floating")),
+                                      ("hierarchy", _("Hierarchy")),
+                                      ("radial", _("Radial")),
+                                  ],
+                                  otherlabel=_("Use custom layout template"),
+                                  explicit=DropdownChoice(choices=[
+                                      ("a", "a"),
+                                      ("b", "b"),
+                                  ]),
+                                  default_value="default")),
+                             ("line_style",
+                              DropdownChoice(title=_("Style of connection lines"),
+                                             choices=[
+                                                 ("straight", "Straight"),
+                                                 ("round", _("Round")),
+                                                 ("elbow", _("Elbow")),
+                                             ],
+                                             default_value="round")),
+                             ("ignore_rule_styles",
+                              Checkbox(title=_("Ignore styles specified in rules"),
+                                       default_value=False)),
+                         ],
+                         optional_keys=[]))])
 
     # .--------------------------------------------------------------------.
     # | Methods for analysing the rules and aggregations                   |
@@ -2424,7 +2452,7 @@ bi_packs['default'] = {
                          'downtime_aggr_warn': False,
                          'hard_states': False,
                          'ID': 'default_aggregation',
-                         'use_layout_id': None},
+                         'node_visualization': {}},
                         [u'Hosts'],
                         FOREACH_HOST,
                         ['tcp'],

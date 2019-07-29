@@ -35,11 +35,14 @@ factory_settings['msexch_database_defaultlevels'] = {
 
 def parse_msexch_database(info):
     instances = {}
-    for key, value in info[1:]:
+    for row in info[1:]:
         # values are always quoted and may have localized thousands-separators.
         # in that case however the check will probably fail anyway
-        value = float(value[1:-1].replace(",", "."))
-        fields = key[1:-1].split("\\")
+        row = [r.strip('"') for r in row]
+        if len(row) != 2 or not row[0].startswith('\\\\'):
+            continue
+        value = float(row[1].replace(",", "."))
+        fields = row[0].split("\\")
         obj, counter = fields[-2:]
         instance = obj.split("(")[-1].split(")")[0]
 

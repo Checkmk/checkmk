@@ -1,0 +1,10 @@
+Title: msexchange: ignore invalid data in agent output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p21
+Date: 1564403834
+Class: fix
+
+

@@ -26,17 +26,8 @@ println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
 
 def DOCKER_BUILDS = [:]
-def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
-def date = new Date()
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERS = ''
-if(BRANCH == 'master' && VERSION == 'daily') {
-    CMK_VERS = dateFormat.format(date)
-} else if (VERSION == 'daily') {
-    CMK_VERS = BRANCH + '-' + dateFormat.format(date)
-} else {
-    CMK_VERS = VERSION
-}
+def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
@@ -51,6 +42,19 @@ if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9
     DAILY_DATA = '/var/jenkins_home/daily-data/testbuild/' + BRANCH + '/' + CMK_VERS
     ARCHIVE_DIR = DAILY_DATA + '/download'
     OMD_MAKE_VARS = 'PYTHON_ENABLE_OPTIMIZATIONS=""'
+}
+
+def get_cmk_version(BRANCH, VERSION) {
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if(BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
+    }
 }
 
 def mount_overlay(LOWER_DIR, UPPER_DIR) {

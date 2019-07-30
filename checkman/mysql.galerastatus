@@ -1,0 +1,18 @@
+title: MySQL Database: Galera sync status
+agents: linux
+catalog: app/mysql
+license: GPL
+distribution: check_mk
+description:
+  This checks monitors the status of the local Galera node and
+  returns CRIT when it is not "Primary".
+
+  This check needs the agent plugin {mk_mysql} to be installed.
+  Further details about this plugin and monitoring of MySQL can be
+  found in the Check_MK online documentation in the article
+  "Monitoring MySQL with Check_MK".
+
+inventory:
+  On each host where the agent plugin {mk_mysql} is being installed
+  and the MySQL daemon is running one service per instance is being generated
+  if the instance has Galera enabled.

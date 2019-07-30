@@ -33,6 +33,7 @@
 #    user with read access to Multisite.
 # 4. Add password OR automation secret of this user
 
+from __future__ import print_function
 url_prefix = ""  # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
@@ -112,4 +113,4 @@ for name, state, output in data[1:]:
         text = "%d %s - %s" % (state_nr, descr, state)
         if output:
             text += " - " + output
-        print text.encode("utf-8")
+        print(text.encode("utf-8"))

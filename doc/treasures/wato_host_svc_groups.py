@@ -36,6 +36,7 @@
 #}
 # Means alias has to follow the name
 
+from __future__ import print_function
 import sys
 path = sys.argv[1]
 
@@ -68,8 +69,8 @@ for line in file(path).readlines():
         except:
             pass
 
-print "Hostgroups:"
-print hostgroups
-print ""
-print "Service groups"
-print servicegroups
+print("Hostgroups:")
+print(hostgroups)
+print("")
+print("Service groups")
+print(servicegroups)

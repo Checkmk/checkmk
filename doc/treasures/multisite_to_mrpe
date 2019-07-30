@@ -32,6 +32,7 @@
 # "$OMD_ROOT/local/lib/multisite_to_mrpe --secret dasistgeheim --url http://localhost/remote/check_mk/ <HOST>"
 #
 
+from __future__ import print_function
 import os, sys, getopt, time, urllib, subprocess
 
 omd_site = os.getenv("OMD_SITE")
@@ -175,7 +176,7 @@ try:
     process = subprocess.Popen(arguments, executable='curl', stdout=subprocess.PIPE)
     answer, stderrdata = process.communicate()
     result = process.wait()
-    print result
+    print(result)
     if answer.startswith("ERROR:"):
         bail_out("Error response from remote Multisite: %s" % answer[7:])
     try:

@@ -6,11 +6,12 @@ import pytest  # type: ignore
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.structured_data import StructuredDataTree
 
 from cmk_base.discovered_labels import (
     DiscoveredHostLabels,
+    HostLabel,
     DiscoveredServiceLabels,
     ServiceLabel,
 )
@@ -19,7 +20,7 @@ from cmk_base.discovered_labels import (
 @pytest.fixture(params=["host", "service"])
 def labels(request):
     if request.param == "host":
-        return DiscoveredHostLabels(StructuredDataTree())
+        return DiscoveredHostLabels()
     return DiscoveredServiceLabels()
 
 
@@ -75,20 +76,6 @@ def test_discovered_labels_to_dict(labels):
     }
 
 
-def test_discovered_add_label(labels):
-    if isinstance(labels, DiscoveredServiceLabels):
-        pytest.skip("Not implemented for service")
-
-    labels.add_label("abc", "123", plugin_name="xyz")
-    assert labels["abc"] == "123"
-    inventory_labels = labels._inventory_tree.get_list(
-        "software.applications.check_mk.host_labels:")
-    assert inventory_labels[0] == {
-        'inventory_plugin_name': 'xyz',
-        'label': ('abc', '123'),
-    }
-
-
 @pytest.fixture()
 def discovered_host_labels_dir(tmp_path, monkeypatch):
     path = tmp_path / "var" / "check_mk" / "discovered_host_labels"
@@ -99,8 +86,7 @@ def discovered_host_labels_dir(tmp_path, monkeypatch):
 def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     store = DiscoveredHostLabelsStore("host")
 
-    labels = DiscoveredHostLabels(StructuredDataTree())
-    labels["xyz"] = "äbc"
+    labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc"))
     label_dict = labels.to_dict()
 
     assert not store.file_path.exists()  # pylint: disable=no-member
@@ -108,6 +94,21 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     store.save(label_dict)
     assert store.file_path.exists()  # pylint: disable=no-member
     assert store.load() == label_dict
+
+
+def test_discovered_host_labels_store_to_inventory_tree(discovered_host_labels_dir):
+    labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc", plugin_name="plugin_name_1"))
+
+    tree = StructuredDataTree()
+    labels.add_labels_to_inventory_tree(tree)
+
+    inv_labels = tree.get_list("software.applications.check_mk.host_labels:")
+    assert inv_labels == [
+        {
+            "label": (u"xyz", u"äbc"),
+            "plugin_name": "plugin_name_1"
+        },
+    ]
 
 
 def test_service_label():

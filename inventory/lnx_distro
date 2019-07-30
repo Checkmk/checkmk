@@ -64,7 +64,8 @@ def inv_lnx_distro(info, inventory_tree, discovered_host_labels):
             break
 
     if "name" in node:
-        discovered_host_labels.add_label("os", node["name"], plugin_name="lnx_distro")
+        discovered_host_labels.add_label(
+            HostLabel(u"os", unicode(node["name"]), discovered_by=("inventory", "lnx_distro")),)  # pylint: disable=undefined-variable
 
 
 def _parse_lnx_distro(info):

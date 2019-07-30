@@ -216,7 +216,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
-    discovered_host_labels = DiscoveredHostLabels(inventory_tree)
+    discovered_host_labels = DiscoveredHostLabels()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
     if host_config.is_cluster:
@@ -227,6 +227,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
         _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
                              inventory_tree, status_data_tree, discovered_host_labels)
 
+    discovered_host_labels.add_labels_to_inventory_tree(inventory_tree)
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
     _run_inventory_export_hooks(host_config, inventory_tree)
@@ -448,9 +449,12 @@ def _run_inventory_export_hooks(host_config, inventory_tree):
 #   | things declared here.                                                |
 #   '----------------------------------------------------------------------'
 
+from cmk_base.discovered_labels import HostLabel
+
 
 def get_inventory_context():
     return {
         "inv_tree_list": inv_tree_list,
         "inv_tree": inv_tree,
+        "HostLabel": HostLabel,
     }

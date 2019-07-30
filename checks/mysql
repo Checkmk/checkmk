@@ -280,7 +280,7 @@ def check_mysql_galeradonor(item, params, data):
         if data[u'wsrep_sst_donor'] == params['wsrep_sst_donor']:
             return (0, 'WSREP sst donor contains "%s"' % data[u'wsrep_sst_donor'])
         else:
-            return (1, 'WSREP sst donor contains "%s" and not "%s"' % (data[u'wsrep_sst_donor'], params['wsrep_sst_donor']))
+            return (1, 'WSREP sst donor contains "%s" (was at discovery "%s")' % (data[u'wsrep_sst_donor'], params['wsrep_sst_donor']))
 
 check_info['mysql.galeradonor'] = {
     "inventory_function"      : inventory_mysql_galeradonor,
@@ -345,11 +345,11 @@ def check_mysql_galerasize(item, params, data):
     if u'wsrep_cluster_size' in data:
         size = saveint(data[u'wsrep_cluster_size'])
         res = 0
-        txt = 'wsrep_cluster_size = %d' % size
+        txt = 'Cluster Size is %d' % size
         perfdata = [('galera_size', size)]
         if size != params['invsize']:
             res = 2
-            txt += ', size at discovery was %d' % params['invsize']
+            txt += ' (was at discovery %d)' % params['invsize']
         return (res, txt, perfdata)
 
 check_info['mysql.galerasize'] = {

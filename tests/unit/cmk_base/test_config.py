@@ -1273,7 +1273,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
     monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", tmp_path)
     host_file = (tmp_path / "test-host").with_suffix(".mk")
     with host_file.open(mode="wb") as f:
-        f.write(repr({u"äzzzz": u"eeeeez"}) + "\n")
+        f.write(repr({u"äzzzz": {"value": u"eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config("test-host").labels == {u"äzzzz": u"eeeeez"}

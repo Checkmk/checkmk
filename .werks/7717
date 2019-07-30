@@ -1,0 +1,39 @@
+Title: Windows Agent 1.6 Beta 4: new features
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1564123293
+Class: feature
+
+Summary of the features introduced in Windows Agent beta 4:
+
+- Asynchronous plugins with 'cache_age' set to 0 are supported now.
+In previous version such plugins have been assumed as synchronous.
+
+- The Uninstallation of the Windows Agent doesn't remove 'config' and 'state' directories from the Agent Data directory to prevent user data loss.
+
+- The start of the Windows Agent may be delayed by a few seconds to allow asynchronous plugins to finish their work.
+This feature has no effect for normal situation when agent is running as a service, but may be useful to test asyncronous plugins.
+
+- Now the Agent uses next directories:
+The Windows Agent installs own binary files in the directory "Program Files (x86)\checkmk\service"
+For user and bakery data the Windows Agent uses the directory "ProgramData\checkmk\agent"
+
+- The  macroses used in the configuration files had been renamed
+$BUILTIN_AGENT_PATH$   -> is C:/Program Files(x86)/checkmk/service/
+$BUILTIN_PLUGINS_PATH$ -> is C:/Program Files(x86)/checkmk/service/plugins
+$CUSTOM_AGENT_PATH$    -> is C:/ProgramData/checkmk/agent/
+$CUSTOM_PLUGINS_PATH$  -> is C:/ProgramData/checkmk/agent/plugins
+$CUSTOM_LOCAL_PATH$    -> is C:/ProgramData/checkmk/agent/local
+
+- The logfile check_mk.log have been moved to the "ProgramData/checkmk/agent/log" directory
+
+- The configuration files check_mk.user.yml and check_mk.yml had been revised, cleaned of old and unused data and better documented.
+
+- The default timeout for all plugins is set to 60 seconds, previously the timeout was set to 30.
+
+- Now all names in any yml configuration file with the leading underscore are considered invalid and skipped 
+from the output when the command showconfig is used.
+

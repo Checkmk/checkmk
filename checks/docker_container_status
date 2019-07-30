@@ -127,6 +127,7 @@ check_info["docker_container_status.health"] = {
 
 
 def discover_docker_container_status(parsed):
+    yield HostLabels(HostLabel(u"cmk/docker_object", u"container"))
     if _is_active_container(parsed):
         yield None, {}
 

@@ -42,6 +42,7 @@
 
 
 def inventory_omd_status(info):
+    yield HostLabels(HostLabel(u"cmk/check_mk_server", u"yes"))
     for site in info.keys():
         yield site, None
 
@@ -75,7 +76,6 @@ def parse_omd_status(info):
 
 
 def check_omd_status(item, _no_params, parsed):
-
     if item not in parsed:
         return
 

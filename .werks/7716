@@ -1,0 +1,41 @@
+Title: Windows Agent 1.6 Beta 4: fixes
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b4
+Date: 1564123293
+Class: fix
+
+Summary of the fixes introduced in beta 4 for Windows Agent
+- the readme file extension had been changed from .md to .txt to be more Windows-friendly
+
+- the logwatch configuration is correctly merged, including data from the config file check_mk.user.yml
+in previous version, the agent only got entries from the check_mk.user.yml
+now used all configurations file are used in the correct order: check_mk.yml, check_mk.bakery.yml and check_mk.user.yml
+
+- the msexch section no longer sends invalid formatted section data, which caused the check to crash
+
+- The processing of plugin had been reorganised. The execution order is now strictly defined according to simple rules:
+"Top-down priority of patterns" and "Duplicate executables will be skipped".
+More examples can be found in the current check_mk.user.yml.
+
+- The Agent Update plugin is now correctly started and its output is correctly processed. 
+Previously Agent doesn't send output from the Agent Updater to the server.
+
+- An empty local section is no longer sent
+
+- Fixed error 104 during connection monitoring site to the 64-bit windows client. 
+Previously 64-bit version of the Agent may reset connection with error 104 if any async plugin didn't stop in time.
+
+- Fixed an error with missing 'temp' folder for Agent Updater. 
+Due to strange glitch in Windows Agent folder 'temp' had been renamed to 'tmp'. 
+Previously the Agent Updater tried to find "temp" folder and if it was not available, 
+the Agent Updater wrote an error message and used the global fallback folder specified in the environment variable %temp%.
+The Agent Updater now uses the 'tmp' folder within ProgramData\checkmk\agent 
+
+- The 1.5 Agent Updater no longer tries to do a second installation after the windows service was updated to version 1.6
+  This was caused by not-updated hash values in the old windows agent directory
+  The 1.6 Agent is now able to patch these values in the old agent directory, hereby preventing the agent updater to trigger another update.
+
+

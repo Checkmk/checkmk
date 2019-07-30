@@ -1,0 +1,11 @@
+Title: stormshield_cluster, stormshield_cluster_node: Do not discover services if cluster info is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p21
+Date: 1564478999
+
+

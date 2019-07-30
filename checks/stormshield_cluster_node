@@ -94,6 +94,6 @@ check_info['stormshield_cluster_node'] = {
                                   '11'    # Uptime
                                   ] ),
     'group'                     : 'stormshield_quality',
-    'snmp_scan_function'        : stormshield_scan_function,
+    'snmp_scan_function'        : stormshield_cluster_scan_function,
     'includes'                  : [ 'stormshield.include' ],
 }

@@ -1,7 +1,7 @@
 rem @echo off
 if exist %REMOTE_MACHINE% goto copy
 powershell Write-Host %REMOTE_MACHINE% is ABSENT -Foreground Red
-exit 2
+exit /b 2
 :copy
 rem if exist %REMOTE_MACHINE%\ProgramData goto copy2
 rem powershell Write-Host Preparing ProgramData -Foreground Green

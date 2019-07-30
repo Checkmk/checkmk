@@ -39,7 +39,7 @@ def inventory_genua_carp(info):
     inventory = []
 
     # remove empty elements due to two alternative enterprise ids in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     if info[0]:
         for ifName, _ifLinkState, ifCarpState in info[0]:
@@ -71,7 +71,7 @@ def genua_carpstate(st):
 def check_genua_carp(item, _no_params, info):
 
     # remove empty elements due to two alternative enterprise ids in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     if not info[0]:
         return (3, "Invalid Output from Agent")

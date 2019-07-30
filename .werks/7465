@@ -1,0 +1,10 @@
+Title: diskstats: Add support for kernel 4.18+
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557910955
+Class: fix
+
+

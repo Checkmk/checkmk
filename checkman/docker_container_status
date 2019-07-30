@@ -16,4 +16,4 @@ item:
  None
 
 inventory:
- One check per container is discovered
+ One service is discovered for every container that is running or has the restart policy set to 'always'.

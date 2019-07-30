@@ -16,7 +16,7 @@ def cleanup_locks():
 def test_lock_with_pid_file(tmpdir):
     pid_file = Path(tmpdir) / "test.pid"
 
-    daemon.lock_with_pid_file("%s" % pid_file)
+    daemon.lock_with_pid_file(pid_file)
 
     assert store.have_lock("%s" % pid_file)
 
@@ -28,10 +28,10 @@ def test_cleanup_locked_pid_file(tmpdir):
     pid_file = Path(tmpdir) / "test.pid"
 
     assert not store.have_lock("%s" % pid_file)
-    daemon.lock_with_pid_file("%s" % pid_file)
+    daemon.lock_with_pid_file(pid_file)
     assert store.have_lock("%s" % pid_file)
 
-    daemon._cleanup_locked_pid_file("%s" % pid_file)
+    daemon._cleanup_locked_pid_file(pid_file)
 
     assert not store.have_lock("%s" % pid_file)
 

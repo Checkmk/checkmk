@@ -116,6 +116,11 @@ def lqencode(s):
     return ensure_unicode(s).replace(u"\n", u"")
 
 
+def quote_dict(s):
+    """Apply the quoting used for dict-valued columns (See #6972)"""
+    return "'%s'" % s.replace(u"'", u"''")
+
+
 def site_local_ca_path():
     """Path to the site local CA bundle"""
     omd_root = os.getenv("OMD_ROOT")
@@ -170,7 +175,7 @@ class Helpers(object):
         result = self.query(query, "ColumnHeaders: off\n")
         try:
             return result[0][0]
-        except:
+        except IndexError:
             if deflt == NO_DEFAULT:
                 raise MKLivestatusNotFoundError(query)
             else:
@@ -359,9 +364,9 @@ class SingleSiteConnection(Helpers):
                 # recoverable by retrying
 
                 if "The handshake operation timed out" in str(e):
-                    raise MKLivestatusSocketError(
-                        "Cannot connect to '%s': %s. The encryption "
-                        "settings are probably wrong." % (self.socketurl, e))
+                    raise MKLivestatusSocketError("Cannot connect to '%s': %s. The encryption "
+                                                  "settings are probably wrong." %
+                                                  (self.socketurl, e))
 
                 raise
 
@@ -633,13 +638,15 @@ class MultiSiteConnection(Helpers):
         # to fetch the status information
         extra_status_sites = {}
         if len(disabled_sites) > 0:
-            status_sitenames = set([])
+            status_sitenames = set()
             for sitename, site in sites.items():
                 try:
-                    s, h = site.get("status_host")
-                    status_sitenames.add(s)
-                except:
+                    s, h = site.get("status_host", [])
+                except ValueError:
                     continue
+
+                status_sitenames.add(s)
+
             for sitename in status_sitenames:
                 site = disabled_sites.get(sitename)
                 if site:
@@ -896,8 +903,8 @@ class MultiSiteConnection(Helpers):
                     (sitename, self.deadsites[sitename]["exception"]))
         conn = [t[2] for t in self.connections if t[0] == sitename]
         if len(conn) == 0:
-            raise MKLivestatusConfigError(
-                "Cannot send command to unconfigured site '%s'" % sitename)
+            raise MKLivestatusConfigError("Cannot send command to unconfigured site '%s'" %
+                                          sitename)
         conn[0].do_command(command)
 
     # Return connection to localhost (UNIX), if available
@@ -926,7 +933,7 @@ class MultiSiteConnection(Helpers):
 #   +----------------------------------------------------------------------+
 #   |  LocalConnection is a convenciance class for connecting to the       |
 #   |  local Livestatus socket within an OMD site. It only works within    |
-#   |  OMD context. It immediately connects()                              |
+#   |  OMD context.                                                        |
 #   '----------------------------------------------------------------------'
 
 
@@ -937,4 +944,3 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context.")
         SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", *args, **kwargs)
-        self.connect()

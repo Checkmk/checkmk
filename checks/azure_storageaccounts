@@ -48,8 +48,12 @@ def check_azure_storageaccounts(_item, params, resource):
     yield 0, "%s: %s" % next(iter_attrs)
 
     levels = params.get("used_capacity_levels", (None, None))
-    mcheck = check_azure_metric(
-        resource, 'total_UsedCapacity', 'used_space', 'Used capacity', levels=levels, minv=0)
+    mcheck = check_azure_metric(resource,
+                                'total_UsedCapacity',
+                                'used_space',
+                                'Used capacity',
+                                levels=levels,
+                                minv=0)
     if mcheck:
         yield mcheck
 
@@ -64,8 +68,8 @@ check_info['azure_storageaccounts'] = {
     'service_description': "Storage %s account",
     'includes': ['azure.include'],
     'has_perfdata': True,
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }
 
 
@@ -87,8 +91,8 @@ check_info['azure_storageaccounts.flow'] = {
     'service_description': "Storage %s flow",
     'has_perfdata': True,
     'includes': ['azure.include'],
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }
 
 
@@ -107,12 +111,13 @@ def check_azure_storageaccounts_performance(_item, params, resource):
 
 
 check_info['azure_storageaccounts.performance'] = {
-    'inventory_function': discover_azure_by_metrics(
-        'total_SuccessServerLatency', 'total_SuccessE2ELatency', 'total_Availability'),
+    'inventory_function': discover_azure_by_metrics('total_SuccessServerLatency',
+                                                    'total_SuccessE2ELatency',
+                                                    'total_Availability'),
     'check_function': check_azure_storageaccounts_performance,
     'service_description': "Storage %s performance",
     'has_perfdata': True,
     'includes': ['azure.include'],
-    'default_levels_variable': 'levels_azure_storageaccount',
-    'group': 'azure_storageaccount',
+    'default_levels_variable': 'levels_azure_storageaccounts',
+    'group': 'azure_storageaccounts',
 }

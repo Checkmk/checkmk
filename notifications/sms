@@ -49,6 +49,12 @@ if not send_path and not spool_dir:
         'Error: SMS Tools binaries (sendsms or smssend) not found and spool dir does not exists.\n')
     sys.exit(2)  # Fatal error, no retry
 
+recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
+if not recipient:
+    contactname = os.environ['NOTIFY_CONTACTNAME']
+    sys.stderr.write('Error: Pager Number of %s not set\n' % contactname)
+    sys.exit(2)  # Fatal error, no retry
+
 max_len = 160
 message = os.environ['NOTIFY_HOSTNAME'] + " "
 
@@ -89,8 +95,6 @@ elif notification_type == "CUSTOM":
     message += " Custom Notification"
     message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
-recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
-
 
 def quote_message(msg, max_length=None):
     if max_length:
@@ -108,6 +112,6 @@ elif spool_dir:
     fd, path = tempfile.mkstemp(prefix='cmk_sms_')
     os.write(fd, 'To: %s\n\n%s' % (recipient, quote_message(message)))
     os.close(fd)
-    os.chmod(path, 0660)
+    os.chmod(path, 0o660)
     filename = path.split('/')[-1]
     shutil.move(path, spool_dir + '/' + filename)

@@ -24,14 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Place for common code shared among different Check_MK special agents"""
+from __future__ import print_function
 
+import abc
 import datetime
+import errno
 import getopt
 import json
+import logging
 import pprint
 import sys
+import time
 
 import requests
+from pathlib2 import Path
+
+import cmk.utils.store
 
 
 class AgentJSON(object):
@@ -90,8 +98,8 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             for line in content:
                 try:
                     pprint.pprint(json.loads(line))
-                except:
-                    print line
+                except Exception:
+                    print(line)
         else:
             return content
 
@@ -102,3 +110,106 @@ def datetime_serializer(obj):
         return obj.__str__()
     # fall back to json default behaviour:
     raise TypeError("%r is not JSON serializable" % obj)
+
+
+class DataCache(object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, cache_file_dir, cache_file_name, debug=False):
+        self._cache_file_dir = Path(cache_file_dir)
+        self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)
+        self.debug = debug
+
+    @abc.abstractproperty
+    def cache_interval(self):
+        """
+        Return the time for how long cached data is valid
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_validity_from_args(self, *args):
+        """
+        Decide whether we need to update the cache due to new arguments
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_live_data(self, *args):
+        """
+        This is the function that will be called if no cached data can be found.
+        """
+        pass
+
+    @property
+    def cache_timestamp(self):
+        if not self._cache_file.exists():
+            return None
+
+        try:
+            return self._cache_file.stat().st_mtime
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
+                logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
+                return None
+            logging.info("Cannot calculate cache file age: %s", exc)
+            raise
+
+    def _cache_is_valid(self):
+        mtime = self.cache_timestamp
+        if mtime is None:
+            return False
+
+        age = time.time() - mtime
+        if 0 < age < self.cache_interval:
+            return True
+
+        if age < 0:
+            logging.info("Cache file from future considered invalid: %s", self._cache_file)
+        else:
+            logging.info("Cache file %s is outdated", self._cache_file)
+        return False
+
+    def get_cached_data(self):
+        try:
+            with self._cache_file.open(encoding="utf-8") as f:
+                raw_content = f.read().strip()
+        except IOError as exc:
+            if exc.errno == errno.ENOENT:
+                logging.info("No such file or directory %s (read from cache)", self._cache_file)
+            else:
+                logging.info("Cannot read from cache file: %s", exc)
+            raise
+
+        try:
+            content = json.loads(raw_content)
+        except ValueError as exc:
+            logging.info("Cannot load raw content: %s", exc)
+            raise
+        return content
+
+    def get_data(self, *args, **kwargs):
+        use_cache = kwargs.pop('use_cache', True)
+        if (use_cache and self.get_validity_from_args(*args) and self._cache_is_valid()):
+            try:
+                return self.get_cached_data()
+            except (OSError, IOError, ValueError) as exc:
+                logging.info("Getting live data (failed to read from cache: %s).", exc)
+                if self.debug:
+                    raise
+
+        live_data = self.get_live_data(*args)
+        if use_cache:
+            try:
+                self._write_to_cache(live_data)
+            except (OSError, IOError, TypeError) as exc:
+                logging.info("Failed to write data to cache file: %s", exc)
+                if self.debug:
+                    raise
+        return live_data
+
+    def _write_to_cache(self, raw_content):
+        self._cache_file_dir.mkdir(parents=True, exist_ok=True)
+
+        json_dump = json.dumps(raw_content, default=datetime_serializer)
+        cmk.utils.store.save_file(str(self._cache_file), json_dump)

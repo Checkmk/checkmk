@@ -52,14 +52,14 @@ def load_user_scripts(what):
         if what == "notifications":
             # Support for setup.sh
             not_dir = cmk.utils.paths.notifications_dir
-    except:
+    except Exception:
         pass
 
     scripts = _load_user_scripts_from(not_dir)
     try:
         local_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/" + what
         scripts.update(_load_user_scripts_from(local_dir))
-    except:
+    except Exception:
         pass
 
     return scripts
@@ -75,7 +75,7 @@ def _load_user_scripts_from(adir):
                 info = {"title": entry, "bulk": False}
                 try:
                     lines = file(path)
-                    lines.next()
+                    next(lines)
                     line = lines.next().decode("utf-8").strip()
                     if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
                         line = lines.next().strip()
@@ -90,7 +90,7 @@ def _load_user_scripts_from(adir):
                         if key.lower() == "bulk":
                             info["bulk"] = (value == "yes")
 
-                except:
+                except Exception:
                     pass
                 scripts[entry] = info
     return scripts

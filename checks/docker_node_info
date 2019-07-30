@@ -59,18 +59,6 @@ check_info['docker_node_info'] = {
 
 @append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_node_containers(_no_item, params, parsed):
-    def check_node_levels(count, levels, levels_lower):
-        warn, crit = levels
-        warn_lower, crit_lower = levels_lower
-        if crit is not None and count >= crit:
-            return 2, " (warn/crit at %s/%s)" % (warn, crit)
-        if crit_lower is not None and count < crit_lower:
-            return 2, " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
-        if warn is not None and count >= warn:
-            return 1, " (warn/crit at %s/%s)" % (warn, crit)
-        if warn_lower is not None and count < warn_lower:
-            return 1, " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
-        return 0, ""
 
     for title, key, levels_prefix in (
         ("containers", "Containers", ''),
@@ -81,17 +69,16 @@ def check_docker_node_containers(_no_item, params, parsed):
 
         count = parsed.get(key)
         if count is None:
-            yield 3, "%s: count not present in agent output" % title
+            yield 3, "%s: count not present in agent output" % title.title()
             continue
 
         levels = params.get('%supper_levels' % levels_prefix, (None, None))
         levels_lower = params.get('%slower_levels' % levels_prefix, (None, None))
-
-        status, level_text = check_node_levels(count, levels, levels_lower)
-        infotext = "%s: %d%s" % (title, count, level_text)
-        perfdata = [(title, count) + levels]
-
-        yield status, infotext, perfdata
+        yield check_levels(count,
+                           title,
+                           levels + levels_lower,
+                           human_readable_func=lambda x: "%d" % x,
+                           infoname=title.title())
 
 
 check_info["docker_node_info.containers"] = {

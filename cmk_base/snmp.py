@@ -293,13 +293,13 @@ def get_single_oid(snmp_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_contexts:
         try:
-            snmp_backend = SNMPBackendFactory().factory(
-                snmp_config, enforce_stored_walks=_enforce_stored_walks)
+            snmp_backend = SNMPBackendFactory().factory(snmp_config,
+                                                        enforce_stored_walks=_enforce_stored_walks)
             value = snmp_backend.get(snmp_config, oid, context_name)
 
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
             value = None
@@ -426,10 +426,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    try:
-                        value = cmk_base.agent_simulator.process(parts[1])
-                    except:
-                        value = parts[1]  # agent simulator missing in precompiled mode
+                    value = cmk_base.agent_simulator.process(parts[1])
                 else:
                     value = ""
                 # Fix for missing starting oids
@@ -552,23 +549,22 @@ def _perform_snmpwalk(snmp_config, check_plugin_name, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        snmp_backend = SNMPBackendFactory().factory(
-            snmp_config, enforce_stored_walks=_enforce_stored_walks)
+        snmp_backend = SNMPBackendFactory().factory(snmp_config,
+                                                    enforce_stored_walks=_enforce_stored_walks)
 
-        rows = snmp_backend.walk(
-            snmp_config,
-            fetchoid,
-            check_plugin_name=check_plugin_name,
-            table_base_oid=base_oid,
-            context_name=context_name)
+        rows = snmp_backend.walk(snmp_config,
+                                 fetchoid,
+                                 check_plugin_name=check_plugin_name,
+                                 table_base_oid=base_oid,
+                                 context_name=context_name)
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose(
-                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0])
+            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" %
+                             rows[0][0])
             rows = rows[:1]
 
         for row_oid, val in rows:
@@ -618,7 +614,7 @@ def _snmp_decode_string(snmp_config, text):
     # Try to determine the current string encoding. In case a UTF-8 decoding fails, we decode latin1.
     try:
         return text.decode('utf-8')
-    except:
+    except UnicodeDecodeError:
         return text.decode('latin1')
 
 
@@ -704,7 +700,7 @@ def _get_cached_snmpwalk(hostname, fetchoid):
     try:
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         return store.load_data_from_file(path)
-    except:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
         console.verbose("  Failed loading walk cache. Continue without it.\n" % path)
@@ -755,8 +751,10 @@ def do_snmptranslate(walk_filename):
 
             command = ["snmptranslate", "-m", "ALL",
                        "-M+%s" % cmk.utils.paths.local_mibs_dir] + oids_for_command
-            p = subprocess.Popen(
-                command, stdout=subprocess.PIPE, stderr=open(os.devnull, "w"), close_fds=True)
+            p = subprocess.Popen(command,
+                                 stdout=subprocess.PIPE,
+                                 stderr=open(os.devnull, "w"),
+                                 close_fds=True)
             p.wait()
             output = p.stdout.read()
             result = output.split("\n")[0::2]

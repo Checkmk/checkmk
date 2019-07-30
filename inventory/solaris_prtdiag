@@ -111,8 +111,8 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
             # 'System Configuration: Sun Microsystems SUN FIRE X4450'
             node = inv_tree("hardware.system.")
-            system_info = line[0].split(":", 1)[1].strip().replace("SERVER", "").replace(
-                "Server", "")
+            system_info = line[0].split(":", 1)[1].strip().replace("SERVER",
+                                                                   "").replace("Server", "")
 
             if "sun microsystems" in system_info.lower():
                 vendor = "Sun Microsystems"

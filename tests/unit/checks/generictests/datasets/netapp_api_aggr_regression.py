@@ -18,7 +18,7 @@ checks = {
         'show_reserved': False,
         'levels_low': (50.0, 60.0),
         'trend_perfdata': True
-    }, [(0, '62.3% used (45.69 of 73.37 TB), trend: 0.00 B / 24 hours',
+    }, [(0, '62.27% used (45.69 of 73.37 TB), trend: 0.00 B / 24 hours',
          [('aggr0_sas_mirror', 47908714.765625, 61548267.690625, 69241801.15195313, 0,
            76935334.61328125), ('fs_size', 76935334.61328125, None, None, None, None),
           ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -33,7 +33,7 @@ checks = {
              'show_reserved': False,
              'levels_low': (50.0, 60.0),
              'trend_perfdata': True
-         }, [(0, '75.0% used (87.27 of 116.42 TB), trend: 0.00 B / 24 hours',
+         }, [(0, '74.97% used (87.27 of 116.42 TB), trend: 0.00 B / 24 hours',
               [('aggr1_sata', 91511435.3671875, 97657704.0, 109864917.0, 0, 122072130.0),
                ('fs_size', 122072130.0, None, None, None, None),
                ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0, 5086338.75)])])]

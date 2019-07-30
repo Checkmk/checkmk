@@ -63,6 +63,11 @@ from cmk.gui.plugins.wato import (
     make_action_link,
 )
 
+try:
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
+except ImportError:
+    alert_handling = None  # type: ignore
+
 
 @mode_registry.register
 class ModeTimeperiods(WatoMode):
@@ -83,12 +88,10 @@ class ModeTimeperiods(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(
-            _("New Timeperiod"), watolib.folder_preserving_link([("mode", "edit_timeperiod")]),
-            "new")
-        html.context_button(
-            _("Import iCalendar"), watolib.folder_preserving_link([("mode", "import_ical")]),
-            "ical")
+        html.context_button(_("New Timeperiod"),
+                            watolib.folder_preserving_link([("mode", "edit_timeperiod")]), "new")
+        html.context_button(_("Import iCalendar"),
+                            watolib.folder_preserving_link([("mode", "import_ical")]), "ical")
 
     def action(self):
         delname = html.request.var("_delete")
@@ -167,8 +170,10 @@ class ModeTimeperiods(WatoMode):
                                                                 ("edit", userid)])))
 
             for index, rule in enumerate(user.get("notification_rules", [])):
-                used_in += self._find_usages_in_notification_rule(
-                    tpname, index, rule, user_id=userid)
+                used_in += self._find_usages_in_notification_rule(tpname,
+                                                                  index,
+                                                                  rule,
+                                                                  user_id=userid)
         return used_in
 
     def _find_usages_in_other_timeperiods(self, tpname):
@@ -220,11 +225,6 @@ class ModeTimeperiods(WatoMode):
         if cmk.is_raw_edition():
             return used_in
 
-        try:
-            import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
-        except:
-            alert_handling = None
-
         for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
             if rule.get("match_timeperiod") == tpname:
                 url = watolib.folder_preserving_link([
@@ -275,8 +275,8 @@ class ModeTimeperiods(WatoMode):
         return used_in
 
     def page(self):
-        with table_element(
-                "timeperiods", empty_text=_("There are no timeperiods defined yet.")) as table:
+        with table_element("timeperiods",
+                           empty_text=_("There are no timeperiods defined yet.")) as table:
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()
 
@@ -326,8 +326,8 @@ class ModeTimeperiodImportICal(WatoMode):
         return _("Import iCalendar File to create a Timeperiod")
 
     def buttons(self):
-        html.context_button(
-            _("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"),
+                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
 
     def _vs_ical(self):
         return Dictionary(
@@ -609,8 +609,8 @@ class ModeEditTimeperiod(WatoMode):
         return _("Edit time period")
 
     def buttons(self):
-        html.context_button(
-            _("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"),
+                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
 
     def _valuespec(self):
         if self._new:

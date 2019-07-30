@@ -26,16 +26,16 @@
 
 
 def agent_netapp_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
 
-    args += " -u " + quote_shell_string(params["username"])
-    args += " -s " + quote_shell_string(params["password"])
+    args += ["-u", params["username"]]
+    args += ["-s", params["password"]]
     if params.get("skip_elements"):
         no_ctrs = [x[4:] for x in params["skip_elements"] if x.startswith("ctr_")]
         if no_ctrs:
-            args += " --nocounters %s" % ",".join(no_ctrs)
+            args += ["--nocounters %s" % ",".join(no_ctrs)]
 
-    args += " " + quote_shell_string(ipaddress)
+    args += [ipaddress]
     return args
 
 

@@ -49,6 +49,8 @@ rds_licenses_product_versionid_map = {
 
 def parse_rds_licenses(info):
     parsed = {}
+    if not info:
+        return parsed
     headers = info[0]
     for line in info[1:]:
         data = dict(zip(headers, line))

@@ -3,22 +3,17 @@
 //
 #include "pch.h"
 
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-
 #include "carrier.h"
-#include "pch.h"
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
+#include "common/cfg_info.h"
+#include "common/wtools.h"
 #include "providers/p_perf_counters.h"
-
+#include "read_file.h"
 #include "service_processor.h"
+#include "test_tools.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
 
 namespace cma::cfg::details {
 extern uint64_t RegisteredPerformanceFreq;
@@ -36,6 +31,39 @@ TEST(WinPerfTest, Pre) {
     auto pf = cma::cfg::GetPerformanceFrequency();
     EXPECT_EQ(cma::cfg::details::RegisteredPerformanceFreq, pf)
         << "Something wrong and value was not initialized";
+}
+
+TEST(WinPerfTest, YmlCheck) {
+    using namespace cma::cfg;
+    using namespace cma::tools;
+    tst::YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto winperf_node = cfg[groups::kWinPerf];
+    ASSERT_TRUE(winperf_node.IsDefined());
+    ASSERT_TRUE(winperf_node.IsMap());
+
+    auto enabled = GetVal(groups::kWinPerf, vars::kEnabled, false);
+    EXPECT_TRUE(enabled);
+    auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+    ASSERT_EQ(counters.size(), 3);
+    const StringPairArray base_counters = {
+        {"238", "processor"},
+        {"234", "phydisk"},
+        {"510", "if"},
+    };
+
+    int found_count = 0;
+    for (const auto& counter : counters) {
+        std::pair<std::string, std::string> counter_low(counter.first,
+                                                        counter.second);
+        StringLower(counter_low.first);
+        StringLower(counter_low.second);
+        auto found = cma::tools::find(base_counters, counter_low);
+        if (found) found_count++;
+    }
+
+    EXPECT_EQ(found_count, 3) << "not correct counter list in the yml";
 }
 
 TEST(WinPerfTest, RootCalls) {
@@ -184,7 +212,7 @@ TEST(WinPerfTest, Calls) {
 
 TEST(WinPerfTest, Config) {
     using namespace cma::cfg;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
         auto c = groups::winperf.counters();
         EXPECT_TRUE(c.size() >= 3)

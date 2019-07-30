@@ -59,23 +59,22 @@ class RulespecCheckgroupParametersMysqlConnections(CheckParameterRulespecWithIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("perc_used",
-                 Tuple(
-                     title=_("Max. parallel connections"),
-                     help=
-                     _("Compares the maximum number of connections that have been "
-                       "in use simultaneously since the server started with the maximum simultaneous "
-                       "connections allowed by the configuration of the server. This threshold "
-                       "makes the check raise warning/critical states if the percentage is equal to "
-                       "or above the configured levels."),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("perc_used",
+             Tuple(
+                 title=_("Max. parallel connections"),
+                 help=_(
+                     "Compares the maximum number of connections that have been "
+                     "in use simultaneously since the server started with the maximum simultaneous "
+                     "connections allowed by the configuration of the server. This threshold "
+                     "makes the check raise warning/critical states if the percentage is equal to "
+                     "or above the configured levels."),
+                 elements=[
+                     Percentage(title=_("Warning at")),
+                     Percentage(title=_("Critical at")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

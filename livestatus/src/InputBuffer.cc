@@ -32,9 +32,9 @@
 #include "Poller.h"
 
 namespace {
-const size_t initial_buffer_size = 4096;
+constexpr size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
-const size_t maximum_buffer_size = 500 * 1024 * 1024;
+constexpr size_t maximum_buffer_size = 500 * 1024 * 1024;
 
 bool timeout_reached(const std::chrono::system_clock::time_point &start,
                      const std::chrono::milliseconds &timeout) {

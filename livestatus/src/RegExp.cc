@@ -34,29 +34,29 @@
 
 class RegExp::Impl {
 public:
-    Impl(const std::string &str, Case c, Syntax s) : _regex(str, opts(c, s)) {
-        if (!_regex.ok()) {
-            throw std::runtime_error(_regex.error());
+    Impl(const std::string &str, Case c, Syntax s) : regex_(str, opts(c, s)) {
+        if (!regex_.ok()) {
+            throw std::runtime_error(regex_.error());
         }
     }
 
     std::string replace(std::string str, const std::string &replacement) {
-        RE2::GlobalReplace(&str, _regex, replacement);
+        RE2::GlobalReplace(&str, regex_, replacement);
         return str;
     }
 
     bool match(const std::string &str) const {
-        return RE2::FullMatch(str, _regex);
+        return RE2::FullMatch(str, regex_);
     }
 
     bool search(const std::string &str) const {
-        return RE2::PartialMatch(str, _regex);
+        return RE2::PartialMatch(str, regex_);
     }
 
     static std::string engine() { return "RE2"; }
 
 private:
-    RE2 _regex;
+    RE2 regex_;
 
     static RE2::Options opts(Case c, Syntax s) {
         RE2::Options options{RE2::Quiet};
@@ -77,7 +77,7 @@ private:
 class RegExp::Impl {
 public:
     Impl(const std::string &str, Case c, Syntax s)
-        : _regex(s == Syntax::literal
+        : regex_(s == Syntax::literal
                      ? std::regex_replace(
                            str, std::regex(R"([.^$|()\[\]{}*+?\\])"), R"(\\&)",
                            std::regex_constants::format_sed)
@@ -88,22 +88,22 @@ public:
 
     std::string replace(const std::string &str,
                         const std::string &replacement) {
-        return std::regex_replace(str, _regex, replacement,
+        return std::regex_replace(str, regex_, replacement,
                                   std::regex_constants::format_sed);
     }
 
-    bool match(const std::string &str) const {
-        return regex_match(str, _regex);
+    [[nodiscard]] bool match(const std::string &str) const {
+        return regex_match(str, regex_);
     }
 
-    bool search(const std::string &str) const {
-        return regex_search(str, _regex);
+    [[nodiscard]] bool search(const std::string &str) const {
+        return regex_search(str, regex_);
     }
 
     static std::string engine() { return "C++11"; }
 
 private:
-    std::regex _regex;
+    std::regex regex_;
 };
 #endif
 

@@ -68,12 +68,12 @@ from cmk.gui.permissions import (
 
 
 class RowTableEC(RowTableLivestatus):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)
 
-        rows = super(RowTableEC, self).query(view, columns, query, only_sites, limit,
+        rows = super(RowTableEC, self).query(view, columns, headers, only_sites, limit,
                                              all_active_filters)
 
         if not rows:
@@ -823,8 +823,9 @@ def render_delete_event_icons(row):
             ("_delete_event", _("Archive Event")),
             ("_show_result", "0"),
         ]
-        url = html.makeactionuri(
-            urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+        url = html.makeactionuri(urlvars,
+                                 filename=filename,
+                                 delvars=["selection", "show_checkboxes"])
         return html.render_icon_button(url, _("Archive this event"), "archive_event")
     else:
         return ''
@@ -1094,7 +1095,6 @@ class PainterHistoryAddinfo(Painter):
 @permission_registry.register
 class PermissionECUpdateEvent(Permission):
     """Acknowledge and update comment and contact"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole
@@ -1119,7 +1119,6 @@ class PermissionECUpdateEvent(Permission):
 @permission_registry.register
 class PermissionECUpdateComment(Permission):
     """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole
@@ -1144,7 +1143,6 @@ class PermissionECUpdateComment(Permission):
 @permission_registry.register
 class PermissionECUpdateContact(Permission):
     """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
-
     @property
     def section(self):
         return mkeventd.PermissionSectionEventConsole
@@ -1229,8 +1227,8 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or 0,
-                                              comment, contact), _("update")
+            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or
+                                              0, comment, contact), _("update")
 
 
 @permission_registry.register

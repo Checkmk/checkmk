@@ -125,9 +125,9 @@ def inventory_heartbeat_crm(info):
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     try:
         _last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
-    except:
+    except Exception:  # pylint: disable=broad-except
         # In the case that CRM is not working, add it as a service and show the error later
-        dc, num_nodes, num_resources = 0, 0, 0
+        _last_updated, dc, num_nodes, num_resources = 0, 0, 0, 0
     params = {
         'num_nodes': num_nodes,
         'num_resources': num_resources,
@@ -137,9 +137,22 @@ def inventory_heartbeat_crm(info):
     return [(None, params)]
 
 
-def check_heartbeat_crm(item, params, info):
-    if not len(info) > 0:
-        return
+def _transform_heartbeat_crm(params):
+    if isinstance(params, dict):
+        return params
+    par_dict = {'max_age': params[0]}
+    if params[1]:
+        par_dict['dc'] = params[1]
+    if params[2] > -1:
+        par_dict['num_nodes'] = params[2]
+    if params[3] > -1:
+        par_dict['num_resources'] = params[3]
+    return par_dict
+
+
+def check_heartbeat_crm(_no_item, params, info):
+    if not info:
+        return None
 
     first_line = ' '.join(info[0])
     if first_line.lower().startswith(
@@ -148,14 +161,8 @@ def check_heartbeat_crm(item, params, info):
 
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
-    # Convert old tuple params (pre 1.2.5i6)
-    if isinstance(params, tuple):
-        params = {
-            'max_age': params[0],
-            'dc': params[1] != "" and params[1] or None,
-            'num_nodes': params[2] != -1 and params[2] or None,
-            'num_resources': params[3] != -1 and params[3] or None,
-        }
+    # Convert old tuple params (pre 1.5.0p14)
+    params = _transform_heartbeat_crm(params)
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
@@ -241,24 +248,23 @@ def heartbeat_crm_parse_resources(info):
                 resources[parts[2]] = []
                 resource = parts[2]
                 mode = 'masterslaveset'
-            elif line.startswith('_'):
-                # consider inconsistent agent output in clone set lines
-                fixed_parts = parts[1:]
+            elif line[0] == '_':
+                # Cleanup inconsistent agent output in clone set lines
                 if parts[0] != "_":
-                    fixed_parts.insert(0, parts[0].lstrip('_'))
+                    parts.insert(1, parts[0][1:])
+                    parts[0] = "_"
 
                 # Resource group or set member
                 if mode == 'resourcegroup':
-                    resources[resource].append(fixed_parts)
+                    resources[resource].append(parts[1:])
                 elif mode == 'cloneset':
-                    if fixed_parts[0] == 'Started:':
-                        resources[resource].append(
-                            [resource, 'Clone', 'Started', fixed_parts[2:-1]])
+                    if parts[1] == 'Started:':
+                        resources[resource].append([resource, 'Clone', 'Started', parts[3:-1]])
                 elif mode == 'masterslaveset':
-                    if fixed_parts[0] == 'Masters:':
-                        resources[resource].append([resource, 'Master', 'Started', fixed_parts[2]])
-                    if fixed_parts[0] == 'Slaves:':
-                        resources[resource].append([resource, 'Slave', 'Started', fixed_parts[2]])
+                    if parts[1] == 'Masters:':
+                        resources[resource].append([resource, 'Master', 'Started', parts[3]])
+                    if parts[1] == 'Slaves:':
+                        resources[resource].append([resource, 'Slave', 'Started', parts[3]])
             else:
                 # Single resource
                 resources[parts[0]] = [parts]

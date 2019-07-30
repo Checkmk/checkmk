@@ -356,9 +356,8 @@ def check_fsc_sc2_temp(item, params, info):
 
             dev_levels = int(dev_warn), int(dev_crit)
 
-            return check_temperature(
-                int(temp), params, 'temp_{}'.format(item.replace(' ', '_')), 'c', dev_levels, None,
-                dev_status, dev_status_name)
+            return check_temperature(int(temp), params, 'temp_{}'.format(item.replace(' ', '_')),
+                                     'c', dev_levels, None, dev_status, dev_status_name)
 
 
 #.

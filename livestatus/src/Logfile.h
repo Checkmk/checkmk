@@ -31,10 +31,10 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
-#include "FileSystem.h"
 #include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
 class Logger;
@@ -44,8 +44,9 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
-    Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch);
-    fs::path path() const { return _path; }
+    Logfile(Logger *logger, LogCache *log_cache, std::filesystem::path path,
+            bool watch);
+    std::filesystem::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
     time_t since() const { return _since; }
@@ -63,7 +64,7 @@ public:
 private:
     Logger *const _logger;
     LogCache *const _log_cache;
-    const fs::path _path;
+    const std::filesystem::path _path;
     const time_t _since;  // time of first entry
     const bool _watch;    // true only for current logfile
     fpos_t _read_pos;     // read until this position

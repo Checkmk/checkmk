@@ -6,26 +6,52 @@
 #ifndef check_mk_service_h__
 #define check_mk_service_h__
 #include <cstdint>
+#include <string_view>
 namespace cma::cmdline {
 // Command Line parameters for service
-constexpr const wchar_t* kInstallParam = L"-install";
-constexpr const wchar_t* kRemoveParam = L"-remove";
-constexpr const wchar_t* kLegacyTestParam = L"test";
-constexpr const wchar_t* kTestParam = L"-test";
-constexpr const wchar_t* kRealtimeParam = L"-rt";
-constexpr const wchar_t* kHelpParam = L"-help";
-constexpr const wchar_t* kExecParam = L"-exec";                 // runs as app
-constexpr const wchar_t* kCvtParam = L"-cvt";                   // runs as app
-constexpr const wchar_t* kSkypeParam = L"-skype";               // hidden
-constexpr const wchar_t* kStopLegacyParam = L"-stop_legacy";    //
-constexpr const wchar_t* kStartLegacyParam = L"-start_legacy";  //
-constexpr const wchar_t* kUpgradeParam = L"-upgrade";           // upgrade LWA
-constexpr const wchar_t* kCapParam = L"-cap";                   // install files
-constexpr const wchar_t* kSectionParam = L"-section";           // dump section
+
+constexpr int kParamShift = 10;
+
+constexpr std::string_view kInstallParam = "install";
+constexpr std::string_view kRemoveParam = "remove";
+constexpr std::string_view kLegacyTestParam = "test";
+
+constexpr std::string_view kCheckParam = "check";
+constexpr std::string_view kCheckParamSelf = "-self";
+constexpr std::string_view kCheckParamMt = "-mt";
+constexpr std::string_view kCheckParamIo = "-io";
+
+constexpr std::string_view kRealtimeParam = "rt";
+constexpr std::string_view kHelpParam = "help";
+constexpr std::string_view kVersionParam = "version";
+constexpr std::string_view kReloadConfigParam = "reload_config";
+
+constexpr std::string_view kExecParam = "exec";             // runs as app
+constexpr std::string_view kAdhocParam = "adhoc";           // runs as app
+constexpr std::string_view kExecParamShowWarn = "-show";    // logging sub param
+constexpr std::string_view kExecParamShowAll = "-showall";  // logging sub param
+
+constexpr std::string_view kCvtParam = "convert";    // convert ini to yaml
+constexpr std::string_view kCvtParamShow = "-show";  // logging sub param
+constexpr const wchar_t* kSkypeParam = L"skype";     // hidden
+constexpr std::string_view kPatchHashParam = "patch_hash";      // hidden
+constexpr std::string_view kStopLegacyParam = "stop_legacy";    //
+constexpr std::string_view kStartLegacyParam = "start_legacy";  //
+
+constexpr std::string_view kUpgradeParam = "upgrade";      // upgrade LWA
+constexpr std::string_view kUpgradeParamForce = "-force";  // upgrade LWA always
+
+constexpr std::string_view kCapParam = "cap";            // install files
+constexpr std::string_view kSectionParam = "section";    // dump section
+constexpr std::string_view kSectionParamShow = "-show";  // logging sub param
+
+constexpr std::string_view kShowConfigParam = "showconfig";  // show config
+
+constexpr std::string_view kResetOhm = "resetohm";  // reset ohm as treasury
 
 // Service name and Targeting
 #if defined(CMK_SERVICE_NAME)
-constexpr const char* const kServiceExeName = CMK_SERVICE_NAME;
+constexpr const char* const kServiceExeName = "check_mk_agent.exe";
 #elif defined(CMK_TEST)
 constexpr const char* const kServiceExeName = L"test";
 #else

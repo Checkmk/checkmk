@@ -7,6 +7,7 @@
 #include "service_processor.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "windows_service_api.h"
 
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor : public wtools::BaseServiceProcessor {
@@ -90,7 +91,9 @@ TEST(ServiceControllerTest, StartStop) {
     EXPECT_EQ(controller.can_shutdown_, false);
     EXPECT_EQ(controller.can_pause_continue_, false);
     EXPECT_NE(controller.processor_, nullptr);
-    if (0) {
+
+    // special case with "no connect" case
+    {
         auto ret =
             wtools::InstallService(test_service_name,  // name of service
                                    L"Test Name",  // service name to display
@@ -100,19 +103,18 @@ TEST(ServiceControllerTest, StartStop) {
                                    nullptr                // no password
             );
         EXPECT_TRUE(ret);
+
         if (ret) {
-            bool success = false;
+            ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
+            auto success = wtools::ServiceController::StopType::fail;
             std::thread t([&]() {
                 success = controller.registerAndRun(test_service_name, true,
                                                     true, true);
             });
-            EXPECT_TRUE(success);
-            std::this_thread::sleep_until(steady_clock::now() +
-                                          500ms);  // wait for thread
-            EXPECT_TRUE(counter > 3);
+            if (t.joinable()) t.join();
 
-            EXPECT_TRUE(ret);
-            if (ret) wtools::UninstallService(test_service_name);
+            EXPECT_EQ(success, wtools::ServiceController::StopType::no_connect);
+            EXPECT_EQ(counter, 0);
         }
     }
 }
@@ -136,3 +138,21 @@ TEST(Misc, All) {
         EXPECT_TRUE(b == "b/");
     }
 }
+
+namespace cma::srv {
+TEST(SelfConfigure, Checker) {
+    auto handle = SelfOpen();
+    if (handle == nullptr) {
+        xlog::sendStringToStdio(
+            "No test self configuration, agent is not installed",
+            xlog::internal::Colors::yellow);
+        return;
+    }
+    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+
+    EXPECT_NO_THROW(IsServiceConfigured(handle));
+    EXPECT_NO_THROW(SelfConfigure());  //
+    EXPECT_TRUE(IsServiceConfigured(handle));
+}
+
+}  // namespace cma::srv

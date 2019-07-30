@@ -7,6 +7,8 @@ import copy
 import json
 import os
 from StringIO import StringIO
+import subprocess
+import sys
 import time
 
 import pytest  # type: ignore
@@ -37,8 +39,8 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            file(
-                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                 repo_path()).read())
 
     yield
 
@@ -56,10 +58,9 @@ def test_global_settings(site, web):
 def test_add_host(web):
     try:
         # Also tests get_host
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_host("test-host")
 
@@ -106,10 +107,9 @@ def test_add_hosts(web):
 
 def test_edit_host(web):
     try:
-        web.add_host(
-            "test-edit-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-edit-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.edit_host("test-edit-host", attributes={"ipaddress": "127.10.0.1"})
     finally:
@@ -118,14 +118,12 @@ def test_edit_host(web):
 
 def test_edit_hosts(web):
     try:
-        web.add_host(
-            "test-edit-hosts1", attributes={
-                "ipaddress": "127.0.0.1",
-            })
-        web.add_host(
-            "test-edit-hosts2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-edit-hosts1", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+        web.add_host("test-edit-hosts2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.edit_hosts([
             ("test-edit-hosts1", {
@@ -141,10 +139,9 @@ def test_edit_hosts(web):
 
 def test_get_all_hosts_basic(web):
     try:
-        web.add_host(
-            "test-host-list", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-list", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts()
         assert "test-host-list" in hosts
@@ -154,34 +151,30 @@ def test_get_all_hosts_basic(web):
 
 def test_delete_host(web):
     try:
-        web.add_host(
-            "test-host-delete", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-delete", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_host("test-host-delete")
 
 
 def test_delete_hosts(web):
     try:
-        web.add_host(
-            "test-hosts-delete1", attributes={
-                "ipaddress": "127.0.0.1",
-            })
-        web.add_host(
-            "test-hosts-delete2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-hosts-delete1", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+        web.add_host("test-hosts-delete2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     finally:
         web.delete_hosts(["test-hosts-delete1", "test-hosts-delete2"])
 
 
 def test_get_host_effective_attributes(web):
     try:
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         host = web.get_host("test-host", effective_attributes=False)
         assert "tag_networking" not in host["attributes"]
@@ -195,10 +188,9 @@ def test_get_host_effective_attributes(web):
 
 def test_get_all_hosts_effective_attributes(web):
     try:
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts(effective_attributes=False)
         host = hosts["test-host"]
@@ -210,6 +202,57 @@ def test_get_all_hosts_effective_attributes(web):
         assert host["attributes"]["tag_networking"] == "lan"
     finally:
         web.delete_host("test-host")
+
+
+def test_get_ruleset(web):
+    response = web.get_ruleset("extra_host_conf:notification_options")
+    assert response == {
+        'ruleset': {
+            '': [{
+                'value': 'd,r,f,s',
+                'condition': {}
+            }]
+        },
+        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+    }
+
+
+def test_set_ruleset(web):
+    orig_ruleset = web.get_ruleset("bulkwalk_hosts")
+    assert orig_ruleset == {
+        'ruleset': {
+            '': [{
+                'value': True,
+                'condition': {
+                    'host_tags': {
+                        'snmp': 'snmp',
+                        'snmp_ds': {
+                            '$ne': 'snmp-v1'
+                        }
+                    }
+                },
+                'options': {
+                    'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
+                }
+            }]
+        },
+        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+    }
+
+    # Now modify something
+    ruleset = copy.deepcopy(orig_ruleset)
+    ruleset["ruleset"][""][0]["value"] = False
+    response = web.set_ruleset("bulkwalk_hosts", ruleset)
+    assert response is None
+
+    try:
+        changed = web.get_ruleset("bulkwalk_hosts")
+        assert changed["ruleset"][""][0]["value"] is False
+    finally:
+        # revert it back
+        del orig_ruleset["configuration_hash"]
+        response = web.set_ruleset("bulkwalk_hosts", orig_ruleset)
+        assert response is None
 
 
 def test_get_site(web, site):
@@ -294,22 +337,21 @@ def test_set_all_sites(web, site, sock_spec):
 
 def test_write_host_tags(web, site):
     try:
-        web.add_host(
-            "test-host-dmz", attributes={
-                "ipaddress": "127.0.0.1",
-                "tag_networking": "dmz",
-            })
+        web.add_host("test-host-dmz",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         "tag_networking": "dmz",
+                     })
 
-        web.add_host(
-            "test-host-lan", attributes={
-                "ipaddress": "127.0.0.1",
-                "tag_networking": "lan",
-            })
+        web.add_host("test-host-lan",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         "tag_networking": "lan",
+                     })
 
-        web.add_host(
-            "test-host-lan2", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-lan2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         hosts = web.get_all_hosts(effective_attributes=True)
         assert hosts["test-host-dmz"]["attributes"]["tag_networking"] == "dmz"
@@ -327,19 +369,14 @@ def test_write_host_tags(web, site):
 
         exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
-        tags_by_host = {}
-        for entry in cfg["all_hosts"]:
-            hostname, tag_txt = entry.split("|", 1)
-            tags_by_host[hostname] = tag_txt.split("|")
+        assert "dmz" in cfg["host_tags"]["test-host-dmz"]["networking"]
+        assert "lan" not in cfg["host_tags"]["test-host-dmz"]["networking"]
 
-        assert "dmz" in tags_by_host["test-host-dmz"]
-        assert "lan" not in tags_by_host["test-host-dmz"]
+        assert "dmz" not in cfg["host_tags"]["test-host-lan"]["networking"]
+        assert "lan" in cfg["host_tags"]["test-host-lan"]["networking"]
 
-        assert "dmz" not in tags_by_host["test-host-lan"]
-        assert "lan" in tags_by_host["test-host-lan"]
-
-        assert "dmz" not in tags_by_host["test-host-lan2"]
-        assert "lan" in tags_by_host["test-host-lan2"]
+        assert "dmz" not in cfg["host_tags"]["test-host-lan2"]["networking"]
+        assert "lan" in cfg["host_tags"]["test-host-lan2"]["networking"]
 
     finally:
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
@@ -412,8 +449,9 @@ def test_edit_group_missing(web, group_type):
         web.add_group(group_type, group_id, attributes)
         try:
             #web.edit_group(group_type, group_id, {"alias": group_alias2}, expect_error = True)
-            web.edit_group(
-                group_type, "%s_missing" % group_id, {"alias": group_alias2}, expect_error=True)
+            web.edit_group(group_type,
+                           "%s_missing" % group_id, {"alias": group_alias2},
+                           expect_error=True)
         except APIError as e:
             assert str(e) != str(None)
             return
@@ -535,10 +573,9 @@ def test_edit_htpasswd_users(web):
 
 def test_discover_services(web):
     try:
-        web.add_host(
-            "test-host-discovery", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-discovery", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.discover_services("test-host-discovery")
     finally:
@@ -562,7 +599,7 @@ def test_bulk_discovery_unknown_host(web):
 def _wait_for_bulk_discovery_job(web):
     def job_completed():
         status = web.bulk_discovery_status()
-        return status["job"]["state"] != "initialized" and status["is_running"] is False
+        return status["job"]["state"] != "initialized" and status["is_active"] is False
 
     wait_until(job_completed, timeout=15, interval=1)
 
@@ -576,7 +613,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
@@ -599,7 +636,7 @@ def test_bulk_discovery_start_with_parameters(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
 
 
@@ -617,16 +654,15 @@ def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
     _wait_for_bulk_discovery_job(web)
 
     status = web.bulk_discovery_status()
-    assert status["is_running"] is False
+    assert status["is_active"] is False
     assert status["job"]["state"] == "finished"
 
 
 def test_activate_changes(web, site):
     try:
-        web.add_host(
-            "test-host-activate", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-activate", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         web.activate_changes()
 
@@ -640,16 +676,15 @@ def test_activate_changes(web, site):
 @pytest.fixture(scope="module")
 def graph_test_config(web, site):
     # No graph yet...
-    with pytest.raises(APIError) as e:
+    with pytest.raises(APIError) as exc_info:
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-        assert "Cannot calculate graph recipes" in "%s" % e
+        assert "Cannot calculate graph recipes" in "%s" % exc_info
 
     try:
         # Now add the host
-        web.add_host(
-            "test-host-get-graph", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host("test-host-get-graph", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
         site.write_file(
             "etc/check_mk/conf.d/test-host-get-graph.mk",
@@ -659,27 +694,32 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            file(
-                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                 repo_path()).read())
 
         web.discover_services("test-host-get-graph")
         web.activate_changes()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
-        # Wait for RRD file creation
-        # Isn't this a bug that the graph is not instantly available?
-        timeout = 10
-        print "Checking for graph..."
-        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
-            try:
-                web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            except Exception:
-                pass
-            timeout -= 1
-            time.sleep(1)
-            print "Checking for graph..."
-            assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
-                "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
+        # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
+        rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
+        for attempt in xrange(50):
+            time.sleep(0.1)
+            proc = subprocess.Popen([site.path("bin/unixcat"),
+                                     site.path("tmp/run/rrdcached.sock")],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+            out, err = proc.communicate("FLUSH %s\n" % rrd_path)
+            if os.path.exists(rrd_path):
+                break
+            sys.stdout.write("waiting for %s (attempt %d)%s%s\n" % (
+                rrd_path,
+                attempt + 1,  #
+                ", stdout: %s" % out if out else "",
+                ", stderr: %s" % err if err else ""))
+        else:
+            assert False, "RRD file %s missing" % rrd_path
 
         yield
     finally:
@@ -701,21 +741,19 @@ def test_get_graph_api(web, graph_test_config):
 
 
 def test_get_graph_image(web, graph_test_config):
-    result = web.post(
-        "graph_image.py",
-        data={
-            "request": json.dumps({
-                "specification": [
-                    "template",
-                    {
-                        "service_description": "Check_MK",
-                        "site": web.site.id,
-                        "graph_index": 0,
-                        "host_name": "test-host-get-graph",
-                    }
-                ],
-            }),
-        })
+    result = web.post("graph_image.py",
+                      data={
+                          "request": json.dumps({
+                              "specification": [
+                                  "template", {
+                                      "service_description": "Check_MK",
+                                      "site": web.site.id,
+                                      "graph_index": 0,
+                                      "host_name": "test-host-get-graph",
+                                  }
+                              ],
+                          }),
+                      })
 
     content = result.content
 
@@ -753,8 +791,7 @@ def test_get_graph_hover(web, graph_test_config):
             u'title': u'Time usage by phase',
             u'horizontal_rules': [],
             u'specification': [
-                u'template',
-                {
+                u'template', {
                     u'service_description': u'Check_MK',
                     u'site': web.site.id,
                     u'graph_index': 0,
@@ -778,44 +815,41 @@ def test_get_graph_hover(web, graph_test_config):
                 ],
                 u'unit': u's',
                 u'title': u'CPU time in user space'
-            },
-                         {
-                             u'color': u'#ff8840',
-                             u'line_type': u'stack',
-                             u'expression': [
-                                 u'operator', u'+',
-                                 [[
-                                     u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                     u'Check_MK', u'system_time', None, 1
-                                 ],
-                                  [
-                                      u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                      u'Check_MK', u'children_system_time', None, 1
-                                  ]]
-                             ],
-                             u'unit': u's',
-                             u'title': u'CPU time in operating system'
-                         },
-                         {
-                             u'color': u'#00b2ff',
-                             u'line_type': u'stack',
-                             u'expression': [
-                                 u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                 u'Check_MK', u'cmk_time_agent', None, 1
-                             ],
-                             u'unit': u's',
-                             u'title': u'Time spent waiting for Check_MK agent'
-                         },
-                         {
-                             u'color': u'#d080af',
-                             u'line_type': u'line',
-                             u'expression': [
-                                 u'rrd', u'test-host-get-graph', u'test-host-get-graph',
-                                 u'Check_MK', u'execution_time', None, 1
-                             ],
-                             u'unit': u's',
-                             u'title': u'Total execution time'
-                         }],
+            }, {
+                u'color': u'#ff8840',
+                u'line_type': u'stack',
+                u'expression': [
+                    u'operator', u'+',
+                    [[
+                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                        u'system_time', None, 1
+                    ],
+                     [
+                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                         u'children_system_time', None, 1
+                     ]]
+                ],
+                u'unit': u's',
+                u'title': u'CPU time in operating system'
+            }, {
+                u'color': u'#00b2ff',
+                u'line_type': u'stack',
+                u'expression': [
+                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                    u'cmk_time_agent', None, 1
+                ],
+                u'unit': u's',
+                u'title': u'Time spent waiting for Check_MK agent'
+            }, {
+                u'color': u'#d080af',
+                u'line_type': u'line',
+                u'expression': [
+                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                    u'execution_time', None, 1
+                ],
+                u'unit': u's',
+                u'title': u'Total execution time'
+            }],
             u'omit_zero_metrics': False,
             u'unit': u's'
         },
@@ -849,12 +883,11 @@ def test_get_graph_hover(web, graph_test_config):
         }
     }
 
-    result = web.post(
-        "ajax_graph_hover.py",
-        data={
-            "context": json.dumps(graph_context),
-            "hover_time": int(time.time() - 300),
-        })
+    result = web.post("ajax_graph_hover.py",
+                      data={
+                          "context": json.dumps(graph_context),
+                          "hover_time": int(time.time() - 300),
+                      })
 
     data = result.json()
 
@@ -881,9 +914,8 @@ def test_get_inventory(web):
         web.add_host(host_name, attributes={"ipaddress": "127.0.0.1"})
         # NOTE: Deleting the host deletes the file, too.
         web.site.makedirs(inventory_dir)
-        web.site.write_file(
-            os.path.join(inventory_dir, host_name),
-            "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}")
+        web.site.write_file(os.path.join(inventory_dir, host_name),
+                            "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}")
 
         inv = web.get_inventory([host_name])
         assert inv[host_name] == {
@@ -942,8 +974,7 @@ def test_get_graph_recipes(web, graph_test_config):
     assert web.get_graph_recipes(
         request={
             "specification": [
-                "template",
-                {
+                "template", {
                     "service_description": "Check_MK",
                     "site": web.site.id,
                     "graph_index": 0,
@@ -971,58 +1002,53 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'line_type': u'stack',
                     u'title': u'CPU time in user space',
                     u'unit': u's'
-                },
-                             {
-                                 u'color': u'#ff8840',
-                                 u'expression': [
-                                     u'operator', u'+',
-                                     [[
-                                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                         u'system_time', None, 1.0
-                                     ],
-                                      [
-                                          u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                          u'children_system_time', None, 1.0
-                                      ]]
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'CPU time in operating system',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#00b2ff',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'cmk_time_agent', None, 1.0
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'Time spent waiting for Check_MK agent',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#00d1ff',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'cmk_time_ds', None, 1.0
-                                 ],
-                                 u'line_type': u'stack',
-                                 u'title': u'Time spent waiting for special agent',
-                                 u'unit': u's'
-                             },
-                             {
-                                 u'color': u'#d080af',
-                                 u'expression': [
-                                     u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                                     u'execution_time', None, 1.0
-                                 ],
-                                 u'line_type': u'line',
-                                 u'title': u'Total execution time',
-                                 u'unit': u's'
-                             }],
+                }, {
+                    u'color': u'#ff8840',
+                    u'expression': [
+                        u'operator', u'+',
+                        [[
+                            u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
+                            u'system_time', None, 1.0
+                        ],
+                         [
+                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
+                             u'children_system_time', None, 1.0
+                         ]]
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'CPU time in operating system',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#00b2ff',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
+                        None, 1.0
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'Time spent waiting for Check_MK agent',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#00d1ff',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_ds',
+                        None, 1.0
+                    ],
+                    u'line_type': u'stack',
+                    u'title': u'Time spent waiting for special agent',
+                    u'unit': u's'
+                }, {
+                    u'color': u'#d080af',
+                    u'expression': [
+                        u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'execution_time',
+                        None, 1.0
+                    ],
+                    u'line_type': u'line',
+                    u'title': u'Total execution time',
+                    u'unit': u's'
+                }],
                 u'omit_zero_metrics': False,
                 u'specification': [
-                    u'template',
-                    {
+                    u'template', {
                         u'graph_index': 0,
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
@@ -1033,3 +1059,52 @@ def test_get_graph_recipes(web, graph_test_config):
                 u'unit': u's'
             },
         ]
+
+
+def test_get_hosttags(web):
+    host_tags = web.get_hosttags()
+    assert isinstance(host_tags["configuration_hash"], str)
+    assert host_tags["aux_tags"] == []
+
+    assert isinstance(host_tags["tag_groups"], list)
+    assert host_tags["tag_groups"][0]["id"] == "criticality"
+
+
+def test_set_hosttags(web):
+    original_host_tags = web.get_hosttags()
+
+    location_tag_group = {
+        'id': 'location',
+        'tags': [{
+            'aux_tags': [],
+            'id': 'munich',
+            'title': 'Munich'
+        }, {
+            'aux_tags': [],
+            'id': 'essen',
+            'title': 'Essen'
+        }, {
+            'aux_tags': [],
+            'id': 'berlin',
+            'title': 'Berlin'
+        }],
+        'title': 'Location',
+    }
+    host_tags = copy.deepcopy(original_host_tags)
+    host_tags["tag_groups"].append(location_tag_group)
+
+    try:
+        web.set_hosttags(
+            request={
+                "aux_tags": host_tags["aux_tags"],
+                "tag_groups": host_tags["tag_groups"],
+                "configuration_hash": host_tags["configuration_hash"],
+            })
+
+        new_host_tags = web.get_hosttags()
+        assert location_tag_group in new_host_tags["tag_groups"]
+    finally:
+        web.set_hosttags(request={
+            "aux_tags": original_host_tags["aux_tags"],
+            "tag_groups": original_host_tags["tag_groups"],
+        })

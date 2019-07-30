@@ -51,23 +51,4 @@ def inv_hp_proliant_da_phydrv(info):
 
 inv_info['hp_proliant_da_phydrv'] = {
     'inv_function': inv_hp_proliant_da_phydrv,
-    # If something changes here please adopt the related check
-    'snmp_info': (
-        ".1.3.6.1.4.1.232.3.2.5.1.1",
-        [
-            "1",  # CPQIDA-MIB::cpqDaPhyDrvCntlrIndex
-            "2",  # CPQIDA-MIB::cpqDaPhyDrvIndex
-            "5",  # CPQIDA-MIB::cpqDaPhyDrvBay
-            "6",  # CPQIDA-MIB::cpqDaPhyDrvStatus
-            "9",  # CPQIDA-MIB::cpqDaPhyDrvRefHours
-            "45",  # CPQIDA-MIB::cpqDaPhyDrvSize
-            "37",  # CPQIDA-MIB::cpqDaPhyDrvCondition
-            "50",  # CPQIDA-MIB::cpqDaPhyDrvBusNumber
-            "57",  # CPQIDA-MIB::cpqDaPhyDrvSmartStatus
-            "3",  # CPQIDA-MIB::cpqDaPhyDrvModel
-            "51",  # CPQIDA-MIB::cpqDaPhyDrvSerialNum
-            "60",  # CPQIDA-MIB::pqDaPhyDrvType
-            "4",  # CPQIDA-MIB::cpqDaPhyDrvFWRev
-        ]),
-    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

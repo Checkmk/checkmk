@@ -60,7 +60,18 @@
 def parse_oracle_crs_res(info):
     crs_nodename = None
     ressources = {}
-    for nodename, varsetting in info:
+
+    for line in info:
+        if len(line) == 1:
+            # Seems to be an old version where first column is missing:
+            # <<<oracle_crs_res>>>
+            # NAME=foo
+            # TYPE=bar
+            # STATE=baz
+            nodename, varsetting = None, line[0]
+        else:
+            nodename, varsetting = line
+
         if nodename == "nodename":
             crs_nodename = varsetting
             continue
@@ -101,8 +112,10 @@ def check_oracle_crs_res(item, _no_params, parsed):
 
         if nodename == "csslocal":
             infotext = "local: "
-        else:
+        elif nodename:
             infotext = "on " + nodename + ": "
+        else:
+            infotext = ""
         infotext += resstate.lower()
 
         if resstate != restarget:
@@ -118,5 +131,4 @@ check_info['oracle_crs_res'] = {
     "check_function": check_oracle_crs_res,
     "inventory_function": inventory_oracle_crs_res,
     "service_description": "ORA-GI %s Resource",
-    "group": "oracle_crs_res",
 }

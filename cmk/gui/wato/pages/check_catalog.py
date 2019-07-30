@@ -146,12 +146,11 @@ class ModeCheckPlugins(WatoMode):
             menu = MainMenu()
             for topic, _has_second_level, title, helptext in self._man_page_catalog_topics():
                 menu.add_item(
-                    MenuItem(
-                        mode_or_url=html.makeuri([("topic", topic)]),
-                        title=title,
-                        icon="plugins_" + topic,
-                        permission=None,
-                        description=helptext))
+                    MenuItem(mode_or_url=html.makeuri([("topic", topic)]),
+                             title=title,
+                             icon="plugins_" + topic,
+                             permission=None,
+                             description=helptext))
             menu.show()
 
     def _get_manpages_after_search(self):
@@ -299,11 +298,13 @@ class ModeCheckPlugins(WatoMode):
                 table.row()
                 url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
                                     ("back", html.makeuri([]))])
-                table.cell(
-                    _("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+                table.cell(_("Type of Check"),
+                           "<a href='%s'>%s</a>" % (url, entry["title"]),
+                           css="title")
                 table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
-                table.cell(
-                    _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
+                table.cell(_("Agents"),
+                           ", ".join(map(translate, sorted(entry["agents"]))),
+                           css="agents")
 
     def _man_page_catalog_topics(self):
         # topic, has_second_level, title, description
@@ -364,9 +365,8 @@ class ModeCheckManPage(WatoMode):
             back_url = html.get_url_input("back")
             html.context_button(_("Back"), back_url, "back")
 
-        html.context_button(
-            _("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]),
-            "check_plugins")
+        html.context_button(_("All Check Plugins"),
+                            html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
 
         if self._check_type.startswith("check_"):
             command = "check_mk_active-" + self._check_type[6:]

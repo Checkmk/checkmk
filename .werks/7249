@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1553184609
 
 Hosts with a state differing from <tt>UP</tt> will no longer be considered in the

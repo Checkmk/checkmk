@@ -1,0 +1,39 @@
+Title: Service labels can now be discovered
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563428760
+Class: feature
+
+The discovery functions of Checkmk checks can now produce a collection of
+service labels together with the discovered services. This makes it possible
+for the check developer to mark the services of the discovered services which
+can then be grouped together in a flexible way.
+
+The discovered service labels can be listed on the service discovery page of
+WATO by enabling them with the button "Show discovered labels".
+
+These labels are attributes of the discovered service and will be handled exactly
+like them. They are discovered in one step and applied to the running
+configuration in the same way. The cluster handling is also equal.
+
+How make my checks produce service labels?
+
+Instead of producing a two element tuple of <tt>(item, parameters)</tt> to
+create a new service the discovery functions can now provide objects like this:
+
+C+:
+Service(
+    item="Interface 213",
+    parameters=None,
+    service_labels=ServiceLabels(
+        ServiceLabel(u"check_type", u"network_interface"),
+        ServiceLabel(u"interface_type", u"uplink"),
+    )
+)
+C-:
+
+These objects can be returned / yielded like the tuples before. Both,
+the parameters and the service_labels are optional arguments.

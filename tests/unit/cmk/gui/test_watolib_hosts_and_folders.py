@@ -16,22 +16,21 @@ import cmk.gui.watolib as watolib
     ([((0, 0), (2, 0)), ((20, 0), (22, 0))], 1515621600.0, 1515625200.0),
 ])
 def test_next_network_scan_at(allowed, last_end, next_time):
-    folder = watolib.Folder(
-        name="bla",
-        title="Bla",
-        attributes={
-            "network_scan": {
-                'exclude_ranges': [],
-                'ip_ranges': [('ip_range', ('10.3.1.1', '10.3.1.100'))],
-                'run_as': u'cmkadmin',
-                'scan_interval': 300,
-                'set_ipaddress': True,
-                'tag_criticality': 'offline',
-                'time_allowed': allowed,
-            },
-            "network_scan_result": {
-                "end": last_end,
-            }
-        })
+    folder = watolib.Folder(name="bla",
+                            title="Bla",
+                            attributes={
+                                "network_scan": {
+                                    'exclude_ranges': [],
+                                    'ip_ranges': [('ip_range', ('10.3.1.1', '10.3.1.100'))],
+                                    'run_as': u'cmkadmin',
+                                    'scan_interval': 300,
+                                    'set_ipaddress': True,
+                                    'tag_criticality': 'offline',
+                                    'time_allowed': allowed,
+                                },
+                                "network_scan_result": {
+                                    "end": last_end,
+                                }
+                            })
 
     assert folder.next_network_scan_at() == next_time

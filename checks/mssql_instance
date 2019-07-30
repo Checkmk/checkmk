@@ -66,7 +66,9 @@ def _parse_prod_version(entry):
 def parse_mssql_instance(info):
     parsed = {}
     for line in info:
-        if line[0].startswith("ERROR:"):
+        if line[0].startswith("ERROR:") or len(line) < 2 or line[1] not in [
+                "config", "state", "details"
+        ]:
             continue
         elif line[0][:6] == "MSSQL_":
             # Remove the MSSQL_ prefix from the ID for this check
@@ -96,8 +98,8 @@ def parse_mssql_instance(info):
         elif line[1] == "details":
             _parse_prod_version(line[2])
             instance.update({
-                "prod_version_info": "%s (%s) (%s) - %s" % (_parse_prod_version(line[2]), line[3],
-                                                            line[2], line[4])
+                "prod_version_info": "%s (%s) (%s) - %s" %
+                                     (_parse_prod_version(line[2]), line[3], line[2], line[4])
             })
 
     return parsed

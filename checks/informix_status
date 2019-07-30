@@ -62,10 +62,14 @@ def check_informix_status(item, params, parsed):
         data = parsed[item]
         state, state_readable = map_states[data["Status"]]
         infotext = "Status: %s" % state_readable
-        if "Server Version" in data:
-            infotext += ", Version: %s" % data["Server Version"]
-        if "PORT" in data:
-            infotext += ", Port: %s" % data["PORT"].split(" ")[1]
+
+        server_version = data.get("Server Version")
+        if server_version:
+            infotext += ", Version: %s" % server_version
+
+        port = data.get("PORT")
+        if port:
+            infotext += ", Port: %s" % port.split(" ")[1]
         return state, infotext
 
 

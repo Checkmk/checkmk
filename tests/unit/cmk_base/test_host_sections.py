@@ -1,4 +1,5 @@
-import pytest
+import pytest  # type: ignore
+from testlib.base import Scenario
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources.host_sections as host_sections
 
@@ -62,6 +63,18 @@ node2 = [
     ])
 def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster_mapping,
                              service_descr, expected_result):
+    ts = Scenario()
+
+    if nodes is None:
+        ts.add_host(hostname)
+    else:
+        ts.add_cluster(hostname, nodes=nodes)
+
+    for node in nodes or []:
+        ts.add_host(node)
+
+    config_cache = ts.apply(monkeypatch)
+
     def host_of_clustered_service(hostname, service_description):
         return cluster_mapping[hostname]
 
@@ -72,11 +85,12 @@ def test_get_section_content(monkeypatch, hostname, nodes, host_entries, cluster
             host_sections.HostSections(sections={"check_plugin_name": node_section_content}))
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.0.1")
-    monkeypatch.setattr(multi_host_sections._config_cache, "nodes_of", lambda h: nodes)
-    monkeypatch.setattr(multi_host_sections._config_cache, "host_of_clustered_service",
-                        host_of_clustered_service)
+    monkeypatch.setattr(config_cache, "host_of_clustered_service", host_of_clustered_service)
 
-    section_content = multi_host_sections.get_section_content(
-        hostname, "127.0.0.1", "check_plugin_name", False, service_description=service_descr)
+    section_content = multi_host_sections.get_section_content(hostname,
+                                                              "127.0.0.1",
+                                                              "check_plugin_name",
+                                                              False,
+                                                              service_description=service_descr)
     assert expected_result == section_content,\
            "Section content: Expected '%s' but got '%s'" % (expected_result, section_content)

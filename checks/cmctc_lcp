@@ -174,14 +174,14 @@ def check_cmctc_lcp_temp(item, params, info):
                      (float(warn), float(high))
             levels_low = None if high == low == warn == "0" else \
                          (float(low), float("-inf"))  # no lower critical level specified
-            return check_temperature(
-                float(value),
-                params,
-                "cmctc_lcp_temp_%s" % item,
-                dev_levels=levels,
-                dev_levels_lower=levels_low,
-                dev_status=cmctc_translate_status(status),
-                dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
+            return check_temperature(float(value),
+                                     params,
+                                     "cmctc_lcp_temp_%s" % item,
+                                     dev_levels=levels,
+                                     dev_levels_lower=levels_low,
+                                     dev_status=cmctc_translate_status(status),
+                                     dev_status_name="Unit: %s" %
+                                     cmctc_translate_status_text(status))
     return 3, "Sensor not found in SNMP output", []
 
 

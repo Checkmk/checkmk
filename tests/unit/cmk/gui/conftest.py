@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore
-import _pytest  # type: ignore
 from werkzeug.test import create_environ
 from pathlib2 import Path
 
@@ -11,9 +10,6 @@ import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
 from cmk.gui.globals import html, current_app
-
-monkeypatch = _pytest.monkeypatch.MonkeyPatch()
-monkeypatch.setattr(config, "omd_site", lambda: "NO_SITE")
 
 
 # TODO: Better make our application available?
@@ -38,14 +34,8 @@ def register_builtin_html():
 @pytest.fixture()
 def load_config(register_builtin_html):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
-
-    multisite_mk = Path(cmk.utils.paths.default_config_dir) / "multisite.mk"
-    multisite_mk.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    multisite_mk.touch()  # pylint: disable=no-member
     config.initialize()
-
     yield
-
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 

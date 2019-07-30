@@ -57,12 +57,10 @@ export MK_CACHEDIR="/var/cache/check_mk"
 # part of a space-separated list. Of both fails, we set
 # the address to 'unknown'
 
-if [ -z "$REMOTE_HOST" ]
-then
+if [ -z "$REMOTE_HOST" ]; then
     REMOTE_HOST=${SSH_CONNECTION%% *}
-    if [ -z "$REMOTE_HOST" ]
-    then
-	REMOTE_HOST=unknown
+    if [ -z "$REMOTE_HOST" ]; then
+        REMOTE_HOST=unknown
     fi
 fi
 
@@ -82,15 +80,13 @@ SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
 # is not very unlikely since the agent might run a couple
 # of seconds
 (
-  flock --timeout 180 --exclusive 200 || exit 1
+    flock --timeout 180 --exclusive 200 || exit 1
 
-  if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]
-  then
-      check_mk_agent > $CACHEFILE
-      rm -f $CACHEFILE.seenby.*
-  fi
-  # Send cache file and mark it as seen by our remote host
-  cat $CACHEFILE
-  touch $SEENFILE
+    if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]; then
+        check_mk_agent >$CACHEFILE
+        rm -f $CACHEFILE.seenby.*
+    fi
+    # Send cache file and mark it as seen by our remote host
+    cat $CACHEFILE
+    touch $SEENFILE
 ) 200>$LOCKFILE
-

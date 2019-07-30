@@ -41,53 +41,45 @@
 # test 409255936       54525952
 
 
+@mysql_parse_per_item
 def parse_mysql_capacity(info):
-    def _name_size_avail(line):
-        name = " ".join(line[:-2])
-        return name, line[-2], line[-1]
+    data = {}
+    for line in info:
+        dbname, size, avail = " ".join(line[:-2]), line[-2], line[-1]
+        try:
+            data[dbname] = (int(size), int(avail))
+        except ValueError:
+            data[dbname] = (size, avail)
 
-    parsed = {}
-    for instance, line in _mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
-        name, size, avail = _name_size_avail(line)
-        parsed.setdefault(instance, {})[name] = (size, avail)
-    return parsed
+    return data
 
 
 @discover
-def inventory_mysql_size(instance, values):
-    for dbname, (used, avail) in values.iteritems():
-        if dbname not in ["information_schema", "mysql", "performance_schema"] \
-            and used != 'NULL' and avail != 'NULL':
+def inventory_mysql_size(instance, data):
+    for dbname, values in data.iteritems():
+        if dbname not in ("information_schema", "mysql", "performance_schema") \
+            and 'NULL' not in values:
             yield "%s:%s" % (instance, dbname)
 
 
 def check_mysql_size(item, params, parsed):
     if ":" not in item:
         # support items discovered before 1.2.7
-        instance = "mysql"
-        dbname = item
+        instance, dbname = "mysql", item
     else:
         instance, dbname = item.split(':')
 
-    instance_data = parsed.get(instance)
-    if not instance_data or dbname not in instance_data:
+    size, _avail = parsed.get(instance, {}).get(dbname, (None, None))
+    if not isinstance(size, int):
         return
-
-    size, _avail = instance_data[dbname]
 
     # size and avail are given as bytes
-    if size == 'NULL':
-        yield 3, "Missing information - Size is reported as 'NULL'"
-        return
-
-    size = int(size)
     levels = (params[0] * 1024, params[1] * 1024) if params else None
-    yield check_levels(
-        size,
-        'database_size',
-        levels,
-        human_readable_func=get_bytes_human_readable,
-        infoname="Size")
+    yield check_levels(size,
+                       'database_size',
+                       levels,
+                       human_readable_func=get_bytes_human_readable,
+                       infoname="Size")
 
 
 check_info['mysql_capacity'] = {

@@ -21,25 +21,24 @@
 
 namespace cma::provider {
 
-void MrpeEntry::loadFromString(const std::string &Value) {
+void MrpeEntry::loadFromString(const std::string &value) {
     full_path_name_ = "";
     namespace fs = std::filesystem;
-    auto tokens = TokenizeString(Value,  // string to tokenize
+    auto tokens = TokenizeString(value,  // string to tokenize
                                  RegexPossiblyQuoted,
                                  1);  // every passing will be added
 
+    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
     if (tokens.size() < 2) {
-        XLOG::l("Invalid command specification for {} in {} '{}'",
-                cma::cfg::groups::kMrpe,
-                cma::cfg::GetPathOfLoadedConfigAsString(), Value);
+        XLOG::l("Invalid command specification for '{}' in '{}' '{}'",
+                cma::cfg::groups::kMrpe, yml_name, value);
         return;
     }
 
     auto exe_name = tokens[1];  // Intentional copy
     if (exe_name.size() <= 2) {
-        XLOG::l("Invalid file specification for {} in {} '{}'",
-                cma::cfg::groups::kMrpe,
-                cma::cfg::GetPathOfLoadedConfigAsString(), Value);
+        XLOG::l("Invalid file specification for '{}' in '{}' '{}'",
+                cma::cfg::groups::kMrpe, yml_name, value);
         return;
     }
 
@@ -49,7 +48,7 @@ void MrpeEntry::loadFromString(const std::string &Value) {
     // remove last space
     if (argv.size()) argv.pop_back();
     auto p = cma::cfg::ReplacePredefinedMarkers(tokens[1]);
-    removeQuotes(p);
+    p = cma::tools::RemoveQuotes(p);
     fs::path exe_full_path = p;
     if (exe_full_path.is_relative()) {
         exe_full_path = cma::cfg::GetUserDir() / exe_full_path;
@@ -59,11 +58,11 @@ void MrpeEntry::loadFromString(const std::string &Value) {
 
     exe_name_ = exe_full_path.filename().u8string();
 
-    command_line_ = exe_full_path.u8string();
+    command_line_ = full_path_name_;
     if (!argv.empty()) command_line_ += " " + argv;
 
     description_ = tokens[0];
-    removeQuotes(description_);
+    description_ = cma::tools::RemoveQuotes(description_);
 }
 
 void MrpeProvider::addParsedConfig() {
@@ -74,10 +73,12 @@ void MrpeProvider::addParsedConfig() {
     auto end = std::remove_if(
         entries_.begin(),      // from
         entries_.end(),        // to
-        [](MrpeEntry Entry) {  // lambda to delete
-            std::error_code ec;
-            return !std::filesystem::exists(Entry.full_path_name_, ec) ||
-                   !std::filesystem::is_regular_file(Entry.full_path_name_, ec);
+        [](MrpeEntry entry) {  // lambda to delete
+            auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
+            if (!ok) {
+                XLOG::d("The file '{}' is no valid", entry.full_path_name_);
+            }
+            return !ok;
         }  //
     );
 
@@ -92,14 +93,15 @@ void MrpeProvider::addParsedChecks() {
 }
 
 std::pair<std::string, std::filesystem::path> parseIncludeEntry(
-    const std::string Entry) {
+    const std::string &entry) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
 
-    auto table = SplitString(Entry, "=", 2);
+    auto table = SplitString(entry, "=", 2);
+    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
+
     if (table.size() != 2) {
-        XLOG::d("invalid entry {} in {}", Entry,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+        XLOG::d("Invalid entry '{}' in '{}'", entry, yml_name);
         return {};
     }
 
@@ -107,13 +109,15 @@ std::pair<std::string, std::filesystem::path> parseIncludeEntry(
 
     auto include_user = table[0];
     auto potential_path = table[table.size() - 1];
+    potential_path = cma::tools::RemoveQuotes(potential_path);
     potential_path = cma::cfg::ReplacePredefinedMarkers(potential_path);
     fs::path path = potential_path;  // last is path
+    if (path.is_relative()) path = cma::cfg::GetUserDir() / path;
 
-    if (!cma::tools::IsRegularFileValid(path)) {
-        XLOG::d("File {} is not valid for entry {} in config {}",
-                path.u8string(), Entry,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+    if (!cma::tools::IsValidRegularFile(path)) {
+        XLOG::d(
+            "File '{}' is not valid or missing for entry '{}' in config '{}'",
+            path.u8string(), entry, yml_name);
         return {};
     }
     return {include_user, path};
@@ -123,14 +127,16 @@ void MrpeProvider::addParsedIncludes() {
     using namespace cma::tools;
     namespace fs = std::filesystem;
 
+    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
+
     for (const auto &entry : includes_) {
         auto [user, path] = parseIncludeEntry(entry);
+
         if (path.empty()) continue;
 
         std::ifstream ifs(path);
         if (!ifs) {
-            XLOG::d("File is really  bad for entry {} in {}", entry,
-                    cma::cfg::GetPathOfLoadedConfigAsString());
+            XLOG::d("File is bad for '{}' in '{}'", entry, yml_name);
             continue;
         }
 
@@ -143,8 +149,7 @@ void MrpeProvider::addParsedIncludes() {
             // split up line at = sign
             auto tokens = SplitString(line, "=", 2);
             if (tokens.size() != 2) {
-                XLOG::d("invalid entry {} in {}", entry,
-                        cma::cfg::GetPathOfLoadedConfigAsString());
+                XLOG::d("Invalid entry '{}' in '{}'", entry, yml_name);
                 continue;
             }
 
@@ -157,15 +162,14 @@ void MrpeProvider::addParsedIncludes() {
                 AllTrim(value);
                 entries_.emplace_back(user, value);
             } else {
-                XLOG::t("Strange entry {} in {}", entry,
-                        cma::cfg::GetPathOfLoadedConfigAsString());
+                XLOG::t("Strange entry '{}' in '{}'", entry, yml_name);
             }
         }
     }
 }
 
-bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
-    auto str = Entry;
+bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
+    auto str = entry;
     auto table = cma::tools::SplitString(str, "=");
     if (table.size() != 2) {
         XLOG::t("Strange entry {} in {}", str,
@@ -173,7 +177,7 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
         return false;
     }
 
-    // include entry determined when include word is presented in
+    // include entry determined when type is 'include'
     // the type
     auto type = table[0];
     std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
@@ -184,31 +188,30 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &Entry) {
     if (pos != std::string::npos &&              // found
         (type[len] == 0 || type[len] == ' ')) {  // include has end
 
-        std::string value = str.substr(len + pos, std::string::npos);
+        auto value = str.substr(len + pos, std::string::npos);
         cma::tools::AllTrim(value);
         if (!value.empty()) {
-            includes_.push_back(value);
+            includes_.emplace_back(value);
             return true;
         }
 
-        XLOG::d("Strange include entry type {} {} in {}", type, str,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+        XLOG::d("Strange include entry type '{}' '{}' ", type, str);
         return false;
     }
 
-    // check entry determined when type is check
+    // check entry determined when type is 'check'
     cma::tools::AllTrim(type);
     std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
     if (type == "check") {
         // check = anything   <-- src
         //        "anything"  <-- value
         cma::tools::AllTrim(table[1]);
-        checks_.push_back(table[1]);
+        auto potential_path = cma::cfg::ReplacePredefinedMarkers(table[1]);
+        checks_.emplace_back(potential_path);
         return true;
     }
 
-    XLOG::d("Strange entry type {} {} in {}", type, str,
-            cma::cfg::GetPathOfLoadedConfigAsString());
+    XLOG::d("Strange check entry type '{}' '{}'", type, str);
     return false;
 }
 
@@ -241,13 +244,12 @@ void MrpeProvider::loadConfig() {
     addParsedConfig();
 }
 
-void FixCrCnForMrpe(std::string &String) {
-    std::transform(String.cbegin(), String.cend(), String.begin(), [](char ch) {
+void FixCrCnForMrpe(std::string &str) {
+    std::transform(str.cbegin(), str.cend(), str.begin(), [](char ch) {
         if (ch == '\n') return '\1';
-        if (ch == '\r')
-            return ' ';
-        else
-            return ch;
+        if (ch == '\r') return ' ';
+
+        return ch;
     });
 }
 
@@ -297,7 +299,7 @@ void MrpeProvider::updateSectionStatus() {
     }
 }
 
-std::string MrpeProvider::makeBody() const {
+std::string MrpeProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 

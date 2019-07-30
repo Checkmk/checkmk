@@ -156,10 +156,10 @@ def extract_wmic_info(info):
 
     while True:
         try:
-            line = lines.next()
+            line = next(lines)
             if line[-1] == '[wmic process]':
                 is_wmic = True
-                wmic_headers = ["node"] + lines.next()[1:]
+                wmic_headers = ["node"] + next(lines)[1:]
                 continue
             elif line[-1] == '[wmic process end]':
                 is_wmic = False
@@ -205,8 +205,8 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
                 threadc = int(psinfo["ThreadCount"])  # do not resolve counter here!
                 line[1:1] = [
-                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" % (virt, resi, pid, pagefile, userc,
-                                                              kernelc, handlec, threadc)
+                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
+                    (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc)
                 ]
         info.append(line)
 

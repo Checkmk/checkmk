@@ -30,7 +30,7 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output():
     expected = [
-        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
+        re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
         re.escape(r'[system_perf]'),
         (r'AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,'
          r'ExceptionDispatchesPersec,FileControlBytesPersec,'
@@ -40,9 +40,9 @@ def expected_output():
          r'Frequency_PerfTime,Frequency_Sys100NS,Name,'
          r'PercentRegistryQuotaInUse,PercentRegistryQuotaInUse_Base,Processes,'
          r'ProcessorQueueLength,SystemCallsPersec,SystemUpTime,Threads,'
-         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus'),
+         r'Timestamp_Object,Timestamp_PerfTime,Timestamp_Sys100NS,WMIStatus').replace(',', '\t'),
         (r'\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,'
-         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b'),
+         r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b').replace(',', '\t'),
         re.escape(r'[computer_system]'),
         (r'AdminPasswordStatus,AutomaticManagedPagefile,'
          r'AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,'
@@ -61,11 +61,12 @@ def expected_output():
          r'ResetLimit,Roles,Status,SupportContactDescription,SystemFamily,'
          r'SystemSKUNumber,SystemStartupDelay,SystemStartupOptions,'
          r'SystemStartupSetting,SystemType,ThermalState,TotalPhysicalMemory,'
-         r'UserName,WakeUpType,Workgroup,WMIStatus'),
-        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,,\w+,\d+,\d+,'
+         r'UserName,WakeUpType,Workgroup,WMIStatus').replace(',', '\t'),
+        (r'\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,'
          r'[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,'
          r'[\w-]+,,\d+,\d+,\d+,,[^,]+,\d+,\-?\d+,\d+,\d+,,,\d+,\d+,\d+,,[\w-]+,'
-         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b')
+         r'\d+,\d+,\d+,[^,]+,\w+,,[^,]*,[^,]*,,,,[^,]+,\d+,\d+,[^,]*,\d+,\w*,\b(?:OK|Timeout)\b'
+        ).replace(',', '\t')
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
@@ -73,5 +74,20 @@ def expected_output():
 
 
 def test_section_wmi_cpuload(request, testconfig, expected_output, actual_output, testfile):
-    # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile, request.node.name)
+
+    # special case, wmi may timeout
+    ac = actual_output
+    required_lines = 7
+    if not Globals.alone:
+        required_lines += 2
+    name = 'cpu_load'
+
+    if ac is None:
+        pytest.skip('"%s" Data is absent' % name)
+        return
+
+    if len(ac) < required_lines:
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
+        return
+
+    remotetest(expected_output, ac, testfile, request.node.name)

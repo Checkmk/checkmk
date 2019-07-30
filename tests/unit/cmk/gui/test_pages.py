@@ -1,5 +1,5 @@
 import sys
-import pytest
+import pytest  # type: ignore
 
 import cmk.gui.pages
 
@@ -8,16 +8,19 @@ import cmk.gui.pages
 def test_registered_pages():
     assert sorted(cmk.gui.pages.page_registry.keys()) == sorted([
         'add_bookmark',
+        'ajax_cascading_render_painer_parameters',
         'ajax_activation_state',
         'ajax_add_visual',
         'ajax_autocomplete_labels',
         'ajax_backup_job_state',
         'ajax_dashlet_pos',
         'ajax_delete_user_notification',
+        'ajax_dict_host_tag_condition_get_choice',
         'ajax_graph',
         'ajax_graph_hover',
         'ajax_inv_render_tree',
         'ajax_metric_choice',
+        'ajax_nagvis_maps_snapin',
         'ajax_pagetype_add_element',
         'ajax_popup_action_menu',
         'ajax_popup_add_metric_to_custom_graph',
@@ -35,9 +38,20 @@ def test_registered_pages():
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_userdb_sync',
+        'ajax_visual_filter_list_get_choice',
         'ajax_vs_autocomplete',
+        'ajax_fetch_aggregation_data',
+        'ajax_save_bi_template_layout',
+        'ajax_save_bi_aggregation_layout',
+        'ajax_load_bi_template_layout',
+        'ajax_load_bi_aggregation_layout',
+        'ajax_delete_bi_template_layout',
+        'ajax_delete_bi_aggregation_layout',
+        'ajax_fetch_network_topology',
+        'ajax_get_all_bi_template_layouts',
         'automation_login',
         'bi',
+        'bi_map',
         'bi_debug',
         'bi_render_tree',
         'bi_save_treestate',

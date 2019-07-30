@@ -67,30 +67,46 @@ def inventory_cisco_asa_failover(parsed):
         yield (None, {})
 
 
+cisco_asa_state_names = {
+    "1": "other",
+    "2": "up",
+    "3": "down",
+    "4": "error",
+    "5": "overTemp",
+    "6": "busy",
+    "7": "noMedia",
+    "8": "backup",
+    "9": "active",
+    "10": "standby",
+}
+
+
+def _convert_params(params):
+    if isinstance(params, int):
+        # Very old case: primary state was remembered during discovery
+        # and stored as an integer: return [(None, int(info[1][1]))]
+        return {
+            "primary": cisco_asa_state_names["%s" % params],
+            "secondary": "standby",
+            "failover_state": 1,
+        }
+    return params
+
+
 def check_cisco_asa_failover(_no_item, params, parsed):
-    asa_state_names = {
-        "1": "other",
-        "2": "up",
-        "3": "down",
-        "4": "error",
-        "5": "overTemp",
-        "6": "busy",
-        "7": "noMedia",
-        "8": "backup",
-        "9": "active",
-        "10": "standby",
-    }
+    converted_params = _convert_params(params)
 
     role = parsed["local"][0]
     status = parsed["local"][1]
-    status_readable = asa_state_names[status]
+    status_readable = cisco_asa_state_names[status]
     status_detail = parsed["local"][2]
 
     yield 0, "Device (%s) is the %s" % (role, status_detail)
 
-    if not params[role] == status_readable:
-        yield params["failover_state"], \
-              "(The %s device should be %s)" % (role, params[role])
+    p_role = converted_params[role]
+    if not p_role == status_readable:
+        yield converted_params["failover_state"], \
+              "(The %s device should be %s)" % (role, p_role)
 
     if not status in ["9", "10"]:
         yield 1, "Unhandled state %s reported" % status_readable

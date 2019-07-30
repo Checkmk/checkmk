@@ -57,13 +57,11 @@ class RulespecCheckgroupParametersFireeyeMail(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "interval",
-                    Integer(
-                        title="Timespan for mail rate computation",
+        return Dictionary(elements=[
+            (
+                "interval",
+                Integer(title="Timespan for mail rate computation",
                         default_value=60,
                         unit="minutes"),
-                ),
-            ],)
+            ),
+        ],)

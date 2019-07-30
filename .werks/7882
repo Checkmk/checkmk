@@ -1,0 +1,10 @@
+Title: entersekt, entersekt.certexpiry, entersekt.ecerterrors, entersekt.emerrors, entersekt.soaperrors: Suite of checks for Entersekt devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564130537
+Class: feature
+
+

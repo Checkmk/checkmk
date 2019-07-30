@@ -72,7 +72,7 @@ opt_filename = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write('%s\n' % err)
     sys.exit(1)
 
@@ -115,7 +115,7 @@ else:
 if opt_filename:
     try:
         data = json.loads(file(opt_filename).read())
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
         if opt_debug:
             raise
@@ -141,11 +141,12 @@ else:
         auth = b64encode('%s:%s' % (opt_username, opt_password))
         headers = {'Authorization': 'Basic ' + auth}
         for obj in ['Agent', '*|*']:
-            connection.request(
-                'GET', url % {
-                    'application': arg_application,
-                    'object': obj
-                }, headers=headers)
+            connection.request('GET',
+                               url % {
+                                   'application': arg_application,
+                                   'object': obj
+                               },
+                               headers=headers)
             response = connection.getresponse()
 
             if response.status != 200:
@@ -155,7 +156,7 @@ else:
 
             data += json.loads(response.read())
 
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write('Cannot connect to AppDynamics server. %s\n' % e)
         if opt_debug:
             raise
@@ -188,8 +189,8 @@ for node, applications in grouped_data.iteritems():
         for typename, items in types.iteritems():
             typename = typename.lower().replace(' ', '_')
             if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
-                sys.stdout.write(
-                    '<<<appdynamics_%s:sep(124)>>>\n' % (typename.replace("_runtime", "")))
+                sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %
+                                 (typename.replace("_runtime", "")))
                 for item, values in items.iteritems():
                     if values:
                         output_items = [application, item]

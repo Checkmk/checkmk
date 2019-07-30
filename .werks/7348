@@ -1,0 +1,14 @@
+Title: Fix rule match diagnose after moving a rule
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1558256595
+
+The host/service context was lost when moving a rule from one position
+to another in a ruleset. This made the page title change to "[Ruleset title] '{}'" instead of
+"[Ruleset title] '[service description]'". The rule match diagnose did not work correctly in
+this situation.

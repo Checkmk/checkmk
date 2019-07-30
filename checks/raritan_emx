@@ -100,13 +100,12 @@ def check_raritan_emx_temp(item, params, parsed):
         rack_value = parsed[item]["rack_value"]
         rack_unit = parsed[item]["rack_unit"]
         state, state_readable = parsed[item]["state"]
-        return check_temperature(
-            rack_value,
-            params,
-            item,
-            dev_unit=rack_unit,
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(rack_value,
+                                 params,
+                                 item,
+                                 dev_unit=rack_unit,
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info['raritan_emx'] = {

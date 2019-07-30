@@ -1,0 +1,12 @@
+Title: cisco_asa_conn: Handle missing OID containing the IP address
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558096969
+Class: fix
+
+It is known that the OIDs for IP addresses may be missing instead of leading to
+an empty string in the info datastructure. This werk adds handling for this
+edge case.

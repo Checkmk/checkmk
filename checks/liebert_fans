@@ -56,7 +56,7 @@ def check_liebert_fans(item, params, parsed):
             if state > 0:
                 yield state, "warn/crit at %s/%s" % (warn, crit)
 
-            if params.has_key('levels_lower'):
+            if 'levels_lower' in params:
                 warn_lower, crit_lower = params['levels_lower']
                 state_lower = levels_liebert(value, warn_lower, crit_lower, 'lower')
                 if state_lower > 0:

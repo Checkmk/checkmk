@@ -149,23 +149,22 @@ def _parse_resource(info):
     except (ValueError, IndexError):
         return None
 
-    if len(info) < 4:
+    if len(info) < 3:
         return resource
 
     key, count = _read(info[1], (str, int), ("", 0))
     if key != "metrics following":
         return resource
 
-    # header = info[2]
-    for mline in info[3:3 + count]:
-        name, aggregation, value, unit, timestamp, timegrain, filters = _read(
-            mline, (str, str, float, str, str, str, str))
-        if unit in ('count', 'bytes') and value is not None:
-            # even integer values are formated '42.0', so we needed float(.)
+    for mline in info[2:2 + count]:
+        metric_dict = json.loads(_AZURE_AGENT_SEPARATOR.join(mline))
+        value = metric_dict['value']
+        if metric_dict['unit'] in ('count', 'bytes') and value is not None:
             value = int(value)
 
-        key = "%s_%s" % (aggregation, name.replace(" ", "_"))
-        metr = Metric(name, aggregation, value, unit, timestamp, timegrain, filters)
+        key = "%s_%s" % (metric_dict['aggregation'], metric_dict['name'].replace(" ", "_"))
+        metr = Metric(metric_dict['name'], metric_dict['aggregation'], value, metric_dict['unit'],
+                      metric_dict['timestamp'], metric_dict['interval_id'], metric_dict['filter'])
         resource.setdefault('metrics', {})[key] = metr
 
     return resource
@@ -201,7 +200,6 @@ def parse_azure(info):
 
 def discover_azure_by_metrics(*desired_metrics):
     """Return a discovery function, that will discover if any of the metrics are found"""
-
     def discovery_function(parsed):
         for name, resource in parsed.iteritems():
             metr = resource.get('metrics', {})

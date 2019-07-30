@@ -31,7 +31,7 @@ def testconfig(request, config):
 @pytest.fixture
 def expected_output():
     base = [
-        re.escape(r'<<<%s:sep(44)>>>' % Globals.section),
+        re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
         (r'AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,'
          r'Frequency_Object,Frequency_PerfTime,Frequency_Sys100NS,Gen0heapsize,'
          r'Gen0PromotedBytesPerSec,Gen1heapsize,Gen1PromotedBytesPerSec,'
@@ -42,16 +42,31 @@ def expected_output():
          r'NumberTotalreservedBytes,PercentTimeinGC,PercentTimeinGC_Base,'
          r'ProcessID,PromotedFinalizationMemoryfromGen0,PromotedMemoryfromGen0,'
          r'PromotedMemoryfromGen1,Timestamp_Object,Timestamp_PerfTime,'
-         r'Timestamp_Sys100NS')
+         r'Timestamp_Sys100NS').replace(',', '\t')
     ]
     re_str = (r'\d+,,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
               r'[\w\#\.]+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,'
-              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+')
+              r'\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+').replace(',', '\t')
     if not Globals.alone:
         re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
     return chain(base, repeat(re_str))
 
 
 def test_section_dotnet_clrmemory(request, testconfig, expected_output, actual_output, testfile):
-    # request.node.name gives test name
-    remotetest(expected_output, actual_output, testfile, request.node.name)
+
+    # special case wmi may timeout.
+    ac = actual_output
+    required_lines = 5
+    if not Globals.alone:
+        required_lines += 2
+    name = 'dotnet'
+
+    if ac is None:
+        pytest.skip('"%s" Data is absent' % name)
+        return
+
+    if len(ac) < required_lines:
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(ac)))
+        return
+
+    remotetest(expected_output, ac, testfile, request.node.name)

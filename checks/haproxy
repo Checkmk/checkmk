@@ -39,9 +39,13 @@
 # 0=frontend, 1=backend, 2=server, 3=socket/listener
 
 
+def _is_discoverable(line, type_):
+    return len(line) >= 33 and line[32] == type_
+
+
 def inventory_haproxy_frontend(info):
     for line in info:
-        if line[32] == "0":
+        if _is_discoverable(line, "0"):
             yield line[0], None
 
 
@@ -74,7 +78,7 @@ check_info["haproxy.frontend"] = {
 
 def inventory_haproxy_server(info):
     for line in info:
-        if line[32] == "2":
+        if _is_discoverable(line, "2"):
             yield "%s/%s" % (line[0], line[1]), None
 
 

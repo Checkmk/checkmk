@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # TODO: This should be realized as unit tests
 
+from __future__ import print_function
 import pytest
 from testlib import web
 
@@ -42,7 +43,7 @@ def test_cfg(web, clear_config_caches, enable_debug):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     if web.host_exists("mgmt-host"):
         web.delete_host("mgmt-host")
@@ -69,13 +70,12 @@ def test_cfg(web, clear_config_caches, enable_debug):
     }),
 ])
 def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
-    web.add_host(
-        "mgmt-host",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-            cred_attribute: credentials,
-        })
+    web.add_host("mgmt-host",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                     cred_attribute: credentials,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -86,13 +86,12 @@ def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
 
 
 def test_mgmt_explicit_address(web):
-    web.add_host(
-        "mgmt-host",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": "snmp",
-            "management_address": "127.0.0.2",
-        })
+    web.add_host("mgmt-host",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": "snmp",
+                     "management_address": "127.0.0.2",
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -103,14 +102,13 @@ def test_mgmt_explicit_address(web):
 
 
 def test_mgmt_disabled(web):
-    web.add_host(
-        "mgmt-host",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": None,
-            "management_address": "127.0.0.1",
-            "management_snmp_community": "HOST",
-        })
+    web.add_host("mgmt-host",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": None,
+                     "management_address": "127.0.0.1",
+                     "management_snmp_community": "HOST",
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -132,19 +130,17 @@ def test_mgmt_disabled(web):
 ])
 def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, credentials,
                                                 folder_credentials):
-    web.add_folder(
-        "folder1", attributes={
-            cred_attribute: folder_credentials,
-        })
+    web.add_folder("folder1", attributes={
+        cred_attribute: folder_credentials,
+    })
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-            cred_attribute: credentials,
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                     cred_attribute: credentials,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -165,18 +161,16 @@ def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, c
     }),
 ])
 def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder(
-        "folder1", attributes={
-            cred_attribute: folder_credentials,
-        })
+    web.add_folder("folder1", attributes={
+        cred_attribute: folder_credentials,
+    })
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -198,20 +192,19 @@ def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, fo
 ])
 def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, credentials,
                                              folder_credentials):
-    web.add_folder(
-        "folder1", attributes={
-            "management_protocol": None,
-            cred_attribute: folder_credentials,
-        })
+    web.add_folder("folder1",
+                   attributes={
+                       "management_protocol": None,
+                       cred_attribute: folder_credentials,
+                   })
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-            cred_attribute: credentials,
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                     cred_attribute: credentials,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -232,17 +225,15 @@ def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, cred
     }),
 ])
 def test_mgmt_inherit_protocol(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder(
-        "folder1",
-        attributes={
-            "management_protocol": protocol,
-            cred_attribute: folder_credentials,
-        })
+    web.add_folder("folder1",
+                   attributes={
+                       "management_protocol": protocol,
+                       cred_attribute: folder_credentials,
+                   })
 
-    web.add_host(
-        "mgmt-host", folder="folder1", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+    web.add_host("mgmt-host", folder="folder1", attributes={
+        "ipaddress": "127.0.0.1",
+    })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -269,10 +260,7 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': (protocol, ruleset_credentials),
                     },
@@ -282,13 +270,12 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
 
     web.add_folder("folder1")
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -316,10 +303,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': (protocol, ruleset_credentials),
                     },
@@ -327,18 +311,16 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
             }
         })
 
-    web.add_folder(
-        "folder1", attributes={
-            cred_attribute: folder_credentials,
-        })
+    web.add_folder("folder1", attributes={
+        cred_attribute: folder_credentials,
+    })
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": protocol,
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": protocol,
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")
@@ -355,18 +337,12 @@ def test_mgmt_config_ruleset_order(web):
             "ruleset": {
                 "": [  # "" -> folder
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': ("snmp", "RULESET1"),
                     },
                     {
-                        'conditions': {
-                            'host_specs': ['@all'],
-                            'host_tags': []
-                        },
+                        'condition': {},
                         'options': {},
                         'value': ("snmp", "RULESET2"),
                     },
@@ -376,13 +352,12 @@ def test_mgmt_config_ruleset_order(web):
 
     web.add_folder("folder1")
 
-    web.add_host(
-        "mgmt-host",
-        folder="folder1",
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "management_protocol": "snmp",
-        })
+    web.add_host("mgmt-host",
+                 folder="folder1",
+                 attributes={
+                     "ipaddress": "127.0.0.1",
+                     "management_protocol": "snmp",
+                 })
 
     config_cache = reload_config()
     host_config = config_cache.get_host_config("mgmt-host")

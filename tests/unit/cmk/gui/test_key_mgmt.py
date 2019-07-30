@@ -12,14 +12,14 @@ def test_key_mgmt_create_key(monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 123)
 
     key_dict = key_mgmt.PageEditKey()._generate_key(u"älias", "passphra$e")
-    assert type(key_dict) == dict
+    assert isinstance(key_dict, dict)
     assert sorted(key_dict.keys()) == ["alias", "certificate", "date", "owner", "private_key"]
-    assert type(key_dict["alias"]) == unicode
+    assert isinstance(key_dict["alias"], unicode)
     assert key_dict["alias"] == u"älias"
 
     assert key_dict["date"] == 123
 
-    assert type(key_dict["owner"]) == unicode
+    assert isinstance(key_dict["owner"], unicode)
     assert key_dict["owner"] == u"dingdöng"
 
     assert key_dict["certificate"].startswith("-----BEGIN CERTIFICATE---")

@@ -32,7 +32,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
 
-# There is common code with modules/events.py:format_plugin_output(). Please check
+# There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output, row=None, shall_escape=True):
@@ -69,8 +69,8 @@ def format_plugin_output(output, row=None, shall_escape=True):
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + http_url +
-            "(?: target=&quot;_blank&quot;&gt;)?", lambda p: str(
+            "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
+            lambda p: str(
                 html.render_icon_button(
                     p.group(1).replace('&quot;', ''),
                     p.group(1).replace('&quot;', ''), "link")), output)
@@ -99,39 +99,43 @@ def get_host_list_links(site, hosts):
     return entries
 
 
-def check_limit(rows, limit, user):
-    count = len(rows)
-    if limit is not None and count >= limit + 1:
-        text = _("Your query produced more than %d results. ") % limit
+def row_limit_exceeded(row_count, limit):
+    return limit is not None and row_count >= limit + 1
 
-        if html.get_ascii_input("limit",
-                                "soft") == "soft" and user.may("general.ignore_soft_limit"):
-            text += html.render_a(
-                _('Repeat query and allow more results.'),
-                target="_self",
-                href=html.makeuri([("limit", "hard")]))
-        elif html.get_ascii_input("limit") == "hard" and user.may("general.ignore_hard_limit"):
-            text += html.render_a(
-                _('Repeat query without limit.'),
-                target="_self",
-                href=html.makeuri([("limit", "none")]))
 
-        text += " " + _(
-            "<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
-        html.show_warning(text)
-        del rows[limit:]
-        return False
-    return True
+def query_limit_exceeded_warn(limit, user_config):
+    """Compare query reply against limits, warn in the GUI about incompleteness"""
+    text = _("Your query produced more than %d results. ") % limit
+
+    if html.get_ascii_input("limit",
+                            "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
+        text += html.render_a(_('Repeat query and allow more results.'),
+                              target="_self",
+                              href=html.makeuri([("limit", "hard")]))
+    elif html.get_ascii_input("limit") == "hard" and user_config.may("general.ignore_hard_limit"):
+        text += html.render_a(_('Repeat query without limit.'),
+                              target="_self",
+                              href=html.makeuri([("limit", "none")]))
+
+    text += " " + _(
+        "<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
+    html.show_warning(text)
 
 
 def render_labels(labels, object_type, with_links, label_sources):
-    return _render_tag_groups_or_labels(
-        labels, object_type, with_links, label_type="label", label_sources=label_sources)
+    return _render_tag_groups_or_labels(labels,
+                                        object_type,
+                                        with_links,
+                                        label_type="label",
+                                        label_sources=label_sources)
 
 
 def render_tag_groups(tag_groups, object_type, with_links):
-    return _render_tag_groups_or_labels(
-        tag_groups, object_type, with_links, label_type="tag_group", label_sources={})
+    return _render_tag_groups_or_labels(tag_groups,
+                                        object_type,
+                                        with_links,
+                                        label_type="tag_group",
+                                        label_sources={})
 
 
 def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, label_sources):
@@ -140,14 +144,15 @@ def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, l
                           label_sources.get(tg_id, "unspecified"))
         for tg_id, tag in sorted(entries.items())
     ]
-    return html.render_tags(
-        HTML("").join(elements), class_=["tagify", label_type, "display"], readonly="true")
+    return html.render_tags(HTML("").join(elements),
+                            class_=["tagify", label_type, "display"],
+                            readonly="true")
 
 
 def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_source):
-    span = html.render_tag(
-        html.render_div(html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
-        class_=["tagify--noAnim", label_source])
+    span = html.render_tag(html.render_div(
+        html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
+                           class_=["tagify--noAnim", label_source])
     if not with_link:
         return span
 
@@ -167,11 +172,10 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
     else:
         raise NotImplementedError()
 
-    url = html.makeuri_contextless(
-        [
-            ("filled_in", "filter"),
-            ("search", "Search"),
-            ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
-        ] + type_filter_vars,
-        filename="view.py")
+    url = html.makeuri_contextless([
+        ("filled_in", "filter"),
+        ("search", "Search"),
+        ("view_name", "searchhost" if object_type == "host" else "searchsvc"),
+    ] + type_filter_vars,
+                                   filename="view.py")
     return html.render_a(span, href=url)

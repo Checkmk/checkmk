@@ -120,7 +120,7 @@ def cmp_version(a, b):
 def savefloat(f):
     try:
         return float(f)
-    except:
+    except (TypeError, ValueError):
         return 0.0
 
 
@@ -129,7 +129,7 @@ def savefloat(f):
 def saveint(x):
     try:
         return int(x)
-    except:
+    except (TypeError, ValueError):
         return 0
 
 
@@ -188,7 +188,7 @@ def load_web_plugins(forwhat, globalvars):
                 elif fn.endswith(".pyc"):
                     code_bytes = file(file_path).read()[8:]
                     code = marshal.loads(code_bytes)
-                    exec code in globalvars
+                    exec(code, globalvars)  # yapf: disable
 
             except Exception as e:
                 logger.error("Failed to load plugin %s: %s", file_path, e, exc_info=True)

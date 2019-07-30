@@ -50,6 +50,9 @@ Some more advanced ones are
   * `mock_host_conf` : [sc-dict] If present, its values are passed to
                            `MockHostExtraConf`
                        as defined in checktestlib module.
+  * `mock_host_conf_merged` : [sc-dict] If present, its values are passed to
+                           `MockHostExtraConf`
+                       as defined in checktestlib module.
   * `mock_item_state`: [sc-dict] If present, its values are passed to
                            `MockItemState`
                        as defined in checktestlib module.

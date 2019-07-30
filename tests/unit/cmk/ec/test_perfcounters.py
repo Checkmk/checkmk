@@ -71,20 +71,20 @@ def test_perfcounters_column_default_values():
     c = Perfcounters(logger)
     for column_name, default_value in c.status_columns():
         if column_name.startswith("status_average_") and column_name.endswith("_time"):
-            assert type(default_value) == float
+            assert isinstance(default_value, float)
             assert default_value == 0.0
 
         elif column_name.startswith("status_average_") and column_name.endswith("_rate"):
-            assert type(default_value) == float
+            assert isinstance(default_value, float)
             assert default_value == 0.0
 
         elif column_name.startswith("status_") and column_name.endswith("_rate"):
-            assert type(default_value) == float
+            assert isinstance(default_value, float)
             assert default_value == 0.0
 
         elif column_name.startswith("status_"):
-            assert type(default_value) == int, "Wrong column type %r: %s" % (column_name,
-                                                                             type(default_value))
+            assert isinstance(default_value,
+                              int), "Wrong column type %r: %s" % (column_name, type(default_value))
             assert default_value == 0, "Wrong column default value %r: %d" % (column_name,
                                                                               default_value)
 

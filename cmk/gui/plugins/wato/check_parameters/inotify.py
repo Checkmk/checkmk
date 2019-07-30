@@ -68,27 +68,25 @@ class RulespecCheckgroupParametersInotify(CheckParameterRulespecWithItem):
                    "these levels here with the configuration rule in the agent bakery. "),
             elements=[
                 ('age_last_operation',
-                 ListOf(
-                     Tuple(
-                         elements=[
-                             DropdownChoice(
-                                 title=_("INotify Operation"),
-                                 choices=[
-                                     ("create", _("Create")),
-                                     ("delete", _("Delete")),
-                                     ("open", _("Open")),
-                                     ("modify", _("Modify")),
-                                     ("access", _("Access")),
-                                     ("movedfrom", _("Moved from")),
-                                     ("movedto", _("Moved to")),
-                                     ("moveself", _("Move self")),
-                                 ],
-                             ),
-                             Age(title=_("Warning at")),
-                             Age(title=_("Critical at")),
-                         ],),
-                     title=_("Age of last operation"),
-                     movable=False)),
+                 ListOf(Tuple(elements=[
+                     DropdownChoice(
+                         title=_("INotify Operation"),
+                         choices=[
+                             ("create", _("Create")),
+                             ("delete", _("Delete")),
+                             ("open", _("Open")),
+                             ("modify", _("Modify")),
+                             ("access", _("Access")),
+                             ("movedfrom", _("Moved from")),
+                             ("movedto", _("Moved to")),
+                             ("moveself", _("Move self")),
+                         ],
+                     ),
+                     Age(title=_("Warning at")),
+                     Age(title=_("Critical at")),
+                 ],),
+                        title=_("Age of last operation"),
+                        movable=False)),
             ],
             optional_keys=None,
         )

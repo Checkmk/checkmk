@@ -125,8 +125,11 @@ def check_fibrechannel_common(item, params, parsed):
                        ("write_latency", "Write Latency")]:
         value = fcp_if.get("avg_%s" % what)
         if value is not None:
-            yield check_levels(
-                value, "avg_%s_latency" % what, params.get(what), unit="ms", infoname=text)
+            yield check_levels(value,
+                               "avg_%s_latency" % what,
+                               params.get(what),
+                               unit="ms",
+                               infoname=text)
 
 
 def parse_netapp_api_fcp(info):

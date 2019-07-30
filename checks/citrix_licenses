@@ -36,27 +36,34 @@
 # PVSD_STD_CCS 42 0
 
 
-def inventory_citrix_licenses(info):
-    license_types = set([])
-    for license_type, _have, _used in info:
-        license_types.add(license_type)
-    return [(lt, None) for lt in license_types]
+def parse_citrix_licenses(info):
+    parsed = {}
+    for line in info:
+        try:
+            have = int(line[1])
+            used = int(line[2])
+        except (IndexError, ValueError):
+            continue
+        license_type = line[0]
+        licenses = parsed.setdefault(license_type, (0, 0))
+        parsed[license_type] = (licenses[0] + have, licenses[1] + used)
+    return parsed
 
 
-def check_citrix_licenses(item, params, info):
-    have = 0
-    used = 0
-    for license_type, h, u in info:
-        if item == license_type:
-            have += int(h)
-            used += int(u)
+def inventory_citrix_licenses(parsed):
+    return [(license_type, None) for license_type in parsed.iterkeys()]
+
+
+@get_parsed_item_data
+def check_citrix_licenses(item, params, data):
+    have, used = data
     if not have:
         return 3, "No licenses of that type found"
-
     return license_check_levels(have, used, params)
 
 
 check_info["citrix_licenses"] = {
+    'parse_function': parse_citrix_licenses,
     'check_function': check_citrix_licenses,
     'inventory_function': inventory_citrix_licenses,
     'service_description': 'Citrix Licenses %s',

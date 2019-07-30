@@ -40,7 +40,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class NotifyUsersDashlet(Dashlet):
     """Dashlet that displays GUI notifications for users"""
-
     @classmethod
     def type_name(cls):
         return "notify_users"
@@ -63,7 +62,6 @@ class NotifyUsersDashlet(Dashlet):
 .notify_users {
     width: 100%;
     height: 100%;
-    overflow: auto;
 }"""
 
     @classmethod
@@ -77,8 +75,8 @@ function delete_user_notification(msg_id, btn) {
 
     def show(self):
         html.open_div(class_="notify_users")
-        with table_element(
-                "notify_users", sortable=False, searchable=False, omit_if_empty=True) as table:
+        with table_element("notify_users", sortable=False, searchable=False,
+                           omit_if_empty=True) as table:
 
             for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
                 if "dashlet" not in entry["methods"]:
@@ -91,11 +89,10 @@ function delete_user_notification(msg_id, btn) {
                 message = entry["text"].replace("\n", " ")
 
                 table.cell(_("Actions"), css="buttons", sortable=False)
-                html.icon_button(
-                    "",
-                    _("Delete"),
-                    "delete",
-                    onclick="delete_user_notification('%s', this);" % msg_id)
+                html.icon_button("",
+                                 _("Delete"),
+                                 "delete",
+                                 onclick="delete_user_notification('%s', this);" % msg_id)
 
                 table.text_cell(_("Message"), message)
                 table.text_cell(_("Date"), datetime)

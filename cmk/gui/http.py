@@ -50,7 +50,6 @@ class Request(object):
     and provides some low level functions to the application for accessing these
     information. These should be basic HTTP request handling things and no application
     specific mechanisms."""
-
     def __init__(self, wsgi_environ):
         super(Request, self).__init__()
         self._logger = log.logger.getChild("http.Request")
@@ -125,7 +124,18 @@ class Request(object):
         return 110
 
     def get_request_header(self, key, deflt=None):
-        return self._wsgi_environ.get(key, deflt)
+        """Returns the value of a HTTP request header
+
+        Applies the CGI variable name mangling to the requested variable name
+        which is used by Apache 2.4+ and mod_wsgi to finally produce the
+        wsgi_environ.
+
+        a) mod_wsgi/Apache only make the variables available that consist of alpha numeric
+           and minus characters. Other variables are skipped.
+        b) e.g. X-Remote-User is available as HTTP_X_REMOTE_USER
+        """
+        env_key = "HTTP_%s" % key.upper().replace("-", "_")
+        return self._wsgi_environ.get(env_key, deflt)
 
     def has_cookie(self, varname):
         """Whether or not the client provides a cookie with the given name"""
@@ -139,7 +149,7 @@ class Request(object):
         """Return either the value of the cookie provided by the client, the given deflt value or None"""
         try:
             return self.cookies[varname]
-        except:
+        except KeyError:
             return deflt
 
     #
@@ -161,6 +171,15 @@ class Request(object):
     def set_var(self, varname, value):
         if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
+
+        # All items in self._vars are encoded at the moment. This should be changed one day,
+        # but for the moment we treat vars set with set_var() equal to the vars received from
+        # the HTTP request.
+        if isinstance(varname, unicode):
+            varname = varname.encode("utf-8")
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
+
         self._vars[varname] = value
 
     # TODO: self._vars should be strictly read only in the Request() object

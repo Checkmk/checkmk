@@ -1,6 +1,8 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
+from pathlib2 import Path
 import pytest  # type: ignore
 from testlib.base import Scenario
 
@@ -10,30 +12,162 @@ import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
 import cmk_base.check_api as check_api
+from cmk_base.check_utils import Service
+from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
-def test_all_configured_realhosts(monkeypatch):
+def test_duplicate_hosts(monkeypatch):
+    ts = Scenario()
+    ts.add_host("bla1")
+    ts.add_host("bla1")
+    ts.add_host("zzz")
+    ts.add_host("zzz")
+    ts.add_host("yyy")
+    ts.apply(monkeypatch)
+    assert config.duplicate_hosts() == ["bla1", "zzz"]
+
+
+def test_all_offline_hosts(monkeypatch):
+    ts = Scenario()
+    ts.add_host("blub", tags={"criticality": "offline"})
+    ts.add_host("bla")
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == set()
+
+
+def test_all_offline_hosts_with_wato_default_config(monkeypatch):
     ts = Scenario(site_id="site1")
-    ts.add_host("real1", ["site:site1"])
-    ts.add_host("real2", ["site:site2"])
-    ts.add_host("real3", [])
-    ts.add_cluster("cluster1", ["site:site1"], nodes=["node1"])
-    ts.add_cluster("cluster2", ["site:site2"], nodes=["node2"])
-    ts.add_cluster("cluster3", [], nodes=["node3"])
+    ts.set_ruleset("only_hosts", [
+        (["!offline"], config.ALL_HOSTS),
+    ])
+    ts.add_host("blub1", tags={"criticality": "offline"})
+    ts.add_host("blub2", tags={"criticality": "offline", "site": "site2"})
+    ts.add_host("bla")
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == {"blub1"}
+
+
+def test_all_configured_offline_hosts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.set_ruleset("only_hosts", [
+        (["!offline"], config.ALL_HOSTS),
+    ])
+    ts.add_host("blub1", tags={"criticality": "offline", "site": "site1"})
+    ts.add_host("blub2", tags={"criticality": "offline", "site": "site2"})
+    ts.apply(monkeypatch)
+    assert config.all_offline_hosts() == {"blub1"}
+
+
+def test_all_configured_hosts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.add_host("real1", tags={"site": "site1"})
+    ts.add_host("real2", tags={"site": "site2"})
+    ts.add_host("real3")
+    ts.add_cluster("cluster1", tags={"site": "site1"}, nodes=["node1"])
+    ts.add_cluster("cluster2", tags={"site": "site2"}, nodes=["node2"])
+    ts.add_cluster("cluster3", nodes=["node3"])
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.all_configured_clusters() == set(["cluster1", "cluster2", "cluster3"])
-    assert config_cache.all_configured_realhosts() == set(["real1", "real2", "real3"])
-    assert config_cache.all_configured_hosts() == set(
-        ["cluster1", "cluster2", "cluster3", "real1", "real2", "real3"])
+    assert config_cache.all_configured_clusters() == {"cluster1", "cluster2", "cluster3"}
+    assert config_cache.all_configured_realhosts() == {"real1", "real2", "real3"}
+    assert config_cache.all_configured_hosts() == {
+        "cluster1", "cluster2", "cluster3", "real1", "real2", "real3"
+    }
+
+
+def test_all_active_hosts(monkeypatch):
+    ts = Scenario(site_id="site1")
+    ts.add_host("real1", tags={"site": "site1"})
+    ts.add_host("real2", tags={"site": "site2"})
+    ts.add_host("real3")
+    ts.add_cluster("cluster1", {"site": "site1"}, nodes=["node1"])
+    ts.add_cluster("cluster2", {"site": "site2"}, nodes=["node2"])
+    ts.add_cluster("cluster3", nodes=["node3"])
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.all_active_clusters() == {"cluster1", "cluster3"}
+    assert config_cache.all_active_realhosts() == {"real1", "real3"}
+    assert config_cache.all_active_hosts() == {"cluster1", "cluster3", "real1", "real3"}
+
+
+def test_config_cache_tag_to_group_map(monkeypatch):
+    ts = Scenario()
+    ts.set_option(
+        "tag_config", {
+            "aux_tags": [],
+            "tag_groups": [{
+                'id': 'dingeling',
+                'title': u'Dung',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'dong',
+                    'title': u'ABC'
+                },],
+            }],
+        })
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_tag_to_group_map() == {
+        'all-agents': 'agent',
+        'auto-piggyback': 'piggyback',
+        'cmk-agent': 'agent',
+        'dong': 'dingeling',
+        'ip-v4': 'ip-v4',
+        'ip-v4-only': 'address_family',
+        'ip-v4v6': 'address_family',
+        'ip-v6': 'ip-v6',
+        'ip-v6-only': 'address_family',
+        'no-agent': 'agent',
+        'no-ip': 'address_family',
+        'no-piggyback': 'piggyback',
+        'no-snmp': 'snmp_ds',
+        'piggyback': 'piggyback',
+        'ping': 'ping',
+        'snmp': 'snmp',
+        'snmp-v1': 'snmp_ds',
+        'snmp-v2': 'snmp_ds',
+        'special-agents': 'agent',
+        'tcp': 'tcp',
+    }
+
+
+@pytest.mark.parametrize("hostname,host_path,result", [
+    ("none", "/hosts.mk", 0),
+    ("main", "/wato/hosts.mk", 0),
+    ("sub1", "/wato/level1/hosts.mk", 1),
+    ("sub2", "/wato/level1/level2/hosts.mk", 2),
+    ("sub3", "/wato/level1/level3/hosts.mk", 3),
+    ("sub11", "/wato/level11/hosts.mk", 11),
+    ("sub22", "/wato/level11/level22/hosts.mk", 22),
+])
+def test_host_folder_matching(monkeypatch, hostname, host_path, result):
+    ts = Scenario().add_host(hostname, host_path=host_path)
+    ts.set_ruleset("agent_ports", [
+        (22, ["/wato/level11/level22/+"], config.ALL_HOSTS),
+        (11, ["/wato/level11/+"], config.ALL_HOSTS),
+        (3, ["/wato/level1/level3/+"], config.ALL_HOSTS),
+        (2, ["/wato/level1/level2/+"], config.ALL_HOSTS),
+        (1, ["/wato/level1/+"], config.ALL_HOSTS),
+        (0, [], config.ALL_HOSTS),
+    ])
+
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).agent_port == result
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], True),
-    ("testhost", ["ip-v4"], True),
-    ("testhost", ["ip-v4", "ip-v6"], True),
-    ("testhost", ["ip-v6"], False),
-    ("testhost", ["no-ip"], False),
+    ("testhost", {}, True),
+    ("testhost", {
+        "address_family": "ip-v4-only"
+    }, True),
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, True),
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, False),
+    ("testhost", {
+        "address_family": "no-ip"
+    }, False),
 ])
 def test_is_ipv4_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -41,11 +175,19 @@ def test_is_ipv4_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["ip-v4"], False),
-    ("testhost", ["ip-v4", "ip-v6"], True),
-    ("testhost", ["ip-v6"], True),
-    ("testhost", ["no-ip"], False),
+    ("testhost", {}, False),
+    ("testhost", {
+        "address_family": "ip-v4-only"
+    }, False),
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, True),
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, True),
+    ("testhost", {
+        "address_family": "no-ip"
+    }, False),
 ])
 def test_is_ipv6_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -53,11 +195,19 @@ def test_is_ipv6_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["ip-v4"], False),
-    ("testhost", ["ip-v4", "ip-v6"], True),
-    ("testhost", ["ip-v6"], False),
-    ("testhost", ["no-ip"], False),
+    ("testhost", {}, False),
+    ("testhost", {
+        "address_family": "ip-v4-only"
+    }, False),
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, True),
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, False),
+    ("testhost", {
+        "address_family": "no-ip"
+    }, False),
 ])
 def test_is_ipv4v6_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -65,8 +215,12 @@ def test_is_ipv4v6_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", ["piggyback"], True),
-    ("testhost", ["no-piggyback"], False),
+    ("testhost", {
+        "piggyback": "piggyback"
+    }, True),
+    ("testhost", {
+        "piggyback": "no-piggyback"
+    }, False),
 ])
 def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -78,8 +232,10 @@ def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     (False, False),
 ])
 @pytest.mark.parametrize("hostname,tags", [
-    ("testhost", []),
-    ("testhost", ["auto-piggyback"]),
+    ("testhost", {}),
+    ("testhost", {
+        "piggyback": "auto-piggyback"
+    }),
 ])
 def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
     monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
@@ -88,11 +244,19 @@ def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["ip-v4"], False),
-    ("testhost", ["ip-v4", "ip-v6"], False),
-    ("testhost", ["ip-v6"], False),
-    ("testhost", ["no-ip"], True),
+    ("testhost", {}, False),
+    ("testhost", {
+        "address_family": "ip-v4-only"
+    }, False),
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, False),
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, False),
+    ("testhost", {
+        "address_family": "no-ip"
+    }, True),
 ])
 def test_is_no_ip_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -100,22 +264,36 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result,ruleset", [
-    ("testhost", [], False, []),
-    ("testhost", ["ip-v4"], False, [
+    ("testhost", {}, False, []),
+    ("testhost", {
+        "address_family": "ip-v4-only"
+    }, False, [
         ('ipv6', [], config.ALL_HOSTS, {}),
     ]),
-    ("testhost", ["ip-v4", "ip-v6"], False, []),
-    ("testhost", ["ip-v4", "ip-v6"], True, [
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, False, []),
+    ("testhost", {
+        "address_family": "ip-v4v6"
+    }, True, [
         ('ipv6', [], config.ALL_HOSTS, {}),
     ]),
-    ("testhost", ["ip-v6"], True, []),
-    ("testhost", ["ip-v6"], True, [
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, True, []),
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, True, [
         ('ipv4', [], config.ALL_HOSTS, {}),
     ]),
-    ("testhost", ["ip-v6"], True, [
+    ("testhost", {
+        "address_family": "ip-v6-only"
+    }, True, [
         ('ipv6', [], config.ALL_HOSTS, {}),
     ]),
-    ("testhost", ["no-ip"], False, []),
+    ("testhost", {
+        "address_family": "no-ip"
+    }, False, []),
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     ts = Scenario().add_host(hostname, tags)
@@ -162,12 +340,21 @@ def test_host_config_additional_ipaddresses(monkeypatch, attrs, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], True),
-    ("testhost", ["cmk-agent"], True),
-    ("testhost", ["cmk-agent", "tcp"], True),
-    ("testhost", ["snmp", "tcp"], True),
-    ("testhost", ["ping"], False),
-    ("testhost", ["no-agent", "no-snmp"], False),
+    ("testhost", {}, True),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, True),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v2"
+    }, True),
+    ("testhost", {
+        "agent": "no-agent"
+    }, False),
+    ("testhost", {
+        "agent": "no-agent",
+        "snmp_ds": "no-snmp"
+    }, False),
 ])
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -175,14 +362,29 @@ def test_is_tcp_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["cmk-agent"], False),
-    ("testhost", ["snmp", "tcp"], False),
-    ("testhost", ["snmp", "tcp", "ping"], False),
-    ("testhost", ["snmp"], False),
-    ("testhost", ["no-agent", "no-snmp", "no-piggyback"], True),
-    ("testhost", ["no-agent", "no-snmp"], True),
-    ("testhost", ["ping"], True),
+    ("testhost", {}, False),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, False),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v1"
+    }, False),
+    ("testhost", {
+        "snmp_ds": "snmp-v1"
+    }, False),
+    ("testhost", {
+        "agent": "no-agent",
+        "snmp_ds": "no-snmp",
+        "piggyback": "no-piggyback"
+    }, True),
+    ("testhost", {
+        "agent": "no-agent",
+        "snmp_ds": "no-snmp"
+    }, True),
+    ("testhost", {
+        "agent": "no-agent"
+    }, True),
 ])
 def test_is_ping_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -190,10 +392,22 @@ def test_is_ping_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["cmk-agent"], False),
-    ("testhost", ["snmp", "tcp"], True),
-    ("testhost", ["snmp"], True),
+    ("testhost", {}, False),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, False),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v1"
+    }, True),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v2"
+    }, True),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "no-snmp"
+    }, False),
 ])
 def test_is_snmp_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -201,13 +415,13 @@ def test_is_snmp_host(monkeypatch, hostname, tags, result):
 
 
 def test_is_not_usewalk_host(monkeypatch):
-    config_cache = Scenario().add_host("xyz", ["abc"]).apply(monkeypatch)
+    config_cache = Scenario().add_host("xyz").apply(monkeypatch)
     assert config_cache.get_host_config("xyz").is_usewalk_host is False
 
 
 def test_is_usewalk_host(monkeypatch):
     ts = Scenario()
-    ts.add_host("xyz", ["abc"])
+    ts.add_host("xyz")
     ts.set_ruleset("usewalk_hosts", [
         (["xyz"], config.ALL_HOSTS, {}),
     ])
@@ -217,12 +431,22 @@ def test_is_usewalk_host(monkeypatch):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["tcp"], False),
-    ("testhost", ["snmp"], False),
-    ("testhost", ["cmk-agent", "snmp"], False),
-    ("testhost", ["no-agent", "no-snmp"], False),
-    ("testhost", ["tcp", "snmp"], True),
+    ("testhost", {}, False),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, False),
+    ("testhost", {
+        "agent": "no-agent",
+        "snmp_ds": "snmp-v1"
+    }, False),
+    ("testhost", {
+        "agent": "no-agent",
+        "snmp_ds": "no-snmp"
+    }, False),
+    ("testhost", {
+        "agent": "cmk-agent",
+        "snmp_ds": "snmp-v1"
+    }, True),
 ])
 def test_is_dual_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -230,11 +454,19 @@ def test_is_dual_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["all-agents"], True),
-    ("testhost", ["special-agents"], False),
-    ("testhost", ["no-agent"], False),
-    ("testhost", ["cmk-agent"], False),
+    ("testhost", {}, False),
+    ("testhost", {
+        "agent": "all-agents"
+    }, True),
+    ("testhost", {
+        "agent": "special-agents"
+    }, False),
+    ("testhost", {
+        "agent": "no-agent"
+    }, False),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, False),
 ])
 def test_is_all_agents_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -242,11 +474,19 @@ def test_is_all_agents_host(monkeypatch, hostname, tags, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
-    ("testhost", [], False),
-    ("testhost", ["all-agents"], False),
-    ("testhost", ["special-agents"], True),
-    ("testhost", ["no-agent"], False),
-    ("testhost", ["cmk-agent"], False),
+    ("testhost", {}, False),
+    ("testhost", {
+        "agent": "all-agents"
+    }, False),
+    ("testhost", {
+        "agent": "special-agents"
+    }, True),
+    ("testhost", {
+        "agent": "no-agent"
+    }, False),
+    ("testhost", {
+        "agent": "cmk-agent"
+    }, False),
 ])
 def test_is_all_special_agents_host(monkeypatch, hostname, tags, result):
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
@@ -699,15 +939,21 @@ def test_host_config_hostgroups(monkeypatch, hostname, result):
 
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
-    ("testhost2", ["dingdong"]),
+    ("testhost2", ["abc", "dingdong"]),
 ])
 def test_host_config_contactgroups(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
-    ts.set_ruleset("host_contactgroups", [
-        ("dingdong", [], ["testhost2"], {}),
-    ])
+    ts.set_ruleset(
+        "host_contactgroups",
+        [
+            # Seems both, a list of groups and a group name is allowed. We should clean
+            # this up to be always a list of groups in the future...
+            ("dingdong", [], ["testhost2"], {}),
+            (["abc"], [], ["testhost2"], {}),
+            (["xyz"], [], ["testhost2"], {}),
+        ])
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).contactgroups == result
+    assert sorted(config_cache.get_host_config(hostname).contactgroups) == sorted(result)
 
 
 @pytest.mark.parametrize("hostname,result", [
@@ -835,7 +1081,7 @@ def test_service_depends_on_unknown_host():
 
 
 def test_service_depends_on(monkeypatch):
-    ts = Scenario().add_host("test-host", tags=[])
+    ts = Scenario().add_host("test-host")
     ts.set_ruleset("service_dependencies", [
         ("dep1", [], config.ALL_HOSTS, ["svc1"], {}),
         ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),
@@ -883,27 +1129,65 @@ def test_host_config_parents(cluster_config):
     assert cluster_config.get_host_config("cluster1").parents == []
 
 
+def test_config_cache_tag_list_of_host(monkeypatch):
+    ts = Scenario()
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("xyz")
+    config_cache = ts.apply(monkeypatch)
+
+    print(config_cache._hosttags["test-host"])
+    print(config_cache._hosttags["xyz"])
+    assert config_cache.tag_list_of_host("xyz") == {
+        '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
+        'site:unit', 'prod'
+    }
+
+
+def test_config_cache_tag_list_of_host_not_existing(monkeypatch):
+    ts = Scenario()
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.tag_list_of_host("not-existing") == {
+        '/', 'lan', 'cmk-agent', 'no-snmp', 'auto-piggyback', 'ip-v4-only', 'site:NO_SITE', 'prod'
+    }
+
+
 def test_host_tags_default():
     assert isinstance(config.host_tags, dict)
 
 
 def test_host_tags_of_host(monkeypatch):
     ts = Scenario()
-    ts.add_host("test-host", ["abc"])
-    ts.set_option("host_tags", {
-        "test-host": {
-            "tag_group": "abc",
-        },
-    })
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 
     cfg = config_cache.get_host_config("xyz")
-    assert cfg.tag_groups == {}
-    assert config_cache.tags_of_host("xyz") == {}
+    assert cfg.tag_groups == {
+        'address_family': 'ip-v4-only',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'ip-v4': 'ip-v4',
+        'networking': 'lan',
+        'piggyback': 'auto-piggyback',
+        'site': 'unit',
+        'snmp_ds': 'no-snmp',
+        'tcp': 'tcp',
+    }
+    assert config_cache.tags_of_host("xyz") == cfg.tag_groups
 
     cfg = config_cache.get_host_config("test-host")
-    assert cfg.tag_groups == {"tag_group": "abc"}
-    assert config_cache.tags_of_host("test-host") == {"tag_group": "abc"}
+    assert cfg.tag_groups == {
+        'address_family': 'ip-v4-only',
+        'agent': 'no-agent',
+        'criticality': 'prod',
+        'ip-v4': 'ip-v4',
+        'networking': 'lan',
+        'piggyback': 'auto-piggyback',
+        'site': 'unit',
+        'snmp_ds': 'no-snmp',
+    }
+    assert config_cache.tags_of_host("test-host") == cfg.tag_groups
 
 
 def test_service_tag_rules_default():
@@ -912,26 +1196,40 @@ def test_service_tag_rules_default():
 
 def test_tags_of_service(monkeypatch):
     ts = Scenario()
-    ts.set_option("host_tags", {
-        "test-host": {
-            "tag_group": "abc",
-        },
-    })
-
     ts.set_ruleset("service_tag_rules", [
-        ([("tag_group1", "val1")], ["abc"], config.ALL_HOSTS, ["CPU load$"], {}),
+        ([("criticality", "prod")], ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
     ])
 
-    ts.add_host("test-host", ["abc"])
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 
     cfg = config_cache.get_host_config("xyz")
-    assert cfg.tag_groups == {}
+    assert cfg.tag_groups == {
+        'address_family': 'ip-v4-only',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'ip-v4': 'ip-v4',
+        'networking': 'lan',
+        'piggyback': 'auto-piggyback',
+        'site': 'unit',
+        'snmp_ds': 'no-snmp',
+        'tcp': 'tcp',
+    }
     assert config_cache.tags_of_service("xyz", "CPU load") == {}
 
     cfg = config_cache.get_host_config("test-host")
-    assert cfg.tag_groups == {"tag_group": "abc"}
-    assert config_cache.tags_of_service("test-host", "CPU load") == {"tag_group1": "val1"}
+    assert cfg.tag_groups == {
+        'address_family': 'ip-v4-only',
+        'agent': 'no-agent',
+        'criticality': 'prod',
+        'ip-v4': 'ip-v4',
+        'networking': 'lan',
+        'piggyback': 'auto-piggyback',
+        'site': 'unit',
+        'snmp_ds': 'no-snmp',
+    }
+    assert config_cache.tags_of_service("test-host", "CPU load") == {"criticality": "prod"}
 
 
 def test_host_label_rules_default():
@@ -940,23 +1238,17 @@ def test_host_label_rules_default():
 
 def test_host_config_labels(monkeypatch):
     ts = Scenario()
-    ts.set_option("host_labels", {
-        "test-host": {
-            "explicit": "ding",
-        },
-    })
-
     ts.set_ruleset("host_label_rules", [
         ({
             "from-rule": "rule1"
-        }, ["abc"], config.ALL_HOSTS, {}),
+        }, ["no-agent"], config.ALL_HOSTS, {}),
         ({
             "from-rule2": "rule2"
-        }, ["abc"], config.ALL_HOSTS, {}),
+        }, ["no-agent"], config.ALL_HOSTS, {}),
     ])
 
-    ts.add_host("test-host", ["abc"])
-
+    ts.add_host("test-host", tags={"agent": "no-agent"}, labels={"explicit": "ding"})
+    ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 
     cfg = config_cache.get_host_config("xyz")
@@ -976,7 +1268,7 @@ def test_host_config_labels(monkeypatch):
 
 
 def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
-    ts = Scenario().add_host("test-host", ["abc"])
+    ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", tmp_path)
     host_file = (tmp_path / "test-host").with_suffix(".mk")
@@ -997,13 +1289,13 @@ def test_labels_of_service(monkeypatch):
     ts.set_ruleset("service_label_rules", [
         ({
             "label1": "val1"
-        }, ["abc"], config.ALL_HOSTS, ["CPU load$"], {}),
+        }, ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
         ({
             "label2": "val2"
-        }, ["abc"], config.ALL_HOSTS, ["CPU load$"], {}),
+        }, ["no-agent"], config.ALL_HOSTS, ["CPU load$"], {}),
     ])
 
-    ts.add_host("test-host", ["abc"])
+    ts.add_host("test-host", tags={"agent": "no-agent"})
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.labels_of_service("xyz", "CPU load") == {}
@@ -1019,17 +1311,47 @@ def test_labels_of_service(monkeypatch):
     }
 
 
+def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
+    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
+
+    ts = Scenario().add_host("test-host")
+
+    monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir).joinpath("test-host.mk")
+    with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write(u"""[
+    {'check_plugin_name': 'cpu.loads', 'item': None, 'parameters': cpuload_default_levels, 'service_labels': {u'äzzzz': u'eeeeez'}},
+]""")
+
+    config_cache = ts.apply(monkeypatch)
+
+    service = config_cache.get_autochecks_of("test-host")[0]
+    assert service.description == u"CPU load"
+
+    assert config_cache.labels_of_service("xyz", u"CPU load") == {}
+    assert config_cache.label_sources_of_service("xyz", u"CPU load") == {}
+
+    assert config_cache.labels_of_service("test-host", service.description) == {u"äzzzz": u"eeeeez"}
+    assert config_cache.label_sources_of_service("test-host", service.description) == {
+        u"äzzzz": u"discovered"
+    }
+
+
 @pytest.mark.parametrize("hostname,result", [
-    ("testhost1", {}),
+    ("testhost1", {
+        "check_interval": 1.0
+    }),
     ("testhost2", {
         '_CUSTOM': ['value1'],
-        'dingdong': ['value1']
+        'dingdong': ['value1'],
+        'check_interval': 10.0,
     }),
 ])
 def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
     ts.set_option(
         "extra_service_conf", {
+            "check_interval": [("10", [], ["testhost2"], "CPU load$", {}),],
             "dingdong": [
                 ([
                     "value1",
@@ -1048,7 +1370,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
             ],
         })
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_extra_attributes_of_service(hostname, "CPU load") == result
+    assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
 @pytest.mark.parametrize("hostname,result", [
@@ -1081,6 +1403,93 @@ def test_config_cache_servicegroups_of_service(monkeypatch, hostname, result):
     assert config_cache.servicegroups_of_service(hostname, "CPU load") == result
 
 
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", []),
+    ("testhost2", ["dingdong"]),
+])
+def test_config_cache_contactgroups_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("service_contactgroups", [
+        ("dingdong", [], ["testhost2"], "CPU load", {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.contactgroups_of_service(hostname, "CPU load") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", "24X7"),
+    ("testhost2", "workhours"),
+])
+def test_config_cache_passive_check_period_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset("check_periods", [
+        ("workhours", [], ["testhost2"], ["CPU load$"], {}),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.passive_check_period_of_service(hostname, "CPU load") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", {}),
+    ("testhost2", {
+        'ATTR1': 'value1',
+        'ATTR2': 'value2',
+    }),
+])
+def test_config_cache_custom_attributes_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "custom_service_attributes",
+        [
+            ([
+                ("ATTR1", "value1"),
+                ("ATTR2", "value2"),
+            ], [], ["testhost2"], ["CPU load$"], {}),
+            ([
+                ("ATTR1", "value1"),
+            ], [], ["testhost2"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.custom_attributes_of_service(hostname, "CPU load") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", 10),
+])
+def test_config_cache_service_level_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "service_service_levels",
+        [
+            (10, [], ["testhost2"], ["CPU load$"], {}),
+            (2, [], ["testhost2"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.service_level_of_service(hostname, "CPU load") == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", None),
+    ("testhost3", "xyz"),
+])
+def test_config_cache_check_period_of_service(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "check_periods",
+        [
+            ("24X7", [], ["testhost2"], ["CPU load$"], {}),
+            ("xyz", [], ["testhost3"], ["CPU load$"], {}),
+            ("zzz", [], ["testhost3"], ["CPU load$"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.check_period_of_service(hostname, "CPU load") == result
+
+
 @pytest.mark.parametrize("edition_short,expected_cache_class_name,expected_host_class_name", [
     ("cme", "CEEConfigCache", "CEEHostConfig"),
     ("cee", "CEEConfigCache", "CEEHostConfig"),
@@ -1090,9 +1499,12 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
                                       expected_host_class_name):
     monkeypatch.setattr(cmk, "edition_short", lambda: edition_short)
 
-    cache = config.get_config_cache()
+    ts = Scenario()
+    ts.add_host("xyz")
+    cache = ts.apply(monkeypatch)
+
     assert cache.__class__.__name__ == expected_cache_class_name
-    assert cache._host_configs == {}
+    assert cache._host_configs.keys() == ["xyz"]
 
     host_config = cache.get_host_config("xyz")
     assert host_config.__class__.__name__ == expected_host_class_name
@@ -1100,59 +1512,35 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
-def test_host_ruleset_match_object_of_host(monkeypatch):
-    ts = Scenario()
-    ts.set_option("host_tags", {
-        "test-host": {
-            "tag_group": "abc",
-        },
-    })
-    ts.add_host("test-host", ["abc"])
-    config_cache = ts.apply(monkeypatch)
-
-    cfg = config_cache.get_host_config("xyz")
-    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
-    assert cfg.ruleset_match_object.to_dict() == {
-        "host_tags": {},
-        "host_name": "xyz",
-    }
-
-    cfg = config_cache.get_host_config("test-host")
-    assert isinstance(cfg.ruleset_match_object, RulesetMatchObject)
-    assert cfg.ruleset_match_object.to_dict() == {
-        "host_name": "test-host",
-        "host_tags": {
-            "tag_group": "abc",
-        }
-    }
-
-
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
-    ts.set_option("host_tags", {
-        "test-host": {
-            "tag_group": "abc",
-        },
-    })
-    ts.add_host("test-host", ["abc"])
+    ts.add_host("xyz")
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.set_autochecks("test-host", [
+        Service("cpu.load",
+                None,
+                "CPU load",
+                "{}",
+                service_labels=DiscoveredServiceLabels(ServiceLabel(u"abc", u"xä"),))
+    ])
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service("xyz", "bla blä")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
         "host_name": "xyz",
-        "host_tags": {},
         "service_description": "bla blä",
+        "service_labels": {},
     }
 
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
         "host_name": "test-host",
-        "host_tags": {
-            "tag_group": "abc",
-        },
         "service_description": "CPU load",
+        "service_labels": {
+            u"abc": u"xä"
+        },
     }
 
 
@@ -1169,7 +1557,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
     }, [], config.ALL_HOSTS, {})]),
 ])
 def test_host_config_do_status_data_inventory(monkeypatch, result, ruleset):
-    ts = Scenario().add_host("abc", [])
+    ts = Scenario().add_host("abc")
     ts.set_option("active_checks", {
         "cmk_inv": ruleset,
     })
@@ -1191,10 +1579,27 @@ def test_host_config_do_status_data_inventory(monkeypatch, result, ruleset):
     }, [], config.ALL_HOSTS, {})]),
 ])
 def test_host_config_do_host_label_discovery_for(monkeypatch, result, ruleset):
-    ts = Scenario().add_host("abc", [])
+    ts = Scenario().add_host("abc")
     ts.set_option("active_checks", {
         "cmk_inv": ruleset,
     })
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.get_host_config("abc").do_host_label_discovery == result
+
+
+@pytest.mark.parametrize("hostname,result", [
+    ("testhost1", None),
+    ("testhost2", 10),
+])
+def test_host_config_service_level(monkeypatch, hostname, result):
+    ts = Scenario().add_host(hostname)
+    ts.set_ruleset(
+        "host_service_levels",
+        [
+            (10, [], ["testhost2"], {}),
+            (2, [], ["testhost2"], {}),
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).service_level == result

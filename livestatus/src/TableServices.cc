@@ -515,7 +515,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, -1, -1, 0, table->core()));
+        indirect_offset, -1, -1, 0));
     table->addColumn(std::make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

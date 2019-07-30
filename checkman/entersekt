@@ -1,0 +1,9 @@
+title: General state of Entersekt Daemon
+agents: snmp
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This checks verifies if the Entersekt is running
+inventory:
+ One service for Entersekt status

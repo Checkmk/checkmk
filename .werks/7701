@@ -1,0 +1,10 @@
+Title: dotnet_clrmemory: Fixed crash; services will not be discovered if the agent only sends a WMI timeout
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1559567327
+Class: fix
+
+

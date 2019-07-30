@@ -1,0 +1,10 @@
+Title: emcvnx_mirrorview: Skip invalid data: 'Error occurred during HTTP request/response from the target'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560323799
+Class: fix
+
+

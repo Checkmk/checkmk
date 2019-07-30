@@ -50,14 +50,12 @@ def main():
 
     if "PARAMETER_IGNORE_SSL" in context:
         sys.stdout.write("Unverified HTTPS request warnings are ignored. Use with caution.\n")
-        jira = JIRA(
-            server=context['PARAMETER_URL'],
-            basic_auth=(context['PARAMETER_USERNAME'], context['PARAMETER_PASSWORD']),
-            options={'verify': False})
+        jira = JIRA(server=context['PARAMETER_URL'],
+                    basic_auth=(context['PARAMETER_USERNAME'], context['PARAMETER_PASSWORD']),
+                    options={'verify': False})
     else:
-        jira = JIRA(
-            server=context['PARAMETER_URL'],
-            basic_auth=(context['PARAMETER_USERNAME'], context['PARAMETER_PASSWORD']))
+        jira = JIRA(server=context['PARAMETER_URL'],
+                    basic_auth=(context['PARAMETER_USERNAME'], context['PARAMETER_PASSWORD']))
 
     if context['WHAT'] == 'HOST':
         summary = context.get('PARAMETER_HOST_SUMMARY') or tmpl_host_summary
@@ -99,7 +97,7 @@ def main():
 
     try:
         custom_field_exists = jira.search_issues("cf[%d]=%d" % (custom_field, custom_field_value))
-    except JIRAError, err:
+    except JIRAError as err:
         sys.stderr.write('Unable to query custom field search, JIRA response code %s, %s' %
                          (err.status_code, err.text))
         return 2
@@ -110,9 +108,9 @@ def main():
     if context['NOTIFICATIONTYPE'] == 'PROBLEM':
         try:
             issue = jira.create_issue(fields=newissue)
-        except JIRAError, err:
-            sys.stderr.write(
-                'Unable to create issue, JIRA response code %s, %s' % (err.status_code, err.text))
+        except JIRAError as err:
+            sys.stderr.write('Unable to create issue, JIRA response code %s, %s' %
+                             (err.status_code, err.text))
             return 2
         sys.stdout.write('Created %s\n' % issue.permalink())
         if 'PARAMETER_MONITORING' in context:
@@ -125,7 +123,7 @@ def main():
                 url = context['PARAMETER_MONITORING'] + context['HOSTURL']
             try:
                 rl = jira.add_simple_link(issue, {'url': url, 'title': 'Monitoring'})
-            except JIRAError, err:
+            except JIRAError as err:
                 sys.stderr.write('Unable to create link in issue, JIRA response code %s, %s\n' %
                                  (err.status_code, err.text))
                 return 2
@@ -149,7 +147,7 @@ def main():
             try:
                 jira.transition_issue(issue, resolution, comment=newissue['description'])
                 sys.stdout.write('Resolved %s' % issue.permalink())
-            except JIRAError, err:
+            except JIRAError as err:
                 sys.stderr.write('Unable to resolve %s, JIRA response code %s, %s' %
                                  (issue.permalink(), err.status_code, err.text))
                 return 2

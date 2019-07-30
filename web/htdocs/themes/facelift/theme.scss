@@ -1,45 +1,34 @@
-// This theme is based on the classic theme, so first load the whole
-// classic theme and then the overrides.
-/* Instead of an import, copy all classic theme imports to stepwise
-   decouple the facelift and classic theme by transferring the
-   modularized scss files and then getting rid of the overriding
-   _main.scss
- */
 @import "~select2/dist/css/select2";
 @import "~@yaireo/tagify/dist/tagify";
 
-@import "../classic/scss/_check_mk.scss";
-@import "../classic/scss/_pages.scss";
-@import "../classic/scss/_status.scss";
-@import "../classic/scss/_prediction.scss";
-@import "../classic/scss/_wato.scss";
-@import "../classic/scss/_mobile.scss";
+@import "scss/_variables.scss";
+@import "scss/_main.scss";
+@import "scss/_pages.scss";
+@import "scss/_status.scss";
+@import "scss/_bi.scss";
+@import "scss/_dashboard.scss";
+@import "scss/_login.scss";
+@import "scss/_logwatch.scss";
+@import "scss/_prediction.scss";
+@import "scss/_views.scss";
+@import "scss/_wato.scss";
+@import "scss/_mobile.scss";
+@import "scss/_sidebar.scss";
+@import "scss/_snapins.scss";
+@import "scss/_node_visualization.scss";
 
 // CEE specific files. Would love to add some kind of conditional import here,
 // but that is simply not possible at the moment using SCSS. Hack around this
 // using symlinks in the git during development and replace the links with empty
 // files during the build procedure of other editions.
-@import "../classic/scss/cee/_graphs.scss";
-@import "../classic/scss/cee/_reporting.scss";
+@import "../facelift/scss/cee/_graphs.scss";
+@import "../facelift/scss/cee/_reporting.scss";
 @if $ENTERPRISE = "yes" {
   @include graphs;
   @include reporting;
 }
 
-@import "../classic/scss/cme/_managed.scss";
+@import "../facelift/scss/cme/_managed.scss";
 @if $MANAGED = "yes" {
   @include managed;
 }
-
-@import "scss/_variables.scss";
-@import "scss/_main.scss";
-@import "scss/_pages.scss";
-@import "scss/_bi.scss";
-@import "scss/_dashboard.scss";
-@import "scss/_login.scss";
-@import "scss/_logwatch.scss";
-@import "scss/_views.scss";
-@import "scss/_wato.scss";
-@import "scss/_tables.scss";
-@import "scss/_sidebar.scss";
-@import "scss/_snapins.scss";

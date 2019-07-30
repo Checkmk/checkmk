@@ -113,6 +113,6 @@ def check_alcatel_temp(item, params, info):
         # If multiple switches are staked and one of them are
         # not reachable, prevent a exception
         temp_celsius = int(info[slot_index][items[sensor]])
-    except:
+    except Exception:
         return 3, "Sensor not found"
     return check_temperature(temp_celsius, params, "alcatel_temp_%s" % item)

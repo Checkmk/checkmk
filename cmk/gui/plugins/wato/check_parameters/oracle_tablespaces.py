@@ -97,11 +97,10 @@ class RulespecCheckgroupParametersOracleTablespaces(CheckParameterRulespecWithIt
                      Tuple(
                          orientation="horizontal",
                          elements=[
-                             DropdownChoice(
-                                 choices=[
-                                     ("RECOVER", _("Recover")),
-                                     ("OFFLINE", _("Offline")),
-                                 ],),
+                             DropdownChoice(choices=[
+                                 ("RECOVER", _("Recover")),
+                                 ("OFFLINE", _("Offline")),
+                             ],),
                              MonitoringState()
                          ],
                      ),

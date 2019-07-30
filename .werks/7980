@@ -1,0 +1,14 @@
+Title: Prevent deletion of contact groups while referenced in hosts or folders
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563441692
+
+Previously contact groups could be deleted while still being referenced in hosts
+or folders which lead to some strange effects in the GUI. Besindes the existing
+validations the contact group deletion feature is now preventing the deletion
+of groups in case it is still in use by a folder or host.

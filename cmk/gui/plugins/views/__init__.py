@@ -53,7 +53,6 @@ from cmk.gui.plugins.views.utils import (
     declare_1to1_sorter,
     declare_simple_sorter,
     display_options,
-    do_query_data,
     EmptyCell,
     format_plugin_output,
     get_graph_timerange_from_painter_options,
@@ -90,7 +89,6 @@ from cmk.gui.plugins.views.utils import (
     paint_nagiosflag,
     paint_stalified,
     pnp_url,
-    query_data,
     render_cache_info,
     replace_action_url_macros,
     row_id,
@@ -98,6 +96,7 @@ from cmk.gui.plugins.views.utils import (
     url_to_view,
     view_is_enabled,
     view_title,
+    query_livestatus,
 )
 
 #.

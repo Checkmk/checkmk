@@ -1,0 +1,34 @@
+Title: Fix "HTTP header authentication"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560923023
+
+The HTTP header authentication can be enabled in the Global Settings using the
+option "Authenticate users by incoming HTTP requests". In case you do not use
+this authentication method, you are not affected by this issue.
+
+It is mostly used in some reverse proxy setups where the Checkmk apache is
+located behind an authentication service. The authentication service only tells
+Checkmk the authenticated username and the user interfaces allows the user to
+enter without further authentication.
+
+The user name is handed over as HTTP header with each HTTP request to the site
+apache and forwarded to the GUI.
+
+With Checkmk 1.5 or older in connection with apache 2.4 and Checkmk 1.6 with
+all apache versions this feature can not be used anymore using HTTP header
+variables containing other characters than <tt>A-z, a-z, 0-9 and -</tt>. For
+example <tt>X-Remote-User</tt> is still working, while <tt>REMOTE_USER</tt>
+(which uses the not allowed <tt>_</tt>) is not working anymore.
+
+This 1.6.0b3 release fixes an issue in this header variable processing and
+changes the default setting in the GUI to <tt>X-Remote-User</tt>.
+
+If you configured this before with 1.5, you will have to check your
+configuration and change the HTTP header variable in the reverse proxy and
+Checkmk configuration to make it work with the new variable syntax.

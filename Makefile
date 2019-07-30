@@ -36,7 +36,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 7
+CLANG_VERSION      := 8
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
@@ -74,7 +74,9 @@ FILES_TO_FORMAT_LINUX := \
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
-JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed))) $(wildcard web/htdocs/js/modules/*.js)
+JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed)))\
+                      $(wildcard web/htdocs/js/modules/*.js)\
+                      $(wildcard web/htdocs/js/modules/node_visualization/*.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
@@ -82,7 +84,8 @@ RRDTOOL_VERS := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdto
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-windows format-linux format-python GTAGS headers help install \
+        format-windows format-linux format-python format-shell \
+	GTAGS headers help install \
         iwyu mrproper optimize-images packages setup setversion tidy version \
         am--refresh skel
 
@@ -227,6 +230,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 		windows/cfg_examples \
 		windows/check_mk_agent*.{exe,msi} \
 		windows/check_mk.example.ini \
+		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
@@ -304,6 +308,9 @@ optimize-images:
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json
+	if curl --head 'http://nexus:8081/#browse/browse:npm-proxy' | grep '200\ OK'; then \
+            npm config set registry http://nexus:8081/repository/npm-proxy/; \
+        fi
 	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
@@ -349,10 +356,14 @@ setup:
 	    librrd-dev \
 	    llvm-7-dev \
 	    libsasl2-dev \
+	    libldap2-dev \
+	    libkrb5-dev \
+	    libmysqlclient-dev \
 	    pngcrush \
 	    valgrind \
 	    direnv \
 	    python-pip \
+	    python3.7-dev \
 	    chrpath \
 	    enchant \
 	    ksh \
@@ -465,7 +476,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
-format: format-python format-c
+format: format-python format-c format-shell
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
@@ -487,6 +498,10 @@ format-python: .venv
 	PYTHON_FILES=$${PYTHON_FILES-$$(tests/find-python-files)} ; \
 	$(PIPENV) run yapf --parallel --style .style.yapf --verbose -i $$PYTHON_FILES
 
+format-shell:
+	sudo docker run --rm -v "$(realpath .):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES)
+
+
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
 	$(MAKE) -C livestatus/src documentation
@@ -494,30 +509,46 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-Pipfile.lock: Pipfile
-	$(PIPENV) lock
-# TODO: Can be removed if pipenv fixes this issue.
+# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+# can be removed if pipenv fixes this issue.
 # See: https://github.com/pypa/pipenv/issues/3140
 #      https://github.com/pypa/pipenv/issues/3026
 # The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
 # Pipfile.lock. This leads to an error when installing packages with this
 # markers and prints an error message. Example:
 # Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
-	sed -i "/\"markers\": \"extra == /d" Pipfile.lock
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
 # want is a check if the contents of .venv match the contents of Pipfile.lock.
 # We should do this via some move-if-change Kung Fu, but for now rm suffices.
+virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
+	cd virtual-envs/$*/; \
+	$(PIPENV) lock; \
+	sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
 	rm -rf .venv
 
-.venv: Pipfile.lock
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'
 # mode installs the dependencies exactly as speciefied in the Pipfile.lock.
 # This is extremely fast since the dependencies do not have to be resolved.
-	$(RM) -r .venv
-	$(PIPENV) sync --dev
+# Cleanup partially created pipenv. This makes us able to automatically repair
+# broken virtual environments which may have been caused by network issues.
+.PRECIOUS: virtual-envs/%/.venv
+virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
+	@type python$* >/dev/null 2>&1 || (echo "ERROR: python$* can not be found. Execute: \"make setup\"" && exit 1)
+	cd virtual-envs/$*/; \
+	$(RM) -r .venv; \
+	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1); \
 	touch .venv
+
+.venv-%: virtual-envs/%/.venv
+	rm -rf {Pipfile,Pipfile.lock,.venv*}
+	ln -s virtual-envs/$*/{Pipfile,Pipfile.lock,.venv} .
+	touch $@
+
+# This is for compatibility: The target .venv should always refer to 2.7
+# .venv is a PHONY target, so it will be remade, even if .venv is 'up to date'
+.venv: .venv-2.7
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

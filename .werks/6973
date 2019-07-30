@@ -1,0 +1,20 @@
+Title: fileinfo: Fixed various bugs.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560255492
+Class: fix
+
+<ul>
+<li>If you only had fileinfo config files below fileinfo.d/, but not
+fileinfo.cfg, the former ones were ignored.</li>
+<li>Spaces in the paths to the config files and within the patterns itself
+did not work.</li>
+<li>Brace expansion and tilde expansion in patterns did not work.</li>
+<li>The config files can now contain comment lines in the usual syntax, i.e.
+lines starting with some optional whitespace, optionally followed by a hash mark
+and a comment.</li>
+<li>Date variables work in all agents now.</li>
+</ul>

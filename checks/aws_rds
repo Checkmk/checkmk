@@ -136,20 +136,18 @@ check_info['aws_rds'] = {
 def check_aws_rds_cpu_credits(item, params, metrics):
     yield 0, "Usage: %.2f" % metrics['CPUCreditUsage']
     warn, crit = params.get("balance_levels_lower", (None, None))
-    yield check_levels(
-        metrics['CPUCreditBalance'],
-        "aws_cpu_credit_balance", (None, None, warn, crit),
-        human_readable_func=lambda x: "%.2f" % x,
-        infoname='Balance')
+    yield check_levels(metrics['CPUCreditBalance'],
+                       "aws_cpu_credit_balance", (None, None, warn, crit),
+                       human_readable_func=lambda x: "%.2f" % x,
+                       infoname='Balance')
 
     burst_balance = metrics.get('BurstBalance')
     if burst_balance is not None:
         warn, crit = params.get("burst_balance_levels_lower", (None, None))
-        yield check_levels(
-            metrics['BurstBalance'],
-            "aws_burst_balance", (None, None, warn, crit),
-            human_readable_func=get_percent_human_readable,
-            infoname='Balance')
+        yield check_levels(metrics['BurstBalance'],
+                           "aws_burst_balance", (None, None, warn, crit),
+                           human_readable_func=get_percent_human_readable,
+                           infoname='Balance')
 
 
 check_info['aws_rds.cpu_credits'] = {
@@ -232,11 +230,10 @@ def check_aws_rds_bin_log_usage(item, params, metrics):
     except (KeyError, ZeroDivisionError):
         yield 1, 'Cannot calculate usage'
     else:
-        yield check_levels(
-            usage,
-            "aws_rds_bin_log_disk_usage",
-            params.get('levels', (None, None)),
-            human_readable_func=get_percent_human_readable)
+        yield check_levels(usage,
+                           "aws_rds_bin_log_disk_usage",
+                           params.get('levels', (None, None)),
+                           human_readable_func=get_percent_human_readable)
 
 
 check_info['aws_rds.bin_log_usage'] = {
@@ -276,11 +273,10 @@ def check_aws_rds_transaction_logs_usage(item, params, metrics):
     except (KeyError, ZeroDivisionError):
         yield 1, 'Cannot calculate usage'
     else:
-        yield check_levels(
-            usage,
-            "aws_rds_transaction_logs_disk_usage",
-            params.get('levels', (None, None)),
-            human_readable_func=get_percent_human_readable)
+        yield check_levels(usage,
+                           "aws_rds_transaction_logs_disk_usage",
+                           params.get('levels', (None, None)),
+                           human_readable_func=get_percent_human_readable)
 
     generation = metrics.get('TransactionLogsGeneration')
     if generation:
@@ -324,11 +320,10 @@ def check_aws_rds_replication_slot_usage(item, params, metrics):
     except (KeyError, ZeroDivisionError):
         yield 1, 'Cannot calculate usage'
     else:
-        yield check_levels(
-            usage,
-            "aws_rds_replication_slot_disk_usage",
-            params.get('levels', (None, None)),
-            human_readable_func=get_percent_human_readable)
+        yield check_levels(usage,
+                           "aws_rds_replication_slot_disk_usage",
+                           params.get('levels', (None, None)),
+                           human_readable_func=get_percent_human_readable)
 
 
 check_info['aws_rds.replication_slot_usage'] = {
@@ -356,19 +351,23 @@ def check_aws_rds_disk_io(item, params, parsed):
     now = time.time()
     disks = {}
     for disk_name, metrics in parsed.iteritems():
-        disks.setdefault(
-            disk_name, {
-                "read_ios": get_rate("aws_rds_disk_io_read_ios.%s" % item, now,
-                                     metrics['ReadIOPS']),
-                "write_ios": get_rate("aws_rds_disk_io_write_ios.%s" % item, now,
-                                      metrics['WriteIOPS']),
-                "read_throughput": get_rate("aws_rds_disk_io_read_throughput.%s" % item, now,
-                                            metrics['ReadThroughput']),
-                "write_throughput": get_rate("aws_rds_disk_io_write_throughput.%s" % item, now,
-                                             metrics['WriteThroughput']),
-                "read_latency": metrics['ReadLatency'] * 1000.0,
-                "write_latency": metrics['WriteLatency'] * 1000.0,
-            })
+        disk = disks.setdefault(disk_name, {})
+        for key, metric_key, scale, comp_rate in [
+            ('read_ios', 'ReadIOPS', 1.0, True),
+            ('write_ios', 'WriteIOPS', 1.0, True),
+            ('read_throughput', 'ReadThroughput', 1.0, True),
+            ('write_throughput', 'WriteThroughput', 1.0, True),
+            ('read_latency', 'ReadLatency', 1000.0, False),
+            ('write_latency', 'WriteLatency', 1000.0, False),
+        ]:
+            metric = metrics.get(metric_key)
+            if metric is None:
+                continue
+            metric *= scale
+            if comp_rate:
+                disk[key] = get_rate("aws_rds_disk_io_%s.%s" % (item, key), now, metric)
+            else:
+                disk[key] = metric
     return check_diskstat_dict(item, params, disks)
 
 
@@ -395,11 +394,10 @@ check_info['aws_rds.disk_io'] = {
 
 @get_parsed_item_data
 def check_aws_rds_connections(item, params, metrics):
-    yield check_levels(
-        metrics['DatabaseConnections'],
-        "aws_rds_connections",
-        params.get('levels', (None, None)),
-        infoname="In use")
+    yield check_levels(metrics['DatabaseConnections'],
+                       "aws_rds_connections",
+                       params.get('levels', (None, None)),
+                       infoname="In use")
 
 
 check_info['aws_rds.connections'] = {
@@ -454,21 +452,19 @@ check_info['aws_rds.agent_jobs'] = {
 
 @get_parsed_item_data
 def check_aws_rds_replica_lag(item, params, metrics):
-    yield check_levels(
-        metrics['ReplicaLag'],
-        "aws_rds_replica_lag",
-        params.get('lag_levels', (None, None)),
-        human_readable_func=get_age_human_readable,
-        infoname="Lag")
+    yield check_levels(metrics['ReplicaLag'],
+                       "aws_rds_replica_lag",
+                       params.get('lag_levels', (None, None)),
+                       human_readable_func=get_age_human_readable,
+                       infoname="Lag")
 
     oldest_replica_lag_space = metrics.get('OldestReplicationSlotLag')
     if oldest_replica_lag_space is not None:
-        yield check_levels(
-            oldest_replica_lag_space,
-            "aws_rds_oldest_replication_slot_lag",
-            params.get('slot_levels', (None, None)),
-            human_readable_func=get_bytes_human_readable,
-            infoname="Oldest replication slot lag")
+        yield check_levels(oldest_replica_lag_space,
+                           "aws_rds_oldest_replication_slot_lag",
+                           params.get('slot_levels', (None, None)),
+                           human_readable_func=get_bytes_human_readable,
+                           infoname="Oldest replication slot lag")
 
 
 check_info['aws_rds.replica_lag'] = {

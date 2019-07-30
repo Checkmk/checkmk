@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1553095186
 
 An encoding issue would lead to queries as used by the event history to skip files with non-ASCII characters

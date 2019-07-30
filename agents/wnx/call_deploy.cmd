@@ -1,7 +1,7 @@
 @echo off
 powershell Write-Host Starting deployment -Foreground Green
-if "%1" == "SIMULATE_OK" powershell Write-Host "Deploy: SUCCESS" -Foreground Green  && exit 0
-if "%1" == "SIMULATE_FAIL" powershell Write-Host "Deploy: FAIL" -Foreground Red && del %REMOTE_MACHINE%\check_mk_agent.msi && exit 99
+if "%1" == "SIMULATE_OK" powershell Write-Host "Deploy: SUCCESS" -Foreground Green  && exit /b 0
+if "%1" == "SIMULATE_FAIL" powershell Write-Host "Deploy: FAIL" -Foreground Red && del %REMOTE_MACHINE%\check_mk_agent.msi && exit /b 99
 set root=%cd%\..\..\artefacts
 set REMOTE_MACHINE=%root%
 @set svc=CheckMkService
@@ -25,11 +25,11 @@ goto end
 :update
 @rem Update check
 mkdir %ALLUSERSPROFILE%\CheckMk\Agent\Update 2> nul
-copy check_mk_agent_update.msi %ALLUSERSPROFILE%\CheckMk\Agent\update\check_mk_agent.msi > nul
+copy check_mk_agent.msi %ALLUSERSPROFILE%\CheckMk\Agent\update\check_mk_agent.msi > nul
 powershell Start-Sleep 20
 echo update > control.tmp
-fc "%ProgramFiles(X86)%\check_mk_service\check_mk.dat" control.tmp > nul
-if not "%ERRORLEVEL%" == "0"   powershell Write-Host "Update failed" -Foreground Red && fc "%ProgramFiles(X86)%\check_mk_service\check_mk.dat" control.tmp
+fc "%ProgramFiles(X86)%\check_mk_service\check_mk.marker" control.tmp > nul
+if not "%ERRORLEVEL%" == "0"   powershell Write-Host "Update failed" -Foreground Red && fc "%ProgramFiles(X86)%\check_mk_service\check_mk.marker" control.tmp
 set upd=%errorlevel%
 del control.tmp > nul
 :work

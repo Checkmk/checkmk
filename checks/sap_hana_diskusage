@@ -27,11 +27,11 @@
 
 def parse_sap_hana_diskusage(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for sid_instance, lines in parse_sap_hana(info).iteritems():
         for line in lines:
             if len(line) < 3:
                 continue
-            inst = parsed.setdefault(("%s %s" % (sid_instance, line[0]), node), {
+            inst = parsed.setdefault("%s - %s" % (sid_instance, line[0]), {
                 "state_name": line[1],
             })
             inst.update(_extract_size_and_used_from_line(line))
@@ -54,31 +54,25 @@ def _extract_size_and_used_from_line(line):
 
 
 def inventory_sap_hana_diskusage(parsed):
-    for (sid_instance, _node) in parsed.iterkeys():
-        yield sid_instance, {}
+    for item in parsed.iterkeys():
+        yield item, {}
 
 
-def check_sap_hana_diskusage(item, params, parsed):
-    for (sid_instance, node), data in parsed.iteritems():
-        if item != sid_instance:
-            continue
+@get_parsed_item_data
+def check_sap_hana_diskusage(item, params, data):
+    state_name = data['state_name']
+    if state_name == 'OK':
+        state = 0
+    elif state_name == "UNKNOWN":
+        state = 3
+    else:
+        state = 2
+    yield state, "Status: %s" % state_name
 
-        if node:
-            yield 0, 'On node: %s' % node
-
-        state_name = data['state_name']
-        if state_name == 'OK':
-            state = 0
-        elif state_name == "UNKNOWN":
-            state = 3
-        else:
-            state = 2
-        yield state, "Status: %s" % state_name
-
-        size_mb = data['size']
-        used_mb = data['used']
-        avail_mb = size_mb - used_mb
-        yield df_check_filesystem_list(item, params, [(item, size_mb, avail_mb, 0)])
+    size_mb = data['size']
+    used_mb = data['used']
+    avail_mb = size_mb - used_mb
+    yield df_check_filesystem_list(item, params, [(item, size_mb, avail_mb, 0)])
 
 
 check_info['sap_hana_diskusage'] = {
@@ -87,7 +81,6 @@ check_info['sap_hana_diskusage'] = {
     'check_function': check_sap_hana_diskusage,
     'service_description': 'SAP HANA Disk %s',
     'includes': ['sap_hana.include', 'size_trend.include', 'df.include'],
-    "node_info": True,
     "has_perfdata": True,
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',

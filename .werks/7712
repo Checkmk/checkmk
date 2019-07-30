@@ -1,0 +1,12 @@
+Title: Realtime Encryption fix
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560758699
+
+Fixed realtime encryption in Windows Agent.
+

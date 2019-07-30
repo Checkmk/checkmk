@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersCarbonMonoxide(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels_ppm",
-                 Tuple(
-                     title="Levels in parts per million",
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("ppm"), default=10),
-                         Integer(title=_("Critical at"), unit=_("ppm"), default=25),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels_ppm",
+             Tuple(
+                 title="Levels in parts per million",
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("ppm"), default=10),
+                     Integer(title=_("Critical at"), unit=_("ppm"), default=25),
+                 ],
+             )),
+        ],)

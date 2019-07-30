@@ -97,7 +97,7 @@ def agent_ipmi_sensors_main(cmdline_args):
 
     try:
         opts, args = getopt.getopt(cmdline_args, short_options, long_options)
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         sys.stderr.write("%s\n" % err)
         sys.exit(1)
 
@@ -179,14 +179,13 @@ def agent_ipmi_sensors_main(cmdline_args):
         sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
         try:
             try:
-                p = subprocess.Popen(
-                    ipmi_cmd + types,
-                    shell=False,
-                    close_fds=True,
-                    stdin=open(os.devnull),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-            except OSError, e:
+                p = subprocess.Popen(ipmi_cmd + types,
+                                     shell=False,
+                                     close_fds=True,
+                                     stdin=open(os.devnull),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            except OSError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
                     raise Exception("Could not find '%s' command (PATH: %s)"\
                                     % (ipmi_cmd_type, os.environ.get("PATH")))
@@ -197,7 +196,7 @@ def agent_ipmi_sensors_main(cmdline_args):
             if stderr:
                 errors.append(stderr)
             parse_data(stdout.splitlines(), excludes)
-        except Exception, e:
+        except Exception as e:
             errors.append(e)
 
     if errors:

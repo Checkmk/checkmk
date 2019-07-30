@@ -129,6 +129,10 @@ dummy_check_commandline = 'echo "ERROR - you did an active check on this service
 nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
+tag_config = {
+    "aux_tags": [],
+    "tag_groups": [],
+}
 checks = []
 static_checks = {}
 check_parameters = []
@@ -144,7 +148,7 @@ host_label_rules = []  # Assign labels via ruleset to hosts
 service_label_rules = []  # Asssing labels via ruleset to services
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
-host_paths = {}
+host_paths = {}  # Map of hostnames to .mk files declaring the hosts (e.g. /wato/hosts.mk)
 snmp_hosts = [
     (['snmp'], _ALL_HOSTS),
 ]
@@ -194,7 +198,6 @@ extra_host_conf = {}
 extra_service_conf = {}
 extra_nagios_conf = ""
 service_descriptions = {}
-scanparent_hosts = [(_ALL_HOSTS)]
 host_attributes = {}  # needed by WATO, ignored by Check_MK
 ping_levels = []  # special parameters for host/PING check_command
 host_check_commands = []  # alternative host check instead of check_icmp

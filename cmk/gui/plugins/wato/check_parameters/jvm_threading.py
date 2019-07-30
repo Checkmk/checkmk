@@ -54,20 +54,18 @@ class RulespecCheckgroupParametersJvmThreads(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("threadcount_levels",
-                 Levels(
-                     title=_("Maximal number of threads"),
-                     default_value=None,
-                 )),
-                ("threadrate_levels",
-                 Levels(
-                     title=_("Maximal rate of thread count"),
-                     default_value=None,
-                 )),
-                ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
-            ],)
+        return Dictionary(elements=[
+            ("threadcount_levels", Levels(
+                title=_("Maximal number of threads"),
+                default_value=None,
+            )),
+            ("threadrate_levels",
+             Levels(
+                 title=_("Maximal rate of thread count"),
+                 default_value=None,
+             )),
+            ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
+        ],)
 
     @property
     def item_spec(self):

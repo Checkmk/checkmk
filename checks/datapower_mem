@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME
+# The WATO group 'memory_simple' needs an item and the service_description should
+# have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
+# works but is not consistent.  This will be fixed in the future.
+# If we change this we loose history and parameter sets have to be adapted.
+
 factory_settings["datapower_mem_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
@@ -32,7 +38,7 @@ def inventory_datapower_mem(info):
         return [("", {})]
 
 
-def check_datapower_mem(_no_item, params, info):
+def check_datapower_mem(item, params, info):
 
     mem_total_bytes = int(info[0][0]) * 1024
     mem_used_bytes = int(info[0][1]) * 1024

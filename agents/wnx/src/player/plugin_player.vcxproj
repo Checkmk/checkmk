@@ -112,15 +112,16 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../../build/engine\$(Platform)\$(Configuration)\engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE)\providers\ 1&gt; nul || exit 3
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -142,15 +143,16 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../../build/engine\$(Platform)\$(Configuration)\engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE)\providers\ 1&gt; nul || exit 3
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -175,15 +177,16 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../../build/engine\$(Platform)\$(Configuration)\engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE)\providers\ 1&gt; nul || exit 3
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -208,15 +211,16 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../../build/engine\$(Platform)\$(Configuration)\engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE)\providers\ 1&gt; nul || exit 3
-@:DoNotCopy
+)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

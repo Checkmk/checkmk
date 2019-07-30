@@ -65,7 +65,7 @@ def inv_hp_proliant_mem(info):
             for entry in node[cpu_num].get("devices", []):
                 if entry["set"] == module_index:
                     entry.update(module_info)
-    except:
+    except Exception:
         array = {"devices": []}
         for _board_index, module_index, module_size_str, module_type, \
             _module_status, _module_condition, module_serial, cpu_num in info:
@@ -83,18 +83,4 @@ def inv_hp_proliant_mem(info):
 
 inv_info['hp_proliant_mem'] = {
     'inv_function': inv_hp_proliant_mem,
-    # If something changes here please adopt the related check
-    'snmp_info': (
-        ".1.3.6.1.4.1.232.6.2.14.13.1",
-        [
-            "2",  # CPQHLTH-MIB::cpqHeResMem2BoardNum
-            "1",  # CPQHLTH-MIB::cpqHeResMem2Module
-            "6",  # CPQHLTH-MIB::cpqHeResMem2ModuleSize
-            "7",  # CPQHLTH-MIB::cpqHeResMem2ModuleType
-            "19",  # CPQHLTH-MIB::cpqHeResMem2ModuleStatus
-            "20",  # CPQHLTH-MIB::cpqHeResMem2ModuleCondition
-            "12",  # CPQHLTH-MIB::cpqHeResMem2SerialNo
-            "3",  # CPQHLTH-MIB::cpqHeResMem2CpuNum
-        ]),
-    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

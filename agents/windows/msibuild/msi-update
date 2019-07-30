@@ -57,7 +57,7 @@ def _create_new_cab(working_dir):
     verbose("Generating new product.cab")
 
     lcab_files = ""
-    for lcab_file in ["check_mk_ini", "plugins_cap"]:
+    for lcab_file in ["check_mk_ini", "checkmk.dat", "plugins_cap"]:
         lcab_files += "%(source_dir)s/%(lcab_file)s " % {
             "source_dir": source_dir,
             "lcab_file": lcab_file
@@ -204,7 +204,7 @@ try:
                        "msi_file": msi_file,
                        "property": entry
                    }
-        if os.system(command) != 0:
+        if os.system(command) != 0:  # nosec
             bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
     verbose("Modify extracted files..")
@@ -215,6 +215,7 @@ try:
     # Convert Input Files to Internal-MSI Presentation
     shutil.copy(source_dir + "/check_mk.ini", source_dir + "/check_mk_ini")
     shutil.copy(source_dir + "/plugins.cap", source_dir + "/plugins_cap")
+    # checkmk.dat is the same, no need to copy
 
     lines_file_idt = file(work_dir + "/File.idt").readlines()
     file_idt_new = file(work_dir + "/File.idt.new", "w")
@@ -225,14 +226,13 @@ try:
         tokens = line.split("\t")
         filename = tokens[0]
         cabinet_files.append((tokens[-1], filename))
-        for f in ["check_mk_ini", "plugins_cap"]:  # sorted(cabinet_files):
+        for f in ["check_mk_ini", "checkmk.dat", "plugins_cap"]:  # sorted(cabinet_files):
             if f == filename:
                 file_stats = os.stat(source_dir + "/" + filename)
                 new_size = file_stats.st_size
                 tokens[3] = str(new_size)
                 break
         # The version of this file is different from the msi installer version !
-        tokens[4] = tokens[4] and new_version_build or ""
         tokens[4] = tokens[4] and new_version_build or ""
         file_idt_new.write("\t".join(tokens))
     file_idt_new.close()
@@ -246,7 +246,7 @@ try:
 
     for line in lines_component_idt[3:]:
         tokens = line.split("\t")
-        if tokens[0] in ["plugins_cap_", "check_mk_ini_"]:
+        if tokens[0] in ["check_mk_ini_", "checkmk.dat", "plugins_cap_"]:
             tokens[1] = ("{%s}" % uuid.uuid1()).upper()
         component_idt_new.write("\t".join(tokens))
 
@@ -309,7 +309,7 @@ try:
 
     shutil.rmtree(work_dir)
     verbose("Successfully created file " + new_msi_file)
-except Exception, e:
+except Exception as e:
     if work_dir and os.path.exists(work_dir):
         shutil.rmtree(work_dir)
     bail_out("Error on creating msi file: %s" % str(e))

@@ -67,8 +67,8 @@ def dummy_rulespec():
 def vs_conditions():
     return Transform(
         VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
-        forth=lambda c: RuleConditions(**c),
-        back=lambda c: dict(c._asdict()),
+        forth=lambda c: RuleConditions(None).from_config(c),
+        back=lambda c: c.to_config_with_folder(),
     )
 
 
@@ -136,9 +136,8 @@ class ModePredefinedConditions(SimpleListMode):
     def _show_action_cell(self, table, ident):
         super(ModePredefinedConditions, self)._show_action_cell(table, ident)
 
-        html.icon_button(
-            self._search_url(ident),
-            _("Show rules using this %s") % self._mode_type.name_singular(), "search")
+        html.icon_button(self._search_url(ident),
+                         _("Show rules using this %s") % self._mode_type.name_singular(), "search")
 
     def _search_url(self, ident):
         return html.makeuri_contextless([("mode", "rulesets"),
@@ -152,8 +151,8 @@ class ModePredefinedConditions(SimpleListMode):
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write("%s: %s" % (_("Folder"), Folder.folder(
-            entry["conditions"]["folder_path"]).alias_path()))
+        html.write("%s: %s" %
+                   (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
         html.close_li()
         html.close_ul()
         html.write(vs_conditions().value_to_text(entry["conditions"]))
@@ -242,12 +241,18 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         ]
 
     def _save(self, entries):
-        old_path = self._store.load_for_reading()[self._ident]["conditions"]["folder_path"]
-        conditions = RuleConditions(**entries[self._ident]["conditions"])
+        # In case it already existed before, remember the previous path
+        old_entries = self._store.load_for_reading()
+        old_path = None
+        if self._ident in old_entries:
+            old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
         super(ModeEditPredefinedCondition, self)._save(entries)
 
-        if old_path != conditions.folder_path:
+        conditions = RuleConditions(None).from_config(entries[self._ident]["conditions"])
+
+        # Update rules of source folder in case the folder was changed
+        if old_path is not None and old_path != conditions.host_folder:
             self._move_rules_for_conditions(conditions, old_path)
 
         self._rewrite_rules_for(conditions)
@@ -259,7 +264,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         old_rulesets = FolderRulesets(old_folder)
         old_rulesets.load()
 
-        new_folder = Folder.folder(conditions.folder_path)
+        new_folder = Folder.folder(conditions.host_folder)
         new_rulesets = FolderRulesets(new_folder)
         new_rulesets.load()
 
@@ -283,7 +288,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         the changed predefined condition. Since the conditions are only applied to the
         rules while saving them this step is needed.
         """
-        folder = Folder.folder(conditions.folder_path)
+        folder = Folder.folder(conditions.host_folder)
         rulesets = FolderRulesets(folder)
         rulesets.load()
 

@@ -7,7 +7,6 @@
 #include <string>
 
 #include "common/cmdline_info.h"
-
 #include "on_start.h"
 
 namespace cma::provider {
@@ -42,7 +41,7 @@ inline int MainFunctionCore(int argc, wchar_t const* argv[]) {
     argv += 2;
 
     // no cache updating
-    cma::OnStart(cma::StartTypes::kService, false);
+    cma::OnStart(cma::AppType::srv);
     ON_OUT_OF_SCOPE(cma::OnExit());
 
     // check and call:

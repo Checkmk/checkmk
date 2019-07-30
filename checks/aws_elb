@@ -72,16 +72,17 @@ factory_settings['aws_elb_statistics'] = {
 def check_aws_elb_statistics(item, params, parsed):
     queue_length = parsed.get('SurgeQueueLength')
     if queue_length is not None:
-        yield check_levels(
-            queue_length,
-            'aws_surge_queue_length',
-            params['levels_surge_queue_length'],
-            infoname='Surge queue length')
+        yield check_levels(queue_length,
+                           'aws_surge_queue_length',
+                           params['levels_surge_queue_length'],
+                           infoname='Surge queue length')
 
     spillover = parsed.get('SpilloverCount')
     if spillover is not None:
-        yield check_levels(
-            spillover, 'aws_spillover', params['levels_spillover'], infoname='Spillover')
+        yield check_levels(spillover,
+                           'aws_spillover',
+                           params['levels_spillover'],
+                           infoname='Spillover')
 
 
 check_info['aws_elb'] = {
@@ -110,11 +111,10 @@ check_info['aws_elb'] = {
 def check_aws_elb_latency(item, params, parsed):
     latency = parsed.get("Latency")
     if latency is not None:
-        yield check_levels(
-            latency,
-            'aws_load_balancer_latency',
-            params.get('levels_latency'),
-            human_readable_func=get_age_human_readable)
+        yield check_levels(latency,
+                           'aws_load_balancer_latency',
+                           params.get('levels_latency'),
+                           human_readable_func=get_age_human_readable)
 
 
 check_info['aws_elb.latency'] = {
@@ -152,7 +152,7 @@ def check_aws_elb_http_elb(item, params, parsed):
             continue
 
         http_errors_rate = get_rate('aws_elb_http_backend.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%s00-Errors: %s/s' % (http_errors_nr, http_errors_rate),
+        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
                [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
 
         try:
@@ -160,12 +160,11 @@ def check_aws_elb_http_elb(item, params, parsed):
         except ZeroDivisionError:
             pass
         else:
-            yield check_levels(
-                http_errors_perc,
-                'http_%sxx_perc' % http_errors_nr,
-                params.get('levels_http_%sxx_perc' % http_errors_nr),
-                human_readable_func=get_percent_human_readable,
-                infoname="%s00-Errors of total requests" % http_errors_nr)
+            yield check_levels(http_errors_perc,
+                               'http_%sxx_perc' % http_errors_nr,
+                               params.get('levels_http_%sxx_perc' % http_errors_nr),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%sXX-Errors of total requests" % http_errors_nr)
 
 
 check_info['aws_elb.http_elb'] = {
@@ -204,7 +203,7 @@ def check_aws_elb_http_backend(item, params, parsed):
             continue
 
         http_errors_rate = get_rate('aws_elb_http_backend.%sxx' % http_errors_nr, now, http_errors)
-        yield (0, '%s00-Errors: %s/s' % (http_errors_nr, http_errors_rate),
+        yield (0, '%sXX-Errors: %s/s' % (http_errors_nr, http_errors_rate),
                [('http_%sxx_rate' % http_errors_nr, http_errors_rate)])
 
         try:
@@ -212,20 +211,19 @@ def check_aws_elb_http_backend(item, params, parsed):
         except ZeroDivisionError:
             pass
         else:
-            yield check_levels(
-                http_errors_perc,
-                'http_%sxx_perc' % http_errors_nr,
-                params.get('levels_http_%sxx_perc' % http_errors_nr),
-                human_readable_func=get_percent_human_readable,
-                infoname="%s00-Errors of total requests" % http_errors_nr)
+            yield check_levels(http_errors_perc,
+                               'http_%sxx_perc' % http_errors_nr,
+                               params.get('levels_http_%sxx_perc' % http_errors_nr),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%sXX-Errors of total requests" % http_errors_nr)
 
     http_backend_2xx = parsed.get('HTTPCode_Backend_2XX')
     if http_backend_2xx is not None:
-        yield 0, '200-Requests: %s/s' % get_rate('aws_elb_http_backend.2xx', now, http_backend_2xx)
+        yield 0, '2XX-Requests: %s/s' % get_rate('aws_elb_http_backend.2xx', now, http_backend_2xx)
 
     http_backend_3xx = parsed.get('HTTPCode_Backend_3XX')
     if http_backend_3xx is not None:
-        yield 0, '300-Requests: %s/s' % get_rate('aws_elb_http_backend.3xx', now, http_backend_3xx)
+        yield 0, '3XX-Requests: %s/s' % get_rate('aws_elb_http_backend.3xx', now, http_backend_3xx)
 
 
 check_info['aws_elb.http_backend'] = {
@@ -278,12 +276,11 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
             perc = None
 
         if perc is not None:
-            yield check_levels(
-                perc,
-                'aws_overall_hosts_health_perc',
-                params.get('levels_overall_hosts_health_perc'),
-                human_readable_func=get_percent_human_readable,
-                infoname="Proportion of healthy hosts")
+            yield check_levels(perc,
+                               'aws_overall_hosts_health_perc',
+                               params.get('levels_overall_hosts_health_perc'),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="Proportion of healthy hosts")
 
 
 check_info['aws_elb.healthy_hosts'] = {

@@ -51,6 +51,7 @@ div.floatfilter {
   width: 310px;
   height: 53px;
   margin: 0 4px 3px 0;
+  padding: 4px 4px;
   color: #000;
   background-color: rgba(160, 181, 190, 0.6);
   border-color: #acc #22404d #22414d #8ab;
@@ -61,7 +62,7 @@ div.floatfilter {
 
   &.double {
     display: table-cell;
-    height: 110px;
+    height: 120.5px;
 
     .content {
       height: 82px;
@@ -81,6 +82,7 @@ div.floatfilter {
     height: 17px;
     padding: 3px 5px 0;
     margin-bottom: 1px;
+    font-size: 10px;
     color: #fff;
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 5px 5px 0 0;
@@ -114,16 +116,8 @@ div.floatfilter {
       }
 
       select {
-        width: 148px;
+        width: 156px;
         height: 66px;
-
-        &.large {
-          width: 228px;
-        }
-
-        &.small {
-          width: 68px;
-        }
       }
     }
 
@@ -142,30 +136,62 @@ div.floatfilter {
       margin-right: 10px;
     }
   }
+
+  table.vs_duallist {
+    width: 313px;
+    border-spacing: 0px 3px !important;
+
+    a.control {
+      padding: 0px 6px;
+    }
+
+    /* TODO: Get rid of these important styles */
+    select {
+      height: 43px !important; /* Is hardcoded to 48px in generated HTML code.
+                                  This is bad but we cannot break compatibility
+                                  with the classic theme for the while. */
+      padding: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
 }
 
 .filterform > tbody > tr > td div.floatfilter {
   position: relative;
-  width: 372px;
+  width: 326px;
   height: auto;
-  margin-right: 16px;
-  margin-bottom: 16px;
+  margin-right: 5px;
+  margin-bottom: 5px;
   background: $theme-color-white;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
 
   &.single {
-    height: 114px;
+    height: 53px;
   }
 
   &.double {
-    height: 246px;
+    height: 110px;
+
+    &.log_class .content, &.log_state .content {
+      table {
+	border-spacing: 6px 0;
+      }
+
+      .checkbox {
+	margin-bottom: 4px;
+      }
+    }
+
+    &.log_state .content table td {
+      line-height: 20px;
+    }
   }
 
   .legend {
     width: 100%;
     height: auto;
-    padding: 12px;
+    padding: 5px 8px;
     color: $theme-color-table-text;
     text-transform: uppercase;
     box-sizing: border-box;
@@ -174,7 +200,7 @@ div.floatfilter {
   .content {
     display: block;
     width: 100%;
-    padding: 12px;
+    padding: 3px 8px;
     box-sizing: border-box;
 
     select {
@@ -183,6 +209,11 @@ div.floatfilter {
 
     table {
       border-spacing: 8px 4px;
+
+      /* TODO: Get rid of this important style */
+      td input.text {
+        width: 96px !important;
+      }
     }
 
     .checkbox {
@@ -193,7 +224,7 @@ div.floatfilter {
     }
 
     input, select, textarea, #mk_side_search_field {
-      margin-bottom: 8px;
+      margin-bottom: 0;
     }
 
     input[type^=radio],
@@ -204,27 +235,66 @@ div.floatfilter {
       margin-bottom: 0;
     }
 
+    input[type=radio] {
+      margin-left: 5px;
+    }
+
     .valuespec_tuple {
       width: 100%;
       border-spacing: 2px 2px;
     }
   }
+
+  &.host_tags .content table {
+    margin-top: -6px;
+    border-spacing: 4px 0;
+  }
+
+  span.select2-selection {
+    border-color: $theme-button-border;
+  }
+
+  &.svchardstate .content, &.svcstate .content {
+    .checkbox {
+      margin-right: 5px;
+    }
+
+    input[type="checkbox"] + label::before {
+      margin: 0 4px 0 0;
+    }
+  }
+
+  &.single span.select2 {
+    position: relative;
+    top: -7px;
+  }
+
+  /* TODO: Get rid of this important style */
+  &.single > div.content > span.select2 {
+    width: 310px !important;
+  }
+
+  &.single input.neg[type=text] {
+    position: relative;
+    top: -6px;
+    width: 222px;
+  }
 }
 
 /* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof {
+table.valuespec_listof.filter {
   *.filter {
     width: 300px;
     border-spacing: 0;
   }
 
   td {
-    &.vlof_content.filter {
+    &.vlof_content {
       width: 1px;
       border-style: none;
     }
 
-    &.vlof_buttons.filter {
+    &.vlof_buttons {
       width: 1px;
       vertical-align: top;
       border-style: none;
@@ -267,6 +337,7 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_buttons {
+    width: 1px;
     padding-top: 8px;
     padding-bottom: 32px;
     vertical-align: middle;
@@ -274,7 +345,7 @@ table.nform table.valuespec_listof {
   }
 
   &.filter {
-    .vlof_content.filter .floatfilter {
+    .vlof_content .floatfilter {
       width: 400px;
       height: auto;
       background-color: $theme-color-white;
@@ -313,10 +384,10 @@ table.filtertime td {
 div.optiondial {
   &, &.num_columns, &.refresh {
     top: 0;
-    width: 73px;
-    height: 32px;
-    margin-right: 12px;
-    margin-bottom: 12px;
+    width: 80.5px;
+    height: 26px;
+    margin-right: 5px;
+    margin-bottom: 5px;
     background: $theme-color-white;
     border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
@@ -324,7 +395,7 @@ div.optiondial {
 
     div {
       padding: 0;
-      line-height: 34px;
+      line-height: 27px;
     }
   }
 
@@ -341,9 +412,8 @@ div.optiondial {
   }
 
   &.num_columns {
-    width: 74px;
     margin-right: 0;
-    border-right: 0;
+    border-right: none;
     border-radius: $theme-border-radius 0 0 4px;
   }
 
@@ -377,70 +447,6 @@ div.view_form {
 '-------------------------------------------------------------------------*/
 
 
-/* TODO: Reproduce this html element */
-td.fillup {
-  background-color: #eee;
-}
-
-tr.groupheader {
-  td {
-    padding: 0;
-    color: $theme-color-text;
-    background: transparent;
-
-    &.groupheader .groupheader tbody tr td {
-      display: inline-block;
-      padding: 12px 0 4px;
-      font-size: $theme-font-table-header;
-      font-weight: $theme-font-weight-global;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-text;
-      vertical-align: baseline;
-
-      &.state {
-        width: auto;
-        padding: 0 8px;
-        font-size: 14px;
-        text-transform: uppercase;
-        box-shadow: none;
-      }
-
-      a,
-      body.main .popup_menu span,
-      body.main .popup_menu & span {
-        display: inline-block;
-        font-size: $theme-font-table-header;
-        font-weight: $theme-font-weight-global;
-        letter-spacing: $theme-letter-spacing-table;
-        color: $theme-color-text;
-      }
-
-      &.state a,
-      &.state body.main .popup_menu span,
-      body.main .popup_menu &.state span {
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-
-      &.state.hstate1 a,
-      &.state.hstate1 body.main .popup_menu span,
-      body.main .popup_menu &.state.hstate1 span {
-        color: $theme-color-lightgrey;
-      }
-    }
-  }
-
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $theme-color-text;
-  }
-}
-
-table.data.oddeven > tbody > tr.groupheader {
-  background-color: transparent;
-}
-
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
 table.data tr > th.last_col {
@@ -461,6 +467,10 @@ table.boxlayout {
 
   td.boxcolumn {
     padding-right: 20px;
+  }
+
+  tr > td {
+    vertical-align: top;
   }
 }
 
@@ -564,7 +574,7 @@ table.data.single {
   tr.data {
     > td {
       height: 16px;
-      padding: 4px 5px 2px 5px;
+      padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
       text-align: left;
@@ -1027,38 +1037,33 @@ td.invtree {
     margin-bottom: 3px;
   }
 
+  table {
+    margin-top: 3px;
+    border-collapse: collapse;
+  }
+
   table td, table th {
     height: 14px;
     padding: 1px 5px;
     border: 1px solid #888;
   }
 
-  td.invtree table th {
+  table th {
     text-align: left;
   }
 
-  td.invtree table td {
+  table td {
     background-color: #fff;
-  }
-
-  /* TODO: Reproduce this html element */
-  td.invtree span.invold, span.invold table.data {
-    color: #ff0000;
-  }
-
-  /* TODO: Reproduce this html element */
-  td.invtree span.invnew, span.invnew table.data {
-    color: #00bf00;
   }
 }
 
-td.sla_spec table,
-td.invtree table,
-td.agent_config table {
-  margin-top: 3px;
-  border: 0.5px solid #000;
-  border-collapse: collapse;
-  box-shadow: 0.5px 0.5px 1px #ccc;
+/* TODO: Reproduce this html element */
+td.invtree span.invold, span.invold table.data {
+  color: #ff0000;
+}
+/* TODO: Reproduce this html element */
+td.invtree span.invnew, span.invnew table.data {
+  color: #00bf00;
 }
 
 table.data.single {
@@ -1100,7 +1105,8 @@ td.if_state {
   box-shadow: none;
 }
 
-table.data.single tr.data td.invtree table td.if_state {
+table.data.single tr.data td.invtree table td.if_state,
+table.data tr.data td.if_state {
   &.if_state_up {
     background-color: $theme-color-state-success-background;
   }
@@ -1243,12 +1249,11 @@ div.timelinerange.sla {
   width: auto;
 }
 
-/* TODO: No important styles */
 table.data.headerleft.sla {
   tbody tr {
     td {
       &, &.sla {
-        padding: 4px 8px !important;
+        padding: 4px 8px;
       }
 
       table.timeline.standalone,
@@ -1268,9 +1273,8 @@ table.data.headerleft.sla {
         border-spacing: 0;
         box-shadow: none;
 
-        /* TODO: No important styles */
         tbody tr td {
-          padding-left: 0 !important;
+          padding-left: 0;
           margin: 0;
           vertical-align: baseline;
           border: none;
@@ -1290,30 +1294,25 @@ table.data.headerleft.sla {
             border-spacing: 0;
             box-shadow: none;
 
-            /* TODO: No important styles */
             tbody tr td {
-              padding: 0 !important;
-              padding-right: 16px;
+              padding: 0;
             }
           }
         }
       }
     }
 
-    /* TODO: No important styles */
     th {
-      width: 240px !important;
+      width: 240px;
     }
   }
 
-  /* TODO: No important styles */
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $theme-color-text !important;
+    color: $theme-color-text;
   }
 }
-
 
 div#avoptions td {
   &.dictleft {
@@ -1322,5 +1321,77 @@ div#avoptions td {
 
   &.dictright {
     padding-right: 4px;
+  }
+}
+
+/* TODO: Reproduce these tables
+ * TODO: Decide whether to put these into a separate _tables.scss or not
+ */
+td.sla_spec table table,
+td.agent_config table.rulesets table,
+table.data tr.ac_test_details table,
+table.data tr.notification_context table {
+   border-collapse: collapse;
+   border: 0.5px solid $theme-color-table-border;
+   box-shadow: 0.5px 0.5px 1px #ccc;
+   margin-top: 3px;
+}
+
+table.data tr.ac_test_details td {
+  padding: 8px;
+
+  p, ul, table {
+    margin: 8px 0;
+
+    &:first-child:not(:last-child) {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+td.sla_spec table td,
+td.agent_config table.rulesets table td,
+td.agent_config table.rulesets table td.title,
+table.data tr.ac_test_details table td,
+table.data tr.notification_context table td,
+table.data tr.notification_context table th,
+td.rule_conditions table td {
+    border: 1px solid $theme-color-table-border;
+    padding: 1px 5px;
+    height: 14px;
+}
+
+td.sla_spec table td.title,
+td.agent_config table.rulesets table td.title,
+table.data tr.notification_context table th {
+    text-align: left;
+}
+
+td.sla_spec table td,
+td.agent_config table.rulesets table td,
+table.data tr.ac_test_details table td,
+table.data tr.notification_context table td,
+td.rule_conditions table td {
+    background-color: #fff;
+}
+
+td.sla_spec table td.title,
+td.agent_config table.rulesets table td.title,
+table.data tr.notification_context table th,
+td.rule_conditions table td.title {
+    background-color: $theme-color-table-background;
+}
+
+table.agents tbody > tr.data > td {
+    vertical-align: top;
+    line-height: 20px;
+
+  &.agent_config {
+      vertical-align: middle;
+      line-height: normal;
   }
 }

@@ -19,7 +19,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python", "-V"], stderr=subprocess.PIPE)
     version = p.stderr.read()
-    assert version.startswith("Python 2.7.15")
+    assert version.startswith("Python 2.7.16")
 
 
 def test_03_python_path(site):
@@ -80,7 +80,6 @@ def test_03_pip_interpreter_version(site):
     "dateutil",
     "snap7",
     "rrdtool",
-    "azure.mgmt.monitor",
     "werkzeug",
     "boto3",
     "kubernetes",

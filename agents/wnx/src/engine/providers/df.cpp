@@ -2,13 +2,13 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/df.h"
+
 #include <iostream>
 #include <string>
 
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
-
-#include "providers/df.h"
 
 namespace cma {
 
@@ -85,7 +85,7 @@ std::string GetMountPoints(const std::string &VolumeId) {
     return out;
 }
 
-std::string Df::makeBody() const {
+std::string Df::makeBody() {
     XLOG::t(XLOG_FUNC + " entering");
 
     char buffer[4096];

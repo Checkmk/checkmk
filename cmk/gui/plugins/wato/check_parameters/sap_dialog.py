@@ -60,33 +60,32 @@ class RulespecCheckgroupParametersSapDialog(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("UsersLoggedIn",
-                 Tuple(
-                     title=_("Number of Loggedin Users"),
-                     elements=[
-                         Integer(title=_("Warning at"), label=_("Users")),
-                         Integer(title=_("Critical at"), label=_("Users"))
-                     ],
-                 )),
-                ("FrontEndNetTime",
-                 Tuple(
-                     title=_("Frontend net time"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms')),
-                         Float(title=_("Critical at"), unit=_('ms'))
-                     ],
-                 )),
-                ("ResponseTime",
-                 Tuple(
-                     title=_("Response Time"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms')),
-                         Float(title=_("Critical at"), unit=_('ms'))
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("UsersLoggedIn",
+             Tuple(
+                 title=_("Number of Loggedin Users"),
+                 elements=[
+                     Integer(title=_("Warning at"), label=_("Users")),
+                     Integer(title=_("Critical at"), label=_("Users"))
+                 ],
+             )),
+            ("FrontEndNetTime",
+             Tuple(
+                 title=_("Frontend net time"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms')),
+                     Float(title=_("Critical at"), unit=_('ms'))
+                 ],
+             )),
+            ("ResponseTime",
+             Tuple(
+                 title=_("Response Time"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms')),
+                     Float(title=_("Critical at"), unit=_('ms'))
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

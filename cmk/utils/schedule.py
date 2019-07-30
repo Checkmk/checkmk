@@ -66,7 +66,6 @@ class DaySchedule(Schedule):
     """
     A daily schedule.
     """
-
     def __init__(self, timeofday):
         self._rule = rrule(DAILY, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
 
@@ -83,12 +82,14 @@ class WeekSchedule(Schedule):
     """
     A weekly schedule.
     """
-
     def __init__(self, weekday, timeofday):
         if not 0 <= weekday <= 6:
             raise ValueError('weekday must be between 0 and 6')
-        self._rule = rrule(
-            WEEKLY, byweekday=weekday, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+        self._rule = rrule(WEEKLY,
+                           byweekday=weekday,
+                           byhour=timeofday.hour,
+                           byminute=timeofday.minute,
+                           bysecond=0)
 
     @property
     def rule(self):
@@ -103,12 +104,14 @@ class StartMonthSchedule(Schedule):
     """
     A monthly schedule initialized relatively to the first day of the month.
     """
-
     def __init__(self, day, timeofday):
         if not 1 <= day <= 31:
             raise ValueError('day must be between 1 and 31')
-        self._rule = rrule(
-            MONTHLY, bymonthday=day, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+        self._rule = rrule(MONTHLY,
+                           bymonthday=day,
+                           byhour=timeofday.hour,
+                           byminute=timeofday.minute,
+                           bysecond=0)
 
     @property
     def rule(self):
@@ -123,13 +126,15 @@ class EndMonthSchedule(Schedule):
     """
     A monthly schedule initialized relatively to the last day of the month.
     """
-
     def __init__(self, days_from_end, timeofday):
         if not 1 <= days_from_end <= 31:
             raise ValueError('days_from_end must be between 1 and 31')
         day = -days_from_end
-        self._rule = rrule(
-            MONTHLY, bymonthday=day, byhour=timeofday.hour, byminute=timeofday.minute, bysecond=0)
+        self._rule = rrule(MONTHLY,
+                           bymonthday=day,
+                           byhour=timeofday.hour,
+                           byminute=timeofday.minute,
+                           bysecond=0)
 
     @property
     def rule(self):

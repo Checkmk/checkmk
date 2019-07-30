@@ -127,7 +127,7 @@ def inventory_apc_symmetra(parsed):
 
 def check_apc_symmetra(_no_item, params, parsed):
     data = parsed["status"]
-    battery_status = data["status"]
+    battery_status = data.get("status")
     output_status = data.get("output")
     self_test_in_progress = data.get("self_test")
     battery_capacity = data.get("capacity")

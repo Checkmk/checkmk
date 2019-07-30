@@ -74,7 +74,7 @@ checks = {
         {},
         [(
             0,
-            'Total CPU: 8.4%, 2.95GHz/35.20GHz, 2 sockets, 6 cores/socket, 24 threads',
+            'Total CPU: 8.37%, 2.95GHz/35.20GHz, 2 sockets, 6 cores/socket, 24 threads',
             [('util', 8.369022144778265, None, None, 0, 100)],
         )],
     )],

@@ -1,0 +1,23 @@
+Title: mk_mysql: More consistent naming of instances
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1558529969
+Class: fix
+
+The naming of different mysql instances has been simplified.
+The item names of the monitored instances are now given by the corresponding sockets
+(e.g. an instance using the socket "/var/run/mysql.sock" will be called "/var/run/mysql.sock").
+If no socket can be determined, only one instance will be monitored, using the default name "mysql".
+
+Previously as a third attempt the <tt>--user=</tt> option found in the output of <tt>ps -fww -C mysqld</tt>
+has been used as instance name. This is not longer considered.
+
+The determination of the sockets themselves is unchanged:
+If no sockets are listed in the config file, the socket is determined by the <tt>--socket=</tt>
+option found in <tt>ps -fww -C mysqld</tt>.
+
+If you are monitoring mysql instances that do not use the default item name "mysql",
+a rediscovery is required.

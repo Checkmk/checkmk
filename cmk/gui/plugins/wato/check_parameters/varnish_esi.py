@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersVarnishEsi(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("errors",
-                 Tuple(
-                     title=_("Upper levels for \"ESI errors\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("warnings",
-                 Tuple(
-                     title=_("Upper levels for \"ESI warnings\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("errors",
+             Tuple(
+                 title=_("Upper levels for \"ESI errors\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("warnings",
+             Tuple(
+                 title=_("Upper levels for \"ESI warnings\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

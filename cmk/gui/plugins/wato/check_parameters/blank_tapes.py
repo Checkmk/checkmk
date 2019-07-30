@@ -52,8 +52,7 @@ class RulespecCheckgroupParametersBlankTapes(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Integer(title=_("Warning below"), default_value=5),
-                Integer(title=_("Critical below"), default_value=1),
-            ],)
+        return Tuple(elements=[
+            Integer(title=_("Warning below"), default_value=5),
+            Integer(title=_("Critical below"), default_value=1),
+        ],)

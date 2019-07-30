@@ -1,0 +1,15 @@
+title: AWS/NetworkELB TLS Handshakes
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of TLS handshakes that failed
+ during negotiation between a TLS listener and a target and
+ the number of TLS handshakes that failed during negotiation
+ between a client and a TLS listener of AWS/NetworkELB services.
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+inventory:
+ One service will be created.

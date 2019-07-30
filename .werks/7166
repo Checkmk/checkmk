@@ -1,0 +1,19 @@
+Title: Agent Bakery now supports systemd
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0b1
+Date: 1558693920
+Class: feature
+
+Until now, it was necessary to have xinetd installed on a host system
+in order to setup the CheckMK Agent coming from the agent bakery
+automatically.
+
+The baked .rpm and .deb installation packages will now fall back
+to install the Agent as a systemd-service, if no xinetd is available
+on the host.
+
+With this change, the baked agent package equals the vanilla agent
+package in its installation behavior.

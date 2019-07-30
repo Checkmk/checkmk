@@ -23,7 +23,18 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+"""mk_logwatch
+This is the Check_MK Agent plugin. If configured it will be called by the
+agent without arguments.
 
+Options:
+    -d    Debug mode: Colored output, no saving of status.
+    -h    Show help.
+    -v    Verbose output for debugging purposes (no debug mode).
+
+You should find an example configuration file at
+'../cfg_examples/logwatch.cfg' relative to this file.
+"""
 import glob
 import logging
 import os
@@ -33,18 +44,33 @@ import sys
 import time
 import socket
 import binascii
+import platform
 
-from collections import namedtuple  # from Python2.6, Python3.1 onwards
+MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
-# logical: LogfilesConfig([file, ...], (level, compiled, [continuation pattern, ...], [rewrite pattern, ...]))
-# types: LogfilesConfig[List[str], Tuple[str, sre.SRE_Pattern object, List[str], List[str]]]
-LogfilesConfig = namedtuple('LogfilesConfig', 'files, patterns')
-
-# logical: ClusterConfig(name, ips_or_subnets)
-# types: ClusterConfig[str, List[str]]
-ClusterConfig = namedtuple('ClusterConfig', 'name, ips_or_subnets')
+MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
 
 LOGGER = logging.getLogger(__name__)
+
+IPV4_REGEX = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+
+IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
+
+ENCODINGS = (
+    ('\xFF\xFE', "utf_16"),
+    ('\xFE\xFF', "utf_16_be"),
+)
+
+TTY_COLORS = {
+    'C': '\033[1;31m',  # red
+    'W': '\033[1;33m',  # yellow
+    'O': '\033[1;32m',  # green
+    'I': '\033[1;34m',  # blue
+    '.': '',  # remain same
+    'normal': '\033[0m',
+}
+
+CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 
 
 def parse_arguments(argv=None):
@@ -57,19 +83,7 @@ def parse_arguments(argv=None):
     if argv is None:
         argv = sys.argv[1:]
     if "-h" in argv:
-        sys.stderr.write("""
-This is the Check_MK Agent plugin. If configured it will be called by the
-agent without arguments.
-
-Options:
-    -d    Debug mode: Colored output, no saving of status.
-    -h    Show help.
-    -v    Verbose output for debugging purposes (no debug mode).
-
-You should find an example configuration file at
-'../cfg_examples/logwatch.cfg' relative to this file.
-
-""")
+        sys.stderr.write(__doc__)
         sys.exit(0)
     if "-v" in argv:
         logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -158,23 +172,7 @@ def debug():
     return '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]
 
 
-# The configuration file and status file are searched
-# in the directory named by the environment variable
-# LOGWATCH_DIR. If that is not set, MK_CONFDIR is used.
-# If that is not set either, the current directory ist
-# used.
-def mk_vardir():
-    return os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
-
-
-def mk_confdir():
-    """Note: When debugging this plugin on hosts this function will always return "." cause
-    required sudo rights for execution of /usr/lib/check_mk_agent/plugins/mk_logwatch
-    doesn't provide env vars."""
-    return os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
-
-
-def get_status_filename(config):
+def get_status_filename(cluster_config):
     """
     Side effect:
     - Depend on ENV var.
@@ -199,67 +197,36 @@ def get_status_filename(config):
     underscores (_) for IPv4 address or is plain $REMOTE in case it does not match
     an IPv4 or IPv6 address.
     """
-    remote = os.getenv("REMOTE", "")
-    ipv4_regex = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-    ipv6_regex = r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$"
-    ipv4_match = re.match(ipv4_regex, remote)
-    ipv6_match = re.match(ipv6_regex, remote)
+    remote = os.getenv("REMOTE", os.getenv("REMOTE_ADDR"))
+    if not remote:
+        status_filename = "logwatch.state" + (".local" if sys.stdout.isatty() else "")
+        return os.path.join(MK_VARDIR, status_filename)
     remote_hostname = remote.replace(":", "_")
-    if ipv4_match:
-        remote_ip = ipv4_match.group()
-    elif ipv6_match:
-        remote_ip = ipv6_match.group()
-        # in case of IPv4 extended to IPv6 get rid of prefix for ip match lookup
-        if remote_ip.startswith("::ffff:"):
-            remote_ip = remote_ip.replace("::ffff:", "")
-    else:
-        remote_ip = None
-        LOGGER.debug("REMOTE neither IPv4 nor IPv6 address.")
+
+    match = IPV4_REGEX.match(remote) or IPV6_REGEX.match(remote)
+    if not match:
+        LOGGER.debug("REMOTE %r neither IPv4 nor IPv6 address.", remote)
+        return os.path.join(MK_VARDIR, "logwatch.state.%s" % remote_hostname)
+
+    remote_ip = match.group()
+    # in case of IPv4 extended to IPv6 get rid of prefix for ip match lookup
+    if remote_ip.startswith("::ffff:"):
+        remote_ip = remote_ip[7:]
+
     # In case cluster configured map ip to cluster name if configured.
     # key "name" is mandatory and unique for cluster dicts
-    status_filename = None
-    cluster_name = None
-    cluster_configs = [nt for nt in config if isinstance(nt, ClusterConfig)]
-    LOGGER.debug("Cluster configurations:")
-    LOGGER.debug(cluster_configs)
-    for nt in cluster_configs:
-        for ip_or_subnet in nt.ips_or_subnets:
-            if remote_ip == ip_or_subnet:
-                # Entry in cluster configuration is IP address.
+    cluster_name = remote_hostname
+    for conf in cluster_config:
+        for ip_or_subnet in conf.ips_or_subnets:
+            if ip_in_subnetwork(remote_ip, ip_or_subnet):
                 # Cluster name may not contain whitespaces (must be provided from
                 # the WATO config as type ID or hostname).
-                cluster_name = nt.name
-                LOGGER.info("matching cluster ip %s", remote_ip)
-                LOGGER.info("matching cluster name %s", cluster_name)
-            else:
-                # Entry in cluster configuration is subnetwork in CIDR notation.
-                try:
-                    if ip_in_subnetwork(remote_ip, ip_or_subnet):
-                        cluster_name = nt.name
-                        LOGGER.info("matching cluster ip %s", remote_ip)
-                        LOGGER.info("matching cluster name %s", cluster_name)
-                except ValueError:
-                    continue  # valid subnetwork configuration expected
-    if cluster_name:
-        status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
-    elif remote_hostname != "":
-        status_filename = "%s/logwatch.state.%s" % (mk_vardir(), remote_hostname)
-    elif remote_hostname == "" and sys.stdout.isatty():  # real terminal
-        status_filename = "%s/logwatch.state.local" % mk_vardir()
-    elif remote_hostname == "" and not sys.stdout.isatty():  # piped or redirected
-        status_filename = "%s/logwatch.state" % mk_vardir()
-    else:
-        raise Exception("Status filename could not be determined.")
+                cluster_name = conf.name
+                LOGGER.info("Matching cluster ip %s", remote_ip)
+                LOGGER.info("Matching cluster name %s", cluster_name)
+    status_filename = os.path.join(MK_VARDIR, "logwatch.state.%s" % cluster_name)
     LOGGER.info("Status filename: %s", status_filename)
     return status_filename
-
-
-def os_type():
-    try:
-        import platform  # added in Python 2.3
-        return platform.system().lower()
-    except ImportError:
-        return "linux"
 
 
 def is_comment(line):
@@ -270,22 +237,12 @@ def is_empty(line):
     return line.strip() == ""
 
 
-def is_pattern_or_ip(line):
+def is_indented(line):
     return line.startswith(" ")
 
 
 def parse_filenames(line):
     return line.split()
-
-
-def parse_pattern(level, pattern, line):
-    if level not in ['C', 'W', 'I', 'O']:
-        raise Exception("Invalid pattern line '%s'" % line)
-    try:
-        compiled = re.compile(pattern)
-    except:
-        raise Exception("Invalid regular expression in line '%s'" % line)
-    return (level, compiled)
 
 
 def get_config_files(directory):
@@ -294,9 +251,72 @@ def get_config_files(directory):
     # Add config file paths from a logwatch.d folder
     for config_file in glob.glob(directory + "/logwatch.d/*.cfg"):
         config_file_paths.append(config_file)
-    LOGGER.info("Configuration file paths:")
-    LOGGER.info(config_file_paths)
+    LOGGER.info("Configuration file paths: %r", config_file_paths)
     return config_file_paths
+
+
+def iter_config_lines(files):
+    for file_ in files:
+        try:
+            with open(file_) as fid:
+                try:
+                    decoded = (line.decode('utf-8') for line in fid)
+                    for line in decoded:
+                        if not is_comment(line):
+                            yield line.rstrip()
+                except UnicodeDecodeError:
+                    msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
+                    sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
+        except IOError:
+            if debug():
+                raise
+
+
+def consume_cluster_definition(iterator, header_line):
+    cluster_name = header_line[8:].strip()  # e.g.: CLUSTER duck
+    cluster = ClusterConfig(cluster_name, [])
+    LOGGER.debug("new ClusterConfig: %s", cluster_name)
+
+    for line in iterator:
+        if is_empty(line) or not is_indented(line):
+            break
+
+        cluster.ips_or_subnets.append(line.strip())
+
+    return cluster
+
+
+def consume_logfile_definition(iterator, header_line):
+    cont_list = []
+    rewrite_list = []
+    filenames = parse_filenames(header_line)
+    logfiles = LogfilesConfig(filenames, [])
+    LOGGER.debug("new LogfilesConfig: %s", filenames)
+
+    for line in iterator:
+        if is_empty(line) or not is_indented(line):
+            break
+
+        level, raw_pattern = line.split(None, 1)
+
+        if level == 'A':
+            cont_list.append(raw_pattern)
+
+        elif level == 'R':
+            rewrite_list.append(raw_pattern)
+
+        elif level in ('C', 'W', 'I', 'O'):
+            # New pattern for line matching => clear continuation and rewrite patterns
+            cont_list = []
+            rewrite_list = []
+            pattern = (level, raw_pattern, cont_list, rewrite_list)
+            logfiles.patterns.append(pattern)
+            LOGGER.debug("pattern %s", pattern)
+
+        else:
+            raise ValueError("Invalid level in pattern line %r" % line)
+
+    return logfiles
 
 
 def read_config(files):
@@ -310,26 +330,12 @@ def read_config(files):
     Or tuple describes optional cluster mapping and is ClusterConfig(name, ips_or_subnets)
     with ips as list of strings.
     """
-    LOGGER.debug("config files:")
-    LOGGER.debug(files)
+    LOGGER.debug("Config files: %r", files)
 
-    config = []
     logfiles_configs = []
     cluster_configs = []
-    config_lines = []
-    for f in files:
-        try:
-            config_lines += [line.rstrip() for line in open(f).readlines() if not is_comment(line)]
-        except IOError:
-            if debug():
-                raise
+    config_lines = iter_config_lines(files)
 
-    patterns = None
-    cont_list = []
-    rewrite_list = []
-    # only cluster_mapping context requires parse context
-    section_context = "no_section"  # valid: "no_section", "logfiles", "cluster"
-    cluster_ips_or_subnets = []
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
     # - logfiles line (begin not with #, are not empty and do not contain CLUSTER)
@@ -337,78 +343,24 @@ def read_config(files):
     # - logfiles patterns (follow logfiles lines, begin with whitespace)
     # - cluster ips or subnets (follow cluster lines, begin with whitespace)
     # Needs to consider end of lines to append ips/subnets to clusters as well.
+
     for line in config_lines:
-        if is_comment(line):
-            continue  # skip comments
         if is_empty(line):
-            section_context = "no_section"
-            continue  # go to next line
-        if section_context == "no_section":
-            if not line.startswith("CLUSTER") and not is_comment(line):
-                section_context = "logfiles"
-                patterns = []
-                cont_list = []  # Clear list of continuation patterns from last file
-                rewrite_list = []  # Same for rewrite patterns
-                filenames = parse_filenames(line)
-                logfiles_configs.append(LogfilesConfig(filenames, patterns))
-                LOGGER.debug("filenames: %s", filenames)
-            elif line.startswith("CLUSTER"):
-                section_context = "cluster"
-                cluster_ips_or_subnets = []
-                cluster_name = line.replace("CLUSTER ", "").strip()
-                cluster_configs.append(ClusterConfig(cluster_name, cluster_ips_or_subnets))
-                LOGGER.debug("new cluster: %s", cluster_name)
-            else:
-                raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
-        elif section_context == "logfiles":
-            if not is_pattern_or_ip(line):
-                raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
-            LOGGER.debug("pattern line: %s", line)
-            if patterns is None:
-                raise Exception("Missing logfile names")
-            level, pattern = line.split(None, 1)
+            # empty lines are still needed to indicate the end
+            # of a logfiles or cluster definition
+            continue
 
-            if level == 'A':
-                cont_list.append(parse_cont_pattern(pattern))
-            elif level == 'R':
-                rewrite_list.append(pattern)
-            else:
-                level, compiled = parse_pattern(level, pattern, line)
-                # New pattern for line matching => clear continuation and rewrite patterns
-                cont_list = []
-                rewrite_list = []
-                pattern = (level, compiled, cont_list, rewrite_list)
-                patterns.append(pattern)
-                LOGGER.debug("pattern %s", pattern)
-        elif section_context == "cluster":
-            if not is_pattern_or_ip(line):
-                raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
-            ip_or_subnet = line.strip()
-            cluster_ips_or_subnets.append(ip_or_subnet)
-            LOGGER.debug("cluster ip: %s", ip_or_subnet)
+        if is_indented(line):
+            raise ValueError("Missing block definition for line %r" % line)
+
+        if line.startswith("CLUSTER "):
+            cluster_configs.append(consume_cluster_definition(config_lines, line))
         else:
-            raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
+            logfiles_configs.append(consume_logfile_definition(config_lines, line))
 
-    config.extend(logfiles_configs)
-    config.extend(cluster_configs)
-
-    LOGGER.info("Logfiles configurations:")
-    LOGGER.info(logfiles_configs)
-    LOGGER.info("Optional cluster configurations:")
-    LOGGER.info(cluster_configs)
-    return config
-
-
-def parse_cont_pattern(pattern):
-    try:
-        return int(pattern)
-    except:
-        try:
-            return re.compile(pattern)
-        except:
-            if debug():
-                raise
-            raise Exception("Invalid regular expression in line '%s'" % pattern)
+    LOGGER.info("Logfiles configurations: %r", logfiles_configs)
+    LOGGER.info("Optional cluster configurations: %r", cluster_configs)
+    return logfiles_configs, cluster_configs
 
 
 def read_status(file_name):
@@ -421,185 +373,204 @@ def read_status(file_name):
 
     Status file lines may not be empty but must contain | separated status meta data.
     """
-    LOGGER.debug("Status file:")
-    LOGGER.debug(file_name)
+    LOGGER.debug("Status file: %r", file_name)
     if debug():
         return {}
 
     status = {}
-    for line in open(file_name):
-        inode = -1
-        try:
+    with open(file_name) as stat_fh:
+        for line in stat_fh:
             parts = line.split('|')
-            filename = parts[0]
-            offset = parts[1]
-            if len(parts) >= 3:
-                inode = parts[2]
-        except Exception as e:
-            raise Exception("Parsing of status file %s line \"%s\" failed: %s" \
-                            % (file_name, line, e))
-        try:
-            status[filename] = int(offset), int(inode)
-        except Exception as e:
-            raise Exception("Parsing of status file %s line \"%s\" failed: %s" \
-                            % (file_name, line, e))
+            filename, offset = parts[0], int(parts[1])
+            inode = int(parts[2]) if len(parts) >= 3 else -1
+            status[filename] = (offset, inode)
 
-    LOGGER.info("read status:")
-    LOGGER.info(status)
+    LOGGER.info("Read status: %r", status)
     return status
 
 
 def save_status(status, file_name):
-    LOGGER.debug("save status:")
-    LOGGER.debug("status: %s", status)
-    LOGGER.debug("filename: %s", file_name)
+    LOGGER.debug("Save status:")
+    LOGGER.debug("Status: %s", status)
+    LOGGER.debug("Filename: %s", file_name)
     with open(file_name, "w") as f:
         for filename, (offset, inode) in status.items():
             f.write("%s|%d|%d\n" % (filename, offset, inode))
 
 
-def next_line(file_handle, continuation_line):
-    if continuation_line is not None:
-        return continuation_line, None
+class LogLinesIter(object):
+    # this is supposed to become a proper iterator.
+    # for now, we need a persistent buffer to fix things
+    BLOCKSIZE = 8192
 
-    try:
-        line = file_handle.next()
-        # Avoid parsing of (yet) incomplete lines (when actual application
-        # is just in the process of writing)
-        # Just check if the line ends with a \n. This handles \n and \r\n
-        if not line.endswith("\n"):
-            begin_of_line_offset = file_handle.tell() - len(line)
-            os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
-            return None, None
-        return line, None
-    except:
-        return None, None
+    def __init__(self, logfile):
+        super(LogLinesIter, self).__init__()
+        self._fd = os.open(logfile, os.O_RDONLY)
+        self._lines = []
+        self._buffer = ''
+        self._reached_end = False  # used for optimization only
+        self._enc = self._get_encoding()
+        self._newline = u'\n'.encode(self._enc)
+
+    def close(self):
+        os.close(self._fd)
+
+    def _get_encoding(self):
+        enc_bytes_len = max(len(bom) for bom, _enc in ENCODINGS)
+        self._buffer = os.read(self._fd, enc_bytes_len)
+        for bom, encoding in ENCODINGS:
+            if self._buffer.startswith(bom):
+                self._buffer = self._buffer[len(bom):]
+                return encoding
+        return 'utf_8'
+
+    def _update_lines(self):
+        """
+        Try to read more lines from file.
+        """
+        # try to read at least to end of next line
+        while self._newline not in self._buffer:
+            new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
+            if not new_bytes:
+                break
+            self._buffer += new_bytes
+
+        raw_lines = self._buffer.split(self._newline)
+        self._buffer = raw_lines.pop()  # unfinished line
+        self._lines.extend(l + self._newline for l in raw_lines)
+
+    def set_position(self, position):
+        if position is None:
+            return
+        self._buffer = ''
+        self._lines = []
+        os.lseek(self._fd, position, os.SEEK_SET)
+
+    def get_position(self):
+        '''
+        Return the position where we want to continue next time
+        '''
+        pointer_pos = os.lseek(self._fd, 0, os.SEEK_CUR)
+        bytes_unused = sum((len(l) for l in self._lines), len(self._buffer))
+        return pointer_pos - bytes_unused
+
+    def skip_remaining(self):
+        os.lseek(self._fd, 0, os.SEEK_END)
+        self._buffer = ''
+        self._lines = []
+
+    def push_back_line(self, line):
+        self._lines.insert(0, line.encode(self._enc))
+
+    def next_line(self):
+        if self._reached_end:  # optimization only
+            return None
+
+        if not self._lines:
+            self._update_lines()
+
+        if self._lines:
+            return self._lines.pop(0).decode(self._enc)
+
+        self._reached_end = True
+        return None
 
 
-def is_inode_cabable(path):
-    if "linux" in os_type():
-        return True
-    elif "windows" in os_type():
+def is_inode_capable(path):
+    system = platform.system()
+    if system == "Windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
         import win32api  # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
-    return False
+    return system == "Linux"
+
+
+def decode_filename(byte_str_filename):
+    return byte_str_filename.decode('utf-8')
 
 
 def process_logfile(logfile, patterns, opt, status):
     """
-    Returns tuple of (logfile lines, warning and/or error indicator, warning and/or error lines, logfile lines (list) in case the file has never been seen before and
-    None in case the logfile cannot be opened.
+    Returns tuple of (
+        logfile lines,
+        warning and/or error indicator,
+        warning and/or error lines,
+    ).
+    In case the file has never been seen before returns a list of logfile lines
+    and None in case the logfile cannot be opened.
     """
-    loglines = []
+    try:
+        log_iter = LogLinesIter(logfile)
+    except OSError:
+        if debug():
+            raise
+        return [u"[[[%s:cannotopen]]]\n" % decode_filename(logfile)]
 
-    if debug():
-        tty_red = '\033[1;31m'
-        tty_green = '\033[1;32m'
-        tty_yellow = '\033[1;33m'
-        tty_blue = '\033[1;34m'
-        tty_normal = '\033[0m'
-    else:
-        tty_red = ''
-        tty_green = ''
-        tty_yellow = ''
-        tty_blue = ''
-        tty_normal = ''
+    output = [u"[[[%s]]]\n" % decode_filename(logfile)]
+
+    stat = os.stat(logfile)
+    inode = stat.st_ino if is_inode_capable(logfile) else 1
 
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
     # before, we set the offset to -1
-    offset, prev_inode = status.get(logfile, (-1, -1))
-    try:
-        file_desc = os.open(logfile, os.O_RDONLY)
-        if not is_inode_cabable(logfile):
-            inode = 1  # Create a dummy inode
-        else:
-            inode = os.fstat(file_desc)[1]  # 1 = st_ino
-    except Exception:
-        if debug():
-            raise
-        return None
-    loglines.append("[[[%s]]]\n" % logfile)
+    offset, prev_inode = status.get(logfile, (None, -1))
 
-    # Seek to the current end in order to determine file size
-    current_end = os.lseek(file_desc, 0, 2)  # os.SEEK_END not available in Python 2.4
-    status[logfile] = current_end, inode
+    # Set the current pointer to the file end
+    status[logfile] = stat.st_size, inode
 
-    # If we have never seen this file before, we just set the
-    # current pointer to the file end. We do not want to make
-    # a fuss about ancient log messages...
-    if offset == -1:
-        if not debug():
-            return loglines
-        else:
-            offset = 0
+    # If we have never seen this file before, we do not want
+    # to make a fuss about ancient log messages... (unless configured to)
+    if offset is None and not (opt.fromstart or debug()):
+        return output
 
     # If the inode of the logfile has changed it has appearently
     # been started from new (logfile rotation). At least we must
     # assume that. In some rare cases (restore of a backup, etc)
     # we are wrong and resend old log messages
     if prev_inode >= 0 and inode != prev_inode:
-        offset = 0
+        offset = None
 
     # Our previously stored offset is the current end ->
     # no new lines in this file
-    if offset == current_end:
-        return (loglines, False, [])  # loglines contain logfile name only
+    if offset == stat.st_size:
+        return output  # contains logfile name only
 
     # If our offset is beyond the current end, the logfile has been
     # truncated or wrapped while keeping the same inode. We assume
     # that it contains all new data in that case and restart from
-    # offset 0.
-    if offset > current_end:
-        offset = 0
+    # beginning.
+    if offset > stat.st_size:
+        offset = None
 
     # now seek to offset where interesting data begins
-    os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
-    if "windows" in os_type():
-        import io  # Available with python 2.6
-        # Some windows files are encoded in utf_16
-        # Peak the first two bytes to determine the encoding...
-        peak_handle = os.fdopen(file_desc, "rb")
-        first_two_bytes = peak_handle.read(2)
-        use_encoding = None
-        if first_two_bytes == "\xFF\xFE":
-            use_encoding = "utf_16"
-        elif first_two_bytes == "\xFE\xFF":
-            use_encoding = "utf_16_be"
-
-        os.lseek(file_desc, offset, 0)  # os.SEEK_SET not available in Python 2.4
-        file_handle = io.open(file_desc, encoding=use_encoding)
-    else:
-        file_handle = os.fdopen(file_desc)
+    log_iter.set_position(offset)
 
     worst = -1
-    warnings = False
     warnings_and_errors = []
     lines_parsed = 0
     start_time = time.time()
-    pushed_back_line = None
 
     while True:
-        line, pushed_back_line = next_line(file_handle, pushed_back_line)
+        line = log_iter.next_line()
         if line is None:
             break  # End of file
 
         # Handle option maxlinesize
         if opt.maxlinesize is not None and len(line) > opt.maxlinesize:
-            line = line[:opt.maxlinesize] + "[TRUNCATED]\n"
+            line = line[:opt.maxlinesize] + u"[TRUNCATED]\n"
 
         lines_parsed += 1
         # Check if maximum number of new log messages is exceeded
         if opt.maxlines is not None and lines_parsed > opt.maxlines:
-            warnings_and_errors.append("%s Maximum number (%d) of new log messages exceeded.\n" % (
+            warnings_and_errors.append(u"%s Maximum number (%d) of new log messages exceeded.\n" % (
                 opt.overflow,
                 opt.maxlines,
             ))
             worst = max(worst, opt.overflow_level)
-            os.lseek(file_desc, 0, os.SEEK_END)  # skip all other messages
+            log_iter.skip_remaining()
             break
 
         # Check if maximum processing time (per file) is exceeded. Check only
@@ -607,142 +578,193 @@ def process_logfile(logfile, patterns, opt, status):
         if opt.maxtime is not None and lines_parsed % 100 == 10 \
             and time.time() - start_time > opt.maxtime:
             warnings_and_errors.append(
-                "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
+                u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
                     opt.overflow,
                     opt.maxtime,
                 ))
             worst = max(worst, opt.overflow_level)
-            os.lseek(file_desc, 0, os.SEEK_END)  # skip all other messages
+            log_iter.skip_remaining()
             break
 
         level = "."
         for lev, pattern, cont_patterns, replacements in patterns:
+
             matches = pattern.search(line[:-1])
             if matches:
                 level = lev
                 levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
                 worst = max(levelint, worst)
 
+                # TODO: the following for block should be a method of the iterator
                 # Check for continuation lines
                 for cont_pattern in cont_patterns:
                     if isinstance(cont_pattern, int):  # add that many lines
                         for _unused_x in range(cont_pattern):
-                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
+                            cont_line = log_iter.next_line()
                             if cont_line is None:  # end of file
                                 break
                             line = line[:-1] + "\1" + cont_line
 
                     else:  # pattern is regex
                         while True:
-                            cont_line, pushed_back_line = next_line(file_handle, pushed_back_line)
+                            cont_line = log_iter.next_line()
                             if cont_line is None:  # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):
                                 line = line[:-1] + "\1" + cont_line
                             else:
-                                pushed_back_line = cont_line  # sorry for stealing this line
+                                log_iter.push_back_line(cont_line)  # sorry for stealing this line
                                 break
 
                 # Replacement
                 for replace in replacements:
                     line = replace.replace('\\0', line.rstrip()) + "\n"
-                    for nr, group in enumerate(matches.groups()):
-                        line = line.replace('\\%d' % (nr + 1), group)
+                    for num, group in enumerate(matches.groups()):
+                        line = line.replace('\\%d' % (num + 1), group)
 
                 break  # matching rule found and executed
 
-        color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
-        if debug():
-            line = line.replace("\1", "\nCONT:")
         if level == "I":
             level = "."
         if opt.nocontext and level == '.':
             continue
-        warnings_and_errors.append("%s%s %s%s\n" % (color, level, line[:-1], tty_normal))
 
-    new_offset = os.lseek(file_desc, 0, 1)  # os.SEEK_CUR not available in Python 2.4
+        out_line = "%s %s" % (level, line[:-1])
+        if sys.stdout.isatty():
+            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
+                "\1", "\nCONT:"), TTY_COLORS['normal'])
+        warnings_and_errors.append("%s\n" % out_line)
+
+    new_offset = log_iter.get_position()
+    log_iter.close()
+
     status[logfile] = new_offset, inode
+
+    # Handle option maxfilesize, regardless of warning or errors that have happened
+    if opt.maxfilesize and ((offset or 0) // opt.maxfilesize) < (new_offset // opt.maxfilesize):
+        warnings_and_errors.append(
+            u"%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
+            (TTY_COLORS['W'] if sys.stdout.isatty() else '', opt.maxfilesize,
+             new_offset // opt.maxfilesize, TTY_COLORS['normal'] if sys.stdout.isatty() else ''))
 
     # output all lines if at least one warning, error or ok has been found
     if worst > -1:
-        warnings = True
+        output.extend(warnings_and_errors)
 
-    # Handle option maxfilesize, regardless of warning or errors that have happened
-    if opt.maxfilesize is not None and (offset / opt.maxfilesize) < (new_offset / opt.maxfilesize):
-        warnings_and_errors.append(
-            "%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
-            (tty_yellow, opt.maxfilesize, new_offset / opt.maxfilesize, tty_normal))
-    return (loglines, warnings, warnings_and_errors)
+    return output
 
 
 class Options(object):
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
     MAP_BOOL = {'true': True, 'false': False}
+    DEFAULTS = {
+        'maxfilesize': None,
+        'maxlines': None,
+        'maxtime': None,
+        'maxlinesize': None,
+        'regex': None,
+        'overflow': 'C',
+        'nocontext': None,
+        'maxoutputsize': 500000,  # same as logwatch_max_filesize in check plugin
+        'fromstart': False,
+    }
 
     def __init__(self):
-        self.maxfilesize = None
-        self.maxlines = None
-        self.maxtime = None
-        self.maxlinesize = None
-        self.regex = None
-        self._overflow = None
-        self.nocontext = None
+        self.values = {}
+
+    @property
+    def maxfilesize(self):
+        return self._attr_or_default('maxfilesize')
+
+    @property
+    def maxlines(self):
+        return self._attr_or_default('maxlines')
+
+    @property
+    def maxtime(self):
+        return self._attr_or_default('maxtime')
+
+    @property
+    def maxlinesize(self):
+        return self._attr_or_default('maxlinesize')
+
+    @property
+    def regex(self):
+        return self._attr_or_default('regex')
 
     @property
     def overflow(self):
-        return 'C' if self._overflow is None else self._overflow
+        return self._attr_or_default('overflow')
+
+    @property
+    def nocontext(self):
+        return self._attr_or_default('nocontext')
+
+    @property
+    def maxoutputsize(self):
+        return self._attr_or_default('maxoutputsize')
+
+    @property
+    def fromstart(self):
+        return self._attr_or_default('fromstart')
+
+    def _attr_or_default(self, key):
+        if key in self.values:
+            return self.values[key]
+        return Options.DEFAULTS[key]
 
     @property
     def overflow_level(self):
         return self.MAP_OVERFLOW[self.overflow]
 
     def update(self, other):
-        for attr in (
-                'maxfilesize',
-                'maxlines',
-                'maxtime',
-                'maxlinesize',
-                'regex',
-                '_overflow',
-                'nocontext',
-        ):
-            new = getattr(other, attr)
-            if new is not None:
-                setattr(self, attr, new)
+        self.values.update(other.values)
 
     def set_opt(self, opt_str):
         try:
             key, value = opt_str.split('=', 1)
-            if key in ('maxlines', 'maxlinesize', 'maxfilesize'):
-                setattr(self, key, int(value))
+            if key in ('maxlines', 'maxlinesize', 'maxfilesize', 'maxoutputsize'):
+                self.values[key] = int(value)
             elif key in ('maxtime',):
-                setattr(self, key, float(value))
+                self.values[key] = float(value)
             elif key == 'overflow':
-                if value not in self.MAP_OVERFLOW.keys():
+                if value not in Options.MAP_OVERFLOW.keys():
                     raise ValueError("Invalid overflow: %r (choose from %r)" % (
                         value,
-                        self.MAP_OVERFLOW.keys(),
+                        Options.MAP_OVERFLOW.keys(),
                     ))
-                self._overflow = value
+                self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
-                self.regex = re.compile(value, re.I if key.startswith('i') else 0)
-            elif key in ('nocontext',):
-                try:
-                    setattr(self, key, self.MAP_BOOL[value.lower()])
-                except KeyError:
+                flags = (re.IGNORECASE if key.startswith('i') else 0) | re.UNICODE
+                self.values['regex'] = re.compile(value, flags)
+            elif key in ('nocontext', 'fromstart'):
+                if value.lower() not in Options.MAP_BOOL.keys():
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,
                         value,
-                        self.MAP_BOOL.keys(),
+                        Options.MAP_BOOL.keys(),
                     ))
+                self.values[key] = Options.MAP_BOOL[value.lower()]
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
-        except ValueError as e:
-            if debug():
-                raise
-            sys.stdout.write("INVALID CONFIGURATION: %s\n" % e)
-            sys.exit(1)
+        except ValueError as exc:
+            sys.stdout.write("INVALID CONFIGURATION: %s\n" % exc)
+            raise
+
+
+class LogfilesConfig(object):
+    def __init__(self, files, patterns):
+        super(LogfilesConfig, self).__init__()
+        self.files = files
+        self.patterns = patterns
+
+
+class ClusterConfig(object):
+    def __init__(self, name, ips_or_subnets):
+        super(ClusterConfig, self).__init__()
+        self.name = name
+        self.ips_or_subnets = ips_or_subnets
 
 
 def find_matching_logfiles(glob_pattern):
@@ -764,50 +786,83 @@ def find_matching_logfiles(glob_pattern):
     return files
 
 
-def parse_sections(config):
-    """
-    Returns dict with logfile name as key and either tuple of (patterns, options)
-    or None (in case the file cannot be found) as value.
-    """
-    logfile_patterns = {}
+def _search_optimize_raw_pattern(raw_pattern):
+    """return potentially stripped pattern for use with *search*
 
-    logfiles_configs = [c for c in config if isinstance(c, LogfilesConfig)]
-    for filenames, patterns in logfiles_configs:
+    Stripping leading and trailing '.*' avoids catastrophic backtracking
+    when long log lines are being processed
+    """
+    start_idx = 2 if raw_pattern.startswith('.*') else 0
+    end_idx = -2 if raw_pattern.endswith('.*') else None
+    return raw_pattern[start_idx:end_idx] or raw_pattern
+
+
+def _compile_continuation_pattern(raw_pattern):
+    try:
+        return int(raw_pattern)
+    except (ValueError, TypeError):
+        return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
+
+
+def _compile_all_expressions(patterns):
+    compiled_patterns = []
+    for level, raw_pattern, cont_list, rewrite_list in patterns:
+        if not rewrite_list:
+            # it does not matter what the matched group is in this case
+            raw_pattern = _search_optimize_raw_pattern(raw_pattern)
+        compiled = re.compile(raw_pattern, re.UNICODE)
+        cont_list = [_compile_continuation_pattern(cp) for cp in cont_list]
+        compiled_patterns.append((level, compiled, cont_list, rewrite_list))
+
+    return compiled_patterns
+
+
+def parse_sections(logfiles_config):
+    """
+    Returns s list of (logfile name, (patterns, options)) tuples and
+    and a list of non-matching patterns.
+    """
+    found_sections = {}
+    non_matching_patterns = []
+
+    for cfg in logfiles_config:
 
         # First read all the options like 'maxlines=100' or 'maxtime=10'
         opt = Options()
-        for item in filenames:
+        for item in cfg.files:
             if '=' in item:
                 opt.set_opt(item)
 
         # Then handle the file patterns
-        for glob_pattern in (f for f in filenames if '=' not in f):
+        for glob_pattern in (f for f in cfg.files if '=' not in f):
             logfiles = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
                 logfiles = [f for f in logfiles if opt.regex.search(f)]
             if not logfiles:
-                logfile_patterns[glob_pattern] = None
+                non_matching_patterns.append(glob_pattern)
             for logfile in logfiles:
-                present_patterns, present_options = logfile_patterns.get(logfile, ([], Options()))
-                present_patterns.extend(patterns)
+                present_patterns, present_options = found_sections.get(logfile, ([], Options()))
+                present_patterns.extend(cfg.patterns)
                 present_options.update(opt)
-                logfile_patterns[logfile] = (present_patterns, present_options)
+                found_sections[logfile] = (present_patterns, present_options)
 
-    return logfile_patterns.items()
+    matching_patterns = [(logfile, (_compile_all_expressions(patterns), options))
+                         for logfile, (patterns, options) in found_sections.iteritems()]
+
+    return matching_patterns, non_matching_patterns
 
 
 def ip_in_subnetwork(ip_address, subnetwork):
     """
-    Accepts ip address as string e.g. "192.168.1.1" and CIDR notation as string e.g."192.168.1.0/24".
-    Raises ValueError in case of incompatible IP versions.
+    Accepts ip address as string e.g. "10.80.1.1" and CIDR notation as string e.g."10.80.1.0/24".
+    Returns False in case of incompatible IP versions.
 
-    Implementation depends on Python2 and Python3 standard lib dependencies only.
-    Do not use Python3 only ipaddress or other Python major and/or minor version specific implementations here.
+    Implementation depends on Python2 and Python3 standard lib only.
     """
     (ip_integer, version1) = _ip_to_integer(ip_address)
     (ip_lower, ip_upper, version2) = _subnetwork_to_ip_range(subnetwork)
     if version1 != version2:
-        raise ValueError("incompatible IP versions")
+        return False
     return ip_lower <= ip_integer <= ip_upper
 
 
@@ -819,36 +874,47 @@ def _ip_to_integer(ip_address):
     for version in (socket.AF_INET, socket.AF_INET6):
         try:
             ip_hex = socket.inet_pton(version, ip_address)
-            ip_integer = int(binascii.hexlify(ip_hex), 16)
-            return (ip_integer, 4 if version == socket.AF_INET else 6)
-        except:
-            pass
-    raise ValueError("invalid IP address")
+        except socket.error:
+            continue
+        ip_integer = int(binascii.hexlify(ip_hex), 16)
+        return (ip_integer, 4 if version == socket.AF_INET else 6)
+    raise ValueError("invalid IP address: %r" % ip_address)
 
 
 def _subnetwork_to_ip_range(subnetwork):
     """
+    Convert subnetwork to a range of IP addresses
+
     Raises ValueError in case of invalid subnetwork.
     """
-    try:
-        fragments = subnetwork.split('/')
-        network_prefix = fragments[0]
-        netmask_len = int(fragments[1])
-        # try parsing the subnetwork first as IPv4, then as IPv6
-        for version in (socket.AF_INET, socket.AF_INET6):
-            ip_len = 32 if version == socket.AF_INET else 128
-            try:
-                suffix_mask = (1 << (ip_len - netmask_len)) - 1
-                netmask = ((1 << ip_len) - 1) - suffix_mask
-                ip_hex = socket.inet_pton(version, network_prefix)
-                ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask
-                ip_upper = ip_lower + suffix_mask
-                return (ip_lower, ip_upper, 4 if version == socket.AF_INET else 6)
-            except:
-                pass
-    except:
-        pass
-    raise ValueError("invalid subnetwork")
+    if '/' not in subnetwork:
+        ip_integer, version = _ip_to_integer(subnetwork)
+        return ip_integer, ip_integer, version
+    network_prefix, netmask_len = subnetwork.split('/', 1)
+    # try parsing the subnetwork first as IPv4, then as IPv6
+    for version, ip_len in ((socket.AF_INET, 32), (socket.AF_INET6, 128)):
+        try:
+            ip_hex = socket.inet_pton(version, network_prefix)
+        except socket.error:
+            continue
+        try:
+            suffix_mask = (1 << (ip_len - int(netmask_len))) - 1
+        except ValueError:  # netmask_len is too large or invalid
+            raise ValueError("invalid subnetwork: %r" % subnetwork)
+        netmask = ((1 << ip_len) - 1) - suffix_mask
+        ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask
+        ip_upper = ip_lower + suffix_mask
+        return (ip_lower, ip_upper, 4 if version == socket.AF_INET else 6)
+    raise ValueError("invalid subnetwork: %r" % subnetwork)
+
+
+def write_output(lines, maxbytes):
+    bytecount = 0
+    for line in (l.encode('utf-8') for l in lines):
+        bytecount += len(line)
+        if bytecount > maxbytes:
+            break
+        sys.stdout.write(line)
 
 
 def main():
@@ -861,63 +927,40 @@ def main():
         # This removes leftover folders which may be generated by crashing frozen binaries
         folder_cleaner = MEIFolderCleaner()
         folder_cleaner.find_and_remove_leftover_folders(hint_filenames=["mk_logwatch.exe.manifest"])
-    except Exception as e:
-        sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % e)
+    except Exception as exc:
+        sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % exc)
         sys.exit(1)
 
     try:
-        files = get_config_files(mk_confdir())
-        config = read_config(files)
-    except Exception as e:
+        files = get_config_files(MK_CONFDIR)
+        logfiles_config, cluster_config = read_config(files)
+    except Exception as exc:
         if debug():
             raise
-        sys.stdout.write("CANNOT READ CONFIG FILE: %s\n" % e)
+        sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
         sys.exit(1)
 
-    status_filename = get_status_filename(config)
+    status_filename = get_status_filename(cluster_config)
     # Copy the last known state from the logwatch.state when there is no status_filename yet.
-    if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % mk_vardir()):
-        shutil.copy("%s/logwatch.state" % mk_vardir(), status_filename)
+    if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
+        shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
 
     # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
     # with an empty status. That keeps the monitoring up and running - even if we might lose a
     # message in the extreme case of a corrupted status file.
     try:
         status = read_status(status_filename)
-    except Exception as e:
+    except Exception:
         status = {}
 
-    loglines = []
-    at_least_warnings = False
-    warnings_and_errors = []
-    for logfile, meta_data in parse_sections(config):
-        if isinstance(meta_data, tuple):
-            (patterns, options) = meta_data
-            # When debugging use option -d to prevent from misleading exceptions
-            # due to side effects of process_logfiles().
-            process_result = process_logfile(logfile, patterns, options, status)
-            if isinstance(process_result, tuple):
-                loglines, at_least_warnings, warnings_and_errors = process_result
-            elif isinstance(process_result, list):
-                loglines = process_result
-            elif isinstance(process_result, None):
-                sys.stdout.write('[[[%s:cannotopen]]]' % logfile)
-            else:
-                LOGGER.debug("Invalid logfile processing result %s", process_result)
-        elif meta_data is None:
-            sys.stdout.write('[[[%s:missing]]]\n' % logfile)
-        else:
-            LOGGER.debug("Invalid parse metadata %s", meta_data)
+    found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
-        LOGGER.debug("Loglines:")
-        LOGGER.debug(loglines)
-        for l in loglines:
-            sys.stdout.write(l)
-        if at_least_warnings:
-            LOGGER.debug("Warnings and errors:")
-            LOGGER.debug(warnings_and_errors)
-            for we in warnings_and_errors:
-                sys.stdout.write(we)
+    for pattern in non_matching_patterns:
+        sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
+
+    for logfile, (patterns, options) in found_sections:
+        output = process_logfile(logfile, patterns, options, status)
+        write_output(output, options.maxoutputsize)
 
     if not debug():
         save_status(status, status_filename)

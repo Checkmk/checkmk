@@ -16,7 +16,6 @@ RUN apt-get update \
     gettext \
     git-buildpackage \
     libboost-all-dev \
-    libcloog-ppl1 \
     libcurl4-openssl-dev \
     libdbi-dev \
     libevent-dev \

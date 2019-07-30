@@ -12,6 +12,7 @@
 # modifed by        date         comment
 ###############################################################################
 
+from __future__ import print_function
 import os, sys, getopt
 import livestatus
 
@@ -23,7 +24,7 @@ def usage():
     -w --warning              warning at % of lost hosts
     -c --critical             critical at % of  lost hosts
     """
-    print usage
+    print(usage)
 
 
 def main(argv):
@@ -38,8 +39,8 @@ def main(argv):
     try:
         opt, args = getopt.getopt(argv, "h:n:w:c:",
                                   ['help', 'clustername=', 'warning=', 'critical='])
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
     output = None
@@ -135,20 +136,20 @@ def main(argv):
                 None, "'[,]")
 
         if failedpercent > warning and failedpercent < critical:
-            print "WARN - (.)" + str_up + str_down + str_unreachable + str_unknown
+            print("WARN - (.)" + str_up + str_down + str_unreachable + str_unknown)
             sys.exit(1)
         elif failedpercent >= critical:
             if str_up == "":
-                print "CRIT - " + str_up + str_down + str_unreachable + str_unknown
+                print("CRIT - " + str_up + str_down + str_unreachable + str_unknown)
             else:
-                print "CRIT - (.)" + str_up + str_down + str_unreachable + str_unknown
+                print("CRIT - (.)" + str_up + str_down + str_unreachable + str_unknown)
             sys.exit(2)
         else:
-            print "OK - (.)" + str_up
+            print("OK - (.)" + str_up)
             sys.exit(0)
 
-    except Exception, e:  # livestatus.MKLivestatusException, e:
-        print "Livestatus error: %s" % str(e)
+    except Exception as e:  # livestatus.MKLivestatusException, e:
+        print("Livestatus error: %s" % str(e))
 
 
 if __name__ == "__main__":

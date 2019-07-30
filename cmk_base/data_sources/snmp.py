@@ -184,14 +184,14 @@ class SNMPDataSource(DataSource):
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added latera
             if self._persisted_sections and section_name in self._persisted_sections:
-                self._logger.debug(
-                    "%s: Skip fetching data (persisted info exists)" % (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (persisted info exists)" %
+                                   (check_plugin_name))
                 continue
 
             # Prevent duplicate data fetching of identical section in case of SNMP sub checks
             if section_name in info:
-                self._logger.debug(
-                    "%s: Skip fetching data (section already fetched)" % (check_plugin_name))
+                self._logger.debug("%s: Skip fetching data (section already fetched)" %
+                                   (check_plugin_name))
                 continue
 
             self._logger.debug("%s: Fetching data" % (check_plugin_name))
@@ -228,10 +228,10 @@ class SNMPDataSource(DataSource):
         # There are some nested check plugin names which have to be considered, too.
         #   for f in $(grep "service_description.*CPU [^lL]" -m1 * | cut -d":" -f1); do
         #   if grep -q "snmp_info" $f; then echo $f; fi done
-        cpu_checks_without_cpu_in_check_name = set(["brocade_sys", "bvip_util"])
-        return sorted(
-            check_plugin_names,
-            key=lambda x: (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
+        cpu_checks_without_cpu_in_check_name = {"brocade_sys", "bvip_util"}
+        return sorted(check_plugin_names,
+                      key=lambda x:
+                      (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
 
     def _convert_to_sections(self, raw_data):
         sections_to_persist = self._extract_persisted_sections(raw_data)

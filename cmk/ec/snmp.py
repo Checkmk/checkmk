@@ -138,14 +138,13 @@ class SNMPTrapEngine(object):
     def process_snmptrap(self, message, sender_address):
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
-        self._logger.verbose(
-            "Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." %
+                             sender_address)
         self.snmp_engine.setUserContext(sender_address=sender_address)
-        self.snmp_engine.msgAndPduDsp.receiveMessage(
-            snmpEngine=self.snmp_engine,
-            transportDomain=(),
-            transportAddress=sender_address,
-            wholeMsg=message)
+        self.snmp_engine.msgAndPduDsp.receiveMessage(snmpEngine=self.snmp_engine,
+                                                     transportDomain=(),
+                                                     transportAddress=sender_address,
+                                                     wholeMsg=message)
 
     def _handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
                          var_binds, cb_ctx):
@@ -186,12 +185,14 @@ class SNMPTrapTranslator(object):
         if translation_config is False:
             self.translate = self._translate_simple
         elif translation_config == (True, {}):
-            self._mib_resolver = self._construct_resolver(
-                logger, settings.paths.compiled_mibs_dir.value, False)
+            self._mib_resolver = self._construct_resolver(logger,
+                                                          settings.paths.compiled_mibs_dir.value,
+                                                          False)
             self.translate = self._translate_via_mibs
         elif translation_config == (True, {'add_description': True}):
-            self._mib_resolver = self._construct_resolver(
-                logger, settings.paths.compiled_mibs_dir.value, True)
+            self._mib_resolver = self._construct_resolver(logger,
+                                                          settings.paths.compiled_mibs_dir.value,
+                                                          True)
             self.translate = self._translate_via_mibs
         else:
             raise Exception("invalid SNMP trap translation")
@@ -202,8 +203,8 @@ class SNMPTrapTranslator(object):
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(
-                *[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] + list(builder.getMibSources()))
+            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] +
+                                  list(builder.getMibSources()))
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
@@ -272,11 +273,11 @@ class SNMPTrapTranslator(object):
                 if description:
                     translated_value += "(%s)" % description
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
-                self._logger.warning(
-                    'Failed to translate OID %s (in trap from %s): %s '
-                    '(enable debug logging for details)' % (oid.prettyPrint(), ipaddress, e))
-                self._logger.debug(
-                    'Failed trap var binds:\n%s' % "\n".join(["%s: %r" % i for i in var_bind_list]))
+                self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
+                                     '(enable debug logging for details)' %
+                                     (oid.prettyPrint(), ipaddress, e))
+                self._logger.debug('Failed trap var binds:\n%s' %
+                                   "\n".join(["%s: %r" % i for i in var_bind_list]))
                 self._logger.debug(traceback.format_exc())
                 translated_oid = str(oid)
                 translated_value = str(value)

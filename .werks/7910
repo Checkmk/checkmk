@@ -1,0 +1,11 @@
+Title: EC pages are now disabled and hidden when EC is disable
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562323209
+
+

@@ -50,6 +50,7 @@ struct NagiosPaths {
     std::string _mk_logwatch;
     std::string _logfile;
     std::string _mkeventd_socket;
+    std::string _rrdcached_socket;
 
     void dump(Logger *logger);
 };
@@ -67,7 +68,7 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(NagiosPaths paths, NagiosLimits limits,
+    NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
@@ -104,6 +105,7 @@ public:
     std::string pnpPath() override;
     std::string historyFilePath() override;
     std::string logArchivePath() override;
+    std::string rrdcachedSocketPath() override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;
@@ -115,6 +117,7 @@ public:
     AuthorizationKind groupAuthorization() const override;
 
     Logger *loggerLivestatus() override;
+    Logger *loggerRRD() override;
 
     Triggers &triggers() override;
 

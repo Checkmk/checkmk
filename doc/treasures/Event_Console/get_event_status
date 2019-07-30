@@ -42,12 +42,12 @@ def query(query, remote_host):
                 break
 
         return eval(response_text)
-    except SyntaxError, e:
+    except SyntaxError as e:
         sys.stdout.write("UNKNOWN - Invalid answer from event daemon\n%s\nQuery was:\n%s\n" \
                 % (e, query))
         sys.exit(3)
 
-    except Exception, e:
+    except Exception as e:
         if remote_host:
             via = "TCP %s:%d" % (host, port)
         else:
@@ -95,6 +95,6 @@ else:
     sys.stdout.write(
         "Message Rate per sec: %d, Processing Time: %2.1f ms Busy: %2.1f %% | rate_sec=%d;800;1000;; processing_times=%2.1f"
         "ms;50;100;; busy=%2.1f"
-        "%%;70;100;;\n" % (processing_rate_av, processing_time, busy, processing_rate_av,
-                           processing_time, busy))
+        "%%;70;100;;\n" %
+        (processing_rate_av, processing_time, busy, processing_rate_av, processing_time, busy))
     sys.exit(exit_code)

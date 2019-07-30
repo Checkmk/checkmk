@@ -228,8 +228,10 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
 
     timegroup, rel_time = period_info["groupby"](now)
 
-    pred_dir = cmk.utils.prediction.predictions_dir(
-        hostname, service_description, dsname, create=True)
+    pred_dir = cmk.utils.prediction.predictions_dir(hostname,
+                                                    service_description,
+                                                    dsname,
+                                                    create=True)
 
     pred_file = os.path.join(pred_dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)

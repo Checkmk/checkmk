@@ -1,0 +1,16 @@
+Title: agent_vsphere: Collect performance counters from vCenter
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563965515
+
+Previously some counters could only be fetched from the ESX host directly.
+We now provide the counters when connecting to the vCenter as well.
+
+If the special agent is executed against the vCenter and creating services
+on the ESX hosts via the piggyback mechanism, this may add the "Disk IO",
+"Datastore IO" and "Interface" services to the affected hosts.

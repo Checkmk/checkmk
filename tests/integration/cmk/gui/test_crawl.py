@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
+import errno
 import os
 import sys
 import time
@@ -89,7 +91,7 @@ class Worker(threading.Thread):
             response = self.client.get(url.url_without_host())
         except AssertionError as e:
             if "This view can only be used in mobile mode" in "%s" % e:
-                print "Skipping mobile mode view checking"
+                print("Skipping mobile mode view checking")
                 return
             else:
                 raise
@@ -329,7 +331,7 @@ class TestCrawler(object):
         try:
             self.stats = eval(file(self.stats_file()).read())
         except IOError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existing files are OK
             else:
                 raise
@@ -372,8 +374,8 @@ class TestCrawler(object):
             f.write("\n")
 
             if self.errors:
-                f.write("Crawled %d URLs in %d seconds. Failures:\n%s\n" % (len(
-                    self.visited), time.time() - self.started, "\n".join(self.errors)))
+                f.write("Crawled %d URLs in %d seconds. Failures:\n%s\n" %
+                        (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
         # Copy the previous file for analysis
         #if os.path.exists(self.report_file()):
@@ -390,8 +392,8 @@ class TestCrawler(object):
                     open(test_path + ".tmp", "w").write(self.site.read_file(site_path))
                     os.rename(test_path + ".tmp", test_path)
 
-            pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" % (len(
-                self.visited), time.time() - self.started, "\n".join(self.errors)))
+            pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %
+                        (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
     def error(self, msg):
         print(msg)
@@ -423,10 +425,10 @@ class TestCrawler(object):
                 last_tick = now
                 last_num_visited = num_visited
 
-                print(
-                    "Workers: %d (Idle: %d), Rate: %0.2f/s (1sec: %0.2f/s), Duration: %d sec, "
-                    "Visited: %s, Todo: %d" % (self.num_workers, num_idle, rate_runtime, rate_tick,
-                                               duration, num_visited, self.todo.qsize()))
+                print("Workers: %d (Idle: %d), Rate: %0.2f/s (1sec: %0.2f/s), Duration: %d sec, "
+                      "Visited: %s, Todo: %d" %
+                      (self.num_workers, num_idle, rate_runtime, rate_tick, duration, num_visited,
+                       self.todo.qsize()))
 
                 if self.todo.qsize() == 0 and all([w.idle for w in workers]):
                     break
@@ -437,7 +439,7 @@ class TestCrawler(object):
         except KeyboardInterrupt:
             for t in workers:
                 t.stop()
-            print "Waiting for workers to finish..."
+            print("Waiting for workers to finish...")
         finally:
             self.update_total_stats(finished)
             self.save_stats()

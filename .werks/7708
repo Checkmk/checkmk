@@ -1,0 +1,13 @@
+Title: multipath: All Services have been UNKNOWN if one line in the agent output was malformed
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559829902
+
+If one multipath ID could not be parsed, now we skip this line instead of
+raising an error. Latter one would generate all services to be in UNKNOWN
+state.

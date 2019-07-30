@@ -341,7 +341,6 @@ class FilterTristate(Filter):
 
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
-
     def __init__(self, info, column):
         self.column = column
         self.ranges = [
@@ -402,7 +401,7 @@ class FilterTime(Filter):
         if rangename == "abs":
             try:
                 return time.mktime(time.strptime(html.request.var(varprefix), "%Y-%m-%d"))
-            except:
+            except Exception:
                 html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                 return None
 
@@ -413,7 +412,7 @@ class FilterTime(Filter):
             count = html.get_integer_input(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
-        except:
+        except Exception:
             html.request.set_var(varprefix, "")
             return None
 

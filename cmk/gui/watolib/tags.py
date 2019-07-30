@@ -26,21 +26,27 @@
 """Helper functions for dealing with host tags"""
 
 import os
+import errno
 from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.tags
-import cmk.gui.config as config
+import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.watolib.utils import (
+    multisite_dir,
+    wato_root_dir,
+)
 
 
 class TagConfigFile(WatoSimpleConfigFile):
-    """Handles loading the 1.6 tag definitions from tags.mk or
-    the pre 1.6 tag configuration from hosttags.mk"""
+    """Handles loading the 1.6 tag definitions from GUI tags.mk or
+    the pre 1.6 tag configuration from hosttags.mk
 
+    When saving the configuration it also writes out the tags.mk for
+    the cmk_base world.
+    """
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
         super(TagConfigFile, self).__init__(config_file_path=file_path, config_variable="wato_tags")
@@ -50,21 +56,37 @@ class TagConfigFile(WatoSimpleConfigFile):
             return self._load_pre_16_config(lock=lock)
         return super(TagConfigFile, self)._load_file(lock=lock)
 
-    def _load_pre_16_config(self, lock):
-        file_path = Path(multisite_dir()) / "hosttags.mk"
-        legacy_cfg = store.load_mk_file(
-            str(file_path), {
-                "wato_host_tags": [],
-                "wato_aux_tags": []
-            }, lock=lock)
+    def _pre_16_hosttags_path(self):
+        return Path(multisite_dir()).joinpath("hosttags.mk")
 
-        return cmk.gui.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
-                                                  legacy_cfg["wato_aux_tags"])
+    def _load_pre_16_config(self, lock):
+        legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {
+            "wato_host_tags": [],
+            "wato_aux_tags": []
+        },
+                                        lock=lock)
+
+        return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
+                                                    legacy_cfg["wato_aux_tags"])
 
     # TODO: Move the hosttag export to a hook
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
+        self._save_base_config(cfg)
+
+        # Cleanup pre 1.6 config files (tags were just saved with new path)
+        try:
+            self._pre_16_hosttags_path().unlink()  # pylint: disable=no-member
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
         _export_hosttags_to_php(cfg)
+
+    def _save_base_config(self, cfg):
+        base_config_file = WatoSimpleConfigFile(config_file_path=Path(wato_root_dir()) / "tags.mk",
+                                                config_variable="tag_config")
+        base_config_file.save(cfg)
 
 
 # Creates a includable PHP file which provides some functions which
@@ -91,9 +113,9 @@ def _export_hosttags_to_php(cfg):
     path = php_api_dir + '/hosttags.php'
     store.mkdir(php_api_dir)
 
-    tag_config = cmk.gui.tags.TagConfig()
+    tag_config = cmk.utils.tags.TagConfig()
     tag_config.parse_config(cfg)
-    tag_config += config.BuiltinTagConfig()
+    tag_config += cmk.utils.tags.BuiltinTagConfig()
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete

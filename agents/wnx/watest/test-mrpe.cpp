@@ -3,24 +3,15 @@
 //
 #include "pch.h"
 
-#include <time.h>
-
-#include <chrono>
-#include <filesystem>
-#include <future>
-#include <string_view>
-
-#include "common/cfg_info.h"
-
-#include "read_file.h"
+#include <string>  // for string
 
 #include "cfg.h"
-#include "cfg_details.h"
-
-#include "cma_core.h"
-
+#include "on_start.h"  // for OnStart, AppType, AppType::test
 #include "providers/mrpe.h"
+#include "system_error"  // for error_code
+#include "test_tools.h"
 
+std::string_view a;
 /*
 Typic output:
 
@@ -31,13 +22,13 @@ Codepage:        437 (chcp.com) sk 1 Geben Sie das Kennwort fuer "sk" ein:
 
 namespace cma::provider {  // to become friendly for wtools classes
 
-class YamlLoader {
+class YamlLoaderMrpe {
 public:
-    YamlLoader() {
+    YamlLoaderMrpe() {
         using namespace cma::cfg;
         std::error_code ec;
         std::filesystem::remove(cma::cfg::GetBakeryFile(), ec);
-        cma::OnStart(cma::kTest);
+        cma::OnStart(cma::AppType::test);
 
         auto yaml = GetLoadedConfig();
         auto sections =
@@ -49,11 +40,11 @@ public:
         ProcessKnownConfigGroups();
         SetupEnvironmentFromGroups();
     }
-    ~YamlLoader() { OnStart(cma::kTest); }
+    ~YamlLoaderMrpe() { OnStart(cma::AppType::test); }
 };
 
 TEST(SectionProviderMrpe, Construction) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
     MrpeProvider mrpe;
@@ -85,14 +76,14 @@ void replaceYamlSeq(const std::string Group, const std::string SeqName,
 }
 
 TEST(SectionProviderMrpe, SmallApi) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     std::string s = "a\rb\n\n";
     FixCrCnForMrpe(s);
     EXPECT_EQ(s, "a b\1\1");
 
     {
-        auto [user, path] =
-            cma::provider::parseIncludeEntry("sk = @data\\mrpe_checks.cfg");
+        auto [user, path] = cma::provider::parseIncludeEntry(
+            "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
         EXPECT_EQ(path.u8string(),
                   wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
@@ -101,7 +92,8 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
-    YamlLoader w;
+    ASSERT_TRUE(true);
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
@@ -115,28 +107,30 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 3)
-            << "check that yml is ok";  // include and check
+        EXPECT_EQ(entries.size(), 0)
+            << "no mrpe expected";  // include and check
     }
 
     replaceYamlSeq(
         groups::kMrpe, vars::kMrpeConfig,
         {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
-         "include sk = @data\\mrpe_checks.cfg",  // reference
-         "Include=@data\\mrpe_checks.cfg",       // valid without space
-         "includes = @data\\mrpe_checks.cfg",    // invalid
-         "includ = @data\\mrpe_checks.cfg",      // invalid
+         "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
+         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // valid without space
+         "include  =   'mrpe_checks.cfg'",                //
+         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // invalid
+         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
          "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
          "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(strings.size(), 7);
+    EXPECT_EQ(strings.size(), 8);
     mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 2);
+    ASSERT_EQ(mrpe.includes_.size(), 3);
     mrpe.parseConfig();
-    ASSERT_EQ(mrpe.includes_.size(), 2);
-    EXPECT_EQ(mrpe.includes_[0], "sk = @data\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes_[1], "=@data\\mrpe_checks.cfg");
+    ASSERT_EQ(mrpe.includes_.size(), 3);
+    EXPECT_EQ(mrpe.includes_[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes_[2], "=   'mrpe_checks.cfg'");
     ASSERT_EQ(mrpe.checks_.size(), 2);
     EXPECT_EQ(mrpe.checks_[0],
               "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");
@@ -144,13 +138,28 @@ TEST(SectionProviderMrpe, ConfigLoad) {
               "'c:\\windows\\system32\\mode.com' CON CP /STATUS");
 
     mrpe.addParsedConfig();
-    EXPECT_EQ(mrpe.includes_.size(), 2);
+    EXPECT_EQ(mrpe.includes_.size(), 3);
     EXPECT_EQ(mrpe.checks_.size(), 2);
-    EXPECT_EQ(mrpe.entries_.size(), 3);
-}  // namespace cma::provider
+    EXPECT_EQ(mrpe.entries_.size(), 4);
+}
+
+TEST(SectionProviderMrpe, YmlCheck) {
+    using namespace cma::cfg;
+    tst::YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto mrpe_node = cfg[groups::kMrpe];
+    ASSERT_TRUE(mrpe_node.IsDefined());
+    ASSERT_TRUE(mrpe_node.IsMap());
+
+    auto enabled = GetVal(groups::kMrpe, vars::kEnabled, false);
+    EXPECT_TRUE(enabled);
+    auto paths = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
+}
 
 TEST(SectionProviderMrpe, Run) {
-    YamlLoader w;
+    YamlLoaderMrpe w;
     using namespace cma::cfg;
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
@@ -164,7 +173,7 @@ TEST(SectionProviderMrpe, Run) {
 
         ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
         auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
-        ASSERT_EQ(entries.size(), 3)
+        ASSERT_EQ(entries.size(), 0)
             << "check that yml is ok";  // include and check
     }
 

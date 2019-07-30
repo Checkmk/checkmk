@@ -1,0 +1,19 @@
+Title: mk_postgres: fix syntax error
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560505452
+
+Version 1.5.0p17 and 1.5.0p18 of the mk_postgres plugin gave a
+syntax error when parsing databases. This results in empty
+output between [databases_start] and [databases_end] in the
+plugin output. As a consequence the checks postgres_stats,
+postgres_bloat, postgres_connections, postgres_locks and
+postgres_query_duration become stale.
+
+To resolve the error the fixed version of mk_postgres has to be
+deployed to the affected hosts.

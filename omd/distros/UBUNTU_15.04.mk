@@ -3,6 +3,7 @@ DISTRO_CODE     = vivid
 # Check_MK build specific packages below
 #
 OS_PACKAGES     =
+OS_PACKAGES    += libcap2-bin # needed for setting special file permissions
 OS_PACKAGES    += cron # needed for sites cron jobs
 OS_PACKAGES    += time # needed for mk-job
 OS_PACKAGES    += traceroute # needed for Check_MK parent scan

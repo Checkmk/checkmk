@@ -2,10 +2,11 @@
 # pylint: disable=redefined-outer-name
 
 from typing import NamedTuple
-from pathlib2 import Path
 import pytest  # type: ignore
 import cmk.utils.paths
+import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.exceptions import MKGeneralException
 
 
@@ -15,20 +16,20 @@ def test_transform_tuple_ruleset():
         ("VAL2", ["HOSTLIST2"]),
     ]
 
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)
 
     assert ruleset == [
         {
             "value": "VAL1",
             "condition": {
-                "host_name": "HOSTLIST1",
+                "host_name": ["HOSTLIST1"],
             }
         },
         {
             "value": "VAL2",
             "condition": {
-                "host_name": "HOSTLIST2",
+                "host_name": ["HOSTLIST2"],
             }
         },
     ]
@@ -40,25 +41,25 @@ def test_transform_mixed_ruleset():
         {
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
             },
         },
     ]
 
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
         ruleset, is_binary=False, is_service=False)
 
     assert ruleset == [
         {
             "value": "VAL1",
             "condition": {
-                "host_name": "HOSTLIST1",
+                "host_name": ["HOSTLIST1"],
             }
         },
         {
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
             },
         },
     ]
@@ -66,7 +67,7 @@ def test_transform_mixed_ruleset():
 
 def test_transform_physical_hosts():
     with pytest.raises(MKGeneralException, match="PHYSICAL_HOSTS"):
-        tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+        ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
                 ("VAL1", tuple_rulesets.PHYSICAL_HOSTS),
             ], is_binary=False, is_service=False)
@@ -74,7 +75,7 @@ def test_transform_physical_hosts():
 
 def test_transform_cluster_hosts():
     with pytest.raises(MKGeneralException, match="CLUSTER_HOSTS"):
-        tuple_rulesets.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
+        ruleset_matcher.RulesetToDictTransformer(tag_to_group_map={}).transform_in_place(
             [
                 ("VAL1", tuple_rulesets.CLUSTER_HOSTS),
             ], is_binary=False, is_service=False)
@@ -97,7 +98,19 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST"
+                "host_name": ["HOSTLIST"],
+            },
+        },
+    ),
+    Case(
+        ident="empty_host_list",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", []),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": [],
             },
         },
     ),
@@ -109,9 +122,7 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": {
-                    "$in": ["HOST1", "HOST2"]
-                }
+                "host_name": ["HOST1", "HOST2"],
             },
         },
     ),
@@ -123,9 +134,28 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": {
-                    "$regex": "^REGEX"
-                }
+                "host_name": [{
+                    "$regex": "REGEX"
+                },]
+            },
+        },
+    ),
+    Case(
+        ident="multi_host_regex",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["~REGEX", "~2REGEX"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": [
+                    {
+                        "$regex": "REGEX"
+                    },
+                    {
+                        "$regex": "2REGEX"
+                    },
+                ],
             },
         },
     ),
@@ -133,12 +163,42 @@ NON_BINARY_HOST_RULESET = [
         ident="hosts_negated",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!HOST1", "!HOST2"]),
+        old=("VAL", ["!HOST1", "!HOST2"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
                 "host_name": {
-                    "$nin": ["HOST1", "HOST2"],
+                    "$nor": ["HOST1", "HOST2"]
+                },
+            },
+        },
+    ),
+    Case(
+        ident="single_host_negated",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["!HOST1"] + tuple_rulesets.ALL_HOSTS),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": {
+                    "$nor": ["HOST1"]
+                },
+            },
+        },
+    ),
+    Case(
+        ident="single_host_regex_negated",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["!~HOST1"] + tuple_rulesets.ALL_HOSTS),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": {
+                    "$nor": [{
+                        "$regex": "HOST1"
+                    },],
                 },
             },
         },
@@ -151,15 +211,12 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "host_name": {
-                        "$regex": "^HOST1"
+                "host_name": [
+                    {
+                        "$regex": "HOST1"
                     },
-                }, {
-                    "host_name": {
-                        "$eq": "HOST2"
-                    },
-                }],
+                    "HOST2",
+                ],
             },
         },
     ),
@@ -167,19 +224,18 @@ NON_BINARY_HOST_RULESET = [
         ident="hosts_negated_with_regex",
         is_service=False,
         is_binary=False,
-        old=("VAL", ["!~HOST1", "!HOST2"]),
+        old=("VAL", ["!~HOST1", "!HOST2"] + tuple_rulesets.ALL_HOSTS),
         new={
             "value": "VAL",
             "condition": {
-                "$nor": [{
-                    "host_name": {
-                        "$regex": "^HOST1"
-                    },
-                }, {
-                    "host_name": {
-                        "$eq": "HOST2"
-                    },
-                }],
+                "host_name": {
+                    "$nor": [
+                        {
+                            "$regex": "HOST1"
+                        },
+                        "HOST2",
+                    ],
+                },
             },
         },
     ),
@@ -191,9 +247,28 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.tg_group1": "tag",
-                "host_tags.tg_group2": "specs",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
+                },
+            }
+        },
+    ),
+    Case(
+        ident="host_tags_with_folder",
+        is_service=False,
+        is_binary=False,
+        old=("VAL", ["tag", "specs", '/aaa/+'], ["HOSTLIST"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "host_name": ["HOSTLIST"],
+                "host_folder": "/aaa/",
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
+                },
             }
         },
     ),
@@ -205,8 +280,10 @@ NON_BINARY_HOST_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "host_tags.tg_group1": "tag",
-                "host_tags.tg_group2": "specs",
+                "host_tags": {
+                    "tg_group1": "tag",
+                    "tg_group2": "specs",
+                },
             }
         },
     ),
@@ -221,7 +298,7 @@ BINARY_HOST_RULESET = [
         new={
             "value": True,
             "condition": {
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -249,7 +326,7 @@ BINARY_HOST_RULESET = [
         new={
             "value": False,
             "condition": {
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -265,14 +342,67 @@ BINARY_HOST_RULESET = [
         new={
             "value": False,
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
+            },
+        },
+    ),
+    Case(
+        ident="not_equal_tag_match",
+        is_service=False,
+        is_binary=True,
+        old=(['!TAG1', '!TAG2'], tuple_rulesets.ALL_HOSTS),
+        new={
+            "value": True,
+            "condition": {
+                "host_tags": {
+                    "TG1": {
+                        '$ne': 'TAG1'
+                    },
+                    'TG2': {
+                        '$ne': 'TAG2'
+                    },
+                },
             },
         },
     ),
 ]
 
 NON_BINARY_SERVICE_RULESET = [
+    Case(
+        ident="simple_single_service",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOST"], ["SVC"]),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": [{
+                    "$regex": "SVC"
+                }],
+                "host_name": ["HOST"],
+            },
+        },
+    ),
+    Case(
+        ident="simple_single_service_negated",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOST"], ["!SVC"] + tuple_rulesets.ALL_SERVICES),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": {
+                    "$nor": [{
+                        "$regex": "SVC"
+                    }]
+                },
+                "host_name": ["HOST"],
+            },
+        },
+    ),
     Case(
         ident="simple",
         is_service=True,
@@ -281,16 +411,28 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
+            },
+        },
+    ),
+    Case(
+        ident="empty_item_list",
+        is_service=True,
+        is_binary=False,
+        old=("VAL", ["HOSTLIST"], []),
+        new={
+            "value": "VAL",
+            "condition": {
+                "service_description": [],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -302,16 +444,15 @@ NON_BINARY_SERVICE_RULESET = [
         new={
             "value": "VAL",
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC$"
+                "service_description": [
+                    {
+                        "$regex": "SVC$"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -319,19 +460,17 @@ NON_BINARY_SERVICE_RULESET = [
         ident="negated_with_all_hosts",
         is_service=True,
         is_binary=False,
-        old=("VAL", tuple_rulesets.ALL_HOSTS, ["!SVC", "!LIST"]),
+        old=("VAL", tuple_rulesets.ALL_HOSTS, ["!SVC", "!LIST"] + tuple_rulesets.ALL_SERVICES),
         new={
             "value": "VAL",
             "condition": {
-                "$nor": [{
-                    "service_description": {
-                        "$regex": "^SVC"
-                    },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
-                    },
-                }],
+                "service_description": {
+                    "$nor": [{
+                        "$regex": "SVC"
+                    }, {
+                        "$regex": "LIST"
+                    }],
+                }
             },
         },
     ),
@@ -346,17 +485,18 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                ],
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -368,16 +508,15 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
+                ],
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -389,8 +528,10 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": True,
             "condition": {
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
         },
     ),
@@ -402,16 +543,12 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
-                    },
+                "service_description": [{
+                    "$regex": "SVC"
                 }, {
-                    "service_description": {
-                        "$regex": "^LIST"
-                    },
+                    "$regex": "LIST"
                 }],
-                "host_name": "HOSTLIST",
+                "host_name": ["HOSTLIST"],
             },
         },
     ),
@@ -423,24 +560,102 @@ BINARY_SERVICE_RULESET = [
         new={
             "value": False,
             "condition": {
-                "$or": [{
-                    "service_description": {
-                        "$regex": "^SVC"
+                "service_description": [
+                    {
+                        "$regex": "SVC"
                     },
-                }, {
-                    "service_description": {
-                        "$regex": "^LIST"
+                    {
+                        "$regex": "LIST"
                     },
-                }],
-                "host_name": "HOSTLIST",
-                "host_tags.TG1": "TAG1",
+                ],
+                "host_name": ["HOSTLIST"],
+                "host_tags": {
+                    "TG1": "TAG1"
+                },
             },
+        },
+    ),
+    Case(
+        ident="list_of_hosts_and_services",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["HOST", "LIST"], ["SVC", "LIST"]),
+        new={
+            "value": False,
+            "condition": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOST', 'LIST']
+            }
+        },
+    ),
+    Case(
+        ident="list_of_host_regexes_and_services",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["~HOST", "~LIST"], ["SVC", "LIST"]),
+        new={
+            "value": False,
+            "condition": {
+                'host_name': [
+                    {
+                        '$regex': 'HOST'
+                    },
+                    {
+                        '$regex': 'LIST'
+                    },
+                ],
+                'service_description': [
+                    {
+                        '$regex': 'SVC'
+                    },
+                    {
+                        '$regex': 'LIST'
+                    },
+                ]
+            }
+        },
+    ),
+    Case(
+        ident="list_of_host_regexes_and_services_negated",
+        is_service=True,
+        is_binary=True,
+        old=(tuple_rulesets.NEGATE, ["!~HOST", "!~LIST"] + tuple_rulesets.ALL_HOSTS,
+             ["!SVC", "!LIST"] + tuple_rulesets.ALL_SERVICES),
+        new={
+            "value": False,
+            "condition": {
+                'host_name': {
+                    "$nor": [
+                        {
+                            '$regex': 'HOST'
+                        },
+                        {
+                            '$regex': 'LIST'
+                        },
+                    ]
+                },
+                'service_description': {
+                    "$nor": [
+                        {
+                            '$regex': 'SVC'
+                        },
+                        {
+                            '$regex': 'LIST'
+                        },
+                    ]
+                },
+            }
         },
     ),
 ]
 
 TAG_TO_GROUP_MAP = {
     "TAG1": "TG1",
+    "TAG2": "TG2",
     "tag": "tg_group1",
     "specs": "tg_group2",
 }
@@ -465,18 +680,17 @@ def _generate_id(val):
         None,
     ],
 )
-@pytest.mark.parametrize(
-    "case",
-    NON_BINARY_HOST_RULESET + BINARY_HOST_RULESET + NON_BINARY_SERVICE_RULESET +
-    BINARY_SERVICE_RULESET,
-    ids=_generate_id)
+@pytest.mark.parametrize("case",
+                         NON_BINARY_HOST_RULESET + BINARY_HOST_RULESET +
+                         NON_BINARY_SERVICE_RULESET + BINARY_SERVICE_RULESET,
+                         ids=_generate_id)
 def test_transform(case, rule_options):
     rule_spec = case.old
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
     ruleset = [rule_spec]
-    tuple_rulesets.RulesetToDictTransformer(tag_to_group_map=TAG_TO_GROUP_MAP).transform_in_place(
+    ruleset_matcher.RulesetToDictTransformer(tag_to_group_map=TAG_TO_GROUP_MAP).transform_in_place(
         ruleset, is_service=case.is_service, is_binary=case.is_binary)
 
     expected = case.new.copy()
@@ -487,31 +701,35 @@ def test_transform(case, rule_options):
 
 
 def test_get_tag_to_group_map(monkeypatch):
-    # Would be cleaner to use existing fixtures from tests/unit/cmk/gui/conftest.py
-    import cmk.gui.config as gui_config
-    monkeypatch.setattr(gui_config, "omd_site", lambda: "NO_SITE")
-    multisite_mk = Path(cmk.utils.paths.default_config_dir) / "multisite.mk"
-    multisite_mk.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-    multisite_mk.touch()  # pylint: disable=no-member
-
-    assert tuple_rulesets.get_tag_to_group_map(tuple_rulesets.get_tag_config_from_gui()) == {
-        'ip-v4v6': 'address_family',
-        'snmp-v1': 'snmp',
-        'ip-v6': 'ip-v6',
-        'all-agents': 'agent',
-        'ip-v4': 'ip-v4',
-        'snmp': 'snmp',
-        'cmk-agent': 'agent',
-        'ip-v6-only': 'address_family',
-        'ping': 'ping',
-        'auto-piggyback': 'piggyback',
-        'tcp': 'tcp',
-        'no-snmp': 'snmp',
-        'piggyback': 'piggyback',
-        'ip-v4-only': 'address_family',
-        'snmp-v2': 'snmp',
-        'no-piggyback': 'piggyback',
-        'no-ip': 'address_family',
-        'no-agent': 'agent',
-        'special-agents': 'agent',
+    tag_config = cmk.utils.tags.TagConfig()
+    tag_config.parse_config({
+        'aux_tags': [{
+            'id': 'bla',
+            'title': u'bl\xfcb'
+        }],
+        'tag_groups': [
+            {
+                'id': 'criticality',
+                'tags': [{
+                    'aux_tags': ["bla"],
+                    'id': 'prod',
+                    'title': u'Productive system'
+                },],
+                'title': u'Criticality'
+            },
+            {
+                'id': 'networking',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'lan',
+                    'title': u'Local network (low latency)'
+                },],
+                'title': u'Networking Segment'
+            },
+        ],
+    })
+    assert ruleset_matcher.get_tag_to_group_map(tag_config) == {
+        'bla': 'bla',
+        'lan': 'networking',
+        'prod': 'criticality',
     }

@@ -32,7 +32,7 @@ from cmk.gui.plugins.views import (
     DataSourceLivestatus,
     RowTable,
     RowTableLivestatus,
-    do_query_data,
+    query_livestatus,
 )
 
 
@@ -208,7 +208,6 @@ class DataSourceHostGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
-
     @property
     def ident(self):
         return "merged_hostgroups"
@@ -260,7 +259,6 @@ class DataSourceServiceGroups(DataSourceLivestatus):
 @data_source_registry.register
 class DataSourceMergedServiceGroups(DataSource):
     """Merged groups across sites"""
-
     @property
     def ident(self):
         return "merged_servicegroups"
@@ -485,15 +483,26 @@ class ServiceDiscoveryRowTable(RowTable):
     # handled here. We need to extract them from the query, hand over the regular
     # filters to the host livestatus query and apply the others during the discovery
     # service query.
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+
+    def prepare_lql(self, columns, headers):
+        query = "GET services\n"
+        query += "Columns: %s\n" % " ".join(columns)
+        query += headers
         # Hard code the discovery service filter
         query += "Filter: check_command = check-mk-inventory\n"
+        return query
+
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
 
         if "long_plugin_output" not in columns:
             columns.append("long_plugin_output")
 
-        service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit,
-                                     "read")
+        columns = [c for c in columns if c not in view.datasource.add_columns]
+        query = self.prepare_lql(columns, headers)
+        data = query_livestatus(query, only_sites, limit, "read")
+
+        columns = ["site"] + columns
+        service_rows = [dict(zip(columns, row)) for row in data]
 
         rows = []
         for row in service_rows:

@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersPaloAltoSessions(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels_sessions_used",
-                 Tuple(
-                     title=_("Levels for sessions used"),
-                     elements=[
-                         Integer(title=_("Warning at"), default_value=60, unit=u"%"),
-                         Integer(title=_("Critical at"), default_value=70, unit=u"%"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels_sessions_used",
+             Tuple(
+                 title=_("Levels for sessions used"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=60, unit=u"%"),
+                     Integer(title=_("Critical at"), default_value=70, unit=u"%"),
+                 ],
+             )),
+        ],)

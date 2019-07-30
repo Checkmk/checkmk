@@ -33,22 +33,38 @@
 #  2  1 669941 89605   0   0   0   3   12   0  12  531 240  0  0 99  0  0.02   0.5
 #  0  1    2    3      4   5   6   7   8    9  10   11  12 13 14 15 16   17     18
 
+VMStatAIX = collections.namedtuple("VMStatAIX", ["user", "system", "idle", "wait"])
 
-def check_vmstat_aix(item, params, info):
+
+def parse_vmstat_aix(info):
     try:
-        if item == 'cpuperc':
-            us, sy, id_, wa = [int(x) for x in info[0][13:17]]
-            perfdata = [('us', "%d%%" % us, '', '', '0', '100'),
-                        ('sy', "%d%%" % sy, '', '', '0', '100'),
-                        ('id', "%d%%" % id_, '', '', '0', '100'),
-                        ('wa', "%d%%" % wa, '', '', '0', '100')]
-            return (0, "%d%%(us) %d%%(sy) %d%%(id) %d%%(wa)" % (us, sy, id_, wa), perfdata)
-        return (3, "item %s not defined" % item)
-    except:
-        return (3, "invalid output from plugin")
+        data = info[0]
+        return VMStatAIX(int(data[13]), int(data[14]), int(data[15]), int(data[16]))
+    except (IndexError, ValueError):
+        return
+
+
+def check_vmstat_aix(item, params, parsed):
+    if item != 'cpuperc':
+        return
+
+    if parsed is None:
+        return
+
+    return 0, "User: %s, System: %s, Idle: %s, Wait: %s"\
+           % (get_percent_human_readable(parsed.user),
+              get_percent_human_readable(parsed.system),
+              get_percent_human_readable(parsed.idle),
+              get_percent_human_readable(parsed.wait)),\
+           [('us', parsed.user),
+            ('sy', parsed.system),
+            ('id', parsed.idle),
+            ('wa', parsed.wait),
+           ]
 
 
 check_info["vmstat_aix"] = {
+    'parse_function': parse_vmstat_aix,
     'check_function': check_vmstat_aix,
     'service_description': 'vmstat %s',
     'has_perfdata': True,

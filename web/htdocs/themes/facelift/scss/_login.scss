@@ -130,17 +130,16 @@ body.login {
     box-shadow: none;
   }
 
-/* TODO: No important styles */
   #_login {
     position: absolute;
     right: 15px;
     bottom: 40px;
     left: 40px;
     width: calc(100% - 80px);
-    padding: 8px 16px !important;
+    padding: 8px 16px;
     margin: 0;
     font-weight: $theme-font-weight-bold;
-    border-color: $theme-color-state-warning-border !important;
+    border-color: #13d389;
   }
 
   #login_error {

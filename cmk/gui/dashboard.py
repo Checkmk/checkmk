@@ -192,8 +192,10 @@ class VisualTypeDashboards(VisualType):
         if add_type == 'view':
             # save the original context and override the context provided by the view
             context = dashlet['context']
-            load_view_into_dashlet(
-                dashlet, len(dashboard['dashlets']), view_name, add_context=context)
+            load_view_into_dashlet(dashlet,
+                                   len(dashboard['dashlets']),
+                                   view_name,
+                                   add_context=context)
 
         elif add_type in ["pnpgraph", "custom_graph"]:
             # The "add to visual" popup does not provide a timerange information,
@@ -583,9 +585,9 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
 
     # Overwrite the views default title with the context specific title
     dashlet['title'] = visuals.visual_title('view', view)
-    dashlet['title_url'] = html.makeuri_contextless(
-        [('view_name', view_name)] + visuals.get_singlecontext_vars(view).items(),
-        filename='view.py')
+    dashlet['title_url'] = html.makeuri_contextless([('view_name', view_name)] +
+                                                    visuals.get_singlecontext_vars(view).items(),
+                                                    filename='view.py')
 
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr
@@ -784,8 +786,8 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):
-    logger.exception(
-        "Problem while rendering dashlet %d of type %s" % (nr, dashlet_instance.type_name()))
+    logger.exception("Problem while rendering dashlet %d of type %s" %
+                     (nr, dashlet_instance.type_name()))
 
     # Unify different string types from exception messages to a unicode string
     try:
@@ -815,11 +817,10 @@ def dashboard_edit_controls(name, board):
         #
         # Add dashlet menu
         #
-        html.open_li(
-            class_=["sublink"],
-            id_="control_add",
-            style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-            onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
+        html.open_li(class_=["sublink"],
+                     id_="control_add",
+                     style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
+                     onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
         html.open_a(href="javascript:void(0)")
         html.icon(title=_("Add dashlet"), icon="dashboard_menuarrow")
         html.write_text(_("Add dashlet"))
@@ -857,10 +858,9 @@ def dashboard_edit_controls(name, board):
         # Properties link
         #
         html.open_li()
-        html.open_a(
-            href="edit_dashboard.py?load_name=%s&back=%s" % (name, html.urlencode(html.makeuri(
-                []))),
-            onmouseover="cmk.dashboard.hide_submenus();")
+        html.open_a(href="edit_dashboard.py?load_name=%s&back=%s" %
+                    (name, html.urlencode(html.makeuri([]))),
+                    onmouseover="cmk.dashboard.hide_submenus();")
         html.icon(title="", icon="trans")
         html.write(_('Properties'))
         html.close_a()
@@ -869,13 +869,11 @@ def dashboard_edit_controls(name, board):
         #
         # Stop editing
         #
-        html.open_li(
-            style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
-            id_="control_view")
-        html.open_a(
-            href="javascript:void(0)",
-            onclick="cmk.dashboard.toggle_dashboard_edit(false)",
-            onmouseover="cmk.dashboard.hide_submenus();")
+        html.open_li(style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
+                     id_="control_view")
+        html.open_a(href="javascript:void(0)",
+                    onclick="cmk.dashboard.toggle_dashboard_edit(false)",
+                    onmouseover="cmk.dashboard.hide_submenus();")
         html.icon(title="", icon="trans")
         html.write(_('Stop Editing'))
         html.close_a()
@@ -884,9 +882,8 @@ def dashboard_edit_controls(name, board):
         #
         # Enable editing link
         #
-        html.open_li(
-            style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
-            id_="control_edit")
+        html.open_li(style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
+                     id_="control_edit")
         html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
         html.icon(title="", icon="trans")
         html.write(_('Edit Dashboard'))
@@ -895,8 +892,11 @@ def dashboard_edit_controls(name, board):
 
     html.close_ul()
 
-    html.icon_button(
-        None, _('Edit the Dashboard'), 'dashboard_controls', 'controls_toggle', onclick='void(0)')
+    html.icon_button(None,
+                     _('Edit the Dashboard'),
+                     'dashboard_controls',
+                     'controls_toggle',
+                     onclick='void(0)')
 
     html.close_div()
 
@@ -916,7 +916,7 @@ def dashlet_styles(board):
 
 
 def used_dashlet_types(board):
-    type_names = list(set([d['type'] for d in board['dashlets']]))
+    type_names = list({d['type'] for d in board['dashlets']})
     return [dashlet_registry[ty] for ty in type_names]
 
 
@@ -977,10 +977,9 @@ def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
     is updated later using the dashboard_dashlet.py ajax call.
     """
     if dashlet_title_html is not None and dashlet_instance.show_title():
-        html.div(
-            html.render_span(dashlet_title_html),
-            id_="dashlet_title_%d" % dashlet_instance.dashlet_id,
-            class_=["title"])
+        html.div(html.render_span(dashlet_title_html),
+                 id_="dashlet_title_%d" % dashlet_instance.dashlet_id,
+                 class_=["title"])
 
     css = ["dashlet_inner"]
     if dashlet_instance.show_background():
@@ -1045,8 +1044,9 @@ def ajax_dashlet():
     dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
 
     try:
-        dashlet_content_html = render_dashlet_content(
-            dashlet_instance, stash_html_vars=False, is_update=True)
+        dashlet_content_html = render_dashlet_content(dashlet_instance,
+                                                      stash_html_vars=False,
+                                                      is_update=True)
     except Exception as e:
         dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
 
@@ -1126,11 +1126,10 @@ def page_edit_dashboard():
         ],
     )
 
-    visuals.page_edit_visual(
-        'dashboards',
-        dashboards,
-        create_handler=create_dashboard,
-        custom_field_handler=custom_field_handler)
+    visuals.page_edit_visual('dashboards',
+                             dashboards,
+                             create_handler=create_dashboard,
+                             custom_field_handler=custom_field_handler)
 
 
 def custom_field_handler(dashboard):
@@ -1184,19 +1183,18 @@ def page_create_view_dashlet_infos():
         raise MKUserError("datasource", _('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
-    visuals.page_create_visual(
-        'views',
-        data_source_registry[ds_name]().infos,
-        next_url=html.makeuri_contextless([
-            ('name', html.request.var('name')),
-            ('type', 'view'),
-            ('datasource', ds_name),
-            ('back', html.makeuri([])),
-            ('next',
-             html.makeuri_contextless([('name', html.request.var('name')),
-                                       ('edit', '1')], 'dashboard.py')),
-        ],
-                                          filename='edit_dashlet.py'))
+    visuals.page_create_visual('views',
+                               data_source_registry[ds_name]().infos,
+                               next_url=html.makeuri_contextless([
+                                   ('name', html.request.var('name')),
+                                   ('type', 'view'),
+                                   ('datasource', ds_name),
+                                   ('back', html.makeuri([])),
+                                   ('next',
+                                    html.makeuri_contextless([('name', html.request.var('name')),
+                                                              ('edit', '1')], 'dashboard.py')),
+                               ],
+                                                                 filename='edit_dashlet.py'))
 
 
 def choose_view(name):
@@ -1484,8 +1482,9 @@ def page_delete_dashlet():
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
-    result = html.confirm(
-        _('Do you really want to delete this dashlet?'), method='GET', add_transid=True)
+    result = html.confirm(_('Do you really want to delete this dashlet?'),
+                          method='GET',
+                          add_transid=True)
     if result is False:
         html.footer()
         return  # confirm dialog shown

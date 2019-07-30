@@ -1,4 +1,4 @@
-PYTHON_VERSION = 2.7.15
+PYTHON_VERSION = 2.7.16
 BUILD_DIR := $(shell realpath ./../../winbuild)
 PLUGINS_DIR := $(shell realpath ./../../plugins)
 
@@ -31,10 +31,12 @@ pypiwin32 = $(SRC_DIR)/pip/pypiwin32-223.tar.gz
 PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
 pywin32 = $(SRC_DIR)/pip/pywin32-224-cp27-cp27m-win32.whl
 pywin32_ctypes = $(SRC_DIR)/pip/pywin32_ctypes-0.2.0-py2.py3-none-any.whl
+pyyaml = $(SRC_DIR)/pip/PyYAML-5.1-cp27-cp27m-win32.whl
 requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
 setuptools = $(SRC_DIR)/pip/setuptools-40.8.0-py2.py3-none-any.whl
 six = $(SRC_DIR)/pip/six-1.12.0-py2.py3-none-any.whl
 urllib3 = $(SRC_DIR)/pip/urllib3-1.24.1-py2.py3-none-any.whl
+wheel = $(SRC_DIR)/pip/wheel-0.33.1-py2.py3-none-any.whl
 win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
@@ -61,10 +63,12 @@ PYTHON_PACKAGE_FILES = \
 	$(PySocks) \
 	$(pywin32) \
 	$(pywin32_ctypes) \
+	$(pyyaml) \
 	$(requests) \
 	$(setuptools) \
 	$(six) \
 	$(urllib3) \
+	$(wheel) \
 	$(win_inet_pton)
 
 # This list is meant to be used as target(s) for manual download
@@ -89,10 +93,12 @@ PYTHON_PACKAGES = \
 	PySocks \
 	pywin32 \
 	pywin32_ctypes \
+	pyyaml \
 	requests \
 	setuptools \
 	six \
 	urllib3 \
+	wheel \
 	win_inet_pton
 
 # Matching from filename to download-string.
@@ -119,10 +125,12 @@ $(pypiwin32) := pypiwin32==223
 $(PySocks) := PySocks==1.6.8
 $(pywin32) := pywin32==224
 $(pywin32_ctypes) := pywin32_ctypes==0.2.0
+$(pyyaml) := pyyaml==5.1
 $(requests) := requests==2.21.0
 $(setuptools) := setuptools==40.8.0
 $(six) := six==1.12
 $(urllib3) := urllib3==1.24.1
+$(wheel) := wheel==0.33.1
 $(win_inet_pton) := win_inet_pton==1.0.1
 
 $(BUILD_DIR)/drive_c/Python27/python.exe: $(SRC_DIR)/python-$(PYTHON_VERSION).msi
@@ -180,6 +188,7 @@ new_packages: $(BUILD_DIR)/drive_c/Python27/python.exe
 	wine c:\\Python27\\python.exe -m pip download requests[socks] && \
 	wine c:\\Python27\\python.exe -m pip download pyinstaller && \
 	wine c:\\Python27\\python.exe -m pip download pyOpenSSL && \
+	wine c:\\Python27\\python.exe -m pip download pyyaml && \
 	mkdir -p $(SRC_DIR)/pip && \
 	cp -r * $(SRC_DIR)/pip
 

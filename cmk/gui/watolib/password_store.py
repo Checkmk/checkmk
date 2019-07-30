@@ -34,9 +34,8 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 class PasswordStore(WatoSimpleConfigFile):
     def __init__(self):
-        super(PasswordStore, self).__init__(
-            config_file_path=Path(wato_root_dir()) / "passwords.mk",
-            config_variable="stored_passwords")
+        super(PasswordStore, self).__init__(config_file_path=Path(wato_root_dir()) / "passwords.mk",
+                                            config_variable="stored_passwords")
 
     def filter_usable_entries(self, entries):
         if config.user.may("wato.edit_all_passwords"):

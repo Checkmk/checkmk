@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersVarnishClient(CheckParameterRulespecWithoutIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("drop",
-                 Tuple(
-                     title=_("Upper levels for \"clients dropped\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("req",
-                 Tuple(
-                     title=_("Upper levels for \"client requests\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("drop",
+             Tuple(
+                 title=_("Upper levels for \"clients dropped\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("req",
+             Tuple(
+                 title=_("Upper levels for \"client requests\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

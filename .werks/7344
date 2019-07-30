@@ -1,0 +1,38 @@
+Title: Changing all setuid root binaries to use linux capabilities
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1556863359
+Class: security
+
+In Linux there is the option to give a binary a SETUID bit. This bit gives the
+processes created by the binary all privileges of the binary file owner. There
+is also a more advanced concept called "linux capabilities" which makes it
+possible to give these processes only a specific set of permissions.
+
+In past versions Check_MK used SETUID root binaries in several places for
+different reasons.
+
+<ul>
+<li>check_dhcp / check_icmp: Active check plugins which need this permission to
+be able to open their raw sockets for sending and receiving their packets.</li>
+<li>bin/mkeventd_open514: Open SNMP trap or sylog ports for receiving
+messages.</li>
+<li>lib/cmc/icmpsender / lib/cmc/icmpreceiver: CEE/CME only: Open raw sockets
+for sending and receiving packets.</li>
+</ul>
+
+SETUID root binaries are problematic in terms of security, because they could
+be used for getting root privileges in case an attacker finds an attackable
+security flaw in them. Once exploited the attacker would gain full root access
+on the Check_MK system.
+
+Because all of these binaries need the privilege for a very specific known
+reason, we have now removed the SETUID bit from these binaries and are now
+setting individual linux capabilities to them.
+
+The capabilities have the advantage that they don't give full root access to
+the processes created with the binary. Instead they give only a defined set of
+permissions.

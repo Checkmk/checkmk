@@ -133,13 +133,13 @@ class RulespecCheckgroupParametersIpmi(CheckParameterRulespecWithItem):
                      orientation="horizontal",
                  )),
                 ("ignored_sensors",
-                 ListOfStrings(
-                     title=_("Ignore the following IPMI sensors"),
-                     help=_("Names of IPMI sensors that should be ignored during discovery "
-                            "and when summarizing."
-                            "The pattern specified here must match exactly the beginning of "
-                            "the actual sensor name (case sensitive)."),
-                     orientation="horizontal")),
+                 ListOfStrings(title=_("Ignore the following IPMI sensors"),
+                               help=_(
+                                   "Names of IPMI sensors that should be ignored during discovery "
+                                   "and when summarizing."
+                                   "The pattern specified here must match exactly the beginning of "
+                                   "the actual sensor name (case sensitive)."),
+                               orientation="horizontal")),
                 ("ignored_sensorstates",
                  ListOfStrings(
                      title=_("Ignore the following IPMI sensor states"),
@@ -152,30 +152,23 @@ class RulespecCheckgroupParametersIpmi(CheckParameterRulespecWithItem):
                      default_value=["nr", "ns"],
                  )),
                 ("numerical_sensor_levels",
-                 ListOf(
-                     Tuple(
-                         elements=[
-                             TextAscii(
-                                 title=_("Sensor name (only summary)"),
-                                 help=_(
-                                     "In summary mode you have to state the sensor name. "
-                                     "In single mode the sensor name comes from service description."
-                                 )),
-                             Dictionary(
-                                 elements=[
-                                     ("lower",
-                                      Tuple(
-                                          title=_("Lower levels"),
-                                          elements=[Float(), Float()],
-                                      )),
-                                     ("upper",
-                                      Tuple(
-                                          title=_("Upper levels"),
-                                          elements=[Float(), Float()],
-                                      )),
-                                 ],),
-                         ],),
-                     title=_("Set lower and upper levels for numerical sensors"))),
+                 ListOf(Tuple(elements=[
+                     TextAscii(
+                         title=_("Sensor name (only summary)"),
+                         help=_("In summary mode you have to state the sensor name. "
+                                "In single mode the sensor name comes from service description.")),
+                     Dictionary(elements=[
+                         ("lower", Tuple(
+                             title=_("Lower levels"),
+                             elements=[Float(), Float()],
+                         )),
+                         ("upper", Tuple(
+                             title=_("Upper levels"),
+                             elements=[Float(), Float()],
+                         )),
+                     ],),
+                 ],),
+                        title=_("Set lower and upper levels for numerical sensors"))),
             ],
             ignored_keys=["ignored_sensors", "ignored_sensor_states"],
         )

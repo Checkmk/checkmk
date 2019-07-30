@@ -59,15 +59,16 @@ class RulespecCheckgroupParametersOracleLongactivesessions(CheckParameterRulespe
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Levels of active sessions"),
-                           elements=[
-                               Integer(title=_("Warning if more than"), unit=_("sessions")),
-                               Integer(title=_("Critical if more than"), unit=_("sessions")),
-                           ],
-                       ))],)
+        return Dictionary(elements=[("levels",
+                                     Tuple(
+                                         title=_("Levels of active sessions"),
+                                         elements=[
+                                             Integer(title=_("Warning if more than"),
+                                                     unit=_("sessions")),
+                                             Integer(title=_("Critical if more than"),
+                                                     unit=_("sessions")),
+                                         ],
+                                     ))],)
 
     @property
     def item_spec(self):

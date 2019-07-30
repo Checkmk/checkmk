@@ -32,8 +32,9 @@ def format_emc_datadomain_temp(descr, encid, index, new_format):
 
 
 def inventory_emc_datadomain_temps(info):
-    for encid, index, descr, _reading, _status in info:
-        yield format_emc_datadomain_temp(descr, encid, index, True), {}
+    for encid, index, descr, _reading, status in info:
+        if status != "2":
+            yield format_emc_datadomain_temp(descr, encid, index, True), {}
 
 
 def check_emc_datadomain_temps(item, params, info):
@@ -48,12 +49,11 @@ def check_emc_datadomain_temps(item, params, info):
         name = format_emc_datadomain_temp(descr, encid, index, "Enclosure" in item)
         if item == name:
             dev_status, state_name = state_table[status]
-            return check_temperature(
-                float(reading),
-                params,
-                "emc_datadomain_temps_%s" % item,
-                dev_status=int(dev_status),
-                dev_status_name=state_name)
+            return check_temperature(float(reading),
+                                     params,
+                                     "emc_datadomain_temps_%s" % item,
+                                     dev_status=int(dev_status),
+                                     dev_status_name=state_name)
 
 
 check_info["emc_datadomain_temps"] = {

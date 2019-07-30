@@ -1,11 +1,11 @@
-Title: Raw Edition: Fixed broken Event Console rule editing
+Title: Raw Edition: Fixed broken Event Console rule editing (1.5 regression)
 Level: 2
 Component: ec
 Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1533536581
 
 It was not possible to edit Event Console rules anymore in previous 1.5 releases.

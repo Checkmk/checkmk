@@ -31,7 +31,7 @@
 # [['/mirrored/data/recording', '172.0.0.0/255.0.0.0']]
 
 
-def inventory_nfsexports(checkname, info):
+def inventory_nfsexports(info):
     # reminder to self: inventorize the exported fs, and maybe even the fs id.
     # but do not inventorize the allowed clients unless i'm really sure that
     # it's not bugged for "features" like multiple different option exports of

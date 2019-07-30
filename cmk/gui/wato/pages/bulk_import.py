@@ -80,11 +80,11 @@ class ModeBulkImport(WatoMode):
         return _("Bulk host import")
 
     def buttons(self):
-        html.context_button(
-            _("Abort"), watolib.folder_preserving_link([("mode", "folder")]), "abort")
+        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "abort")
         if html.request.has_var("file_id"):
-            html.context_button(
-                _("Back"), watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
+            html.context_button(_("Back"),
+                                watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
 
     def action(self):
         if html.transaction_valid():
@@ -168,7 +168,7 @@ class ModeBulkImport(WatoMode):
     def _import(self):
         if self._params.get("has_title_line"):
             try:
-                self._csv_reader.next()  # skip header
+                next(self._csv_reader)  # skip header
             except StopIteration:
                 pass
 
@@ -316,7 +316,7 @@ class ModeBulkImport(WatoMode):
         # erneut importieren kann.
         if self._params.get("has_title_line"):
             try:
-                headers = list(self._csv_reader.next())
+                headers = list(next(self._csv_reader))
             except StopIteration:
                 headers = []  # nope, there is no header
         else:
@@ -327,9 +327,9 @@ class ModeBulkImport(WatoMode):
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([len(r) for r in [headers] + rows])
 
-        with table_element(
-                sortable=False, searchable=False,
-                omit_headers=not self._params.get("has_title_line")) as table:
+        with table_element(sortable=False,
+                           searchable=False,
+                           omit_headers=not self._params.get("has_title_line")) as table:
 
             # Render attribute selection fields
             table.row()
@@ -343,11 +343,10 @@ class ModeBulkImport(WatoMode):
                     attribute_method = self._try_detect_default_attribute(attributes, header)
                     html.request.del_var(attribute_varname)
 
-                html.dropdown(
-                    "attribute_%d" % col_num,
-                    attributes,
-                    deflt=attribute_method,
-                    autocomplete="off")
+                html.dropdown("attribute_%d" % col_num,
+                              attributes,
+                              deflt=attribute_method,
+                              autocomplete="off")
 
             # Render sample rows
             for row in rows:

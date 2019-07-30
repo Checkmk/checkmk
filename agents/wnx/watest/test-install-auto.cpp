@@ -9,12 +9,12 @@
 #include "common/wtools.h"
 #include "install_api.h"
 #include "service_processor.h"
-#include "test-tools.h"
+#include "test_tools.h"
 
 TEST(InstallAuto, LowLevel) {
     using namespace cma::install;
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
 
     tst::SafeCleanTempDir();
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
@@ -29,7 +29,7 @@ TEST(InstallAuto, LowLevel) {
     EXPECT_NO_THROW(BackupFile(path, out));
     EXPECT_FALSE(NeedInstall(path, out));
 
-    tst::CreateFile(path, "-----\n");
+    tst::ConstructFile(path, "-----\n");
 
     // check for presence
     std::error_code ec;
@@ -45,7 +45,7 @@ TEST(InstallAuto, LowLevel) {
 
     EXPECT_TRUE(RmFile(path));
     EXPECT_FALSE(MvFile(path, out / name)) << "file should be removed";
-    tst::CreateFile(path, "-----\n");
+    tst::ConstructFile(path, "-----\n");
     EXPECT_TRUE(MvFile(path, out / name)) << "move has to success";
 
     EXPECT_NO_THROW(BackupFile(path, out));
@@ -53,14 +53,14 @@ TEST(InstallAuto, LowLevel) {
     EXPECT_TRUE(fs::exists(path, ec));
 
     EXPECT_FALSE(NeedInstall(path, out));
-    tst::CreateFile(path, "-----\n");
+    tst::ConstructFile(path, "-----\n");
     EXPECT_TRUE(NeedInstall(path, out));
     BackupFile(path, out);
     EXPECT_FALSE(NeedInstall(path, out));
 }
 
 TEST(InstallAuto, TopLevel) {
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     using namespace cma::install;
     using namespace cma::tools;
     namespace fs = std::filesystem;
@@ -73,7 +73,7 @@ TEST(InstallAuto, TopLevel) {
     // artificial file creation
     const auto name = L"test.dat";
     auto path = in / name;
-    tst::CreateFile(path, "-----\n");
+    tst::ConstructFile(path, "-----\n");
 
     // check for presence
     std::error_code ec;

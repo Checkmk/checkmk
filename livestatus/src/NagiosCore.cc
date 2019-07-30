@@ -42,9 +42,10 @@ void NagiosPaths::dump(Logger *logger) {
     Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
     Notice(logger) << "log file path = '" << _logfile << "'";
     Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
+    Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
 }
 
-NagiosCore::NagiosCore(NagiosPaths paths, NagiosLimits limits,
+NagiosCore::NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
                        NagiosAuthorization authorization,
                        Encoding data_encoding)
     : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
@@ -176,6 +177,9 @@ std::string NagiosCore::logArchivePath() {
     extern char *log_archive_path;
     return log_archive_path;
 }
+std::string NagiosCore::rrdcachedSocketPath() {
+    return _paths._rrdcached_socket;
+}
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
@@ -196,6 +200,8 @@ AuthorizationKind NagiosCore::groupAuthorization() const {
 
 Logger *NagiosCore::loggerLivestatus() { return _logger_livestatus; }
 
+Logger *NagiosCore::loggerRRD() { return loggerLivestatus(); }
+
 Triggers &NagiosCore::triggers() { return _triggers; }
 
 size_t NagiosCore::numQueuedNotifications() { return 0; }
@@ -205,6 +211,22 @@ size_t NagiosCore::numCachedLogMessages() {
     return _store.numCachedLogMessages();
 }
 
+namespace {
+// Nagios converts custom attribute names to uppercase, splits name/value at
+// space, uses ';' as a comment character, is line-oriented, etc. etc. So we use
+// a base16 encoding for names and values of tags, labels, and label sources,
+// e.g. "48656C6C6F2C20776F726C6421" => "Hello, world!".
+std::string b16decode(const std::string &hex) {
+    auto len = hex.length() & ~1;
+    std::string result;
+    result.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2) {
+        result.push_back(strtol(hex.substr(i, 2).c_str(), nullptr, 16));
+    }
+    return result;
+}
+}  // namespace
+
 Attributes NagiosCore::customAttributes(const void *holder,
                                         AttributeKind kind) const {
     auto h = *static_cast<const customvariablesmember *const *>(holder);
@@ -212,7 +234,17 @@ Attributes NagiosCore::customAttributes(const void *holder,
     for (auto cvm = h; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
-            attrs.emplace(name, cvm->variable_value);
+            switch (kind) {
+                case AttributeKind::custom_variables:
+                    attrs.emplace(name, cvm->variable_value);
+                    break;
+                case AttributeKind::tags:
+                case AttributeKind::labels:
+                case AttributeKind::label_sources:
+                    attrs.emplace(b16decode(name),
+                                  b16decode(cvm->variable_value));
+                    break;
+            }
         }
     }
     return attrs;

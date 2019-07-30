@@ -27,7 +27,7 @@
 #include <vector>
 
 namespace {
-constexpr int num_counters = 11;
+constexpr int num_counters = 10;
 
 struct CounterInfo {
     double value;

@@ -69,7 +69,7 @@ linux_nic_check = "lnx_if"
 
 
 def _parse_lnx_if_node_info(lines):
-    line = lines.next()
+    line = next(lines)
     return line[0], line[1:]
 
 
@@ -98,13 +98,17 @@ def _parse_lnx_if_ipaddress(lines):
 
         if line[0].startswith('link/'):
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-            iface[line[0]] = line[1]
-            iface[line[2]] = line[3]
+            # link/none
+            try:
+                iface[line[0]] = line[1]
+                iface[line[2]] = line[3]
+            except IndexError:
+                pass
 
         elif line[0].startswith('inet'):
             # inet 127.0.0.1/8 scope host lo
             # inet6 ::1/128 scope host
-            iface[line[0]] = line[1]
+            iface.setdefault(line[0], []).append(line[1])
     return ip_stats
 
 
@@ -232,9 +236,11 @@ def parse_lnx_if(info):
                 else:
                     ifOperStatus = 4
 
-        if attr.get("Address"):
+        try:
+            # We saw interface entries of tunnels for the address
+            # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = "".join([chr(int(x, 16)) for x in attr.get("Address", "").split(":")])
-        else:
+        except ValueError:
             ifPhysAddress = ''
 
         row = [node_info] + map(str, [

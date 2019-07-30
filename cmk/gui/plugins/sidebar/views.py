@@ -73,17 +73,15 @@ class Views(SidebarSnapin):
                         html.begin_foldable_container("views", topic, False, topic, indent=True)
                         first = False
                     if is_view:
-                        bulletlink(
-                            title,
-                            "view.py?view_name=%s" % name,
-                            onclick="return cmk.sidebar.wato_views_clicked(this)")
+                        bulletlink(title,
+                                   "view.py?view_name=%s" % name,
+                                   onclick="return cmk.sidebar.wato_views_clicked(this)")
                     elif "?name=" in name:
                         bulletlink(title, name)
                     else:
-                        bulletlink(
-                            title,
-                            'dashboard.py?name=%s' % name,
-                            onclick="return cmk.sidebar.wato_views_clicked(this)")
+                        bulletlink(title,
+                                   'dashboard.py?name=%s' % name,
+                                   onclick="return cmk.sidebar.wato_views_clicked(this)")
 
             # TODO: One day pagestypes should handle the complete snapin.
             # for page_type in pagetypes.all_page_types().values():

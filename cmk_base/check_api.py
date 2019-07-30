@@ -116,6 +116,7 @@ import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # pylint: disable=unused-import
 import cmk.utils.render as render
+import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
@@ -172,6 +173,9 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
+from cmk_base.discovered_labels import DiscoveredServiceLabels as ServiceLabels, ServiceLabel  # pylint: disable=unused-import
+Service = _check_api_utils.Service
+
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
 
 
@@ -184,7 +188,7 @@ def saveint(i):
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except:
+    except (TypeError, ValueError):
         return 0
 
 
@@ -197,21 +201,32 @@ def savefloat(f):
     you can not know whether it is really 0.0 or something went wrong."""
     try:
         return float(f)
-    except:
+    except (TypeError, ValueError):
         return 0.0
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+class as_float(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+    def __repr__(self):
+        if self > sys.float_info.max:
+            return '1e309'
+        if self < -1 * sys.float_info.max:
+            return '-1e309'
+        return super(as_float, self).__repr__()
+
+
+# Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
 def service_extra_conf(hostname, service, ruleset):
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+# Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
 def host_extra_conf(hostname, ruleset):
     return _config.get_config_cache().host_extra_conf(hostname, ruleset)
 
 
-# Compatibility wrapper for the pre 1.6 existant conf.service_extra_conf()
+# Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
 def in_binary_hostlist(hostname, ruleset):
     return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
@@ -222,13 +237,19 @@ def host_extra_conf_merged(hostname, conf):
 
 
 # TODO: Only used by logwatch check. Can we clean this up?
-get_rule_options = _config.get_rule_options
+get_rule_options = _tuple_rulesets.get_rule_options
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-in_extraconf_hostlist = _config.in_extraconf_hostlist
-hosttags_match_taglist = _config.hosttags_match_taglist
-all_matching_hosts = _config.all_matching_hosts
+in_extraconf_hostlist = _tuple_rulesets.in_extraconf_hostlist
+hosttags_match_taglist = _tuple_rulesets.hosttags_match_taglist
+
+
+# These functions were used in some specific checks until 1.6. Don't add it to
+# the future check API. It's kept here for compatibility reasons for now.
+def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+    return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        tags, hostlist, with_foreign_hosts)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
@@ -248,6 +269,7 @@ is_cmc = _config.is_cmc
 
 get_age_human_readable = lambda secs: str(render.Age(secs))
 get_bytes_human_readable = render.fmt_bytes
+get_percent_human_readable = render.percent
 quote_shell_string = _utils.quote_shell_string
 
 
@@ -276,23 +298,23 @@ def get_nic_speed_human_readable(speed):
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
-        if speedi == 10000000:
-            speed = "10 Mbit/s"
-        elif speedi == 100000000:
-            speed = "100 Mbit/s"
-        elif speedi == 1000000000:
-            speed = "1 Gbit/s"
-        elif speedi < 1500:
-            speed = "%d bit/s" % speedi
-        elif speedi < 1000000:
-            speed = "%.1f Kbit/s" % (speedi / 1000.0)
-        elif speedi < 1000000000:
-            speed = "%.2f Mbit/s" % (speedi / 1000000.0)
-        else:
-            speed = "%.2f Gbit/s" % (speedi / 1000000000.0)
-    except:
-        pass
-    return speed
+    except ValueError:
+        return speed
+
+    if speedi == 10000000:
+        return "10 Mbit/s"
+    elif speedi == 100000000:
+        return "100 Mbit/s"
+    elif speedi == 1000000000:
+        return "1 Gbit/s"
+    elif speedi < 1500:
+        return "%d bit/s" % speedi
+    elif speedi < 1000000:
+        return "%.1f Kbit/s" % (speedi / 1000.0)
+    elif speedi < 1000000000:
+        return "%.2f Mbit/s" % (speedi / 1000000.0)
+
+    return "%.2f Gbit/s" % (speedi / 1000000000.0)
 
 
 # TODO: Replace by some render.* function / move to render module?
@@ -312,16 +334,6 @@ def get_relative_date_human_readable(timestamp):
     if timestamp > now:
         return "in " + get_age_human_readable(timestamp - now)
     return get_age_human_readable(now - timestamp) + " ago"
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_percent_human_readable(perc, precision=2):
-    """Format perc (0 <= perc <= 100 + x) so that precision
-    digits are being displayed. This avoids a "0.00%" for
-    very small numbers."""
-    if abs(perc) > 4:
-        return "%.1f%%" % perc
-    return "%.3g%%" % perc
 
 
 #
@@ -345,7 +357,7 @@ ZERO = _item_state.ZERO
 MKCounterWrapped = _item_state.MKCounterWrapped
 
 
-def _normalize_bounds(levels):
+def _normalize_levels(levels):
     if len(levels) == 2:  # upper warn and crit
         warn_upper, crit_upper = levels[0], levels[1]
         warn_lower, crit_lower = None, None
@@ -357,8 +369,8 @@ def _normalize_bounds(levels):
     return warn_upper, crit_upper, warn_lower, crit_lower
 
 
-def _check_boundaries(value, levels, human_readable_func, unit_info):
-    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_bounds(levels)
+def _do_check_levels(value, levels, human_readable_func, unit_info):
+    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
         return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
@@ -386,7 +398,8 @@ def check_levels(value,
                  scale=1.0,
                  statemarkers=False,
                  human_readable_func=None,
-                 infoname=None):
+                 infoname=None,
+                 boundaries=None):
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -429,6 +442,7 @@ def check_levels(value,
                          - get_timestamp_human_readable
                          - get_relative_date_human_readable
     infoname: Perf value name for infotext like a title.
+    boundaries: Add minimum and maximum to performance data.
     """
     unit_info = ""
     if unit.startswith('/'):
@@ -449,15 +463,15 @@ def check_levels(value,
     else:
         infotext = "%s%s" % (human_readable_func(value), unit_info)
 
-    # None, {} or (None, None) -> do not check any levels
-    if not params or params == (None, None):
+    # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
+    if not params or set(params) <= {None}:
         if dsname:
             return 0, infotext, [(dsname, value)]
         return 0, infotext, []
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
-        levels = map(scale_value, _normalize_bounds(params))
+        levels = map(scale_value, _normalize_levels(params))
         ref_value = None
 
     # Dictionary -> predictive levels
@@ -485,13 +499,17 @@ def check_levels(value,
         if predictive_levels_msg:
             infotext += " (%s)" % predictive_levels_msg
 
-    state, levelstext = _check_boundaries(value, levels, human_readable_func, unit_info)
+    state, levelstext = _do_check_levels(value, levels, human_readable_func, unit_info)
     infotext += levelstext
     if statemarkers:
         infotext += state_markers[state]
 
     if dsname:
-        perfdata = [(dsname, value, levels[0], levels[1])]
+        if isinstance(boundaries, tuple) and len(boundaries) == 2:
+            min_, max_ = map(scale_value, boundaries)
+            perfdata = [(dsname, value, levels[0], levels[1], min_, max_)]
+        else:
+            perfdata = [(dsname, value, levels[0], levels[1])]
         if ref_value:
             perfdata.append(('predict_' + dsname, ref_value))
     else:
@@ -504,15 +522,14 @@ def get_effective_service_level():
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
-    service_levels = config_cache.service_extra_conf(host_name(), service_description(),
-                                                     _config.service_service_levels)
+    service_level = config_cache.service_level_of_service(host_name(), service_description())
+    if service_level is not None:
+        return service_level
 
-    if service_levels:
-        return service_levels[0]
-    else:
-        service_levels = config_cache.host_extra_conf(host_name(), _config.host_service_levels)
-        if service_levels:
-            return service_levels[0]
+    service_level = config_cache.get_host_config(host_name()).service_level
+    if service_level is not None:
+        return service_level
+
     return 0
 
 
@@ -589,7 +606,6 @@ def get_parsed_item_data(check_function):
     cmk_base returning 3 (UNKN state) with an item not found message
     (see cmk_base/checking.py).
     """
-
     @functools.wraps(check_function)
     def wrapped_check_function(item, params, parsed):
         if not isinstance(parsed, dict):
@@ -681,7 +697,6 @@ def discover(selector=None, default_params=None):
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
-
     def roller(parsed):
         if isinstance(parsed, dict):
             return parsed.iteritems()
@@ -696,8 +711,8 @@ def discover(selector=None, default_params=None):
         def discoverer(parsed):
             # type (Union[dict,list]) -> Iterable[Tuple]
 
-            params = default_params if isinstance(default_params,
-                                                  six.string_types + (dict,)) else {}
+            params = default_params if isinstance(default_params, six.string_types +
+                                                  (dict,)) else {}
             filterer = validate_filter(filter_function)
             from_dict = isinstance(parsed, dict)
 

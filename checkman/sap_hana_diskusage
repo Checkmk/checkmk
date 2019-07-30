@@ -15,8 +15,6 @@ description:
  If the disk reports OK the check state is OK, if it reports UNKNOWN,
  the check state is also UNKNOWN, otherwise CRIT.
 
- This check is also cluster-aware.
-
 item:
  The instance name and disk type.
 

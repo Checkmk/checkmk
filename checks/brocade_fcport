@@ -198,14 +198,13 @@ def inventory_brocade_fcport(parsed):
                 settings=settings,
         ):
             inventory.append((
-                brocade_fcport_getitem(
-                    number_of_ports=len(parsed),
-                    index=if_entry["index"],
-                    portname=if_entry["portname"],
-                    is_isl=if_entry["is_isl"],
-                    settings=settings),
-                '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }' % (phystate, opstate,
-                                                                             admstate),
+                brocade_fcport_getitem(number_of_ports=len(parsed),
+                                       index=if_entry["index"],
+                                       portname=if_entry["portname"],
+                                       is_isl=if_entry["is_isl"],
+                                       settings=settings),
+                '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }' %
+                (phystate, opstate, admstate),
             ))
     return inventory
 
@@ -295,8 +294,8 @@ def check_brocade_fcport(item, params, parsed):
             value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value,
                                 average)
             output.append("Average (%d min): %s/s" % (average, get_bytes_human_readable(value)))
-            perfaverages.append(("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0,
-                                 wirespeed))
+            perfaverages.append(
+                ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # handle levels for in/out
         if crit_bytes is not None and value >= crit_bytes:
@@ -366,8 +365,8 @@ def check_brocade_fcport(item, params, parsed):
     for dev_state, state_key, state_info, warn_states, state_map in [
         (found_entry["phystate"], "phystate", "Physical", [1, 6], brocade_fcport_phystates),
         (found_entry["opstate"], "opstate", "Operational", [1, 3], brocade_fcport_opstates),
-        (found_entry["admstate"], "admstate", "Administrative", [0, 1, 3],
-         brocade_fcport_admstates),
+        (found_entry["admstate"], "admstate", "Administrative", [0, 1,
+                                                                 3], brocade_fcport_admstates),
     ]:
         errorflag = ""
         if params.get(state_key) is not None and dev_state != params[state_key] \

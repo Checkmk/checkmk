@@ -92,12 +92,14 @@ include     packages/apache-omd/apache-omd.make \
     packages/perl-modules/perl-modules.make \
     packages/pnp4nagios/pnp4nagios.make \
     packages/Python/Python.make \
+    packages/Python3/Python3.make \
     packages/python-modules/python-modules.make \
+    packages/python3-modules/python3-modules.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
     packages/snap7/snap7.make \
     packages/Webinject/Webinject.make \
-    packages/cma/cma.make
+    packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make

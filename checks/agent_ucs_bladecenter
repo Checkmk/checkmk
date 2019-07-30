@@ -26,15 +26,15 @@
 
 
 def agent_ucsbladecenter_arguments(params, hostname, ipaddress):
-    args = ''
+    args = []
 
-    args += " -u " + quote_shell_string(params["username"])
-    args += " -p " + quote_shell_string(params["password"])
+    args += ["-u", params["username"]]
+    args += ["-p", params["password"]]
 
     if params.get("no_cert_check"):
-        args += " --no-cert-check"
+        args.append("--no-cert-check")
 
-    args += " " + quote_shell_string(ipaddress)
+    args.append(ipaddress)
     return args
 
 

@@ -63,8 +63,8 @@ def cmp_config_paths(a, b):
     3. subdirectories of a directory will always be read *after*
        the *.mk files in that directory.
     """
-    pa = a.split('/')
-    pb = b.split('/')
+    pa = a.parts
+    pb = b.parts
     return cmp(pa[:-1], pb[:-1]) or \
            cmp(len(pa), len(pb)) or \
            cmp(pa, pb)

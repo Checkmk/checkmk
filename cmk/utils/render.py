@@ -32,7 +32,8 @@ are just for optical output purposes."""
 
 import time
 import math
-from typing import Tuple  # pylint: disable=unused-import
+from datetime import timedelta
+from typing import Tuple, Union  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
 
@@ -52,7 +53,7 @@ def date(timestamp):
 
 
 def date_and_time(timestamp):
-    return time.strftime(_("%Y-%m-%d %H:%M:%S"), time.localtime(timestamp))
+    return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
 def time_of_day(timestamp):
@@ -60,18 +61,17 @@ def time_of_day(timestamp):
 
 
 def timespan(seconds):
-    hours, secs = divmod(seconds, 3600)
-    mins, secs = divmod(secs, 60)
-    return "%d:%02d:%02d" % (hours, mins, secs)
+    # type: (Union[float, int]) -> str
+    return str(timedelta(seconds=int(seconds)))
 
 
 def time_since(timestamp):
+    # type: (int) -> str
     return timespan(time.time() - timestamp)
 
 
 class Age(object):
     """Format time difference seconds into approximated human readable text"""
-
     def __init__(self, secs):
         super(Age, self).__init__()
         self.__secs = secs
@@ -110,24 +110,6 @@ class Age(object):
                 return "%.1f %s" % (years, _("y"))
 
             return "%.0f %s" % (years, _("y"))
-
-    # OLD LOGIC:
-    #
-    #def __str__(self):
-    #    if self.__secs < 240:
-    #        return "%d sec" % self.__secs
-    #    mins = self.__secs / 60
-    #    if mins < 120:
-    #        return "%d min" % mins
-    #    hours, mins = divmod(mins, 60)
-    #    if hours < 12 and mins > 0:
-    #        return "%d hours %d min" % (hours, mins)
-    #    elif hours < 48:
-    #        return "%d hours" % hours
-    #    days, hours = divmod(hours, 24)
-    #    if days < 7 and hours > 0:
-    #        return "%d days %d hours" % (days, hours)
-    #    return "%d days" % days
 
     def __float__(self):
         return float(self.__secs)
@@ -202,19 +184,62 @@ def filesize(size):
 #   '----------------------------------------------------------------------'
 
 
-def percent(perc, precision=2, drop_zeroes=True):
+def percent(perc, scientific_notation=False):
     """Renders a given number as percentage string"""
-    if perc > 0:
-        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
+    # 0 / 0.0 -> 0%
+    # 9.0e-05 -> 0.00009%
+    # 0.00009 -> 0.00009%
+    # 0.00103 -> 0.001%
+    # 0.0019  -> 0.002%
+    # 0.129   -> 0.13%
+    # 8.25752 -> 8.26%
+    # 8       -> 8.0%
+    # 80      -> 80.0%
+    # 100.123 -> 100%
+    # 200.123 -> 200%
+    # 1234567 -> 1234567%
+    #
+    # with scientific_notation:
+    # 0.00009 -> 9.0e-05%
+    # 0.00019 -> 0.0002%
+    # 12345 -> 12345%
+    # 1234567 -> 1.2e+06%
+
+    # 0 and 0.0 is a special case
+    if perc == 0:
+        return "0%"
+
+    # 1000 < oo
+    if abs(perc) > 999.5:
+        if scientific_notation and abs(perc) >= 100000:
+            result = "%1.e" % perc
+        else:
+            # TODO: in python3 change to >= 999.5
+            # the way python rounds x.5 changed between py2 and py3
+            result = "%d" % perc
+    # 100 < 1000
+    elif abs(perc) >= 100:
+        result = "%d" % perc
+    # 0.0 < 0.001
+    elif 0.0 < abs(perc) < 0.01:
+        result = "%.7f" % round(perc, -int(math.floor(math.log10(abs(perc)))))
+        # for super small numbers < 0.0000001%, just return 0%
+        if float(result) == 0:
+            return "0%"
+        if scientific_notation and perc < 0.0001:
+            result = "%1.e" % float(result)
+        else:
+            result = result.rstrip("0")
+    # 0.001 < 100
     else:
-        perc_precision = 1
+        result = "%.2f" % perc
+        result = result.rstrip("0").rstrip(".")
 
-    text = "%%.%df" % perc_precision % perc
+    # add .0 to all integers < 100
+    if float(result).is_integer() and float(result) < 100:
+        result += ".0"
 
-    if drop_zeroes:
-        text = text.rstrip("0").rstrip(".")
-
-    return text + "%"
+    return result + "%"
 
 
 def scientific(v, precision=3):

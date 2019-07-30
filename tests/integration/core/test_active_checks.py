@@ -2,12 +2,11 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import collections
-import pytest
+import pytest  # type: ignore
 
 from testlib import web  # pylint: disable=unused-import
-
-import cmk_base.config as config
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
@@ -17,12 +16,11 @@ def test_cfg(request, web, site):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
-    print "Applying default config"
-    web.add_host(
-        "test-host", attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_agent": "no-agent",
-        })
+    print("Applying default config")
+    web.add_host("test-host", attributes={
+        "ipaddress": "127.0.0.1",
+        "tag_agent": "no-agent",
+    })
 
     web.activate_changes()
     yield config
@@ -30,7 +28,7 @@ def test_cfg(request, web, site):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     web.delete_host("test-host")
 
@@ -47,10 +45,7 @@ def test_active_check_execution(test_cfg, site, web):
                             'service_description': u'\xc4ctive-Check',
                             'command_line': 'echo "123"'
                         },
-                        "conditions": {
-                            "host_specs": config.ALL_HOSTS,
-                            "host_tags": [],
-                        },
+                        "condition": {},
                         "options": {},
                     },],
                 }
@@ -62,7 +57,7 @@ def test_active_check_execution(test_cfg, site, web):
         result = site.live.query_row(
             "GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check"
         )
-        print "Result: %r" % result
+        print("Result: %r" % result)
         assert result[4] == 1
         assert result[0] == "test-host"
         assert result[1] == u'\xc4ctive-Check'
@@ -87,7 +82,7 @@ def test_active_check_macros(test_cfg, site, web):
             sorted([
                 "/wato/", "auto-piggyback", "ip-v4", "ip-v4-only", "lan", "no-agent", "no-snmp",
                 "ping", "prod",
-                "site:%s" % site.id, "wato"
+                "site:%s" % site.id
             ])),
         "$_HOSTADDRESS_4$": "127.0.0.1",
         "$_HOSTADDRESS_6$": "",
@@ -108,10 +103,7 @@ def test_active_check_macros(test_cfg, site, web):
                 'service_description': descr(var),
                 'command_line': 'echo "Output: %s"' % var,
             },
-            "conditions": {
-                "host_specs": config.ALL_HOSTS,
-                "host_tags": [],
-            },
+            "condition": {},
         })
 
     try:

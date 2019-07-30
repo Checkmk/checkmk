@@ -20,9 +20,12 @@ PYTHON_MODULES_PATCHES  := $(wildcard $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/*
 
 PYTHON_MODULES_LIST :=
 
-# Modules needed because of own packed python (would be available in OS)
-PYTHON_MODULES_LIST += setuptools-40.6.2.zip  # needed by rrdtool bindings
-PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz
+PYTHON_MODULES_LIST += setuptools_scm-3.1.0.tar.gz # needed by various setup.py
+PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
+PYTHON_MODULES_LIST += typing-3.7.4.tar.gz # direct dependency
+PYTHON_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
+PYTHON_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
+PYTHON_MODULES_LIST += Werkzeug-0.15.5.tar.gz # direct dependency
 
 # Modules really needed on all platforms
 PYTHON_MODULES_LIST += pysphere-0.1.7.zip
@@ -34,7 +37,6 @@ PYTHON_MODULES_LIST += ply-3.11.tar.gz # needed by pysmi
 PYTHON_MODULES_LIST += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 PYTHON_MODULES_LIST += snmpsim-0.4.6.tar.gz # needed by SNMP integration tests
-PYTHON_MODULES_LIST += setuptools-git-1.2.tar.gz # needed for pymssql on some older platforms
 PYTHON_MODULES_LIST += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 
 LEGACY_LDAP=0
@@ -60,7 +62,6 @@ PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
 PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
-PYTHON_MODULES_LIST += pip-18.1.tar.gz # needed by reportlab (pip>=1.4.1)
 PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
 
@@ -104,7 +105,6 @@ PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench
 # 0.9.8i. Again, cryptography has a bug here and assumes it from 0.9.8g onwards,
 # so we need to patch one more time.
 
-PYTHON_MODULES_LIST += six-1.11.0.tar.gz
 PYTHON_MODULES_LIST += ipaddress-1.0.22.tar.gz
 
 PYTHON_MODULES_LIST += netifaces-0.10.7.tar.gz # needed for LDAP (nearest DC detection)
@@ -147,35 +147,17 @@ PYTHON_MODULES_LIST += tinkerforge-2.1.19.tar.gz
 PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
 
-PYTHON_MODULES_LIST += typing-3.6.6.tar.gz
 PYTHON_MODULES_LIST += scandir-1.9.0.tar.gz
 PYTHON_MODULES_LIST += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
-PYTHON_MODULES_LIST += python-dateutil-2.7.5.tar.gz
 PYTHON_MODULES_LIST += python-snap7-0.10.tar.gz
 # Added for azure special agent
 PYTHON_MODULES_LIST += PyJWT-1.6.4.tar.gz
-PYTHON_MODULES_LIST += SecretStorage-2.3.1.tar.gz
 PYTHON_MODULES_LIST += adal-1.2.0.tar.gz
-PYTHON_MODULES_LIST += azure-nspkg-3.0.2.zip
-PYTHON_MODULES_LIST += azure-common-1.1.16.zip
-PYTHON_MODULES_LIST += azure-mgmt-nspkg-3.0.2.zip
-PYTHON_MODULES_LIST += isodate-0.6.0.tar.gz
 PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
-PYTHON_MODULES_LIST += msrest-0.6.1.tar.gz
-# use azure-mgmt-monitor 0.4.0 and its dependency
-# msrestazure 0.4.34 since the monitor version 0.5.0
-# will not deliver all metrics.
-PYTHON_MODULES_LIST += msrestazure-0.4.34.tar.gz
-PYTHON_MODULES_LIST += azure-mgmt-monitor-0.4.0.zip
-PYTHON_MODULES_LIST += azure-mgmt-resource-2.0.0.zip
-PYTHON_MODULES_LIST += azure-mgmt-compute-4.3.1.zip
-PYTHON_MODULES_LIST += configparser-3.5.0.tar.gz
-PYTHON_MODULES_LIST += entrypoints-0.2.3.tar.gz
-PYTHON_MODULES_LIST += keyring-15.1.0.tar.gz
+PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
 # Added for the GUI
-PYTHON_MODULES_LIST += Werkzeug-0.14.1.tar.gz
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz
@@ -198,6 +180,13 @@ PYTHON_MODULES_LIST += jira-2.0.0.tar.gz
 # Has been added for opsgenie notification plugin
 PYTHON_MODULES_LIST += opsgenie-sdk-0.3.1.tar.gz
 PYTHON_MODULES_LIST += pytz-2019.1.tar.gz
+# Added for easier debugging of check plugins in OMD scope
+PYTHON_MODULES_LIST += fancycompleter-0.8.tar.gz # needed for pdbpp
+PYTHON_MODULES_LIST += wmctrl-0.3.tar.gz # needed for pdbpp
+PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
+PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
+# Added to support Python 3 transition
+PYTHON_MODULES_LIST += future-0.17.1.tar.gz
 
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
@@ -224,6 +213,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(PACKAGE_PYTHON_MODULES_DESTDIR) \
 		    --prefix='' \
+		    --install-data=/share \
 		    --install-platlib=/lib \
 		    --install-purelib=/lib ; \
 		cd .. ; \
@@ -272,48 +262,41 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 		$(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 		    --root=$(DESTDIR)$(OMD_ROOT) \
 		    --prefix='' \
+		    --install-data=/share \
 		    --install-platlib=/lib/python \
 		    --install-purelib=/lib/python ; \
 		cd .. ; \
 	    done
 # Cleanup some unwanted files (example scripts)
-	rm -f $(DESTDIR)$(OMD_ROOT)/bin/*.py || true
+	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/*.py
 # Fix python interpreter for kept scripts
-	for F in $(DESTDIR)$(OMD_ROOT)/bin/easy_install \
-		 $(DESTDIR)$(OMD_ROOT)/bin/easy_install-2.7 \
-		 $(DESTDIR)$(OMD_ROOT)/bin/libsmi2pysnmp \
-		 $(DESTDIR)$(OMD_ROOT)/bin/pip \
-		; do \
-	    if [ -f $$F ]; then \
-		sed -i "1s|^#!.*python|#!/usr/bin/env python|" $$F; \
-	    fi ; \
-	done
+	$(SED) -i '1s|^#!.*/python$$|#!/usr/bin/env python2|' $(addprefix $(DESTDIR)$(OMD_ROOT)/bin/,chardetect fakebmc futurize jirashell pasteurize pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc)
 	$(TOUCH) $@
 
-$(PYTHON_MODULES)-skel:
-
 python-modules-dump-Pipfile:
-	@echo '# ATTENTION: Most of this file is generated by omd/packages/python-modules/Makefile'
+	@echo '# ATTENTION: Most of this file is generated by omd/packages/python-modules/python-modules.make'
 	@echo '[[source]]'
 	@echo 'url = "https://pypi.python.org/simple"'
 	@echo 'verify_ssl = true'
 	@echo 'name = "pypi"'
 	@echo ''
 	@echo '[dev-packages]'
-	@echo 'pytest = "*"'
-	@echo 'pytest-cov = "*"'
-	@echo 'pytest-mock = "*"'
-	@echo '"beautifulsoup4" = "*"'
-	@echo 'dill = "*"'
-	@echo 'bandit = "*"'
-	@echo 'lockfile = "*"'
-	@echo 'lxml = "*"'
-	@echo 'pylint = "*"'
-	@echo 'pyenchant = "*"'
-	@echo 'yapf = "*"'
-	@echo 'docker = "*"'
-	@echo 'mockldap = "*"'
-	@echo 'isort = "*"'
+	@echo 'astroid = "*"  # used by testlib.pylint_checker_localization'
+	@echo 'bandit = "*"  # used by test/Makefile'"'"'s test-bandit target'
+	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
+	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
+	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
+	@echo 'freezegun = "*"  # used by various unit tests'
+	@echo 'isort = "*"  # used as a plugin for editors'
+	@echo 'lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent'
+	@echo 'mock = "*"  # used in checktestlib in unit tests'
+	@echo 'mockldap = "*"  # used in test_userdb_ldap_connector unit test'
+	@echo 'pylint = "*"  # used by test/Makefile'"'"'s test-pylint target'
+	@echo 'pymongo = "*"  # used by mk_mongodb agent plugin'
+	@echo 'pytest = "*"  # used by various test/Makefile targets'
+	@echo 'pytest-cov = "*"  # used (indirectly) by test/Makefile'"'"'s test-unit-coverage-html target, see comment there'
+	@echo 'pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture'
+	@echo 'yapf = "*"  # used for editor integration and the format-python Makefile target'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

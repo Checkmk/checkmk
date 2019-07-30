@@ -1,0 +1,14 @@
+Title: exs_vsphere_datastores: reintroduce old perfometer definitions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0b1
+Date: 1557911760
+
+In older CheckMK versions the perfometers of the check
+esx_vsphere_datastores used to indicate the filesystem size and
+uncommitted size. The corresponding segments are now shown again
+in the perfometer.

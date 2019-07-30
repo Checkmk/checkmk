@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cme
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1537968155
 
 It was not possible to e.g. upload custom GUI logos individually for customers.

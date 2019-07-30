@@ -32,7 +32,7 @@ def parse_db2_dbs(info):
     global_timestamp = None
     try:
         while True:
-            line = lines.next()
+            line = next(lines)
             if line[0].startswith("TIMESTAMP") and not current_instance:
                 global_timestamp = int(line[1])
                 continue
@@ -42,7 +42,7 @@ def parse_db2_dbs(info):
                 dbs[current_instance] = []
             elif current_instance:
                 dbs[current_instance].append(line)
-    except:
+    except Exception:
         pass
 
     # By returning a tuple, we trick Check_MK

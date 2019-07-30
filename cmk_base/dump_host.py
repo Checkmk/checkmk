@@ -50,8 +50,8 @@ def dump_host(hostname):
     else:
         color = tty.bgblue
         add_txt = ""
-    console.output(
-        "%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
+    console.output("%s%s%s%-78s %s\n" %
+                   (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(host_config)
 
@@ -64,7 +64,7 @@ def dump_host(hostname):
                 secondary = _ip_address_for_dump_host(host_config, 4)
             else:
                 secondary = _ip_address_for_dump_host(host_config, 6)
-        except:
+        except Exception:
             secondary = "X.X.X.X"
 
         addresses = "%s, %s" % (ipaddress, secondary)
@@ -77,9 +77,7 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [
-        (tag_template % ":".join(t)) for t in sorted(config_cache.tags_of_host(hostname).items())
-    ]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
@@ -113,22 +111,23 @@ def dump_host(hostname):
         console.output("\n  ".join(agenttypes) + "\n")
 
     console.output(tty.yellow + "Services:" + tty.normal + "\n")
-    check_items = check_table.get_sorted_check_table(hostname)
 
     headers = ["checktype", "item", "params", "description", "groups"]
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
-    if config.service_dependencies != []:
-        headers.append("depends on")
-        colors.append(tty.magenta)
 
-    tty.print_table(headers, colors, [[
-        checktype,
-        cmk_base.utils.make_utf8(item),
-        _evaluate_params(params),
-        cmk_base.utils.make_utf8(description),
-        cmk_base.utils.make_utf8(",".join(
-            config_cache.servicegroups_of_service(hostname, description))), ",".join(deps)
-    ] for checktype, item, params, description, deps in check_items], "  ")
+    table_data = []
+    for service in sorted(check_table.get_check_table(hostname).values(),
+                          key=lambda s: s.description):
+        table_data.append([
+            service.check_plugin_name,
+            cmk_base.utils.make_utf8(service.item),
+            _evaluate_params(service.parameters),
+            cmk_base.utils.make_utf8(service.description),
+            cmk_base.utils.make_utf8(",".join(
+                config_cache.servicegroups_of_service(hostname, service.description)))
+        ])
+
+    tty.print_table(headers, colors, table_data, "  ")
 
 
 def _evaluate_params(params):
@@ -136,18 +135,18 @@ def _evaluate_params(params):
         return params
 
     current_params = checking.determine_check_params(params)
-    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(time.time()),
-                                                  current_params)
+    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
+        time.time()), current_params)
 
 
 def _ip_address_for_dump_host(host_config, family=None):
     if host_config.is_cluster:
         try:
             return ip_lookup.lookup_ip_address(host_config.hostname, family)
-        except:
+        except Exception:
             return ""
 
     try:
         return ip_lookup.lookup_ip_address(host_config.hostname, family)
-    except:
+    except Exception:
         return core_config.fallback_ip_for(host_config, family)

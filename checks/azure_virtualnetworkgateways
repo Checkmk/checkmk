@@ -34,8 +34,13 @@ def check_azure_virtualnetworkgateways(_item, params, resource):
     ):
         levels_l = params.get("%s_levels_lower" % cmk_key, (None, None))
         levels_u = params.get("%s_levels_upper" % cmk_key, (None, None))
-        mcheck = check_azure_metric(
-            resource, metric_key, cmk_key, displ, levels=levels_u, levels_lower=levels_l, minv=0)
+        mcheck = check_azure_metric(resource,
+                                    metric_key,
+                                    cmk_key,
+                                    displ,
+                                    levels=levels_u,
+                                    levels_lower=levels_l,
+                                    minv=0)
         if mcheck:
             yield mcheck
 

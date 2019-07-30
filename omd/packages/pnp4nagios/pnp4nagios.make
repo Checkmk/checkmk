@@ -42,7 +42,13 @@ $(PNP4NAGIOS_BUILD): $(PNP4NAGIOS_PATCHING)
 $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	$(MKDIR) $(DESTDIR)$(APACHE_CONF_DIR)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(PNP4NAGIOS_DIR) install
-	# Remove installer 
+	# Fixup wrong man page installation path
+	# (There is a --mandir configure option, but it does not work)
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man8
+	mv $(DESTDIR)$(OMD_ROOT)/man/man8/npcd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8/npcd.8
+	rmdir $(DESTDIR)$(OMD_ROOT)/man/man8
+	rmdir $(DESTDIR)$(OMD_ROOT)/man
+	# Remove installer
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios

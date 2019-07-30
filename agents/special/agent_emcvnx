@@ -39,6 +39,7 @@
 # <-mirrorview><-snapviews><-sancopy><-reserved> <-cloneview><-metalun>
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
+from __future__ import print_function
 import getopt
 import os
 import sys
@@ -86,7 +87,7 @@ long_options = ['help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'm
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -226,20 +227,20 @@ if cmdout:
                          "credentials if you don't have a security file.\n")
         sys.exit(1)
 
-print "<<<emcvnx_info:sep(58)>>>"
+print("<<<emcvnx_info:sep(58)>>>")
 for line in cmdout:
-    print line
+    print(line)
 
 # if module "agent" was requested, fetch additional information about the
 # agent, e. g. Model and Revision
 if fetch_agent_info:
-    print "<<<emcvnx_agent:sep(58)>>>"
+    print("<<<emcvnx_agent:sep(58)>>>")
     cmd = basecmd + "getagent"
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
     for line in os.popen(cmd).readlines():  # nosec
-        print line,
+        print(line, end=' ')
 
 #
 # all other sections of agent output
@@ -248,18 +249,18 @@ for module, module_options in naviseccli_options.items():
     if module_options["active"] is True:
         separator = module_options["sep"]
         if separator:
-            print "<<<emcvnx_%s:sep(%s)>>>" % (module, separator)
+            print("<<<emcvnx_%s:sep(%s)>>>" % (module, separator))
         else:
-            print "<<<emcvnx_%s>>>" % module
+            print("<<<emcvnx_%s>>>" % module)
 
         for header, cmd_option in module_options["cmd_options"]:
             if header is not None:
-                print "[[[%s]]]" % header
+                print("[[[%s]]]" % header)
             cmd = basecmd + cmd_option
             if opt_debug:
                 sys.stderr.write("executing external command: %s\n" % cmd)
             for line in os.popen(cmd).readlines():  # nosec
-                print line,
+                print(line, end=' ')
 
 
 def output_profile():
@@ -270,7 +271,7 @@ def output_profile():
                "import pstats\n"
                "stats = pstats.Stats('%s')\n"
                "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-    os.chmod(show_profile, 0755)
+    os.chmod(show_profile, 0o755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 

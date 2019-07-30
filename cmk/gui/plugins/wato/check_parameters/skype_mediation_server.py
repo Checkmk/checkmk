@@ -58,58 +58,53 @@ class RulespecCheckgroupParametersSkypeMediationServer(CheckParameterRulespecWit
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('load_call_failure_index',
-                 Dictionary(
-                     title=_("Load Call Failure Index"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(title=_("Warning at"), default_value=10),
-                                  Integer(title=_("Critical at"), default_value=20),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('failed_calls_because_of_proxy',
-                 Dictionary(
-                     title=_("Failed calls caused by unexpected interaction from proxy"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(title=_("Warning at"), default_value=10),
-                                  Integer(title=_("Critical at"), default_value=20),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('failed_calls_because_of_gateway',
-                 Dictionary(
-                     title=_("Failed calls caused by unexpected interaction from gateway"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(title=_("Warning at"), default_value=10),
-                                  Integer(title=_("Critical at"), default_value=20),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-                ('media_connectivity_failure',
-                 Dictionary(
-                     title=_("Media Connectivity Check Failure"),
-                     elements=[
-                         ("upper",
-                          Tuple(
-                              elements=[
-                                  Integer(title=_("Warning at"), default_value=1),
-                                  Integer(title=_("Critical at"), default_value=2),
-                              ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('load_call_failure_index',
+             Dictionary(
+                 title=_("Load Call Failure Index"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), default_value=10),
+                          Integer(title=_("Critical at"), default_value=20),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('failed_calls_because_of_proxy',
+             Dictionary(
+                 title=_("Failed calls caused by unexpected interaction from proxy"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), default_value=10),
+                          Integer(title=_("Critical at"), default_value=20),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('failed_calls_because_of_gateway',
+             Dictionary(
+                 title=_("Failed calls caused by unexpected interaction from gateway"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), default_value=10),
+                          Integer(title=_("Critical at"), default_value=20),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+            ('media_connectivity_failure',
+             Dictionary(
+                 title=_("Media Connectivity Check Failure"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), default_value=1),
+                          Integer(title=_("Critical at"), default_value=2),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+        ],)

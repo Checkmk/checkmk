@@ -100,7 +100,6 @@ class WithPermissions(object):
 
 class WithPermissionsAndAttributes(WithPermissions):
     """Base class containing a couple of generic permission checking functions, used for Host and Folder"""
-
     def __init__(self):
         super(WithPermissionsAndAttributes, self).__init__()
         self._attributes = {}
@@ -146,7 +145,6 @@ class WithPermissionsAndAttributes(WithPermissions):
 
 class BaseFolder(WithPermissionsAndAttributes):
     """Base class of SearchFolder and Folder. Implements common methods"""
-
     def hosts(self):
         raise NotImplementedError()
 
@@ -154,6 +152,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         return self.hosts().keys()
 
     def host(self, host_name):
+        # type: (str) -> CREHost
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -267,10 +266,9 @@ class BaseFolder(WithPermissionsAndAttributes):
             breadcrump_element_start(z_index=100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
-            html.dropdown(
-                "folder", [("", "")] + self.subfolder_choices(),
-                class_="folderpath",
-                onchange="folderpath.submit();")
+            html.dropdown("folder", [("", "")] + self.subfolder_choices(),
+                          class_="folderpath",
+                          onchange="folderpath.submit();")
             if keepvarnames is True:
                 html.hidden_fields()
             else:
@@ -390,6 +388,7 @@ class CREFolder(BaseFolder):
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
     def current():
+        # type: () -> CREFolder
         if "wato_current_folder" in current_app.g:
             return current_app.g["wato_current_folder"]
 
@@ -541,9 +540,18 @@ class CREFolder(BaseFolder):
 
     def _transform_old_attributes(self, attributes):
         """Mangle all attribute structures read from the disk to prepare it for the current logic"""
-        attributes = self._transform_old_agent_type_in_attributes(attributes)
+        attributes = self._transform_pre_15_agent_type_in_attributes(attributes)
         attributes = self._transform_none_value_site_attribute(attributes)
         attributes = self._add_missing_meta_data(attributes)
+        attributes = self._transform_tag_snmp_ds(attributes)
+        return attributes
+
+    # In versions previous to 1.6 Checkmk had a tag group named "snmp" and an
+    # auxiliary tag named "snmp" in the builtin tags. This name conflict had to
+    # be resolved. The tag group has been changed to "snmp_ds" to fix it.
+    def _transform_tag_snmp_ds(self, attributes):
+        if "tag_snmp" in attributes:
+            attributes["tag_snmp_ds"] = attributes.pop("tag_snmp")
         return attributes
 
     # 1.6 introduced meta_data for hosts and folders to keep information about their
@@ -566,7 +574,7 @@ class CREFolder(BaseFolder):
     #    ],
     #)
     #
-    def _transform_old_agent_type_in_attributes(self, attributes):
+    def _transform_pre_15_agent_type_in_attributes(self, attributes):
         if "tag_agent" not in attributes:
             return attributes  # Nothing set here, no transformation necessary
 
@@ -654,10 +662,9 @@ class CREFolder(BaseFolder):
         out = cStringIO.StringIO()
         out.write(wato_fileheader())
 
-        all_hosts = []  # list of [Python string for all_hosts]
-        clusters = []  # tuple list of (Python string, nodes)
-        hostnames = self.hosts().keys()
-        hostnames.sort()
+        all_hosts = []  # type: List[str]
+        clusters = {}  # type: Dict[str, List[str]]
+        hostnames = sorted(self.hosts().keys())
         custom_macros = {}  # collect value for attributes that are to be present in Nagios
         cleaned_hosts = {}
         host_tags = {}
@@ -680,12 +687,6 @@ class CREFolder(BaseFolder):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = host.attributes()
 
-            tags = host.tags()
-            tagstext = "|".join(list(tags))
-            if tagstext:
-                tagstext += "|"
-            hostentry = '"%s|%swato|/" + FOLDER_PATH + "/"' % (hostname, tagstext)
-
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
@@ -695,9 +696,9 @@ class CREFolder(BaseFolder):
                 host_labels[hostname] = labels
 
             if host.is_cluster():
-                clusters.append((hostentry, host.cluster_nodes()))
+                clusters[hostname] = host.cluster_nodes()
             else:
-                all_hosts.append(hostentry)
+                all_hosts.append(hostname)
 
             # Save the effective attributes of a host to the related attribute maps.
             # These maps are saved directly in the hosts.mk to transport the effective
@@ -707,25 +708,36 @@ class CREFolder(BaseFolder):
                 if value:
                     dictionary[hostname] = value
 
-            # Create contact group rule entries for hosts with explicitely set values
-            # Note: since the type if this entry is a list, not a single contact group, all other list
-            # entries coming after this one will be ignored. That way the host-entries have
-            # precedence over the folder entries.
-
+            # Create contact group rule entries for hosts with explicitely set
+            # values Note: since the type if this entry is a list, not a single
+            # contact group, all other list entries coming after this one will
+            # be ignored. That way the host-entries have precedence over the
+            # folder entries.
+            #
+            # LM: This comment is wrong. The folders create list entries,
+            # but the hosts create string entries. This makes the hosts add
+            # their contact groups in addition to the effective folder contact
+            # groups I went back to ~2015 and it seems it was always working
+            # this way. I won't change it now and leave the comment here for
+            # reference.
             if host.has_explicit_attribute("contactgroups"):
                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
-                    out.write("\nhost_contactgroups += [\n")
+                    group_rules = []
                     for cg in cgs:
-                        out.write('    ( %r, [%r] ),\n' % (cg, hostname))
-                    out.write(']\n\n')
+                        group_rules.append({
+                            "value": cg,
+                            "condition": {
+                                "host_name": [hostname]
+                            },
+                        })
+
+                    out.write("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
 
                     if cgconfig.get("use_for_services"):
-                        out.write("\nservice_contactgroups += [\n")
-                        for cg in cgs:
-                            out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
-                        out.write(']\n\n')
+                        out.write("\nservice_contactgroups += %s\n\n" %
+                                  format_config_value(group_rules))
 
             for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
@@ -739,17 +751,11 @@ class CREFolder(BaseFolder):
                                 custom_macros[custom_varname] = {}
                             custom_macros[custom_varname][hostname] = nagstring
 
-        if len(all_hosts) > 0:
-            out.write("all_hosts += [\n")
-            for entry in all_hosts:
-                out.write('  %s,\n' % entry)
-            out.write("]\n")
+        if all_hosts:
+            out.write("all_hosts += %s\n" % format_config_value(all_hosts))
 
-        if len(clusters) > 0:
-            out.write("\nclusters.update({")
-            for entry, nodes in clusters:
-                out.write('\n  %s : %s,\n' % (entry, repr(nodes)))
-            out.write("})\n")
+        if clusters:
+            out.write("\nclusters.update(%s)\n" % format_config_value(clusters))
 
         out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
 
@@ -771,19 +777,20 @@ class CREFolder(BaseFolder):
                 out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
                 out.write("  %s)\n" % format_config_value(macrolist))
 
-        # If the contact groups of the host are set to be used for the monitoring,
-        # we create an according rule for the folder and an according rule for
-        # each host that has an explicit setting for that attribute.
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
         _permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
-            out.write("\nhost_contactgroups.append(\n"
-                      "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
+            out.write("\nhost_contactgroups.insert(0, \n"
+                      "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" %
+                      list(contact_groups))
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
                 for cg in contact_groups:
                     out.write(
-                        "\nservice_contactgroups.append(\n"
-                        "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS, ALL_SERVICES ))\n" % cg)
+                        "\nservice_contactgroups.insert(0, \n"
+                        "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" % cg)
 
         # Write information about all host attributes into special variable - even
         # values stored for check_mk as well.
@@ -858,8 +865,10 @@ class CREFolder(BaseFolder):
                     subfolder_path = self.path() + "/" + entry
                 else:
                     subfolder_path = entry
-                self._subfolders[entry] = Folder(
-                    entry, subfolder_path, self, root_dir=self._root_dir)
+                self._subfolders[entry] = Folder(entry,
+                                                 subfolder_path,
+                                                 self,
+                                                 root_dir=self._root_dir)
 
     def wato_info_path(self):
         return self.filesystem_path() + "/.wato"
@@ -908,6 +917,11 @@ class CREFolder(BaseFolder):
         elif self.parent().is_root():
             return self.name()
         return self.parent().path() + "/" + self.name()
+
+    def path_for_rule_matching(self):
+        if self.is_root():
+            return "/"
+        return "/wato/%s/" % self.path()
 
     def linkinfo(self):
         return self.path() + ":"
@@ -1029,8 +1043,8 @@ class CREFolder(BaseFolder):
         return sorted(self.all_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
 
     def visible_subfolders_sorted_by_title(self):
-        return sorted(
-            self.visible_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.visible_subfolders().values(),
+                      cmp=lambda a, b: cmp(a.title(), b.title()))
 
     def site_id(self):
         if "site" in self._attributes:
@@ -1307,11 +1321,10 @@ class CREFolder(BaseFolder):
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
-        add_change(
-            "new-folder",
-            _("Created new folder %s") % new_subfolder.alias_path(),
-            obj=new_subfolder,
-            sites=[new_subfolder.site_id()])
+        add_change("new-folder",
+                   _("Created new folder %s") % new_subfolder.alias_path(),
+                   obj=new_subfolder,
+                   sites=[new_subfolder.site_id()])
         hooks.call("folder-created", new_subfolder)
         need_sidebar_reload()
         return new_subfolder
@@ -1332,11 +1345,10 @@ class CREFolder(BaseFolder):
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
-        add_change(
-            "delete-folder",
-            _("Deleted folder %s") % subfolder.alias_path(),
-            obj=self,
-            sites=subfolder.all_site_ids())
+        add_change("delete-folder",
+                   _("Deleted folder %s") % subfolder.alias_path(),
+                   obj=self,
+                   sites=subfolder.all_site_ids())
         self._remove_subfolder(name)
         shutil.rmtree(subfolder.filesystem_path())
         Folder.invalidate_caches()
@@ -1368,11 +1380,10 @@ class CREFolder(BaseFolder):
         subfolder.rewrite_hosts_files()  # fixes changed inheritance
         Folder.invalidate_caches()
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
-        add_change(
-            "move-folder",
-            _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-            obj=subfolder,
-            sites=affected_sites)
+        add_change("move-folder",
+                   _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+                   obj=subfolder,
+                   sites=affected_sites)
         need_sidebar_reload()
 
     def edit(self, new_title, new_attributes):
@@ -1409,11 +1420,10 @@ class CREFolder(BaseFolder):
         self.rewrite_hosts_files()
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
-        add_change(
-            "edit-folder",
-            _("Edited properties of folder %s") % self.title(),
-            obj=self,
-            sites=affected_sites)
+        add_change("edit-folder",
+                   _("Edited properties of folder %s") % self.title(),
+                   obj=self,
+                   sites=affected_sites)
 
     def _get_cgconf_from_attributes(self, attributes):
         v = attributes.get("contactgroups", (False, []))
@@ -1438,11 +1448,10 @@ class CREFolder(BaseFolder):
             host = Host(self, host_name, attributes, cluster_nodes)
             self._hosts[host_name] = host
             self._num_hosts = len(self._hosts)
-            add_change(
-                "create-host",
-                _("Created new host %s.") % host_name,
-                obj=host,
-                sites=[host.site_id()])
+            add_change("create-host",
+                       _("Created new host %s.") % host_name,
+                       obj=host,
+                       sites=[host.site_id()])
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
 
@@ -1467,8 +1476,10 @@ class CREFolder(BaseFolder):
             host = self.hosts()[host_name]
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
-            add_change(
-                "delete-host", _("Deleted host %s") % host_name, obj=host, sites=[host.site_id()])
+            add_change("delete-host",
+                       _("Deleted host %s") % host_name,
+                       obj=host,
+                       sites=[host.site_id()])
 
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
@@ -1519,11 +1530,10 @@ class CREFolder(BaseFolder):
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
-            add_change(
-                "move-host",
-                _("Moved host from %s to %s") % (self.path(), target_folder.path()),
-                obj=host,
-                sites=affected_sites)
+            add_change("move-host",
+                       _("Moved host from %s to %s") % (self.path(), target_folder.path()),
+                       obj=host,
+                       sites=affected_sites)
 
         self._save_wato_info()  # num_hosts has changed
         self.save_hosts()
@@ -1542,11 +1552,10 @@ class CREFolder(BaseFolder):
         host.rename(newname)
         del self._hosts[oldname]
         self._hosts[newname] = host
-        add_change(
-            "rename-host",
-            _("Renamed host from %s to %s") % (oldname, newname),
-            obj=host,
-            sites=[host.site_id()])
+        add_change("rename-host",
+                   _("Renamed host from %s to %s") % (oldname, newname),
+                   obj=host,
+                   sites=[host.site_id()])
         self.save_hosts()
 
     def rename_parent(self, oldname, newname):
@@ -1556,12 +1565,11 @@ class CREFolder(BaseFolder):
         if not changed:
             return False
 
-        add_change(
-            "rename-parent",
-            _("Renamed parent from %s to %s in folder \"%s\"") % (oldname, newname,
-                                                                  self.alias_path()),
-            obj=self,
-            sites=self.all_site_ids())
+        add_change("rename-parent",
+                   _("Renamed parent from %s to %s in folder \"%s\"") %
+                   (oldname, newname, self.alias_path()),
+                   obj=self,
+                   sites=self.all_site_ids())
         self.save_hosts()
         self.save()
         return True
@@ -1644,19 +1652,20 @@ def validate_host_uniqueness(varname, host_name):
         raise MKUserError(
             varname,
             _('A host with the name <b><tt>%s</tt></b> already '
-              'exists in the folder <a href="%s">%s</a>.') % (host_name, host.folder().url(),
-                                                              host.folder().alias_path()))
+              'exists in the folder <a href="%s">%s</a>.') %
+            (host_name, host.folder().url(), host.folder().alias_path()))
 
 
 class SearchFolder(BaseFolder):
     """A virtual folder representing the result of a search."""
-
     @staticmethod
     def criteria_from_html_vars():
         crit = {".name": html.request.var("host_search_host")}
         crit.update(
-            cmk.gui.watolib.host_attributes.collect_attributes(
-                "host_search", do_validate=False, varprefix="host_search_"))
+            cmk.gui.watolib.host_attributes.collect_attributes("host_search",
+                                                               new=False,
+                                                               do_validate=False,
+                                                               varprefix="host_search_"))
         return crit
 
     # This method is allowed to return None when no search is currently performed.
@@ -1876,6 +1885,7 @@ class CREHost(WithPermissionsAndAttributes):
         return self.attributes().get("alias")
 
     def folder(self):
+        # type: () -> CREFolder
         return self._folder
 
     def linkinfo(self):
@@ -1921,7 +1931,7 @@ class CREHost(WithPermissionsAndAttributes):
         # Because we need information from multiple attributes to get this
         # information, we need to add this decision here.
         # Skip this in case no-ip is configured: A ping check is useless in this case
-        if tag_groups["snmp"] == "no-snmp" \
+        if tag_groups["snmp_ds"] == "no-snmp" \
            and tag_groups["agent"] == "no-agent" \
            and tag_groups["address_family"] != "no-ip":
             tag_groups["ping"] = "ping"
@@ -1932,12 +1942,12 @@ class CREHost(WithPermissionsAndAttributes):
         aux_tag_ids = [t.id for t in config.tags.aux_tag_list.get_tags()]
 
         # Be compatible to: Agent type -> SNMP v2 or v3
-        if tag_groups["agent"] == "no-agent" and tag_groups["snmp"] == "snmp-v2" \
+        if tag_groups["agent"] == "no-agent" and tag_groups["snmp_ds"] == "snmp-v2" \
            and "snmp-only" in aux_tag_ids:
             tag_groups["snmp-only"] = "snmp-only"
 
         # Be compatible to: Agent type -> Dual: SNMP + TCP
-        if tag_groups["agent"] == "cmk-agent" and tag_groups["snmp"] == "snmp-v2" \
+        if tag_groups["agent"] == "cmk-agent" and tag_groups["snmp_ds"] == "snmp-v2" \
            and "snmp-tcp" in aux_tag_ids:
             tag_groups["snmp-tcp"] = "snmp-tcp"
 
@@ -2070,8 +2080,10 @@ class CREHost(WithPermissionsAndAttributes):
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        add_change(
-            "edit-host", _("Modified host %s.") % self.name(), obj=self, sites=affected_sites)
+        add_change("edit-host",
+                   _("Modified host %s.") % self.name(),
+                   obj=self,
+                   sites=affected_sites)
 
     def update_attributes(self, changed_attributes):
         new_attributes = self.attributes().copy()
@@ -2091,11 +2103,10 @@ class CREHost(WithPermissionsAndAttributes):
                 del self._attributes[attrname]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
-        add_change(
-            "edit-host",
-            _("Removed explicit attributes of host %s.") % self.name(),
-            obj=self,
-            sites=affected_sites)
+        add_change("edit-host",
+                   _("Removed explicit attributes of host %s.") % self.name(),
+                   obj=self,
+                   sites=affected_sites)
 
     def _need_folder_write_permissions(self):
         if not self.folder().may("write"):
@@ -2134,11 +2145,10 @@ class CREHost(WithPermissionsAndAttributes):
         if not changed:
             return False
 
-        add_change(
-            "rename-node",
-            _("Renamed cluster node from %s into %s.") % (oldname, newname),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-node",
+                   _("Renamed cluster node from %s into %s.") % (oldname, newname),
+                   obj=self,
+                   sites=[self.site_id()])
         self.folder().save_hosts()
         return True
 
@@ -2148,20 +2158,18 @@ class CREHost(WithPermissionsAndAttributes):
         if not changed:
             return False
 
-        add_change(
-            "rename-parent",
-            _("Renamed parent from %s into %s.") % (oldname, newname),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-parent",
+                   _("Renamed parent from %s into %s.") % (oldname, newname),
+                   obj=self,
+                   sites=[self.site_id()])
         self.folder().save_hosts()
         return True
 
     def rename(self, new_name):
-        add_change(
-            "rename-host",
-            _("Renamed host from %s into %s.") % (self.name(), new_name),
-            obj=self,
-            sites=[self.site_id()])
+        add_change("rename-host",
+                   _("Renamed host from %s into %s.") % (self.name(), new_name),
+                   obj=self,
+                   sites=[self.site_id()])
         self._name = new_name
 
 
@@ -2228,8 +2236,8 @@ class CMEFolder(CREFolder):
                 None,
                 _("The configured target site refers to the default customer <i>%s</i>. The parent folder however, "
                   "already have the specific customer <i>%s</i> set. This violates the CME folder hierarchy."
-                 ) % (managed.get_customer_name_by_id(managed.default_customer_id()),
-                      managed.get_customer_name_by_id(customer_id)))
+                 ) % (managed.get_customer_name_by_id(
+                     managed.default_customer_id()), managed.get_customer_name_by_id(customer_id)))
 
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
@@ -2288,7 +2296,7 @@ class CMEFolder(CREFolder):
                 "involved_customers": set()
             }
             subfolder._determine_involved_customers(result_dict)
-            other_customers = result_dict["involved_customers"] - set([target_folder_customer])
+            other_customers = result_dict["involved_customers"] - {target_folder_customer}
             if other_customers:
                 other_customers_text = ", ".join(
                     map(managed.get_customer_name_by_id, other_customers))

@@ -1,5 +1,5 @@
 NAGVIS = nagvis
-NAGVIS_VERS = 1.9.11
+NAGVIS_VERS = 1.9.13
 NAGVIS_DIR = $(NAGVIS)-$(NAGVIS_VERS)
 
 NAGVIS_BUILD := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-build
@@ -57,4 +57,4 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 $(NAGVIS)-skel:
 
 $(NAGVIS)-clean:
-	$(RM) -r $(NAGVIS)-*.*.[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*
+	$(RM) -r $(NAGVIS)-*.*.*[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*

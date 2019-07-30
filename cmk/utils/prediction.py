@@ -67,7 +67,6 @@ class TimeSeries(object):
     - The Series describes the interval [start; end[
     - Start has no associated value to it.
     """
-
     def __init__(self, data):
         self.start = data[0]
         self.end = data[1]
@@ -146,13 +145,16 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
                                                              hostname, service_description))))
 
     try:
-        connection = livestatus.SingleSiteConnection(
-            "unix:%s" % cmk.utils.paths.livestatus_unix_socket)
+        connection = livestatus.SingleSiteConnection("unix:%s" %
+                                                     cmk.utils.paths.livestatus_unix_socket)
         response = connection.query_value(lql)
     except MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
+
+    if response is None:
+        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
     return TimeSeries(response)
 

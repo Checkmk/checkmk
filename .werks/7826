@@ -1,0 +1,12 @@
+Title: Report snapin: Fix timerange selection
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1561366427
+
+The timerange selection in the report sidebar snapin did not work
+as intended in previous 1.6 releases.

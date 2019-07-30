@@ -1,0 +1,10 @@
+Title: fsc_fans: Do not discover fans for which the SNMP agent sends 'NULL'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560415127
+Class: fix
+
+

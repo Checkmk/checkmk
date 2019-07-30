@@ -1,16 +1,16 @@
 import types
 import copy
 import mock
+import pytest
 from cmk_base.item_state import MKCounterWrapped
 
 
 class Tuploid(object):
     """Base class for values with (potentially variadic) tuple representations"""
-
     def __eq__(self, other_value):
         if isinstance(other_value, self.__class__):
             return other_value.tuple == self.tuple
-        elif type(other_value) == tuple:
+        elif isinstance(other_value, tuple):
             return all(x == y for x, y in zip(other_value, self.tuple))
 
     def __ne__(self, other_value):
@@ -27,7 +27,6 @@ class Tuploid(object):
 
 class PerfValue(Tuploid):
     """Represents a single perf value"""
-
     def __init__(self, key, value, warn=None, crit=None, minimum=None, maximum=None):
         # assign first, so __repr__ won't crash
         self.key = key
@@ -58,7 +57,7 @@ class PerfValue(Tuploid):
                msg.replace(' or None', '') % ('value', value, type(value))
         for n in ('warn', 'crit', 'minimum', 'maximum'):
             v = getattr(self, n)
-            assert type(v) in [int, float, types.NoneType], msg % (n, v, type(v))
+            assert type(v) in [int, float, type(None)], msg % (n, v, type(v))
 
     @property
     def tuple(self):
@@ -77,7 +76,8 @@ def assertPerfValuesEqual(actual, expected):
     assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
     assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
     assert expected.key == actual.key, "expected %r, but key is %r" % (expected, actual.key)
-    assert expected.value == actual.value, "expected %r, but value is %r" % (expected, actual.value)
+    assert expected.value == pytest.approx(
+        actual.value), "expected %r, but value is %r" % (expected, actual.value)
     assert expected.warn == actual.warn, "expected %r, but warn is %r" % (expected, actual.warn)
     assert expected.crit == actual.crit, "expected %r, but crit is %r" % (expected, actual.crit)
     assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (expected,
@@ -94,7 +94,6 @@ class BasicCheckResult(Tuploid):
     facilities to match it against conditions, such as 'Status is...' or
     'Infotext contains...'
     """
-
     def __init__(self, status, infotext, perfdata=None):
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
@@ -124,7 +123,7 @@ class BasicCheckResult(Tuploid):
                 assert te in [tuple, PerfValue], \
                        "BasicCheckResult: perfdata entry %r must be of type " \
                        "tuple or PerfValue - not %r" % (entry, te)
-                if type(entry) is tuple:
+                if isinstance(entry, tuple):
                     self.perfdata.append(PerfValue(*entry))
                 else:
                     self.perfdata.append(entry)
@@ -170,7 +169,6 @@ class CheckResult(object):
     -The check's code is being run, and doesn't disappear in the yield-APIs
      generator-induced laziness.
     """
-
     def __init__(self, result):
         """
         Initializes a list of subresults using BasicCheckResult.
@@ -245,19 +243,18 @@ def assertCheckResultsEqual(actual, expected):
                "%r is not a CheckResult instance" % actual
         assert isinstance(expected, CheckResult), \
                "%r is not a CheckResult instance" % expected
-        assert len(actual.subresults) == len(expected.subresults), \
-               "subresults not of equal length (expected %d)" % len(expected.subresults)
         for suba, sube in zip(actual.subresults, expected.subresults):
             assertBasicCheckResultsEqual(suba, sube)
+        len_ac, len_ex = len(actual.subresults), len(expected.subresults)
+        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (len_ac, len_ex)
 
 
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery (or in oldspeak: inventory) function."""
-
     def __init__(self, entry):
         self.item, self.default_params = entry
         ti = type(self.item)
-        assert ti in [str, unicode, types.NoneType], \
+        assert ti in [str, unicode, type(None)], \
                "DiscoveryEntry: item %r must be of type str, unicode or None - not %r" \
                % (self.item, ti)
 
@@ -334,7 +331,6 @@ class BasicItemState(object):
     We assert that we have exactly two values,
     where the first one is either float or int.
     """
-
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
@@ -437,7 +433,6 @@ class assertMKCounterWrapped(object):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-
     def __init__(self, msg=None):
         self.msg = msg
 
@@ -483,9 +478,8 @@ class MockHostExtraConf(object):
 
     See for example 'test_df_check.py'.
     """
-    TARGET = 'cmk_base.config.host_extra_conf'
-
-    def __init__(self, check, mock_config):
+    def __init__(self, check, mock_config, target="host_extra_conf"):
+        self.target = target
         self.context = None
         self.check = check
         self.config = mock_config
@@ -495,7 +489,7 @@ class MockHostExtraConf(object):
         if callable(self.config):
             return self.config(_hostname, _ruleset)
 
-        if isinstance(self.config, dict):
+        if self.target == "host_extra_conf" and isinstance(self.config, dict):
             return [self.config]
         return self.config
 
@@ -505,7 +499,7 @@ class MockHostExtraConf(object):
         config_cache = cmk_base.config.get_config_cache()
         self.context = mock.patch.object(
             config_cache,
-            "host_extra_conf",
+            self.target,
             # I'm the MockObj myself!
             new_callable=lambda: self)
         return self.context.__enter__()
@@ -520,7 +514,6 @@ class ImmutablesChangedError(AssertionError):
 
 class Immutables(object):
     """Store some data and ensure it is not changed"""
-
     def __init__(self):
         self.refs = {}
         self.copies = {}
@@ -544,7 +537,7 @@ def assertEqual(first, second, descr=''):
     if first == second:
         return
 
-    assert type(first) == type(second), "%sdiffering type: %r != %r for values %r and %r" \
+    assert isinstance(first, type(second)), "%sdiffering type: %r != %r for values %r and %r" \
         % (descr, type(first), type(second), first, second)
 
     if isinstance(first, dict):

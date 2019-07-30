@@ -14,8 +14,6 @@ description:
 
  If there are no startet threads the check goes CRIT.
 
- This check is also cluster-aware.
-
 item:
  The instance name
 

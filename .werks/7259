@@ -1,0 +1,16 @@
+Title: Fixed bug with host discovery causing steadily increasing CPU load on the monitoring system.
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1557135736
+
+A host service discovery could modify the monitoring cores live configuration.
+The monitoring core detects this deviation and restarts the Check_MK helper.
+However, the restarted helper uses the new configuration, whereas the core still uses the old configuration - causing another restart...
+
+This has been fixed.
+

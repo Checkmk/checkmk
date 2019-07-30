@@ -53,7 +53,7 @@ long_options = ["help", "username=", "password=", "address=", "demo", "no-cert-c
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -79,8 +79,9 @@ for o, a in opts:
 def query(url):
     if not opt_cert:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    response = requests.get(
-        url, auth=(args_dict["username"], args_dict["password"]), verify=opt_cert)
+    response = requests.get(url,
+                            auth=(args_dict["username"], args_dict["password"]),
+                            verify=opt_cert)
     raw_xml = response.text
     # Remove namespace nonsense
     raw_xml = re.sub(' xmlns="[^"]+"', '', raw_xml, count=1)
@@ -177,7 +178,7 @@ def main():
         process_stores_info()
 
         sys.stdout.write("\n".join(output_lines) + "\n")
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Connection error: %s" % e)
         sys.exit(1)
 

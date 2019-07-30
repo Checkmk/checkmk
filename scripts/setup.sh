@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.6.0i1
+VERSION=1.7.0i1
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -937,7 +937,8 @@ EOF
 	       then
                    pushd $SRCDIR > /dev/null &&
                    install -m 755 bin/mkevent bin/mkeventd $DESTDIR$bindir &&
-                   install -m 4754 bin/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
+                   install -m 750 bin/mkeventd_open514 -g $wwwgroup $DESTDIR$bindir &&
+	           setcap "cap_net_bind_service+ep" $DESTDIR$bindir/mkeventd_open514  &&
                    mkdir -p $DESTDIR$confdir/mkeventd.d/wato &&
                    if [ ! -e "$DESTDIR$confdir/multisite.d/mkeventd.mk" ] ; then
                        mkdir -p $DESTDIR$confdir/multisite.d &&

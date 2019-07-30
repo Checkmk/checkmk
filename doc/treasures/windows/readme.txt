@@ -17,3 +17,12 @@ Synopsis:
     Solves problems with OpenHardwareMonitor section. 
 Usage: 
     Run the script from Windows command line as Administrator
+
+3. uninstall_agent.cmd
+Synopsis: 
+    Removes New Windows Agent(since 1.6). 
+Usage: 
+    Run the script from Windows command line as Administrator
+    Possible options: 
+        yes - to remove silently
+        all - to clean all folders and all files

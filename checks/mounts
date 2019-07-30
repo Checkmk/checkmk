@@ -43,8 +43,7 @@ def inventory_mounts(info):
 
         if dev not in devices:
             devices.append(dev)
-            opts = options.split(",")
-            opts.sort()
+            opts = sorted(options.split(","))
             inventory.append((mp.replace("\\040(deleted)", ""), opts))
     return inventory
 

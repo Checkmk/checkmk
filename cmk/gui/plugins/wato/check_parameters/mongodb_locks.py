@@ -57,15 +57,14 @@ class RulespecCheckgroupParametersMongodbLocks(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("%s_locks" % what,
-                       Tuple(
-                           title=_("%s Locks") % what.title().replace("_", " "),
-                           elements=[
-                               Integer(title=_("Warning at"), minvalue=0),
-                               Integer(title=_("Critical at"), minvalue=0),
-                           ],
-                       )) for what in [
-                           "clients_readers", "clients_writers", "clients_total", "queue_readers",
-                           "queue_writers", "queue_total"
-                       ]],)
+        return Dictionary(elements=[("%s_locks" % what,
+                                     Tuple(
+                                         title=_("%s Locks") % what.title().replace("_", " "),
+                                         elements=[
+                                             Integer(title=_("Warning at"), minvalue=0),
+                                             Integer(title=_("Critical at"), minvalue=0),
+                                         ],
+                                     )) for what in [
+                                         "clients_readers", "clients_writers", "clients_total",
+                                         "queue_readers", "queue_writers", "queue_total"
+                                     ]],)

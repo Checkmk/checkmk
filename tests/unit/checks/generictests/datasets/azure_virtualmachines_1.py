@@ -43,22 +43,15 @@ info = [
         ' "subscription": "2fac104f-cb9c-461d-be57-037039662426"}'
     ],
     ['metrics following', '9'],
-    ['name', 'aggregation', 'value', 'unit', 'timestamp', 'timegrain', 'filters'],
-    ['Percentage CPU', 'average', '0.66', 'percent', '1537797300', 'PT1M', 'None'],
-    ['Network In', 'average', '5459.12765957', 'bytes', '1537797300', 'PT1M', 'None'],
-    ['Network Out', 'average', '8545.80851064', 'bytes', '1537797300', 'PT1M', 'None'],
-    ['Disk Read Bytes', 'average', '0.0', 'bytes', '1537797300', 'PT1M', 'None'],
-    ['Disk Write Bytes', 'average', '852331.78', 'bytes', '1537797300', 'PT1M', 'None'],
-    [
-        'Disk Read Operations/Sec', 'average', '0.0', 'count_per_second', '1537797300', 'PT1M',
-        'None'
-    ],
-    [
-        'Disk Write Operations/Sec', 'average', '2.41', 'count_per_second', '1537797300', 'PT1M',
-        'None'
-    ],
-    ['Inbound Flows', 'average', '36.0', 'count', '1537797360', 'PT1M', 'None'],
-    ['Outbound Flows', 'average', '36.0', 'count', '1537797360', 'PT1M', 'None'],
+    ['{"name": "Percentage CPU", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.66, "unit": "percent"}'],
+    ['{"name": "Network In", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 5459.12765957, "unit": "bytes"}'],
+    ['{"name": "Network Out", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 8545.80851064, "unit": "bytes"}'],
+    ['{"name": "Disk Read Bytes", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'],
+    ['{"name": "Disk Write Bytes", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 852331.78, "unit": "bytes"}'],
+    ['{"name": "Disk Read Operations/Sec", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "count_per_second"}'],
+    ['{"name": "Disk Write Operations/Sec", "timestamp": "1537797300", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 2.41, "unit": "count_per_second"}'],
+    ['{"name": "Inbound Flows", "timestamp": "1537797360", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 36.0, "unit": "count"}'],
+    ['{"name": "Outbound Flows", "timestamp": "1537797360", "aggregation": "average", "interval_id": "PT1M", "filter": "None", "value": 36.0, "unit": "count"}'],
 ]
 
 discovery = {

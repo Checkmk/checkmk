@@ -69,7 +69,7 @@ def parse_didactum_sensors(info):
             else:
                 try:
                     value = float(value_str)
-                except:
+                except ValueError:
                     value = value_str
             parsed[ty][name].update({"value": value})
 
@@ -92,14 +92,13 @@ def inventory_didactum_sensors(parsed, what):
 def check_didactum_sensors_temp(item, params, parsed):
     if item in parsed["temperature"]:
         data = parsed["temperature"][item]
-        return check_temperature(
-            data["value"],
-            params,
-            "didactum_can_sensors_analog_temp.%s" % item,
-            dev_levels=data["levels"],
-            dev_levels_lower=data["levels_lower"],
-            dev_status=data["state"],
-            dev_status_name=data["state_readable"])
+        return check_temperature(data["value"],
+                                 params,
+                                 "didactum_can_sensors_analog_temp.%s" % item,
+                                 dev_levels=data["levels"],
+                                 dev_levels_lower=data["levels_lower"],
+                                 dev_status=data["state"],
+                                 dev_status_name=data["state_readable"])
 
 
 def check_didactum_sensors_humidity(item, params, parsed):

@@ -43,7 +43,7 @@ def check_wmi_cpuload(item, params, parsed):
         load5min = get_average("load_5min", this_time, load, 5)
         load15min = get_average("load_15min", this_time, load, 15)
         computer_system = parsed["computer_system"]
-    except KeyError, e:
+    except KeyError as e:
         return 3, "Missing information from agent: %s" % e
 
     try:

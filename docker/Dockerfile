@@ -1,12 +1,12 @@
 FROM debian:stretch-slim
-LABEL maintainer="feedback@check-mk.org"
+LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="1.6.0i1"
+ARG CMK_VERSION="1.7.0i1"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
-ARG CMK_DL_URL="https://mathias-kettner.de/support"
+ARG CMK_DL_URL="https://checkmk.com/support"
 # Give download credentials in "USER:PASSWORD" format. You can only use Raw Edition without
 ARG CMK_DL_CREDENTIALS=""
 
@@ -85,12 +85,12 @@ RUN set -e \
     && rm -rf /var/lib/apt/lists/*
 
 LABEL \
-    org.opencontainers.image.title="Check_MK" \
+    org.opencontainers.image.title="Checkmk" \
     org.opencontainers.image.version="${CMK_VERSION}" \
-    org.opencontainers.image.description="Check_MK is a leading tool for Infrastructure & Application Monitoring" \
-    org.opencontainers.image.vendor="Mathias Kettner GmbH" \
-    org.opencontainers.image.source="https://git.mathias-kettner.de/" \
-    org.opencontainers.image.url="https://mathias-kettner.com/"
+    org.opencontainers.image.description="Checkmk is a leading tool for Infrastructure & Application Monitoring" \
+    org.opencontainers.image.vendor="tribe29 GmbH" \
+    org.opencontainers.image.source="https://github.com/tribe29/checkmk" \
+    org.opencontainers.image.url="https://checkmk.com/"
 
 # Ports:
 # 5000 - Serves the Check_MK GUI

@@ -59,19 +59,18 @@ class RulespecCheckgroupParametersNetscalerSslcerts(CheckParameterRulespecWithIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    'age_levels',
-                    Tuple(
-                        title=_("Remaining days of validity"),
-                        elements=[
-                            Integer(title=_("Warning below"), default_value=30, min_value=0),
-                            Integer(title=_("Critical below"), default_value=10, min_value=0),
-                        ],
-                    ),
+        return Dictionary(elements=[
+            (
+                'age_levels',
+                Tuple(
+                    title=_("Remaining days of validity"),
+                    elements=[
+                        Integer(title=_("Warning below"), default_value=30, min_value=0),
+                        Integer(title=_("Critical below"), default_value=10, min_value=0),
+                    ],
                 ),
-            ],)
+            ),
+        ],)
 
     @property
     def item_spec(self):

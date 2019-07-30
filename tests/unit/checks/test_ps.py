@@ -1,6 +1,6 @@
 # yapf: disable
-from itertools import izip_longest
 from collections import namedtuple
+from six.moves import zip_longest
 import pytest
 from cmk_base.check_api import MKGeneralException
 from checktestlib import CheckResult, assertCheckResultsEqual
@@ -182,7 +182,7 @@ def test_parse_ps(check_manager, capture, result):
 
     parsed = check.run_parse(capture)
     assert parsed[0] == result[0]  # cpu_cores
-    for out, ref in izip_longest(parsed[1], result[1]):
+    for out, ref in zip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
         assert out[1] == check.context["ps_info"](*ref[1])
         assert out[2:] == ref[2:]
@@ -275,7 +275,7 @@ PS_DISCOVERY_WATO_RULES = [
         "default_params": {
             "process_info": "text"
         },
-        "match": "~/omd/sites/(\w+)/lib/cmc/checkhelper",
+        "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
         "descr": "Checkhelpers %s",
         "user": None,
     }, [], ["@all"], {
@@ -285,7 +285,7 @@ PS_DISCOVERY_WATO_RULES = [
         "default_params": {
             "process_info": "text"
         },
-        "match": "~/omd/sites/\w+/lib/cmc/checkhelper",
+        "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
         "descr": "Checkhelpers Overall",
         "user": None,
     }, [], ["@all"], {
@@ -334,11 +334,11 @@ PS_DISCOVERY_SPECS = [
     ('PS counter', None, 'zombie', {
         'cpu_rescale_max': None
     }),
-    ("Checkhelpers %s", "~/omd/sites/(\w+)/lib/cmc/checkhelper", None, {
+    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("Checkhelpers Overall", "~/omd/sites/\w+/lib/cmc/checkhelper", None, {
+    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
@@ -446,27 +446,27 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "html",
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("firefox is on fire", {
         "process": "~.*(fire)fox",
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['fire'],
+        'match_groups': ('fire',),
     }),
     ("Checkhelpers heute", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['heute'],
+        'match_groups': ('heute',),
     }),
     ("Checkhelpers Overall", {
         "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
         "process_info": "text",
         "user": None,
-        'match_groups': [],
+        'match_groups': (),
         'cpu_rescale_max': None,
     }),
     ("Checkhelpers twelve", {
@@ -474,19 +474,19 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
-        'match_groups': ['twelve'],
+        'match_groups': ('twelve',),
     }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("PS counter", {
         'cpu_rescale_max': None,
         'process': None,
         'user': 'zombie',
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -500,13 +500,13 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
     ("smss", {
         "process": "~smss.exe",
         "user": None,
         'cpu_rescale_max': None,
-        "match_groups": [],
+        "match_groups": (),
     }),
 ]
 
@@ -523,7 +523,15 @@ def test_inventory_common(check_manager):
     ("PS %2 %1", ["service", "check"], "PS check service"),
     ("PS %2 %1", ["service", "check", "sm"], "PS check service"),
     ("PS %s %s", ["service", "rename"], "PS service rename"),
-    ("PS %2 %s", ["service", "rename"], "PS rename service"),
+    ("My Foo Service", ("Moo", "Cow"), "My Foo Service"),
+    ("My %sService", ("", "Cow"), "My Service"),
+    ("My %sService", (None, "Cow"), "My Service"),
+    ("My %s Service", ("Moo", "Cow"), "My Moo Service"),
+    ("My %2 Service sais '%1!'", ("Moo", "Cow"), "My Cow Service sais 'Moo!'"),
+    # the following is not very sensible, and not allowed by WATO configuration since 1.7.0i1.
+    # Make sure we know what's happening, though
+    ("PS %2 %s", ["service", "rename"], "PS rename rename"),
+    ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one")
 ])
 def test_replace_service_description(check_manager, service_description, matches, result):
     check = check_manager.get_check("ps")
@@ -543,7 +551,7 @@ check_results = [
         (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
                                                                  2147483648, None, None)]),
         (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
-        (1, "28.9% of total RAM: (warn/crit at 25.0%/50.0%)"),
+        (1, "28.92% of total RAM: (warn/crit at 25.0%/50.0%)"),
         (0, "0.0% CPU (15 min average: 0.0%)", [("pcpu", 0.0, None, None, None, None),
                                                 ("pcpuavg", 0.0, None, None, 0, 15)]),
         (0, "running for 27 h", []),
@@ -604,9 +612,6 @@ check_results = [
         (0, "38.59 MB physical", [("rss", 39516, 104857600, 209715200, None, None)]),
         (3, "percentual RAM levels configured, but total RAM is unknown", []),
         (0, "0.0% CPU", [("pcpu", 0.0, 90.0, 98.0, None, None)]),
-        (0, "0.0% CPU for svchost.exe with PID 600"),
-        (0, "0.0% CPU for svchost.exe with PID 676"),
-        (0, "0.0% CPU for svchost.exe with PID 764"),
         (1, "1204 process handles: (warn/crit at 1000/2000)", [("process_handles", 1204, 1000, 2000,
                                                                 None, None)]),
         (1, "youngest running for 12.0 s, oldest running for 71 m: (warn/crit at 60 m/120 m)", []),
@@ -753,21 +758,21 @@ def test_subset_patterns(check_manager):
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main'],
+            'match_groups': ('main',),
             'user': None,
         }),
         ('main_dev', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main_dev'],
+            'match_groups': ('main_dev',),
             'user': None,
         }),
         ('main_test', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
             'process': '~(main.*)\\b',
-            'match_groups': ['main_test'],
+            'match_groups': ('main_test',),
             'user': None,
         }),
     ]
@@ -784,3 +789,60 @@ def test_subset_patterns(check_manager):
     for (item, params), count in zip(discovered, [1, 2, 1]):
         output = CheckResult(check.context["check_ps_common"](item, params, parsed, cpu_cores=1))
         assertCheckResultsEqual(output, counted_reference(count))
+
+
+@pytest.mark.parametrize("cpu_cores", [2, 4, 5])
+def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
+    """Test CPU utilization per single process.
+- Check that Number of cores weight is active
+- Check that single process CPU utilization is present only on warn/crit states"""
+
+    check = check_manager.get_check("ps")
+
+    params = {
+        'process': '~.*firefox',
+        'process_info': "text",
+        'cpu_rescale_max': True,
+        'levels': (1, 1, 99999, 99999),
+        'single_cpulevels': (45.0, 80.0),
+    }
+
+    def run_check_ps_common_with_elapsed_time(check_time, cputime):
+        monkeypatch.setattr('time.time', lambda: check_time)
+        agent_info = """(on,2275004,434008,00:00:49/26:58,25576) firefox
+(on,1869920,359836,00:01:23/6:57,25664) firefox
+(on,7962644,229660,00:00:10/26:56,25758) firefox
+(on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
+        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+
+        return CheckResult(check.context["check_ps_common"](
+            'firefox', params, parsed, cpu_cores=cpu_cores))
+
+    # CPU utilization is a counter, initialize it
+    run_check_ps_common_with_elapsed_time(0, 0)
+    # CPU utilization is a counter, after 60s time, one process consumes 2 min of CPU
+    output = run_check_ps_common_with_elapsed_time(60, 2)
+
+    cpu_util = 200.0 / cpu_cores
+    single_msg = '%.1f%% CPU for firefox with PID 25898: (warn/crit at 45.0%%/80.0%%)' % cpu_util
+    reference = [
+        (0, "4 processes", [("count", 4, 100000, 100000, 0)]),
+        (0, "13.00 GB virtual", [("vsz", 13631104, None, None, None, None)]),
+        (0, "1.06 GB physical", [("rss", 1106568, None, None, None, None)]),
+        (0, "%.1f%% CPU" % cpu_util, [('pcpu', cpu_util, None, None, None, None)]),
+        (0, 'youngest running for 6 m, oldest running for 26 m', []),
+        (0, "\r\n".join([
+            '\nname firefox, user on, virtual size 2275004kB, resident size 434008kB, creation time 1970-01-01 00:34:02, pid 25576, cpu usage 0.0%',
+            'name firefox, user on, virtual size 1869920kB, resident size 359836kB, creation time 1970-01-01 00:54:03, pid 25664, cpu usage 0.0%',
+            'name firefox, user on, virtual size 7962644kB, resident size 229660kB, creation time 1970-01-01 00:34:04, pid 25758, cpu usage 0.0%',
+            'name firefox, user on, virtual size 1523536kB, resident size 83064kB, creation time 1970-01-01 00:34:05, pid 25898, cpu usage %.1f%%\r\n'
+            % cpu_util,
+        ]))
+    ]
+
+    if cpu_util > params['single_cpulevels'][1]:
+        reference.insert(4, (2, single_msg, []))
+    elif cpu_util > params['single_cpulevels'][0]:
+        reference.insert(4, (1, single_msg, []))
+
+    assertCheckResultsEqual(output, CheckResult(reference))

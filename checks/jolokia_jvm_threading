@@ -67,8 +67,11 @@ def check_jolokia_jvm_threading(item, params, instance_data):
     count = data.get('ThreadCount')
     if count is not None:
         levels = params.get('threadcount_levels')
-        yield check_levels(
-            count, 'ThreadCount', levels, infoname="Count", human_readable_func=lambda i: "%.f" % i)
+        yield check_levels(count,
+                           'ThreadCount',
+                           levels,
+                           infoname="Count",
+                           human_readable_func=lambda i: "%.f" % i)
 
         counter = "jolokia_jvm_threading.count.%s" % item
         thread_rate = get_rate(counter, time.time(), count, allow_negative=True)
@@ -84,8 +87,11 @@ def check_jolokia_jvm_threading(item, params, instance_data):
         if value is None:
             continue
         levels = params.get('%s_levels' % key.lower())
-        yield check_levels(
-            value, key, levels, infoname=name, human_readable_func=lambda i: "%.f" % i)
+        yield check_levels(value,
+                           key,
+                           levels,
+                           infoname=name,
+                           human_readable_func=lambda i: "%.f" % i)
 
 
 check_info["jolokia_jvm_threading"] = {
@@ -122,13 +128,12 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
         value = threadpool_info.get(key)
         if value is None:
             continue
-        result = check_levels(
-            value,
-            key,
-            params.get(key),
-            infoname=name,
-            factor=max_threads / 100.,
-            human_readable_func=lambda f: "%.f" % f)
+        result = check_levels(value,
+                              key,
+                              params.get(key),
+                              infoname=name,
+                              factor=max_threads / 100.,
+                              human_readable_func=lambda f: "%.f" % f)
         result[2][0] = result[2][0][:4] + (None, max_threads)
         yield result
 

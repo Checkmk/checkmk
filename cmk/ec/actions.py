@@ -61,16 +61,15 @@ def event_has_opened(history, settings, config, logger, event_server, event_colu
         logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
-    do_event_actions(
-        history,
-        settings,
-        config,
-        logger,
-        event_server,
-        event_columns,
-        rule.get("actions", []),
-        event,
-        is_cancelling=False)
+    do_event_actions(history,
+                     settings,
+                     config,
+                     logger,
+                     event_server,
+                     event_columns,
+                     rule.get("actions", []),
+                     event,
+                     is_cancelling=False)
 
 
 # Execute a list of actions on an event that has just been
@@ -86,8 +85,8 @@ def do_event_actions(history, settings, config, logger, event_server, event_colu
                 logger.info("Cannot execute undefined action '%s'" % aname)
                 logger.info("We have to following actions: %s" % ", ".join(config["action"].keys()))
             else:
-                logger.info(
-                    "Going to execute action '%s' on event %d" % (action["title"], event["id"]))
+                logger.info("Going to execute action '%s' on event %d" %
+                            (action["title"], event["id"]))
                 do_event_action(history, settings, config, logger, event_columns, action, event, "")
 
 
@@ -120,8 +119,8 @@ def do_event_action(history, settings, config, logger, event_columns, action, ev
                                            _get_quoted_event(event, logger))), event, logger)
             history.add(event, "SCRIPT", user, action['id'])
         else:
-            logger.error(
-                "Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
+            logger.error("Cannot execute action %s: invalid action type %s" %
+                         (action["id"], action_type))
     except Exception:
         if settings.options.debug:
             raise
@@ -175,12 +174,11 @@ def _send_email(config, to, subject, body, logger):
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(command_utf8))
 
-    p = subprocess.Popen(
-        command_utf8,
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE)
+    p = subprocess.Popen(command_utf8,
+                         close_fds=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
     # notify.py, this one, ...)
@@ -458,8 +456,8 @@ def _core_has_notifications_disabled(event, logger):
                         event["id"])
             return True
     except Exception as e:
-        logger.info(
-            "Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
+        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." %
+                    e)
 
     return False
 

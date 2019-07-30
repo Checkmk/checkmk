@@ -48,7 +48,10 @@ def parse_liebert(info):
             if not element[0]:
                 continue
             name = get_item_name(element[0])
-            parsed[name] = [element[1], element[2]]
+            try:
+                parsed[name] = [float(element[1]), element[2]]
+            except ValueError:
+                continue
 
     return parsed
 
@@ -78,7 +81,10 @@ def parse_liebert_without_unit(info):
             if not element[0]:
                 continue
             name = get_item_name(element[0])
-            parsed[name] = element[1]
+            try:
+                parsed[name] = float(element[1])
+            except ValueError:
+                continue
 
     return parsed
 

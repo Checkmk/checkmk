@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import os
 import pprint
-from typing import Text  # pylint: disable=unused-import
+from typing import Optional, Type, Text, List  # pylint: disable=unused-import
 
 import six
 
@@ -35,6 +36,7 @@ import cmk.utils.store as store
 import cmk.utils.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 
 def wato_fileheader():
@@ -141,6 +143,47 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 config_domain_registry = ConfigDomainRegistry()
 
+
+class SampleConfigGenerator(object):
+    __metaclass__ = abc.ABCMeta
+
+    # Is currently not possible to do this with Python 2.7:
+    # TODO: @abc.abstractmethod
+    @classmethod
+    def ident(cls):
+        # type: () -> str
+        """Unique key which can be used to identify a generator"""
+        raise NotImplementedError()
+
+    # TODO: @abc.abstractmethod
+    @classmethod
+    def sort_index(cls):
+        # type: () -> int
+        """The generators are executed in this order (low to high)"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def generate(self):
+        # type: () -> None
+        """Execute the sample configuration creation step"""
+        raise NotImplementedError()
+
+
+class SampleConfigGeneratorRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return SampleConfigGenerator
+
+    def plugin_name(self, plugin_class):
+        return plugin_class.ident()
+
+    def get_generators(self):
+        # type: () -> List[SampleConfigGenerator]
+        """Return the generators in the order they are expected to be executed"""
+        return sorted([g_class() for g_class in self.values()], key=lambda e: e.sort_index())
+
+
+sample_config_generator_registry = SampleConfigGeneratorRegistry()
+
 #.
 #   .--Global configuration------------------------------------------------.
 #   |       ____ _       _           _                    __ _             |
@@ -207,7 +250,7 @@ class ConfigVariable(object):
         raise NotImplementedError()
 
     def valuespec(self):
-        # type: () -> Valuespec
+        # type: () -> ValueSpec
         """Returns the valuespec object of this configuration variable"""
         raise NotImplementedError()
 

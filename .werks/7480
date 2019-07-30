@@ -1,0 +1,23 @@
+Title: azure_usagedetails: Check Plugin to monitor Microsoft Azure costs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558069821
+Class: feature
+
+This check reports the daily costs of the Azure subscription,
+in sum and per Azure service type and/or resource group.
+
+Note that cost information has a granularity of one day.
+The current value will always display the costs corresonding
+to the last complete day (00:00 - 23:59 UTC).
+
+Levels can be imposed on this value using the rule
+"Azure Usage Details (Costs)".
+
+One service per Azure service type plus an additional summary
+are created on both the host running the agent and every
+host corresponding to a monitored resource group.
+

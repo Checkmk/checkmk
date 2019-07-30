@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import getopt
 import json
 import sys
@@ -81,7 +82,7 @@ long_options = ["help", "user=", "password=", "values=", "verify-certs="]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -124,15 +125,14 @@ if not opt_verify:
 # in json format. The standard port for all requests is 8080 as it is hard
 # coded above. Maybe this will be changed later!
 try:
-    req = requests.post(
-        "%s/credentials" % url,
-        json={
-            'user': opt_user,
-            'password': opt_password
-        },
-        headers=headers,
-        timeout=10,
-        verify=opt_verify)
+    req = requests.post("%s/credentials" % url,
+                        json={
+                            'user': opt_user,
+                            'password': opt_password
+                        },
+                        headers=headers,
+                        timeout=10,
+                        verify=opt_verify)
 
 except requests.exceptions.RequestException as e:
     sys.stderr.write("Error: %s\n" % e)
@@ -140,8 +140,8 @@ except requests.exceptions.RequestException as e:
 
 # Status code should be 201.
 if not req.status_code == requests.codes.CREATED:  # pylint: disable=no-member
-    sys.stderr.write(
-        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
+    sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
+                     (req.status_code, requests.codes.CREATED))  # pylint: disable=no-member
     sys.exit(1)
 else:
     try:
@@ -156,20 +156,19 @@ else:
 # to get better performance in the checkplugin if less data is needed.
 
 for value in opt_values:
-    print "<<<3par_%s:sep(0)>>>" % value
+    print("<<<3par_%s:sep(0)>>>" % value)
     req = requests.get("%s/%s" % (url, value), headers=headers, timeout=10, verify=opt_verify)
     value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
-    print value_data
+    print(value_data)
 
 # Perform a proper disconnect. The Connection is closed if the session key
 # is deleted. The standard timeout for a session would be 15 minutes.
-req = requests.delete(
-    "%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
-    headers=headers,
-    timeout=10,
-    verify=opt_verify)
+req = requests.delete("%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
+                      headers=headers,
+                      timeout=10,
+                      verify=opt_verify)
 
 if not req.status_code == requests.codes.OK:  # pylint: disable=no-member
-    sys.stderr.write(
-        "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.OK))  # pylint: disable=no-member
+    sys.stderr.write("Wrong status code: %s. Expected: %s \n" %
+                     (req.status_code, requests.codes.OK))  # pylint: disable=no-member
     sys.exit(1)

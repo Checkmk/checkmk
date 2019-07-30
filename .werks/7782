@@ -1,0 +1,14 @@
+Title: hp_proliant_da_phydrv, hp_proliant_mem: Fixed crashes caused by different but partial similar SNMP info
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560260000
+Class: fix
+
+Both plugins have a check and a related inventory plugin.
+The check plugin processes a subset of the SNMP data of the
+inventory plugin.
+During some refactorings the fetched OIDs were adapted.
+This caused crashes during checking and inventory phase.

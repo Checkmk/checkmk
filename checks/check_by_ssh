@@ -26,40 +26,43 @@
 
 
 def check_by_ssh_arguments(params):
+    args = []
     settings = params[1]
-    if 'hostname' in settings:
-        args = "-H %s" % quote_shell_string(settings['hostname'])
+    if "hostname" in settings:
+        args += ["-H", settings["hostname"]]
     else:
-        args = "-H $HOSTADDRESS$"
+        args += ["-H", "$HOSTADDRESS$"]
 
-    args += " -C \"%s\"" % params[0]
+    args += ["-C", "%s" % params[0]]
     if "port" in settings:
-        args += " -p %d" % settings["port"]
+        args += ["-p", settings["port"]]
     if "ip_version" in settings:
-        if settings['ip_version'] == 'ipv4':
-            args += ' -4'
+        if settings["ip_version"] == "ipv4":
+            args.append("-4")
         else:
-            args += ' -6'
+            args.append("-6")
 
+    if settings.get("accept_new_host_keys", False):
+        args += ["-o", "StrictHostKeyChecking=accept-new"]
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
     if "logname" in settings:
-        args += ' -l %s' % quote_shell_string(settings["logname"])
+        args += ["-l", settings["logname"]]
     if "identity" in settings:
-        args += ' -i %s' % settings["identity"]
+        args += ["-i", settings["identity"]]
 
     return args
 
 
 def check_by_ssh_description(params):
     settings = params[1]
-    if 'description' in settings:
-        return settings['description']
+    if "description" in settings:
+        return settings["description"]
     return "check_by_ssh %s" % params[0]
 
 
-active_check_info['by_ssh'] = {
-    "command_line": '$USER1$/check_by_ssh $ARG1$',
+active_check_info["by_ssh"] = {
+    "command_line": "$USER1$/check_by_ssh $ARG1$",
     "argument_function": check_by_ssh_arguments,
     "service_description": check_by_ssh_description,
     "has_perfdata": True,

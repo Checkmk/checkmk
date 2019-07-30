@@ -1,8 +1,0 @@
-#!/bin/bash
-# This script assumes that the current directory is the base
-# directory of the version.
-# We are e.g. in /omd/versions/1.2.3i4p5/
-
-SUIDFILES="lib/cmc/icmpsender lib/cmc/icmpreceiver lib/nagios/plugins/check_icmp lib/nagios/plugins/check_dhcp bin/mkeventd_open514"
-chgrp omd $SUIDFILES
-chmod 4755 $SUIDFILES

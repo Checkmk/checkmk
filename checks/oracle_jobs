@@ -87,7 +87,7 @@ def check_oracle_jobs(item, params, info):
         # item could have the following formats. Keep in mind, that job_name could include a '.'!
         if len(line) == 11:
             # => sid.pdb_name.job_owner.job_name
-            itemsid, itempdb, itemowner, itemname = item.split('.', 4)
+            itemsid, itempdb, itemowner, itemname = item.split('.', 3)
             lineformat = 3
 
             sid, job_pdb, job_owner, job_name, job_state, job_runtime, _job_run_count, \
@@ -95,7 +95,7 @@ def check_oracle_jobs(item, params, info):
 
         elif len(line) == 10:
             # sid.job_owner.job_name
-            itemsid, itemowner, itemname = item.split('.', 3)
+            itemsid, itemowner, itemname = item.split('.', 2)
             itempdb = ''
             lineformat = 2
 
@@ -107,7 +107,7 @@ def check_oracle_jobs(item, params, info):
             # this should be removed in a future release!
 
             # sid.job_name
-            itemsid, itemname = item.split('.', 2)
+            itemsid, itemname = item.split('.', 1)
             itempdb = ''
             itemowner = ''
             lineformat = 1

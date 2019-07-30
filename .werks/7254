@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1554382214
 
 The <tt>Bake agents</tt> or <tt>Download agent output</tt> background job details pages incorrectly showed the jobstatus as initialized.

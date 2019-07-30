@@ -55,11 +55,10 @@ def load_timeperiods():
 
 def save_timeperiods(timeperiods):
     store.mkdir(wato_root_dir())
-    store.save_to_mk_file(
-        wato_root_dir() + "timeperiods.mk",
-        "timeperiods",
-        _filter_builtin_timeperiods(timeperiods),
-        pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file(wato_root_dir() + "timeperiods.mk",
+                          "timeperiods",
+                          _filter_builtin_timeperiods(timeperiods),
+                          pprint_value=config.wato_pprint_config)
 
 
 def _filter_builtin_timeperiods(timeperiods):
@@ -78,7 +77,7 @@ class TimeperiodSelection(DropdownChoice):
         elements = [(name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()]
 
         always = ("24X7", _("Always"))
-        if always not in elements:
+        if always[0] not in dict(elements):
             elements.insert(0, always)
 
         return sorted(elements, key=lambda x: x[1].lower())

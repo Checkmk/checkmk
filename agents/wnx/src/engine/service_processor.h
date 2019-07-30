@@ -56,7 +56,7 @@ public:
     TheMiniProcess& operator=(TheMiniProcess&&) = delete;
 
     ~TheMiniProcess() { stop(); }
-    bool start(std::wstring ExeName);
+    bool start(const std::wstring& exe_name);
     bool stop();
     bool running() const {
         std::lock_guard lk(lock_);
@@ -68,6 +68,7 @@ private:
     HANDLE process_handle_;
     HANDLE thread_handle_;
     uint32_t process_id_;
+    std::string process_name_;  // for debug purposes
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SectionProviderOhm;
@@ -120,7 +121,7 @@ public:
                 auto port_name = Proc->getInternalPort();
                 auto id = Tp.time_since_epoch().count();
                 goGoGo(SectionName, CommandLine, port_name, id);
-                XLOG::l.t("Provider {} started, id {} port {}",
+                XLOG::l.t("Provider '{}' started, id '{}' port [{}]",
                           provider_uniq_name_, id, port_name);
 
                 return true;
@@ -211,6 +212,9 @@ public:
         return answer_.addSegment(Name, Tp, std::vector<uint8_t>());
     }
 
+    static void resetOhm() noexcept;
+    bool isOhmStarted() const noexcept { return ohm_started_; }
+
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {
         const std::string answer_test = Text;
@@ -229,89 +233,9 @@ private:
     void informDevice(cma::rt::Device& Device, std::string_view Ip) const
         noexcept;
 
-    // this thread is HOSTING THREAD for start next services
-    // Io
-    // All providers
-    // Plugin Provider
-    // RealTime checks
-    void mainThread(world::ExternalPort* Port) {
-        // Periodically checks if the service is stopping.
-
-        // mailslot name selector "service" or "not service"
-        auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
-                                              : cma::cfg::kTestingMailSlot;
-
-        cma::MailSlot mailbox(mailslot_name, 0);
-        using namespace cma::carrier;
-        internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
-        try {
-            bool io_started = false;
-            mailbox.ConstructThread(SystemMailboxCallback, 20, this);
-            ON_OUT_OF_SCOPE(mailbox.DismantleThread());
-            cma::rt::Device rt_device;
-            preStart();
-            if (Port) {
-                // this is main part
-                rt_device.start();
-                io_started = Port->startIo(
-                    [this,
-                     &rt_device](const std::string Ip) -> std::vector<uint8_t> {
-                        // most important entry point for external port io
-                        // this is internal implementation of the io_context
-                        // called upon kicking in port, i.e. LATER. NOT NOW.
-
-                        // 1. preparation
-                        XLOG::d.i("Connected from '{}'", Ip.c_str());
-                        cma::OnStartApp();
-                        cma::cfg::SetupRemoteHostEnvironment(Ip);
-                        informDevice(rt_device, Ip);
-
-                        // 2. processing
-                        auto tp = openAnswer(Ip);
-                        if (tp) {
-                            XLOG::d.i("Id is [{}] ",
-                                      tp.value().time_since_epoch().count());
-                            auto started = startProviders(tp.value(), Ip);
-
-                            return getAnswer(started);
-
-                        } else
-                            return makeTestString("No Answer");
-                        // return getTestString();
-                    });
-
-            } else {
-                XLOG::l.i("Started without IO. Debug mode");
-                auto tp = openAnswer("127.0.0.1");
-                if (tp) {
-                    auto started = startProviders(tp.value(), "");
-                    auto block = getAnswer(started);
-                    block.emplace_back('\0');
-                    printf("%s", block.data());
-                }
-                return;
-            }
-            // critical: we want to shutdown io even on crash
-            ON_OUT_OF_SCOPE(if (Port) Port->shutdownIo());
-
-            // no more processing
-            if (Port && !io_started) {
-                XLOG::l.bp("Ups. We cannot start main thread");
-                return;
-            }
-
-            // we wait her to the end of the External port
-            mainWaitLoop();
-
-            // the end of the fun
-            XLOG::l.i("Thread is stopped");
-        } catch (const std::exception& e) {
-            XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
-        } catch (...) {
-            XLOG::l.bp("Not expected exception. Fix it!");
-        }
-        internal_port_ = "";
-    }
+    // used to start OpenHardwareMonitor if conditions are ok
+    [[nodiscard]] bool conditionallyStartOhm() noexcept;
+    void mainThread(world::ExternalPort* Port) noexcept;
 
     // object data
     std::thread thread_;
@@ -332,35 +256,61 @@ private:
     AsyncAnswer& getAsyncAnswer() { return answer_; }
 
 private:
-    void mainWaitLoop() {
+    bool ohm_started_ = false;
+    // support of mainThread
+    void prepareAnswer(const std::string& ip_from, cma::rt::Device& rt_device);
+    cma::ByteVector generateAnswer(const std::string& ip_from);
+    void sendDebugData();
+
+    bool timedWaitForStop() {
+        std::unique_lock<std::mutex> l(lock_stopper_);
+        auto stop_requested = stop_thread_.wait_until(
+            l, std::chrono::steady_clock::now() + delay_,
+            [this]() { return stop_requested_; });
+        return stop_requested;
+    }
+
+    // type of breaks in mainWaitLoop
+    enum class Signal { restart, quit };
+
+    // returns break type(what todo)
+    Signal mainWaitLoop() {
+        using namespace cma::cfg;
         XLOG::l.i("main Wait Loop");
+        // memorize vars to check for changes in loop below
+        auto ipv6 = groups::global.ipv6();
+        auto port = groups::global.port();
         while (1) {
             using namespace std::chrono;
 
             // Perform main service function here...
-            //
-            //
 
             // special case when thread is one time run
             if (!callback_(static_cast<const void*>(this))) break;
             if (delay_ == 0ms) break;
 
             // check for config update and inform external port
+            auto new_ipv6 = groups::global.ipv6();
+            auto new_port = groups::global.port();
+            if (new_ipv6 != ipv6 || new_port != port) {
+                XLOG::l.i(
+                    "Restarting server with new parameters [{}] ipv6:[{}]",
+                    new_port, new_port);
+                return Signal::restart;
+            }
 
             // wait and check
-            std::unique_lock<std::mutex> l(lock_stopper_);
-            auto stop_requested =
-                stop_thread_.wait_until(l, steady_clock::now() + delay_,
-                                        [this]() { return stop_requested_; });
-            if (stop_requested) {
+            if (timedWaitForStop()) {
                 XLOG::l.t("Stop request is set");
                 break;  // signaled stop
             }
         }
         XLOG::l.t("main Wait Loop END");
+        return Signal::quit;
     }
-    AsyncAnswer
-        answer_;  // we make queue n the future, now only one answer for all
+
+    AsyncAnswer answer_;  // queue in the future, now only one answer for all
+
     std::vector<std::future<bool>> vf_;
 
     // called from the network callbacks in ExternalPort
@@ -382,11 +332,12 @@ private:
         return tp;
     }
 
-    // #TODO gtest!
+    //
     int startProviders(AnswerId Tp, std::string Ip);
 
     // all pre operation required for normal functionality
     void preStart();
+    void detachedPluginsStart();
 
 private:
     void preLoadConfig();
@@ -485,7 +436,7 @@ private:
 
         // now wait for answers
         if (!answer_.waitAnswer(std::chrono::seconds(max_timeout_))) {
-            XLOG::l(XLOG_FLINE + " no full answer: awaited {}, received {}",
+            XLOG::l(XLOG_FLINE + " no full answer: awaited [{}], received [{}]",
                     answer_.awaitingSegments(),   // expected count
                     answer_.receivedSegments());  // on the hand
         }
@@ -634,28 +585,53 @@ private:
 
     SectionProvider<provider::MrpeProvider> mrpe_provider_;
     SectionProvider<provider::SkypeProvider> skype_provider_;
-    SectionProvider<provider::OhmProvider> ohm_provider_{provider::kOhm, ','};
+    SectionProvider<provider::OhmProvider> ohm_provider_{
+        provider::kOhm, provider::ohm::kSepChar};
     SectionProvider<provider::SpoolProvider> spool_provider_;
 
     SectionProvider<provider::Wmi> dotnet_clrmemory_provider_{
-        provider::kDotNetClrMemory, ','};
+        provider::kDotNetClrMemory, cma::provider::wmi::kSepChar};
 
     SectionProvider<provider::Wmi> wmi_webservices_provider_{
-        provider::kWmiWebservices, ','};
+        provider::kWmiWebservices, cma::provider::wmi::kSepChar};
 
-    SectionProvider<provider::Wmi> msexch_provider_{provider::kMsExch, ','};
+    SectionProvider<provider::Wmi> msexch_provider_{
+        provider::kMsExch, cma::provider::wmi::kSepChar};
 
-    SectionProvider<provider::Wmi> wmi_cpuload_provider_{provider::kWmiCpuLoad,
-                                                         ','};
-
-    // ',');
-    // cma::provider::kDotNetClrMemory, ',');
+    SectionProvider<provider::Wmi> wmi_cpuload_provider_{
+        provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, StartStopExe);
 #endif
-};  // namespace cma::srv
+};
+
+// tested indirectly in integration
+// gtest is required
+template <typename T, typename B>
+void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
+    using namespace std::chrono;
+
+    cma::tools::sleep(500ms);  // giving a bit time to start threads
+    auto count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Waiting for async threads [{}]", count);
+    constexpr auto grane = 500ms;
+    auto wait_time = allowed_wait;
+
+    // waiting is like a polling
+    // we do not want to loose time on test method
+    while (wait_time >= 0ms) {
+        int count = cma::PluginEntry::threadCount();
+        if (count == 0) break;
+
+        cma::tools::sleep(grane);
+        wait_time -= grane;
+    }
+    count = cma::PluginEntry::threadCount();
+    XLOG::d.i("Left async threads [{}] after waiting {}ms", count,
+              (allowed_wait - wait_time).count());
+}
 
 }  // namespace cma::srv
 

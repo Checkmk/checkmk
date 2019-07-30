@@ -59,7 +59,6 @@ class MkpRulePackProxy(UserDict.DictMixin):
     A newly created instance is not yet connected to a specific rule pack.
     This is achieved via the method bind_to.
     """
-
     def __init__(self, rule_pack_id):
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
@@ -98,8 +97,8 @@ class MkpRulePackProxy(UserDict.DictMixin):
         # type: (Dict[str, Any]) -> None
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
-            raise MkpRulePackBindingError(
-                'The IDs of %s and %s cannot be different.' % (self, mkp_rule_pack))
+            raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' %
+                                          (self, mkp_rule_pack))
 
         self.rule_pack = mkp_rule_pack
 
@@ -192,8 +191,8 @@ def _bind_to_rule_pack_proxies(rule_packs, mkp_rule_packs):
             if isinstance(rule_pack, MkpRulePackProxy):
                 rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
-            raise MkpRulePackBindingError(
-                'Exported rule pack with ID "%s" not found.' % rule_pack.id_)
+            raise MkpRulePackBindingError('Exported rule pack with ID "%s" not found.' %
+                                          rule_pack.id_)
 
 
 def load_config(settings):
@@ -338,8 +337,8 @@ def override_rule_pack_proxy(rule_pack_nr, rule_packs):
     """
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
-        raise TypeError('Expected an instance of %s got %s' % (MkpRulePackProxy.__name__,
-                                                               proxy.__class__.__name__))
+        raise TypeError('Expected an instance of %s got %s' %
+                        (MkpRulePackProxy.__name__, proxy.__class__.__name__))
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
@@ -405,7 +404,6 @@ def rule_pack_id_to_mkp(package_info):
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-
     def mkp_of(rule_pack_file):
         # type: (str) -> Any
         """Find the MKP for the given file"""

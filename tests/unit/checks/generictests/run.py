@@ -1,4 +1,5 @@
 """Submodule providing the `run` function of generictests package"""
+from __future__ import print_function
 from ast import literal_eval
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
@@ -67,7 +68,8 @@ def get_merged_parameters(check, provided_p):
 def get_mock_values(dataset, subcheck):
     mock_is_d = getattr(dataset, 'mock_item_state', {})
     mock_hc_d = getattr(dataset, 'mock_host_conf', {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, [])
+    mock_hc_m = getattr(dataset, 'mock_host_conf_merged', {})
+    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {}),
 
 
 def parse(check_manager, dataset):
@@ -204,9 +206,11 @@ def run(check_manager, dataset, write=False):
             immu.test(' after get_info_argument ')
             immu.register(info_arg, 'info_arg')
 
-            mock_is, mock_hec = get_mock_values(dataset, subcheck)
+            mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with MockItemState(mock_is), MockHostExtraConf(check, mock_hec):
+            with MockItemState(mock_is), \
+                 MockHostExtraConf(check, mock_hec), \
+                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
                 # test discovery
                 d_result = discovery(check, subcheck, dataset, info_arg, immu)
                 if write:

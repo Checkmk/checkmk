@@ -173,7 +173,10 @@ mbg_lantime_refclock_default_levels = (3, 3)
 
 def inventory_lantime_ng_refclock_gps(info):
     for line in info:
-        if mbg_lantime_ng_refclock_types[line[1]].startswith("gps"):
+        clock_type = mbg_lantime_ng_refclock_types.get(line[1])
+        if clock_type is None:
+            continue
+        if clock_type.startswith("gps"):
             yield (line[0], 'mbg_lantime_refclock_default_levels')
 
 
@@ -230,7 +233,10 @@ check_info["mbg_lantime_ng_refclock.gps"] = {
 
 def inventory_lantime_ng_refclock(info):
     for line in info:
-        if not mbg_lantime_ng_refclock_types[line[1]].startswith("gps"):
+        clock_type = mbg_lantime_ng_refclock_types.get(line[1])
+        if clock_type is None:
+            continue
+        if not clock_type.startswith("gps"):
             yield (line[0], None)
 
 

@@ -66,33 +66,32 @@ class RulespecCheckgroupParametersBluecatNtp(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("oper_states",
-                 Dictionary(
-                     title=_("Operations States"),
-                     elements=[
-                         ("warning",
-                          ListChoice(
-                              title=_("States treated as warning"),
-                              choices=bluecat_operstates,
-                              default_value=[2, 3, 4],
-                          )),
-                         ("critical",
-                          ListChoice(
-                              title=_("States treated as critical"),
-                              choices=bluecat_operstates,
-                              default_value=[5],
-                          )),
-                     ],
-                     required_keys=['warning', 'critical'],
-                 )),
-                ("stratum",
-                 Tuple(
-                     title=_("Levels for Stratum "),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("oper_states",
+             Dictionary(
+                 title=_("Operations States"),
+                 elements=[
+                     ("warning",
+                      ListChoice(
+                          title=_("States treated as warning"),
+                          choices=bluecat_operstates,
+                          default_value=[2, 3, 4],
+                      )),
+                     ("critical",
+                      ListChoice(
+                          title=_("States treated as critical"),
+                          choices=bluecat_operstates,
+                          default_value=[5],
+                      )),
+                 ],
+                 required_keys=['warning', 'critical'],
+             )),
+            ("stratum",
+             Tuple(
+                 title=_("Levels for Stratum "),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+        ],)

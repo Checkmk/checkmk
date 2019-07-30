@@ -231,7 +231,7 @@ run_real_time_checks()
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0i1"
+echo "Version: 1.7.0i1"
 echo "AgentOS: openwrt"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -686,38 +686,36 @@ then
 fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-if [ -r "$MK_CONFDIR/fileinfo.cfg" ] ; then
-    echo '<<<fileinfo:sep(124)>>>'
-    date +%s
+perl -e '
+my @patterns = ();
+foreach (<"$ARGV[0]/fileinfo.cfg">, <"$ARGV[0]/fileinfo.d/*">) {
+    open my $handle, "<", $_ or next;
+    while (<$handle>) {
+        chomp;
+        next if /^\s*(#|$)/;
+        my $pattern = $_;
+        $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+        push @patterns, $pattern;
+    }
+    warn "error while reading $_: $!\n" if $!;
+    close $handle;
+}
+exit if ! @patterns;
 
-    OLD_IFS=$IFS
-    IFS='
-'
-    echo "[[[header]]]"
-    echo " name | status | size | time "
-    echo "[[[content]]]"
-    # name | status (missing/stat failed/ok)) | size | date
-    # filename|missing||
-    # filename|ok|123|456
+print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
 
-    while read -r pattern; do
-        case $pattern in
-            /*) for file in $pattern; do
-                    if [ -d "$file" ]; then
-                          continue
-                    fi
-
-                    if [ ! -f "$file" ]; then
-                        echo "$file|missing"
-                        continue
-                    fi
-
-                    stat -c "%n|ok|%s|%Y" "$file" || echo "$file|stat failed"
-                done ;;
-        esac
-    done < "$MK_CONFDIR/fileinfo.cfg"
-    IFS=$OLD_IFS
-fi
+foreach (@patterns) {
+    while (<"$_">) {
+        if (! -f) {
+            print "$_|missing\n" if ! -d;
+        } elsif (my @infos = stat) {
+            print "$_|ok|$infos[7]|$infos[9]\n";
+        } else {
+            print "$_|stat failed: $!\n";
+        }
+    }
+}
+' -- "$MK_CONFDIR"
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance
@@ -835,8 +833,7 @@ if cd $PLUGINSDIR ; then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ]
-then
+if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
     pushd "$SPOOLDIR" > /dev/null
     now=$(date +%s)
 

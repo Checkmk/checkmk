@@ -163,15 +163,15 @@ class AggregationRawdataGenerator(object):
             return AggregationData(None, self._config, "Request Error %s" % e)
 
     def _fetch_aggregation_data(self):
-        response = requests.post(
-            "%s/check_mk/webapi.py?action=get_bi_aggregations" % self._site_url,
-            data={
-                "_username": self._username,
-                "_secret": self._secret,
-                "request": repr({"filter": self._config.get("filter", {})}),
-                "request_format": "python",
-                "output_format": "python"
-            })
+        response = requests.post("%s/check_mk/webapi.py?action=get_bi_aggregations" %
+                                 self._site_url,
+                                 data={
+                                     "_username": self._username,
+                                     "_secret": self._secret,
+                                     "request": repr({"filter": self._config.get("filter", {})}),
+                                     "request_format": "python",
+                                     "output_format": "python"
+                                 })
         response.raise_for_status()
         return response.text
 

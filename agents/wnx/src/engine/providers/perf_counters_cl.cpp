@@ -4,30 +4,28 @@
 
 #include "stdafx.h"
 
+#include "providers/perf_counters_cl.h"
+
 #include <string>
 
-#include "tools/_raii.h"
-
+#include "cfg.h"
 #include "common/cmdline_info.h"
 #include "common/wtools.h"
-
-#include "cfg.h"
 #include "logger.h"
-
 #include "providers/p_perf_counters.h"
-#include "providers/perf_counters_cl.h"
+#include "tools/_raii.h"
 
 namespace cma {
 
 namespace provider {
 
 std::string AccumulateCounters(
-    const std::wstring& PrefixName,
-    const std::vector<std::wstring_view>& CounterArray) {
+    const std::wstring& prefix_name,
+    const std::vector<std::wstring_view>& counter_array) {
     using namespace cma::tools;
 
     std::string accu;
-    for (const auto& cur_counter : CounterArray) {
+    for (const auto& cur_counter : counter_array) {
         auto [key, name] = ParseKeyValue(cur_counter, exe::cmdline::kSplitter);
         if (key == L"ip") {
             XLOG::d.i("From ip {}", wtools::ConvertToUTF8(name));
@@ -37,7 +35,7 @@ std::string AccumulateCounters(
         std::replace(key.begin(), key.end(), L'*', L' ');
 
         if (!name.empty() && !key.empty())
-            accu += cma::provider::BuildWinPerfSection(PrefixName, name, key);
+            accu += cma::provider::BuildWinPerfSection(prefix_name, name, key);
 
         // sends results to carrier
     }

@@ -26,18 +26,10 @@
 """
 Special agent for monitoring azure cloud applications with Check_MK.
 """
-#
-# Docs about authentication:
-#  https://docs.microsoft.com/en-us/python/azure/python-sdk-azure-authenticate?view=azure-python
-# About monitoring:
-#  https://github.com/Azure/azure-sdk-for-python/blob/master/doc/sample_azure-monitor.rst
-# About the python binding
-#   https://azure.microsoft.com/en-us/resources/samples/sql-database-python-manage/
-#
-
 import json
+import time
 import datetime
-import calendar
+import string
 import sys
 import re
 import argparse
@@ -46,19 +38,12 @@ import logging
 from multiprocessing import Process, Lock, Queue
 from Queue import Empty as QueueEmpty
 
-# We have to set a null handler for logging before importing the azure stuff.
-#   Otherwise a warning will be sent to stderr - and if for some other reason
-#   the agent returns a non-zero exit code this (irrelevant) warning would be
-#   all the user sees.
-logging.getLogger().addHandler(logging.NullHandler())
-# pylint: disable=wrong-import-position
-from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.monitor import MonitorManagementClient
-from azure.mgmt.monitor.models.error_response import ErrorResponseException
-from azure.mgmt.compute import ComputeManagementClient
-from azure.common.credentials import ServicePrincipalCredentials
-logging.getLogger().handlers.pop()
+from pathlib2 import Path
 
+from cmk.utils.paths import tmp_dir
+
+from cmk.special_agents.agent_azure import rest_client, ApiError
+from cmk.special_agents.utils import DataCache
 import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
 
@@ -68,19 +53,25 @@ METRICS_SELECTED = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
     # key: list of (name(s), interval, aggregation, filter)
+    # NB: Azure API won't have requests with more than 20 metric names at once
     'Microsoft.Network/virtualNetworkGateways': [
-        ('AverageBandwidth,P2SBandwidth', 'PT1M', 'average', None),
+        ('AverageBandwidth,P2SBandwidth', 'PT5M', 'average', None),
         ('P2SConnectionCount', 'PT1M', 'maximum', None),
     ],
     'Microsoft.Sql/servers/databases': [
         ('storage_percent,deadlock,cpu_percent,dtu_consumption_percent,'
          'connection_successful,connection_failed', 'PT1M', 'average', None),
     ],
-    'Microsoft.Storage/storageAccounts': [('UsedCapacity,Ingress,Egress,Transactions,'
-                                           'SuccessServerLatency,SuccessE2ELatency,Availability',
-                                           'PT1H', 'total', None),],
+    'Microsoft.Storage/storageAccounts': [
+        ('UsedCapacity,Ingress,Egress,Transactions,'
+         'SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'total', None),
+    ],
     'Microsoft.Web/sites': [('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),],
 }
+
+AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
+
+NOW = datetime.datetime.utcnow()
 
 
 class AsyncMapper(object):  # pylint: disable=too-few-public-methods
@@ -108,7 +99,6 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
                   a tuple (err, value). If err is falsey, value will we be
                   yielded (default: (1, None)).
     '''
-
     def __init__(self, timeout=None, debug=False, fallback=lambda x: (1, None)):
         super(AsyncMapper, self).__init__()
         self.timeout = timeout
@@ -148,28 +138,28 @@ class AsyncMapper(object):  # pylint: disable=too-few-public-methods
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--debug", action="store_true", help='''Debug mode: raise Python exceptions''')
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help='''Verbose mode (for even more output use -vvv)''')
-    parser.add_argument(
-        "--sequential", action="store_true", help='''Sequential mode: do not use multiprocessing''')
-    parser.add_argument(
-        "--dump-config", action="store_true", help='''Dump parsed configuration and exit''')
-    parser.add_argument(
-        "--timeout",
-        default=10,
-        type=int,
-        help='''Timeout for individual processes in seconds (default 10)''')
-    parser.add_argument(
-        "--piggyback_vms",
-        default="grouphost",
-        choices=["grouphost", "self"],
-        help='''Send VM piggyback data to group host (default) or the VM iteself''')
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("--sequential",
+                        action="store_true",
+                        help='''Sequential mode: do not use multiprocessing''')
+    parser.add_argument("--dump-config",
+                        action="store_true",
+                        help='''Dump parsed configuration and exit''')
+    parser.add_argument("--timeout",
+                        default=10,
+                        type=int,
+                        help='''Timeout for individual processes in seconds (default 10)''')
+    parser.add_argument("--piggyback_vms",
+                        default="grouphost",
+                        choices=["grouphost", "self"],
+                        help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
     # REQUIRED
     parser.add_argument("--subscription", required=True, help="Azure subscription ID")
@@ -177,20 +167,18 @@ def parse_arguments(argv):
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
-    parser.add_argument(
-        "--require-tag",
-        default=[],
-        metavar='TAG',
-        action='append',
-        help='''Only monitor resources that have the specified TAG.
+    parser.add_argument("--require-tag",
+                        default=[],
+                        metavar='TAG',
+                        action='append',
+                        help='''Only monitor resources that have the specified TAG.
               To require multiple tags, provide the option more than once.''')
-    parser.add_argument(
-        "--require-tag-value",
-        default=[],
-        metavar=("TAG", "VALUE"),
-        nargs=2,
-        action='append',
-        help='''Only monitor resources that have the specified TAG set to VALUE.
+    parser.add_argument("--require-tag-value",
+                        default=[],
+                        metavar=("TAG", "VALUE"),
+                        nargs=2,
+                        action='append',
+                        help='''Only monitor resources that have the specified TAG set to VALUE.
              To require multiple tags, provide the option more than once.''')
     parser.add_argument(
         "--explicit-config",
@@ -346,16 +334,13 @@ class Selector(object):
 class Section(object):
     LOCK = Lock()
 
-    def __init__(self, name, piggytarget, separator):
+    def __init__(self, name, piggytargets, separator, options):
         super(Section, self).__init__()
         self._sep = chr(separator)
-        self._head = []
+        self._piggytargets = list(piggytargets)
         self._cont = []
-        self._foot = []
-        if piggytarget:
-            self._head.append('<<<<%s>>>>\n' % piggytarget)
-            self._foot.append('<<<<>>>>\n')
-        self._head.append('<<<%s:sep(%d)>>>\n' % (name, separator))
+        section_options = ':'.join(['sep(%d)' % separator] + options)
+        self._title = '<<<%s:%s>>>\n' % (name, section_options)
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -373,18 +358,35 @@ class Section(object):
         if not self._cont:
             return
         with self.LOCK:
-            sys.stdout.writelines(self._head + self._cont + self._foot)
+            for piggytarget in self._piggytargets:
+                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write(self._title)
+                sys.stdout.writelines(self._cont)
+            sys.stdout.write('<<<<>>>>\n')
             sys.stdout.flush()
 
 
 class AzureSection(Section):
-    def __init__(self, name, piggytarget=None):
-        super(AzureSection, self).__init__('azure_%s' % name, piggytarget, separator=124)
+    def __init__(self, name, piggytargets=('',)):
+        super(AzureSection, self).__init__('azure_%s' % name,
+                                           piggytargets,
+                                           separator=124,
+                                           options=[])
 
 
 class LabelsSection(Section):
     def __init__(self, piggytarget):
-        super(LabelsSection, self).__init__("labels", piggytarget, separator=0)
+        super(LabelsSection, self).__init__("labels", [piggytarget], separator=0, options=[])
+
+
+class UsageSection(Section):
+    def __init__(self, usage_details, piggytargets, cacheinfo):
+        options = ['cached(%d,%d)' % cacheinfo]
+        super(UsageSection, self).__init__('azure_%s' % usage_details.section,
+                                           piggytargets,
+                                           separator=124,
+                                           options=options)
+        self.add(usage_details.dumpinfo())
 
 
 class IssueCollecter(object):
@@ -407,256 +409,237 @@ class AzureMetricParseError(ValueError):
     pass
 
 
-class AzureMetric(object):  # pylint: disable=too-many-instance-attributes
+def create_metric_dict(metric, aggregation, interval_id, filter_):
 
-    HEADER = ("name", "aggregation", "value", "unit", "timestamp", "filter", "interval_id",
-              "interval")
+    name = metric['name']['value']
+    metric_dict = {
+        'name': name,
+        'aggregation': aggregation,
+        'value': None,
+        'unit': metric['unit'],
+        'timestamp': None,
+        'filter': filter_,
+        'interval_id': interval_id,
+        'interval': None,
+    }
 
-    def __init__(self, metric, aggregation, interval_id, filter_):
-        super(AzureMetric, self).__init__()
+    timeseries = metric.get('timeseries')
+    if not timeseries:
+        raise AzureMetricParseError('info', "no timeseries found for metric %r" % name)
 
-        self.name = metric.name.value
-        self.aggregation = aggregation
-        self.value = None
-        self.unit = metric.unit.name
-        self.timestamp = None
-        self.filter = filter_
-        self.interval_id = interval_id
-        self.interval = None
+    for measurement in reversed(timeseries):
+        dataset = measurement.get('data', ())
+        if not dataset:
+            continue
 
-        count = len(metric.timeseries)
-        if count == 0:
-            msg = "no timeseries found for metric %r" % self.name
-            raise AzureMetricParseError('info', msg)
+        try:
+            metric_dict['interval'] = str(
+                datetime.datetime.strptime(dataset[-1]['timeStamp'], '%Y-%m-%dT%H:%M:%SZ') -
+                datetime.datetime.strptime(dataset[-2]['timeStamp'], '%Y-%m-%dT%H:%M:%SZ'))
+        except (IndexError, TypeError):
+            pass
 
-        for measurement in reversed(metric.timeseries):
-            if not measurement.data:
-                continue
+        for data in reversed(dataset):
+            LOG.debug("data: %s", data)
+            metric_dict['value'] = data.get(aggregation)
+            if metric_dict['value'] is not None:
+                metric_dict['timestamp'] = data['timeStamp']
+                return metric_dict
 
-            try:
-                self.interval = (measurement.data[-1].time_stamp - measurement.data[-2].time_stamp)
-            except (IndexError, TypeError):
-                pass
-
-            for data in reversed(measurement.data):
-                LOG.debug("data: %s", data)
-                self.value = getattr(data, aggregation, None)
-                if self.value is not None:
-                    self.timestamp = calendar.timegm(data.time_stamp.utctimetuple())
-                    return
-
-        raise AzureMetricParseError('warning', "not found: %s (%s)" % (self.name, aggregation))
-
-    @property
-    def tuple(self):
-        return tuple(getattr(self, field) for field in AzureMetric.HEADER)
+    raise AzureMetricParseError('warning', "not found: %s (%s)" % (name, aggregation))
 
 
 class AzureResource(object):
 
-    ID_PATTERN = re.compile("/subscriptions/([^/]*)/resourceGroups/([^/]*)/providers/([^/]*)")
+    ID_PATTERN = re.compile("/subscriptions/(?P<subscription>[^/]*)"
+                            "(/resourceGroups/(?P<group>[^/]*))?"
+                            "/providers/(?P<provider>[^/]*)")
 
-    def __init__(self, resource):
+    def __init__(self, info):
         super(AzureResource, self).__init__()
-        self.info = resource.as_dict()
-        match = AzureResource.ID_PATTERN.match(resource.id)
-        self.info["subscription"] = match.group(1)
-        self.info["group"] = match.group(2)
-        self.info["provider"] = match.group(3)
+        self.info = info
+        match = AzureResource.ID_PATTERN.match(info["id"])
+        for key, value in match.groupdict().iteritems():
+            if value is not None:
+                self.info[key] = value
         self.tags = self.info.get("tags", {})
 
-        self.section = resource.type.split('/')[-1].lower()
-        self.piggytargets = [self.info["group"]]
+        self.section = info["type"].split('/')[-1].lower()
+        self.piggytargets = []
+        group = self.info.get("group")
+        if group:
+            self.piggytargets.append(group)
         self.metrics = []
 
     def dumpinfo(self):
         lines = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
-            lines += [("metrics following", len(self.metrics)), AzureMetric.HEADER]
-            lines += [m.tuple for m in self.metrics]
+            lines += [("metrics following", len(self.metrics))]
+            lines += [(json.dumps(m),) for m in self.metrics]
         return lines
 
 
-class AzureComputeClient(object):
-    def __init__(self, creds, subs):
-        super(AzureComputeClient, self).__init__()
-        self._client = ComputeManagementClient(creds, subs)
+def process_vm(vmach, args):
+    use_keys = ('statuses',)
 
-    def process(self, vmach, args):
-        use_keys = ('statuses',)
-        inst_view = self._client.virtual_machines.get(
-            vmach.info["group"], vmach.info["name"], expand='instanceView').instance_view.as_dict()
-        items = ((k, inst_view.get(k)) for k in use_keys)
-        vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
+    inst_view = rest_client.vmview(vmach.info["group"], vmach.info["name"])
+    items = ((k, inst_view.get(k)) for k in use_keys)
+    vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
 
-        if args.piggyback_vms not in ("grouphost",):
-            vmach.piggytargets.remove(vmach.info["group"])
-        if args.piggyback_vms in ("self",):
-            vmach.piggytargets.append(vmach.info["name"])
+    if args.piggyback_vms not in ("grouphost",):
+        vmach.piggytargets.remove(vmach.info["group"])
+    if args.piggyback_vms in ("self",):
+        vmach.piggytargets.append(vmach.info["name"])
 
 
-class AzureClient(object):  # pylint: disable=too-many-instance-attributes
-
-    SPECIFIC_CLIENTS = {
-        'Microsoft.Compute/virtualMachines': AzureComputeClient,
-    }
-
-    def __init__(self, args):
-        super(AzureClient, self).__init__()
-        self.args = args
-        self.remaining_reads = "unknown (no metrics fetched)"
-
-        self._creds = ServicePrincipalCredentials(
-            client_id=args.client, secret=args.secret, tenant=args.tenant)
-        # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
-        # azure-api-call
-        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
-
-        self.specific_clients = {}
-        self.timespans = self._get_timespans()
-        self._cache = {}
+class MetricCache(DataCache):
+    def __init__(self, resource, metric_definition, ref_time, debug=False):
+        self.metric_definition = metric_definition
+        metricnames = metric_definition[0]
+        super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
+        self.remaining_reads = None
+        self.timedelta = {
+            "PT1M": datetime.timedelta(minutes=1),
+            "PT5M": datetime.timedelta(minutes=5),
+            "PT1H": datetime.timedelta(hours=1),
+        }[metric_definition[1]]
+        start = ref_time - 3 * self.timedelta
+        self._timespan = "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                    ref_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
     @staticmethod
-    def _get_timespans():
-        """compute timespans dict"""
-        t_end = datetime.datetime.utcnow()
+    def get_cache_path(resource):
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        subdir = ''.join(c if c in valid_chars else '_' for c in resource.info['id'])
+        return AZURE_CACHE_FILE_PATH / subdir
 
-        def interval(**kwargs):
-            start = t_end - datetime.timedelta(**kwargs)
-            return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              t_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    @property
+    def cache_interval(self):
+        return self.timedelta.seconds
 
-        timespans = {}
-        timespans["PT1M"] = interval(minutes=3)
-        timespans["PT5M"] = interval(minutes=15)
-        timespans["PT1H"] = interval(hours=3)
-        return timespans
+    def get_validity_from_args(self, *args):
+        return True
 
-    def init_specific(self, resources):
-        r_types = set(r.info["type"] for r in resources)
-        for rtp in r_types:
-            client_class = AzureClient.SPECIFIC_CLIENTS.get(rtp)
-            if client_class is not None:
-                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription)
-
-    def process_specific(self, resource):
-        client = self.specific_clients.get(resource.info["type"])
-        if client is None:
-            return
-        client.process(resource, self.args)
-
-    def list_groups(self):
-        if "groups" not in self._cache:
-            # azure-api-call
-            self._cache["groups"] = list(self._resource_client.resource_groups.list())
-        return self._cache["groups"]
-
-    def list_resources(self):
-        if "resources" not in self._cache:
-            # azure-api-call
-            raw_resources = self._resource_client.resources.list()
-            self._cache["resources"] = map(AzureResource, raw_resources)
-        return self._cache["resources"]
-
-    def _metric_api_call(self, rid, timespan, interval, metric, aggregation, filter_):
-        LOG.debug(
-            "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
-            " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
-        raw = self._monitor_client.metrics.list(
-            rid,
-            timespan=timespan,
-            interval=interval,
-            metric=metric,
-            aggregation=aggregation,
-            filter=filter_,
-            raw=True,
-        )
-        # raw.output is what we'd gotten had we set raw=False.
-        # It is a paged object, make sure to actually retrieve
-        # all pages (as this may raise exceptions)
-        raw_metrics = list(raw.output.value)
-        return raw.response, raw_metrics
-
-    def _fetch_specific_metrics(self, resource, metricnames, interval, aggregation, filter_, err):
-        if metricnames.count(',') >= 20:
-            raise ValueError("Azure API won't have requests with more than 20 metrics!")
-
-        rid = resource.info["id"]
-        timespan = self.timespans[interval]
+    def get_live_data(self, resource_id, err):  # pylint: disable=arguments-differ
+        metricnames, interval, aggregation, filter_ = self.metric_definition
 
         try:
-            response, raw_metrics = self._metric_api_call(rid, timespan, interval, metricnames,
-                                                          aggregation, filter_)
-        except ErrorResponseException as exc:
-            if self.args.debug:
-                raise exc
-            err.add("exception", rid, exc.message)
+            raw_metrics = rest_client.metrics(resource_id,
+                                              timespan=self._timespan,
+                                              interval=interval,
+                                              metricnames=metricnames,
+                                              aggregation=aggregation,
+                                              filter=filter_)
+        except () if self.debug else ApiError as exc:
+            err.add("exception", resource_id, str(exc))
             LOG.exception(exc)
             return []
-
-        LOG.debug("response: %s", response)
-        self.remaining_reads = response.headers['x-ms-ratelimit-remaining-subscription-reads']
 
         metrics = []
         for raw_metric in raw_metrics:
             try:
-                metrics.append(AzureMetric(raw_metric, aggregation, interval, filter_))
+                metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
             except AzureMetricParseError as exc:
-                err.add(exc[0], rid, exc[1])
+                err.add(exc[0], resource_id, exc[1])
                 LOG.warning(exc.args[1])
 
         return metrics
 
-    def get_metrics(self, resource, err):
-        metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
-        metrics = []
-        for metricnames, interval, aggregation, filter_ in metric_params:
-            metrics += self._fetch_specific_metrics(resource, metricnames, interval, aggregation,
-                                                    filter_, err)
+class UsageClient(DataCache):
+    def __init__(self, subscription, debug=False):
+        super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
+                                          "%s-usage" % subscription,
+                                          debug=debug)
 
-        return metrics
+    @property
+    def cache_interval(self):
+        midnight = NOW.combine(NOW.date(), datetime.time(0))
+        return (NOW - midnight).seconds
+
+    def get_validity_from_args(self, *args):
+        return True
+
+    def get_live_data(self):  # pylint: disable=arguments-differ
+        LOG.debug("UsageClient: get live data")
+
+        # (mo) I am unable to get the filter for usage_end working :-(
+        unfiltered_usages = rest_client.usagedetails()
+        LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
+
+        yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        usages = [u for u in unfiltered_usages if u['properties']['usageEnd'].startswith(yesterday)]
+        LOG.debug('yesterdays usage details: %d', len(usages))
+
+        # add group info:
+        for usage in usages:
+            iid = usage['properties']['instanceId']
+            match = AzureResource.ID_PATTERN.match(iid)
+            group = match.group("group")
+            if group:
+                usage["group"] = group
+
+        return usages
+
+    def write_sections(self, monitored_groups):
+        cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
+        for usage_details in self.get_data():
+            usage_resource = AzureResource(usage_details)
+            piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + ['']
+            UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def process_resource(args):
-    resource, client = args
+def gather_metrics(resource, debug=False):
+    '''
+    Gather all metrics for a resource. These metrics have different time
+    resolutions, so every metric needs its own cache.
+    Along the way collect ocurrring errors.
+    '''
+    err = IssueCollecter()
+    metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
+    for metric_def in metric_definitions:
+        cache = MetricCache(resource, metric_def, NOW, debug=debug)
+        resource.metrics += cache.get_data(resource.info['id'],
+                                           err,
+                                           use_cache=cache.cache_interval > 60)
+    return err
 
-    client.process_specific(resource)
 
-    err = IssueCollecter()  # pass this to methods to collect issues
-    for metric in client.get_metrics(resource, err):
-        resource.metrics.append(metric)
+def process_resource(function_args):
+    resource, args = function_args
+
+    resource_type = resource.info.get("type")
+    if resource_type == 'Microsoft.Compute/virtualMachines':
+        process_vm(resource, args)
+
+    err = gather_metrics(resource, debug=args.debug)
 
     agent_info_section = AzureSection('agent_info')
-    agent_info_section.add(('remaining-reads', client.remaining_reads))
+    agent_info_section.add(('remaining-reads', rest_client.ratelimit))
     agent_info_section.add(err.dumpinfo())
 
-    sections = [agent_info_section]
-    for piggytarget in resource.piggytargets:
-        section = AzureSection(resource.section, piggytarget)
-        section.add(resource.dumpinfo())
-        sections.append(section)
+    section = AzureSection(resource.section, resource.piggytargets)
+    section.add(resource.dumpinfo())
 
-    return sections
+    return [agent_info_section, section]
 
 
-def write_group_info(client, resources):
-    monitored_groups = sorted(set(r.info['group'] for r in resources))
+def write_group_info(monitored_groups):
 
-    for group in client.list_groups():
-        if group.name in monitored_groups and group.tags:
-            labels_section = LabelsSection(group.name)
-            labels_section.add((json.dumps(group.tags),))
+    for group in rest_client.resourcegroups():
+        name = group['name']
+        tags = group.get('tags')
+        if name in monitored_groups and tags:
+            labels_section = LabelsSection(name)
+            labels_section.add((json.dumps(tags),))
             labels_section.write()
 
     section = AzureSection('agent_info')
     section.add(('monitored-groups', json.dumps(monitored_groups)))
     section.write()
-    # create empty agent_info section for all groups, otherwise
+    # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
-    for group in monitored_groups:
-        AzureSection('agent_info', group).write()
+    AzureSection('agent_info', monitored_groups).write()
 
 
 def write_exception_to_agent_info_section(exception):
@@ -683,13 +666,19 @@ def main(argv=None):
     LOG.debug("%s", selector)
 
     try:
-        client = AzureClient(args)
-        resources = [r for r in client.list_resources() if selector.do_monitor(r)]
-        client.init_specific(resources)
+        rest_client.login(args.tenant, args.client, args.secret, args.subscription)
 
-        write_group_info(client, resources)
+        resources = [
+            r for r in map(AzureResource, rest_client.resources()) if selector.do_monitor(r)
+        ]
+        monitored_groups = sorted(set(r.info['group'] for r in resources))
 
-        func_args = ((resource, client) for resource in resources)
+        write_group_info(monitored_groups)
+
+        usage_client = UsageClient(args.subscription, args.debug)
+        usage_client.write_sections(monitored_groups)
+
+        func_args = ((resource, args) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
         for sections in map_(process_resource, func_args):
             for section in sections:

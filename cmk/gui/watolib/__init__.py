@@ -53,7 +53,7 @@ import traceback
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 from pathlib2 import Path
 import six
 
@@ -71,12 +71,13 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.utils
 import cmk.gui.sites
-import cmk.gui.tags
+import cmk.utils.tags
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.multitar as multitar
 import cmk.gui.mkeventd as mkeventd
+import cmk.gui.werks as werks
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.weblib as weblib
@@ -258,8 +259,6 @@ from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
     NEGATE,
-    NO_ITEM,
-    ENTRY_NEGATE_CHAR,
     wato_root_dir,
     multisite_dir,
     rename_host_in_list,
@@ -268,14 +267,12 @@ from cmk.gui.watolib.utils import (
     default_site,
     format_config_value,
     liveproxyd_config_dir,
-    lock_exclusive,
     mk_repr,
     mk_eval,
-    exclusive_lock,
     has_agent_bakery,
     site_neutral_path,
 )
-
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
@@ -284,6 +281,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_domain_registry,
     config_variable_registry,
     wato_fileheader,
+    SampleConfigGenerator,
+    sample_config_generator_registry,
 )
 
 import cmk.gui.plugins.watolib
@@ -314,7 +313,7 @@ def init_wato_datastructures(with_wato_lock=False):
         _create_sample_config()
 
     if with_wato_lock:
-        with exclusive_lock():
+        with store.lock_checkmk_configuration():
             init()
     else:
         init()
@@ -330,232 +329,265 @@ def _need_to_create_sample_config():
     return True
 
 
-# TODO: Create a hook here and move CEE and other specific things away
 def _create_sample_config():
     """Create a very basic sample configuration
 
-    But only if none of the
-    files that we will create already exists. That is e.g. the case
-    after an update from an older version where no sample config had
-    been created.
+    But only if none of the files that we will create already exists. That is
+    e.g. the case after an update from an older version where no sample config
+    had been created.
     """
     if not _need_to_create_sample_config():
         return
 
-    # Global configuration settings
-    save_global_settings({
-        "use_new_descriptions_for": [
-            "df",
-            "df_netapp",
-            "df_netapp32",
-            "esx_vsphere_datastores",
-            "hr_fs",
-            "vms_diskstat.df",
-            "zfsget",
-            "ps",
-            "ps.perf",
-            "wmic_process",
-            "services",
-            "logwatch",
-            "logwatch.groups",
-            "cmk-inventory",
-            "hyperv_vms",
-            "ibm_svc_mdiskgrp",
-            "ibm_svc_system",
-            "ibm_svc_systemstats.diskio",
-            "ibm_svc_systemstats.iops",
-            "ibm_svc_systemstats.disk_latency",
-            "ibm_svc_systemstats.cache",
-            "casa_cpu_temp",
-            "cmciii.temp",
-            "cmciii.psm_current",
-            "cmciii_lcp_airin",
-            "cmciii_lcp_airout",
-            "cmciii_lcp_water",
-            "etherbox.temp",
-            "liebert_bat_temp",
-            "nvidia.temp",
-            "ups_bat_temp",
-            "innovaphone_temp",
-            "enterasys_temp",
-            "raritan_emx",
-            "raritan_pdu_inlet",
-            "mknotifyd",
-            "mknotifyd.connection",
-            "postfix_mailq",
-            "nullmailer_mailq",
-            "barracuda_mailqueues",
-            "qmail_stats",
-            "http",
-            "mssql_backup",
-            "mssql_counters.cache_hits",
-            "mssql_counters.transactions",
-            "mssql_counters.locks",
-            "mssql_counters.sqlstats",
-            "mssql_counters.pageactivity",
-            "mssql_counters.locks_per_batch",
-            "mssql_counters.file_sizes",
-            "mssql_databases",
-            "mssql_datafiles",
-            "mssql_tablespaces",
-            "mssql_transactionlogs",
-            "mssql_versions",
-        ],
-        "enable_rulebased_notifications": True,
-        "ui_theme": "facelift",
-        "lock_on_logon_failures": 10,
-    })
-
-    # A contact group for all hosts and services
-    groups = {
-        "contact": {
-            'all': {
-                'alias': u'Everything'
-            }
-        },
-    }
-    save_group_information(groups)
-
-    _initialize_tag_config()
-
-    # Rules that match the upper host tag definition
-    ruleset_config = {
-        # Make the tag 'offline' remove hosts from the monitoring
-        'only_hosts': [(['!offline'], ['@all'], {
-            'description': u'Do not monitor hosts with the tag "offline"'
-        }),],
-
-        # Rule for WAN hosts with adapted PING levels
-        'ping_levels': [({
-            'loss': (80.0, 100.0),
-            'packets': 6,
-            'rta': (1500.0, 3000.0),
-            'timeout': 20
-        }, ['wan'], ['@all'], {
-            'description': u'Allow longer round trip times when pinging WAN hosts'
-        }),],
-
-        # All hosts should use SNMP v2c if not specially tagged
-        'bulkwalk_hosts': [(['snmp', '!snmp-v1'], ['@all'], {
-            'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
-        }),],
-
-        # Put all hosts and the contact group 'all'
-        'host_contactgroups': [('all', [], ALL_HOSTS, {
-            'description': u'Put all hosts into the contact group "all"'
-        }),],
-
-        # Interval for HW/SW-Inventory check
-        'extra_service_conf': {
-            'check_interval': [(1440, [], ALL_HOSTS, ["Check_MK HW/SW Inventory$"], {
-                'description': u'Restrict HW/SW-Inventory to once a day'
-            }),],
-        },
-
-        # Disable unreachable notifications by default
-        'extra_host_conf': {
-            'notification_options': [('d,r,f,s', [], ALL_HOSTS, {}),],
-        },
-
-        # Periodic service discovery
-        'periodic_discovery': [({
-            'severity_unmonitored': 1,
-            'severity_vanished': 0,
-            'inventory_check_do_scan': True,
-            'check_interval': 120.0
-        }, [], ALL_HOSTS, {
-            'description': u'Perform every two hours a service discovery'
-        }),],
-    }
-
-    rulesets = FolderRulesets(Folder.root_folder())
-    rulesets.from_config(Folder.root_folder(), ruleset_config)
-    rulesets.save()
-
-    notification_rules = [
-        {
-            'allow_disable': True,
-            'contact_all': False,
-            'contact_all_with_email': False,
-            'contact_object': True,
-            'description': 'Notify all contacts of a host/service via HTML email',
-            'disabled': False,
-            'notify_plugin': ('mail', {}),
-        },
-    ]
-    save_notification_rules(notification_rules)
-
-    try:
-        import cmk.gui.cee.plugins.wato.sample_config  # pylint: disable=redefined-outer-name
-        cmk.gui.cee.plugins.wato.sample_config.create_cee_sample_config()
-    except ImportError:
-        pass
-
-    # Initial baking of agents (when bakery is available)
-    if has_agent_bakery():
-        import cmk.gui.cee.plugins.wato.agent_bakery
-        bake_job = cmk.gui.cee.plugins.wato.agent_bakery.BakeAgentsBackgroundJob()
-        bake_job.set_function(cmk.gui.cee.plugins.wato.agent_bakery.bake_agents_background_job)
+    logger.debug("Start creating the sample config")
+    for generator in sample_config_generator_registry.get_generators():
         try:
-            bake_job.start()
-        except background_job.BackgroundJobAlreadyRunning:
-            pass
+            logger.debug("Starting [%s]" % generator.ident())
+            generator.generate()
+            logger.debug("Finished [%s]" % generator.ident())
+        except Exception:
+            logger.error("Exception in sample config generator [%s]" % generator.ident(),
+                         exc_info=True)
 
-    # This is not really the correct place for such kind of action, but the best place we could
-    # find to execute it only for new created sites.
-    import cmk.gui.werks as werks
-    werks.acknowledge_all_werks(check_permission=False)
-
-    cmk.gui.wato.mkeventd.save_mkeventd_sample_config()
-
-    userdb.create_cmk_automation_user()
+    logger.debug("Finished creating the sample config")
 
 
-def _initialize_tag_config():
-    tag_config = cmk.gui.tags.TagConfig()
-    tag_config.parse_config({
-        'aux_tags': [],
-        'tag_groups': [
-            {
-                'id': 'criticality',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'prod',
-                    'title': u'Productive system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'critical',
-                    'title': u'Business critical'
-                }, {
-                    'aux_tags': [],
-                    'id': 'test',
-                    'title': u'Test system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'offline',
-                    'title': u'Do not monitor this host'
-                }],
-                'title': u'Criticality'
+@sample_config_generator_registry.register
+class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
+    @classmethod
+    def ident(cls):
+        return "basic_wato_config"
+
+    @classmethod
+    def sort_index(cls):
+        return 10
+
+    def generate(self):
+        save_global_settings({
+            "use_new_descriptions_for": [
+                "df",
+                "df_netapp",
+                "df_netapp32",
+                "esx_vsphere_datastores",
+                "hr_fs",
+                "vms_diskstat.df",
+                "zfsget",
+                "ps",
+                "ps.perf",
+                "wmic_process",
+                "services",
+                "logwatch",
+                "logwatch.groups",
+                "cmk-inventory",
+                "hyperv_vms",
+                "ibm_svc_mdiskgrp",
+                "ibm_svc_system",
+                "ibm_svc_systemstats.diskio",
+                "ibm_svc_systemstats.iops",
+                "ibm_svc_systemstats.disk_latency",
+                "ibm_svc_systemstats.cache",
+                "casa_cpu_temp",
+                "cmciii.temp",
+                "cmciii.psm_current",
+                "cmciii_lcp_airin",
+                "cmciii_lcp_airout",
+                "cmciii_lcp_water",
+                "etherbox.temp",
+                "liebert_bat_temp",
+                "nvidia.temp",
+                "ups_bat_temp",
+                "innovaphone_temp",
+                "enterasys_temp",
+                "raritan_emx",
+                "raritan_pdu_inlet",
+                "mknotifyd",
+                "mknotifyd.connection",
+                "postfix_mailq",
+                "nullmailer_mailq",
+                "barracuda_mailqueues",
+                "qmail_stats",
+                "http",
+                "mssql_backup",
+                "mssql_counters.cache_hits",
+                "mssql_counters.transactions",
+                "mssql_counters.locks",
+                "mssql_counters.sqlstats",
+                "mssql_counters.pageactivity",
+                "mssql_counters.locks_per_batch",
+                "mssql_counters.file_sizes",
+                "mssql_databases",
+                "mssql_datafiles",
+                "mssql_tablespaces",
+                "mssql_transactionlogs",
+                "mssql_versions",
+            ],
+            "enable_rulebased_notifications": True,
+            "ui_theme": "facelift",
+            "lock_on_logon_failures": 10,
+        })
+
+        # A contact group for all hosts and services
+        groups = {
+            "contact": {
+                'all': {
+                    'alias': u'Everything'
+                }
             },
-            {
-                'id': 'networking',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'lan',
-                    'title': u'Local network (low latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'wan',
-                    'title': u'WAN (high latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'dmz',
-                    'title': u'DMZ (low latency, secure access)'
-                }],
-                'title': u'Networking Segment'
+        }
+        save_group_information(groups)
+
+        self._initialize_tag_config()
+
+        # Rules that match the upper host tag definition
+        ruleset_config = {
+            # Make the tag 'offline' remove hosts from the monitoring
+            'only_hosts': [{
+                'condition': {
+                    'host_tags': {
+                        'criticality': {
+                            '$ne': 'offline'
+                        }
+                    }
+                },
+                'value': True,
+                'options': {
+                    'description': u'Do not monitor hosts with the tag "offline"'
+                },
+            },],
+
+            # Rule for WAN hosts with adapted PING levels
+            'ping_levels': [{
+                'condition': {
+                    'host_tags': {
+                        'networking': 'wan',
+                    }
+                },
+                'value': {
+                    'loss': (80.0, 100.0),
+                    'packets': 6,
+                    'timeout': 20,
+                    'rta': (1500.0, 3000.0)
+                },
+                'options': {
+                    'description': u'Allow longer round trip times when pinging WAN hosts'
+                },
+            },],
+
+            # All hosts should use SNMP v2c if not specially tagged
+            'bulkwalk_hosts': [{
+                'condition': {
+                    'host_tags': {
+                        'snmp': 'snmp',
+                        'snmp_ds': {
+                            '$ne': 'snmp-v1'
+                        },
+                    },
+                },
+                'value': True,
+                'options': {
+                    'description': u'Hosts with the tag "snmp-v1" must not use bulkwalk'
+                },
+            },],
+
+            # Put all hosts and the contact group 'all'
+            'host_contactgroups': [{
+                'condition': {},
+                'value': 'all',
+                'options': {
+                    'description': u'Put all hosts into the contact group "all"'
+                },
+            },],
+
+            # Interval for HW/SW-Inventory check
+            'extra_service_conf': {
+                'check_interval': [{
+                    'condition': {
+                        'service_description': [{
+                            '$regex': 'Check_MK HW/SW Inventory$'
+                        }]
+                    },
+                    'value': 1440,
+                    'options': {
+                        'description': u'Restrict HW/SW-Inventory to once a day'
+                    },
+                },],
             },
-        ],
-    })
-    TagConfigFile().save(tag_config.get_dict_format())
-    # Make sure the host tag attributes are immediately declared!
-    config.tags = tag_config
+
+            # Disable unreachable notifications by default
+            'extra_host_conf': {
+                'notification_options': [{
+                    'condition': {},
+                    'value': 'd,r,f,s'
+                },],
+            },
+
+            # Periodic service discovery
+            'periodic_discovery': [{
+                'condition': {},
+                'value': {
+                    'severity_unmonitored': 1,
+                    'severity_vanished': 0,
+                    'check_interval': 120.0,
+                    'inventory_check_do_scan': True
+                },
+                'options': {
+                    'description': u'Perform every two hours a service discovery'
+                },
+            },],
+        }
+
+        rulesets = FolderRulesets(Folder.root_folder())
+        rulesets.load()
+        rulesets.from_config(Folder.root_folder(), ruleset_config)
+        rulesets.save()
+
+        notification_rules = [
+            {
+                'allow_disable': True,
+                'contact_all': False,
+                'contact_all_with_email': False,
+                'contact_object': True,
+                'description': 'Notify all contacts of a host/service via HTML email',
+                'disabled': False,
+                'notify_plugin': ('mail', {}),
+            },
+        ]
+        save_notification_rules(notification_rules)
+
+    def _initialize_tag_config(self):
+        tag_config = cmk.utils.tags.TagConfig()
+        tag_config.parse_config(cmk.utils.tags.sample_tag_config())
+        TagConfigFile().save(tag_config.get_dict_format())
+        # Make sure the host tag attributes are immediately declared!
+        config.tags = tag_config
+
+
+@sample_config_generator_registry.register
+class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
+    """This is not really the correct place for such kind of action, but the best place we could
+    find to execute it only for new created sites."""
+    @classmethod
+    def ident(cls):
+        return "acknowledge_initial_werks"
+
+    @classmethod
+    def sort_index(cls):
+        return 40
+
+    def generate(self):
+        werks.acknowledge_all_werks(check_permission=False)
+
+
+@sample_config_generator_registry.register
+class ConfigGeneratorAutomationUser(SampleConfigGenerator):
+    """Create the default Checkmk "automation" user"""
+    @classmethod
+    def ident(cls):
+        return "create_automation_user"
+
+    @classmethod
+    def sort_index(cls):
+        return 60
+
+    def generate(self):
+        userdb.create_cmk_automation_user()

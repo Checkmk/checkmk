@@ -13,17 +13,19 @@
 #define _WIN32_DCOM
 
 #include <Wbemidl.h>
-#include <assert.h>
 #include <comdef.h>
 #include <shellapi.h>
 #include <tlhelp32.h>
 
 #include <atomic>
+#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <tuple>
 
 #include "datablock.h"
 #include "tools/_misc.h"
@@ -71,8 +73,9 @@ bool InstallService(const wchar_t* ServiceName, const wchar_t* DisplayName,
 //   error in the standard output stream for users to diagnose the problem.
 //
 enum class UninstallServiceMode { normal, test };
-bool UninstallService(const wchar_t* ServiceName,
-                      UninstallServiceMode Mode = UninstallServiceMode::normal);
+bool UninstallService(
+    const wchar_t* service_name,
+    UninstallServiceMode uninstall_mode = UninstallServiceMode::normal);
 
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
@@ -80,7 +83,7 @@ bool UninstallService(const wchar_t* ServiceName,
 // This is just to check validness during initial development
 class BaseServiceProcessor {
 public:
-    virtual ~BaseServiceProcessor() {}
+    virtual ~BaseServiceProcessor() = default;
     // Standard Windows API to Service hit here
     virtual void stopService() = 0;
     virtual void startService() = 0;
@@ -94,11 +97,11 @@ public:
 // keeps two handles
 class SimplePipe {
 public:
-    SimplePipe() : read_(0), write_(0), sa_initialized_(false) {
+    SimplePipe() : read_(nullptr), write_(nullptr), sa_initialized_(false) {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
 
-        sa_.bInheritHandle = true;  // allow handle inherit for child process
+        sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
     }
 
     SimplePipe(const SimplePipe&) = delete;
@@ -122,8 +125,8 @@ public:
         }
 
         if (!::CreatePipe(&read_, &write_, &sa_, 0)) {
-            read_ = 0;
-            write_ = 0;
+            read_ = nullptr;
+            write_ = nullptr;
             xlog::l("Failed to create pipe, %d", GetLastError()).print();
             return false;
         }
@@ -134,8 +137,8 @@ public:
                 .print();
             ::CloseHandle(read_);
             ::CloseHandle(write_);
-            read_ = 0;
-            write_ = 0;
+            read_ = nullptr;
+            write_ = nullptr;
             return false;
         }
         xlog::v("Allocated  2 handle %p %p", read_, write_);
@@ -147,12 +150,12 @@ public:
         if (read_) {
             CloseHandle(read_);
             xlog::v("Closed read %p", read_);
-            read_ = 0;
+            read_ = nullptr;
         }
         if (write_) {
             CloseHandle(write_);
             xlog::v("Closed write %p", write_);
-            write_ = 0;
+            write_ = nullptr;
         }
     }
 
@@ -168,7 +171,7 @@ public:
     const HANDLE moveWrite() noexcept {
         std::lock_guard lk(lock_);
         auto write = write_;
-        write_ = 0;
+        write_ = nullptr;
         return write;
     }
 
@@ -205,12 +208,27 @@ private:
     SECURITY_ATTRIBUTES sa_;
 };
 
-// process terminators
-bool KillProcess(uint32_t ProcessId, int Code = -1) noexcept;
+// scans all processes in system and calls op
+// returns false only when something is really bad
+// based on ToolHelp api family
+// normally require elevation
+// if op returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
+
+// standard process terminator
+bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
 
 // process terminator
 // used to kill OpenHardwareMonitor
-bool KillProcess(const std::wstring& Name, int Code = 9) noexcept;
+bool KillProcess(std::wstring_view process_name, int exit_code = 9) noexcept;
+
+// special function to kill suspicious processes with all here children
+// useful mostly to stop legacy agent which may have plugins running
+bool KillProcessFully(const std::wstring& process_name,
+                      int exit_code = 9) noexcept;
+
+// calculates count of processes in the system
+int FindProcess(std::wstring_view process_name) noexcept;
 
 // WIN32 described method of killing process tree
 inline void KillProcessTree(uint32_t ProcessId) {
@@ -240,6 +258,13 @@ public:
         , exit_code_(STILL_ACTIVE)
         , job_handle_(nullptr)
         , process_handle_(nullptr) {}
+
+    // no copy, no move
+    AppRunner(const AppRunner&) = delete;
+    AppRunner(AppRunner&&) = delete;
+    AppRunner& operator=(const AppRunner&) = delete;
+    AppRunner& operator=(AppRunner&&) = delete;
+
     ~AppRunner() {
         kill(true);
         stdio_.shutdown();
@@ -247,8 +272,10 @@ public:
     }
 
     // returns process id
-    uint32_t goExec(std::wstring CommandLine, bool Wait, bool InheritHandle,
-                    bool PipeOutput) noexcept;
+    uint32_t goExecAsJob(std::wstring_view CommandLine) noexcept;
+
+    // returns process id
+    uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
     void kill(bool KillTreeToo) {
         auto proc_id = process_id_.exchange(0);
@@ -302,7 +329,9 @@ public:
     }
 
 private:
-    const bool use_job_ = true;
+    void prepareResources(std::wstring_view command_line,
+                          bool create_pipe) noexcept;
+    void cleanResources() noexcept;
     void setExitCode(uint32_t Code) { exit_code_ = Code; }
     std::wstring cmd_line_;
     std::atomic<uint32_t> process_id_;
@@ -314,6 +343,10 @@ private:
     // output
     std::vector<char> data_;
     uint32_t exit_code_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class Wtools;
+    FRIEND_TEST(Wtools, AppRunner);
+#endif
 };
 
 class ServiceController {
@@ -342,9 +375,10 @@ public:
     }
 
     // no return from here till service ends
-    bool registerAndRun(const wchar_t* ServiceName,  //
-                        bool CanStop = true, bool CanShutdown = true,
-                        bool CanPauseContinue = true);
+    enum class StopType { normal, no_connect, fail };
+    StopType registerAndRun(const wchar_t* ServiceName,  //
+                            bool CanStop = true, bool CanShutdown = true,
+                            bool CanPauseContinue = true);
 
 protected:
     //
@@ -417,27 +451,12 @@ private:
     //   This parameter can also be a user-defined control code ranges from
     //   128 to 255.
     //
-    static void WINAPI ServiceCtrlHandler(DWORD dwCtrl) {
-        switch (dwCtrl) {
-            case SERVICE_CONTROL_STOP:
-                s_controller_->Stop();
-                break;
-            case SERVICE_CONTROL_PAUSE:
-                s_controller_->Pause();
-                break;
-            case SERVICE_CONTROL_CONTINUE:
-                s_controller_->Continue();
-                break;
-            case SERVICE_CONTROL_SHUTDOWN:
-                s_controller_->Shutdown();
-                break;
+    static void WINAPI ServiceCtrlHandler(DWORD control_code);
 
-            case SERVICE_CONTROL_INTERROGATE:
-                break;
-            default:
-                break;
-        }
-    }
+    // used to trace calls in debug mode, not used in production
+    static DWORD WINAPI ServiceCtrlHandlerEx(DWORD control_code,
+                                             DWORD event_type, void* event_data,
+                                             void* context);
 
     // The singleton service instance.
     std::unique_ptr<BaseServiceProcessor> processor_;
@@ -572,8 +591,9 @@ struct CounterParam {
 };
 
 // read MULTI_SZ string from the registry
-std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(bool LocalLanguage);
-std::optional<uint32_t> FindPerfIndexInRegistry(const std::wstring& Key);
+enum class PerfCounterReg { national, english };
+std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type);
+std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key);
 NameMap GenerateNameMap();
 
 const CounterParam kCpuCounter = {L"Processor", L"238", 238, 15, 1, 33};
@@ -644,18 +664,16 @@ inline std::wstring GetCurrentExePath() noexcept {
     std::wstring exe_path;
     int args_count = 0;
     auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (arg_list) {
-        ON_OUT_OF_SCOPE(LocalFree(arg_list););
-        fs::path exe = arg_list[0];
-        try {
-            if (exists(exe)) {
-                exe_path = exe.parent_path();
-            }
-        } catch (const std::exception&) {
-            // not possible, btw, but policy is noexcept
-        }
-    }
-    return exe_path;
+    if (nullptr == arg_list) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
+    fs::path exe = arg_list[0];
+
+    std::error_code ec;
+    if (fs::exists(exe, ec)) return exe.parent_path();
+    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
+
+    return {};
 }
 
 // wrapper for win32 specific function
@@ -668,55 +686,62 @@ inline int DataCountOnHandle(HANDLE Handle) {
     auto peek_result =
         ::PeekNamedPipe(Handle, nullptr, 0, nullptr, &read_count, nullptr);
 
-    if (!peek_result) return 0;
+    if (0 == peek_result) return 0;
 
     return read_count;
 }
 
+// templated to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T>& Data) {
-    if (Data.empty()) return {};
-    bool convert_required =
-        Data.data()[0] == '\xFF' && Data.data()[1] == '\xFE';
+std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    if (utf16_data.empty()) return {};
+
+    constexpr T char_0 = static_cast<T>('\xFF');
+    constexpr T char_1 = static_cast<T>('\xFE');
+
+    bool convert_required = utf16_data.size() > 1 && utf16_data[0] == char_0 &&
+                            utf16_data[1] == char_1;
 
     std::string data;
     if (convert_required) {
-        auto raw_data = reinterpret_cast<const wchar_t*>(Data.data() + 2);
-        std::wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
+        auto raw_data = reinterpret_cast<const wchar_t*>(utf16_data.data() + 2);
+
+        std::wstring wdata(raw_data, raw_data + (utf16_data.size() - 2) / 2);
         if (wdata.empty()) return {};
-        if (wdata.back() != 0) wdata += L'\0';
+
         data = wtools::ConvertToUTF8(wdata);
     } else {
-        data.assign(Data.begin(), Data.end());
+        data.assign(utf16_data.begin(), utf16_data.end());
     }
 
-    // trick to place in string 0 at the end
-    if (data.back() != 0) {
-        data.reserve(data.size() + 1);
-        data.data()[data.size()] = 0;
-    }
+    // trick to place in string 0 at the end without changing length
+    // this is required for some stupid engines like iostream+YAML
+    auto length = data.size();
+    if (data.capacity() <= length) data.reserve(length + 1);
+    data[length] = 0;
 
     return data;
 }
 
 // local implementation of shitty registry access functions
 inline uint32_t LocalReadUint32(const char* RootName, const char* Name,
-                                uint32_t DefaultValue = 0) {
-    HKEY hKey = 0;
+                                uint32_t DefaultValue = 0) noexcept {
+    HKEY hkey = nullptr;
     auto result =
-        RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hKey);
+        RegOpenKeyExA(HKEY_LOCAL_MACHINE, RootName, 0, KEY_QUERY_VALUE, &hkey);
+
     if (result != ERROR_SUCCESS) return DefaultValue;
 
     DWORD value = 0;
     DWORD type = REG_DWORD;
     DWORD size = sizeof(DWORD);
-    result = RegQueryValueExA(hKey, Name, 0, &type, (PBYTE)&value, &size);
-    RegCloseKey(hKey);
+    result = RegQueryValueExA(hkey, Name, nullptr, &type, (PBYTE)&value, &size);
+    RegCloseKey(hkey);
 
-    if (result == ERROR_SUCCESS)
-        return value;
-    else
-        return DefaultValue;
+    if (result == ERROR_SUCCESS) return value;
+
+    return DefaultValue;
 }
 
 void InitWindowsCom();
@@ -764,6 +789,39 @@ inline uint32_t WmiGetUint32(const VARIANT& Var) noexcept {
             return Var.uintVal;  // no conversion here, we expect good type here
         case VT_I4:
             return static_cast<uint32_t>(Var.uintVal);
+        default:
+            return 0;
+    }
+}
+
+// Low Level Utilities to access and convert VARIANT
+// Tries to get positive numbers instead of negative
+inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
+    switch (Var.vt) {
+        // dumb method to make negative values sometimes positive
+        // source: LWA
+        // #TODO FIX THIS AS IN MSDN. This is annoying and cumbersome task
+        // Microsoft provides us invalid info about data fields
+        case VT_I1:
+            return Var.iVal;
+        case VT_I2:
+            return Var.intVal;
+        case VT_I4:
+            return Var.llVal;
+
+            // 8 bits values
+        case VT_UI1:
+            return static_cast<int64_t>(Var.bVal);
+            // 16 bits values
+        case VT_UI2:
+            return static_cast<int64_t>(Var.uiVal);
+            // 64 bits values
+        case VT_UI4:
+            return static_cast<int64_t>(Var.uintVal);
+        case VT_UI8:
+            return static_cast<int64_t>(Var.ullVal);
+        case VT_I8:
+            return Var.llVal;  // no conversion here, we expect good type here
         default:
             return 0;
     }
@@ -837,8 +895,9 @@ inline bool WmiObjectContains(IWbemClassObject* Object,
 std::wstring WmiGetWstring(const VARIANT& Var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,
                                             const std::wstring& Name);
-std::wstring WmiStringFromObject(IWbemClassObject* Object,
-                                 const std::vector<std::wstring>& Names);
+std::wstring WmiStringFromObject(IWbemClassObject* object,
+                                 const std::vector<std::wstring>& names,
+                                 std::wstring_view separator);
 std::wstring WmiStringFromObject(IWbemClassObject* Object,
                                  const std::wstring& Name);
 std::vector<std::wstring> WmiGetNamesFromObject(IWbemClassObject* WmiObject);
@@ -848,7 +907,21 @@ uint64_t WmiUint64FromObject(IWbemClassObject* Object,
 
 IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
                                    const std::wstring& Query) noexcept;
-IWbemClassObject* WmiGetNextObject(IEnumWbemClassObject* Enumerator);
+
+// returned codes from the wmi
+enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
+
+std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
+    IEnumWbemClassObject* enumerator);
+
+// in exception column we have
+enum class StatusColumn { ok, timeout };
+std::string StatusColumnText(StatusColumn exception_column) noexcept;
+
+// "decorator" for WMI tables with OK, Timeout: WMIStatus
+// #TODO this function to be moved in other place
+std::string WmiPostProcess(const std::string& in, StatusColumn exception_column,
+                           char separator);
 
 // the class is thread safe(theoretisch)
 class WmiWrapper {
@@ -870,24 +943,29 @@ public:
     // This is OPTIONAL feature, LWA doesn't use it
     bool impersonate() noexcept;
 
-    std::wstring produceTable(IEnumWbemClassObject* Enumerator,
-                              const std::vector<std::wstring>& Names) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> produceTable(
+        IEnumWbemClassObject* enumerator,
+        const std::vector<std::wstring>& names,
+        std::wstring_view separator) noexcept;
 
     // work horse to ask certain names from the target
-    // on error returns empty string
-    std::wstring queryTable(const std::vector<std::wstring> Names,
-                            const std::wstring& Target) noexcept;
+    // on error returns empty string and timeout status
+    std::tuple<std::wstring, WmiStatus> queryTable(
+        const std::vector<std::wstring>& names, const std::wstring& target,
+        std::wstring_view separator) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr
     // You have to call Release for returned object!!!
-    IEnumWbemClassObject* queryEnumerator(const std::vector<std::wstring> Names,
-                                          const std::wstring& Target) noexcept;
+    IEnumWbemClassObject* queryEnumerator(
+        const std::vector<std::wstring>& names,
+        const std::wstring& target) noexcept;
 
 private:
     void close() noexcept;
     // build valid WQL query
-    static std::wstring makeQuery(const std::vector<std::wstring> Names,
+    static std::wstring makeQuery(const std::vector<std::wstring>& Names,
                                   const std::wstring& Target) noexcept;
 
     mutable std::mutex lock_;
@@ -895,7 +973,7 @@ private:
     IWbemServices* services_;
 };
 
-HMODULE LoadWindowsLibrary(const std::wstring DllPath);
+HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 
 // Look into the registry in order to find out, which
 // event logs are available
@@ -904,17 +982,18 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring Key, const std::wstring Value,
+uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                           uint32_t Default) noexcept;
 
 // gtest [+]
 // returns data from the root machine registry
-bool SetRegistryValue(const std::wstring Key, const std::wstring Value,
+bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept;
 
-std::wstring GetRegistryValue(const std::wstring Key, const std::wstring Value,
-                              const std::wstring Default) noexcept;
-
+std::wstring GetRegistryValue(const std::wstring& Key,
+                              const std::wstring& Value,
+                              const std::wstring& Default) noexcept;
+std::wstring GetArgv(uint32_t index) noexcept;
 }  // namespace wtools
 
 #endif  // wtools_h__

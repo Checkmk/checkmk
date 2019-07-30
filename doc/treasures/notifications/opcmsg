@@ -5,6 +5,7 @@
 #
 # Note: Some paths are still hardcoded here.
 
+from __future__ import print_function
 import os, sys, re
 
 
@@ -59,9 +60,9 @@ def main():
             opcmsg_bin, severity, application, the_object, msg_grp, msg_t, node)
 
         # Execute the command
-        print "executing command", command
+        print("executing command", command)
         os.system(command)  # nosec
-    except Exception, e:
+    except Exception as e:
         sys.stdout.write("ERROR %r" % e)
         sys.exit(1)
 

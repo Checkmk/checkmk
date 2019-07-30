@@ -97,20 +97,19 @@ class RulespecBrocadeFcportInventory(HostRulespec):
             title=_("Brocade Port Discovery"),
             elements=[
                 ("use_portname",
-                 Checkbox(
-                     title=_("Use port name as service name"),
-                     label=_("use port name"),
-                     default_value=True,
-                     help=_("This option lets Check_MK use the port name as item instead of the "
-                            "port number. If no description is available then the port number is "
-                            "used anyway."))),
+                 Checkbox(title=_("Use port name as service name"),
+                          label=_("use port name"),
+                          default_value=True,
+                          help=_(
+                              "This option lets Check_MK use the port name as item instead of the "
+                              "port number. If no description is available then the port number is "
+                              "used anyway."))),
                 ("show_isl",
-                 Checkbox(
-                     title=_("add \"ISL\" to service description for interswitch links"),
-                     label=_("add ISL"),
-                     default_value=True,
-                     help=_("This option lets Check_MK add the string \"ISL\" to the service "
-                            "description for interswitch links."))),
+                 Checkbox(title=_("add \"ISL\" to service description for interswitch links"),
+                          label=_("add ISL"),
+                          default_value=True,
+                          help=_("This option lets Check_MK add the string \"ISL\" to the service "
+                                 "description for interswitch links."))),
                 ("admstates",
                  ListChoice(
                      title=_("Administrative port states to discover"),
@@ -169,128 +168,116 @@ class RulespecCheckgroupParametersBrocadeFcport(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("bw",
-                 Alternative(
-                     title=_("Throughput levels"),
-                     help=_("Please note: in a few cases the automatic detection of the link speed "
-                            "does not work. In these cases you have to set the link speed manually "
-                            "below if you want to monitor percentage values"),
-                     elements=[
-                         Tuple(
-                             title=_("Used bandwidth of port relative to the link speed"),
-                             elements=[
-                                 Percentage(title=_("Warning at"), unit=_("percent")),
-                                 Percentage(title=_("Critical at"), unit=_("percent")),
-                             ]),
-                         Tuple(
-                             title=_("Used Bandwidth of port in megabyte/s"),
-                             elements=[
-                                 Integer(title=_("Warning at"), unit=_("MByte/s")),
-                                 Integer(title=_("Critical at"), unit=_("MByte/s")),
-                             ])
-                     ])),
-                ("assumed_speed",
-                 Float(
-                     title=_("Assumed link speed"),
-                     help=_("If the automatic detection of the link speed does "
-                            "not work you can set the link speed here."),
-                     unit=_("GByte/s"))),
-                ("rxcrcs",
-                 Tuple(
-                     title=_("CRC errors rate"),
-                     elements=[
-                         Percentage(title=_("Warning at"), unit=_("percent")),
-                         Percentage(title=_("Critical at"), unit=_("percent")),
-                     ])),
-                ("rxencoutframes",
-                 Tuple(
-                     title=_("Enc-Out frames rate"),
-                     elements=[
-                         Percentage(title=_("Warning at"), unit=_("percent")),
-                         Percentage(title=_("Critical at"), unit=_("percent")),
-                     ])),
-                ("rxencinframes",
-                 Tuple(
-                     title=_("Enc-In frames rate"),
-                     elements=[
-                         Percentage(title=_("Warning at"), unit=_("percent")),
-                         Percentage(title=_("Critical at"), unit=_("percent")),
-                     ])),
-                ("notxcredits",
-                 Tuple(
-                     title=_("No-TxCredits errors"),
-                     elements=[
-                         Percentage(title=_("Warning at"), unit=_("percent")),
-                         Percentage(title=_("Critical at"), unit=_("percent")),
-                     ])),
-                ("c3discards",
-                 Tuple(
-                     title=_("C3 discards"),
-                     elements=[
-                         Percentage(title=_("Warning at"), unit=_("percent")),
-                         Percentage(title=_("Critical at"), unit=_("percent")),
-                     ])),
-                ("average",
-                 Integer(
-                     title=_("Averaging"),
-                     help=_("If this parameter is set, all throughputs will be averaged "
-                            "over the specified time interval before levels are being applied. Per "
-                            "default, averaging is turned off. "),
-                     unit=_("minutes"),
-                     minvalue=1,
-                     default_value=60,
-                 )),
-                ("phystate",
-                 Optional(
-                     ListChoice(
-                         title=_("Allowed states (otherwise check will be critical)"),
-                         choices=[
-                             (1, _("noCard")),
-                             (2, _("noTransceiver")),
-                             (3, _("laserFault")),
-                             (4, _("noLight")),
-                             (5, _("noSync")),
-                             (6, _("inSync")),
-                             (7, _("portFault")),
-                             (8, _("diagFault")),
-                             (9, _("lockRef")),
-                         ]),
-                     title=_("Physical state of port"),
-                     negate=True,
-                     label=_("ignore physical state"),
-                 )),
-                ("opstate",
-                 Optional(
-                     ListChoice(
-                         title=_("Allowed states (otherwise check will be critical)"),
-                         choices=[
-                             (0, _("unknown")),
-                             (1, _("online")),
-                             (2, _("offline")),
-                             (3, _("testing")),
-                             (4, _("faulty")),
-                         ]),
-                     title=_("Operational state"),
-                     negate=True,
-                     label=_("ignore operational state"),
-                 )),
-                ("admstate",
-                 Optional(
-                     ListChoice(
-                         title=_("Allowed states (otherwise check will be critical)"),
-                         choices=[
-                             (1, _("online")),
-                             (2, _("offline")),
-                             (3, _("testing")),
-                             (4, _("faulty")),
-                         ]),
-                     title=_("Administrative state"),
-                     negate=True,
-                     label=_("ignore administrative state"),
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("bw",
+             Alternative(
+                 title=_("Throughput levels"),
+                 help=_("Please note: in a few cases the automatic detection of the link speed "
+                        "does not work. In these cases you have to set the link speed manually "
+                        "below if you want to monitor percentage values"),
+                 elements=[
+                     Tuple(title=_("Used bandwidth of port relative to the link speed"),
+                           elements=[
+                               Percentage(title=_("Warning at"), unit=_("percent")),
+                               Percentage(title=_("Critical at"), unit=_("percent")),
+                           ]),
+                     Tuple(title=_("Used Bandwidth of port in megabyte/s"),
+                           elements=[
+                               Integer(title=_("Warning at"), unit=_("MByte/s")),
+                               Integer(title=_("Critical at"), unit=_("MByte/s")),
+                           ])
+                 ])),
+            ("assumed_speed",
+             Float(title=_("Assumed link speed"),
+                   help=_("If the automatic detection of the link speed does "
+                          "not work you can set the link speed here."),
+                   unit=_("GByte/s"))),
+            ("rxcrcs",
+             Tuple(title=_("CRC errors rate"),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent")),
+                       Percentage(title=_("Critical at"), unit=_("percent")),
+                   ])),
+            ("rxencoutframes",
+             Tuple(title=_("Enc-Out frames rate"),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent")),
+                       Percentage(title=_("Critical at"), unit=_("percent")),
+                   ])),
+            ("rxencinframes",
+             Tuple(title=_("Enc-In frames rate"),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent")),
+                       Percentage(title=_("Critical at"), unit=_("percent")),
+                   ])),
+            ("notxcredits",
+             Tuple(title=_("No-TxCredits errors"),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent")),
+                       Percentage(title=_("Critical at"), unit=_("percent")),
+                   ])),
+            ("c3discards",
+             Tuple(title=_("C3 discards"),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent")),
+                       Percentage(title=_("Critical at"), unit=_("percent")),
+                   ])),
+            ("average",
+             Integer(
+                 title=_("Averaging"),
+                 help=_("If this parameter is set, all throughputs will be averaged "
+                        "over the specified time interval before levels are being applied. Per "
+                        "default, averaging is turned off. "),
+                 unit=_("minutes"),
+                 minvalue=1,
+                 default_value=60,
+             )),
+            ("phystate",
+             Optional(
+                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                            choices=[
+                                (1, _("noCard")),
+                                (2, _("noTransceiver")),
+                                (3, _("laserFault")),
+                                (4, _("noLight")),
+                                (5, _("noSync")),
+                                (6, _("inSync")),
+                                (7, _("portFault")),
+                                (8, _("diagFault")),
+                                (9, _("lockRef")),
+                            ]),
+                 title=_("Physical state of port"),
+                 negate=True,
+                 label=_("ignore physical state"),
+             )),
+            ("opstate",
+             Optional(
+                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                            choices=[
+                                (0, _("unknown")),
+                                (1, _("online")),
+                                (2, _("offline")),
+                                (3, _("testing")),
+                                (4, _("faulty")),
+                            ]),
+                 title=_("Operational state"),
+                 negate=True,
+                 label=_("ignore operational state"),
+             )),
+            ("admstate",
+             Optional(
+                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                            choices=[
+                                (1, _("online")),
+                                (2, _("offline")),
+                                (3, _("testing")),
+                                (4, _("faulty")),
+                            ]),
+                 title=_("Administrative state"),
+                 negate=True,
+                 label=_("ignore administrative state"),
+             )),
+        ],)
 
     @property
     def item_spec(self):

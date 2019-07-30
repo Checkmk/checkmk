@@ -28,12 +28,9 @@
 #ifdef CMC
 #include <algorithm>
 #include <iterator>
-#include "Core.h"
 #include "Metric.h"
-#include "MonitoringCore.h"
 #include "Object.h"
-#include "RRDBackend.h"
-#include "RRDInfoCache.h"
+#include "RRDInfo.h"
 #include "State.h"
 #include "cmc.h"
 #endif
@@ -45,14 +42,13 @@ std::vector<std::string> MetricsColumn::getValue(
 #ifdef CMC
     if (auto object = columnData<Object>(row)) {
         if (object->isEnabled(State::Enable::performance_data)) {
-            auto names = _mc->impl<Core>()->_rrd_backend.infoFor(object)._names;
+            auto names = object->rrdInfo().names_;
             std::transform(
                 names.begin(), names.end(), std::back_inserter(metrics),
                 [](const Metric::MangledName &name) { return name.string(); });
         }
     }
 #else
-    (void)_mc;
     (void)row;
 #endif
     return metrics;

@@ -1,0 +1,10 @@
+Title: oracle_dataguard_stats: Add missing metric definitions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1556796336
+Class: fix
+
+CMK-1768

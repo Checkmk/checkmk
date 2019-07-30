@@ -59,19 +59,18 @@ class RulespecCheckgroupParametersNetappSystemtime(CheckParameterRulespecWithIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Set upper levels for the time difference"),
-                     help=_("Here you can Set upper levels for the time difference "
-                            "between agent and system time."),
-                     elements=[
-                         Age(title=_("Warning if at")),
-                         Age(title=_("Critical if at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Set upper levels for the time difference"),
+                 help=_("Here you can Set upper levels for the time difference "
+                        "between agent and system time."),
+                 elements=[
+                     Age(title=_("Warning if at")),
+                     Age(title=_("Critical if at")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

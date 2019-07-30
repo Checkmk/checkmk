@@ -2,6 +2,10 @@
 
 #include "logger.h"
 
+#include <filesystem>
+
+#include "cfg.h"
+
 namespace XLOG {
 
 Emitter l(LogType::log);
@@ -96,14 +100,15 @@ static int XLogType2Marker(xlog::Type Lt) {
 
 // get base global variable
 // modifies it!
-static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
+static std::tuple<int, int, std::string, std::string, xlog::internal::Colors>
+CalcLogParam(const xlog::LogParam &Param, int Modifications) {
     using namespace xlog::internal;
 
     auto &lp = Param;
     auto directions = lp.directions_;
     auto flags = lp.flags_;
     using namespace fmt::v5;
-    auto c = Colors::kDefault;
+    auto c = Colors::dflt;
 
     if (Modifications & Mods::kStdio) directions |= xlog::kStdioPrint;
     if (Modifications & Mods::kNoStdio) directions &= ~xlog::kStdioPrint;
@@ -126,17 +131,17 @@ static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
             marker = "[ERROR:CRITICAL] ";
             flags &= ~xlog::kNoPrefix;
             directions |= xlog::kEventPrint;
-            c = Colors::kPinkLight;
+            c = Colors::pink_light;
             break;
 
         case Mods::kError:
             marker = "[Err  ] ";
-            c = Colors::kRed;
+            c = Colors::red;
             break;
 
         case Mods::kWarning:
             marker = "[Warn ] ";
-            c = Colors::kYellow;
+            c = Colors::yellow;
             break;
 
         case Mods::kTrace:
@@ -145,47 +150,106 @@ static auto CalcLogParam(const xlog::LogParam &Param, int Modifications) {
         case Mods::kInfo:
         default:
             // nothing here, empty.
-            c = xlog::internal::Colors::kGreen;
+            c = xlog::internal::Colors::green;
             break;
     }
 
     return std::make_tuple(directions, flags, prefix, marker, c);
 }
 
+namespace details {
+static std::mutex g_backup_lock_mutex;  // intentionally global
+constexpr unsigned int file_text_header_size = 24;
+
+std::string MakeBackupLogName(std::string_view filename,
+                              unsigned int index) noexcept {
+    std::string name;
+    if (filename.data()) name += filename;
+
+    if (index == 0) return name;
+    return name + "." + std::to_string(index);
+}
+
+constexpr unsigned int kMaxAllowedBackupCount = 32;
+constexpr size_t kMaxAllowedBackupSize = 1024 * 1024 * 256;
+
+void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
+                              unsigned int max_backup_count,
+                              std::string_view text) noexcept {
+    // sanity check
+    if (max_backup_count > kMaxAllowedBackupCount)
+        max_backup_count = kMaxAllowedBackupCount;
+
+    if (max_size > kMaxAllowedBackupSize) max_size = kMaxAllowedBackupSize;
+
+    namespace fs = std::filesystem;
+    std::lock_guard lk(g_backup_lock_mutex);
+
+    fs::path log_file(filename);
+
+    std::error_code ec;
+    auto size = fs::file_size(log_file, ec);
+    if (ec.value() != 0) size = 0;
+
+    if (size + text.size() + file_text_header_size > max_size) {
+        // required backup
+
+        // making chain of backups
+        for (auto i = max_backup_count; i > 0; --i) {
+            auto old_file = MakeBackupLogName(filename, i - 1);
+            auto new_file = MakeBackupLogName(filename, i);
+            fs::rename(old_file, new_file, ec);
+        }
+
+        // clean main file(may be required)
+        fs::remove(filename, ec);
+    }
+
+    xlog::internal_PrintStringFile(filename.data(), text.data());
+}
+}  // namespace details
+
 // output string in different directions
-void Emitter::postProcessAndPrint(const std::string &String) {
+void Emitter::postProcessAndPrint(const std::string &text) {
+    using namespace cma::cfg;
     using namespace xlog;
     if (!CalcEnabled(mods_, type_)) return;
 
     auto lp = getLogParam();
-    auto [directions, flags, prefix_ascii, marker_ascii, c] =
-        CalcLogParam(lp, mods_);
+    auto [dirs, flags, prefix_ascii, marker_ascii, c] = CalcLogParam(lp, mods_);
 
     // EVENT
-    if (setup::IsEventLogEnabled() && (directions & xlog::kEventPrint)) {
+    if (setup::IsEventLogEnabled() && (dirs & xlog::kEventPrint)) {
         // we do not need to format string for the event
-        details::LogWindowsEventCritical(EventClass::kDefault, String.c_str());
+        auto windows_event_log_id = cma::IsService() ? EventClass::kSrvDefault
+                                                     : EventClass::kAppDefault;
+        details::LogWindowsEventCritical(windows_event_log_id, text.c_str());
     }
 
     // USUAL
-    if (directions & Directions::kDebuggerPrint) {
+    if (dirs & Directions::kDebuggerPrint) {
         auto normal = formatString(flags, (prefix_ascii + marker_ascii).c_str(),
-                                   String.c_str());
+                                   text.c_str());
         sendStringToDebugger(normal.c_str());
     }
 
-    if (directions & Directions::kStdioPrint ||
-        details::IsDuplicatedOnStdio()) {
-        auto normal = formatString(flags, nullptr, String.c_str());
+    auto file_print = (dirs & Directions::kFilePrint) != 0 ? true : false;
+    auto stdio_print = (dirs & Directions::kStdioPrint) != 0 ? true : false;
+
+    if (stdio_print || (file_print && details::IsDuplicatedOnStdio())) {
+        auto normal = formatString(flags, nullptr, text.c_str());
         sendStringToStdio(normal.c_str(), c);
     }
 
     // FILE
-    if (directions & xlog::kFilePrint) {
-        if (lp.filename() && lp.filename()[0]) {
+    if (file_print) {
+        auto fname = lp.filename();
+        if (fname && fname[0]) {
             auto for_file =
-                xlog::formatString(flags, marker_ascii.c_str(), String.c_str());
-            xlog::internal_PrintStringFile(lp.filename(), for_file.c_str());
+                formatString(flags, marker_ascii.c_str(), text.c_str());
+
+            details::WriteToLogFileWithBackup(fname, GetBackupLogMaxSize(),
+                                              GetBackupLogMaxCount(), for_file);
         }
     }
 
@@ -317,3 +381,23 @@ void ReConfigure() {
 }  // namespace setup
 
 }  // namespace XLOG
+
+namespace cma::tools {
+// time is set at the moment of creation
+TimeLog::TimeLog(const std::string &object_name) : id_(object_name) {
+    start_ = std::chrono::steady_clock::now();
+}
+
+void TimeLog::writeLog(size_t processed_bytes) const noexcept {
+    using namespace std::chrono;
+    auto ended = steady_clock::now();
+    auto lost = duration_cast<milliseconds>(ended - start_);
+
+    if (processed_bytes == 0)
+        XLOG::d.w("Object '{}' in {}ms sends NO DATA", id_, lost.count());
+    else
+        XLOG::d.i("Object '{}' in {}ms sends [{}] bytes", id_, lost.count(),
+                  processed_bytes);
+}
+
+}  // namespace cma::tools

@@ -2,17 +2,31 @@
 #pragma once
 namespace cma::cfg {
 
+namespace yml_var {
+constexpr const std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
+constexpr const std::string_view kCore = "$BUILTIN_AGENT_PATH$";
+constexpr const std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
+constexpr const std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
+constexpr const std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
+
+constexpr const std::string_view kBuiltinOld = "@builtin";
+constexpr const std::string_view kCoreOld = "@core";
+constexpr const std::string_view kLocalOld = "@local";
+constexpr const std::string_view kUserOld = "@user";
+constexpr const std::string_view kDataOld = "@data";
+
+};  // namespace yml_var
+
 namespace groups {
 constexpr const char* const kGlobal = "global";
 constexpr const char* const kWinPerf = "winperf";
 constexpr const char* const kLogFiles = "logfiles";
 constexpr const char* const kPs = "ps";
 constexpr const char* const kPlugins = "plugins";
-constexpr const char* const kLocal = "local";
 constexpr const char* const kFileInfo = "fileinfo";
 constexpr const char* const kMrpe = "mrpe";
 constexpr const char* const kLogWatchEvent = "logwatch";
-constexpr const char* const kLocalGroup = "local";
+constexpr const char* const kLocal = "local";
 }  // namespace groups
 
 // ALL name of variables in the YAML
@@ -46,12 +60,12 @@ const char* const kRtEnabled = "enabled";    // bool
 const char* const kSectionsEnabled = "sections";            // seq
 const char* const kSectionsDisabled = "disabled_sections";  // seq
 
-const char* const kLogging = "logging";    // map
-const char* const kLogPublic = "public";   // bool
-const char* const kLogDebug = "debug";     // string no, yes, all
-const char* const kLogWinDbg = "windbg";   // bool
-const char* const kLogEvent = "eventlog";  // bool
-const char* const kLogFile = "file";       // string
+const char* const kLogging = "logging";       // map
+const char* const kLogLocation = "location";  // bool
+const char* const kLogDebug = "debug";        // string no, yes, all
+const char* const kLogWinDbg = "windbg";      // bool
+const char* const kLogEvent = "eventlog";     // bool
+const char* const kLogFile = "file";          // string
 
 // group plugins
 const char* const kPluginsFolders = "folders";            // seq
@@ -60,10 +74,12 @@ const char* const kPluginsExecution = "execution";        // seq
 const char* const kPluginMaxWait = "max_wait";            // int
 const char* const kPluginAsyncStart = "async_start";      // bool
 
-const char* const kLocalUserFolder = "@local";   // to be replaced
-const char* const kPluginUserFolder = "@user";   // to be replaced
-const char* const kPluginCoreFolder = "@core";   // to be replaced
-const char* const kProgramDataFolder = "@data";  // to be replaced
+// to be replaced
+constexpr std::string_view kLocalUserFolder = yml_var::kLocal;
+constexpr std::string_view kPluginUserFolder = yml_var::kUserPlugins;
+constexpr std::string_view kPluginCoreFolder = yml_var::kCore;
+constexpr std::string_view kPluginBuiltinFolder = yml_var::kBuiltinPlugins;
+constexpr std::string_view kProgramDataFolder = yml_var::kAgent;
 
 // plugins.execution
 const char* const kPluginPattern = "pattern";     // string

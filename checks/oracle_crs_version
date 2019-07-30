@@ -30,7 +30,7 @@ def inventory_oracle_crs_version(info):
         return [(None, {})]
 
 
-def check_oracle_crs_version(_no_item, params, info):
+def check_oracle_crs_version(_no_item, _no_params, info):
     for line in info:
         return (0, line[0])
 
@@ -43,5 +43,4 @@ check_info['oracle_crs_version'] = {
     "check_function": check_oracle_crs_version,
     "inventory_function": inventory_oracle_crs_version,
     "service_description": "ORA-GI Version",
-    "group": "oracle_crs_version",
 }

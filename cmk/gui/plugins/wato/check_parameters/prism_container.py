@@ -77,10 +77,10 @@ class RulespecCheckgroupParametersPrismContainer(CheckParameterRulespecWithItem)
                                Tuple(
                                    title=_("Specify levels in absolute usage"),
                                    elements=[
-                                       Filesize(
-                                           title=_("Warning at"), default_value=1000 * 1024 * 1024),
-                                       Filesize(
-                                           title=_("Critical at"), default_value=5000 * 1024 * 1024)
+                                       Filesize(title=_("Warning at"),
+                                                default_value=1000 * 1024 * 1024),
+                                       Filesize(title=_("Critical at"),
+                                                default_value=5000 * 1024 * 1024)
                                    ],
                                ),
                            ],

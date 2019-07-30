@@ -36,9 +36,9 @@
 
 
 def inv_aix_packages(info):
-    paclist = inv_tree_list("software.packages:")
     headers = info[0]
     headers[0] = headers[0].lstrip("#")
+    parsed_packages = []
     for line in info[1:]:
         row = dict(zip(headers, [x.strip() for x in line]))
 
@@ -64,7 +64,10 @@ def inv_aix_packages(info):
             "version": row["Level"],
             "package_type": package_type,
         }
-        paclist.append(entry)
+        parsed_packages.append(entry)
+
+    paclist = inv_tree_list("software.packages:")
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['aix_packages'] = {

@@ -32,6 +32,7 @@
 # 3) restarts omd site
 # 4) removes all data (including rrd files) from the given hosts
 
+from __future__ import print_function
 import os, sys, shutil, pprint
 
 # Set automation user login credentials
@@ -40,8 +41,8 @@ automation_secret = "UVEMFMCBITYUURHPILKP"
 
 
 def usage():
-    print "usage: cmk_delete_host {hostname1 hostname2}"
-    print "Script needs to be executed as site user"
+    print("usage: cmk_delete_host {hostname1 hostname2}")
+    print("Script needs to be executed as site user")
 
 
 if len(sys.argv) == 1:
@@ -56,14 +57,14 @@ if len(sys.argv) == 1:
 # Remove the host in WATO
 omd_site = os.environ["OMD_SITE"]
 if not omd_site:
-    print "This script is only executable as site user"
+    print("This script is only executable as site user")
     sys.exit(1)
 
 g_current_host = None
 
 
 def log(text):
-    print "%s: %s" % (g_current_host, text)
+    print("%s: %s" % (g_current_host, text))
 
 
 def get_wato_folder(hostname):
@@ -115,7 +116,7 @@ if wato_config_changed:
     os.system("cmk -R ; omd restart")
 
 # Flushing counters, cache files, piggy files, logfiles and autochecks
-print "Flushing data"
+print("Flushing data")
 os.system("cmk --flush %s" % " ".join(sys.argv[1:]))  # nosec
 for hostname in sys.argv[1:]:
     if not hostname.strip():

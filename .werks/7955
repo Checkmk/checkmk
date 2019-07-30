@@ -1,0 +1,10 @@
+Title: esx_vsphere_counters.diskio: Fix wrong count of I/O ops
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563879661
+Class: fix
+
+The numberRead and numberWrite parameters where off (too large) by a factor of 20.

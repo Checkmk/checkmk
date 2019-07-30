@@ -105,14 +105,14 @@ def check_temperature_determine_levels(dlh, usr_warn, usr_crit, usr_warn_lower, 
     # minn is a min that deals with None in the way we want here.
     elif dlh == "best":
         warn, crit = max(usr_warn, dev_warn), max(usr_crit, dev_crit)
-        warn_lower, crit_lower = minn(usr_warn_lower, dev_warn_lower), minn(
-            usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = minn(usr_warn_lower,
+                                      dev_warn_lower), minn(usr_crit_lower, dev_crit_lower)
 
     # Use most critical of your and device's levels
     elif dlh == "worst":
         warn, crit = minn(usr_warn, dev_warn), minn(usr_crit, dev_crit)
-        warn_lower, crit_lower = max(usr_warn_lower, dev_warn_lower), max(
-            usr_crit_lower, dev_crit_lower)
+        warn_lower, crit_lower = max(usr_warn_lower,
+                                     dev_warn_lower), max(usr_crit_lower, dev_crit_lower)
 
     # Use user's levels if present, otherwise the device's
     elif dlh == "usrdefault":
@@ -322,19 +322,19 @@ def check_temperature(reading,
         dev_levelstext_lower = ""
 
         if usr_levels:
-            usr_levelstext = " (warn/crit at %s/%s %s)" % (render_temp(usr_warn, output_unit),
-                                                           render_temp(usr_crit, output_unit),
-                                                           temp_unitsym[output_unit])
+            usr_levelstext = " (warn/crit at %s/%s %s)" % (render_temp(
+                usr_warn, output_unit), render_temp(usr_crit,
+                                                    output_unit), temp_unitsym[output_unit])
 
         if usr_levels_lower:
             usr_levelstext_lower = " (warn/crit below %s/%s %s)" % (render_temp(
-                usr_warn_lower, output_unit), render_temp(usr_crit_lower, output_unit),
-                                                                    temp_unitsym[output_unit])
+                usr_warn_lower, output_unit), render_temp(usr_crit_lower,
+                                                          output_unit), temp_unitsym[output_unit])
 
         if dev_levels:
             dev_levelstext = " (device warn/crit at %s/%s %s)" % (render_temp(
-                dev_warn, output_unit), render_temp(dev_crit, output_unit),
-                                                                  temp_unitsym[output_unit])
+                dev_warn, output_unit), render_temp(dev_crit,
+                                                    output_unit), temp_unitsym[output_unit])
 
         if dev_levels_lower:
             dev_levelstext_lower = " (device warn/crit below %s/%s %s)" % (render_temp(

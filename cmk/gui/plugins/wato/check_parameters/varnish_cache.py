@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersVarnishCache(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("miss",
-                 Tuple(
-                     title=_("Upper levels for \"cache misses\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("miss",
+             Tuple(
+                 title=_("Upper levels for \"cache misses\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

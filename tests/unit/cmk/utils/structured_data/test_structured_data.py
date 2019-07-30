@@ -611,28 +611,29 @@ def test_structured_data_StructuredDataTree_copy(tree):
 
 
 @pytest.mark.parametrize("tree_start,tree_edges", [
-    (tree_old_addresses, [(tree_old_arrays, ["hardware", "networking"], [
-        ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
-        ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
-        ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
+    (tree_old_addresses, [
+        (tree_old_arrays, ["hardware", "networking"], [
+            ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
+            ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
+            ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
+        ]),
+        (tree_new_memory, ["hardware", "networking"], [
+            ("get_sub_attributes", ["hardware", "memory"]),
+        ]),
+        (tree_new_interfaces, ["hardware", "networking", "software"], [
+            ("get_sub_numeration", ["hardware", "components", "backplanes"]),
+            ("get_sub_numeration", ["hardware", "components", "chassis"]),
+            ("get_sub_numeration", ["hardware", "components", "containers"]),
+            ("get_sub_numeration", ["hardware", "components", "fans"]),
+            ("get_sub_numeration", ["hardware", "components", "modules"]),
+            ("get_sub_numeration", ["hardware", "components", "others"]),
+            ("get_sub_numeration", ["hardware", "components", "psus"]),
+            ("get_sub_numeration", ["hardware", "components", "sensors"]),
+            ("get_sub_attributes", ["hardware", "system"]),
+            ("get_sub_attributes", ["software", "applications", "check_mk", "cluster"]),
+            ("get_sub_attributes", ["software", "os"]),
+        ])
     ]),
-                          (tree_new_memory, ["hardware", "networking"], [
-                              ("get_sub_attributes", ["hardware", "memory"]),
-                          ]),
-                          (tree_new_interfaces, ["hardware", "networking", "software"], [
-                              ("get_sub_numeration", ["hardware", "components", "backplanes"]),
-                              ("get_sub_numeration", ["hardware", "components", "chassis"]),
-                              ("get_sub_numeration", ["hardware", "components", "containers"]),
-                              ("get_sub_numeration", ["hardware", "components", "fans"]),
-                              ("get_sub_numeration", ["hardware", "components", "modules"]),
-                              ("get_sub_numeration", ["hardware", "components", "others"]),
-                              ("get_sub_numeration", ["hardware", "components", "psus"]),
-                              ("get_sub_numeration", ["hardware", "components", "sensors"]),
-                              ("get_sub_attributes", ["hardware", "system"]),
-                              ("get_sub_attributes",
-                               ["software", "applications", "check_mk", "cluster"]),
-                              ("get_sub_attributes", ["software", "os"]),
-                          ])]),
 ])
 def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_start, tree_edges):
     tree_start = tree_start.copy()
@@ -683,6 +684,42 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
     assert not tree.is_equal(filtered)
     for path in unavail:
         assert filtered.get_sub_container(path) is None
+
+
+@pytest.mark.parametrize("tree,paths,node_types,amount_if_entries", [
+    (tree_new_interfaces, [(['networking'], None)], [Container, Attributes], 3178),
+    (tree_new_interfaces, [(['networking'], [])], [Attributes], None),
+    (tree_new_interfaces, [
+        (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports'])
+    ], [Attributes], None),
+    (tree_new_interfaces, [(['networking', 'interfaces'], None)], [Container], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], [])], [Container], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], [Container], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], [Container
+                                                                                        ], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])
+                          ], [Container], 652),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
+                          ], [Container], 652),
+])
+def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths, node_types,
+                                                                     amount_if_entries):
+    filtered = tree.get_filtered_tree(paths)
+    assert filtered.has_edge('networking')
+    assert not filtered.has_edge('hardware')
+    assert not filtered.has_edge('software')
+
+    children = filtered.get_sub_children(['networking'])
+    assert len(children) == len(node_types)
+    for child in children:
+        assert type(child) in node_types  # pylint: disable=unidiomatic-typecheck
+
+    interfaces = filtered.get_sub_numeration(['networking', 'interfaces'])
+    if Container in node_types:
+        assert bool(interfaces)
+        assert interfaces.count_entries() == amount_if_entries
+    else:
+        assert interfaces is None
 
 
 def test_structured_data_StructuredDataTree_building_tree():

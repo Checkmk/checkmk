@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1535701338
 
 When e.g. editing the network interface port types to discovery in the "Network Interface and Switch Port Discovery" ruleset,

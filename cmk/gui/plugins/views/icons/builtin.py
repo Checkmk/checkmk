@@ -117,11 +117,12 @@ class ActionMenuIcon(Icon):
             url_vars.append(('_display_options', html.request.var('_display_options')))
         url_vars.append(('_back_url', html.makeuri([])))
 
-        return html.render_popup_trigger(
-            html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
-            'action_menu',
-            'action_menu',
-            url_vars=url_vars)
+        return html.render_popup_trigger(html.render_icon('menu',
+                                                          _('Open the action menu'),
+                                                          cssclass="iconbutton"),
+                                         'action_menu',
+                                         'action_menu',
+                                         url_vars=url_vars)
 
 
 #.
@@ -154,10 +155,13 @@ class IconImageIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         img = row[what + '_icon_image']
-        if img:
-            if img.endswith('.png'):
-                img = img[:-4]
-                return html.render_icon(img)  # TODO
+        if not img:
+            return
+
+        if img.endswith('.png'):
+            img = img[:-4]
+
+        return html.render_icon(img)
 
 
 #.
@@ -655,8 +659,8 @@ class CommentsIcon(Icon):
             for c in sorted(comments, key=lambda x: x[4]):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
-                text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author,
-                                              comment)
+                text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0,
+                                                        'abs')[1], author, comment)
             return 'comment', text, url_to_view(row, 'comments_of_' + what)
 
 

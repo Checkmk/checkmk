@@ -95,8 +95,7 @@ def check_zypper(_no_item, _no_params, info):
 
     infotext = "%d updates" % updates
     if updates:
-        patch_items = patch_types.items()
-        patch_items.sort()
+        patch_items = sorted(patch_types.items())
         infos = []
         for t, c in patch_items:
             if t == "security":

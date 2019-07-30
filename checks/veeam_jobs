@@ -42,30 +42,33 @@ def inventory_veeam_jobs(info):
 
 def check_veeam_jobs(item, _no_params, info):
     for line in info:
-        if line[0] == item:
-            backup_type = line[1]
-            backup_status = line[3]
-            backup_current = line[2]
+        if len(line) < 6:
+            continue  # Skip incomplete lines
 
-            if backup_status == "Success":
-                state = 0
-            elif backup_current == 'Idle' and backup_type == "BackupSync":
-                # A sync job is always idle
-                state = 0
-            elif backup_current in ["Working", "Postprocessing"]:
-                state = 0
-                line = line[:6]
-            elif backup_status == "Failed":
-                state = 2
-            elif backup_current == "Stopped" and backup_status == "Warning":
-                state = 1
-            else:
-                state = 3
-            infotxt = "Result: %s, " % line[3]
-            infotxt += ", ".join(line[1:3] + line[4:])
-            return (state, infotxt)
+        job_name, job_type, job_last_state, job_last_result, \
+            job_creation_time, job_end_time = line[:6]
 
-    return 3, "No such job found"
+        if job_name != item:
+            continue  # Skip not matching lines
+
+        if job_last_state in ["Working", "Postprocessing"]:
+            return 0, "Running since %s (current state is: %s)" % (job_creation_time,
+                                                                   job_last_state)
+
+        if job_last_result == "Success":
+            state = 0
+        elif job_last_state == 'Idle' and job_type == "BackupSync":
+            # A sync job is always idle
+            state = 0
+        elif job_last_result == "Failed":
+            state = 2
+        elif job_last_state == "Stopped" and job_last_result == "Warning":
+            state = 1
+        else:
+            state = 3
+
+        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % \
+            (job_last_state, job_last_result, job_creation_time, job_end_time, job_type)
 
 
 check_info["veeam_jobs"] = {

@@ -1,0 +1,10 @@
+Title: esx_vsphere_vm: Report 'Item not found' if not VM name is available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557827339
+Class: fix
+
+

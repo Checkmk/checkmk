@@ -608,15 +608,33 @@ a.service_button.disabled {
 }
 
 .wato ul.conditions {
-    padding: 0;
-    margin-left: 15px;
-    margin-top: 0;
-    margin-bottom: 0;
-    list-style-type: square;
-}
-.wato ul.conditions li {
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 15px;
+  list-style-type: square;
+
+  li {
     padding: 0;
     margin: 0;
+  }
+
+  tags {
+    padding: 0 2px;
+
+    &.tagify.display[readonly] tag {
+      padding: 0;
+
+      div {
+        margin: 0;
+      }
+    }
+  }
+
+  .label_operator {
+    display: inline-block;
+    padding: 0 2px;
+  }
 }
 
 

@@ -79,6 +79,14 @@
 #  Index 12 -- # of milliseconds spent doing I/Os
 #  Index 13 -- weighted # of milliseconds spent doing I/Os
 
+#  Kernel 4.18+ appends four more fields for discard
+#		tracking putting the total at 18:
+
+#  Index 14 -- discards completed successfully
+#  Index 15 -- discards merged
+#  Index 16 -- sectors discarded
+#  Index 17 -- time spent discarding
+
 # Convert information to generic format also generated
 # by winperf_phydisk
 # [ now, [( disk, readctr, writectr ), ... ]]
@@ -134,10 +142,18 @@ def parse_diskstat(info):
         if line[3] in real_partitions:
             continue
 
-        node_name, major, minor, device, \
-            read_ios, _read_merges, read_sectors, read_ticks, \
-            write_ios, _write_merges, write_sectors, write_ticks, \
-            ios_in_prog, total_ticks, _rq_ticks = line
+        try:
+            node_name, major, minor, device, \
+                read_ios, _read_merges, read_sectors, read_ticks, \
+                write_ios, _write_merges, write_sectors, write_ticks, \
+                ios_in_prog, total_ticks, _rq_ticks = line
+        except ValueError:
+            # kernel 4.18+
+            node_name, major, minor, device, \
+                read_ios, _read_merges, read_sectors, read_ticks, \
+                write_ios, _write_merges, write_sectors, write_ticks, \
+                ios_in_prog, total_ticks, _rq_ticks, _discards_completed, \
+                _discards_merged, _sectors_discarded, _time_discard = line
 
         if (node_name, int(major), int(minor)) in name_info:
             device = name_info[(node_name, int(major), int(minor))]
@@ -151,12 +167,18 @@ def parse_diskstat(info):
         # Note: we use onwrap=0.0 here because the parse function is being used also during
         # service discovery. If we raise a counter wrap exception here, then nothing will
         # be inventorized.
-        read_ticks_rate = get_rate(
-            counter_base + "read_ticks", timestamp, int(read_ticks), onwrap=0.0)
-        write_ticks_rate = get_rate(
-            counter_base + "write_ticks", timestamp, int(write_ticks), onwrap=0.0)
-        total_ticks_rate = get_rate(
-            counter_base + "total_ticks", timestamp, int(total_ticks), onwrap=0.0)
+        read_ticks_rate = get_rate(counter_base + "read_ticks",
+                                   timestamp,
+                                   int(read_ticks),
+                                   onwrap=0.0)
+        write_ticks_rate = get_rate(counter_base + "write_ticks",
+                                    timestamp,
+                                    int(write_ticks),
+                                    onwrap=0.0)
+        total_ticks_rate = get_rate(counter_base + "total_ticks",
+                                    timestamp,
+                                    int(total_ticks),
+                                    onwrap=0.0)
         read_ios_rate = get_rate(counter_base + "read_ios", timestamp, int(read_ios), onwrap=0.0)
         write_ios_rate = get_rate(counter_base + "write_ios", timestamp, int(write_ios), onwrap=0.0)
         total_ios_rate = read_ios_rate + write_ios_rate
@@ -314,7 +336,7 @@ def diskstat_extract_name_info(info):
                     else:
                         name = "DM %s" % line[1]
                     name_info[node, major, minor] = name
-                except:
+                except Exception:
                     pass  # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
                 major = int(line[1], 16)
@@ -370,8 +392,9 @@ def inventory_diskstat(parsed):
 
     # Use generic diskstat inventory function that is used also for other
     # Disk IO checks. That expects a table of (node, device, ...)
-    return inventory_diskstat_generic(
-        [(disk["node"], device) for device, disk in converted_disks.items()])
+    return inventory_diskstat_generic([
+        (disk["node"], device) for device, disk in converted_disks.items()
+    ])
 
 
 def check_diskstat(item, params, parsed):

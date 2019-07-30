@@ -65,23 +65,20 @@ class RulespecCheckgroupParametersSapHanaBackup(CheckParameterRulespecWithItem):
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('backup_age',
-             Alternative(
-                 title=_("Upper levels for the backup age"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels for the backup age"),
+                         style="dropdown",
                          elements=[
-                             Age(title=_("Warning at")),
-                             Age(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Age(title=_("Warning at")),
+                                       Age(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property
@@ -111,41 +108,35 @@ class RulespecCheckgroupParametersSapHanaLicense(CheckParameterRulespecWithItem)
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ('license_size',
-             Alternative(
-                 title=_("Upper levels for the license size"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels for the license size"),
+                         style="dropdown",
                          elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Filesize(title=_("Warning at")),
+                                       Filesize(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
             ('license_usage_perc',
-             Alternative(
-                 title=_("Upper levels for the license usage"),
-                 style="dropdown",
-                 elements=[
-                     Tuple(
-                         title=_("Set levels"),
+             Alternative(title=_("Upper levels for the license usage"),
+                         style="dropdown",
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ]),
-                     Tuple(
-                         title=_("No levels"),
-                         elements=[
-                             FixedValue(None, totext=""),
-                             FixedValue(None, totext=""),
-                         ]),
-                 ])),
+                             Tuple(title=_("Set levels"),
+                                   elements=[
+                                       Percentage(title=_("Warning at")),
+                                       Percentage(title=_("Critical at")),
+                                   ]),
+                             Tuple(title=_("No levels"),
+                                   elements=[
+                                       FixedValue(None, totext=""),
+                                       FixedValue(None, totext=""),
+                                   ]),
+                         ])),
         ])
 
     @property
@@ -180,23 +171,19 @@ class RulespecCheckgroupParametersSapHanaMemory(CheckParameterRulespecWithItem):
                      title=_("Levels for memory usage"),
                      choices=[
                          ("perc_used", _("Percentual levels for used memory"),
-                          Tuple(
-                              elements=[
-                                  Percentage(
-                                      title=_("Warning at a memory usage of"),
-                                      default_value=80.0,
-                                      maxvalue=None),
-                                  Percentage(
-                                      title=_("Critical at a memory usage of"),
-                                      default_value=90.0,
-                                      maxvalue=None)
-                              ],)),
+                          Tuple(elements=[
+                              Percentage(title=_("Warning at a memory usage of"),
+                                         default_value=80.0,
+                                         maxvalue=None),
+                              Percentage(title=_("Critical at a memory usage of"),
+                                         default_value=90.0,
+                                         maxvalue=None)
+                          ],)),
                          ("abs_free", _("Absolute levels for free memory"),
-                          Tuple(
-                              elements=[
-                                  Filesize(title=_("Warning below")),
-                                  Filesize(title=_("Critical below"))
-                              ],)),
+                          Tuple(elements=[
+                              Filesize(title=_("Warning below")),
+                              Filesize(title=_("Critical below"))
+                          ],)),
                          ("ignore", _("Do not impose levels")),
                      ],
                  )),

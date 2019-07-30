@@ -12,6 +12,7 @@
 
 #include "cap.h"
 #include "cfg.h"
+#include "commander.h"
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
@@ -28,9 +29,20 @@ bool G_SkypeTesting = false;
 namespace cma {
 
 namespace srv {
+static std::string_view kYouHaveToBeElevatedMessage =
+    "You have to be elevated to use this function.\nPlease, run as Administrator\n";
 // on -install
 // Doesn't create artifacts in program. Changes registry.
 int InstallMainService() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    xlog::sendStringToStdio("Service to be installed...\n",
+                            xlog::internal::Colors::green);
+    if (!cma::tools::win::IsElevated()) {
+        xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
+                                xlog::internal::Colors::red);
+        return 1;
+    }
+
     auto result = wtools::InstallService(
         cma::srv::kServiceName,         // Name of service
         cma::srv::kServiceDisplayName,  // Name to display
@@ -45,6 +57,15 @@ int InstallMainService() {
 // on -remove
 // Doesn't create artifacts in program. Changes registry.
 int RemoveMainService() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    xlog::sendStringToStdio("Service to be removed...\n",
+                            xlog::internal::Colors::green);
+    if (!cma::tools::win::IsElevated()) {
+        xlog::sendStringToStdio(kYouHaveToBeElevatedMessage.data(),
+                                xlog::internal::Colors::red);
+        return 1;
+    }
+
     auto result = wtools::UninstallService(cma::srv::kServiceName);
     return result ? 0 : 1;
 }
@@ -93,9 +114,9 @@ static bool execMsi() {
 // execute it
 static void CheckForCommand(std::string& Command) {
     Command = "";
-    char dir[MAX_PATH * 2] = "";
-    GetCurrentDirectoryA(MAX_PATH * 2, dir);
-    std::cout << dir << ": tick\n";
+    std::error_code ec;
+    auto dir = std::filesystem::current_path(ec);
+    std::cout << dir.u8string() << ": tick\n";
     try {
         constexpr const char* kUpdateFileCommandDone = "update.command.done";
         std::string done_file_name = kUpdateFileCommandDone;
@@ -127,24 +148,25 @@ static void CheckForCommand(std::string& Command) {
         if (length > MAX_PATH) {
             // sanity check - too long file will be ignored
             xlog::l("File %s is too big", command_file_name.c_str()).print();
-            command_file.close();
-        } else {
-            // store command & rename file
-            char buffer[MAX_PATH * 2];
-            command_file.read(buffer, length);
-            buffer[length] = 0;
-            command_file.close();
-            auto ret =
-                ::MoveFileA(command_file_name.c_str(), done_file_name.c_str());
-            if (ret) {
-                Command = buffer;
-                xlog::l("To exec %s", Command.c_str());
-                execMsi();
-            } else {
-                xlog::l("Cannot Rename File from to %s %s with error %d",
-                        done_file_name.c_str(), GetLastError());
-            }
+            return;
         }
+
+        // store command & rename file
+        char buffer[MAX_PATH * 2];
+        command_file.read(buffer, length);
+        buffer[length] = 0;
+        command_file.close();
+        auto ret =
+            ::MoveFileA(command_file_name.c_str(), done_file_name.c_str());
+        if (ret) {
+            Command = buffer;
+            xlog::l("To exec %s", Command.c_str());
+            execMsi();
+            return;
+        }
+
+        xlog::l("Cannot Rename File from to %s %s with error %d",
+                done_file_name.c_str(), GetLastError());
     } catch (...) {
     }
     return;
@@ -171,6 +193,10 @@ int TestMainServiceSelf(int Interval) {
         asio::ip::tcp::socket socket(ios);
         std::error_code ec;
 
+        // give some time to start main thread
+        // this is tesing routine ergo so primitive method is ok
+        cma::tools::sleep(1000);
+
         while (!stop) {
             auto enc = cma::cfg::groups::global.globalEncrypt();
             auto password = enc ? cma::cfg::groups::global.password() : "";
@@ -179,7 +205,7 @@ int TestMainServiceSelf(int Interval) {
                 XLOG::l("Can't connect to {}:{}, waiting for 5 seconds",
                         address, port);
 
-                // methods below is not a good still we do not want
+                // method below is not good, still we do not want
                 // to over complicate the code just for testing purposes
                 for (int i = 0; i < 5; i++) {
                     if (stop) break;
@@ -219,9 +245,10 @@ int TestMainServiceSelf(int Interval) {
             if (Interval == 0) break;
         }
         XLOG::l.i("Leaving testing thread");
+        if (Interval == 0) XLOG::l.i("\n\nPress any key to end program\n\n");
     });
 
-    ExecMainService();  // blocking call waiting for keypress
+    ExecMainService(StdioLog::no);  // blocking call waiting for keypress
     stop = true;
     if (kick_and_print.joinable()) {
         XLOG::l.i("Waiting for testing thread");
@@ -232,70 +259,85 @@ int TestMainServiceSelf(int Interval) {
     return 0;
 }
 
-// on -test
-int TestMainService(const std::wstring& What, int Interval) {
+int TestIo() {
     using namespace std::chrono;
-    if (What == L"port") {
-        // simple test for ExternalPort. will be disabled in production.
-        try {
-            cma::world::ExternalPort port(nullptr);
-            port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
-                return std::vector<uint8_t>();
-            });  //
-            std::this_thread::sleep_until(steady_clock::now() + 10000ms);
-            port.shutdownIo();  //
 
-        } catch (const std::exception& e) {
-            xlog::l("Exception is not allowed here %s", e.what());
-        }
-    } else if (What == L"mt") {
+    // simple test for ExternalPort. will be disabled in production.
+    try {
+        XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::ColoredOutputOnStdio(true);
+        cma::world::ExternalPort port(nullptr);
+        port.startIo([](const std::string Ip) -> std::vector<uint8_t> {
+            return std::vector<uint8_t>();
+        });  //
+        XLOG::l.i("testing 10 seconds");
+        std::this_thread::sleep_until(steady_clock::now() + 10000ms);
+        port.shutdownIo();  //
+
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
+int TestMt() {
+    using namespace std::chrono;
+
+    // test for main thread. will be disabled in production
+    // to find file, read and start update POC.
+    try {
+        // XLOG::setup::DuplicateOnStdio(true);
+        XLOG::setup::ColoredOutputOnStdio(true);
+        using namespace std::chrono;
+        std::string command = "";
+        cma::srv::ServiceProcessor sp(2000ms, [&command](const void* Sp) {
+            CheckForCommand(command);
+            if (command[0]) {
+                cma::tools::RunDetachedCommand(command);
+                command = "";
+            }
+            return true;
+        });
+        XLOG::SendStringToStdio("Testing...\n\n", XLOG::Colors::green);
+        sp.startTestingMainThread();
+        XLOG::SendStringToStdio("\nPress any key\n", XLOG::Colors::green);
+        cma::tools::GetKeyPress();
+        sp.stopTestingMainThread();
+
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
+int TestLegacy() {
+    using namespace std::chrono;
+
+    try {
         // test for main thread. will be disabled in production
         // to find file, read and start update POC.
-        try {
-            using namespace std::chrono;
-            std::string command = "";
-            cma::srv::ServiceProcessor sp(2000ms, [&command](const void* Sp) {
-                CheckForCommand(command);
-                if (command[0]) {
-                    cma::tools::RunDetachedCommand(command);
-                    command = "";
-                }
-                return true;
-            });
-            sp.startTestingMainThread();
-            std::cout << "Press any key to stop testing";
-            cma::tools::GetKeyPress();
-            sp.stopTestingMainThread();
-
-        } catch (const std::exception& e) {
-            xlog::l("Exception is not allowed here %s", e.what());
-        }
-    } else if (What == L"legacy") {
         using namespace std::chrono;
         std::string command = "";
         cma::srv::ServiceProcessor sp(
             2000ms, [&command](const void* Sp) { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService();
-    } else if (What == L"self") {
-        TestMainServiceSelf(Interval);
-    } else {
-        XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::ColoredOutputOnStdio(true);
-        XLOG::l(
-            "Unsupported second parameter\n\tAllowed: port, mt, legacy, self");
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
     }
-
     return 0;
-}  // namespace srv
+}
 
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
 int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile, bool DiagnosticMessage) {
+                   std::filesystem::path YamlFile, StdioLog stdio_log) {
     //
-    auto flag = DiagnosticMessage ? XLOG::kStdio : 0;
+    auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
+    if (stdio_log != StdioLog::no) {
+        XLOG::setup::ColoredOutputOnStdio(true);
+    }
     namespace fs = std::filesystem;
     fs::path file = IniFile;
     std::error_code ec;
@@ -338,25 +380,26 @@ std::vector<std::wstring> SupportedSections{
 // on -section
 // NOT GTESTED
 int ExecSection(const std::wstring& SecName, int RepeatPause,
-                bool DianosticMessages) {
+                StdioLog stdio_log) {
     //
     XLOG::setup::ColoredOutputOnStdio(true);
-    if (DianosticMessages) {
-        XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::EnableDebugLog(true);
+    if (stdio_log == StdioLog::yes)
+        XLOG::setup::EnableTraceLog(false);
+    else
         XLOG::setup::EnableTraceLog(true);
-    }
+
+    if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
+
+    auto y = cma::cfg::GetLoadedConfig();
+    std::vector<std::string> sections;
+    sections.emplace_back(wtools::ConvertToUTF8(SecName));
+    cma::cfg::PutInternalArray(cma::cfg::groups::kGlobal,
+                               cma::cfg::vars::kSectionsEnabled, sections);
+    cma::cfg::ProcessKnownConfigGroups();
+    cma::cfg::SetupEnvironmentFromGroups();
 
     while (1) {
-        if (SecName == wtools::ConvertToUTF16(cma::section::kDfName)) {
-            provider::Df df;
-            auto x = df.generateContent(cma::section::kUseEmbeddedName, true);
-            XLOG::stdio("{}", x);
-        } else {
-            XLOG::l("Section {} not supported", wtools::ConvertToUTF8(SecName));
-            break;
-        }
-
+        TestLegacy();
         if (RepeatPause <= 0) break;
         cma::tools::sleep(RepeatPause * 1000);
     }
@@ -369,20 +412,23 @@ int ExecSection(const std::wstring& SecName, int RepeatPause,
 // this is testing routine probably eliminated from the production build
 // THIS ROUTINE DOESN'T USE wtools::ServiceController and Windows Service API
 // Just internal to debug logic
-int ExecMainService(bool DuplicateOn) {
+int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono;
     using namespace cma::install;
-
-    milliseconds Delay = 1000ms;
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::SendStringToStdio(
+        "Adhoc/Exec Mode,"
+        "press any key to stop execution\n",
+        XLOG::Colors::cyan);
+    auto delay = 1000ms;
     auto processor =
-        std::make_unique<ServiceProcessor>(Delay, [](const void* Processor) {
+        std::make_unique<ServiceProcessor>(delay, [](const void* Processor) {
     // default embedded callback for exec
-    // atm does nothing
-    // optional commands listed here
+    // At the moment does nothing
+    // optional commands should be placed here
     // ********
-    // 1. Auto Update when  msi file is located by specified address
 #if 0
-        // #TODO planned test
+        // Auto Update when  MSI file is located by specified address
         CheckForUpdateFile(kDefaultMsiFileName, cma::cfg::GetUpdateDir(),
                            UpdateType::kMsiExecQuiet, true);
 #endif
@@ -393,21 +439,27 @@ int ExecMainService(bool DuplicateOn) {
 
     try {
         // setup output
-        if (DuplicateOn) XLOG::setup::DuplicateOnStdio(true);
-        XLOG::setup::ColoredOutputOnStdio(true);
-
-        XLOG::l.i("Press any key to stop");
+        if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(true);
 
         cma::tools::GetKeyPress();  // blocking  wait for key press
     } catch (const std::exception& e) {
-        xlog::l("Exception \"%s\"", e.what());
+        XLOG::l("Exception '{}'", e.what());
     }
 
     XLOG::l.i("Server is going to stop");
     processor->stopService();
 
-    if (DuplicateOn) XLOG::setup::DuplicateOnStdio(false);
+    if (stdio_log != StdioLog::no) XLOG::setup::DuplicateOnStdio(false);
 
+    return 0;
+}
+
+int ExecVersion() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    std::string version =
+        fmt::format("Check_MK Agent version {}", CMK_WIN_AGENT_VERSION);
+
+    XLOG::SendStringToStdio(version, XLOG::Colors::white);
     return 0;
 }
 
@@ -420,6 +472,82 @@ int ExecCap() {
     XLOG::l.i("Installing...");
     cma::cfg::cap::Install();
     XLOG::l.i("End of!");
+    return 0;
+}
+
+// on -cap
+int ExecPatchHash() {
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::EnableDebugLog(true);
+    XLOG::setup::EnableTraceLog(true);
+    XLOG::l.i("Patching...");
+    cma::cfg::upgrade::PatchOldFilesWithDatHash();
+    XLOG::l.i("End of!");
+    return 0;
+}
+
+static void InformPort(std::string_view mail_slot) {
+    cma::carrier::CoreCarrier cc;
+
+    using namespace cma::carrier;
+    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto ret = cc.establishCommunication(internal_port);
+    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+
+    cc.shutdownCommunication();
+}
+
+int ExecReloadConfig() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::SendStringToStdio("Reloading configuration...\n",
+                            XLOG::Colors::white);
+    cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
+    cma::MailSlot mailbox_test(cma::cfg::kTestingMailSlot, 0);
+    using namespace cma::carrier;
+
+    XLOG::l.i("Asking for reload service");
+    InformPort(mailbox_service.GetName());
+
+    XLOG::l.i("Asking for reload executable");
+    InformPort(mailbox_test.GetName());
+
+    XLOG::SendStringToStdio("Done.", XLOG::Colors::white);
+    return 0;
+}
+
+int ExecShowConfig(std::string_view sec) {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    using namespace cma::cfg;
+    const auto yaml = GetLoadedConfig();
+    YAML::Node filtered_yaml =
+        sec.empty() ? YAML::Clone(yaml) : YAML::Clone(yaml[sec.data()]);
+    cma::cfg::RemoveInvalidNodes(filtered_yaml);
+    YAML::Emitter emit;
+    emit << filtered_yaml;
+    XLOG::SendStringToStdio("# Environment Variables:\n", XLOG::Colors::green);
+    ProcessPluginEnvironment([](std::string_view name, std::string_view value) {
+        XLOG::stdio("# {}=\"{}\"\n", name, value);
+    });
+
+    auto files = wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig());
+    auto file_table = cma::tools::SplitString(files, ",");
+
+    XLOG::SendStringToStdio("# Loaded Config Files:\n", XLOG::Colors::green);
+    std::string markers[] = {"# system: ", "# bakery: ", "# user  : "};
+    int i = 0;
+    for (auto f : file_table) {
+        XLOG::SendStringToStdio(markers[i++], XLOG::Colors::white);
+        if (f.empty())
+            XLOG::SendStringToStdio(" [missing]\n");
+        else
+            XLOG::SendStringToStdio(f + "\n");
+    }
+
+    XLOG::setup::ColoredOutputOnStdio(false);
+    XLOG::stdio("\n# {}\n{}\n", sec, emit.c_str());
+
     return 0;
 }
 
@@ -459,7 +587,7 @@ int ExecUpgradeParam(bool Force) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::EnableDebugLog(true);
     XLOG::setup::EnableTraceLog(true);
-    UpgradeLegacy(Force);
+    UpgradeLegacy(Force ? Force::yes : Force::no);
     XLOG::l.i("End of!");
 
     return 0;
@@ -492,7 +620,8 @@ int ExecSkypeTest() {
     if (result.size())
         XLOG::l.i("{}", result);
     else {
-        auto counter_str = wtools::perf::ReadPerfCounterKeyFromRegistry(false);
+        auto counter_str = wtools::perf::ReadPerfCounterKeyFromRegistry(
+            wtools::perf::PerfCounterReg::english);
         auto data = counter_str.data();
         const auto end = counter_str.data() + counter_str.size();
         for (;;) {
@@ -524,6 +653,18 @@ int ExecSkypeTest() {
     XLOG::l.i("*******************************************************");
     //    skype.generateContent();
     XLOG::l.i("<<<Skype testing END>>>");
+    return 0;
+}
+
+// on -skype
+// verify that skype business is present
+int ExecResetOhm() {
+    G_SkypeTesting = true;
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::SendStringToStdio("Resetting OHM internally\n", XLOG::Colors::yellow);
+    cma::srv::ServiceProcessor sp;
+    sp.resetOhm();
     return 0;
 }
 
@@ -569,7 +710,7 @@ private:
 
         xlog::sendStringToStdio(
             "Press any key to STOP testing Realtime Sections\n",
-            xlog::internal::Colors::kPink);
+            xlog::internal::Colors::pink);
     }
 
     const std::string password_{kRtTestPassword};
@@ -609,7 +750,7 @@ int ExecRealtimeTest(bool Print) {
 
     xlog::sendStringToStdio(
         "Press any key to START testing Realtime Sections\n",
-        xlog::internal::Colors::kGreen);
+        xlog::internal::Colors::green);
     cma::tools::GetKeyPress();  // blocking  wait for key press
     dev.connectFrom("127.0.0.1", kRtTestPort,
                     {"mem", "df", "winperf_processor"}, kRtTestPassword, 30);
@@ -634,6 +775,8 @@ int ServiceAsService(
     cma::OnStartApp();               // path from service
     ON_OUT_OF_SCOPE(cma::OnExit());  // we are sure that this is last foo
 
+    SelfConfigure();
+
     // infinite loop to protect from exception
     while (1) {
         try {
@@ -645,9 +788,18 @@ int ServiceAsService(
                 cma::srv::kServiceName);  // we will stay here till
                                           // service will be stopped
                                           // itself or from outside
-            XLOG::l.i("Service is stopped {}",
-                      ret ? "" : "due to abnormal situation");
-            return ret ? 0 : -1;
+            switch (ret) {
+                case wtools::ServiceController::StopType::normal:
+                    XLOG::l.i("Service is stopped normally");
+                    return 0;
+
+                case wtools::ServiceController::StopType::fail:
+                    XLOG::l.i("Service is stopped due to abnormal situation");
+                    return -1;
+                case wtools::ServiceController::StopType::no_connect:
+                    // may happen when we try to call usual exe
+                    return 0;
+            }
         } catch (const std::exception& e) {
             XLOG::l.crit("Exception hit {} in ServiceAsService", e.what());
         } catch (...) {
@@ -655,6 +807,116 @@ int ServiceAsService(
         }
     }
     // reachable only on service stop
+}
+
+// we are setting service as restartable using more or less suitable parameters
+// set
+// returns false if failed call
+bool ConfigureServiceAsRestartable(SC_HANDLE handle) {
+    SERVICE_FAILURE_ACTIONS service_fail_actions;
+    SC_ACTION fail_actions[3];
+
+    fail_actions[0].Type =
+        SC_ACTION_RESTART;         // Failure action: Restart Service
+    fail_actions[0].Delay = 2000;  // in milliseconds = 2minutes
+    fail_actions[1].Type = SC_ACTION_RESTART;
+    fail_actions[1].Delay = 2000;
+    fail_actions[2].Type = SC_ACTION_RESTART;
+    fail_actions[2].Delay = 2000;
+
+    service_fail_actions.dwResetPeriod =
+        3600;  // Reset Failures Counter, in Seconds
+    service_fail_actions.lpCommand = nullptr;  // on service failure, not used
+    service_fail_actions.lpRebootMsg =
+        nullptr;  // Message during rebooting computer
+                  // due to service failure, not used
+
+    service_fail_actions.cActions = 3;  // Number of failure action to manage
+    service_fail_actions.lpsaActions = fail_actions;
+
+    auto result =
+        ::ChangeServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS,
+                               &service_fail_actions);  // Apply above settings
+    if (!result) {
+        XLOG::l("Error [{}] configuring service", GetLastError());
+        return false;
+    }
+
+    return true;
+}
+
+// returns allocated data on success
+SERVICE_FAILURE_ACTIONS* GetServiceFailureActions(SC_HANDLE handle) {
+    SERVICE_FAILURE_ACTIONS* actions = nullptr;
+
+    DWORD bytes_needed = 0;
+    DWORD new_buf_size = 0;
+    if (!::QueryServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS, NULL, 0,
+                               &bytes_needed)) {
+        auto dwError = ::GetLastError();
+        if (ERROR_INSUFFICIENT_BUFFER != dwError) return nullptr;
+
+        // allocation
+        new_buf_size = bytes_needed;
+        actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS*>(
+            ::LocalAlloc(LMEM_FIXED, new_buf_size));
+    }
+
+    if (::QueryServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS,
+                              reinterpret_cast<LPBYTE>(actions), new_buf_size,
+                              &bytes_needed))
+        return actions;
+
+    // we have to kill our actions data here
+    if (actions) LocalFree(actions);
+
+    return nullptr;
+}
+
+// complementary function to GetServiceFailuerActions
+void DeleteServiceFailureActions(SERVICE_FAILURE_ACTIONS* actions) {
+    if (actions) ::LocalFree(actions);
+}
+
+// returns true ALSO on error(to avoid useless attempts to configure
+// non-configurable)
+bool IsServiceConfigured(SC_HANDLE handle) {
+    auto actions = GetServiceFailureActions(handle);
+    ON_OUT_OF_SCOPE(DeleteServiceFailureActions(actions));
+
+    if (actions) return actions->cActions != 0;
+
+    XLOG::l("QueryServiceConfig2 failed [{}]", ::GetLastError());
+    return true;
+}
+
+// handle must be killed with CloseServiceHandle
+SC_HANDLE SelfOpen() {
+    auto manager_handle = ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (nullptr == manager_handle) {
+        XLOG::l.crit("Cannot open SC Manager {}", ::GetLastError());
+        return nullptr;
+    }
+    ON_OUT_OF_SCOPE(::CloseServiceHandle(manager_handle));
+
+    auto handle = ::OpenService(manager_handle, cma::srv::kServiceName,
+                                SERVICE_ALL_ACCESS);
+    if (nullptr == handle) {
+        XLOG::l.crit("Cannot open Service {}, error =  {}",
+                     wtools::ConvertToUTF8(cma::srv::kServiceName),
+                     ::GetLastError());
+    }
+
+    return handle;
+}
+
+void SelfConfigure() {
+    auto handle = SelfOpen();
+    ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
+    if (!IsServiceConfigured(handle)) {
+        XLOG::l.i("Configure check mk service");
+        ConfigureServiceAsRestartable(handle);
+    }
 }
 
 }  // namespace srv

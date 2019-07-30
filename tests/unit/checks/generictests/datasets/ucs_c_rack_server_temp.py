@@ -39,8 +39,8 @@ checks = {
           [(0, u'40.4 \xb0C', [('temp', 40.4, None, None, None, None)])]),
          ('Rack Unit 1 Memory Array 1 Memory DIMM 2', {},
           [(0, u'61.4 \xb0C', [('temp', 61.4, None, None, None, None)])]),
-         ('Rack Unit 1 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None,
-                                                               None)])]),
-         ('Rack Unit 2 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None,
-                                                               None)])])]
+         ('Rack Unit 1 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None, None)
+                                                             ])]),
+         ('Rack Unit 2 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None, None)
+                                                             ])])]
 }

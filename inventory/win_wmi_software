@@ -35,7 +35,7 @@
 
 
 def inv_win_wmi_software(info):
-    paclist = inv_tree_list("software.packages:")
+    parsed_packages = []
     for line in info:
         if len(line) < 3:
             continue
@@ -61,7 +61,10 @@ def inv_win_wmi_software(info):
             "language": language,
             "package_type": "wmi",
         }
-        paclist.append(entry)
+        parsed_packages.append(entry)
+
+    paclist = inv_tree_list("software.packages:")
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['win_wmi_software'] = {

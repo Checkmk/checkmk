@@ -1,0 +1,11 @@
+Title: Bump shipped Python from 2.7.15 to 2.7.16.
+Level: 2
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557305932
+Class: feature
+
+Python 2.7.16 contains quite a few bug fixes compared to 2.7.15 plus some
+performance, library and syntax improvements.

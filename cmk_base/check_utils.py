@@ -30,7 +30,95 @@
 #  along with Check_MK. If not, email to mk@mathias-kettner.de
 #  or write to the postal address provided at www.mathias-kettner.de
 
+from typing import Union, TypeVar, Iterable, Text, Optional, Dict, Tuple, Any, List  # pylint: disable=unused-import
+
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk_base
+from cmk_base.discovered_labels import DiscoveredServiceLabels
+
+Item = Union[Text, None, int]
+CheckParameters = Union[None, Dict, Tuple, List, str]
+CheckPluginName = str
+
+
+class Service(object):
+    __slots__ = ["_check_plugin_name", "_item", "_description", "_parameters", "_service_labels"]
+
+    def __init__(self, check_plugin_name, item, description, parameters, service_labels=None):
+        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
+        self._check_plugin_name = check_plugin_name
+        self._item = item
+        self._description = description
+        self._parameters = parameters
+        self._service_labels = service_labels or DiscoveredServiceLabels()
+
+    @property
+    def check_plugin_name(self):
+        return self._check_plugin_name
+
+    @property
+    def item(self):
+        return self._item
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def parameters(self):
+        return self._parameters
+
+    @property
+    def service_labels(self):
+        return self._service_labels
+
+    def __eq__(self, other):
+        """Is used during service discovery list computation to detect and replace duplicates
+        For this the parameters and similar need to be ignored."""
+        return self.check_plugin_name == other.check_plugin_name and self.item == other.item
+
+    def __hash__(self):
+        """Is used during service discovery list computation to detect and replace duplicates
+        For this the parameters and similar need to be ignored."""
+        return hash((self.check_plugin_name, self.item))
+
+
+CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
+
+
+class DiscoveredService(Service):
+    __slots__ = []  # type: List[str]
+    """Special form of Service() which holds the unresolved textual representation of the check parameters"""
+    def __init__(self,
+                 check_plugin_name,
+                 item,
+                 description,
+                 parameters_unresolved,
+                 service_labels=None):
+        # type: (CheckPluginName, Item, Text, CheckParameters, DiscoveredServiceLabels) -> None
+        super(DiscoveredService, self).__init__(check_plugin_name=check_plugin_name,
+                                                item=item,
+                                                description=description,
+                                                parameters=parameters_unresolved,
+                                                service_labels=service_labels)
+
+    @property
+    def parameters(self):
+        raise MKGeneralException(
+            "Can not get the resolved parameters from a DiscoveredService object")
+
+    @property
+    def parameters_unresolved(self):
+        """Returns the unresolved check parameters discovered for this service
+
+        The reason for this hack is some old check API behaviour: A check may return the name of
+        a default levels variable (as string), for example "cpu_utilization_default_levels".
+        The user is allowed to override the value of this variable in his configuration and
+        the check needs to evaluate this variable after config loading or during check
+        execution. The parameter must not be resolved during discovery.
+        """
+        return self._parameters
 
 
 def section_name_of(check_plugin_name):

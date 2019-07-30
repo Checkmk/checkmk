@@ -4,11 +4,9 @@
 //
 #include "pch.h"
 
+#include "cfg.h"
 #include "common/cfg_info.h"
 #include "external_port.h"
-
-#include "cfg.h"
-
 #include "onlyfrom.h"
 
 std::string network_list[] = {
@@ -140,7 +138,7 @@ TEST(OnlyFromTest, Base) {
     using namespace std::chrono;
     using namespace xlog::internal;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] =
@@ -230,28 +228,66 @@ TEST(OnlyFromTest, Base) {
 
         // bad address
         {
-            auto yaml = GetLoadedConfig();
-            yaml[groups::kGlobal][vars::kOnlyFrom] =
-                YAML::Load("192.168.1.14/24");
-
-            groups::global.loadFromMainConfig();
-            auto only_froms = groups::global.getOnlyFrom();
-            EXPECT_TRUE(only_froms.size() == 2);
             cma::world::ExternalPort test_port(nullptr, port);  //
-            auto ret = test_port.startIo(reply);                //
-            ASSERT_TRUE(ret);
-            io_context ios;
-            ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+            {
+                auto yaml = GetLoadedConfig();
+                yaml[groups::kGlobal][vars::kOnlyFrom] =
+                    YAML::Load("192.168.1.14/24");
 
-            asio::ip::tcp::socket socket(ios);
+                groups::global.loadFromMainConfig();
+                auto only_froms = groups::global.getOnlyFrom();
+                EXPECT_TRUE(only_froms.size() == 2);
+                auto ret = test_port.startIo(reply);  //
+                ASSERT_TRUE(ret);
+                io_context ios;
+                ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
 
-            socket.connect(endpoint);
+                asio::ip::tcp::socket socket(ios);
 
-            error_code error;
-            char text[256];
-            auto count = socket.read_some(asio::buffer(text), error);
-            socket.close();
-            EXPECT_TRUE(count == 0);
+                socket.connect(endpoint);
+
+                error_code error;
+                char text[256];
+                auto count = socket.read_some(asio::buffer(text), error);
+                socket.close();
+                EXPECT_TRUE(count == 0);
+            }
+
+            // ipv6 connect again from valid address
+            {
+                auto yaml = GetLoadedConfig();
+                yaml[groups::kGlobal][vars::kOnlyFrom] =
+                    YAML::Load("127.0.0.1/32 0:0:0:0:0:0:0:1/128");
+
+                groups::global.loadFromMainConfig();
+                auto only_froms = groups::global.getOnlyFrom();
+                auto ret = test_port.startIo(reply);  //
+                ASSERT_FALSE(ret);
+                io_context ios;
+                ip::tcp::endpoint endpoint(ip::make_address("::1"), port);
+
+                asio::ip::tcp::socket socket(ios);
+
+                error_code error;
+                socket.connect(endpoint, error);
+
+                char text[10] = "   ";
+                size_t count = 0;
+                std::atomic<bool> signaled = false;
+                // we do not use async_read correctly
+                socket.async_read_some(
+                    asio::buffer(text, 10),
+                    [&count, &signaled](
+                        const error_code&,  // Result of operation.
+                        std::size_t         // Number of bytes read.
+                    ) {});
+                for (int i = 0; i < 25; i++) {
+                    if (text[0] != ' ') break;
+                    cma::tools::sleep(100);
+                }
+                socket.close();
+                EXPECT_TRUE(text[0] != ' ');
+            }
             test_port.shutdownIo();  //
         }
     }
@@ -261,7 +297,7 @@ TEST(OnlyFromTest, Ipv6) {
     using namespace std::chrono;
     using namespace xlog::internal;
 
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
     {
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");

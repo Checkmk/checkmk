@@ -1,14 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?define CompanyName = "Mathias Kettner GmbH"?>
-<?define ProductName = "Check MK Service"?>
-<?define ProductVersion = "1.6.0"?>
+<?ifdef $(env.wnx_version) = Enterprise ?>
+<!-- IMPORTANT: Build script must correctly set wnx_version -->
+<?define ProductVersion = $(env.wnx_version)?>
+<?else?>
+<!-- IMPORTANT: Code below is executed ONLY during manual compilation
+just to signal that real build script was not called -->
+<?define ProductVersion = "2.0.0.0"?>
+<?endif ?>
+
+<?define CompanyName = "tribe29 GmbH"?>
+<?include version.wxi ?>
 <?define ProductId = "{C3BDE55B-4C42-48D0-8792-B1DE5174C202}"?>
 <?define ProductUpgradeCode = "83F434E9-EA96-4881-AA93-E21B27285C05"?>
+<!-- IMPORTANT NOTE 1: If you change architecture, please change the package code TOO -->
+<!-- IMPORTANT NOTE 2: Fix msi-update after fixing this code: msi-info uses this code to patch msi itself-->
 <?define PackageCode = "BAEBF560-7308-4D53-B426-903EA74B1D7E"?>
-<?define FolderName = "check_mk_service"?>
+<?define CompanyFolderName = "checkmk"?>
+<?define ServiceFolderName = "service"?>
 <?define ServiceName = "CheckMkService"?>
 <?define ServiceDisplayName = "Check MK Service"?>
-<?define ServiceDescription = "Check MK monitoring and management service for Windows"?>
+<?define ServiceDescription = "Check MK monitoring and management Service"?>
 <?define ServiceStart = "demand"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -39,6 +50,20 @@
     <!-- Property Id="ALLUSERS" Value="1" /<- This option already set -->
     <Property Id="REINSTALLMODE" Value="amus" />
 
+    <!-- Repair disabled 
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    -->
+
+    <!-- Help Link in the Control Panel -->
+    <Property Id="ARPHELPLINK" Value="https://checkmk.com" />
+    <!-- Support Link in the Control Panel -->
+    <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
+    
+    <!-- Other links
+    <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
+    <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
+     -->
+    
     <!-- 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Stopping installation" />
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 
@@ -65,57 +90,139 @@
     <Feature Id="providers" Title="Providers Folder" Level="1">
       <ComponentRef Id="providers"/>
     </Feature>
-    <Feature Id="bin" Title="Local Folder" Level="1">
-      <ComponentRef Id="bin"/>
-    </Feature>
     <Feature Id="utils" Title="Utils Folder" Level="1">
       <ComponentRef Id="utils"/>
     </Feature>
     <Feature Id="install" Title="Install Folder" Level="1">
       <ComponentRef Id="install"/>
     </Feature>
+    <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
+      <ComponentRef Id="remove_install_protocol"/>
+
+      <ComponentRef Id="clean_update"/>
+      <ComponentRef Id="clean_cache"/>
+      <ComponentRef Id="clean_install"/>
+      <ComponentRef Id="clean_bakery"/>
+      <ComponentRef Id="clean_backup"/>
+      <ComponentRef Id="clean_spool"/>
+      <ComponentRef Id="clean_tmp"/>
+    </Feature>
+    
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="$(var.FolderName)">
-          <Directory Id="providers" Name="providers">
-            <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
+        <Directory Id="INSTALLFOLDER_ROOT" Name="$(var.CompanyFolderName)">
+          <Directory Id="INSTALLFOLDER_SERVICE" Name="$(var.ServiceFolderName)">
+            <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
+              <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
             </Component>
+            <Directory Id="providers" Name="providers">
+              <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="plugins" Name="plugins">
+              <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="install" Name="install">
+              <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
+            <Directory Id="utils" Name="utils">
+              <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
+                SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
+                Win64="no" Location="either">
+                <CreateFolder/>
+              </Component>
+            </Directory>
           </Directory>
-          <Directory Id="bin" Name="bin">
-            <Component Id="bin" Guid="{AC275C27-1AEF-4967-8DF0-33DC9343397B}"
+        </Directory>
+      </Directory>
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="CmkFolder" Name="checkmk">
+          <Directory Id="UserFolder" Name="agent">
+            
+            <Directory Id="BakeryFolder" Name="bakery">
+              <Component Id="clean_bakery" Guid="{3593E36E-BC8C-4951-8ED8-8522D6205D3A}">
+                <RemoveFile Id="clean_check_mk_bakery_yml" On ="uninstall" Name="check_mk.bakery.yml"/>
+                <RemoveFolder Id ="RemoveBakeryFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="BackupFolder" Name="backup">
+              <Component Id="clean_backup" Guid="{73925DB5-076D-4E93-8138-1FDBEA4DAFC5}">
+                <RemoveFile Id="clean_backup" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveBackupFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="SpoolFolder" Name="spool">
+              <Component Id="clean_spool" Guid="{19581C7B-0EE6-49BF-858A-90059FC844D1}">
+                <RemoveFile Id="clean_spool" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveSpoolFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="InstallFolder" Name="install">
+              <Component Id="clean_install" Guid="{1D6B56F5-DC84-42CD-B026-EB29B15518D5}">
+                <RemoveFile Id="clean_install" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveInstallFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="UpdateFolder" Name="update">
+              <Component Id="clean_update" Guid="{BAABD622-3B82-44DD-8877-4E4528248FBE}">
+                <RemoveFile Id="clean_update" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveUpdateFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            
+            <Directory Id="CacheFolder" Name="cache">
+              <Component Id="clean_cache" Guid="{20F41F71-0BC0-4BAA-BF25-10C44BD84C2F}">
+                <RemoveFile Id="clean_cache" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveCacheFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+
+            <Directory Id="TmpFolder" Name="tmp">
+              <Component Id="clean_tmp" Guid="{4E12FD73-AB1E-4881-A910-954D103C6FFD}">
+                <RemoveFile Id="clean_tmp" On ="uninstall" Name="*.*"/>
+                <RemoveFolder Id ="RemoveTmpFolder" On ="uninstall" />
+              </Component>
+            </Directory>
+            <!--      
+            -->
+          
+          </Directory>
+        </Directory>
+      </Directory>
+      <!--      
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="PDFOLDER" Name="checkmk">
+          <Directory Id="pd_dir" Name="pd_dir_name">
+            <Component Id="pd_dir" Guid="{A21C3961-4585-49A7-A17B-8FD2AD4E29C5}"
               SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
               Win64="no" Location="either">
               <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="plugins" Name="plugins">
-            <Component Id="plugins" Guid="{A6E4AC5A-B0CB-461D-A8E4-4C0C8436E2E3}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="install" Name="install">
-            <Component Id="install" Guid="{040A6E7A-CED1-4431-954D-5735AC5F28C0}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
-            </Component>
-          </Directory>
-          <Directory Id="utils" Name="utils">
-            <Component Id="utils" Guid="{F2285297-4495-4BAD-8874-F92684E732BE}"
-              SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
-              Win64="no" Location="either">
-              <CreateFolder/>
+              <RemoveFile Id="pd_dir_files_remove" On ="uninstall" Name="*.*"/>
+              <RemoveFolder Id="pd_dir_folder_remove" On="uninstall"/>            
             </Component>
           </Directory>
         </Directory>
       </Directory>
+      -->
     </Directory>
+    
+
 
     <!-- Step 2: Add files to your installer package -->
     <DirectoryRef Id="providers">
@@ -163,9 +270,27 @@
         <File Id="plugins_cap"
               Source="resources\plugins.cap"
               KeyPath="yes"
-              Checksum="yes" DiskId="2"
-              />
+              Checksum="yes" 
+              DiskId="2"/>
       </Component>
+      
+      <Component Id="checkmk.dat" Guid="{77EB5469-AD06-4B52-A408-C2F4151C7114}">
+        <File Id="checkmk.dat"
+              Source="resources\checkmk.dat" 
+              KeyPath="yes"
+              Checksum="yes"
+              DiskId="2" />
+      </Component>
+
+      <Component Id="check_mk.user.yml" Guid="{FB530333-4B0E-4C13-BF01-4F980B1C7332}">
+        <File Id="check_mk.user.yml" 
+              Source="resources\check_mk.user.yml" 
+              KeyPath="yes"
+              Checksum="yes"
+              DiskId="1" />
+      </Component>
+
+
     </DirectoryRef>
 
     <DirectoryRef Id="plugins">
@@ -290,6 +415,8 @@
       -->
       <ComponentRef Id="check_mk_ini_" />
       <ComponentRef Id="plugins_cap_" />
+      <ComponentRef Id="checkmk.dat" />
+      <ComponentRef Id="check_mk.user.yml" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
@@ -332,7 +459,7 @@
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
     <WixVariable Id="WixUILicenseRtf" Value="resources\GPL-V2.rtf" />
     <UIRef Id="CmkWixUI_InstallDir"/>
 
@@ -343,18 +470,18 @@
   </Product>
 
   <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER_SERVICE">
       <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
       <!-- <Component Id="ProductComponent"> -->
       <!-- TODO: Insert files, registry keys, and other resources here. -->
       <!-- </Component> -->
-      <Component Id="check_mk_data"
-                 Guid="{382114FC-FB0C-4A15-AECE-CD489957DDFC}">
-        <File Id="check_mk.dat"
-              Source="resources\check_mk.dat"
-              Name="check_mk.dat"
+      <Component Id="check_mk_marker"
+                 Guid="{F3949AC9-2D27-4A96-81C7-9C5599E8AF8F}">
+        <File Id="check_mk.marker"
+              Source="resources\check_mk.marker"
+              Name="check_mk.marker"
               KeyPath="yes"
-              Checksum="yes" 
+              Checksum="yes"
               DiskId="1" />
       </Component>
 
@@ -373,7 +500,7 @@
           Name="$(var.ServiceName)"
           DisplayName="$(var.ServiceDisplayName)"
           Description="$(var.ServiceDescription), 32-bit"
-          Start="demand"
+          Start="auto"
           Account="[SERVICEACCOUNT]"
           Password="[SERVICEPASSWORD]"
           ErrorControl="ignore"
@@ -402,7 +529,7 @@
           Name="$(var.ServiceName)"
           DisplayName="$(var.ServiceDisplayName)"
           Description="$(var.ServiceDescription), 64-bit"
-          Start="demand"
+          Start="auto"
           Account="[SERVICEACCOUNT]"
           Password="[SERVICEPASSWORD]"
           ErrorControl="ignore"
@@ -420,10 +547,10 @@
         <File Id="check_mk.yml" Source="resources\check_mk.yml" DiskId="1" />
       </Component>
 
-      <Component Id="faq.txt" Guid="{E5DC6560-A666-4939-A441-3861BE025A27}">
-        <File Id="faq.txt" Source="resources\faq.txt" DiskId="1" />
+      <Component Id="readme.txt" Guid="{14F083A7-2ACE-4738-A8E4-3D5D8C1DA50C}">
+        <File Id="readme.txt" Source="resources\readme.txt" DiskId="1" />
       </Component>
-
+      
       <!-- not required anybmore -->
       <Component Id="RegistryEntries"
                  Guid="F95DD079-D93F-441B-9D38-CA6D9500C6A7"
@@ -434,7 +561,7 @@
                      ForceDeleteOnUninstall="yes">
           <RegistryValue Type="string"
                          Name="Install_Folder"
-                         Value="[INSTALLFOLDER]"/>
+                         Value="[INSTALLFOLDER_SERVICE]"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

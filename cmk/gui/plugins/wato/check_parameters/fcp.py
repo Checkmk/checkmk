@@ -31,47 +31,17 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
     Integer,
     ListOf,
-    Percentage,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     Levels,
-    PredictiveLevels,
     RulespecGroupCheckParametersNetworking,
 )
 
-
-def vs_interface_traffic():
-    def vs_abs_perc():
-        return CascadingDropdown(
-            orientation="horizontal",
-            choices=[("perc", _("Percentual levels (in relation to port speed)"),
-                      Tuple(
-                          orientation="float",
-                          show_titles=False,
-                          elements=[
-                              Percentage(label=_("Warning at")),
-                              Percentage(label=_("Critical at")),
-                          ])),
-                     ("abs", _("Absolute levels in bits or bytes per second"),
-                      Tuple(
-                          orientation="float",
-                          show_titles=False,
-                          elements=[
-                              Integer(label=_("Warning at")),
-                              Integer(label=_("Critical at")),
-                          ])), ("predictive", _("Predictive Levels"), PredictiveLevels())])
-
-    return CascadingDropdown(
-        orientation="horizontal",
-        choices=[
-            ("upper", _("Upper"), vs_abs_perc()),
-            ("lower", _("Lower"), vs_abs_perc()),
-        ])
+from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 @rulespec_registry.register
@@ -94,57 +64,53 @@ class RulespecCheckgroupParametersFcp(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("speed",
-                 OptionalDropdownChoice(
-                     title=_("Operating speed"),
-                     help=_("If you use this parameter then the check goes warning if the "
-                            "interface is not operating at the expected speed (e.g. it "
-                            "is working with 8Gbit/s instead of 16Gbit/s)."),
+        return Dictionary(elements=[
+            ("speed",
+             OptionalDropdownChoice(
+                 title=_("Operating speed"),
+                 help=_("If you use this parameter then the check goes warning if the "
+                        "interface is not operating at the expected speed (e.g. it "
+                        "is working with 8Gbit/s instead of 16Gbit/s)."),
+                 choices=[
+                     (None, _("ignore speed")),
+                     (4000000000, "4 Gbit/s"),
+                     (8000000000, "8 Gbit/s"),
+                     (16000000000, "16 Gbit/s"),
+                 ],
+                 otherlabel=_("specify manually ->"),
+                 explicit=Integer(title=_("Other speed in bits per second"),
+                                  label=_("Bits per second")))),
+            ("traffic",
+             ListOf(
+                 CascadingDropdown(
+                     title=_("Direction"),
+                     orientation="horizontal",
                      choices=[
-                         (None, _("ignore speed")),
-                         (4000000000, "4 Gbit/s"),
-                         (8000000000, "8 Gbit/s"),
-                         (16000000000, "16 Gbit/s"),
+                         ('both', _("In / Out"), vs_interface_traffic()),
+                         ('in', _("In"), vs_interface_traffic()),
+                         ('out', _("Out"), vs_interface_traffic()),
                      ],
-                     otherlabel=_("specify manually ->"),
-                     explicit=Integer(
-                         title=_("Other speed in bits per second"), label=_("Bits per second")))),
-                ("traffic",
-                 ListOf(
-                     CascadingDropdown(
-                         title=_("Direction"),
-                         orientation="horizontal",
-                         choices=[
-                             ('both', _("In / Out"), vs_interface_traffic()),
-                             ('in', _("In"), vs_interface_traffic()),
-                             ('out', _("Out"), vs_interface_traffic()),
-                         ],
-                     ),
-                     title=_("Used bandwidth (minimum or maximum traffic)"),
-                     help=_("Setting levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using averaging."),
-                 )),
-                ("read_latency",
-                 Levels(
-                     title=_("Read latency"),
-                     unit=_("ms"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-                ("write_latency",
-                 Levels(
-                     title=_("Write latency"),
-                     unit=_("ms"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-                ("latency",
-                 Levels(
-                     title=_("Overall latency"),
-                     unit=_("ms"),
-                     default_value=None,
-                     default_levels=(50.0, 100.0))),
-            ],)
+                 ),
+                 title=_("Used bandwidth (minimum or maximum traffic)"),
+                 help=_("Setting levels on the used bandwidth is optional. If you do set "
+                        "levels you might also consider using averaging."),
+             )),
+            ("read_latency",
+             Levels(title=_("Read latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+            ("write_latency",
+             Levels(title=_("Write latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+            ("latency",
+             Levels(title=_("Overall latency"),
+                    unit=_("ms"),
+                    default_value=None,
+                    default_levels=(50.0, 100.0))),
+        ],)
 
     @property
     def item_spec(self):

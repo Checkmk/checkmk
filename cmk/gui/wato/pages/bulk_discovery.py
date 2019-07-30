@@ -114,7 +114,7 @@ class ModeBulkDiscovery(WatoMode):
         config.user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()
-        if job_status_snapshot.is_running():
+        if job_status_snapshot.is_active():
             html.message(
                 _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
@@ -136,8 +136,8 @@ class ModeBulkDiscovery(WatoMode):
             #   imported/selected hosts can be executed
             vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
-                _("You have selected <b>%d</b> hosts for bulk discovery.") % len(
-                    self._get_hosts_to_discover()))
+                _("You have selected <b>%d</b> hosts for bulk discovery.") %
+                len(self._get_hosts_to_discover()))
             selection = self._bulk_discovery_params["selection"]
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
@@ -169,10 +169,9 @@ class ModeBulkDiscovery(WatoMode):
         hosts_to_discover = []
 
         if not self._all:
+            filterfunc = None
             if self._only_failed:
                 filterfunc = lambda host: host.discovery_failed()
-            else:
-                filterfunc = None
 
             for host_name in get_hostnames_from_checkboxes(filterfunc):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
@@ -181,7 +180,9 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = Folder.current().host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(
+                    DiscoveryHost(host.site_id(),
+                                  host.folder().path(), host_name))
 
         else:
             # all host in this folder, maybe recursively. New: we always group
@@ -195,7 +196,9 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = folder.host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(
+                    DiscoveryHost(host.site_id(),
+                                  host.folder().path(), host_name))
 
         return hosts_to_discover
 

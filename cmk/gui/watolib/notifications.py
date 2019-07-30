@@ -48,8 +48,7 @@ def load_notification_rules(lock=False):
 
 def save_notification_rules(rules):
     store.mkdir(wato_root_dir())
-    store.save_to_mk_file(
-        wato_root_dir() + "notifications.mk",
-        "notification_rules",
-        rules,
-        pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file(wato_root_dir() + "notifications.mk",
+                          "notification_rules",
+                          rules,
+                          pprint_value=config.wato_pprint_config)

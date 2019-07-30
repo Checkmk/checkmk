@@ -1,0 +1,19 @@
+Title: Splunk Monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1556813484
+Class: feature
+
+A special agent and checks to support monitoring of splunk instances.
+
+With the first checks it is possible to monitor:
+
+LI: Licenses on their state and expiration
+LI: License usage
+LI: Splunk system messages
+LI: Splunk jobs
+LI: Splunk health (component monitoring)
+LI: Splunk alerts (fired alerts within splunk)

@@ -6,11 +6,149 @@
 #include <string>
 
 #include "cfg.h"
-
 #include "logger.h"
 #include "on_start.h"
+#include "read_file.h"
+#include "test_tools.h"
+
+namespace xlog {
+TEST(xlogTest, xlogLowLevel) {
+    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::kAddCr));
+    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::kAddCr));
+
+    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::kNoCr));
+    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::kNoCr));
+
+    std::string s;
+    EXPECT_NO_THROW(xlog::RmCr(s));
+    xlog::AddCr(s);
+    EXPECT_EQ(s, "\n");
+    xlog::AddCr(s);
+    EXPECT_EQ(s, "\n");
+    xlog::RmCr(s);
+    EXPECT_EQ(s, "");
+    EXPECT_NO_THROW(xlog::RmCr(s));
+}
+}  // namespace xlog
 
 namespace XLOG {
+
+TEST(LogTest, RotationFileNameCreation) {
+    EXPECT_NO_THROW(details::MakeBackupLogName("a", 0));
+    EXPECT_EQ("a", details::MakeBackupLogName("a", 0));
+    EXPECT_EQ("a.2", details::MakeBackupLogName("a", 2));
+    EXPECT_EQ("a.5", details::MakeBackupLogName("a", 5));
+}
+
+TEST(LogTest, RotationFileCfgParam) {
+    auto max_count = cma::cfg::GetBackupLogMaxCount();
+    auto max_size = cma::cfg::GetBackupLogMaxSize();
+    EXPECT_TRUE(max_count < 32);
+    EXPECT_TRUE(max_size > 100'000);
+    EXPECT_TRUE(max_size < 1'000'000'000);
+}
+
+static std::vector<std::string> ReadFileAsTable(const std::string& Name) {
+    std::ifstream in(Name.c_str());
+    std::stringstream sstr;
+    sstr << in.rdbuf();
+    auto content = sstr.str();
+    return cma::tools::SplitString(content, "\n");
+}
+
+static bool FindString(const std::string& name, unsigned int index,
+                       const std::string& Text) {
+    auto filename = details::MakeBackupLogName(name, index);
+    auto data = ReadFileAsTable(filename);
+    if (data.size() != 1) return false;
+    auto table = cma::tools::SplitString(data[0], " ");
+    if (table.size() != 3) return false;
+    return table[2] == Text;
+}
+
+TEST(LogTest, RotationFile) {
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    namespace fs = std::filesystem;
+    using namespace XLOG::details;
+    fs::path log_file = cma::cfg::GetTempDir();
+    log_file /= "log.log";
+
+    std::error_code ec;
+    std::string val0 = "00000000";
+    std::string val1 = "11111111";
+    std::string val2 = "22222222";
+    std::string val3 = "33333333";
+    std::string val4 = "44444444";
+    std::string val5 = "55555555";
+    {
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val0);
+        EXPECT_TRUE(fs::exists(log_file, ec));
+        EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
+        auto data = ReadFileAsTable(log_file.string());
+        ASSERT_TRUE(data.size() == 1);
+        auto table = cma::tools::SplitString(data[0], " ");
+        ASSERT_TRUE(table.size() == 3);
+        EXPECT_TRUE(table[2] == val0);
+    }
+
+    {
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val1);
+        EXPECT_TRUE(fs::exists(log_file, ec));
+        auto log_file_1 = MakeBackupLogName(log_file.string(), 1);
+        EXPECT_TRUE(fs::exists(log_file_1, ec));
+
+        auto data = ReadFileAsTable(log_file.string());
+        ASSERT_TRUE(data.size() == 1);
+        auto table = cma::tools::SplitString(data[0], " ");
+        ASSERT_TRUE(table.size() == 3);
+        EXPECT_TRUE(table[2] == val1);
+
+        auto data1 = ReadFileAsTable(log_file_1);
+        ASSERT_TRUE(data1.size() == 1);
+        auto table1 = cma::tools::SplitString(data1[0], " ");
+        ASSERT_TRUE(table1.size() == 3);
+        EXPECT_TRUE(table1[2] == val0);
+    }
+
+    {
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val2);
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val3);  // log.log.2
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val4);  // log.log.1
+        WriteToLogFileWithBackup(log_file.string(), 40, 3, val5);  // log.log
+
+        EXPECT_TRUE(FindString(log_file.string(), 3, val2));
+        EXPECT_TRUE(FindString(log_file.string(), 2, val3));
+        EXPECT_TRUE(FindString(log_file.string(), 1, val4));
+        EXPECT_TRUE(FindString(log_file.string(), 0, val5));
+    }
+
+    // check for 0
+    tst::SafeCleanTempDir();
+    {
+        WriteToLogFileWithBackup(log_file.string(), 40, 0, val0);
+        EXPECT_TRUE(fs::exists(log_file, ec));
+        EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
+        auto data = ReadFileAsTable(log_file.string());
+        ASSERT_TRUE(data.size() == 1);
+        auto table = cma::tools::SplitString(data[0], " ");
+        ASSERT_TRUE(table.size() == 3);
+        EXPECT_TRUE(table[2] == val0);
+    }
+
+    {
+        WriteToLogFileWithBackup(log_file.string(), 40, 0, val1);
+        EXPECT_TRUE(fs::exists(log_file, ec));
+        EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
+        auto data = ReadFileAsTable(log_file.string());
+        ASSERT_TRUE(data.size() == 1);
+        auto table = cma::tools::SplitString(data[0], " ");
+        ASSERT_TRUE(table.size() == 3);
+        EXPECT_TRUE(table[2] == val1);
+    }
+}
+
 TEST(LogTest, All) {
     // tests of log:
     // stream OUT
@@ -258,7 +396,7 @@ TEST(LogTest, Yaml) {
     fs::path logf = log_file_name;
     fs::remove(logf);
 
-    cma::OnStart(cma::StartTypes::kTest);
+    cma::OnStart(cma::AppType::test);
     setup::ChangeLogFileName(logf.u8string());
 
     XLOG::l("simple test");

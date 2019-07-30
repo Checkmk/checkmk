@@ -29,7 +29,10 @@ so it's best place is in the central library."""
 import itertools
 import json
 
-from pathlib2 import Path
+try:
+    from pathlib import Path  # type: ignore
+except ImportError:
+    from pathlib2 import Path
 
 import cmk.utils.paths
 
@@ -116,7 +119,7 @@ class WerkTranslator(object):
 
 
 def _compiled_werks_dir():
-    return Path(cmk.utils.paths.share_dir) / "werks"
+    return Path(cmk.utils.paths.share_dir, "werks")
 
 
 def load():
@@ -136,7 +139,7 @@ def load_precompiled_werks_file(path):
 
 def load_raw_files(werks_dir):
     if werks_dir is None:
-        werks_dir = Path(cmk.utils.paths.share_dir) / "werks"
+        werks_dir = _compiled_werks_dir()
     werks = {}
     for file_name in werks_dir.glob("[0-9]*"):
         werk_id = int(file_name.name)
@@ -206,15 +209,19 @@ def write_precompiled_werks(path, werks):
         json.dump(werks, fp, check_circular=False)
 
 
-# Writhe the given werks to a file object. This is used for creating a textual
-# change log for the released versions and the announcement mails
-def write_as_text(werks, f):
+def write_as_text(werks, f, write_version=True):
+    """Write the given werks to a file object
+
+    This is used for creating a textual hange log for the released versions and the announcement mails.
+    """
     translator = WerkTranslator()
     werklist = sort_by_version_and_component(werks.values())
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
-        f.write("%s:\n" % version)
-        for component, component_group in itertools.groupby(
-                version_group, key=translator.component_of):
+        # write_version=False is used by the announcement mails
+        if write_version:
+            f.write("%s:\n" % version)
+        for component, component_group in itertools.groupby(version_group,
+                                                            key=translator.component_of):
             f.write("    %s:\n" % component.encode("utf-8"))
             for werk in component_group:
                 write_werk_as_text(f, werk)
@@ -256,11 +263,10 @@ _COMPATIBLE_SORTING_VALUE = {
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
     translator = WerkTranslator()
-    return sorted(
-        werks,
-        key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
-                       _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
-                       _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
+    return sorted(werks,
+                  key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
+                                 _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
+                                 _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
 
 
 def sort_by_date(werks):
@@ -274,7 +280,6 @@ def sort_by_date(werks):
 # 1.2.4b1   -> 01020420100
 # 1.2.3i1p1 -> 01020310101
 # 1.2.3i1   -> 01020310100
-# TODO: Copied from check_mk_base.py - find location for common code.
 def parse_check_mk_version(v):
     def extract_number(s):
         number = ''

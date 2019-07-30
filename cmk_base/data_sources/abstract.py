@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import socket
 import time
@@ -35,16 +36,17 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 
 import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
+import cmk_base.cpu_tracking as cpu_tracking
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.check_api_utils as check_api_utils
 from cmk_base.exceptions import MKAgentError, MKEmptyAgentData, MKSNMPError, \
                                 MKIPAddressLookupError
+from cmk_base.check_api_utils import state_markers
 
 from .host_sections import HostSections
 
@@ -93,8 +95,8 @@ class DataSource(object):
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
-        self._logger.set_format(
-            " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
+        self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
+                                (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:
@@ -240,13 +242,13 @@ class DataSource(object):
             try:
                 os.makedirs(os.path.dirname(cachefile))
             except OSError as e:
-                if e.errno == 17:  # File exists
+                if e.errno == errno.EEXIST:
                     pass
                 else:
                     raise
         except Exception as e:
-            raise MKGeneralException(
-                "Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
+            raise MKGeneralException("Cannot create directory %r: %s" %
+                                     (os.path.dirname(cachefile), e))
 
         self._logger.debug("Write data to cache file %s" % (cachefile))
         try:
@@ -435,7 +437,7 @@ class DataSource(object):
         try:
             os.makedirs(os.path.dirname(file_path))
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -463,8 +465,8 @@ class DataSource(object):
 
             # Don't overwrite sections that have been received from the source with this call
             if section_name in host_sections.sections:
-                self._logger.debug(
-                    "Skipping persisted section %r, live data available" % (section_name))
+                self._logger.debug("Skipping persisted section %r, live data available" %
+                                   (section_name))
             else:
                 self._logger.debug("Using persisted section %r" % (section_name))
                 host_sections.add_cached_section(section_name, section_info, persisted_from,
@@ -625,7 +627,7 @@ class CheckMKAgentDataSource(DataSource):
                     sections[section_name] = section_content
                 try:
                     separator = chr(int(section_options["sep"]))
-                except:
+                except Exception:
                     separator = None
 
                 # Split of persisted section for server-side caching
@@ -658,8 +660,11 @@ class CheckMKAgentDataSource(DataSource):
 
     # TODO: refactor
     def _summary_result(self, for_checking):
-        agent_info = self._get_agent_info()
+        cmk_section = self._host_sections.sections.get("check_mk")
+        agent_info = self._get_agent_info(cmk_section)
         agent_version = agent_info["version"]
+
+        status = 0
         output = []
         if not self._host_config.is_cluster and agent_version is not None:
             output.append("Version: %s" % agent_version)
@@ -667,24 +672,120 @@ class CheckMKAgentDataSource(DataSource):
         if not self._host_config.is_cluster and agent_info["agentos"] is not None:
             output.append("OS: %s" % agent_info["agentos"])
 
-        return 0, ", ".join(output), []
+        if for_checking and cmk_section:
+            for sub_result in [
+                    self._sub_result_version(agent_info),
+                    self._sub_result_only_from(agent_info),
+            ]:
+                if not sub_result:
+                    continue
+                sub_status, sub_output = sub_result
+                status = max(status, sub_status)
+                output.append(sub_output)
+        return status, ", ".join(output), []
 
-    def _get_agent_info(self):
+    def _get_agent_info(self, cmk_section):
         agent_info = {
             "version": "unknown",
             "agentos": "unknown",
         }
 
-        if self._host_sections is None:
+        if self._host_sections is None or not cmk_section:
             return agent_info
 
-        cmk_section = self._host_sections.sections.get("check_mk")
-        if cmk_section:
-            for line in cmk_section:
-                value = " ".join(line[1:]) if len(line) > 1 else None
-                agent_info[line[0][:-1].lower()] = value
-
+        for line in cmk_section:
+            value = " ".join(line[1:]) if len(line) > 1 else None
+            agent_info[line[0][:-1].lower()] = value
         return agent_info
+
+    def _sub_result_version(self, agent_info):
+        agent_version = agent_info["version"]
+        expected_version = self._host_config.agent_target_version
+
+        if expected_version and agent_version \
+             and not self._is_expected_agent_version(agent_version, expected_version):
+            # expected version can either be:
+            # a) a single version string
+            # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
+            #    (the dict keys are optional)
+            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+                expected = 'at least'
+                if 'daily_build' in expected_version[1]:
+                    expected += ' build %s' % expected_version[1]['daily_build']
+                if 'release' in expected_version[1]:
+                    if 'daily_build' in expected_version[1]:
+                        expected += ' or'
+                    expected += ' release %s' % expected_version[1]['release']
+            else:
+                expected = expected_version
+            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            return (status, "unexpected agent version %s (should be %s)%s" %
+                    (agent_version, expected, state_markers[status]))
+
+        elif config.agent_min_version and agent_version < config.agent_min_version:
+            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            return (status, "old plugin version %s (should be at least %s)%s" %
+                    (agent_version, config.agent_min_version, state_markers[status]))
+
+    def _sub_result_only_from(self, agent_info):
+        agent_only_from = agent_info.get("onlyfrom")
+        config_only_from = self._host_config.only_from
+        if None in (agent_only_from, config_only_from):
+            return
+
+        allowed_nets = set(_normalize_ip_addresses(agent_only_from))
+        expected_nets = set(_normalize_ip_addresses(config_only_from))
+        if allowed_nets == expected_nets:
+            return 0, "allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
+
+        infotexts = []
+        exceeding = allowed_nets - expected_nets
+        if exceeding:
+            infotexts.append("agent allows extra: %s" % " ".join(sorted(exceeding)))
+        missing = expected_nets - allowed_nets
+        if missing:
+            infotexts.append("agent blocks: %s" % " ".join(sorted(missing)))
+
+        return 1, "invalid access configuration: %s%s" % (", ".join(infotexts), state_markers[1])
+
+    def _is_expected_agent_version(self, agent_version, expected_version):
+        try:
+            if agent_version in ['(unknown)', None, 'None']:
+                return False
+
+            if isinstance(expected_version, str) and expected_version != agent_version:
+                return False
+
+            elif isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+                spec = expected_version[1]
+                if cmk_base.utils.is_daily_build_version(agent_version) and 'daily_build' in spec:
+                    expected = int(spec['daily_build'].replace('.', ''))
+
+                    branch = cmk_base.utils.branch_of_daily_build(agent_version)
+                    if branch == "master":
+                        agent = int(agent_version.replace('.', ''))
+
+                    else:  # branch build (e.g. 1.2.4-2014.06.01)
+                        agent = int(agent_version.split('-')[1].replace('.', ''))
+
+                    if agent < expected:
+                        return False
+
+                elif 'release' in spec:
+                    if cmk_base.utils.is_daily_build_version(agent_version):
+                        return False
+
+                    if cmk.utils.werks.parse_check_mk_version(agent_version) \
+                        < cmk.utils.werks.parse_check_mk_version(spec['release']):
+                        return False
+
+            return True
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKGeneralException(
+                "Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
+                (agent_version, expected_version, e))
 
 
 class ManagementBoardDataSource(DataSource):
@@ -754,3 +855,21 @@ def _persisted_sections_file_path(datasource_id, hostname):
 def _persisted_sections_dir(datasource_id):
     # type: (str) -> str
     return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", datasource_id)
+
+
+def _normalize_ip_addresses(ip_addresses):
+    '''factorize 10.0.0.{1,2,3}'''
+    if not isinstance(ip_addresses, list):
+        ip_addresses = ip_addresses.split()
+
+    expanded = [word for word in ip_addresses if '{' not in word]
+    for word in ip_addresses:
+        if word in expanded:
+            continue
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+            expanded.extend(prefix + i + suffix for i in curly.split(','))
+        except:
+            raise MKGeneralException("could not expand %r" % word)
+    return expanded

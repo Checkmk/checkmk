@@ -8,11 +8,13 @@
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
+#include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "external_port.h"
 #include "realtime.h"
 #include "tools/_process.h"
+#include "upgrade.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
@@ -211,16 +213,88 @@ void ServiceProcessor::preLoadConfig() {
 void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions");
     cma::cfg::SetupPluginEnvironment();
+    ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
     plugins.preStart();
+    plugins.detachedStart();
 
     auto& local = local_provider_.getEngine();
     local.preStart();
     XLOG::l.i("Pre Start actions ended");
 }
 
-// This is simple function which kicks to call
+void ServiceProcessor::detachedPluginsStart() {
+    XLOG::t.i("Detached Start");
+    auto& plugins = plugins_provider_.getEngine();
+    plugins.detachedStart();
+}
+
+void ServiceProcessor::resetOhm() noexcept {
+    using namespace cma::cfg::upgrade;
+    auto powershell_exe = cma::FindPowershellExe();
+    if (powershell_exe.empty()) {
+        XLOG::l("NO POWERSHELL!");
+        return;
+    }
+
+    // terminating all
+    wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
+    StopWindowsService(cma::provider::ohm::kDriverNameWide);
+    auto status = WaitForStatus(GetServiceStatusByName,
+                                cma::provider::ohm::kDriverNameWide,
+                                SERVICE_STOPPED, 5000);
+    auto cmd_line = powershell_exe;
+    cmd_line += L" ";
+    cmd_line += std::wstring(cma::provider::ohm::kResetCommand);
+    XLOG::l.i("I'm going to execute '{}'", wtools::ConvertToUTF8(cmd_line));
+
+    cma::tools::RunStdCommand(cmd_line, true);
+}
+
+// conditions are: yml + exists(ohm) + elevated
+// true on successful start or if OHM is already started
+bool ServiceProcessor::conditionallyStartOhm() noexcept {
+    using namespace cma::tools;
+
+    auto& ohm_engine = ohm_provider_.getEngine();
+    if (!ohm_engine.isAllowedByCurrentConfig()) {
+        XLOG::t.i("OHM starting skipped due to config");
+        return false;
+    }
+
+    if (!win::IsElevated()) {
+        XLOG::d(
+            "Starting OHM in non elevated mode has no sense."
+            "Please start it by self or change to the elevated mode");
+        return false;
+    }
+
+    auto ohm_exe = cma::provider::GetOhmCliPath();
+    if (!IsValidRegularFile(ohm_exe)) {
+        XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+        return false;
+    }
+
+    auto error_count = ohm_engine.errorCount();
+    if (error_count > cma::cfg::kMaxOhmErrorsBeforeRestart) {
+        XLOG::l(
+            "Too many errors [{}] on the OHM, stopping, cleaning and starting",
+            error_count);
+        // no ohm, nop reset
+        auto running = ohm_process_.running();
+        if (running) ohm_process_.stop();
+
+        resetOhm();
+
+        ohm_engine.resetError();
+        if (running) ohm_process_.start(ohm_exe.wstring());
+    } else
+        ohm_process_.start(ohm_exe.wstring());
+    return true;
+}
+
+// This is relative simple function which kicks to call
 // different providers
 int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     using namespace cma::cfg;
@@ -228,13 +302,22 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     vf_.clear();
     max_timeout_ = 0;
 
-#if 0
-    vf_.emplace_back(txt_provider_.kick(Tp, this));
-    if (0) vf_.emplace_back(file_provider_.kick(Tp, this));
-#endif
     preLoadConfig();
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
+
+    // #TODO remove warning and relocate this block back at the end after
+    // beta-testing We have RElocated winperf here just to be compatible with
+    // older servers to winperf check crash. This is not 100% guarantee, that we
+    // get winperf before plugin winperf but good enough for older servers(which
+    // we should not support in any case)
+    //
+    // WinPerf Processing
+    if (groups::winperf.enabledInConfig() &&
+        groups::global.allowedSection(vars::kWinPerfPrefixDefault)) {
+        kickWinPerf(Tp, Ip);
+    }
+
     tryToKick(df_provider_, Tp, Ip);
     tryToKick(mem_provider_, Tp, Ip);
     tryToKick(services_provider_, Tp, Ip);
@@ -253,21 +336,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     tryToKick(skype_provider_, Tp, Ip);
     tryToKick(spool_provider_, Tp, Ip);
     tryToKick(ohm_provider_, Tp, Ip);
-    auto& ohm_engine = ohm_provider_.getEngine();
-    if (ohm_engine.isAllowedByCurrentConfig()) {
-        if (!cma::tools::win::IsElevated()) {
-            XLOG::d(
-                "Starting OHM in non elevated mode has no sense. Please start it by self or change to the elevated mode");
-        } else
-            ohm_process_.start(cma::provider::GetOhmCliPath().wstring());
-    }
-
-    // WinPerf Processing
-    if (groups::winperf.enabledInConfig() &&
-        groups::global.allowedSection(vars::kWinPerfPrefixDefault)) {
-        kickWinPerf(Tp, Ip);
-    }
-
     // Plugins Processing
 #if 0
     // we do not use anymore separate plugin process(player)
@@ -284,6 +352,122 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     }
 
     return static_cast<int>(vf_.size());
+}
+
+// test function to be used when no real connection
+void ServiceProcessor::sendDebugData() {
+    XLOG::l.i("Started without IO. Debug mode");
+
+    auto tp = openAnswer("127.0.0.1");
+    if (!tp) return;
+    auto started = startProviders(tp.value(), "");
+    cma::tools::sleep(2000);  // a bit of time to finish async plugins
+    auto block = getAnswer(started);
+    block.emplace_back('\0');  // yes, we need this for printf
+    auto count = printf("%s", block.data());
+    if (count != block.size() - 1) {
+        XLOG::l("Binary data at offset [{}]", count);
+    }
+}
+
+// called before every answer to execute routine tasks
+void ServiceProcessor::prepareAnswer(const std::string& ip_from,
+                                     cma::rt::Device& rt_device) {
+    auto value = cma::tools::win::GetEnv(cma::kAutoReload);
+
+    if (cma::cfg::ReloadConfigAutomatically() ||
+        cma::tools::IsEqual(value, L"yes"))
+        cma::ReloadConfig();
+
+    cma::cfg::SetupRemoteHostEnvironment(ip_from);
+    ohm_started_ = conditionallyStartOhm();  // start may happen when
+                                             // config changed
+
+    detachedPluginsStart();  // cmk agent update
+    informDevice(rt_device, ip_from);
+}
+
+// main function of the client
+cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
+    auto tp = openAnswer(ip_from);
+    if (tp) {
+        XLOG::d.i("Id is [{}] ", tp.value().time_since_epoch().count());
+        auto count_of_started = startProviders(tp.value(), ip_from);
+
+        return getAnswer(count_of_started);
+    }
+
+    XLOG::l.crit("Can't open Answer");
+    return makeTestString("No Answer");
+}
+
+// <HOSTING THREAD>
+// ex_port may be nullptr(command line test, for example)
+// makes a mail slot + starts IO on TCP
+void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
+    using namespace std::chrono;
+    // Periodically checks if the service is stopping.
+    // mail slot name selector "service" or "not service"
+    auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
+                                          : cma::cfg::kTestingMailSlot;
+
+    cma::MailSlot mailbox(mailslot_name, 0);
+    using namespace cma::carrier;
+    internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
+    try {
+        // start and stop for mailbox thread
+        mailbox.ConstructThread(SystemMailboxCallback, 20, this);
+        ON_OUT_OF_SCOPE(mailbox.DismantleThread());
+
+        // preparation if any
+        preStart();
+
+        // check that we have something for testing
+        if (ex_port == nullptr) {
+            // wait for async plugins
+            WaitForAsyncPluginThreads(5000ms);
+            sendDebugData();
+            return;
+        }
+        WaitForAsyncPluginThreads(5000ms);
+
+        cma::rt::Device rt_device;
+        for (;;) {
+            // this is main processing loop
+            rt_device.start();
+            auto io_started = ex_port->startIo(
+                [this,
+                 &rt_device](const std::string Ip) -> std::vector<uint8_t> {
+                    // most important entry point for external port io
+                    // this is internal implementation of the io_context
+                    // called upon kicking in port, i.e. LATER. NOT NOW.
+
+                    prepareAnswer(Ip, rt_device);
+                    return generateAnswer(Ip);
+                });
+            ON_OUT_OF_SCOPE({
+                ex_port->shutdownIo();
+                rt_device.stop();
+            });
+
+            if (!io_started) {
+                XLOG::l.bp("Ups. We cannot start main thread");
+                return;
+            }
+
+            // we wait her to the end of the External port
+            if (mainWaitLoop() == Signal::quit) break;
+            XLOG::l.i("restart main loop");
+        };
+
+        // the end of the fun
+        XLOG::l.i("Thread is stopped");
+    } catch (const std::exception& e) {
+        XLOG::l.crit("Not expected exception '{}'. Fix it!", e.what());
+    } catch (...) {
+        XLOG::l.bp("Not expected exception. Fix it!");
+    }
+    internal_port_ = "";
 }
 
 void ServiceProcessor::startTestingMainThread() {
@@ -312,7 +496,7 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
     auto fname = cma::cfg::GetCurrentLogFileName();
 
     auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    XLOG::t("Received {} bytes from {}\n", Len, dt->providerId());
+    XLOG::d.i("Received [{}] bytes from '{}'\n", Len, dt->providerId());
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
@@ -320,7 +504,7 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
             {
                 std::string to_log;
                 if (dt->data()) {
-                    auto data = (const char*)dt->data();
+                    auto data = static_cast<const char*>(dt->data());
                     to_log.assign(data, data + dt->length());
                     XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(),
                                              to_log);
@@ -332,21 +516,35 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
         case cma::carrier::DataType::kSegment:
             // IMPORTANT ENTRY POINT
             // Receive data for Section
-            nanoseconds duration_since_epoch(dt->answerId());
-            time_point<steady_clock> tp(duration_since_epoch);
-            auto data_source = static_cast<const uint8_t*>(dt->data());
-            auto data_end = data_source + dt->length();
-            AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
+            {
+                nanoseconds duration_since_epoch(dt->answerId());
+                time_point<steady_clock> tp(duration_since_epoch);
+                auto data_source = static_cast<const uint8_t*>(dt->data());
+                auto data_end = data_source + dt->length();
+                AsyncAnswer::DataBlock vectorized_data(data_source, data_end);
 
-            if (vectorized_data.size() && vectorized_data.back() == 0) {
-                XLOG::l("Section '{}' sends null terminated strings",
-                        dt->providerId());
-                vectorized_data.pop_back();
+                if (vectorized_data.size() && vectorized_data.back() == 0) {
+                    XLOG::l("Section '{}' sends null terminated strings",
+                            dt->providerId());
+                    vectorized_data.pop_back();
+                }
+
+                processor->addSectionToAnswer(dt->providerId(), tp,
+                                              vectorized_data);
             }
-
-            processor->addSectionToAnswer(dt->providerId(), tp,
-                                          vectorized_data);
             break;
+        case cma::carrier::DataType::kYaml:
+            XLOG::l.bp(XLOG_FUNC + " NOT SUPPORTED now");
+            break;
+
+        case cma::carrier::DataType::kCommand: {
+            std::string cmd(static_cast<const char*>(dt->data()),
+                            static_cast<size_t>(dt->length()));
+            std::string peer(cma::commander::kMainPeer);
+            cma::commander::RunCommand(peer, cmd);
+
+            break;
+        }
     }
 
     return true;
@@ -361,7 +559,7 @@ HANDLE CreateDevNull() {
 }
 
 // This Function is safe
-bool TheMiniProcess::start(const std::wstring ExePath) {
+bool TheMiniProcess::start(const std::wstring& exe_name) {
     std::unique_lock lk(lock_);
     if (process_handle_ != INVALID_HANDLE_VALUE) {
         // check status and reset handle if required
@@ -385,15 +583,17 @@ bool TheMiniProcess::start(const std::wstring ExePath) {
         ON_OUT_OF_SCOPE(CloseHandle(null_handle));
 
         PROCESS_INFORMATION pi{0};
-        if (!::CreateProcess(ExePath.c_str(), nullptr, nullptr, nullptr, TRUE,
+        if (!::CreateProcess(exe_name.c_str(), nullptr, nullptr, nullptr, TRUE,
                              0, nullptr, nullptr, &si, &pi)) {
-            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(ExePath));
+            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(exe_name));
             return false;
         }
         process_handle_ = pi.hProcess;
         process_id_ = pi.dwProcessId;
         CloseHandle(pi.hThread);  // as in LA
-        XLOG::d.i("Started {}", wtools::ConvertToUTF8(ExePath));
+
+        process_name_ = wtools::ConvertToUTF8(exe_name);
+        XLOG::d.i("Started '{}' wih pid [{}]", process_name_, process_id_);
     }
 
     return true;
@@ -404,24 +604,35 @@ bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);
     if (process_handle_ == INVALID_HANDLE_VALUE) return false;
 
+    auto name = process_name_;
+    auto pid = process_id_;
+    auto handle = process_handle_;
+
+    process_id_ = 0;
+    process_name_.clear();
     CloseHandle(process_handle_);
     process_handle_ = INVALID_HANDLE_VALUE;
-    auto pid = process_id_;
-    process_id_ = 0;
 
     // check status and reset handle if required
     DWORD exit_code = STILL_ACTIVE;
-    if (!::GetExitCodeProcess(process_handle_, &exit_code) ||  // no access
-        exit_code == STILL_ACTIVE) {                           // running
-
-        // our proc either running or we have no access to the proc
-        // try to kill
+    if (!::GetExitCodeProcess(handle, &exit_code) ||  // no access
+        exit_code == STILL_ACTIVE) {                  // running
         lk.unlock();
-        XLOG::l("Killing process {}", process_id_);
+
+        // our process either running or we have no access to the process
+        // -> try to kill
+        if (pid == 0) {
+            XLOG::l.bp("Killing 0 process '{}' not allowed", name);
+            return false;
+        }
+
         wtools::KillProcessTree(pid);
         wtools::KillProcess(pid);
+        XLOG::l.t("Killing process [{}] '{}'", pid, name);
         return true;
     }
+
+    XLOG::l.t("Process [{}] '{}' already dead", pid, name);
     return false;
 }
 

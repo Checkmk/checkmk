@@ -1,0 +1,12 @@
+Title: HW/SW filter did not work: Network interface: Last Change
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560953342
+
+The HW/SW inventory view filter "Network interface: Last Change" could not be used,
+neither in views, nor in reports. The configured values were never applied.

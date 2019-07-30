@@ -53,7 +53,6 @@ from .abstract import CheckMKAgentDataSource
 
 class ProgramDataSource(CheckMKAgentDataSource):
     """Abstract base class for all data source classes that execute external programs"""
-
     def _cpu_tracking_id(self):
         return "ds"
 
@@ -195,8 +194,9 @@ class SpecialAgentDataSource(ProgramDataSource):
             cmd_arguments = agent_configuration
             command_stdin = None
 
-        final_arguments = config.prepare_check_command(
-            cmd_arguments, self._hostname, description=None)
+        final_arguments = config.prepare_check_command(cmd_arguments,
+                                                       self._hostname,
+                                                       description=None)
 
         special_agents_dir = cmk.utils.paths.agents_dir + "/special"
         local_special_agents_dir = cmk.utils.paths.local_agents_dir + "/special"

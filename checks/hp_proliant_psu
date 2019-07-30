@@ -49,8 +49,8 @@ def parse_hp_proliant_psu(info):
             pass
     if parsed:
         PsuTotal = collections.namedtuple("Psu", ['used', 'max'])
-        parsed['Total'] = PsuTotal(
-            sum(v.used for v in parsed.values()), sum(v.max for v in parsed.values()))
+        parsed['Total'] = PsuTotal(sum(v.used for v in parsed.values()),
+                                   sum(v.max for v in parsed.values()))
     return parsed
 
 

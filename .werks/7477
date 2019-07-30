@@ -1,0 +1,17 @@
+Title: job: Gracefully handle long running cronjobs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557340275
+Class: fix
+
+Previously mk_job got confused when a job was started while a job with
+the same Identity was still running.
+
+The mk_job script can now handle these cases. The corresponding check plugin
+will apply the age levels to the longest runnging job, and additionally
+display the stats of the last completed job.
+
+

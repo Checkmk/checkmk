@@ -1,0 +1,10 @@
+Title: dmidecode: Fixed crash if any value is empty, eg. "Voltage = ''"
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1559742152
+Class: fix
+
+

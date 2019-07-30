@@ -83,4 +83,6 @@ def check_storeonce_space(item, params, values):
         yield 0, "Free cloud: %s, Free local: %s" % (get_bytes_human_readable(free_cloud_bytes),
                                                      get_bytes_human_readable(free_local_bytes))
 
-    yield 0, "Dedup ratio: %.2f" % float(values['Deduplication Ratio'])
+    dedupl_ratio_str = values.get('Deduplication Ratio')
+    if dedupl_ratio_str is not None:
+        yield 0, "Dedup ratio: %.2f" % float(dedupl_ratio_str)

@@ -28,7 +28,7 @@
 # Check_MK HW/SW-Inventory.
 
 
-def inventory_dmi_sysinfo(checkname, info):
+def inventory_dmi_sysinfo(info):
     if len(info) > 0 and info[0] == ['System', 'Information']:
         return [(None, None)]
 

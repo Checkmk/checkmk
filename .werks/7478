@@ -1,0 +1,10 @@
+Title: azure_storageaccounts: Fix missing WATO parameters
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557392280
+Class: fix
+
+

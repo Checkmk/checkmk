@@ -1,0 +1,12 @@
+Title: df: Fixed broken exclusion of zfs file systems
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1560511979
+Class: fix
+
+With werk #7226 The detection of zfs has been reintroduced into the df
+section again. You may need to rediscover your services again to get rid of
+this problem, after you updated your agent.

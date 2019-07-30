@@ -7,11 +7,14 @@ pytestmark = pytest.mark.checks
     "info,expected_parsed",
     [
         ([], []),
-        ([["tcp", "0", "0", "0.0.0.0:6556", "0.0.0.0:*", "LISTENING"]],
-         [("TCP", ["0.0.0.0", "6556"], ["0.0.0.0", "*"], "LISTENING")]),
+        ([["tcp", "0", "0", "0.0.0.0:6556", "0.0.0.0:*", "LISTENING"]
+         ], [("TCP", ["0.0.0.0", "6556"], ["0.0.0.0", "*"], "LISTENING")]),
         # Some AIX systems separate the port with a dot (.) instead of a colon (:)
-        ([["tcp4", "0", "0", "127.0.0.1.1234", "127.0.0.1.5678", "ESTABLISHED"]],
-         [("TCP", ["127.0.0.1", "1234"], ["127.0.0.1", "5678"], "ESTABLISHED")]),
+        ([["tcp4", "0", "0", "127.0.0.1.1234", "127.0.0.1.5678", "ESTABLISHED"]
+         ], [("TCP", ["127.0.0.1", "1234"], ["127.0.0.1", "5678"], "ESTABLISHED")]),
+        # Solaris systems output a different format for udp (3 elements instead 5)
+        ([['udp', '-', '-', '*.*', '0.0.0.0:*']], [('UDP', ['*', '*'], ['0.0.0.0', '*'
+                                                                       ], 'LISTENING')]),
     ])
 def test_parse_netstat(check_manager, info, expected_parsed):
     parsed = check_manager.get_check('netstat').run_parse(info)

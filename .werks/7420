@@ -1,0 +1,16 @@
+Title: ps: only show processes which do not belong to a docker container
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1558598280
+Class: fix
+
+On hosts which run Docker the ps section contained processes which belong
+to Docker containers. This Werk omits these container processes and only
+shows processes which do not belong to a Docker container. If the agent
+is run in the context of a Docker container this filter is not applied.
+
+If you want to use this feature a check_mk_agent including this Werk has
+to be installed on the host.

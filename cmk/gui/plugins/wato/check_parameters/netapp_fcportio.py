@@ -59,23 +59,22 @@ class RulespecCheckgroupParametersNetappFcportio(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("read",
-                       Tuple(
-                           title=_("Read"),
-                           elements=[
-                               Filesize(title=_("Warning if below")),
-                               Filesize(title=_("Critical if below")),
-                           ],
-                       )),
-                      ("write",
-                       Tuple(
-                           title=_("Write"),
-                           elements=[
-                               Filesize(title=_("Warning at")),
-                               Filesize(title=_("Critical at")),
-                           ],
-                       ))],)
+        return Dictionary(elements=[("read",
+                                     Tuple(
+                                         title=_("Read"),
+                                         elements=[
+                                             Filesize(title=_("Warning if below")),
+                                             Filesize(title=_("Critical if below")),
+                                         ],
+                                     )),
+                                    ("write",
+                                     Tuple(
+                                         title=_("Write"),
+                                         elements=[
+                                             Filesize(title=_("Warning at")),
+                                             Filesize(title=_("Critical at")),
+                                         ],
+                                     ))],)
 
     @property
     def item_spec(self):

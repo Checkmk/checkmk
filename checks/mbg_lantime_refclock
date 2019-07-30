@@ -64,16 +64,16 @@ def check_mbg_lantime_refclock(item, params, info):
         elif ref_mode in ['2', '4', '5']:
             state = max(state, 1)
             thr_txt = ' (!)'
-        state_txt.append('Refclock State: %s%s' % (mbg_lantime_refclock_refmode_map.get(
-            ref_mode, 'UNKNOWN'), thr_txt))
+        state_txt.append('Refclock State: %s%s' %
+                         (mbg_lantime_refclock_refmode_map.get(ref_mode, 'UNKNOWN'), thr_txt))
 
         # Handle gps state
         thr_txt = ''
         if gps_state in ['0', '2']:
             state = max(state, 2)
             thr_txt = ' (!!)'
-        state_txt.append('GPS State: %s%s' % (mbg_lantime_refclock_gpsstate_map.get(
-            gps_state, 'UNKNOWN'), thr_txt))
+        state_txt.append('GPS State: %s%s' %
+                         (mbg_lantime_refclock_gpsstate_map.get(gps_state, 'UNKNOWN'), thr_txt))
 
         # Add gps position
         state_txt.append(gps_pos)

@@ -72,22 +72,21 @@ class RulespecCheckgroupParametersMultipathCount(CheckParameterRulespecWithItem)
                     title=_("Custom settings"),
                     elements=[
                         (element,
-                         Transform(
-                             Tuple(
-                                 title=description,
-                                 elements=[
-                                     Integer(title=_("Critical if less than")),
-                                     Integer(title=_("Warning if less than")),
-                                     Integer(title=_("Warning if more than")),
-                                     Integer(title=_("Critical if more than")),
-                                 ],
-                             ),
-                             forth=lambda x: len(x) == 2 and (
-                                 0,
-                                 0,
-                                 x[0],
-                                 x[1],
-                             ) or x))
+                         Transform(Tuple(
+                             title=description,
+                             elements=[
+                                 Integer(title=_("Critical if less than")),
+                                 Integer(title=_("Warning if less than")),
+                                 Integer(title=_("Warning if more than")),
+                                 Integer(title=_("Critical if more than")),
+                             ],
+                         ),
+                                   forth=lambda x: len(x) == 2 and (
+                                       0,
+                                       0,
+                                       x[0],
+                                       x[1],
+                                   ) or x))
                         for (element,
                              description) in [("active", _("Active paths")
                                               ), ("dead",

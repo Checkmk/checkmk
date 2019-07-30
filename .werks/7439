@@ -1,0 +1,15 @@
+Title: PagerDuty notification when Host Check Command queries a service
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1556798474
+Class: fix
+
+PagerDuty notification plugin tried to parse perfdata and include it on the
+Notification payload. This led to some buggy behavior on host problems when
+using a Host check command. Since this information is not Processed by
+PagerDuty only showed, we drop the perfdata information out of the
+notification. Also for consistency as other notification plugins don't
+include this information either.

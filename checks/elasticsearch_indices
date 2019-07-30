@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<elasticsearch_indices>>>
+# filebeat-6.5.4 11492614 801366929
+
+ElasticIndex = collections.namedtuple("ElasticIndex", [
+    "count",
+    "size",
+])
+
+
+def parse_elasticsearch_indices(info):
+    parsed = {}
+
+    for line in info:
+        try:
+            index, count, size = line
+            if parsed.get(index):
+                # sum up count/size for index names which already appeared
+                parsed[index] = parsed[index]._replace(count=parsed[index].count + int(count))
+                parsed[index] = parsed[index]._replace(size=parsed[index].size + int(size))
+            else:
+                parsed.setdefault(index, ElasticIndex(
+                    int(count),
+                    int(size),
+                ))
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_elasticsearch_indices(item, params, item_data):
+    for value, name, infotext, hr_func, unit in [
+        (item_data.count, "elasticsearch_count", "count", int, "docs"),
+        (item_data.size, "elasticsearch_size", "size", get_bytes_human_readable, ""),
+    ]:
+
+        if params.get("%s_rate" % name):
+            avg = params.get("%s_rate" % name)[2]
+        else:
+            avg = 30
+
+        yield check_levels(value,
+                           name, (None, None),
+                           human_readable_func=hr_func,
+                           unit=unit,
+                           infoname="Total %s" % infotext)
+
+        this_time = time.time()
+        rate = get_rate("elasticsearch_indices.%s.%s" % (name, item), this_time, value) * 60
+
+        avg_rate = get_average("elasticsearch_indices.%s.%s.avg" % (name, item), this_time, rate,
+                               avg)
+
+        if params.get("%s_rate" % name):
+            warn, crit, avg = params["%s_rate" % name]
+            avg_rate_warn = (avg_rate * (warn / 100 + 1))
+            avg_rate_crit = (avg_rate * (crit / 100 + 1))
+            params_avg = (avg_rate_warn, avg_rate_crit)
+        else:
+            params_avg = (None, None)
+
+        yield check_levels(rate,
+                           "%s_rate" % name,
+                           params_avg,
+                           human_readable_func=hr_func,
+                           unit="%s per Minute" % unit,
+                           infoname="Average %s" % infotext)
+
+
+check_info["elasticsearch_indices"] = {
+    "check_function": check_elasticsearch_indices,
+    "parse_function": parse_elasticsearch_indices,
+    "inventory_function": discover(),
+    "service_description": "Elasticsearch Indice %s",
+    "has_perfdata": True,
+    "group": "elasticsearch_indices",
+}

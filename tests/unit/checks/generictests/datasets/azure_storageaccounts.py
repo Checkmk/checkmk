@@ -12,14 +12,13 @@ info = [
         '/st0ragetestaccount", "location": "westeurope"}'
     ],
     ['metrics following', '7'],
-    ['name', 'aggregation', 'value', 'unit', 'timestamp', 'timegrain', 'filters'],
-    ['UsedCapacity', 'total', '3822551.0', 'bytes', '1544591820', 'PT1H', 'None'],
-    ['Ingress', 'total', '31620.0', 'bytes', '1544595420', 'PT1H', 'None'],
-    ['Egress', 'total', '237007090.0', 'bytes', '1544595420', 'PT1H', 'None'],
-    ['Transactions', 'total', '62.0', 'count', '1544595420', 'PT1H', 'None'],
-    ['SuccessServerLatency', 'total', '5624.0', 'milli_seconds', '1544595420', 'PT1H', 'None'],
-    ['SuccessE2ELatency', 'total', '9584.0', 'milli_seconds', '1544595420', 'PT1H', 'None'],
-    ['Availability', 'total', '6200.0', 'percent', '1544595420', 'PT1H', 'None'],
+    ['{"name": "UsedCapacity", "timestamp": "1544591820", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 3822551.0, "unit": "bytes"}'],
+    ['{"name": "Ingress", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 31620.0, "unit": "bytes"}'],
+    ['{"name": "Egress", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 237007090.0, "unit": "bytes"}'],
+    ['{"name": "Transactions", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 62.0, "unit": "count"}'],
+    ['{"name": "SuccessServerLatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 5624.0, "unit": "milli_seconds"}'],
+    ['{"name": "SuccessE2ELatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 9584.0, "unit": "milli_seconds"}'],
+    ['{"name": "Availability", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'],
     ['Resource'],
     [
         '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "Storage", "group":'
@@ -30,14 +29,13 @@ info = [
         '/storageAccounts/glastonburydiag381", "location": "westeurope"}'
     ],
     ['metrics following', '7'],
-    ['name', 'aggregation', 'value', 'unit', 'timestamp', 'timegrain', 'filters'],
-    ['UsedCapacity', 'total', '10773519964.0', 'bytes', '1544598780', 'PT1H', 'None'],
-    ['Ingress', 'total', '43202937.0', 'bytes', '1544602380', 'PT1H', 'None'],
-    ['Egress', 'total', '5835881.0', 'bytes', '1544602380', 'PT1H', 'None'],
-    ['Transactions', 'total', '1907.0', 'count', '1544602380', 'PT1H', 'None'],
-    ['SuccessServerLatency', 'total', '20105.0', 'milli_seconds', '1544602380', 'PT1H', 'None'],
-    ['SuccessE2ELatency', 'total', '37606.0', 'milli_seconds', '1544602380', 'PT1H', 'None'],
-    ['Availability', 'total', '190700.0', 'percent', '1544602380', 'PT1H', 'None'],
+    ['{"name": "UsedCapacity", "timestamp": "1544598780", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 10773519964.0, "unit": "bytes"}'],
+    ['{"name": "Ingress", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 43202937.0, "unit": "bytes"}'],
+    ['{"name": "Egress", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 5835881.0, "unit": "bytes"}'],
+    ['{"name": "Transactions", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 1907.0, "unit": "count"}'],
+    ['{"name": "SuccessServerLatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 20105.0, "unit": "milli_seconds"}'],
+    ['{"name": "SuccessE2ELatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 37606.0, "unit": "milli_seconds"}'],
+    ['{"name": "Availability", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'],
 ]
 
 _common_discovery = [(u'glastonburydiag381', {}), (u'st0ragetestaccount', {})]
@@ -83,14 +81,14 @@ checks = {
                                                       None)]),
             (0, 'End-to-end server latency: 37606 ms', [('e2e_latency', 37.606, None, None, 0,
                                                          None)]),
-            (0, 'Availability: 190700.0%', [('availability', 190700.0, None, None, 0, None)]),
+            (0, 'Availability: 190700%', [('availability', 190700.0, None, None, 0, None)]),
         ]),
         (u'st0ragetestaccount', {}, [
             (0, 'Success server latency: 5624 ms', [('server_latency', 5.624, None, None, 0,
                                                      None)]),
             (0, 'End-to-end server latency: 9584 ms', [('e2e_latency', 9.584, None, None, 0,
                                                         None)]),
-            (0, 'Availability: 6200.0%', [('availability', 6200.0, None, None, 0, None)]),
+            (0, 'Availability: 6200%', [('availability', 6200.0, None, None, 0, None)]),
         ]),
     ],
 }

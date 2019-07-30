@@ -1,0 +1,11 @@
+Title: oracle_logswitches: Handle db error maybe provided via the agent output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558078151
+Class: fix
+
+An agent may potentially provide an output containing an error message resulting
+from the underlying SQL query. The check does not crash during discovery anymore.

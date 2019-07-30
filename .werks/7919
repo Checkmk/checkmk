@@ -1,0 +1,10 @@
+Title: mk_sap_hana: Do not write empty loglines which let the logwatch check crash
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563345194
+Class: fix
+
+

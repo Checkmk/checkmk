@@ -1,0 +1,13 @@
+Title: Improve view editor rendering time
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1558337767
+
+The view editor was rendered slowly when a view uses a lot of columns. The dialog
+did load the colorpicker.js file once for each column, even when the configured
+columns do not use the color picker.

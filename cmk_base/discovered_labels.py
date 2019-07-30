@@ -26,69 +26,23 @@
 
 import abc
 import collections
-from typing import Dict, Text  # pylint: disable=unused-import
-from pathlib2 import Path  # pylint: disable=unused-import
+from typing import Text, List, Dict  # pylint: disable=unused-import
 
-import cmk.utils.paths
-import cmk.utils.store
-
-
-class ABCDiscoveredLabelsStore(object):
-    """Managing persistance of discovered labels"""
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractproperty
-    def file_path(self):
-        # type () -> Path
-        raise NotImplementedError()
-
-    def load(self):
-        # type: () -> Dict
-        return cmk.utils.store.load_data_from_file(str(self.file_path), default={})
-
-    def save(self, labels):
-        # type: (Dict) -> None
-        if not labels:
-            if self.file_path.exists():
-                self.file_path.unlink()
-            return
-
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_data_to_file(str(self.file_path), labels)
-
-
-class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname):
-        # type: (str) -> None
-        super(DiscoveredHostLabelsStore, self).__init__()
-        self._hostname = hostname
-
-    @property
-    def file_path(self):
-        # type () -> Path
-        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
-
-
-class DiscoveredServiceLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname, service_desc):
-        # type: (str, Text) -> None
-        super(DiscoveredServiceLabelsStore, self).__init__()
-        self._hostname = hostname
-        self._service_desc = service_desc
-
-    @property
-    def file_path(self):
-        # type () -> Path
-        return (cmk.utils.paths.discovered_service_labels_dir / self._hostname /
-                self._service_desc).with_suffix(".mk")
+from cmk.utils.exceptions import MKGeneralException
 
 
 class ABCDiscoveredLabels(collections.MutableMapping, object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args):
         super(ABCDiscoveredLabels, self).__init__()
-        self._labels = kwargs
+        self._labels = {}
+        for entry in args:
+            self.add_label(entry)
+
+    @abc.abstractmethod
+    def add_label(self, label):
+        raise NotImplementedError()
 
     def is_empty(self):
         return not self._labels
@@ -114,14 +68,14 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-
-    def __init__(self, inventory_tree, **kwargs):
-        super(DiscoveredHostLabels, self).__init__(**kwargs)
+    def __init__(self, inventory_tree, *args):
+        super(DiscoveredHostLabels, self).__init__(*args)
         self._inventory_tree = inventory_tree
 
     # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
     # inventory API.
-    def add_label(self, key, value, plugin_name):
+    # TODO: Cleanup these different argument
+    def add_label(self, key, value, plugin_name):  # pylint: disable=arguments-differ
         """Add a label to the collection of discovered labels and inventory tree
 
         Add it to the inventory tree for debugging purposes
@@ -134,6 +88,66 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         })
 
 
+class ServiceLabel(object):
+    """Representing a service label in Checkmk
+
+    This class is meant to be exposed to the check API. It will be usable in
+    the discovery function to create a new label like this:
+
+    yield ServiceLabel(u"my_label_key", u"my_value")
+    """
+
+    __slots__ = ["_name", "_value"]
+
+    def __init__(self, name, value):
+        # type: (Text, Text) -> None
+
+        if not isinstance(name, unicode):
+            raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
+        self._name = name
+
+        if not isinstance(value, unicode):
+            raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
+        self._value = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def label(self):
+        return "%s:%s" % (self._name, self._value)
+
+
 class DiscoveredServiceLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single service during runtime"""
-    pass
+    def add_label(self, label):
+        # type: (ServiceLabel) -> None
+        self._labels[label.name] = label.value
+
+
+class DiscoveredServiceLabelsOfHost(object):
+    """Manages the discovered labels of all services of one host
+
+    During the service discovery in Checkmk base code, this class
+    is used to collect all discovered labels.
+    """
+    __slots__ = ["_service_labels"]
+
+    def __init__(self, **kwargs):
+        super(DiscoveredServiceLabelsOfHost, self).__init__()
+        self._service_labels = kwargs  # type: Dict[Text, DiscoveredServiceLabels]
+
+    def add_labels(self, service_desc, service_labels):
+        # type: (Text, DiscoveredServiceLabels) -> None
+        self._service_labels[service_desc] = service_labels
+
+    def to_dict(self):
+        return {
+            service_descr: service_labels.to_dict()
+            for service_descr, service_labels in self._service_labels.items()
+        }

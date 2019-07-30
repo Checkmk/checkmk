@@ -38,7 +38,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class SnapinDashlet(IFrameDashlet):
     """Dashlet that displays a sidebar snapin"""
-
     @classmethod
     def type_name(cls):
         return "snapin"
@@ -94,28 +93,6 @@ class SnapinDashlet(IFrameDashlet):
 
         html.set_browser_reload(self.refresh_interval())
         html.html_head(_('Snapin Dashlet'))
-        html.style('''
-#side_content {
-    height: auto;
-    top: 0;
-    padding-top: 4px;
-    padding-left: 4px;
-}
-div.snapin:last-child {
-    margin-bottom: 0;
-}
-div.snapin div.content {
-    background-image: none;
-    background-color: #508AA1;
-}
-div.snapin {
-    margin: 0;
-    padding: 0;
-}
-body.side {
-    overflow-x: hidden;
-    overflow-y: auto;
-}''')
         html.open_body(class_="side")
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")

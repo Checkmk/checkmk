@@ -60,8 +60,8 @@ def check_netapp_api_qtree_quota(item, params, qtree):
 check_info["netapp_api_qtree_quota"] = {
     'check_function': check_netapp_api_qtree_quota,
     'inventory_function': inventory_netapp_api_qtree_quota,
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["quota", "quota-users"]),
+    'parse_function': lambda info: netapp_api_parse_lines(info,
+                                                          custom_keys=["quota", "quota-users"]),
     'service_description': 'Qtree %s',
     'has_perfdata': True,
     'group': "filesystem",

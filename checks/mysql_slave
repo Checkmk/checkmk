@@ -25,30 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 
+@mysql_parse_per_item
 def parse_mysql_slave(info):
-    def parse_line(line):
+    data = {}
+    for line in info:
         if not line[0].endswith(':'):
-            return None, None
-        key = line[0][:-1]
+            continue
 
+        key = line[0][:-1]
         val = ' '.join(line[1:])
+
         # Parse some values
         try:
             val = int(val)
         except ValueError:
             val = {'Yes': True, 'No': False, 'None': None}.get(val, val)
-        return key, val
+        data[key] = val
 
-    parsed = {}
-    for instance, line in _mysql_iter_instance_lines(info):  # pylint: disable=undefined-variable
-        key, value = parse_line(line)
-        parsed.setdefault(instance, {})[key] = value
-    return parsed
-
-
-@discover
-def inventory_mysql_slave(_key, values):
-    return len(values) > 0
+    return data
 
 
 @get_parsed_item_data
@@ -95,7 +89,7 @@ def check_mysql_slave(_no_item, params, data):
 
 check_info['mysql_slave'] = {
     "parse_function": parse_mysql_slave,
-    "inventory_function": inventory_mysql_slave,
+    "inventory_function": discover(lambda k, v: bool(v)),
     "check_function": check_mysql_slave,
     "service_description": "MySQL DB Slave %s",
     "has_perfdata": True,

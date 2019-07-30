@@ -58,14 +58,13 @@ class RulespecCheckgroupParametersSaprouterCertAge(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("validity_age",
-                 Tuple(
-                     title=_('Lower levels for certificate age'),
-                     elements=[
-                         Age(title=_("Warning below"), default_value=30 * 86400),
-                         Age(title=_("Critical below"), default_value=7 * 86400),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("validity_age",
+             Tuple(
+                 title=_('Lower levels for certificate age'),
+                 elements=[
+                     Age(title=_("Warning below"), default_value=30 * 86400),
+                     Age(title=_("Critical below"), default_value=7 * 86400),
+                 ],
+             )),
+        ],)

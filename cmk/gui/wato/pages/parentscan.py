@@ -27,6 +27,8 @@
 
 import collections
 
+import cmk.utils.store as store
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -39,7 +41,6 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
-    WatoBackgroundJob,
     get_hosts_from_checkboxes,
 )
 
@@ -50,7 +51,7 @@ ParentScanResult = collections.namedtuple("ParentScanResult",
 
 # TODO: This job should be executable multiple times at once
 @gui_background_job.job_registry.register
-class ParentScanBackgroundJob(WatoBackgroundJob):
+class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod
@@ -127,13 +128,13 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
 
     def _process_parent_scan_results(self, task, settings, gateways):
-        gateway = ParentScanResult(*gateways[0][0])
+        gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]
 
         if state in ["direct", "root", "gateway"]:
             # The following code updates the host config. The progress from loading the WATO folder
             # until it has been saved needs to be locked.
-            with watolib.exclusive_lock():
+            with store.lock_checkmk_configuration():
                 self._configure_host_and_gateway(task, settings, state, gateway)
         else:
             self._logger.error(error)
@@ -160,8 +161,8 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 
         host = folder.host(task.host_name)
         if host.effective_attribute("parents") == parents:
-            self._logger.info(
-                _("Parents unchanged at %s"), (",".join(parents) if parents else _("none")))
+            self._logger.info(_("Parents unchanged at %s"),
+                              (",".join(parents) if parents else _("none")))
             return
 
         if settings["force_explicit"] or host.folder().effective_attribute("parents") != parents:
@@ -344,7 +345,7 @@ class ModeParentScan(WatoMode):
 
     def page(self):
         job_status_snapshot = self._job.get_status_snapshot()
-        if job_status_snapshot.is_running():
+        if job_status_snapshot.is_active():
             html.message(
                 _("Parent scan currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())

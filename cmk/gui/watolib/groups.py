@@ -42,6 +42,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import format_config_value
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
     ABCHostAttribute,
@@ -94,8 +95,8 @@ def _load_cmk_base_groups():
         "define_contactgroups": {},
     }
 
-    return store.load_mk_file(
-        cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", default=group_specs)
+    return store.load_mk_file(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk",
+                              default=group_specs)
 
 
 def _load_gui_groups():
@@ -106,8 +107,8 @@ def _load_gui_groups():
         "multisite_contactgroups": {},
     }
 
-    return store.load_mk_file(
-        cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs)
+    return store.load_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk",
+                              default=group_specs)
 
 
 def add_group(name, group_type, extra_info):
@@ -177,8 +178,8 @@ def delete_group(name, group_type):
     if usages:
         raise MKUserError(
             None,
-            _("Unable to delete group. It is still in use by: %s") % ", ".join(
-                [e[0] for e in usages]))
+            _("Unable to delete group. It is still in use by: %s") %
+            ", ".join([e[0] for e in usages]))
 
     # Delete group
     group = groups.pop(name)
@@ -281,16 +282,24 @@ def find_usages_of_group(name, group_type):
     return usages
 
 
-# Check if a group is currently in use and cannot be deleted
-# Returns a list of occurrances.
-# Possible usages:
-# - 1. rules: host to contactgroups, services to contactgroups
-# - 2. user memberships
 def find_usages_of_contact_group(name):
-    # Part 1: Rules
-    used_in = _find_usages_of_group_in_rules(name, ['host_contactgroups', 'service_contactgroups'])
+    """Check if a group is currently in use and cannot be deleted
+    Returns a list of occurrances.
+    """
+    global_config = load_configuration_settings()
 
-    # Is the contactgroup assigned to a user?
+    used_in = _find_usages_of_group_in_rules(name, ['host_contactgroups', 'service_contactgroups'])
+    used_in += _find_usages_of_contact_group_in_users(name)
+    used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
+    used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
+    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+
+    return used_in
+
+
+def _find_usages_of_contact_group_in_users(name):
+    """Is the contactgroup assigned to a user?"""
+    used_in = []
     users = userdb.load_users()
     entries = users.items()
     for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
@@ -298,10 +307,12 @@ def find_usages_of_contact_group(name):
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
                             folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
+    return used_in
 
-    global_config = load_configuration_settings()
 
-    # Used in default_user_profile?
+def _find_usages_of_contact_group_in_default_user_profile(name, global_config):
+    """Used in default_user_profile?"""
+    used_in = []
     config_variable = config_variable_registry['default_user_profile']()
     domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
@@ -311,8 +322,12 @@ def find_usages_of_contact_group(name):
         used_in.append(('%s' % (_('Default User Profile')),
                         folder_preserving_link([('mode', 'edit_configvar'),
                                                 ('varname', 'default_user_profile')])))
+    return used_in
 
-    # Is the contactgroup used in mkeventd notify (if available)?
+
+def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config):
+    """Is the contactgroup used in mkeventd notify (if available)?"""
+    used_in = []
     if 'mkeventd_notify_contactgroup' in config_variable_registry:
         config_variable = config_variable_registry['mkeventd_notify_contactgroup']()
         domain = config_variable.domain()
@@ -323,6 +338,22 @@ def find_usages_of_contact_group(name):
             used_in.append(('%s' % (config_variable.valuespec().title()),
                             folder_preserving_link([('mode', 'edit_configvar'),
                                                     ('varname', 'mkeventd_notify_contactgroup')])))
+    return used_in
+
+
+def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
+    used_in = []
+    for subfolder in folder.all_subfolders().values():
+        used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
+
+    attributes = folder.attributes()
+    if name in attributes.get("contactgroups", {}).get("groups", []):
+        used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
+
+    for host in folder.hosts().itervalues():
+        attributes = host.attributes()
+        if name in attributes.get("contactgroups", {}).get("groups", []):
+            used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in
 
@@ -375,7 +406,6 @@ def is_alias_used(my_what, my_name, my_alias):
 @host_attribute_registry.register
 class HostAttributeContactGroups(ABCHostAttribute):
     """Attribute needed for folder permissions"""
-
     def __init__(self):
         ABCHostAttribute.__init__(self)
         self._contactgroups = None
@@ -389,6 +419,10 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def topic(self):
         return HostAttributeTopicBasicSettings
+
+    @classmethod
+    def sort_index(cls):
+        return 25
 
     def help(self):
         url = "wato.py?mode=rulesets&group=grouping"
@@ -442,26 +476,23 @@ class HostAttributeContactGroups(ABCHostAttribute):
         html.hr()
 
         if is_host:
-            html.checkbox(
-                varprefix + self.name() + "_use",
-                value["use"],
-                label=_("Add these contact groups to the host"))
+            html.checkbox(varprefix + self.name() + "_use",
+                          value["use"],
+                          label=_("Add these contact groups to the host"))
 
         elif not is_search:
-            html.checkbox(
-                varprefix + self.name() + "_recurse_perms",
-                value["recurse_perms"],
-                label=_("Give these groups also <b>permission on all subfolders</b>"))
+            html.checkbox(varprefix + self.name() + "_recurse_perms",
+                          value["recurse_perms"],
+                          label=_("Give these groups also <b>permission on all subfolders</b>"))
             html.hr()
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
                 label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
             html.br()
-            html.checkbox(
-                varprefix + self.name() + "_recurse_use",
-                value["recurse_use"],
-                label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(varprefix + self.name() + "_recurse_use",
+                          value["recurse_use"],
+                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
 
         html.hr()
         html.help(
@@ -470,10 +501,9 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(
-            varprefix + self.name() + "_use_for_services",
-            value.get("use_for_services", False),
-            label=_("Always add host contact groups also to its services"))
+        html.checkbox(varprefix + self.name() + "_use_for_services",
+                      value.get("use_for_services", False),
+                      label=_("Always add host contact groups also to its services"))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

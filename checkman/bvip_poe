@@ -1,12 +1,9 @@
-title: Bosch Video over IP: Power over Ethernet power consumation
+title: Bosch Video over IP: Power over Ethernet power consumption
 agents: snmp
 catalog: hw/environment/bosch
 license: GPL
 distribution: check_mk
 description:
- This Check monitors the power consumation in Watt if Power over Ehternet is used for the device. Leves can be set in Wato.
-
-
-
+ This Check monitors the power consumption in Watt if Power over Ethernet is used for the device. Levels can be set in Wato.
 inventory:
  Creates one check.

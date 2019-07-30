@@ -103,6 +103,7 @@ void somefoo_about_video()
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <sstream>  // str in strstream
 
 #define XLOG_INCLUDED
@@ -189,11 +190,13 @@ namespace std
 #include <windows.h>
 #endif
 #include <wchar.h>
+
 #include <chrono>
 #include <iomanip>
 #include <string>
 #include <strstream>
 #include <type_traits>
+
 #include "functional"
 #endif
 
@@ -558,6 +561,7 @@ using WorkString = std::basic_string<T>;
         // old GCC cannot find not declared xlog::l
         // xlog::l("You have error opening file %s", FileName);
 #endif
+        return;
     }
 
     {
@@ -823,9 +827,9 @@ inline void internal_PrintStringStdio(const char *Txt) { printf("%s", Txt); };
         auto prefixAscii() const { return prefix_ascii_; }
 
         void initPrefix(const wchar_t *Prefix) {
-            const wchar_t *const prefix = Prefix ? Prefix : GetPrefix();
+            auto prefix = Prefix ? Prefix : GetPrefix();
 
-            // safe asciiz copy
+            // safe ASCIIZ copy
             auto len = static_cast<int>(wcslen(prefix));
             auto to_copy = std::min(len, kFileNameLength - 1);
             memcpy(prefix_, prefix, to_copy * sizeof(wchar_t));

@@ -47,7 +47,6 @@
 
 
 def inv_solaris_pkginfo(info):
-    paclist = inv_tree_list("software.packages:")
     entry = {}
     translation_dict = {
         "ARCH": "arch",
@@ -57,6 +56,7 @@ def inv_solaris_pkginfo(info):
         "VENDOR": "vendor",
     }
 
+    parsed_packages = []
     for line in info:
         # key / value declaration is clear
         if len(line) == 2:
@@ -67,7 +67,7 @@ def inv_solaris_pkginfo(info):
             value = " ".join(line[1:])
         if key == "PKGINST":
             #append the dict wich was build before to paclist
-            paclist.append(entry)
+            parsed_packages.append(entry)
             pkginst = value
         elif key == "NAME":
             # build a dict for each package initiator = PKGINST
@@ -77,8 +77,8 @@ def inv_solaris_pkginfo(info):
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server
             try:
-                install_date_epoch = int(
-                    time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
+                install_date_epoch = int(time.mktime(time.strptime(value.strip(),
+                                                                   "%b %d %Y %H %M")))
                 entry.update({'install_date': install_date_epoch})
             except Exception:
                 pass
@@ -88,7 +88,10 @@ def inv_solaris_pkginfo(info):
                 if key == tkey:
                     entry.update({translation_dict[tkey]: value.strip()})
     if entry:
-        paclist.append(entry)
+        parsed_packages.append(entry)
+
+    paclist = inv_tree_list("software.packages:")
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
 
 
 inv_info['solaris_pkginfo'] = {

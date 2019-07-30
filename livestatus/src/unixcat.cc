@@ -142,7 +142,8 @@ int main(int argc, char **argv) {
 
     thread_info toleft_info = {sock, 1, 0, 1};
     thread_info toright_info = {0, sock, 1, 0};
-    pthread_t toright_thread, toleft_thread;
+    pthread_t toright_thread;
+    pthread_t toleft_thread;
     if (pthread_create(&toright_thread, nullptr, copy_thread, &toright_info) !=
             0 ||
         pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=

@@ -1,0 +1,11 @@
+Title: cisco_mem_asa64: Fixed crash if free or used memory is empty
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558363108
+Class: fix
+
+We saw SNMP outputs which may contain empty entries for free or used memory.
+Assumption: In this case these values are zero.

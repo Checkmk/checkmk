@@ -70,21 +70,20 @@ def _vs_cisco_dom(which_levels):
             default_value=True,  # use device levels
             elements=[
                 FixedValue(
-                    False,
-                    title=_("No levels"),
-                    totext="",
-                ),
-                FixedValue(
                     True,
                     title=_("Use device levels"),
                     totext="",
                 ),
-                Tuple(
-                    title=_("Use the following levels"),
-                    elements=[
-                        Float(title=_(_button_text_warn(which_levels)), unit=_("dBm")),
-                        Float(title=_(_button_text_crit(which_levels)), unit=_("dBm")),
-                    ]),
+                Tuple(title=_("Use the following levels"),
+                      elements=[
+                          Float(title=_(_button_text_warn(which_levels)), unit=_("dBm")),
+                          Float(title=_(_button_text_crit(which_levels)), unit=_("dBm")),
+                      ]),
+                FixedValue(
+                    False,
+                    title=_("No levels"),
+                    totext="",
+                ),
             ]))
 
 
@@ -108,11 +107,10 @@ class RulespecCheckgroupParametersCiscoDOM(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (_vs_cisco_dom("upper")),
-                (_vs_cisco_dom("lower")),
-            ],)
+        return Dictionary(elements=[
+            (_vs_cisco_dom("upper")),
+            (_vs_cisco_dom("lower")),
+        ],)
 
     @property
     def item_spec(self):
@@ -135,18 +133,17 @@ class RulespecDiscoveryCiscoDomRules(HostRulespec):
 
     @property
     def valuespec(self):
-        return Dictionary(
-            title=_("Cisco DOM Discovery"),
-            elements=[
-                ("admin_states",
-                 ListChoice(
-                     title=_("Admin states to discover"),
-                     choices={
-                         1: _("up"),
-                         2: _("down"),
-                         3: _("testing"),
-                     },
-                     toggle_all=True,
-                     default_value=['1', '2', '3'],
-                 )),
-            ])
+        return Dictionary(title=_("Cisco DOM Discovery"),
+                          elements=[
+                              ("admin_states",
+                               ListChoice(
+                                   title=_("Admin states to discover"),
+                                   choices={
+                                       1: _("up"),
+                                       2: _("down"),
+                                       3: _("testing"),
+                                   },
+                                   toggle_all=True,
+                                   default_value=['1', '2', '3'],
+                               )),
+                          ])

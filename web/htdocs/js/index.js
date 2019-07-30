@@ -52,6 +52,9 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
+import * as d3 from "d3";
+import * as node_visualization from "node_visualization";
+
 // Optional import is currently not possible using the ES6 imports
 var graphs;
 try {
@@ -97,6 +100,8 @@ export default {
         reload_pause: reload_pause,
         graph_integration: graph_integration,
         graphs: graphs,
-        dashboard: dashboard
+        dashboard: dashboard,
+        node_visualization: node_visualization,
+        d3: d3,
     }
 };

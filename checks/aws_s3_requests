@@ -85,12 +85,11 @@ def check_aws_s3_requests(item, params, metrics):
         except ZeroDivisionError:
             pass
         else:
-            yield check_levels(
-                requests_perc,
-                '%s_perc' % perf_key,
-                params.get('levels_%s_perc' % perf_key),
-                human_readable_func=get_percent_human_readable,
-                infoname="%s of total requests" % title)
+            yield check_levels(requests_perc,
+                               '%s_perc' % perf_key,
+                               params.get('levels_%s_perc' % perf_key),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%s of total requests" % title)
 
 
 check_info['aws_s3_requests'] = {
@@ -134,12 +133,11 @@ def check_aws_s3_http_errors(item, params, metrics):
         except ZeroDivisionError:
             pass
         else:
-            yield check_levels(
-                http_errors_perc,
-                'http_%sxx_perc' % http_errors_nr,
-                params.get('levels_http_%sxx_perc' % http_errors_nr),
-                human_readable_func=get_percent_human_readable,
-                infoname="%s00-Errors of total requests" % http_errors_nr)
+            yield check_levels(http_errors_perc,
+                               'http_%sxx_perc' % http_errors_nr,
+                               params.get('levels_http_%sxx_perc' % http_errors_nr),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%s00-Errors of total requests" % http_errors_nr)
 
 
 check_info['aws_s3_requests.http_errors'] = {
@@ -165,12 +163,11 @@ check_info['aws_s3_requests.http_errors'] = {
 
 @get_parsed_item_data
 def check_aws_s3_latency(item, params, metrics):
-    yield check_levels(
-        metrics['TotalRequestLatency'] / 1000.0,
-        'aws_request_latency',
-        params.get('levels_latency'),
-        human_readable_func=get_age_human_readable,
-        infoname="Total request latency")
+    yield check_levels(metrics['TotalRequestLatency'] / 1000.0,
+                       'aws_request_latency',
+                       params.get('levels_latency'),
+                       human_readable_func=get_age_human_readable,
+                       infoname="Total request latency")
 
     first_byte_latency = metrics.get('FirstByteLatency')
     if first_byte_latency is not None:

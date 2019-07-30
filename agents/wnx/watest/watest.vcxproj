@@ -120,7 +120,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -146,12 +146,15 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-check_watest.cmd watest
-@:DoNotCopy</Command>
+call check_watest.cmd watest
+)
+
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -160,7 +163,7 @@ check_watest.cmd watest
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -186,12 +189,15 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-check_watest.cmd watest
-@:DoNotCopy</Command>
+call check_watest.cmd watest
+)
+
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -202,7 +208,7 @@ check_watest.cmd watest
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -216,7 +222,7 @@ check_watest.cmd watest
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;userenv.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -228,12 +234,15 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-check_watest.cmd watest
-@:DoNotCopy</Command>
+call check_watest.cmd watest
+)
+
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -244,7 +253,7 @@ check_watest.cmd watest
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -258,7 +267,7 @@ check_watest.cmd watest
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;userenv.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -270,16 +279,20 @@ check_watest.cmd watest
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
+      <Command>@echo off
+@if "$(VS_DEPLOY)" == "YES" (
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-check_watest.cmd watest
-@:DoNotCopy</Command>
+call check_watest.cmd watest
+)
+
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="test_tools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\extlibs\googletest\googletest\src\gtest-all.cc">
@@ -296,6 +309,8 @@ check_watest.cmd watest
     </ClCompile>
     <ClCompile Include="test-cap.cpp" />
     <ClCompile Include="test-carrier.cpp" />
+    <ClCompile Include="test-cfg.cpp" />
+    <ClCompile Include="test-cma-tools.cpp" />
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
@@ -319,7 +334,6 @@ check_watest.cmd watest
     <ClCompile Include="test-service.cpp" />
     <ClCompile Include="test-skype.cpp" />
     <ClCompile Include="test-spool.cpp" />
-    <ClCompile Include="test-tools.cpp" />
     <ClCompile Include="test-upgrade.cpp" />
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />
@@ -333,6 +347,8 @@ check_watest.cmd watest
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="test_check_mk.cpp" />
+    <ClCompile Include="test_tools.cpp" />
     <ClCompile Include="watest.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -345,6 +361,15 @@ check_watest.cmd watest
     <None Include="..\test_files\config\check_mk_dev_malformed.yml" />
     <None Include="..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\test_files\config\check_mk_dev_utf16.yml" />
+    <None Include="..\test_files\unit_test\checkmk.hash.dat" />
+    <None Include="..\test_files\unit_test\check_mk.hash.ini" />
+    <Text Include="..\test_files\unit_test\cmk-update-agent.state">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </Text>
     <None Include="..\wnxtest\wnxtest.vcxproj" />
     <None Include="check_watest.cmd" />
     <None Include="packages.config" />

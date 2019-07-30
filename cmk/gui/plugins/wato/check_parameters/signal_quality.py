@@ -54,11 +54,10 @@ class RulespecCheckgroupParametersSignalQuality(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            elements=[
-                Percentage(title=_("Warning if under"), maxvalue=100),
-                Percentage(title=_("Critical if under"), maxvalue=100),
-            ],)
+        return Tuple(elements=[
+            Percentage(title=_("Warning if under"), maxvalue=100),
+            Percentage(title=_("Critical if under"), maxvalue=100),
+        ],)
 
     @property
     def item_spec(self):

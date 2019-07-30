@@ -164,13 +164,13 @@ class DataSources(object):
 
     def describe_data_sources(self):
         if self._host_config.is_all_agents_host:
-            return "Contact Check_MK Agent and use all enabled special agents"
+            return "Normal Checkmk agent, all configured special agents"
 
         elif self._host_config.is_all_special_agents_host:
-            return "Use all enabled special agents"
+            return "No Checkmk agent, all configured special agents"
 
         elif self._host_config.is_tcp_host:
-            return "Contact either Check_MK Agent or use a single special agent"
+            return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"
 
@@ -218,8 +218,8 @@ class DataSources(object):
 
     def get_data_sources(self):
         # Always execute piggyback at the end
-        return sorted(
-            self._sources.values(), key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
+        return sorted(self._sources.values(),
+                      key=lambda s: (isinstance(s, PiggyBackDataSource), s.id()))
 
     def set_max_cachefile_age(self, max_cachefile_age):
         for source in self.get_data_sources():
@@ -246,11 +246,12 @@ class DataSources(object):
             for node_hostname in nodes:
                 node_ipaddress = ip_lookup.lookup_ip_address(node_hostname)
 
-                table = check_table.get_precompiled_check_table(
-                    node_hostname, remove_duplicates=True, filter_mode="only_clustered")
+                node_check_names = check_table.get_needed_check_names(node_hostname,
+                                                                      remove_duplicates=True,
+                                                                      filter_mode="only_clustered")
 
                 node_data_sources = DataSources(node_hostname, node_ipaddress)
-                node_data_sources.enforce_check_plugin_names(set([e[0] for e in table]))
+                node_data_sources.enforce_check_plugin_names(set(node_check_names))
                 hosts.append((node_hostname, node_ipaddress, node_data_sources,
                               config.cluster_max_cachefile_age))
         else:

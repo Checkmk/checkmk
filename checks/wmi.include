@@ -80,7 +80,7 @@ class WMITable(object):
         if key_field is not None:
             try:
                 self.__key_index = self.__headers[self._normalize_key(key_field)]
-            except KeyError, e:
+            except KeyError as e:
                 raise KeyError(e.message + " missing, valid keys: " +
                                ", ".join(self.__headers.keys()))
 
@@ -163,7 +163,7 @@ class WMITable(object):
         else:
             try:
                 col_index = self.__headers[self._normalize_key(column)]
-            except KeyError, e:
+            except KeyError as e:
                 raise MKGeneralException(e.message + " missing, valid keys: " +
                                          ", ".join(self.__headers.keys()))
         return self.__rows[row_index][col_index]
@@ -200,12 +200,12 @@ def parse_wmi_table(info, key="Name"):
     try:
         # read input line by line. rows with [] start the table name.
         # Each table has to start with a header line
-        line = info_iter.next()
+        line = next(info_iter)
 
         timestamp, frequency = None, None
         if line[0] == "sampletime":
             timestamp, frequency = int(line[1]), int(line[2])
-            line = info_iter.next()
+            line = next(info_iter)
 
         while True:
             if len(line) == 1 and line[0].startswith("["):
@@ -213,7 +213,7 @@ def parse_wmi_table(info, key="Name"):
                 tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
 
                 # Did subsection get WMI timeout?
-                line = info_iter.next()
+                line = next(info_iter)
             else:
                 # single-table input
                 tablename = ""
@@ -222,12 +222,12 @@ def parse_wmi_table(info, key="Name"):
                 _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency)
 
             # read table content
-            line = info_iter.next()
+            line = next(info_iter)
             while not line[0].startswith("["):
                 if missing_wmi_status:
                     line.append("OK")
                 current_table.add_row(line)
-                line = info_iter.next()
+                line = next(info_iter)
     except (StopIteration, ValueError):
         # regular end of block
         pass
@@ -294,9 +294,14 @@ def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
 
 
 def wmi_filter_global_only(tables, row):
-    return all(
-        table.get(row, "Name", silently_skip_timed_out=True) == "_Global_"
-        for table in tables.values())
+    for table in tables.values():
+        try:
+            value = table.get(row, "Name", silently_skip_timed_out=True)
+        except KeyError:
+            return False
+        if value != "_Global_":
+            return False
+    return True
 
 
 #.
@@ -386,6 +391,8 @@ def inventory_wmi_table(tables, required_tables=None, filt=None, levels=None):
 def get_wmi_time(table, row):
     timestamp = table.timestamp() or table.get(row, "Timestamp_PerfTime")
     frequency = table.frequency() or table.get(row, "Frequency_PerfTime")
+    if not frequency:
+        frequency = 1
     return float(timestamp) / float(frequency)
 
 

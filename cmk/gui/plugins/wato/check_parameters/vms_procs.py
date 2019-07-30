@@ -55,10 +55,9 @@ class RulespecCheckgroupParametersVmsProcs(CheckParameterRulespecWithoutItem):
     @property
     def parameter_valuespec(self):
         return Optional(
-            Tuple(
-                elements=[
-                    Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
-                    Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
-                ],),
+            Tuple(elements=[
+                Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
+                Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
+            ],),
             title=_("Impose levels on number of processes"),
         )

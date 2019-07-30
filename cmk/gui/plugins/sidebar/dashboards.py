@@ -60,15 +60,17 @@ class Dashboards(SidebarSnapin):
                 if t == topic:
                     if first:
                         if foldable:
-                            html.begin_foldable_container(
-                                "dashboards", topic, False, topic, indent=True)
+                            html.begin_foldable_container("dashboards",
+                                                          topic,
+                                                          False,
+                                                          topic,
+                                                          indent=True)
                         else:
                             html.open_ul()
                         first = False
-                    bulletlink(
-                        title,
-                        'dashboard.py?name=%s' % name,
-                        onclick="return cmk.sidebar.wato_views_clicked(this)")
+                    bulletlink(title,
+                               'dashboard.py?name=%s' % name,
+                               onclick="return cmk.sidebar.wato_views_clicked(this)")
 
             if not first:  # at least one item rendered
                 if foldable:
@@ -76,8 +78,8 @@ class Dashboards(SidebarSnapin):
                 else:
                     html.open_ul()
 
-        by_topic = visuals_by_topic(
-            dashboard.permitted_dashboards().items(), default_order=[_('Overview')])
+        by_topic = visuals_by_topic(dashboard.permitted_dashboards().items(),
+                                    default_order=[_('Overview')])
         topics = [topic for topic, _entry in by_topic]
 
         if len(topics) < 2:

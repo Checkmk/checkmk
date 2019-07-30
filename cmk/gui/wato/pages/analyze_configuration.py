@@ -128,30 +128,28 @@ class ModeAnalyzeConfig(WatoMode):
 
         site_ids = sorted(self._analyze_site_ids())
 
-        for category_name, results_by_test in sorted(
-                results_by_category.items(), key=lambda x: ACTestCategories.title(x[0])):
-            with table_element(
-                    title=ACTestCategories.title(category_name),
-                    css="data analyze_config",
-                    sortable=False,
-                    searchable=False) as table:
+        for category_name, results_by_test in sorted(results_by_category.items(),
+                                                     key=lambda x: ACTestCategories.title(x[0])):
+            with table_element(title=ACTestCategories.title(category_name),
+                               css="data analyze_config",
+                               sortable=False,
+                               searchable=False) as table:
 
-                for test_id, test_results_by_site in sorted(
-                        results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
+                for test_id, test_results_by_site in sorted(results_by_test.items(),
+                                                            key=lambda x: x[1]["test"]["title"]):
                     self._show_test_row(table, test_id, test_results_by_site, site_ids)
 
     def _show_test_row(self, table, test_id, test_results_by_site, site_ids):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)
-        html.icon_button(
-            None,
-            _("Toggle result details"),
-            "toggle_details",
-            onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id)
+        html.icon_button(None,
+                         _("Toggle result details"),
+                         "toggle_details",
+                         onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id)
 
-        worst_result = sorted(
-            test_results_by_site["site_results"].values(), key=lambda result: result.status)[0]
+        worst_result = sorted(test_results_by_site["site_results"].values(),
+                              key=lambda result: result.status)[0]
 
         # Disabling of test in total
         is_test_disabled = self._is_test_disabled(test_id)
@@ -264,8 +262,8 @@ class ModeAnalyzeConfig(WatoMode):
 
         processes = []
         for site_id in test_site_ids:
-            process = multiprocessing.Process(
-                target=self._perform_tests_for_site, args=(site_id, result_queue))
+            process = multiprocessing.Process(target=self._perform_tests_for_site,
+                                              args=(site_id, result_queue))
             process.start()
             processes.append((site_id, process))
 
@@ -331,7 +329,7 @@ class ModeAnalyzeConfig(WatoMode):
             #    try:
             #        os.close(x)
             #    except OSError, e:
-            #        if e.errno == 9: # Bad file descriptor
+            #        if e.errno == errno.EBADF:
             #            pass
             #        else:
             #            raise
@@ -344,8 +342,8 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = watolib.do_remote_automation(
-                    config.site(site_id), "check-analyze-config", [])
+                results_data = watolib.do_remote_automation(config.site(site_id),
+                                                            "check-analyze-config", [])
 
             self._logger.debug("[%s] Finished" % site_id)
 

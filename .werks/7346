@@ -1,0 +1,17 @@
+Title: Fix name conflict between builtin snmp tag group and aux tag snmp
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1557055089
+
+The bultin tag group "snmp" for configuring the SNMP datasource of a host
+and the related auxiliary tag "snmp" used the same ID. This resulted in
+a name conflict between both which could cause problems e.g. in the rule
+editor when using the auxiliary tag as condition.
+
+The tag group has now been renamed to "snmp_ds" and the auxiliary tag ID
+stays "snmp".

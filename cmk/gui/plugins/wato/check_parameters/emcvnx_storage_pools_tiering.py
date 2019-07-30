@@ -59,17 +59,16 @@ class RulespecCheckgroupParametersEmcvnxStoragePoolsTiering(CheckParameterRulesp
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("time_to_complete",
-                 Tuple(
-                     title=_("Upper levels for estimated time to complete"),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=300 * 60 * 60),
-                         Age(title=_("Critical at"), default_value=350 * 60 * 60),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("time_to_complete",
+             Tuple(
+                 title=_("Upper levels for estimated time to complete"),
+                 elements=[
+                     Age(title=_("Warning at"), default_value=300 * 60 * 60),
+                     Age(title=_("Critical at"), default_value=350 * 60 * 60),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

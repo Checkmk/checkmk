@@ -36,6 +36,7 @@
 # Maybe the MOB is helpful:
 #   http://<your-esx-host>/mob
 
+from __future__ import print_function
 import getopt
 import inspect  # FOR DEBUGGING
 import os
@@ -105,7 +106,7 @@ long_options = [
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
@@ -261,9 +262,9 @@ esx_version_num = float(esx_version)
 
 # use the same section and keys as in
 # agent_vsphere
-print "<<<esx_systeminfo>>>"
-print "apiVersion %s" % esx_version
-print "name %s" % host.get_server_type()
+print("<<<esx_systeminfo>>>")
+print("apiVersion %s" % esx_version)
+print("name %s" % host.get_server_type())
 
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()
@@ -283,7 +284,7 @@ def output_profile():
                "import pstats\n"
                "stats = pstats.Stats('%s')\n"
                "stats.sort_stats('time').print_stats()\n" % g_profile_path)
-    os.chmod(show_profile, 0755)
+    os.chmod(show_profile, 0o755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
@@ -303,11 +304,11 @@ def dump(x, indent=""):
 
             if "_values" in value:
                 for k, v in value["_values"].items():
-                    print indent + k
+                    print(indent + k)
                     dump_object(v, indent + "    ")
 
             elif isinstance(value, str):
-                print indent + value
+                print(indent + value)
             elif is_dict:
                 dump_dict(value, indent)
             elif isinstance(value, list):
@@ -319,20 +320,20 @@ def dump(x, indent=""):
 
 def dump_dict(d, indent):
     for key in d.iterkeys():
-        print indent + key
+        print(indent + key)
         # dump(value, "    " + indent)
 
 
 def dump_object(v, indent):
     for name, member in inspect.getmembers(v):
         if not name.startswith("_"):
-            print indent + name
+            print(indent + name)
             dump(member, indent + "    ")
 
 
 def dump_list(l, indent):
     for nr, v in enumerate(l):
-        print indent + "%d:" % nr
+        print(indent + "%d:" % nr)
         dump(v, indent + "    ")
 
 
@@ -514,8 +515,8 @@ def output_hostsystem_counters(all_counters=False):
     pm = host.get_performance_manager()
     for mor, name in all_hosts.items():
         if not opt_direct:
-            print '<<<<%s>>>>' % name
-        print '<<<esx_vsphere_counters:sep(124)>>>'
+            print('<<<<%s>>>>' % name)
+        print('<<<esx_vsphere_counters:sep(124)>>>')
 
         # Determine IDs of the counters: We have hard coded the IDs here in order to save
         # a couple of seconds. To check out which counters are available just comment out
@@ -602,9 +603,9 @@ def output_hostsystem_counters(all_counters=False):
             lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit))
         lines.sort()
         for line in lines:
-            print line
+            print(line)
     if not opt_direct:
-        print '<<<<>>>>'
+        print('<<<<>>>>')
 
 
 def output_mors(what, properties, direct=False):
@@ -661,11 +662,10 @@ def output_mors(what, properties, direct=False):
             if count > 1:
                 raise Exception("You specified --direct, but there is more than one HostSystem!")
         else:
-            print '<<<<%s>>>>' % obj_name
+            print('<<<<%s>>>>' % obj_name)
 
-        print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
-        items = data.items()
-        items.sort()
+        print('<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm')))
+        items = sorted(data.items())
         running_on = ''
         power_state = ''
         for name, value in items:
@@ -676,7 +676,7 @@ def output_mors(what, properties, direct=False):
                     running_on = value
                 elif name == 'runtime.powerState':
                     power_state = value
-                print '%s %s' % (name, value)
+                print('%s %s' % (name, value))
 
         # Remember the total list of output objects. We will put this into
         # a special section
@@ -686,9 +686,9 @@ def output_mors(what, properties, direct=False):
 
         # pprint.pprint(sections)
         for section_name, section_lines in sections:
-            print '<<<%s>>>' % section_name
+            print('<<<%s>>>' % section_name)
             for line in section_lines:
-                print line
+                print(line)
 
 
 g_datastores = {}
@@ -711,9 +711,9 @@ def output_datastores():
         ]
 
     # print inspect.getmembers(MORTypes)
-    print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
-    rows = host._retrieve_properties_traversal(
-        property_names=property_names, obj_type=MORTypes.Datastore)
+    print("<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t'))
+    rows = host._retrieve_properties_traversal(property_names=property_names,
+                                               obj_type=MORTypes.Datastore)
     # if the user has no permission to host / datastores, rows is None, skip it then
     if rows:
         last_name = None
@@ -721,10 +721,10 @@ def output_datastores():
             for entry in mor.PropSet:
                 if entry.Name == "name":
                     last_name = entry.Val
-                    print '[%s]' % entry.Val
+                    print('[%s]' % entry.Val)
                 else:
                     g_datastores.setdefault(last_name, {})[entry.Name.split(".")[1]] = entry.Val
-                    print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
+                    print('%s\t%s' % (entry.Name.split(".")[1], entry.Val))
 
 
 def conv_multipath(value):
@@ -857,10 +857,10 @@ if esx_version_num > 4.1:
 if "virtualmachine" in mortypes:
     output_mors("virtualmachine", vm_propertys)
 
-print "<<<<>>>>"
-print "<<<esx_vsphere_objects:sep(9)>>>"
+print("<<<<>>>>")
+print("<<<esx_vsphere_objects:sep(9)>>>")
 for entry in object_collection:
-    print "\t".join(entry)
+    print("\t".join(entry))
 host.disconnect()
 
 # Get check_mk agent output

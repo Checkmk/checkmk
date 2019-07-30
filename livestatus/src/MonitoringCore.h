@@ -126,6 +126,7 @@ public:
     virtual std::string pnpPath() = 0;
     virtual std::string historyFilePath() = 0;
     virtual std::string logArchivePath() = 0;
+    virtual std::string rrdcachedSocketPath() = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
@@ -136,6 +137,7 @@ public:
     virtual AuthorizationKind groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
+    virtual Logger *loggerRRD() = 0;
 
     virtual Triggers &triggers() = 0;
 

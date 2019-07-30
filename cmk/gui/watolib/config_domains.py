@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import os
 import re
 import signal
@@ -122,9 +123,12 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pid = int(file(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
-                if e.errno == 2:  # No such file or directory
-                    pass
-                else:
+                # No liveproxyd running: No reload needed.
+                if e.errno != errno.ENOENT:
+                    raise
+            except OSError as e:
+                # PID in pidfiles does not exist: No reload needed.
+                if e.errno != errno.ESRCH:  # [Errno 3] No such process
                     raise
             except ValueError:
                 # ignore empty pid file (may happen during locking in
@@ -240,8 +244,8 @@ class ConfigDomainCACertificates(ConfigDomain):
         except Exception:
             logger.exception()
             return [
-                "Failed to create trusted CA file '%s': %s" % (self.trusted_cas_file,
-                                                               traceback.format_exc())
+                "Failed to create trusted CA file '%s': %s" %
+                (self.trusted_cas_file, traceback.format_exc())
             ]
 
     def _update_trusted_cas(self, current_config):
@@ -296,7 +300,7 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
         except IOError as e:
-            if e.errno == 2:  # No such file or directory
+            if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
                 return []
             else:

@@ -63,12 +63,14 @@ def parse_oracle_asm_diskgroup(info):
 
     first_node = ''
     for line in info:
-
         # Filuregroups are usually REGULAR.
         # Other types are possible from Version 11.2 onwards
         fg_type = 'REGULAR'
 
-        dgstate = line[1]
+        try:
+            dgstate = line[1]
+        except IndexError:
+            continue
 
         if dgstate == "DISMOUNTED":
             dgtype = None

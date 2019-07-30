@@ -27,66 +27,70 @@
 
 def check_tcp_arguments(params):
     port, settings = params
-    args = ' -p %d' % port
+    args = []
+
+    args += ["-p", port]
 
     if "response_time" in settings:
-        args += ' -w %f -c %f' % (settings["response_time"][0] / 1000.0,
-                                  settings["response_time"][1] / 1000.0)
+        warn, crit = settings["response_time"]
+        args += ["-w", "%f" % warn / 1000.0]
+        args += ["-c", "%f" % crit / 1000.0]
 
     if "timeout" in settings:
-        args += ' -t %d' % settings["timeout"]
+        args += ["-t", settings["timeout"]]
 
     if "refuse_state" in settings:
-        args += ' -r %s' % settings["refuse_state"]
+        args += ["-r", settings["refuse_state"]]
 
     if settings.get("escape_send_string"):
-        args += ' --escape'
+        args.append("--escape")
 
     if "send_string" in settings:
-        args += ' -s %s' % quote_shell_string(settings["send_string"])
+        args += ["-s", settings["send_string"]]
 
     if "expect" in settings:
         for s in settings["expect"]:
-            args += ' -e %s' % quote_shell_string(s)
+            args += ["-e", s]
 
     if settings.get("expect_all"):
-        args += ' -A'
+        args.append("-A")
 
     if settings.get("jail"):
-        args += ' --jail'
+        args.append("--jail")
 
     if "mismatch_state" in settings:
-        args += ' -M %s' % settings["mismatch_state"]
+        args += ["-M", settings["mismatch_state"]]
 
     if "delay" in settings:
-        args += ' -d %d' % settings["delay"]
+        args += ["-d", settings["delay"]]
 
     if "maxbytes" in settings:
-        args += ' -m %d' % settings["maxbytes"]
+        args += ["-m", settings["maxbytes"]]
 
     if settings.get("ssl"):
-        args += ' --ssl'
+        args.append("--ssl")
 
     if "cert_days" in settings:
         # legacy behavior
         if isinstance(settings["cert_days"], int):
-            args += ' -D %d' % settings["cert_days"]
+            args += ["-D", settings["cert_days"]]
         else:
             warn, crit = settings["cert_days"]
-            args += ' -D %d,%d' % (warn, crit)
+            args += ["-D", "%d,%d" % (warn, crit)]
 
     if "quit_string" in settings:
-        args += ' -q %s' % quote_shell_string(settings["quit_string"])
+        args += ["-q", settings["quit_string"]]
 
     if "hostname" in settings:
-        args += ' -H %s' % quote_shell_string(settings["hostname"])
+        args += ["-H", settings["hostname"]]
     else:
-        args += " -H '$HOSTADDRESS$'"
+        args += ["-H", "'$HOSTADDRESS$'"]
+
     return args
 
 
-active_check_info['tcp'] = {
-    "command_line": '$USER1$/check_tcp $ARG1$',
+active_check_info["tcp"] = {
+    "command_line": "$USER1$/check_tcp $ARG1$",
     "argument_function": check_tcp_arguments,
     "service_description": lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
     "has_perfdata": True,

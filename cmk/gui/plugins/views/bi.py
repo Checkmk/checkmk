@@ -79,8 +79,8 @@ class DataSourceBIAggregations(DataSource):
 
 
 class RowTableBIAggregations(RowTable):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return bi.table(view, columns, query, only_sites, limit, all_active_filters)
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return bi.table(view, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -111,15 +111,14 @@ class DataSourceBIHostAggregations(DataSource):
 
 
 class RowTableBIHostAggregations(RowTable):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return bi.host_table(view, columns, query, only_sites, limit, all_active_filters)
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return bi.host_table(view, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
 class DataSourceBIHostnameAggregations(DataSource):
     """Similar to host aggregations, but the name of the aggregation
     is used to join the host table rather then the affected host"""
-
     @property
     def ident(self):
         return "bi_hostname_aggregations"
@@ -146,14 +145,13 @@ class DataSourceBIHostnameAggregations(DataSource):
 
 
 class RowTableBIHostnameAggregations(RowTable):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return bi.hostname_table(view, columns, query, only_sites, limit, all_active_filters)
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return bi.hostname_table(view, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
 class DataSourceBIHostnameByGroupAggregations(DataSource):
     """The same but with group information"""
-
     @property
     def ident(self):
         return "bi_hostnamebygroup_aggregations"
@@ -180,8 +178,8 @@ class DataSourceBIHostnameByGroupAggregations(DataSource):
 
 
 class RowTableBIHostnameByGroupAggregations(RowTable):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return bi.hostname_by_group_table(view, columns, query, only_sites, limit,
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return bi.hostname_by_group_table(view, columns, headers, only_sites, limit,
                                           all_active_filters)
 
 
@@ -216,21 +214,25 @@ class PainterAggrIcons(Painter):
                                                        ("aggr_name", row["aggr_name"])])
         avail_url = single_url + "&mode=availability"
 
+        bi_map_url = "bi_map.py?" + html.urlencode_vars([
+            ("aggr_name", row["aggr_name"]),
+        ])
+
         with html.plugged():
+            html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
                              "availability")
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon(
-                    _("A service or host in this aggregation is in downtime."), "derived_downtime")
+                html.icon(_("A service or host in this aggregation is in downtime."),
+                          "derived_downtime")
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
                     _("The critical problems that make this aggregation non-OK have been acknowledged."
                      ), "ack")
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon(
-                    _("This aggregation is currently out of its service period."),
-                    "outof_serviceperiod")
+                html.icon(_("This aggregation is currently out of its service period."),
+                          "outof_serviceperiod")
             code = html.drain()
         return "buttons", code
 
@@ -590,13 +592,12 @@ def paint_aggregated_tree_state(row, force_renderer_cls=None):
     else:
         raise NotImplementedError()
 
-    renderer = cls(
-        row,
-        omit_root=False,
-        expansion_level=expansion_level,
-        only_problems=only_problems,
-        lazy=True,
-        wrap_texts=wrap_texts)
+    renderer = cls(row,
+                   omit_root=(treetype == "boxes-omit-root"),
+                   expansion_level=expansion_level,
+                   only_problems=only_problems,
+                   lazy=True,
+                   wrap_texts=wrap_texts)
     return renderer.css_class(), renderer.render()
 
 

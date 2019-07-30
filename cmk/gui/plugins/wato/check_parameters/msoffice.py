@@ -61,12 +61,11 @@ class RulespecCheckgroupParametersMsOfficeLicenses(CheckParameterRulespecWithIte
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ("usage",
-             Tuple(
-                 title=_("Upper levels for license usage"),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=80.0),
-                     Percentage(title=_("Critical at"), default_value=90.0),
-                 ])),
+             Tuple(title=_("Upper levels for license usage"),
+                   elements=[
+                       Percentage(title=_("Warning at"), default_value=80.0),
+                       Percentage(title=_("Critical at"), default_value=90.0),
+                   ])),
         ])
 
     @property
@@ -96,12 +95,11 @@ class RulespecCheckgroupParametersMsOfficeServiceplans(CheckParameterRulespecWit
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ("levels",
-             Tuple(
-                 title=_("Upper levels for pending activations"),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=_("services")),
-                     Integer(title=_("Critical at"), unit=_("services")),
-                 ])),
+             Tuple(title=_("Upper levels for pending activations"),
+                   elements=[
+                       Integer(title=_("Warning at"), unit=_("services")),
+                       Integer(title=_("Critical at"), unit=_("services")),
+                   ])),
         ])
 
     @property

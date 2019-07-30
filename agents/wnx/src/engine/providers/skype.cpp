@@ -2,27 +2,23 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/skype.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
-
 #include "providers/p_perf_counters.h"
-#include "providers/skype.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 extern bool G_SkypeTesting;
 
@@ -105,7 +101,7 @@ std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
     }
 
     auto object = perf::FindPerfObject(data, key_index);
-    if (!object) {
+    if (nullptr == object) {
         if (G_SkypeTesting)
             XLOG::d("Not found index {}, for value '{}'", key_index, reg_name);
         return {};
@@ -140,10 +136,10 @@ std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
     std::vector<std::vector<ULONGLONG>> columns;
     for (const auto& counter : counters) {
         std::vector<ULONGLONG> v;
-        if (instances.size() > 0) {
-            v = perf::GenerateValues(*counter, instances);
-        } else {
+        if (instances.empty()) {
             v.emplace_back(perf::GetValueFromBlock(*counter, block));
+        } else {
+            v = perf::GenerateValues(*counter, instances);
         }
         if (G_SkypeTesting)
             XLOG::d.t("columns[{}] added {} values", columns.size(), v.size());
@@ -167,10 +163,10 @@ std::wstring SkypeProvider::makeSubSection(const std::wstring& RegName) {
         return wide;
     }
 
-    return columns[0].size() ? wide : L"";
+    return columns[0].empty() ? L"" : wide;
 }
 
-std::string SkypeProvider::makeBody() const {
+std::string SkypeProvider::makeBody() {
     using namespace cma::cfg;
     XLOG::t(XLOG_FUNC + " entering");
 
@@ -181,9 +177,7 @@ std::string SkypeProvider::makeBody() const {
         wide += makeSubSection(registry_name);
     }
 
-    if (wide.size() || G_SkypeTesting) {
-        // stupid? stupid. This is Windows and Legacy code.
-        // #TODO make this code not such stupid. Thank you.
+    if (!wide.empty() || G_SkypeTesting) {
         wide += makeSubSection(SkypeAspSomeCounter);
 
         auto out_string = makeFirstLine();

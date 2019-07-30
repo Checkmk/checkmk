@@ -1,0 +1,117 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<splunk_system_msg>>>
+# manifest_error warn klappclub
+# 2019-05-02T13:16:11+02:00 File Integrity checks found 1 files that did not
+# match the system-provided manifest. Review the list of problems reported by
+# the InstalledFileHashChecker in splunkd.log
+# [[/app/search/integrity_check_of_installed_files?form.splunk_server=klappclub|File
+# Integrity Check View]] ; potentially restore files from installation media,
+# change practices to avoid changing files, or work with support to identify
+# the problem.
+
+# <<<splunk_system_msg>>>
+# manifest_error warn klappclub 2019-05-16T08:32:33+02:00 File Integrity checks
+# found 1 files that did not match the system-provided manifest. Review the list
+# of problems reported by the InstalledFileHashChecker in splunkd.log
+# [[/app/search/integrity_check_of_installed_files?form.splunk_server=klappclub|File
+# Integrity Check View]] ; potentially restore files from installation media,
+# change practices to avoid changing files, or work with support to identify the
+# problem.
+
+SplunkMessage = collections.namedtuple("SplunkMessage", [
+    "name",
+    "severity",
+    "server",
+    "timeCreated_iso",
+    "message",
+])
+
+
+def parse_splunk_system_msg(info):
+    parsed = {}
+
+    for msg_list in info:
+        try:
+            name, severity, server, timeCreated_iso = msg_list[0:4]
+            message = " ".join(msg_list[5:])
+
+            parsed.setdefault("messages", []).append(
+                SplunkMessage(name, severity, server, timeCreated_iso, message))
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+def inventory_splunk_system_msg(parsed):
+    yield None, {}
+
+
+def check_splunk_system_msg(no_item, params, parsed):
+    if not parsed:
+        yield 0, "No open messages"
+        return
+
+    data = parsed["messages"]
+    long_output = ""
+
+    severity_mapping = {
+        "info": 0,
+        "warn": 1,
+        "error": 2,
+    }
+
+    for msg in data:
+
+        worst_severity = _handle_severity(msg)
+        server = msg.server
+        creation_time = msg.timeCreated_iso
+        long_output += "%s - %s - %s\n" % (msg.timeCreated_iso, msg.server, msg.message)
+
+    yield severity_mapping[
+        worst_severity], "Worst severity: %s, Last message from server: %s, Creation time: %s\n%s" % (
+            worst_severity, server, creation_time, long_output)
+
+
+def _handle_severity(msg):
+    worst_severity = "info"
+    if msg.severity != "info":
+        worst_severity = "crit"
+        if msg.severity != "crit":
+            worst_severity = msg.severity
+    return worst_severity
+
+
+check_info["splunk_system_msg"] = {
+    "parse_function": parse_splunk_system_msg,
+    "check_function": check_splunk_system_msg,
+    "inventory_function": inventory_splunk_system_msg,
+    "service_description": "Splunk System Messages",
+    "group": "splunk_system_msg",
+}

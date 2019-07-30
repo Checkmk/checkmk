@@ -41,8 +41,12 @@ from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
-from cmk.gui.valuespec import ListOfStrings, Hostname
+from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException, HTTPRedirect
+from cmk.gui.valuespec import (
+    ListOfStrings,
+    Hostname,
+    FixedValue,
+)
 from cmk.gui.wato.pages.folders import delete_host_after_confirm
 
 
@@ -59,8 +63,8 @@ class HostMode(WatoMode):
         super(HostMode, self).__init__()
 
     def buttons(self):
-        html.context_button(
-            _("Folder"), watolib.folder_preserving_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
+                            "back")
 
     def _is_cluster(self):
         return self._host.is_cluster()
@@ -133,23 +137,28 @@ class HostMode(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
 
-        forms.header(_("General Properties"))
-        self._show_host_name()
+        basic_attributes = [
+            # attribute name, valuepec, default value
+            ("host", self._vs_host_name(), self._host.name()),
+        ]
 
-        # Cluster: nodes
         if self._is_cluster():
-            forms.section(_("Nodes"))
-            self._vs_cluster_nodes().render_input("nodes",
-                                                  self._host.cluster_nodes() if self._host else [])
-            html.help(
-                _('Enter the host names of the cluster nodes. These '
-                  'hosts must be present in WATO. '))
+            basic_attributes += [
+                # attribute name, valuepec, default value
+                ("nodes", self._vs_cluster_nodes(),
+                 self._host.cluster_nodes() if self._host else []),
+            ]
 
         configure_attributes(
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent=watolib.Folder.current())
+            parent=watolib.Folder.current(),
+            basic_attributes=basic_attributes,
+        )
+
+        if self._mode != "edit":
+            html.set_focus("host")
 
         forms.end()
         if not watolib.Folder.current().locked_hosts():
@@ -162,12 +171,15 @@ class HostMode(WatoMode):
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
+            title=_("Nodes"),
             valuespec=ConfigHostname(),
             orientation="horizontal",
+            help=_(
+                'Enter the host names of the cluster nodes. These hosts must be present in WATO.'),
         )
 
     @abc.abstractmethod
-    def _show_host_name(self):
+    def _vs_host_name(self):
         raise NotImplementedError()
 
 
@@ -236,8 +248,8 @@ class ModeEditHost(HostMode):
                 _("Diagnostic"),
                 watolib.folder_preserving_link([("mode", "diag_host"),
                                                 ("host", self._host.name())]), "diagnose")
-        html.context_button(
-            _("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]), "update")
+        html.context_button(_("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]),
+                            "update")
 
     def action(self):
         if html.request.var("_update_dns_cache"):
@@ -259,7 +271,8 @@ class ModeEditHost(HostMode):
             return delete_host_after_confirm(self._host.name())
 
         if html.check_transaction():
-            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster")
+            attributes = watolib.collect_attributes("host" if not self._is_cluster() else "cluster",
+                                                    new=False)
             watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
             self._host = watolib.Folder.current().host(self._host.name())
 
@@ -270,9 +283,11 @@ class ModeEditHost(HostMode):
             return "diag_host"
         return "folder"
 
-    def _show_host_name(self):
-        forms.section(_("Hostname"), simple=True)
-        html.write_text(self._host.name())
+    def _vs_host_name(self):
+        return FixedValue(
+            self._host.name(),
+            title=_("Hostname"),
+        )
 
 
 class CreateHostMode(HostMode):
@@ -316,7 +331,7 @@ class CreateHostMode(HostMode):
         if not html.transaction_valid():
             return "folder"
 
-        attributes = watolib.collect_attributes(self._host_type_name())
+        attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
         hostname = html.request.var("host")
@@ -327,25 +342,30 @@ class CreateHostMode(HostMode):
 
         self._host = watolib.Folder.current().host(hostname)
 
+        inventory_url = watolib.folder_preserving_link([
+            ("mode", "inventory"),
+            ("host", self._host.name()),
+            ("_scan", "1"),
+        ])
+
         if not self._host.is_ping_host():
             create_msg = _('Successfully created the host. Now you should do a '
                            '<a href="%s">service discovery</a> in order to auto-configure '
-                           'all services to be checked on this host.') % \
-                            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._host.name())])
+                           'all services to be checked on this host.') % inventory_url
         else:
             create_msg = None
 
         if html.request.var("services"):
-            return "inventory"
-        elif html.request.var("diag_host"):
+            raise HTTPRedirect(inventory_url)
+
+        if html.request.var("diag_host"):
             html.request.set_var("_try", "1")
             return "diag_host", create_msg
+
         return "folder", create_msg
 
-    def _show_host_name(self):
-        forms.section(_("Hostname"))
-        Hostname().render_input("host", "")
-        html.set_focus("host")
+    def _vs_host_name(self):
+        return Hostname(title=_("Hostname"),)
 
 
 @mode_registry.register
@@ -365,11 +385,10 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
-            host_name=html.request.var("host"),
-            attributes={},
-            cluster_nodes=None)
+        return watolib.Host(folder=watolib.Folder.current(),
+                            host_name=html.request.var("host"),
+                            attributes={},
+                            cluster_nodes=None)
 
     @classmethod
     def _host_type_name(cls):
@@ -401,11 +420,10 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
-        return watolib.Host(
-            folder=watolib.Folder.current(),
-            host_name=html.request.var("host"),
-            attributes={},
-            cluster_nodes=[])
+        return watolib.Host(folder=watolib.Folder.current(),
+                            host_name=html.request.var("host"),
+                            attributes={},
+                            cluster_nodes=[])
 
     @classmethod
     def _host_type_name(cls):

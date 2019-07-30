@@ -337,7 +337,7 @@ def main_list(args, format):
             ("compatible", compatible),
         ]:
             for v in values:
-                if type(v) == tuple:
+                if isinstance(v, tuple):
                     v = v[0]
                 if v.startswith(a):
                     entries = filters.get(tp, [])
@@ -410,7 +410,7 @@ def werk_class(werk):
     for entry in classes:
         if entry == cl:
             return cl
-        elif type(entry) == tuple and entry[0] == cl:
+        elif isinstance(entry, tuple) and entry[0] == cl:
             return entry[1]
     return cl
 
@@ -478,7 +478,7 @@ def input_choice(what, choices):
     ctc = {}
     texts = []
     for choice in choices:
-        if type(choice) == tuple:
+        if isinstance(choice, tuple):
             choice = choice[0]
 
         added = False
@@ -737,8 +737,8 @@ def werk_cherry_pick(commit_id, no_commit):
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
-            sys.stdout.write(
-                "Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
+            sys.stdout.write("Changed version of werk #%04d to %s.\n" %
+                             (werk_id, g_current_version))
 
     # Commit
     if not no_commit:
@@ -785,30 +785,32 @@ def main_fetch_ids(args):
 
     # Get the start werk_id to reserve
     try:
-        first_free = int(eval(file('first_free').read()))
-
-        # enterprise werks were between 8000 and 8749. Skip over this area for new
-        # reserved werk ids
-        if first_free >= 8000 and first_free < 8780:
-            first_free = 8780
-
-        # cmk-omd werk were between 7500 and 7680. Skip over this area for new
-        # reserved werk ids
-        if first_free >= 7500 and first_free < 7680:
-            first_free = 7680
-    except:
+        first_free = int(file('first_free').read().strip())
+    except (IOError, ValueError):
         first_free = 0
+
     new_first_free = first_free + num
+    # enterprise werks were between 8000 and 8749. Skip over this area for new
+    # reserved werk ids
+    if 8000 <= first_free < 8780 or 8000 <= new_first_free < 8780:
+        first_free = 8780
+        new_first_free = first_free + num
+
+    # cmk-omd werk were between 7500 and 7680. Skip over this area for new
+    # reserved werk ids
+    if 7500 <= first_free < 7680 or 7500 <= new_first_free < 7680:
+        first_free = 7680
+        new_first_free = first_free + num
 
     # Store the werk_ids to reserve
-    my_ids = get_werk_ids() + range(first_free, first_free + num)
+    my_ids = get_werk_ids() + range(first_free, new_first_free)
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids
     file('first_free', 'w').write(str(new_first_free) + "\n")
 
-    sys.stdout.write(
-        'Reserved %d additional IDs now. You have %d reserved IDs now.\n' % (num, len(my_ids)))
+    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
+                     (num, len(my_ids)))
 
     if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")

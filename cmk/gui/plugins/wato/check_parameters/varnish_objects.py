@@ -58,22 +58,21 @@ class RulespecCheckgroupParametersVarnishObjects(CheckParameterRulespecWithoutIt
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("expired",
-                 Tuple(
-                     title=_("Upper levels for \"expired objects\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-                ("lru_nuked",
-                 Tuple(
-                     title=_("Upper levels for \"LRU nuked objects\" per second"),
-                     elements=[
-                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("expired",
+             Tuple(
+                 title=_("Upper levels for \"expired objects\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+            ("lru_nuked",
+             Tuple(
+                 title=_("Upper levels for \"LRU nuked objects\" per second"),
+                 elements=[
+                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 ],
+             )),
+        ],)

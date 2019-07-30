@@ -47,8 +47,16 @@ def check_cisco_mem(item, params, info):
         if isinstance(params, tuple):
             params = {"levels": params}
 
-        mem_free = int(line[2])
-        mem_used = int(line[1])
+        # We saw SNMP outputs which may contain empty entries for free or used memory.
+        # Assumption: In this case these values are zero.
+        try:
+            mem_free = int(line[2])
+        except ValueError:
+            mem_free = 0
+        try:
+            mem_used = int(line[1])
+        except ValueError:
+            mem_used = 0
         mem_total = mem_free + mem_used
         return check_cisco_mem_sub(item, params, mem_used, mem_total)
 

@@ -37,7 +37,6 @@ import six
 import cmk
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
-import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.regex import regex
 import cmk.utils.debug
@@ -46,6 +45,7 @@ import cmk_base.utils
 import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config
+import cmk_base.cpu_tracking as cpu_tracking
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
@@ -206,13 +206,14 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     if belongs_to_cluster:
         filter_mode = "include_clustered"
 
-    table = check_table.get_precompiled_check_table(
-        hostname, remove_duplicates=True, filter_mode=filter_mode)
+    services = check_table.get_precompiled_check_table(hostname,
+                                                       remove_duplicates=True,
+                                                       filter_mode=filter_mode)
 
     # When check types are specified via command line, enforce them. Otherwise use the
     # list of checks defined by the check table.
     if only_check_plugin_names is None:
-        only_check_plugins = set([e[0] for e in table])
+        only_check_plugins = {service.check_plugin_name for service in services}
     else:
         only_check_plugins = set(only_check_plugin_names)
 
@@ -225,23 +226,24 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     if belongs_to_cluster:
         pos_match = set()
         neg_match = set()
-        for check_plugin_name, item, params, description in table:
-            if hostname != config_cache.host_of_clustered_service(hostname, description):
-                pos_match.add(check_plugin_name)
+        for service in services:
+            if hostname != config_cache.host_of_clustered_service(hostname, service.description):
+                pos_match.add(service.check_plugin_name)
             else:
-                neg_match.add(check_plugin_name)
+                neg_match.add(service.check_plugin_name)
         only_check_plugins -= (pos_match - neg_match)
 
-    for check_plugin_name, item, params, description in table:
-        if only_check_plugins is not None and check_plugin_name not in only_check_plugins:
+    for service in services:
+        if only_check_plugins is not None and service.check_plugin_name not in only_check_plugins:
             continue
 
         if belongs_to_cluster and hostname != config_cache.host_of_clustered_service(
-                hostname, description):
+                hostname, service.description):
             continue
 
-        success = execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item,
-                                params, description)
+        success = execute_check(config_cache, multi_host_sections, hostname, ipaddress,
+                                service.check_plugin_name, service.item, service.parameters,
+                                service.description)
         if success:
             num_success += 1
         elif success is None:
@@ -250,7 +252,7 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
             # - add to missing sections
             continue
         else:
-            missing_sections.add(cmk_base.check_utils.section_name_of(check_plugin_name))
+            missing_sections.add(cmk_base.check_utils.section_name_of(service.check_plugin_name))
 
     import cmk_base.inventory as inventory
     inventory.do_inventory_actions_during_checking_for(sources, multi_host_sections, host_config,
@@ -260,21 +262,20 @@ def _do_all_checks_on_host(sources, host_config, ipaddress, only_check_plugin_na
     return num_success, missing_section_list
 
 
-def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, item, params,
-                  description):
+def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_plugin_name, item,
+                  params, description):
     # Make a bit of context information globally available, so that functions
     # called by checks now this context
     check_api_utils.set_service(check_plugin_name, description)
     item_state.set_item_state_prefix(check_plugin_name, item)
 
     # Skip checks that are not in their check period
-    period = config.check_period_of(hostname, description)
-    if period and not cmk_base.core.check_timeperiod(period):
-        console.verbose(
-            "Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
-        return None
-
-    elif period:
+    period = config_cache.check_period_of_service(hostname, description)
+    if period is not None:
+        if not cmk_base.core.check_timeperiod(period):
+            console.verbose("Skipping service %s: currently not in timeperiod %s.\n" %
+                            (description, period))
+            return None
         console.vverbose("Service %s: timeperiod %s is currently active.\n" % (description, period))
 
     section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
@@ -358,12 +359,11 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                 oldest_cached_at = minn(oldest_cached_at, cached_at)
                 largest_interval = max(largest_interval, cache_interval)
 
-        _submit_check_result(
-            hostname,
-            description,
-            result,
-            cached_at=oldest_cached_at,
-            cache_interval=largest_interval)
+        _submit_check_result(hostname,
+                             description,
+                             result,
+                             cached_at=oldest_cached_at,
+                             cache_interval=largest_interval)
     return True
 
 
@@ -401,7 +401,7 @@ def _evaluate_timespecific_entry(entry):
     for timeperiod_name, tp_entry in entry["tp_values"][::-1]:
         try:
             tp_active = cmk_base.core.timeperiod_active(timeperiod_name)
-        except:
+        except Exception:
             # Connection error
             if cmk.utils.debug.enabled():
                 raise
@@ -421,8 +421,9 @@ def _evaluate_timespecific_entry(entry):
 
 
 def is_manual_check(hostname, check_plugin_name, item):
-    manual_checks = check_table.get_check_table(
-        hostname, remove_duplicates=True, skip_autochecks=True)
+    manual_checks = check_table.get_check_table(hostname,
+                                                remove_duplicates=True,
+                                                skip_autochecks=True)
     return (check_plugin_name, item) in manual_checks
 
 
@@ -676,8 +677,8 @@ def _open_command_pipe():
     if _nagios_command_pipe is None:
         if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
             _nagios_command_pipe = False  # False means: tried but failed to open
-            raise MKGeneralException(
-                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path)
+            raise MKGeneralException("Missing core command pipe '%s'" %
+                                     cmk.utils.paths.nagios_command_pipe_path)
         else:
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)

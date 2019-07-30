@@ -393,12 +393,11 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
 
 def perfometer_check_mk_if(row, check_command, perf_data):
     unit = "Bit" if "Bit/s" in row["service_plugin_output"] else "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0][1]),
-        out_traffic=utils.savefloat(perf_data[5][1]),
-        in_bw=utils.savefloat(perf_data[0][6]),
-        out_bw=utils.savefloat(perf_data[5][6]),
-        unit=unit)
+    return perfometer_bandwidth(in_traffic=utils.savefloat(perf_data[0][1]),
+                                out_traffic=utils.savefloat(perf_data[5][1]),
+                                in_bw=utils.savefloat(perf_data[0][6]),
+                                out_bw=utils.savefloat(perf_data[5][6]),
+                                unit=unit)
 
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
@@ -423,12 +422,11 @@ perfometers["check_mk-if_fortigate"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
     unit = "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0][1]),
-        out_traffic=utils.savefloat(perf_data[1][1]),
-        in_bw=utils.savefloat(perf_data[0][6]),
-        out_bw=utils.savefloat(perf_data[1][6]),
-        unit=unit)
+    return perfometer_bandwidth(in_traffic=utils.savefloat(perf_data[0][1]),
+                                out_traffic=utils.savefloat(perf_data[1][1]),
+                                in_bw=utils.savefloat(perf_data[0][6]),
+                                out_bw=utils.savefloat(perf_data[1][6]),
+                                unit=unit)
 
 
 perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
@@ -449,12 +447,11 @@ perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
     unit = "Bit" if "Bit/s" in row["service_plugin_output"] else "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0][1]),
-        out_traffic=utils.savefloat(perf_data[1][1]),
-        in_bw=utils.savefloat(perf_data[0][5]),
-        out_bw=utils.savefloat(perf_data[1][5]),
-        unit=unit)
+    return perfometer_bandwidth(in_traffic=utils.savefloat(perf_data[0][1]),
+                                out_traffic=utils.savefloat(perf_data[1][1]),
+                                in_bw=utils.savefloat(perf_data[0][5]),
+                                out_bw=utils.savefloat(perf_data[1][5]),
+                                unit=unit)
 
 
 perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
@@ -551,7 +548,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
     try:
         perc = perf_dict["pcpu"]
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
-    except:
+    except Exception:
         return "", ""
 
 

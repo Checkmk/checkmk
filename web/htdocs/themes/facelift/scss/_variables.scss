@@ -20,6 +20,7 @@ $theme-border-radius:                       4px;
 $theme-button-background:                   #f7f7f7;
 $theme-button-border:                       #d9d9d9;
 $theme-button-hover:                        #ffe350;
+$theme-button-height:                       28px;
 
 
 // States
@@ -64,6 +65,7 @@ $theme-color-table-border-dark-2:           #313638; // dark grey
 $theme-font-table-header:                   18px;
 
 $theme-color-table-text:                    #2a2a2a; // dark grey
+$theme-color-table-header-text:             #2a2a2a80; // half transparent
 
 
 // Sidebar
@@ -109,3 +111,8 @@ $theme-font-weight-bold:                    700;
 $theme-letter-spacing:                      .5px;
 $theme-letter-spacing-table:                1px;
 
+
+// Tags
+
+$tag-margin:                                0 5px 2px 0;
+$tag-padding:                               .1em .3em;

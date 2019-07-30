@@ -2,6 +2,8 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
+
 import os
 import glob
 import pwd
@@ -61,16 +63,13 @@ def cme_path():
 
 
 def virtualenv_path():
-    try:
-        venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
-        return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
-    except subprocess.CalledProcessError:
-        return None
+    venv = subprocess.check_output(["pipenv", "--bare", "--venv"])
+    return pathlib.Path(venv.decode("utf-8").rstrip("\n"))
 
 
 def current_branch_name():
-    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).split(
-        "\n", 1)[0]
+    branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref",
+                                           "HEAD"]).split("\n", 1)[0]
     return branch_name.decode("utf-8")
 
 
@@ -84,11 +83,12 @@ def get_cmk_download_credentials():
 
 def wait_until(condition, timeout=1, interval=0.1):
     start = time.time()
-    while not condition() and time.time() - start < timeout:
+    while time.time() - start < timeout:
+        if condition():
+            return  # Success. Stop waiting...
         time.sleep(interval)
-    if not condition():
-        raise Exception(
-            "Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+
+    raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 class APIError(Exception):
@@ -101,21 +101,44 @@ class APIError(Exception):
 def InterProcessLock(filename):
     fd = None
     try:
+        print("[%0.2f] Getting lock: %s" % (time.time(), filename))
         # Need to unset umask here to get the permissions we need because
         # os.open() mode is using the given mode not as absolute mode, but
         # respects the umask "mode & ~umask" (See "man 2 open").
         old_umask = os.umask(0)
         try:
-            fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+            fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0o666)
         finally:
             os.umask(old_umask)
 
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        # Handle the case where the file has been renamed/overwritten between
+        # file creation and locking
+        while True:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+
+            try:
+                fd_new = os.open(filename, os.O_RDONLY | os.O_CREAT, 0o666)
+            finally:
+                os.umask(old_umask)
+
+            if os.path.sameopenfile(fd, fd_new):
+                os.close(fd_new)
+                break
+            else:
+                os.close(fd)
+                fd = fd_new
+
+        print("[%0.2f] Have lock: %s" % (time.time(), filename))
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)
     finally:
+        print("[%0.2f] Released lock: %s" % (time.time(), filename))
         if fd:
             os.close(fd)
+
+
+def SiteActionLock():
+    return InterProcessLock("/tmp/cmk-test-create-site")
 
 
 # It's ok to make it currently only work on debian based distros
@@ -125,20 +148,37 @@ class CMKVersion(object):
     GIT = "git"
 
     CEE = "cee"
-    CME = "cme"
     CRE = "cre"
     CME = "cme"
 
     def __init__(self, version, edition, branch):
         self._version = version
-        self._edition = edition
         self._branch = branch
 
-        if len(edition) != 3:
-            raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
-        self.edition_short = edition
-
+        self._set_edition(edition)
         self.set_version(version, branch)
+
+    def _set_edition(self, edition):
+        # Allow short (cre) and long (raw) notation as input
+        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+            edition_short = self._get_short_edition(edition)
+        else:
+            edition_short = edition
+
+        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME]:
+            raise NotImplementedError("Unknown short edition: %s" % edition_short)
+
+        self.edition_short = edition_short
+
+    def _get_short_edition(self, edition):
+        if edition == "raw":
+            return "cre"
+        elif edition == "enterprise":
+            return "cee"
+        elif edition == "managed":
+            return "cme"
+        else:
+            raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self):
         if os.path.exists("/etc/alternatives/omd"):
@@ -238,12 +278,12 @@ class CMKVersion(object):
 
     def install(self):
         if os.path.exists(self._build_system_package_path()):
-            print "Install from build system package (%s)" % self._build_system_package_path()
+            print("Install from build system package (%s)" % self._build_system_package_path())
             package_path = self._build_system_package_path()
             self._install_package(package_path)
 
         else:
-            print "Install from download portal"
+            print("Install from download portal")
             package_path = self._download_package()
             self._install_package(package_path)
             os.unlink(package_path)
@@ -251,7 +291,7 @@ class CMKVersion(object):
     def _download_package(self):
         temp_package_path = "/tmp/%s" % self.package_name()
 
-        print self.package_url()
+        print(self.package_url())
         response = requests.get(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
@@ -264,15 +304,13 @@ class CMKVersion(object):
         # manager task being active. Try to wait for other task to finish. Sure
         # this is not race free, but hope it's sufficient.
         while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
-            print "Waiting for other dpkg process to complete..."
+            print("Waiting for other dpkg process to complete...")
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
-        print "Getting install file lock (/tmp/cmk-test-install-version.lock)..."
         with InterProcessLock("/tmp/cmk-test-install-version"):
-            print "Have install file lock"
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
-            print cmd
+            print(cmd)
             sys.stdout.flush()
             if os.system(cmd) >> 8 != 0:  # nosec
                 raise Exception("Failed to install package: %s" % package_path)
@@ -374,8 +412,8 @@ class Site(object):
 
         #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
 
-        self.live.command(
-            "[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
+        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
+                          (schedule_ts, hostname, state, output))
         self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout,
                                   expected_state)
 
@@ -392,13 +430,12 @@ class Site(object):
         self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
                           (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
 
-        self._wait_for_next_check(
-            hostname,
-            last_check_before,
-            schedule_ts,
-            wait_timeout,
-            expected_state,
-            service_description=service_description)
+        self._wait_for_next_check(hostname,
+                                  last_check_before,
+                                  schedule_ts,
+                                  wait_timeout,
+                                  expected_state,
+                                  service_description=service_description)
 
     def _wait_for_next_check(self,
                              hostname,
@@ -417,9 +454,9 @@ class Site(object):
                                                                            service_description)
             wait_obj = "%s;%s" % (hostname, service_description)
 
-        last_check, state = self.live.query_row(
+        last_check, state, plugin_output = self.live.query_row(
             "GET %s\n" \
-            "Columns: last_check state\n" \
+            "Columns: last_check state plugin_output\n" \
             "%s" \
             "WaitObject: %s\n" \
             "WaitTimeout: %d\n" \
@@ -427,7 +464,7 @@ class Site(object):
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (table, filt, wait_obj, wait_timeout*1000, last_check_before, expected_state))
 
-        print "processing check result took %0.2f seconds" % (time.time() - schedule_ts)
+        print("processing check result took %0.2f seconds" % (time.time() - schedule_ts))
 
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
@@ -435,7 +472,7 @@ class Site(object):
                 (wait_timeout, last_check_before, schedule_ts, last_check)
 
         assert state == expected_state, \
-            "Expected %d state, got %d state" % (expected_state, state)
+            "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
     def _get_last_check(self, hostname, service_description=None):
         if not service_description:
@@ -513,8 +550,8 @@ class Site(object):
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-rf", self.path(rel_path)])
             if p.wait() != 0:
-                raise Exception(
-                    "Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
+                raise Exception("Failed to delete directory %s. Exit-Code: %d" %
+                                (rel_path, p.wait()))
         else:
             shutil.rmtree(self.path(rel_path))
 
@@ -567,39 +604,36 @@ class Site(object):
         return os.path.split(os.readlink("/omd/sites/%s/version" % self.id))[-1]
 
     def create(self):
-        if not self.version.is_installed():
-            self.version.install()
+        with SiteActionLock():
+            if not self.version.is_installed():
+                self.version.install()
 
-        if self.update_with_git:
-            self._copy_omd_version_for_test()
+            if self.update_with_git:
+                self._copy_omd_version_for_test()
 
-        if not self.reuse and self.exists():
-            raise Exception("The site %s already exists." % self.id)
+            if not self.reuse and self.exists():
+                raise Exception("The site %s already exists." % self.id)
 
-        if not self.exists():
-            print "Getting site create lock (/tmp/cmk-test-create-site.lock)..."
-            with InterProcessLock("/tmp/cmk-test-create-site"):
-                print "Have site create lock"
-
-                print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
+            if not self.exists():
+                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
                     self.version.version_directory(), "create", "--admin-password", "cmk",
                     "--apache-reload", self.id
                 ])
                 exit_code = p.wait()
-                print "[%0.2f] Executed create command" % time.time()
+                print("[%0.2f] Executed create command" % time.time())
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
-            self._enable_mod_python_debug()
-            self._enabled_liveproxyd_debug_logging()
-            self._enable_mkeventd_debug_logging()
+                self._set_number_of_helpers()
+                #self._enabled_liveproxyd_debug_logging()
+                self._enable_mkeventd_debug_logging()
 
-        self._install_test_python_modules()
+            self._install_test_python_modules()
 
-        if self.update_with_git:
-            self._update_with_f12_files()
+            if self.update_with_git:
+                self._update_with_f12_files()
 
     # When using the Git version, the original version files will be
     # replaced by the .f12 scripts. When tests are running in parallel
@@ -612,28 +646,28 @@ class Site(object):
 
         src_version, src_path = self.version.version, self.version.version_path()
         new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
-        self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
+        self.version = CMKVersion(new_version_name, self.version.edition(), self.version._branch)
 
-        print "Copy CMK '%s' to '%s'" % (src_path, self.version.version_path())
+        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
         assert not os.path.exists(self.version.version_path()), \
             "New version path '%s' already exists" % self.version.version_path()
 
         def execute(cmd):
-            print "Executing: %s" % cmd
+            print("Executing: %s" % cmd)
             rc = os.system(cmd) >> 8  # nosec
             if rc != 0:
                 raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
 
-        execute("sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path()))
+        execute("sudo /bin/cp -a %s %s" % (src_path, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" % (src_version, new_version_name,
-                                                          self.version.version_path()))
+        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
+                (src_version, new_version_name, self.version.version_path()))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python/omdlib/__init__.py" %
                 (src_version, new_version_name, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" % (src_version, new_version_name,
-                                                                     self.version.version_path()))
+        execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %
+                (src_version, new_version_name, self.version.version_path()))
 
         # we should use self.version.version_path() in the RPATH, but that is limited to
         # 32 bytes and our versions exceed this limit. We need to use some hack to make
@@ -641,8 +675,8 @@ class Site(object):
         if not os.path.exists("/omd/v"):
             execute("sudo /bin/ln -s /omd/versions /omd/v")
 
-        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" % (self.version.version_directory(),
-                                                                 self.version.version_path()))
+        execute("sudo chrpath -r /omd/v/%s/lib %s/bin/python" %
+                (self.version.version_directory(), self.version.version_path()))
 
     def _update_with_f12_files(self):
         paths = [
@@ -674,8 +708,6 @@ class Site(object):
                 # TODO: To be able to build the core correctly we need to build
                 # python/boost/python-modules/rrdtool first. Skip cmc for the moment here
                 #cmc_path() + "/core",
-                cmc_path() + "/agents/bakery",
-                cmc_path() + "/agents/plugins",
                 cmc_path() + "/agents",
             ]
 
@@ -686,20 +718,24 @@ class Site(object):
             ]
 
         # Prevent build problems of livestatus
-        print "Cleanup git files"
+        print("Cleanup git files")
         assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print "Executing .f12 in \"%s\"..." % path
+                print("Executing .f12 in \"%s\"..." % path)
                 sys.stdout.flush()
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash -x .f12" % (path, self.id)) >> 8 == 0
-                print "Executing .f12 in \"%s\" DONE" % path
+                print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
+
+    def _set_number_of_helpers(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
 
     def _enabled_liveproxyd_debug_logging(self):
         self.makedirs("etc/check_mk/liveproxyd.d")
@@ -717,14 +753,6 @@ class Site(object):
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
             })
-
-    def _enable_mod_python_debug(self):
-        path = "etc/check_mk/apache.conf"
-        content = self.read_file(path)
-
-        self.write_file(
-            path,
-            content.replace("PythonHandler index", "PythonHandler index\n        PythonDebug On"))
 
     def _install_test_python_modules(self):
         venv = virtualenv_path()
@@ -747,18 +775,16 @@ class Site(object):
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
                              (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
-    def rm_if_not_reusing(self):
-        if not self.reuse:
-            self.rm()
-
     def rm(self, site_id=None):
         if site_id is None:
             site_id = self.id
-        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.Popen(
-            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
-             site_id]).wait()
+
+        with SiteActionLock():
+            # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
+            #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+            subprocess.Popen(
+                ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
+                 site_id]).wait()
 
     def cleanup_old_sites(self, cleanup_pattern):
         if not os.path.exists("/omd/sites"):
@@ -766,7 +792,7 @@ class Site(object):
 
         for site_id in os.listdir("/omd/sites"):
             if site_id != self.id and site_id.startswith(cleanup_pattern):
-                print "Cleaning up old site: %s" % site_id
+                print("Cleaning up old site: %s" % site_id)
                 self.rm(site_id)
 
     def start(self):
@@ -778,21 +804,40 @@ class Site(object):
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
-                print "The site %s is not running yet, sleeping... (round %d)" % (self.id, i)
+                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()
                 time.sleep(0.2)
 
     def stop(self):
-        if self.is_running():
-            assert self.omd("stop") == 0
+        if not self.is_running():
+            return  # Nothing to do
+
+        print("= BEGIN PROCESSES BEFORE =======================================")
+        os.system("ps -fwwu %s" % self.id)  # nosec
+        print("= END PROCESSES BEFORE =======================================")
+
+        stop_exit_code = self.omd("stop")
+        if stop_exit_code != 0:
+            print("omd stop exit code: %d" % stop_exit_code)
+
+        print("= BEGIN PROCESSES AFTER STOP =======================================")
+        os.system("ps -fwwu %s" % self.id)  # nosec
+        print("= END PROCESSES AFTER STOP =======================================")
+
+        try:
             i = 0
             while self.is_running():
                 i += 1
                 if i > 10:
                     raise Exception("Could not stop site %s" % self.id)
-                print "The site %s is still running, sleeping... (round %d)" % (self.id, i)
+                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
                 sys.stdout.flush()
                 time.sleep(0.2)
+        except:
+            print("= BEGIN PROCESSES AFTER WAIT =======================================")
+            os.system("ps -fwwu %s" % self.id)  # nosec
+            print("= END PROCESSES AFTER WAIT =======================================")
+            raise
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
@@ -803,19 +848,19 @@ class Site(object):
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
-            print "omd config: %s is already at %r" % (key, val)
+            print("omd config: %s is already at %r" % (key, val))
             return
 
         if with_restart:
-            print "Stopping site"
+            print("Stopping site")
             self.stop()
 
-        print "omd config: Set %s to %r" % (key, val)
+        print("omd config: Set %s to %r" % (key, val))
         assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
             self.start()
-            print "Started site"
+            print("Started site")
 
     def set_core(self, core):
         self.set_config("CORE", core, with_restart=True)
@@ -825,7 +870,7 @@ class Site(object):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        print stderr
+        print(stderr)
         return stdout.strip()
 
     # These things are needed to make the site basically being setup. So this
@@ -851,7 +896,7 @@ class Site(object):
 
     def init_wato(self):
         if not self._missing_but_required_wato_files():
-            print "WATO is already initialized -> Skipping initializiation"
+            print("WATO is already initialized -> Skipping initializiation")
             return
 
         web = CMKWebSession(self)
@@ -890,12 +935,8 @@ class Site(object):
                 "ruleset": {
                     "": [  # "" -> folder
                         {
-                            'conditions': {
-                                'host_specs': ['@all'],
-                                'host_tags': []
-                            },
+                            'condition': {},
                             'options': {},
-                            'path': '',
                             'value': [('TESTGROUP', ('*gwia*', ''))]
                         },
                     ],
@@ -939,7 +980,7 @@ class Site(object):
 
         cmd = "cd %s && " % pipes.quote(cmk_path())
         cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
-        print cmd
+        print(cmd)
         args = ["/usr/bin/sudo", "--", "/bin/su", "-l", self.id, "-c", cmd]
         return subprocess.call(args)
 
@@ -983,7 +1024,7 @@ class Site(object):
         while port in used_ports:
             port += 1
 
-        print "Livestatus ports already in use: %r, using port: %d" % (used_ports, port)
+        print("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
         return port
 
     # Problem: The group change only affects new sessions of the test_user
@@ -1092,8 +1133,8 @@ class WebSession(requests.Session):
                    response.url, response.headers.get('Location', "None"))
 
         if response.history:
-            #print "Followed redirect (%d) %s -> %s" % \
-            #    (response.history[0].status_code, response.history[0].url, response.url)
+            #print("Followed redirect (%d) %s -> %s" % \
+            #    (response.history[0].status_code, response.history[0].url, response.url))
             if not allow_redirect_to_login:
                 assert "check_mk/login.py" not in response.url, \
                        "Followed redirect (%d) %s -> %s" % \
@@ -1121,7 +1162,7 @@ class WebSession(requests.Session):
     def _find_errors(self, body, allow_errors):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
         if allow_errors and matches:
-            print "Found error message, but it's allowed: %s" % matches.groups()
+            print("Found error message, but it's allowed: %s" % matches.groups())
         else:
             assert not matches, "Found error message: %s" % matches.groups()
 
@@ -1133,14 +1174,16 @@ class WebSession(requests.Session):
         self._check_resources(soup, response, "img", "src", ["image/png"])
         self._check_resources(soup, response, "script", "src",
                               ["application/javascript", "text/javascript"])
-        self._check_resources(
-            soup, response, "link", "href", ["text/css"], filters=[("rel", "stylesheet")])
-        self._check_resources(
-            soup,
-            response,
-            "link",
-            "href", ["image/vnd.microsoft.icon"],
-            filters=[("rel", "shortcut icon")])
+        self._check_resources(soup,
+                              response,
+                              "link",
+                              "href", ["text/css"],
+                              filters=[("rel", "stylesheet")])
+        self._check_resources(soup,
+                              response,
+                              "link",
+                              "href", ["image/vnd.microsoft.icon"],
+                              filters=[("rel", "shortcut icon")])
 
     def _check_resources(self, soup, response, tag, attr, allowed_mime_types, filters=None):
         parsed_url = urlparse(response.url)
@@ -1212,14 +1255,13 @@ class CMKWebSession(WebSession):
         assert "_password" in login_page
         assert "_login" in login_page
 
-        r = self.post(
-            "login.py",
-            data={
-                "filled_in": "login",
-                "_username": username,
-                "_password": password,
-                "_login": "Login",
-            })
+        r = self.post("login.py",
+                      data={
+                          "filled_in": "login",
+                          "_username": username,
+                          "_password": password,
+                          "_login": "Login",
+                      })
         auth_cookie = r.cookies.get("auth_%s" % self.site.id)
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
@@ -1236,17 +1278,16 @@ class CMKWebSession(WebSession):
         if lang:
             assert "value=\"" + lang + "\"" in profile_page
 
-        r = self.post(
-            "user_profile.py",
-            data={
-                "filled_in": "profile",
-                "_set_lang": "on",
-                "ua_start_url_use": "0",
-                "ua_ui_theme_use": "0",
-                "language": lang,
-                "_save": "Save",
-            },
-            add_transid=True)
+        r = self.post("user_profile.py",
+                      data={
+                          "filled_in": "profile",
+                          "_set_lang": "on",
+                          "ua_start_url_use": "0",
+                          "ua_ui_theme_use": "0",
+                          "language": lang,
+                          "_save": "Save",
+                      },
+                      add_transid=True)
 
         if lang == "":
             assert "Successfully updated" in r.text, "Body: %s" % r.text
@@ -1305,17 +1346,16 @@ class CMKWebSession(WebSession):
         if attributes is None:
             attributes = {}
 
-        result = self._api_request(
-            "webapi.py?action=add_host", {
-                "request": json.dumps({
-                    "hostname": hostname,
-                    "folder": folder,
-                    "attributes": attributes or {},
-                    "create_folders": create_folders,
-                    "nodes": cluster_nodes,
-                }),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_host", {
+            "request": json.dumps({
+                "hostname": hostname,
+                "folder": folder,
+                "attributes": attributes or {},
+                "create_folders": create_folders,
+                "nodes": cluster_nodes,
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1438,15 +1478,14 @@ class CMKWebSession(WebSession):
         if attributes is None:
             attributes = {}
 
-        result = self._api_request(
-            "webapi.py?action=add_folder", {
-                "request": json.dumps({
-                    "folder": folder_path,
-                    "attributes": attributes or {},
-                    "create_parent_folders": create_folders,
-                }),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_folder", {
+            "request": json.dumps({
+                "folder": folder_path,
+                "attributes": attributes or {},
+                "create_parent_folders": create_folders,
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1498,13 +1537,12 @@ class CMKWebSession(WebSession):
         assert not self.folder_exists(folder_path)
 
     def get_ruleset(self, ruleset_name):
-        result = self._api_request(
-            "webapi.py?action=get_ruleset&output_format=python", {
-                "request": json.dumps({
-                    "ruleset_name": ruleset_name,
-                }),
-            },
-            output_format="python")
+        result = self._api_request("webapi.py?action=get_ruleset&output_format=python", {
+            "request": json.dumps({
+                "ruleset_name": ruleset_name,
+            }),
+        },
+                                   output_format="python")
 
         assert isinstance(result, dict)
         assert "ruleset" in result
@@ -1523,6 +1561,25 @@ class CMKWebSession(WebSession):
                 "request": repr(request),
             },
             output_format="python")
+
+        assert result is None
+
+    def get_hosttags(self):
+        result = self._api_request("webapi.py?action=get_hosttags&output_format=python", {
+            "request": json.dumps({}),
+        },
+                                   output_format="python")
+
+        assert isinstance(result, dict)
+        assert "aux_tags" in result
+        assert "tag_groups" in result
+        return result
+
+    def set_hosttags(self, request):
+        result = self._api_request("webapi.py?action=set_hosttags&output_format=python", {
+            "request": json.dumps(request),
+        },
+                                   output_format="python")
 
         assert result is None
 
@@ -1586,16 +1643,15 @@ class CMKWebSession(WebSession):
         return result
 
     def get_all_sites(self):
-        result = self._api_request(
-            "webapi.py?action=get_all_sites&output_format=python", {}, output_format="python")
+        result = self._api_request("webapi.py?action=get_all_sites&output_format=python", {},
+                                   output_format="python")
         assert result is not None
         return result
 
     def delete_site(self, site_id):
-        result = self._api_request(
-            "webapi.py?action=delete_site&output_format=python",
-            {"request": json.dumps({"site_id": site_id})},
-            output_format="python")
+        result = self._api_request("webapi.py?action=delete_site&output_format=python",
+                                   {"request": json.dumps({"site_id": site_id})},
+                                   output_format="python")
 
         assert result is None
 
@@ -1609,9 +1665,9 @@ class CMKWebSession(WebSession):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
 
-        result = self._api_request(
-            "webapi.py?action=add_%sgroup" % group_type, {"request": json.dumps(request_object)},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=add_%sgroup" % group_type,
+                                   {"request": json.dumps(request_object)},
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1619,19 +1675,18 @@ class CMKWebSession(WebSession):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
 
-        result = self._api_request(
-            "webapi.py?action=edit_%sgroup" % group_type, {"request": json.dumps(request_object)},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=edit_%sgroup" % group_type,
+                                   {"request": json.dumps(request_object)},
+                                   expect_error=expect_error)
 
         assert result is None
 
     def delete_group(self, group_type, group_name, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=delete_%sgroup" % group_type,
-            {"request": json.dumps({
-                "groupname": group_name,
-            })},
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=delete_%sgroup" % group_type,
+                                   {"request": json.dumps({
+                                       "groupname": group_name,
+                                   })},
+                                   expect_error=expect_error)
 
         assert result is None
 
@@ -1671,11 +1726,10 @@ class CMKWebSession(WebSession):
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=bulk_discovery_start", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=bulk_discovery_start", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, dict)
         return result
 
@@ -1685,38 +1739,34 @@ class CMKWebSession(WebSession):
         return result
 
     def get_user_sites(self, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_user_sites", {
-                "request": json.dumps({}),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_user_sites", {
+            "request": json.dumps({}),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
     def get_host_names(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_host_names", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_host_names", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
     def get_metrics_of_host(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_metrics_of_host", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_metrics_of_host", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, dict)
         return result
 
     def get_graph_recipes(self, request, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_graph_recipes", {
-                "request": json.dumps(request),
-            },
-            expect_error=expect_error)
+        result = self._api_request("webapi.py?action=get_graph_recipes", {
+            "request": json.dumps(request),
+        },
+                                   expect_error=expect_error)
         assert isinstance(result, list)
         return result
 
@@ -1747,24 +1797,22 @@ class CMKWebSession(WebSession):
         self.site.wait_for_core_reloaded(old_t)
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
-        result = self._api_request(
-            "webapi.py?action=get_graph", {
-                "request": json.dumps({
-                    "specification": [
-                        "template",
-                        {
-                            "service_description": service_description,
-                            "site": self.site.id,
-                            "graph_index": graph_index,
-                            "host_name": hostname,
-                        }
-                    ],
-                    "data_range": {
-                        "time_range": [time.time() - 3600, time.time()]
+        result = self._api_request("webapi.py?action=get_graph", {
+            "request": json.dumps({
+                "specification": [
+                    "template", {
+                        "service_description": service_description,
+                        "site": self.site.id,
+                        "graph_index": graph_index,
+                        "host_name": hostname,
                     }
-                }),
-            },
-            expect_error=expect_error)
+                ],
+                "data_range": {
+                    "time_range": [time.time() - 3600, time.time()]
+                }
+            }),
+        },
+                                   expect_error=expect_error)
 
         assert isinstance(result, dict)
         assert "start_time" in result
@@ -1833,25 +1881,24 @@ class CMKEventConsole(CMKWebSession):
             "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
         assert "Save" in html
 
-        html = web.post(
-            "wato.py",
-            data={
-                "filled_in": "value_editor",
-                "ve_use": "on",
-                "ve_value_0": self.status_port,
-                "ve_value_2_use": "on",
-                "ve_value_2_value_0": "127.0.0.1",
-                "save": "Save",
-                "varname": "remote_status",
-                "mode": "mkeventd_edit_configvar",
-            },
-            add_transid=True).text
+        html = web.post("wato.py",
+                        data={
+                            "filled_in": "value_editor",
+                            "ve_use": "on",
+                            "ve_value_0": self.status_port,
+                            "ve_value_2_use": "on",
+                            "ve_value_2_value_0": "127.0.0.1",
+                            "save": "Save",
+                            "varname": "remote_status",
+                            "mode": "mkeventd_edit_configvar",
+                        },
+                        add_transid=True).text
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
 
     def activate_changes(self, web):
         old_t = web.site.live.query_value(
             "GET eventconsolestatus\nColumns: status_config_load_time\n")
-        #print "Old config load time: %s" % old_t
+        #print("Old config load time: %s" % old_t)
         assert old_t > time.time() - 86400
 
         super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
@@ -1859,7 +1906,7 @@ class CMKEventConsole(CMKWebSession):
         def config_reloaded():
             new_t = web.site.live.query_value(
                 "GET eventconsolestatus\nColumns: status_config_load_time\n")
-            #print "New config load time: %s" % new_t
+            #print("New config load time: %s" % new_t)
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10
@@ -1932,7 +1979,6 @@ class CMKEventConsoleStatus(object):
 
 class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
-
     def __init__(self, site, rel_path, default_timeout=5):
         self._site = site
         self._rel_path = rel_path
@@ -1956,23 +2002,23 @@ class WatchLog(object):
             timeout = self._default_timeout
 
         if not self._check_for_line(match_for, timeout):
-            raise Exception(
-                "Did not find %r in %s after %d seconds" % (match_for, self._log_path(), timeout))
+            raise Exception("Did not find %r in %s after %d seconds" %
+                            (match_for, self._log_path(), timeout))
 
     def check_not_logged(self, match_for, timeout=None):
         if timeout is None:
             timeout = self._default_timeout
 
         if self._check_for_line(match_for, timeout):
-            raise Exception(
-                "Found %r in %s after %d seconds" % (match_for, self._log_path(), timeout))
+            raise Exception("Found %r in %s after %d seconds" %
+                            (match_for, self._log_path(), timeout))
 
     def _check_for_line(self, match_for, timeout):
         timeout_at = time.time() + timeout
-        sys.stdout.write(
-            "Start checking for matching line at %d until %d\n" % (time.time(), timeout_at))
+        sys.stdout.write("Start checking for matching line at %d until %d\n" %
+                         (time.time(), timeout_at))
         while time.time() < timeout_at:
-            #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
+            #print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
             line = self._log.readline()
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)

@@ -1,0 +1,11 @@
+Title: Fixed exception during subreport generation, fixed missing macros in subreports
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1562671455
+
+The $HOST_NAME$ and $SERVICE_DESCRIPTION$ macros were not correctly replaced within subreports.

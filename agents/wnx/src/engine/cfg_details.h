@@ -3,14 +3,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 
+// other files
 #include <filesystem>
 #include <string>
 #include <vector>
 
+#include "cfg.h"
 #include "read_file.h"
 #include "tools/_misc.h"
-
-#include "cfg.h"
 
 // Class to be used internally
 // placed in h not cpp to be unit tested.
@@ -20,30 +20,21 @@
 namespace cma::cfg::details {
 
 // tool to get ImagePath value from Registry
-inline std::wstring FindServiceImagePath(const std::wstring ServiceValidName) {
-    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
-    key_path += ServiceValidName;
-    std::wstring service_path_new =
-        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
+std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
 
-    // check for very short strings
-    if (service_path_new.length() < 2) return {};
-
-    if (auto back = service_path_new.back(); back == L'\"')
-        service_path_new.pop_back();
-    if (auto front = service_path_new.front(); front == L'\"')
-        service_path_new.erase(0, 1);
-
-    return service_path_new;
-}
+std::filesystem::path ExtractPathFromServiceName(
+    std::wstring_view service_name) noexcept;
 
 class Folders {
 public:
     // if ServiceValidName set, then we MUST find path
     // otherwise look for WorkFolder
     // otherwise current path to current exe
-    bool setRoot(const std::wstring& ServiceValidName,  // look in registry
-                 const std::wstring& WorkFolder);       // look in disk
+    bool setRoot(const std::wstring& service_name,  // look in registry
+                 const std::wstring& preset_root);  // look in disk
+    // deprecated API
+    bool setRootEx(const std::wstring& service_name,  // look in registry
+                   const std::wstring& preset_root);  // look in disk
 
     void createDataFolderStructure(const std::wstring& AgentDataFolder);
 
@@ -89,12 +80,16 @@ public:
         return data_ / dirs::kState;
     }
 
+    inline std::filesystem::path getAuState() const {
+        return data_ / dirs::kAuStateLocation;
+    }
+
     inline std::filesystem::path getPluginConfigPath() const {
         return data_ / dirs::kPluginConfig;
     }
 
-    inline std::filesystem::path getCache() const {
-        return data_ / dirs::kCache;
+    inline std::filesystem::path getBackup() const {
+        return data_ / dirs::kBackup;
     }
 
     inline std::filesystem::path getUpdate() const {
@@ -111,10 +106,8 @@ public:
 private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
-    // #TODO gtest?
-    // #TODO into ConfigInfo
     std::filesystem::path makeDefaultDataFolder(
-        const std::wstring& AgentDataFolder);
+        std::wstring_view AgentDataFolder);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -124,6 +117,9 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, FoldersTest);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
 #endif
 };
 
@@ -131,13 +127,18 @@ private:
 
 namespace cma::cfg {
 namespace details {
+// low level API to combine sequences
+enum class Combine { overwrite, merge, merge_value };
+constexpr Combine GetCombineMode(std::string_view name);
+void CombineSequence(std::string_view name, YAML::Node target_value,
+                     const YAML::Node source_value, Combine combine);
 
 // critical and invisible global variables
 // YAML config and PAThs are here
 class ConfigInfo {
     enum { kMaxFiles = 3 };
     struct YamlData {
-        YamlData(std::filesystem::path Path,
+        YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp)
             : path_(Path), bad_(false) {}
 
@@ -187,6 +188,10 @@ class ConfigInfo {
                     XLOG::l("Cannot load cfg '{}'", path_.u8string());
                     data_.clear();
                 }
+            } catch (const std::exception& e) {
+                XLOG::l.crit("Can't load yaml file '{}', exception: '{}'",
+                             path_.u8string(), e.what());
+                bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
                 bad_ = true;
@@ -200,20 +205,20 @@ class ConfigInfo {
     };
 
 public:
-    void initAll(const std::wstring& ServiceValidName,  // look in registry
-                 const std::wstring& RootFolder,        // look in disk
-                 const std::wstring& AgentDataFolder);  // look in disk
+    void initFolders(const std::wstring& ServiceValidName,  // look in registry
+                     const std::wstring& RootFolder,        // look in disk
+                     const std::wstring& AgentDataFolder);  // look in disk
 
-    void cleanAll();
+    void cleanFolders();
+    void cleanConfig();
 
     // not so heavy operation, use free
     // #TODO probably replace with shared_ptr
     YAML::Node getConfig() const noexcept {
         std::lock_guard lk(lock_);
-        if (ok_)
-            return yaml_;
-        else
-            return {};
+        if (ok_) return yaml_;
+
+        return {};
     }
 
     std::wstring getRootYamlPath() const noexcept {
@@ -275,12 +280,17 @@ public:
 
     auto getCacheDir() const {
         std::lock_guard lk(lock_);
-        return folders_.getCache();
+        return folders_.getBackup();
     }
 
     auto getStateDir() const {
         std::lock_guard lk(lock_);
         return folders_.getState();
+    }
+
+    auto getAuStateDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getAuState();
     }
 
     auto getPluginConfigDir() const {
@@ -323,6 +333,10 @@ public:
         return path_to_msi_exec_;
     }
 
+    size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
+
+    int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
+
     void setLogFileDir(const std::wstring& Path) {
         std::lock_guard lk(lock_);
         logfile_dir_ = Path;
@@ -339,16 +353,17 @@ public:
     }
 
     // main api call to load all three configs
-    LoadCfgStatus loadAggregated(const std::wstring& ConfigFileName,
-                                 bool SaveOnSuccess, bool RestoreOnFail);
+    LoadCfgStatus loadAggregated(const std::wstring& config_filename,
+                                 YamlCacheOp cache_op);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src,
-                           bool MergeSequences = false);
+    static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
 
     // THIS IS ONLY FOR TESTING
-    bool loadDirect(const std::filesystem::path FullPath);
+    bool loadDirect(const std::filesystem::path& FullPath);
 
 private:
+    void fillExePaths(std::filesystem::path root);
+    void fillConfigDirs();
     std::vector<YamlData> buildYamlData(
         const std::wstring& ConfigFileName) const noexcept;
     void loadYamlDataWithMerge(YAML::Node Config,
@@ -387,12 +402,23 @@ private:
     bool generated_ = false;
     bool ok_ = false;
 
+    std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
+    std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
     FRIEND_TEST(StartTest, CheckStatus);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, LogFileLocation);
+    FRIEND_TEST(CmaCfg, InitEnvironment);
 #endif
 };
 extern ConfigInfo G_ConfigInfo;
 
+std::filesystem::path ConvertLocationToLogPath(std::string_view location);
+std::filesystem::path GetDefaultLogPath();
+std::wstring FindMsiExec() noexcept;
+std::string FindHostName() noexcept;
 }  // namespace details
 }  // namespace cma::cfg

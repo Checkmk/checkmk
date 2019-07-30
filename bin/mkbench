@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-__version__ = "1.6.0i1"
+__version__ = "1.7.0i1"
 
 # TODO:
 # - Create a more detailed report out of the test results. For example
@@ -51,6 +51,7 @@ __version__ = "1.6.0i1"
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
+import errno
 import os
 import re
 import ast
@@ -149,13 +150,6 @@ class MKFailTestCase(MKGeneralException):
 
 class MKFailTestCaseHighLatency(MKFailTestCase):
     pass
-
-
-class LocalConnection(livestatus.SingleSiteConnection):
-    def __init__(self, *args, **kwargs):
-        livestatus.SingleSiteConnection.__init__(self, "unix:%s/tmp/run/live" % omd_root(), *args,
-                                                 **kwargs)
-        self.connect()
 
 
 def interrupt_handler(signum, frame):
@@ -262,7 +256,7 @@ def run_performance_test(num_hosts, num_helpers):
 
         try:
             renderer.run(fork=False)
-        except npyscreen.wgwidget.NotEnoughSpaceForWidget, e:
+        except npyscreen.wgwidget.NotEnoughSpaceForWidget as e:
             raise MKGeneralException("Too small terminal (%s)" % e)
 
         finally:
@@ -324,16 +318,17 @@ class Test(object):
         test_dir = self.dir()
         try:
             os.makedirs(test_dir)
-        except OSError, e:
-            if e.errno == 17:  # file exists
+        except OSError as e:
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
 
         path = os.path.join(test_dir, "state")
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             tmp.write(pprint.pformat(self.serialize()) + "\n")
         os.rename(tmp_path, path)
@@ -477,7 +472,7 @@ class TestRunner(threading.Thread):
 
             result = Test.RESULT_COMPLETED
 
-        except Exception, e:
+        except Exception as e:
             if opt_debug:
                 raise
             self.test.error("Test failed: %s" % traceback.format_exc())
@@ -558,7 +553,7 @@ class TestRunner(threading.Thread):
                         while time.time() <= step.until:
                             try:
                                 self._while_waiting()
-                            except MKSkipTestCase, e:
+                            except MKSkipTestCase as e:
                                 self.test.info(
                                     "Skipping %s (%s): %s" %
                                     (test_case.name(), fmt_timespan(test_case.duration()), e))
@@ -573,11 +568,11 @@ class TestRunner(threading.Thread):
 
                             time.sleep(1)
 
-                self.test.info(
-                    "Finished %s (%s)" % (test_case.name(), fmt_timespan(test_case.duration())))
+                self.test.info("Finished %s (%s)" %
+                               (test_case.name(), fmt_timespan(test_case.duration())))
                 self._increase_hosts()
 
-            except MKFailTestCase, e:
+            except MKFailTestCase as e:
                 result = TestCase.RESULT_FAILED
                 result_msg = "Test case aborted: %s" % e
                 self.test.error(result_msg)
@@ -587,7 +582,7 @@ class TestRunner(threading.Thread):
                 else:
                     break
 
-            except Exception, e:
+            except Exception as e:
                 result = TestCase.RESULT_FAILED
                 result_msg = "Test case failed: %s" % e
                 self.test.error(result_msg)
@@ -613,11 +608,10 @@ class TestRunner(threading.Thread):
 
     def _generate_test_cases(self):
         while not self._stop.isSet():
-            yield TestAgentBasedStandardHosts(
-                self,
-                num_hosts=self._num_hosts,
-                planned_duration=15 * 60,
-                num_cmk_helpers=self._num_helpers)
+            yield TestAgentBasedStandardHosts(self,
+                                              num_hosts=self._num_hosts,
+                                              planned_duration=15 * 60,
+                                              num_cmk_helpers=self._num_helpers)
         #return [
         #    TestAgentBasedStandardHosts(self, num_hosts=100,   planned_duration=15*60, num_cmk_helpers=20),
         #    TestAgentBasedStandardHosts(self, num_hosts=200,   planned_duration=15*60, num_cmk_helpers=20),
@@ -662,15 +656,15 @@ class TestRunner(threading.Thread):
                                  (self.test.system_info.block_device, fmt_bytes(m.disk_usage.free)))
 
         if m.cpu_load[1] > self.test.system_info.cpu_count * 1.2:
-            raise MKFailTestCase(
-                "The 5 min average CPU load %0.2f is higher than "
-                "number of CPUs (%d)." % (m.cpu_load[1], self.test.system_info.cpu_count))
+            raise MKFailTestCase("The 5 min average CPU load %0.2f is higher than "
+                                 "number of CPUs (%d)." %
+                                 (m.cpu_load[1], self.test.system_info.cpu_count))
 
         # Check memory threshold. There are different values provided by psutil.
         # this value sounds good to me for testing.
         if m.memory.available < 100 * 1024 * 1024:
-            raise MKFailTestCase(
-                "There is only %s memory available." % (fmt_bytes(m.memory.available)))
+            raise MKFailTestCase("There is only %s memory available." %
+                                 (fmt_bytes(m.memory.available)))
 
         # Initial scheduling of the CMC spreads the service checks for a maximum of
         # 5 * check_interval. So we should terminate the test only after some initialization
@@ -972,7 +966,7 @@ class Measurement(object):
         try:
             raw_data = ast.literal_eval(open(path).read())
             self.deserialize(raw_data)
-        except Exception, e:
+        except Exception as e:
             if opt_debug:
                 raise
             raise MKGeneralException("Failed to load '%s': %s" % (path, e))
@@ -981,9 +975,10 @@ class Measurement(object):
         test_dir = self._runner.test.dir()
 
         path = os.path.join(test_dir, "%d.data" % self.time)
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             tmp.write(pprint.pformat(self.serialize()) + "\n")
         os.rename(tmp_path, path)
@@ -1065,11 +1060,11 @@ class Measurement(object):
             return
 
         try:
-            live = LocalConnection()
+            live = livestatus.LocalConnection()
             live.set_timeout(5)
             self.site_stats = live.query_row_assoc("GET status")
             live.disconnect()
-        except livestatus.MKLivestatusException, e:
+        except livestatus.MKLivestatusException as e:
             self._runner.test.error("Livestatus: %s" % e)
             self.site_stats = None
 
@@ -1121,7 +1116,7 @@ class AgentListener(multiprocessing.Process):
                 s.listen(1)
                 self._sockets.append(s)
                 self._socket_map[s.getsockname()] = host_id
-            except Exception, e:
+            except Exception as e:
                 if opt_debug:
                     raise
                 sys.stderr.write("Failed to open %s:%d: %s\n" % (address[0], address[1], e))
@@ -1132,7 +1127,7 @@ class AgentListener(multiprocessing.Process):
             try:
                 try:
                     readable = select.select(self._sockets, [], [], 0.2)[0]
-                except select.error, e:
+                except select.error as e:
                     if e[0] == 4:
                         continue
                     else:
@@ -1146,7 +1141,7 @@ class AgentListener(multiprocessing.Process):
                     client_socket.close()
             except (KeyboardInterrupt, MKTerminate):
                 break
-            except Exception, e:
+            except Exception as e:
                 sys.stderr.write("Error in listener: %s - %s\n" % (type(e), e))
 
     def _close_sockets(self):
@@ -2566,8 +2561,8 @@ class TestAgentBasedStandardHosts(TestCase):
         config_dir = self._cmk_config_dir()
         try:
             os.makedirs(config_dir)
-        except OSError, e:
-            if e.errno == 17:  # file exists
+        except OSError as e:
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -2624,24 +2619,29 @@ class TestAgentBasedStandardHosts(TestCase):
         config_dir = self._cmk_config_dir()
         try:
             os.makedirs(config_dir)
-        except OSError, e:
-            if e.errno == 17:  # file exists
+        except OSError as e:
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
 
-        all_hosts, ipaddresses, host_attributes = self._create_host_data()
+        all_hosts, host_tags, ipaddresses, host_attributes = self._create_host_data()
 
         with open("%s/hosts.mk" % config_dir, "w") as f:
             f.write("# Created by mkbench\n"
                     "\n"
                     "all_hosts += %s\n"
                     "\n"
+                    "host_tags.update(%s)\n"
+                    "\n"
                     "ipaddresses.update(%s)\n"
                     "\n"
-                    "host_attributes.update(%s)\n" % (pprint.pformat(all_hosts),
-                                                      pprint.pformat(ipaddresses),
-                                                      pprint.pformat(host_attributes)))
+                    "host_attributes.update(%s)\n" % (
+                        pprint.pformat(all_hosts),
+                        pprint.pformat(host_tags),
+                        pprint.pformat(ipaddresses),
+                        pprint.pformat(host_attributes),
+                    ))
 
         with open("%s/rules.mk" % config_dir, "w") as f:
             f.write("agent_ports = [\n" "    ( 6559, [], ALL_HOSTS, {} ),\n" "] + agent_ports\n")
@@ -2651,14 +2651,25 @@ class TestAgentBasedStandardHosts(TestCase):
                     "] + tcp_connect_timeouts\n")
 
     def _create_host_data(self):
-        all_hosts, ipaddresses, host_attributes = [], {}, {}
+        site = site_id()
+        all_hosts, host_tags, ipaddresses, host_attributes = [], {}, {}, {}
 
         for num in range(self.num_hosts):
             host_name = self.host_name_template % num
             ipaddress = get_host_ip(num)
 
-            all_hosts.append(
-                "%s|lan|ip-v4|cmk-agent|tcp|site:%s|ip-v4-only|prod|bench" % (host_name, site_id()))
+            all_hosts.append(host_name)
+
+            host_tags[host_name] = {
+                "agent": "cmk-agent",
+                "criticality": "prod",
+                "networking": "lan",
+                "piggyback": "piggyback",
+                "snmp_ds": "no-snmp",
+                "address_family": "ip-v4-only",
+                "tcp": "tcp",
+                "site": site,
+            }
 
             ipaddresses[host_name] = ipaddress
 
@@ -2666,7 +2677,7 @@ class TestAgentBasedStandardHosts(TestCase):
                 "ipaddress": ipaddress,
             }
 
-        return all_hosts, ipaddresses, host_attributes
+        return all_hosts, host_tags, ipaddresses, host_attributes
 
     def _discover_services(self):
         self._test.info("  Discovering services")
@@ -2722,7 +2733,7 @@ class TestAgentBasedStandardHosts(TestCase):
         try:
             # The execution of service checks needs to be stopped to prevent
             # races with the core.
-            LocalConnection().command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+            livestatus.LocalConnection().command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
             self._test.info("  Creating RRDs (stopping core during this step)")
             first_host_name = self.host_name_template % 0
@@ -2730,7 +2741,7 @@ class TestAgentBasedStandardHosts(TestCase):
             self._copy_rrds_of(first_host_name)
             self._test.info("  Finished creating RRDs")
         finally:
-            LocalConnection().command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
+            livestatus.LocalConnection().command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     def _copy_rrds_of(self, first_host_name):
         rrd_dir = "%s/var/check_mk/rrd" % omd_root()
@@ -2754,8 +2765,8 @@ class TestAgentBasedStandardHosts(TestCase):
 
                 try:
                     shutil.copytree(src_dir, target_dir)
-                except OSError, e:
-                    if e.errno == 17:  # file exists
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
                         pass
                     else:
                         raise
@@ -2849,13 +2860,13 @@ class TestAgentBasedStandardHosts(TestCase):
             if num_not_ready is None:
                 self._test.info("  Waiting for helper initialization")
             else:
-                self._test.info(
-                    "  Waiting for helper initialization (%d not ready)" % num_not_ready)
+                self._test.info("  Waiting for helper initialization (%d not ready)" %
+                                num_not_ready)
 
             try:
                 matched_pids = subprocess.check_output(
                     ["pgrep", "-u", site_id(), "-f", "python.*cmk --keepalive$"]).split("\n")
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 self._test.error("  Found no helper yet (%s)" % e.returncode)
                 continue
 
@@ -2952,17 +2963,17 @@ def run_report(test_id):
             "",
             "CPU load    : %0.2f %0.2f %0.2f" % values.cpu_load,
             "Memory      : %0.2f %%" % values.memory.percent,
-            "Disk %-6s : %s free" % (os.path.basename(test.system_info.block_device),
-                                     fmt_bytes(values.disk_usage.free)),
-            "Disk IO     : read %s/s, write %s/s" % (fmt_bytes(values.disk_io.read_bytes),
-                                                     fmt_bytes(values.disk_io.write_bytes)),
+            "Disk %-6s : %s free" %
+            (os.path.basename(test.system_info.block_device), fmt_bytes(values.disk_usage.free)),
+            "Disk IO     : read %s/s, write %s/s" %
+            (fmt_bytes(values.disk_io.read_bytes), fmt_bytes(values.disk_io.write_bytes)),
         ]
 
         if values.site_stats:
             data += [
                 "",
-                "Objects     : %d Hosts, %d Services" % (values.site_stats["num_hosts"],
-                                                         values.site_stats["num_services"]),
+                "Objects     : %d Hosts, %d Services" %
+                (values.site_stats["num_hosts"], values.site_stats["num_services"]),
                 "Check lat.  : %0.2f sec" % values.site_stats["average_latency_cmk"],
                 "Checks      : %0.2f Hosts/s %0.2f Services/s" %
                 (values.site_stats["host_checks_rate"], values.site_stats["service_checks_rate"]),
@@ -3017,8 +3028,8 @@ class GeneralInformation(npyscreen.BoxTitle):
                 "Memory     : %0.2f %%" % values.memory.percent,
                 "Disk %-6s: %s free" % (os.path.basename(
                     self._runner.test.system_info.block_device), fmt_bytes(values.disk_usage.free)),
-                "Disk IO    : r %s/s, w %s/s" % (fmt_bytes(values.disk_io.read_bytes),
-                                                 fmt_bytes(values.disk_io.write_bytes)),
+                "Disk IO    : r %s/s, w %s/s" %
+                (fmt_bytes(values.disk_io.read_bytes), fmt_bytes(values.disk_io.write_bytes)),
             ]
         super(GeneralInformation, self).update(clear)
 
@@ -3054,11 +3065,11 @@ class SiteInformation(npyscreen.BoxTitle):
             return
 
         self.values += [
-            "Objects     : %d H, %d S" % (values.site_stats["num_hosts"],
-                                          values.site_stats["num_services"]),
+            "Objects     : %d H, %d S" %
+            (values.site_stats["num_hosts"], values.site_stats["num_services"]),
             "Check lat.  : %0.2f s" % values.site_stats["average_latency_cmk"],
-            "Checks      : %0.2f H/s %0.2f S/s" % (values.site_stats["host_checks_rate"],
-                                                   values.site_stats["service_checks_rate"]),
+            "Checks      : %0.2f H/s %0.2f S/s" %
+            (values.site_stats["host_checks_rate"], values.site_stats["service_checks_rate"]),
             "CMK helpers : %0.2f %%" % (values.site_stats["helper_usage_cmk"] * 100),
         ]
 
@@ -3091,8 +3102,8 @@ class Log(npyscreen.BoxTitle):
                 lines = entry.split("\n")
 
             for line in lines:
-                entries.append(
-                    "%s %s" % (time.strftime("%H:%M:%S", time.localtime(timestamp)), line))
+                entries.append("%s %s" %
+                               (time.strftime("%H:%M:%S", time.localtime(timestamp)), line))
 
         self.entry_widget.clearBuffer()
         self.entry_widget.buffer(entries, scroll_end=True)
@@ -3128,21 +3139,19 @@ class ConsoleRenderer(npyscreen.NPSApp):
         help_height = 2
         log_height = max_y - info_box_height - form_border - help_height
 
-        self._general = self._window.add(
-            GeneralInformation,
-            relx=1,
-            rely=1,
-            max_height=info_box_height,
-            width=info_box_width,
-            runner=self._runner)
+        self._general = self._window.add(GeneralInformation,
+                                         relx=1,
+                                         rely=1,
+                                         max_height=info_box_height,
+                                         width=info_box_width,
+                                         runner=self._runner)
 
-        self._site = self._window.add(
-            SiteInformation,
-            relx=info_box_width + 1,
-            rely=1,
-            max_height=info_box_height,
-            width=info_box_width,
-            runner=self._runner)
+        self._site = self._window.add(SiteInformation,
+                                      relx=info_box_width + 1,
+                                      rely=1,
+                                      max_height=info_box_height,
+                                      width=info_box_width,
+                                      runner=self._runner)
 
         self._log = self._window.add(
             Log,
@@ -3199,7 +3208,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    except getopt.GetoptError, e:
+    except getopt.GetoptError as e:
         usage("%s" % e)
 
     mode = "run"
@@ -3226,8 +3235,8 @@ def main():
                 raise MKGeneralException("--num-hosts must be given as number")
 
             if num_hosts not in TestRunner.host_steps:
-                raise MKGeneralException(
-                    "--num-hosts must be one of: %s" % ", ".join(map(str, TestRunner.host_steps)))
+                raise MKGeneralException("--num-hosts must be one of: %s" %
+                                         ", ".join(map(str, TestRunner.host_steps)))
 
         elif o == "--num-helpers":
             try:
@@ -3262,7 +3271,7 @@ def verify_site_is_running():
 
 
 def verify_site_is_empty():
-    hosts = LocalConnection().query_column("GET hosts\nColumns: host_name")
+    hosts = livestatus.LocalConnection().query_column("GET hosts\nColumns: host_name")
     # Allow sites:
     # - empty
     # - created with "omd-vonheute"
@@ -3280,7 +3289,7 @@ if __name__ == "__main__":
         sys.stderr.write("Terminated.\n")
         sys.exit(0)
 
-    except MKGeneralException, e:
+    except MKGeneralException as e:
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise

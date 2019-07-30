@@ -28,6 +28,7 @@
 
 # This script extracts data of the hardware inventory to csv files
 
+from __future__ import print_function
 relations = {
     "devices": {
         "columns": (
@@ -114,13 +115,13 @@ inv_dir = "%s/var/check_mk/inventory/" % omd_root
 out_dir = "/var/tmp/"
 
 if not omd_root:
-    print "This script is only executable as site user"
+    print("This script is only executable as site user")
     sys.exit(1)
 
 
 def is_list(relation):
     list_start = ""
-    if type(relation) == dict:  # filter and converter are dicts, check them too
+    if isinstance(relation, dict):  # filter and converter are dicts, check them too
         relation = relation.keys()
     for field in relation:
         if not field.startswith("@"):
@@ -133,7 +134,7 @@ def is_list(relation):
     for field in relation:
         if ( is_list != (":*" in field) or not field.startswith(list_start) ) \
                 and not field.startswith("@") and not field.startswith("!"):
-            print "bad definition of relation, must be list or dict, not both:"
+            print("bad definition of relation, must be list or dict, not both:")
             sys.exit(1)
     return list_start
 
@@ -206,8 +207,8 @@ def list_get(hostname, list_start):
         try:
             subtree = subtree[item]
         except:
-            print "   %s does not exist in database of host" % item
-    if type(subtree) == list:
+            print("   %s does not exist in database of host" % item)
+    if isinstance(subtree, list):
         for package in subtree:
             if filt_it(package, relations[ofs]):
                 continue
@@ -252,7 +253,7 @@ for ofs in relations:
     list_start = is_list(elements)
     if list_start == "":
         for hostname in all_data:
-            print "creating relation %s for %s" % (ofs, hostname)
+            print("creating relation %s for %s" % (ofs, hostname))
             items = []
             for field in elements:
                 items.append(no_list_get(hostname, field))
@@ -260,14 +261,14 @@ for ofs in relations:
         out_rel.close()
     else:
         for hostname in all_data:
-            print "creating relation %s for %s" % (ofs, hostname)
+            print("creating relation %s for %s" % (ofs, hostname))
             subtree = all_data[hostname]
             for item in list_start.split("."):
                 try:
                     subtree = subtree[item]
                 except:
-                    print "   %s does not exist in database of host" % item
-            if type(subtree) == list:
+                    print("   %s does not exist in database of host" % item)
+            if isinstance(subtree, list):
                 for package in subtree:
                     if filt_it(package, relations[ofs]):
                         continue

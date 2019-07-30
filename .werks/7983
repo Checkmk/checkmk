@@ -1,0 +1,13 @@
+Title: Fix registering GUI commands with old multisite_commands
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563787592
+
+The command registration API has changed with 1.6, but the 1.5 API
+should still work as before for some time. This compatibility layer
+has been fixed now.

@@ -86,8 +86,9 @@ def user_profile_async_replication_dialog(sites):
         if start_sync:
             changes_manager = watolib.ActivateChanges()
             changes_manager.load()
-            estimated_duration = changes_manager.get_activation_time(
-                site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0)
+            estimated_duration = changes_manager.get_activation_time(site_id,
+                                                                     ACTIVATION_TIME_PROFILE_SYNC,
+                                                                     2.0)
             html.javascript(
                 'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
                 (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
@@ -105,11 +106,10 @@ def user_profile_async_replication_dialog(sites):
 
 def _add_profile_replication_change(site_id, result):
     """Add pending change entry to make sync possible later for admins"""
-    add_change(
-        "edit-users",
-        _('Profile changed (sync failed: %s)') % result,
-        sites=[site_id],
-        need_restart=False)
+    add_change("edit-users",
+               _('Profile changed (sync failed: %s)') % result,
+               sites=[site_id],
+               need_restart=False)
 
 
 @cmk.gui.pages.register("user_change_pw")
@@ -350,7 +350,6 @@ def page_user_profile(change_pw=False):
 @page_registry.register_page("wato_ajax_profile_repl")
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
-
     def page(self):
         request = self.webapi_request()
 

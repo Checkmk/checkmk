@@ -28,7 +28,10 @@ to all components of Check_MK."""
 
 import os
 
-from pathlib2 import Path
+try:
+    from pathlib import Path  # type: ignore
+except ImportError:
+    from pathlib2 import Path
 
 
 # One bright day, when every path is really a Path, this can die... :-)
@@ -84,9 +87,8 @@ inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
 discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
-discovered_service_labels_dir = Path(_omd_path("var/check_mk/discovered_service_labels"))
-piggyback_dir = Path(tmp_dir) / "piggyback"
-piggyback_source_dir = Path(tmp_dir) / "piggyback_sources"
+piggyback_dir = Path(tmp_dir, "piggyback")
+piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

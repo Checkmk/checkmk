@@ -139,7 +139,7 @@ def parse_oracle_tablespaces(info):
                 "increment_size": int(increment_size) * bs,
             })
 
-        except:
+        except Exception:
             this_tablespace.update({
                 "block_size": None,
                 "size": None,

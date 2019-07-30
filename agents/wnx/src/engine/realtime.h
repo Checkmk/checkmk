@@ -18,8 +18,8 @@ enum {
     kDataOffset = kHeaderSize + kTimeStampSize
 };
 
-constexpr const std::string_view kEncryptedHeader = "99";
-constexpr const std::string_view kPlainHeader = "00";
+constexpr const std::string_view kEncryptedHeader = "00";
+constexpr const std::string_view kPlainHeader = "99";
 
 using RtBlock = std::vector<uint8_t>;
 using RtTable = std::vector<std::string_view>;
@@ -53,7 +53,7 @@ public:
     bool working() const noexcept { return working_period_; }
 
 private:
-    void mainThread();
+    void mainThread() noexcept;
     std::string generateData();
 
     void clear();
@@ -68,6 +68,7 @@ private:
     std::string ip_address_;
     std::string passphrase_;
     int port_ = 0;
+
     int timeout_ = cma::cfg::kDefaultRealtimeTimeout;
     uint64_t kick_count_ = 0;
 
@@ -80,7 +81,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class RealtimeTest;
-    FRIEND_TEST(RealtimeTest, Base);
+    FRIEND_TEST(RealtimeTest, Base_Long);
     FRIEND_TEST(RealtimeTest, LowLevel);
 #endif
 };

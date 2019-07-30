@@ -41,7 +41,7 @@ def check_hpux_cpu_load(item, params, info):
     # Assuming 1 cpu when none can be found in the agent output
     try:
         num_cpus = int(info[1][0])
-    except:
+    except Exception:
         num_cpus = 1
 
     return check_cpu_load_generic(params, load, num_cpus)

@@ -50,9 +50,9 @@ public:
     ECTableConnection(MonitoringCore *mc, const Table &table, Query *query)
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->mkeventdSocketPath())
-        , _mc(mc)
-        , _table(table)
-        , _query(query) {}
+        , mc_(mc)
+        , table_(table)
+        , query_(query) {}
 
 private:
     void sendRequest(std::ostream &os) override {
@@ -67,7 +67,7 @@ private:
 
     void emitGET(std::ostream &os) const {
         // skip "eventconsole" prefix :-P
-        os << "GET " << _table.name().substr(12);
+        os << "GET " << table_.name().substr(12);
     }
 
     void emitOutputFormat(std::ostream &os) const {
@@ -77,7 +77,7 @@ private:
     void emitColumnsHeader(std::ostream &os) {
         os << "\nColumns:";
         // Initially we consider all columns used in the query...
-        auto all = _query->allColumns();
+        auto all = query_->allColumns();
         // ... then we add some special columns which we might need irrespective
         // of the actual query...
         static std::unordered_set<std::string> special_columns{
@@ -87,7 +87,7 @@ private:
             "event_contact_groups_precedence",
             // see  isAuthorizedForEventViaContactGroups
             "event_contact_groups"};
-        _table.any_column([&](const auto &col) {
+        table_.any_column([&](const auto &col) {
             if (special_columns.find(col->name()) != special_columns.end()) {
                 all.insert(col);
             }
@@ -103,21 +103,21 @@ private:
     }
 
     void emitTimeRangeFilter(std::ostream &os) {
-        if (auto glb = _query->greatestLowerBoundFor("history_time")) {
+        if (auto glb = query_->greatestLowerBoundFor("history_time")) {
             os << "\nFilter: history_time >= " << *glb;
         }
-        if (auto lub = _query->leastUpperBoundFor("history_time")) {
+        if (auto lub = query_->leastUpperBoundFor("history_time")) {
             os << "\nFilter: history_time <= " << *lub;
         }
     }
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
-            if (auto svr = _query->stringValueRestrictionFor(column_name)) {
+            if (auto svr = query_->stringValueRestrictionFor(column_name)) {
                 os << "\nFilter: " << column_name << " = " << *svr;
             } else {
-                auto glb = _query->greatestLowerBoundFor(column_name);
-                auto lub = _query->leastUpperBoundFor(column_name);
+                auto glb = query_->greatestLowerBoundFor(column_name);
+                auto lub = query_->leastUpperBoundFor(column_name);
                 if (glb && lub && glb == lub) {
                     os << "\nFilter: " << column_name << " = " << *glb;
                 }
@@ -152,17 +152,17 @@ private:
                 auto it = row._map.find("event_host");
                 row._host = it == row._map.end()
                                 ? nullptr
-                                : _mc->getHostByDesignation(it->second);
-                if (!_query->processDataset(Row(&row))) {
+                                : mc_->getHostByDesignation(it->second);
+                if (!query_->processDataset(Row(&row))) {
                     return;
                 }
             }
         } while (true);
     }
 
-    MonitoringCore *_mc;
-    const Table &_table;
-    Query *_query;
+    MonitoringCore *mc_;
+    const Table &table_;
+    Query *query_;
 };
 }  // namespace
 

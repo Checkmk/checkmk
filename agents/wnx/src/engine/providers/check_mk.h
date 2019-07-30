@@ -7,13 +7,19 @@
 
 #include <string>
 
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
 namespace provider {
+
+// Converts address entry from config file into
+// expected by check_mk check(only_from) representation.
+// Carefully tested to be maximally compatible with legacy
+// integrations tests
+// on error returns empty string
+std::string AddressToCheckMkString(std::string_view entry) noexcept;
 
 class CheckMk : public Synchronous {
 public:
@@ -22,7 +28,7 @@ public:
         : Synchronous(Name, Separator) {}
 
 private:
-    virtual std::string makeBody() const override;
+    virtual std::string makeBody() override;
 };
 
 }  // namespace provider

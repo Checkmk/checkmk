@@ -1,0 +1,10 @@
+Title: ceph_df: Fixed wrong calculation of size and available space
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563873399
+Class: fix
+
+

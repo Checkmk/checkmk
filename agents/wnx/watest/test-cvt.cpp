@@ -5,23 +5,16 @@
 
 #include <filesystem>
 
+#include "cvt.h"
+#include "lwa/types.h"
+#include "providers/logwatch_event.h"
+#include "providers/mrpe.h"
+#include "read_file.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-
-#include "read_file.h"
 #include "yaml-cpp/yaml.h"
-
-#include "cvt.h"
-
-#include "read_file.h"
-
-#include "lwa/types.h"
-
-#include "providers/logwatch_event.h"
-#include "providers/mrpe.h"
-
-#include "test-tools.h"
 
 template <class T>
 std::string type_name() {
@@ -167,9 +160,9 @@ TEST(CvtTest, LogFilesSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLogFiles].IsMap());
@@ -216,9 +209,9 @@ TEST(CvtTest, LogWatchSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLogWatchEvent].IsMap());
@@ -267,9 +260,9 @@ TEST(CvtTest, MrpeSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kMrpe].IsMap());
@@ -308,9 +301,9 @@ TEST(CvtTest, PluginsLocalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kLocal].IsMap());
@@ -338,14 +331,15 @@ TEST(CvtTest, PluginsLocalSection) {
         EXPECT_EQ(plu[vars::kPluginsExecution].size(), 5);
         auto exec = plu[vars::kPluginsExecution];
         EXPECT_EQ(exec[0][vars::kPluginPattern].as<std::string>(),
-                  "@user\\windows_updates.vbs");
+                  std::string(yml_var::kUserPlugins) + "\\windows_updates.vbs");
         EXPECT_EQ(exec[1][vars::kPluginPattern].as<std::string>(),
-                  "@user\\mk_inventory.ps1");
+                  std::string(yml_var::kUserPlugins) + "\\mk_inventory.ps1");
         EXPECT_EQ(exec[2][vars::kPluginPattern].as<std::string>(),
-                  "@user\\ps_perf.ps1");
+                  std::string(yml_var::kUserPlugins) + "\\ps_perf.ps1");
         EXPECT_EQ(exec[3][vars::kPluginPattern].as<std::string>(),
-                  "@user\\*.ps1");
-        EXPECT_EQ(exec[4][vars::kPluginPattern].as<std::string>(), "@user\\*");
+                  std::string(yml_var::kUserPlugins) + "\\*.ps1");
+        EXPECT_EQ(exec[4][vars::kPluginPattern].as<std::string>(),
+                  std::string(yml_var::kUserPlugins) + "\\*");
 
         EXPECT_EQ(exec[0][vars::kPluginTimeout].as<int>(), 120);
         EXPECT_EQ(exec[0][vars::kPluginCacheAge].as<int>(), 3600);
@@ -379,9 +373,9 @@ TEST(CvtTest, PsSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kPs].IsMap());
@@ -413,9 +407,9 @@ TEST(CvtTest, FileInfoSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kFileInfo].IsMap());
@@ -451,9 +445,9 @@ TEST(CvtTest, WinPerfSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kWinPerf].IsMap());
@@ -493,9 +487,9 @@ TEST(CvtTest, GlobalSection) {
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(kTest, false, temp_file.wstring());
+    OnStart(AppType::test, temp_file.wstring());
     std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(kTest));
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
         auto ya = cma::cfg::GetLoadedConfig();
         ASSERT_TRUE(ya[groups::kGlobal].IsMap());

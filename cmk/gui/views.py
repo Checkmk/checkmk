@@ -25,12 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import ast
 import time
 import os
 import pprint
 import traceback
 import json
-from collections import namedtuple
 from typing import Dict, Optional, List  # pylint: disable=unused-import
 
 import livestatus
@@ -61,6 +61,7 @@ from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
 )
+from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
@@ -95,6 +96,8 @@ from cmk.gui.plugins.views.utils import (
     painter_exists,
     PainterOptions,
     get_tag_groups,
+    _parse_url_sorters,
+    SorterEntry,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -105,9 +108,8 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
     declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
     cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, query_data, do_query_data, join_row, get_view_infos,
-    replace_action_url_macros, Cell, JoinCell, register_legacy_command, register_painter,
-    register_sorter,
+    get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
+    Cell, JoinCell, register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -132,7 +134,7 @@ loaded_with_language = False
 # will be displayed.
 multisite_painter_options = {}
 multisite_layouts = {}
-multisite_commands = {}
+multisite_commands = []
 multisite_datasources = {}
 multisite_painters = {}
 multisite_sorters = {}
@@ -141,7 +143,6 @@ multisite_sorters = {}
 @visual_type_registry.register
 class VisualTypeViews(VisualType):
     """Register the views as a visual type"""
-
     @property
     def ident(self):
         return "views"
@@ -203,7 +204,6 @@ class PermissionSectionViews(PermissionSection):
 
 class View(object):
     """Manages processing of a single view, e.g. during rendering"""
-
     def __init__(self, view_name, view_spec):
         # type: (str, Dict) -> None
         super(View, self).__init__()
@@ -265,14 +265,24 @@ class View(object):
     def _get_sorter_entries(self, sorter_list):
         sorters = []
         for entry in sorter_list:
-            if entry[0] not in sorter_registry:
+            if not isinstance(entry, SorterEntry):
+                entry = SorterEntry(*entry)
+
+            sorter_name = entry.sorter
+            hash_id = None
+            if ":" in entry.sorter:
+                sorter_name, hash_id = entry.sorter.split(':', 1)
+
+            sorter = sorter_registry.get(sorter_name, None)
+
+            if sorter is None:
                 continue  # Skip removed sorters
 
-            # e.g. service description
-            join_key = entry[2] if len(entry) > 2 else None
+            sorter = sorter()
+            if hasattr(sorter, 'derived_columns'):
+                sorter.derived_columns(self, hash_id)
 
-            sorters.append(
-                SorterEntry(sorter=sorter_registry[entry[0]](), negate=entry[1], join_key=join_key))
+            sorters.append(SorterEntry(sorter=sorter, negate=entry.negate, join_key=entry.join_key))
         return sorters
 
     @property
@@ -321,7 +331,8 @@ class ViewRenderer(object):
         self.view = view
 
     @abc.abstractmethod
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               unfiltered_amount_of_rows):
         raise NotImplementedError()
 
 
@@ -330,7 +341,8 @@ class GUIViewRenderer(ViewRenderer):
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               unfiltered_amount_of_rows):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
@@ -413,7 +425,7 @@ class GUIViewRenderer(ViewRenderer):
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
-            except:
+            except Exception:
                 pass  # currently no feed back on webservice
 
         painter_options = PainterOptions.get_instance()
@@ -424,9 +436,11 @@ class GUIViewRenderer(ViewRenderer):
             html.open_div(id_="data_container")
 
         if not has_done_actions:
-            # Limit exceeded? Show warning
             if display_options.enabled(display_options.W):
-                cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
+                if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
+                                                         self.view.row_limit):
+                    cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
+                    del rows[self.view.row_limit:]
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
                           not html.do_actions())
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -461,8 +475,8 @@ class GUIViewRenderer(ViewRenderer):
            and display_options.enabled(display_options.W) \
            and html.output_format == "html":
             for info in sites.live().dead_sites().itervalues():
-                html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"],
-                                                          _('Livestatus error'), info["exception"]))
+                html.show_error("<b>%s - %s</b><br>%s" %
+                                (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
         # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
         if display_options.enabled(display_options.R):
@@ -499,16 +513,16 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
     # will be displayed.
     if multisite_painter_options:
-        raise MKGeneralException(
-            "Found legacy painter option plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_painter_options.keys()))
+        raise MKGeneralException("Found legacy painter option plugins: %s. You will either have to "
+                                 "remove or migrate them." %
+                                 ", ".join(multisite_painter_options.keys()))
     if multisite_layouts:
         raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
                                  "remove or migrate them." % ", ".join(multisite_layouts.keys()))
     if multisite_datasources:
-        raise MKGeneralException(
-            "Found legacy data source plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_datasources.keys()))
+        raise MKGeneralException("Found legacy data source plugins: %s. You will either have to "
+                                 "remove or migrate them." %
+                                 ", ".join(multisite_datasources.keys()))
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
@@ -584,10 +598,10 @@ def _register_host_tag_painters():
         spec = {
             "title": _("Host tag:") + ' ' + long_title,
             "short": tag_group.title,
-            "columns": ["host_custom_variables"],
+            "columns": ["host_tags"],
         }
         cls = type(
-            "HostTagPainter%s" % tag_group.id.title(),
+            "HostTagPainter%s" % str(tag_group.id).title(),
             (Painter,),
             {
                 "_ident": ident,
@@ -600,7 +614,7 @@ def _register_host_tag_painters():
                 "short_title": property(lambda self: self._spec["short"]),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
-                "group_by": property(lambda self, row: _paint_host_tag(row, self._tag_group_id)[1]),
+                "group_by": lambda self, row: _paint_host_tag(row, self._tag_group_id)[1],
             })
         painter_registry.register(cls)
 
@@ -612,10 +626,10 @@ def _paint_host_tag(row, tgid):
 def _register_host_tag_sorters():
     for tag_group in config.tags.tag_groups:
         register_sorter(
-            "host_tag_" + tag_group.id, {
+            "host_tag_" + str(tag_group.id), {
                 "_tag_group_id": tag_group.id,
                 "title": _("Host tag:") + ' ' + tag_group.title,
-                "columns": ["host_custom_variables"],
+                "columns": ["host_tags"],
                 "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
             })
 
@@ -726,10 +740,10 @@ def page_create_view(next_url=None):
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
     ds_class, ds_name = html.get_item_input("datasource", data_source_registry)
-    visuals.page_create_visual(
-        'views',
-        ds_class().infos,
-        next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' % ds_name)
+    visuals.page_create_visual('views',
+                               ds_class().infos,
+                               next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' %
+                               ds_name)
 
 
 #.
@@ -834,7 +848,7 @@ def view_editor_specs(ds_name, general_properties=True):
                                    title=_('Automatic page reload'),
                                    unit=_('seconds'),
                                    minvalue=0,
-                                   help=_('Leave this empty or at 0 for no automatic reload.'),
+                                   help=_('Set to \"0\" to disable the automatic reload.'),
                                )),
                               ('layout',
                                DropdownChoice(
@@ -879,6 +893,11 @@ def view_editor_specs(ds_name, general_properties=True):
                     title=_('Column'),
                     choices=painter_choices_with_params(painters),
                     no_preselect=True,
+                    render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                    render_sub_vs_request_vars={
+                        "ds_name": ds_name,
+                        "painter_type": "painter",
+                    },
                 ),
                 DropdownChoice(
                     title=_('Link'),
@@ -894,8 +913,6 @@ def view_editor_specs(ds_name, general_properties=True):
 
         join_painters = join_painters_of_datasource(ds_name)
         if ident == 'columns' and join_painters:
-            join_painters = join_painters_of_datasource(ds_name)
-
             vs_column = Alternative(
                 elements=[
                     vs_column,
@@ -910,6 +927,11 @@ def view_editor_specs(ds_name, general_properties=True):
                                 title=_('Column'),
                                 choices=painter_choices_with_params(join_painters),
                                 no_preselect=True,
+                                render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+                                render_sub_vs_request_vars={
+                                    "ds_name": ds_name,
+                                    "painter_type": "join_painter",
+                                },
                             ),
                             TextUnicode(
                                 title=_('of Service'),
@@ -985,6 +1007,33 @@ def view_editor_specs(ds_name, general_properties=True):
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
 
     return specs
+
+
+@page_registry.register_page("ajax_cascading_render_painer_parameters")
+class PageAjaxCascadingRenderPainterParameters(AjaxPage):
+    def page(self):
+        request = html.get_request()
+
+        if request["painter_type"] == "painter":
+            painters = painters_of_datasource(request["ds_name"])
+        elif request["painter_type"] == "join_painter":
+            painters = join_painters_of_datasource(request["ds_name"])
+        else:
+            raise NotImplementedError()
+
+        vs = CascadingDropdown(choices=painter_choices_with_params(painters))
+        sub_vs = self._get_sub_vs(vs, ast.literal_eval(request["choice_id"]))
+        value = ast.literal_eval(request["encoded_value"])
+
+        with html.plugged():
+            vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
+            return {"html_code": html.drain()}
+
+    def _get_sub_vs(self, vs, choice_id):
+        for val, _title, sub_vs in vs.choices():
+            if val == choice_id:
+                return sub_vs
+        raise MKGeneralException("Invaild choice")
 
 
 def render_view_config(view, general_properties=True):
@@ -1137,8 +1186,9 @@ def show_filter(f):
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.open_div(
-        id_="filters", class_=["view_form"], style="display: none;" if not is_open else None)
+    html.open_div(id_="filters",
+                  class_=["view_form"],
+                  style="display: none;" if not is_open else None)
 
     html.begin_form("filter")
     html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
@@ -1146,8 +1196,7 @@ def show_filter_form(is_open, filters):
     html.open_td()
 
     # sort filters according to title
-    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
-    s.sort()
+    s = sorted([(f.sort_index, f.title, f) for f in filters if f.available()])
 
     # First show filters with double height (due to better floating
     # layout)
@@ -1217,8 +1266,9 @@ def show_view(view, view_renderer, only_count=False):
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
-    show_filters = visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters)
+    show_filters = visuals.filters_of_visual(view.spec,
+                                             view.datasource.infos,
+                                             link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
@@ -1268,7 +1318,7 @@ def show_view(view, view_renderer, only_count=False):
         return cmk.gui.plugins.views.availability.render_availability_page(
             view, context, filterheaders)
 
-    query = filterheaders + view.spec.get("add_headers", "")
+    headers = filterheaders + view.spec.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
     if only_count:
@@ -1291,7 +1341,7 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        rows = view.datasource.table.query(view, columns, query, view.only_sites, view.row_limit,
+        rows = view.datasource.table.query(view, columns, headers, view.only_sites, view.row_limit,
                                            all_active_filters)
 
         # Now add join information, if there are join columns
@@ -1319,6 +1369,8 @@ def show_view(view, view_renderer, only_count=False):
         sort_data(rows, sorters)
     else:
         rows = []
+
+    unfiltered_amount_of_rows = len(rows)
 
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:
@@ -1371,10 +1423,7 @@ def show_view(view, view_renderer, only_count=False):
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
     view_renderer.render(rows, group_cells, cells, show_checkboxes, layout, num_columns,
-                         show_filters)
-
-
-SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
+                         show_filters, unfiltered_amount_of_rows)
 
 
 def _get_all_active_filters(view):
@@ -1386,7 +1435,13 @@ def _get_all_active_filters(view):
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
-    return [f for f in use_filters if f.available()]
+    use_filters = [f for f in use_filters if f.available()]
+
+    for filt in use_filters:
+        if hasattr(filt, 'derived_columns'):
+            filt.derived_columns(view)
+
+    return use_filters
 
 
 def _is_ec_unrelated_host_view(view):
@@ -1500,13 +1555,14 @@ def _do_table_join(view, master_rows, master_filters, sorters):
         join_filters.append(cell.livestatus_filter(join_slave_column))
 
     join_filters.append("Or: %d" % len(join_filters))
-    query = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = query_data(
-        datasource=slave_ds,
-        columns=[join_master_column, join_slave_column] + join_columns,
-        add_headers=query,
-        only_sites=view.only_sites,
-        limit=None)
+    headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
+    rows = slave_ds.table.query(view,
+                                columns=list(
+                                    set([join_master_column, join_slave_column] + join_columns)),
+                                headers=headers,
+                                only_sites=view.only_sites,
+                                limit=None,
+                                all_active_filters=None)
     per_master_entry = {}
     current_key = None
     current_entry = None
@@ -1573,19 +1629,6 @@ def get_user_sorters():
     return _parse_url_sorters(html.request.var("sort"))
 
 
-def _parse_url_sorters(sort):
-    sorters = []
-    if not sort:
-        return sorters
-    for s in sort.split(','):
-        if '~' not in s:
-            sorters.append((s.replace('-', ''), s.startswith('-')))
-        else:
-            sorter, join_index = s.split('~', 1)
-            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
-    return sorters
-
-
 def get_only_sites():
     # type: () -> Optional[List[str]]
     """Is the view limited to specific sites by request?"""
@@ -1619,13 +1662,11 @@ def view_optiondial(view, option, choices, help_txt):
 
     title = dict(choices).get(value, value)
     html.begin_context_buttons()  # just to be sure
-    # Remove unicode strings
-    choices = [[c[0], str(c[1])] for c in choices]
-    html.open_div(
-        id_="optiondial_%s" % option,
-        class_=["optiondial", option, "val_%s" % value],
-        title=help_txt,
-        onclick="cmk.views.dial_option(this, \'%s\', \'%s\', %r)" % (view["name"], option, choices))
+    html.open_div(id_="optiondial_%s" % option,
+                  class_=["optiondial", option, "val_%s" % value],
+                  title=help_txt,
+                  onclick="cmk.views.dial_option(this, %s, %s, %s)" %
+                  (json.dumps(view["name"]), json.dumps(option), json.dumps(choices)))
     html.div(title)
     html.close_div()
     html.final_javascript("cmk.views.init_optiondial('optiondial_%s');" % option)
@@ -1647,7 +1688,7 @@ def ajax_set_viewoption():
     if isinstance(value, str) and value[0].isdigit():
         try:
             value = int(value)
-        except:
+        except ValueError:
             pass
 
     painter_options = PainterOptions.get_instance()
@@ -1683,20 +1724,18 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
 
     if display_options.enabled(display_options.D):
         painter_options = PainterOptions.get_instance()
-        html.toggle_button(
-            "painteroptions",
-            False,
-            "painteroptions",
-            _("Modify display options"),
-            disabled=not painter_options.painter_option_form_enabled())
+        html.toggle_button("painteroptions",
+                           False,
+                           "painteroptions",
+                           _("Modify display options"),
+                           disabled=not painter_options.painter_option_form_enabled())
 
     if display_options.enabled(display_options.C):
-        html.toggle_button(
-            "commands",
-            False,
-            "commands",
-            _("Execute commands on hosts, services and other objects"),
-            hidden=not enable_commands)
+        html.toggle_button("commands",
+                           False,
+                           "commands",
+                           _("Execute commands on hosts, services and other objects"),
+                           hidden=not enable_commands)
         html.toggle_button("commands", False, "commands", "", hidden=enable_commands, disabled=True)
 
         selection_enabled = enable_checkboxes if enable_commands else thisview.get(
@@ -1706,18 +1745,17 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                 id_="checkbox",
                 icon="checkbox",
                 title=_("Enable/Disable checkboxes for selecting rows for commands"),
-                onclick="location.href='%s';" % html.makeuri([('show_checkboxes',
-                                                               show_checkboxes and '0' or '1')]),
+                onclick="location.href='%s';" %
+                html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                 isopen=show_checkboxes,
                 hidden=True,
             )
-        html.toggle_button(
-            "checkbox",
-            False,
-            "checkbox",
-            "",
-            hidden=not thisview.get("force_checkboxes"),
-            disabled=True)
+        html.toggle_button("checkbox",
+                           False,
+                           "checkbox",
+                           "",
+                           hidden=not thisview.get("force_checkboxes"),
+                           disabled=True)
         html.javascript('cmk.selection.set_selection_enabled(%s);' % json.dumps(selection_enabled))
 
     if display_options.enabled(display_options.O):
@@ -1751,22 +1789,27 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
                 url = _link_to_host_by_name(host)
             else:
                 url = _link_to_folder_by_path(html.request.var("wato_folder", ""))
-            html.context_button(
-                _("WATO"), url, "wato", id_="wato", bestof=config.context_buttons_to_show)
+            html.context_button(_("WATO"),
+                                url,
+                                "wato",
+                                id_="wato",
+                                bestof=config.context_buttons_to_show)
 
         # Button for creating an instant report (if reporting is available)
         if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(
-                _("Export as PDF"),
-                html.makeuri([], filename="report_instant.py"),
-                "report",
-                class_="context_pdf_export")
+            html.context_button(_("Export as PDF"),
+                                html.makeuri([], filename="report_instant.py"),
+                                "report",
+                                class_="context_pdf_export")
 
         # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
-            html.context_button(
-                linktitle, url=uri, icon=icon, id_=buttonid, bestof=config.context_buttons_to_show)
+            html.context_button(linktitle,
+                                url=uri,
+                                icon=icon,
+                                id_=buttonid,
+                                bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
@@ -1779,13 +1822,16 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
             url_vars.append(("load_user", thisview["owner"]))
 
         url = html.makeuri_contextless(url_vars, filename="edit_view.py")
-        html.context_button(
-            _("Edit View"), url, "edit", id_="edit", bestof=config.context_buttons_to_show)
+        html.context_button(_("Edit View"),
+                            url,
+                            "edit",
+                            id_="edit",
+                            bestof=config.context_buttons_to_show)
 
     if display_options.enabled(display_options.E):
         if _show_availability_context_button(view):
-            html.context_button(
-                _("Availability"), html.makeuri([("mode", "availability")]), "availability")
+            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]),
+                                "availability")
 
         if _show_combined_graphs_context_button(view):
             html.context_button(
@@ -1836,8 +1882,8 @@ def _link_to_host_by_name(host_name):
 
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
-    html.javascript(
-        "cmk.views.update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
+    html.javascript("cmk.views.update_togglebutton('commands', %d);" %
+                    (enable_command_toggle and 1 or 0))
     html.javascript("cmk.views.update_togglebutton('checkbox', %d);" %
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
@@ -1862,7 +1908,7 @@ def sort_data(data, sorters):
         return
 
     # Handle case where join columns are not present for all rows
-    def save_compare(compfunc, row1, row2):
+    def safe_compare(compfunc, row1, row2):
         if row1 is None and row2 is None:
             return 0
         elif row1 is None:
@@ -1877,7 +1923,7 @@ def sort_data(data, sorters):
             neg = -1 if entry.negate else 1
 
             if entry.join_key:  # Sorter for join column, use JOIN info
-                c = neg * save_compare(entry.sorter.cmp, e1["JOIN"].get(entry.join_key),
+                c = neg * safe_compare(entry.sorter.cmp, e1["JOIN"].get(entry.join_key),
                                        e2["JOIN"].get(entry.join_key))
             else:
                 c = neg * entry.sorter.cmp(e1, e2)
@@ -1935,8 +1981,7 @@ def infos_needed_by_painter(painter, add_columns=None):
     if add_columns is None:
         add_columns = []
 
-    return set(
-        [c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns])
+    return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
 
 
 def painter_choices(painters, add_params=False):
@@ -2024,8 +2069,9 @@ def show_command_form(is_open, datasource):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource.infos[0]
 
-    html.open_div(
-        id_="commands", class_=["view_form"], style="display:none;" if not is_open else None)
+    html.open_div(id_="commands",
+                  class_=["view_form"],
+                  style="display:none;" if not is_open else None)
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
@@ -2126,13 +2172,12 @@ def do_actions(view, what, action_rows, backurl):
     command = None
     title, executor = core_command(what, action_rows[0], 0,
                                    len(action_rows))[1:3]  # just get the title and executor
-    if not html.confirm(
-            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-                "title": title,
-                "count": len(action_rows),
-                "what": visual_info_registry[what]().title_plural,
-            },
-            method='GET'):
+    if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") % {
+            "title": title,
+            "count": len(action_rows),
+            "what": visual_info_registry[what]().title_plural,
+    },
+                        method='GET'):
         return False
 
     count = 0
@@ -2166,6 +2211,7 @@ def do_actions(view, what, action_rows, backurl):
 
     if message:
         if html.output_format == "html":  # sorry for this hack
+            backurl += "&filled_in=filter"
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
             if html.request.var("show_checkboxes") == "1":
                 html.request.del_var("selection")
@@ -2240,7 +2286,7 @@ def execute_hooks(hook):
     for hook_func in view_hooks.get(hook, []):
         try:
             hook_func()
-        except:
+        except Exception:
             if config.debug:
                 raise MKGeneralException(
                     _('Problem while executing hook function %s in hook %s: %s') %

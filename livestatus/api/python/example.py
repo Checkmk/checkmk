@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import os, sys
 import livestatus
 
@@ -38,33 +39,33 @@ except:
 
 try:
     # Make a single connection for each query
-    print "\nPerformance:"
+    print("\nPerformance:")
     for key, value in livestatus.SingleSiteConnection(socket_path).query_row_assoc(
             "GET status").items():
-        print "%-30s: %s" % (key, value)
-    print "\nHosts:"
+        print("%-30s: %s" % (key, value))
+    print("\nHosts:")
     hosts = livestatus.SingleSiteConnection(socket_path).query_table(
         "GET hosts\nColumns: name alias address")
     for name, alias, address in hosts:
-        print "%-16s %-16s %s" % (name, address, alias)
+        print("%-16s %-16s %s" % (name, address, alias))
 
     # Do several queries in one connection
     conn = livestatus.SingleSiteConnection(socket_path)
     num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
-    print "\nHosts up: %d" % num_up
+    print("\nHosts up: %d" % num_up)
 
     stats = conn.query_row("GET services\n"
                            "Stats: state = 0\n"
                            "Stats: state = 1\n"
                            "Stats: state = 2\n"
                            "Stats: state = 3\n")
-    print "Service stats: %d/%d/%d/%d" % tuple(stats)
+    print("Service stats: %d/%d/%d/%d" % tuple(stats))
 
-    print "List of commands: %s" % \
-       ", ".join(conn.query_column("GET commands\nColumns: name"))
+    print("List of commands: %s" % \
+       ", ".join(conn.query_column("GET commands\nColumns: name")))
 
-    print "Query error:"
+    print("Query error:")
     conn.query_value("GET hosts\nColumns: hirni")
 
 except Exception as e:  # livestatus.MKLivestatusException, e:
-    print "Livestatus error: %s" % str(e)
+    print("Livestatus error: %s" % str(e))

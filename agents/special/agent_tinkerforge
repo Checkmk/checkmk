@@ -57,6 +57,7 @@
 #  Currently the bricklets included in the Starter Kit: Server Room Monitoring are
 #  implemented
 
+from __future__ import print_function
 import os
 import socket
 import sys
@@ -86,7 +87,7 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
         global segment_display_value, segment_display_unit
         segment_display_value = int(values[0] * factor)
         segment_display_unit = unit
-    print "%s,%s,%s" % (sensor_type, id_to_string(ident), ",".join([str(val) for val in values]))
+    print("%s,%s,%s" % (sensor_type, id_to_string(ident), ",".join([str(val) for val in values])))
 
 
 def print_ambient_light(conn, settings, uid):
@@ -238,31 +239,27 @@ def main():
 
     settings = read_config(os.environ)
     parser = OptionParser()
-    parser.add_option(
-        "--host",
-        dest="host",
-        default=settings['host'],
-        help="host/ipaddress of the tinkerforge device",
-        metavar="ADDRESS")
-    parser.add_option(
-        "--port",
-        dest="port",
-        default=settings['port'],
-        type=int,
-        help="port of the tinkerforge device",
-        metavar="PORT")
-    parser.add_option(
-        "--segment_display_uid",
-        dest="uid",
-        default=settings['segment_display_uid'],
-        help="uid of the bricklet which will be displayed in the 7-segment display",
-        metavar="UID")
-    parser.add_option(
-        "--segment_display_brightness",
-        type=int,
-        dest="brightness",
-        default=settings['segment_display_brightness'],
-        help="brightness of the 7-segment display (0-7)")
+    parser.add_option("--host",
+                      dest="host",
+                      default=settings['host'],
+                      help="host/ipaddress of the tinkerforge device",
+                      metavar="ADDRESS")
+    parser.add_option("--port",
+                      dest="port",
+                      default=settings['port'],
+                      type=int,
+                      help="port of the tinkerforge device",
+                      metavar="PORT")
+    parser.add_option("--segment_display_uid",
+                      dest="uid",
+                      default=settings['segment_display_uid'],
+                      help="uid of the bricklet which will be displayed in the 7-segment display",
+                      metavar="UID")
+    parser.add_option("--segment_display_brightness",
+                      type=int,
+                      dest="brightness",
+                      default=settings['segment_display_brightness'],
+                      help="brightness of the 7-segment display (0-7)")
 
     options, _args = parser.parse_args()
 
@@ -276,8 +273,8 @@ def main():
     try:
         from tinkerforge.ip_connection import IPConnection
     except ImportError:
-        print "<<<tinkerforge:sep(44)>>>"
-        print "master,0.0.0,tinkerforge api isn't installed"
+        print("<<<tinkerforge:sep(44)>>>")
+        print("master,0.0.0,tinkerforge api isn't installed")
         return 1
 
     conn = IPConnection()
@@ -290,7 +287,7 @@ def main():
     device_handlers = init_device_handlers()
 
     try:
-        print "<<<tinkerforge:sep(44)>>>"
+        print("<<<tinkerforge:sep(44)>>>")
 
         cb = lambda uid, connected_uid, position, hardware_version, firmware_version, \
                     device_identifier, enumeration_type: \

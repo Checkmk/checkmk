@@ -91,16 +91,16 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
         # if config.debug:
-        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
+        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
+        p = subprocess.Popen(cmd,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             close_fds=True)
     except Exception as e:
-        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (" ".join(cmd), e))
+        raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" %
+                                 (subprocess.list2cmdline(cmd), e))
 
     if stdin_data is not None:
         auto_logger.info("STDIN: %r" % stdin_data)
@@ -115,12 +115,13 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     auto_logger.info("FINISHED: %d" % exitcode)
     auto_logger.debug("OUTPUT: %r" % outdata)
     if exitcode != 0:
-        auto_logger.error(
-            "Error running %r (exit code %d)" % (subprocess.list2cmdline(cmd), exitcode))
+        auto_logger.error("Error running %r (exit code %d)" %
+                          (subprocess.list2cmdline(cmd), exitcode))
 
         if config.debug:
-            raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
-                                     (" ".join(cmd), exitcode, _hilite_errors(outdata)))
+            raise MKGeneralException(
+                "Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>" %
+                (subprocess.list2cmdline(cmd), exitcode, _hilite_errors(outdata)))
         else:
             raise MKGeneralException(_hilite_errors(outdata))
 
@@ -133,7 +134,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     except SyntaxError as e:
         raise MKGeneralException(
             "Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-            (" ".join(cmd), e, outdata))
+            (subprocess.list2cmdline(cmd), e, outdata))
 
 
 def _hilite_errors(outdata):
@@ -150,13 +151,13 @@ def check_mk_remote_automation(site_id,
     site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(
-            _("Cannot connect to site \"%s\": The site is not logged in") % site.get(
-                "alias", site_id))
+            _("Cannot connect to site \"%s\": The site is not logged in") %
+            site.get("alias", site_id))
 
     if not site.get("replication"):
         raise MKGeneralException(
-            _("Cannot connect to site \"%s\": The replication is disabled") % site.get(
-                "alias", site_id))
+            _("Cannot connect to site \"%s\": The replication is disabled") %
+            site.get("alias", site_id))
 
     if sync:
         sync_changes_before_remote_automation(site_id)
@@ -260,7 +261,7 @@ def do_remote_automation(site, command, vars_, timeout=None):
     return response
 
 
-def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
     response = requests.post(
         url,
         data=data,
@@ -281,7 +282,11 @@ def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     elif response.status_code != 200:
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
-    return response.text
+    return response
+
+
+def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+    return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
 def do_site_login(site_id, name, password):
@@ -300,12 +305,12 @@ def do_site_login(site_id, name, password):
         '_login': '1',
         '_username': name,
         '_password': password,
-        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' % (cmk.__version__,
-                                                                              cmk.edition_short()),
+        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' %
+                       (cmk.__version__, cmk.edition_short()),
         '_plain_error': '1',
     }
-    response = get_url(
-        url, site.get('insecure', False), auth=(name, password), data=post_data).strip()
+    response = get_url(url, site.get('insecure', False), auth=(name, password),
+                       data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
             html.strip_tags(html.strip_scripts(response))

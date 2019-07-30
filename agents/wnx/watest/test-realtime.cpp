@@ -7,12 +7,10 @@
 #include <thread>
 
 #include "asio.h"
-
-#include "common/cfg_info.h"
-#include "tools/_misc.h"
-
 #include "cfg.h"
+#include "common/cfg_info.h"
 #include "realtime.h"
+#include "tools/_misc.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view Str) {
@@ -113,6 +111,17 @@ TEST(RealtimeTest, LowLevel) {
     EXPECT_FALSE(dev.working_period_);
 }
 
+TEST(RealtimeTest, StaticCheck) {
+    // prtects again occasional consats change
+    EXPECT_EQ(kEncryptedHeader, "00");
+    EXPECT_EQ(kPlainHeader, "99");
+    EXPECT_EQ(kHeaderSize, 2);
+    EXPECT_EQ(kTimeStampSize, 10);
+    EXPECT_EQ(kDataOffset, 12);
+    EXPECT_EQ(cma::cfg::kDefaultRealtimeTimeout, 90);
+    EXPECT_EQ(cma::cfg::kDefaultRealtimePort, 6559);
+}
+
 TEST(RealtimeTest, PackData) {
     // stub
     std::string_view output = "123456789";
@@ -165,11 +174,12 @@ TEST(RealtimeTest, PackData) {
     }
 }
 
-TEST(RealtimeTest, Base) {
+TEST(RealtimeTest, Base_Long) {
     // stub
 
-    cma::OnStart(cma::kTest);
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));  // restore original config
+    cma::OnStart(cma::AppType::test);
+    ON_OUT_OF_SCOPE(
+        cma::OnStart(cma::AppType::test));  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled
@@ -197,7 +207,7 @@ TEST(RealtimeTest, Base) {
 
         context.stop();
         if (first.joinable()) first.join();
-        EXPECT_TRUE(TestTable.size() > 3);
+        EXPECT_GT(TestTable.size(), static_cast<size_t>(3));
 
         for (auto packet : TestTable) {
             auto d = reinterpret_cast<const char*>(packet.data());

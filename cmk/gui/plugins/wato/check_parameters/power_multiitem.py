@@ -58,17 +58,16 @@ class RulespecCheckgroupParametersPowerMultiitem(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("power_upper_levels",
-                 Tuple(
-                     title=_("Alert on too high power consumption"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("W"), default_value=90),
-                         Integer(title=_("Critical at"), unit=_("W"), default_value=100),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("power_upper_levels",
+             Tuple(
+                 title=_("Alert on too high power consumption"),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("W"), default_value=90),
+                     Integer(title=_("Critical at"), unit=_("W"), default_value=100),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

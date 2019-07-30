@@ -36,6 +36,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.plugins.wato.utils import (
     PermissionSectionWATO,
     ACResultCRIT,
@@ -148,7 +149,6 @@ from cmk.gui.plugins.wato.utils import (
     UserIconOrAction,
     user_script_choices,
     user_script_title,
-    WatoBackgroundJob,
     wato_confirm,
     wato_fileheader,
     register_hook,
@@ -160,8 +160,12 @@ from cmk.gui.plugins.wato.utils import (
     ConfigHostname,
     SiteBackupJobs,
     HostTagCondition,
+    DictHostTagCondition,
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
+    get_check_information,
+    SampleConfigGenerator,
+    sample_config_generator_registry,
 )
 
 #.

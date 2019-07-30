@@ -36,7 +36,7 @@ def main():
     api_key = context["PARAMETER_API_KEY"]
     recipient_key = context["PARAMETER_RECIPIENT_KEY"]
 
-    send_push_notification(api_key, recipient_key, subject, text, context)
+    return send_push_notification(api_key, recipient_key, subject, text, context)
 
 
 def get_subject(context):
@@ -112,16 +112,38 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
     if context.get("PARAMETER_SOUND", "none") != "none":
         params.append(("sound", context["PARAMETER_SOUND"]))
 
-    s = requests.Session()
-    if context.get("PARAMETER_PROXY_URL"):
-        r = s.post(api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
+    proxy_url = context.get("PARAMETER_PROXY_URL")
+    proxies = {"https": proxy_url} if proxy_url else None
 
-    else:
-        r = s.post(api_url, params=dict(params))
+    session = requests.Session()
+    try:
+        response = session.post(
+            api_url,
+            params=dict(params),
+            proxies=proxies,
+        )
+    except requests.exceptions.ProxyError:
+        sys.stdout.write("Cannot connect to proxy: %s\n" % context["PARAMETER_PROXY_URL"])
+        return 1
+    except requests.exceptions.RequestException:
+        sys.stdout.write("POST request to server failed: %s\n" % api_url)
+        return 1
 
-    r_status = r.status_code
-    if r_status == '200':
-        return True
+    if response.status_code != 200:
+        sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" %
+                         (response.status_code, response.text))
+        return 1
 
-    sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
-    return False
+    try:
+        data = response.json()
+    except ValueError:
+        sys.stdout.write("Failed to decode JSON response: %s\n" % response.text)
+        return 1
+
+    # According to the Pushover API the status should be 1 if we get a 200,
+    # but check it just in case
+    if data.get("status") != 1:
+        sys.stdout.write("Received an error from the Pushover API: %s" % response.text)
+        return 1
+
+    return 0

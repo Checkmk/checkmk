@@ -32,10 +32,10 @@
     "extract-loader": "^3.1.0",
     "file-loader": "^3.0.1",
     "mini-css-extract-plugin": "^0.5.0",
-    "node-sass": "^4.11.0",
+    "node-sass": "^4.12.0",
     "postcss-clean": "^1.1.0",
     "postcss-loader": "^3.0.0",
-    "sass-lint": "^1.12.1",
+    "sass-lint": "^1.13.1",
     "sass-loader": "^7.1.0",
     "script-loader": "^0.7.2",
     "style-loader": "^0.23.1",
@@ -45,7 +45,8 @@
   },
   "dependencies": {
     "@yaireo/tagify": "^2.16.0",
-    "jquery": "^3.3.1",
-    "select2": "^4.0.6-rc.1"
+    "jquery": "^3.4.1",
+    "select2": "^4.0.6-rc.1",
+    "d3": "5"
   }
 }

@@ -1,0 +1,305 @@
+#
+# User Check MK configuration file
+#
+
+# ********************************
+# Copyright Mathias Kettner GmbH
+# ********************************
+
+# The Agent will accept YML-File as a valid configuration file
+# only when the section global is presented
+
+# $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
+# $CUSTOM_AGENT_PATH$    -> is ProgramData/checkmk/agent/
+# $CUSTOM_LOCAL_PATH$    -> is ProgramData/checkmk/agent/local
+
+# 1. use http://www.yamllint.com/ for example to validate your yamllint
+# 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
+
+# To disable any feature you may use two methods
+# 1. commenting out with '#' recommended to use with one line declarations
+# 2. renaming. Recommended to disable big parts of YAML tree
+#   Most useful is adding _ at the beginning of name
+#
+# example 
+#         _logging: # <----- this structure is fully ignored by agent
+#         logging:  # <----- this structure is accepted by agent
+
+# Overriding values from the bakery( or defauts )
+# For example we want to change sections set in output
+
+# 1. No sections at all:
+# sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
+
+# 2a. Two sections:
+# sections: [check_mk, systemtime]  # <--- this is accepted as list of two sections
+
+# 2b. One section:
+# sections: [plugins]  # <--- this is accepted as list of two sections
+
+# 3. We want to return back(Use values combined from default and bakery if present)
+# 3a. 
+# sections: ~   # <--- this line is skipped, this value is estimated as undefined
+
+# 3a. 
+# _sections: ~   # <--- this name, '_sections' is unknown and will be silently ignored
+
+
+global:
+    # section may be fully disabled
+    # enabled: yes
+
+    # Restrict access to certain IP addresses
+    # If ipv6 is enabled, all listed ipv4 adresses are also accepted as
+    # source adresses in their ipv6-mapped form. I.e. if
+    # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
+    # are also possible
+    only_from: # 127.0.0.1 192.168.56.0/24 ::1
+
+    # Change port where the agent is listening ( default 6556 )
+    # port: 6556
+
+    # Disable ipv6 support. By default, ipv4 is always supported
+    # and ipv6 is enabled additionally if supported by the system.
+    # ipv6: no
+
+    # encryption
+    # encrypted: no
+
+    # password
+    # passphrase: secret
+
+    # Do only execute programs and scripts with
+    # the following suffixes (in local and plugins).
+    # Per default all extensions except txt and dir
+    # are being executed.
+    # execute: exe bat vbs cmd ps1
+
+    # Run sync scripts in parallel (to each other). Default is "yes"
+    # async: yes
+
+    # Just output certain sections
+    _sections: 
+        - check_mk 
+        - mrpe 
+        - skype 
+        - spool 
+        - plugins
+        - local
+        - winperf 
+        - uptime 
+        - systemtime 
+        - df 
+        - mem 
+        - services 
+        - msexch
+        - dotnet_clrmemory
+        - wmi_webservices
+        - wmi_cpuload
+        - ps 
+        - fileinfo 
+        - logwatch 
+        - openhardwaremonitor 
+
+    # Useful example
+    # sections: ~   # <--- this line is skipped as undefined
+    # sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
+
+    # forced to not use
+    _disabled_sections: []
+
+    #realtime data description
+    # to control section manually change name from _realtime to realtime.
+    _realtime:
+        enabled: yes
+        # specifies how long (in seconds) realtime updates are sent to
+        # the last monitoring system that requested an update.
+        # this should be longer than the request frequency (usually
+        # one minute).
+        # Please note that any new request cancels previous realtime
+        # update schedules, so no more than one update is sent per second,
+        # no matter if this timeout is "too high" or how many monitoring
+        # systems are querying the agent.
+        timeout: 90
+    
+        port: 6559
+        # enable/disable encryption of regular agent output (default: no) 
+        encrypted: no
+    
+        # passphrase for encrypted communication.
+        passphrase: this is my password
+        # which sections are realtime, those three are by default
+        run: 
+            - mem
+            - df
+            - winperf_processor
+
+    # In seconds. Windows may be slow during WMI, increase the value when you have problems
+    # wmi_timeout: 3 
+
+    # -------------------------------------------------------------- 
+    # Internal log of agent
+    # Write a logfile for tackling down crashes of the agent
+    _logging:
+        # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
+        location: 
+        # name of file log, default is check_mk.log
+        file : 
+        # log in file also internal debug messages, recommended when we have problems
+        # allowed no, yes and all. Default yes!
+        debug: yes
+        # you may send logging messages in realtime in windows debug sink, default is yes
+        windbg: yes
+
+        # you may disable your eventlog ability
+        eventlog: yes
+
+ps:
+    # enabled: yes
+    # use_wmi: yes
+    # full_path: yes
+
+winperf:
+    # enabled: yes
+
+    # changes only section name winperf_******
+    # prefix: winperf
+
+    # default value,  increase for heavy loaded machine
+    # timeout: 10
+    
+    # Select counters to extract. The following counters
+    # are needed by checks shipped with check_mk.
+    # Format:
+    # - id:name
+    # where id is OS counter and name is part of CHECK_MK Header 
+    counters:
+        #- 638: tcp_conn
+        #- Terminal Services: ts_sessions
+
+_logfiles:
+    enabled: no
+    # We do not support logfiles monitoring in agent at the moment
+    # Please, use plugin mk_logwatch
+
+fileinfo:
+    # enabled: yes
+    # below are possible examples
+    path:
+        # - 'c:\a\a' # generates missing| string
+        # - 'c:\Users\Public\*.log' # real string to process
+        # - "this\\is\\not\\recommended\\" # double quoating uses escape sequences
+        # - 'c:\Users\Public\**\Desktop.ini' works, 8 files to control
+        # - 'c:\Windows\Resources\**\aero\aero*.*' works too, you will get two files in 'c:\Windows\Resources\Themes\aero\'
+        # - 'c:\dev\shared_public\*.*' # typical test folder, provided during development
+        # - ''  # empty strings will be ignored
+        # - '--' # all string without "C:\" or "\\" at start will be ignored too for security reason
+
+logwatch:
+    # enabled: yes
+    
+    # sendall: no   # this is MANDATORY
+    # vista_api: no # this is RECOMMENDED
+
+     # entries in the windows eventlog
+    logfile:
+        # - 'EventLogName': <crit|warn|all|off> + [context|nocontext]
+        # - 'Application': crit context # example
+        # - 'System': warn nocontext    # another example
+        # - 'YourOwn': all nocontext    # yet another example
+        # - '*': warn nocontext         # This is default params for not missing entries
+
+plugins:
+    # enabled: yes
+
+    # max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
+                 # this is useful to terminate badly written or hanging plugins   
+
+
+    # async_start: yes # start plugins asynchronous, this is default
+
+    # folders are scanned left -> right, order is important
+    # all files from folders are gathered and verified, duplicated files will be removed
+    # folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]       # ProgramData/checkmk/agent/plugins & Program Files x86/checkmk/service/plugins
+
+    _execution:
+        # *********************************************************************************************
+        # PATTERNS:
+        # patterns 1. Absolute path: 'c:\Windows\*.exe' or '$CUSTOM_PLUGINS_PATH$\win_license.bat'
+        #          2. Only Filename: 'mk_*.exe' or win_license.bat
+        #             IMPORTANT: if you use relative path, then Agent takes only filename
+        #                        'win_license.bat' and 'include\win_license.bat' are the same    
+        #
+        # PRIORITY:
+        # Most important is top-most pattern:
+        # Most important is check_mk.user.yml, next check_mk.bakery.yml amd least important is check_mk.yml
+        #
+        # DUPLICATED Plugins:
+        # Plugins with Duplicated names will not be executed:
+        # if you have '$CUSTOM_PLUGINS_PATH$\winstat_an.bat' and '$BUILTIN_PLUGINS_PATH$\winstat_an.bat'
+        # to execute only first one will run ^^^^^^^^^^^^^^                              xxxxxxxxxxxxxx 
+        #
+        # *********************************************************************************************
+        # execution pattern for  windows-updates.vbs:
+        # all parameters below are DEFAULT set for every entry
+        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_inventory.vbs'  # Plugin name or absolute path . * and ? are allowed
+        #  run         : yes                 # execute this plugin if plugin found
+        #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
+        #  timeout     : 120                 # after 120 seconds process will be killed.
+        #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
+    #                                        # default value is 0. Minimum positive value is 120.
+        #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
+        #  cmd_line    : ''                  # reserved for future use
+        #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
+        #  run         : no                  # do not execute this plugin even if plugin found
+
+        - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
+          timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
+          run         : yes                 # ALL FOUND files will be started. This is default value
+
+        - pattern     : '$BUILTIN_PLUGINS_PATH$\*.*'         # in the ProgramFiles folder. DO NOT REMOVE THIS ENTRY
+          timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
+          run         : no                  # No run, i.e disabled.
+
+        - pattern     : '*'                 # This is safety entry. Try not use plugins outside your predefined folder
+          run         : no                  # No run, i.e. disabked.
+
+# ProgramData/checkmk/agent/local folder
+local:
+    # enabled: yes
+
+    # max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
+                   # this is useful to terminate badly written or hanging plugins   
+
+
+    # async_start: true # start plugins asynchronous, this is normal mode. 
+
+    # patterns will be scanned up down, 
+    # configuration is assigned to the first found file matching the pattern 
+    _execution:
+        - pattern     : 'test_me.bat'   # Plugin name. * and ? are allowed
+          #async: no                    # default is no
+          timeout     : 35              # after 35 seconds process will be killed, default is 60 in check_mk.yml
+          run         : yes             # execute this plugin.
+
+        - pattern     : '*.*'           # in the user folder. DO NOT REMOVE THIS ENTRY
+          run         : yes             # Do not run any files matching this pattern
+
+
+mrpe:
+    # enabled: yes
+
+    # 60 is default, this is safe value, because mrpe checks are relative fast ergo
+    # hitting this timeout is virtually not possible
+    # timeout: 60
+
+    # entries and cfg are the same as in the Legacy agent
+    config:
+        # *Relative* path are supported for checks and includes
+        # Path below is equal to '$CUSTOM_AGENT_PATH$\plugins\your_check.com'
+        # - check = Console 'plugins\your_check.com' CON CP /STATUS
+        # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
+        # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
+        # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
+

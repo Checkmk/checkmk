@@ -1,5 +1,6 @@
 DISTRO_CODE     = sles15
 OS_PACKAGES     =
+OS_PACKAGES    += libcap-progs # needed for setting special file permissions
 OS_PACKAGES    += cronie # needed for sites cron jobs
 OS_PACKAGES    += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2
@@ -47,7 +48,7 @@ APACHE_CONF_DIR   = /etc/apache2/conf.d
 APACHE_INIT_NAME  = apache2
 APACHE_USER       = wwwrun
 APACHE_GROUP      = www
-APACHE_BIN        = /usr/sbin/httpd2-prefork
+APACHE_VERSION    = 2.4.33
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork

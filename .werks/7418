@@ -1,0 +1,14 @@
+Title: netapp_api_if: new option to disable a warning for interface groups
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558103118
+Class: feature
+
+It is now possible to disable the warning "Interfaces do not have the
+same speed" for interface groups monitored by the netapp_api_if
+interface check. This can be configured in the rule "Network interfaces
+and switch ports". Currently this option is only supported by the
+netapp_api_if check.

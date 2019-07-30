@@ -99,38 +99,35 @@ class RulespecCheckgroupParametersMemoryLinux(CheckParameterRulespecWithoutItem)
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                elements=[
-                    ("levels_ram", DualMemoryLevels(_("RAM"))),
-                    ("levels_swap", DualMemoryLevels(_("Swap"))),
-                    ("levels_virtual", DualMemoryLevels(_("Total virtual memory"), (80.0, 90.0))),
-                    ("levels_total",
-                     UpperMemoryLevels(
-                         _("Total Data in relation to RAM"), (120.0, 150.0), _("RAM"))),
-                    ("levels_shm", UpperMemoryLevels(_("Shared memory"), (20.0, 30.0), _("RAM"))),
-                    ("levels_pagetables", UpperMemoryLevels(
-                        _("Page tables"), (8.0, 16.0), _("RAM"))),
-                    ("levels_writeback", UpperMemoryLevels(_("Disk Writeback"))),
-                    ("levels_committed",
-                     UpperMemoryLevels(_("Committed memory"), (100.0, 150.0), _("RAM + Swap"))),
-                    ("levels_commitlimit",
-                     LowerMemoryLevels(_("Commit Limit"), (20.0, 10.0), _("RAM + Swap"))),
-                    ("levels_available",
-                     LowerMemoryLevels(
-                         _("Estimated RAM for new processes"), (20.0, 10.0), _("RAM"),
-                         _("If the host has a kernel of version 3.14 or newer, the information MemAvailable is provided: "
-                           "\"An estimate of how much memory is available for starting new "
-                           "applications, without swapping. Calculated from MemFree, "
-                           "SReclaimable, the size of the file LRU lists, and the low "
-                           "watermarks in each zone. "
-                           "The estimate takes into account that the system needs some "
-                           "page cache to function well, and that not all reclaimable "
-                           "slab will be reclaimable, due to items being in use. The "
-                           "impact of those factors will vary from system to system.\" "
-                           "(https://www.kernel.org/doc/Documentation/filesystems/proc.txt)"))),
-                    ("levels_vmalloc", LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
-                    ("levels_hardwarecorrupted",
-                     UpperMemoryLevels(_("Hardware Corrupted"), (1, 1), _("RAM"))),
-                ],),
+            Dictionary(elements=[
+                ("levels_ram", DualMemoryLevels(_("RAM"))),
+                ("levels_swap", DualMemoryLevels(_("Swap"))),
+                ("levels_virtual", DualMemoryLevels(_("Total virtual memory"), (80.0, 90.0))),
+                ("levels_total",
+                 UpperMemoryLevels(_("Total Data in relation to RAM"), (120.0, 150.0), _("RAM"))),
+                ("levels_shm", UpperMemoryLevels(_("Shared memory"), (20.0, 30.0), _("RAM"))),
+                ("levels_pagetables", UpperMemoryLevels(_("Page tables"), (8.0, 16.0), _("RAM"))),
+                ("levels_writeback", UpperMemoryLevels(_("Disk Writeback"))),
+                ("levels_committed",
+                 UpperMemoryLevels(_("Committed memory"), (100.0, 150.0), _("RAM + Swap"))),
+                ("levels_commitlimit",
+                 LowerMemoryLevels(_("Commit Limit"), (20.0, 10.0), _("RAM + Swap"))),
+                ("levels_available",
+                 LowerMemoryLevels(
+                     _("Estimated RAM for new processes"), (20.0, 10.0), _("RAM"),
+                     _("If the host has a kernel of version 3.14 or newer, the information MemAvailable is provided: "
+                       "\"An estimate of how much memory is available for starting new "
+                       "applications, without swapping. Calculated from MemFree, "
+                       "SReclaimable, the size of the file LRU lists, and the low "
+                       "watermarks in each zone. "
+                       "The estimate takes into account that the system needs some "
+                       "page cache to function well, and that not all reclaimable "
+                       "slab will be reclaimable, due to items being in use. The "
+                       "impact of those factors will vary from system to system.\" "
+                       "(https://www.kernel.org/doc/Documentation/filesystems/proc.txt)"))),
+                ("levels_vmalloc", LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
+                ("levels_hardwarecorrupted",
+                 UpperMemoryLevels(_("Hardware Corrupted"), (1, 1), _("RAM"))),
+            ],),
             forth=transform_memory_levels,
         )

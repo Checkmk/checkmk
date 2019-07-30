@@ -33,8 +33,9 @@ from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 
+import cmk
 import cmk.gui.utils as utils
-import cmk.gui.tags
+import cmk.utils.tags
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
@@ -70,7 +71,7 @@ if cmk.is_managed_edition():
 sites = {}
 multisite_users = {}
 admin_users = []
-tags = cmk.gui.tags.TagConfig()
+tags = cmk.utils.tags.TagConfig()
 
 # hard coded in various permissions
 builtin_role_ids = ["user", "admin", "guest"]
@@ -152,18 +153,16 @@ def initialize():
     cmk.gui.i18n.set_user_localizations(user_localizations)
 
 
-# Read in a multisite.d/*.mk file
-def include(filename):
-    if not filename.startswith("/"):
-        filename = cmk.utils.paths.default_config_dir + "/" + filename
-
-    # Config file is obligatory. An empty example is installed
-    # during setup.sh. Better signal an error then simply ignore
-    # Absence.
+def _load_config_file(path):
+    # type: (str) -> None
+    """Load the given GUI configuration file"""
     try:
-        execfile(filename, globals(), globals())
+        execfile(path, globals(), globals())
+    except IOError as e:
+        if e.errno != errno.ENOENT:  # No such file or directory
+            raise
     except Exception as e:
-        raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
+        raise MKConfigError(_("Cannot read configuration file %s: %s:") % (path, e))
 
 
 # Load multisite.mk and all files in multisite.d/. This will happen
@@ -183,7 +182,7 @@ def load_config():
     sites = default_single_site_configuration()
 
     # First load main file
-    include("multisite.mk")
+    _load_config_file(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
     # Load also recursively all files below multisite.d
     conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
@@ -196,7 +195,7 @@ def load_config():
 
     filelist.sort()
     for p in filelist:
-        include(p)
+        _load_config_file(p)
 
     if sites:
         sites = migrate_old_site_config(sites)
@@ -215,16 +214,9 @@ def _prepare_tag_config():
     tag_config = wato_tags
     if any(tag_config) and (wato_host_tags or wato_aux_tags):
         migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
-        tag_config = cmk.gui.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
+        tag_config = cmk.utils.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
 
-    # We don't want to access the plain config data structure during GUI code processing
-    tags = cmk.gui.tags.TagConfig()
-    tags.parse_config(tag_config)
-
-    # Merge builtin tags with configured tags. The logic favors the configured tags, even
-    # when the user config should not conflict with the builtin tags. This is something
-    # which could be left over from pre 1.5 setups.
-    tags += BuiltinTagConfig()
+    tags = cmk.utils.tags.get_effective_tag_config(tag_config)
 
 
 def execute_post_config_load_hooks():
@@ -299,7 +291,7 @@ def reporting_available():
         # reporting module
         _dummy = reporting_filename
         return True
-    except:
+    except NameError:
         return False
 
 
@@ -307,7 +299,7 @@ def combined_graphs_available():
     try:
         _dummy = have_combined_graphs
         return True
-    except:
+    except NameError:
         return False
 
 
@@ -316,7 +308,7 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return set([name for name, value in var_dict.items() if name[0] != '_' and not callable(value)])
+    return {name for name, value in var_dict.items() if name[0] != '_' and not callable(value)}
 
 
 def get_language(default=None):
@@ -706,162 +698,6 @@ def save_user_file(name, data, user_id, unlock=False):
     store.save_data_to_file(path, data)
 
 
-#.
-#   .--Host tags-----------------------------------------------------------.
-#   |              _   _           _     _                                 |
-#   |             | | | | ___  ___| |_  | |_ __ _  __ _ ___                |
-#   |             | |_| |/ _ \/ __| __| | __/ _` |/ _` / __|               |
-#   |             |  _  | (_) \__ \ |_  | || (_| | (_| \__ \               |
-#   |             |_| |_|\___/|___/\__|  \__\__,_|\__, |___/               |
-#   |                                             |___/                    |
-#   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with host tags                         |
-#   '----------------------------------------------------------------------'
-
-
-class BuiltinTagConfig(cmk.gui.tags.TagConfig):
-    def __init__(self):
-        super(BuiltinTagConfig, self).__init__()
-        self.parse_config({
-            "tag_groups": self._builtin_tag_groups(),
-            "aux_tags": self._builtin_aux_tags(),
-        })
-
-    def _initialize(self):
-        self.tag_groups = []
-        self.aux_tag_list = cmk.gui.tags.BuiltinAuxTagList()
-
-    def _builtin_tag_groups(self):
-        return [
-            {
-                'id': 'agent',
-                'title': _('Check_MK Agent'),
-                'topic': _('Data sources'),
-                'tags': [
-                    {
-                        'id': 'cmk-agent',
-                        'title': _('Contact either Check_MK Agent or use datasource program'),
-                        'aux_tags': ['tcp'],
-                    },
-                    {
-                        'id': 'all-agents',
-                        'title': _('Contact Check_MK agent and all enabled datasource programs'),
-                        'aux_tags': ['tcp'],
-                    },
-                    {
-                        'id': 'special-agents',
-                        'title': _('Use all enabled datasource programs'),
-                        'aux_tags': ['tcp'],
-                    },
-                    {
-                        'id': 'no-agent',
-                        'title': _('No agent'),
-                        'aux_tags': [],
-                    },
-                ],
-            },
-            {
-                'id': 'piggyback',
-                'title': _("Piggyback"),
-                'topic': _('Data sources'),
-                'tags': [
-                    {
-                        "id": "auto-piggyback",
-                        "title": _("Legacy: Automatically detect piggyback usage"),
-                        "aux_tags": []
-                    },
-                    {
-                        "id": "piggyback",
-                        "title": _("Use piggyback data"),
-                        "aux_tags": [],
-                    },
-                    {
-                        "id": "no-piggyback",
-                        "title": _("Do not use piggyback data"),
-                        "aux_tags": [],
-                    },
-                ],
-            },
-            {
-                'id': 'snmp',
-                'title': _('SNMP'),
-                'topic': _('Data sources'),
-                'tags': [{
-                    'id': 'no-snmp',
-                    'title': _('No SNMP'),
-                    'aux_tags': [],
-                }, {
-                    'id': 'snmp-v2',
-                    'title': _('SNMP v2 or v3'),
-                    'aux_tags': ['snmp'],
-                }, {
-                    'id': 'snmp-v1',
-                    'title': _('SNMP v1'),
-                    'aux_tags': ['snmp'],
-                }],
-            },
-            {
-                'id': 'address_family',
-                'title': _('IP Address Family'),
-                'topic': u'Address',
-                'tags': [
-                    {
-                        'id': 'ip-v4-only',
-                        'title': _('IPv4 only'),
-                        'aux_tags': ['ip-v4'],
-                    },
-                    {
-                        'id': 'ip-v6-only',
-                        'title': _('IPv6 only'),
-                        'aux_tags': ['ip-v6'],
-                    },
-                    {
-                        'id': 'ip-v4v6',
-                        'title': _('IPv4/IPv6 dual-stack'),
-                        'aux_tags': ['ip-v4', 'ip-v6'],
-                    },
-                    {
-                        'id': 'no-ip',
-                        'title': _('No IP'),
-                        'aux_tags': [],
-                    },
-                ],
-            },
-        ]
-
-    def _builtin_aux_tags(self):
-        return [
-            {
-                'id': 'ip-v4',
-                'topic': _('Address'),
-                'title': _('IPv4'),
-            },
-            {
-                'id': 'ip-v6',
-                'topic': _('Address'),
-                'title': _('IPv6'),
-            },
-            {
-                'id': 'snmp',
-                'topic': _('Data sources'),
-                'title': _('Monitor via SNMP'),
-            },
-            {
-                'id': 'tcp',
-                'topic': _('Data sources'),
-                'title': _('Monitor via Check_MK Agent'),
-            },
-            {
-                'id': 'ping',
-                'topic': _('Data sources'),
-                'title': _('Only ping this device'),
-            },
-        ]
-
-    def insert_tag_group(self, tag_group):
-        self._insert_tag_group(tag_group)
-
-
 def migrate_old_site_config(site_config):
     if not site_config:
         # Prevent problem when user has deleted all sites from his
@@ -1047,23 +883,22 @@ def extend_user_modified_tag_groups(host_tags):
         tag_group[2].insert(0, ("no-agent", _("No agent"), []))
 
     if "special-agents" not in tag_choices:
-        tag_group[2].insert(0,
-                            ("special-agents", _("Use all enabled datasource programs"), ["tcp"]))
+        tag_group[2].insert(
+            0, ("special-agents", _("No Checkmk agent, all configured special agents"), ["tcp"]))
 
     if "all-agents" not in tag_choices:
         tag_group[2].insert(
-            0, ("all-agents", _("Contact Check_MK agent and all enabled datasource programs"),
-                ["tcp"]))
+            0, ("all-agents", _("Normal Checkmk agent, all configured special agents"), ["tcp"]))
 
     if "cmk-agent" not in tag_choices:
         tag_group[2].insert(
-            0, ("cmk-agent", _("Contact either Check_MK Agent or use datasource program"), ["tcp"]))
+            0, ("cmk-agent", _("Normal Checkmk agent, or special agent if configured"), ["tcp"]))
     else:
         # Change title of cmk-agent tag choice and move to top
         for index, tag_choice in enumerate(tag_group[2]):
             if tag_choice[0] == "cmk-agent":
                 tag_choice_list = list(tag_group[2].pop(index))
-                tag_choice_list[1] = _("Contact either Check_MK Agent or use datasource program")
+                tag_choice_list[1] = _("Normal Checkmk agent, or special agent if configured")
                 tag_group[2].insert(0, tuple(tag_choice_list))
                 break
 
@@ -1082,11 +917,11 @@ def extend_user_modified_tag_groups(host_tags):
 
 
 def omd_site():
-    return os.environ["OMD_SITE"]
+    return cmk.omd_site()
 
 
 def url_prefix():
-    return "/%s/" % omd_site()
+    return "/%s/" % cmk.omd_site()
 
 
 use_siteicons = False
@@ -1126,8 +961,9 @@ def sitenames():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def allsites():
-    return dict(
-        [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
+    return dict([
+        (name, site(name)) for name in sitenames() if not site(name).get("disabled", False)
+    ])
 
 
 def configured_sites():

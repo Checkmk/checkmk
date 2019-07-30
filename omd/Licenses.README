@@ -3,5 +3,9 @@ packed into the Check_MK packages and available to the user under
 the path /omd/versions/default/share/doc/Licenses.csv.
 All license texts can be found in Licence_texts.pdf.
 
-Please have a look at our internal wiki on how these files have been
-created and should be updated in future.
+For generating the file License_texts.pdf as well as updating the
+list of licenses, scripts can be found in the license_sources/
+directory.
+
+Please have a look at the file license_sources/README on how these
+files have been created and should be updated in future.

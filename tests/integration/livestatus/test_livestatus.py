@@ -2,6 +2,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import collections
 import pytest  # type: ignore
 
@@ -15,7 +16,7 @@ def default_cfg(request, site, web):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
-    print "Applying default config (%s)" % config.core
+    print("Applying default config (%s)" % config.core)
     create_linux_test_host(request, web, site, "livestatus-test-host")
     create_linux_test_host(request, web, site, "livestatus-test-host.domain")
     web.discover_services("livestatus-test-host")
@@ -48,9 +49,6 @@ def test_host_table(default_cfg, site):
 
 
 def test_host_custom_variables(default_cfg, site):
-    if default_cfg.core == "nagios":
-        pytest.skip("Disabled until tags column is supported by play nagios")
-
     rows = site.live.query(
         "GET hosts\nColumns: custom_variables tags\nFilter: name = livestatus-test-host\n")
     assert isinstance(rows, list)
@@ -58,9 +56,8 @@ def test_host_custom_variables(default_cfg, site):
     custom_variables, tags = rows[0]
     assert custom_variables == {
         u'ADDRESS_FAMILY': u'4',
-        u'TAGS':
-            u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp wato' %
-            site.id,
+        u'TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp' %
+                 site.id,
         u'FILENAME': u'/wato/hosts.mk',
         u'ADDRESS_4': u'127.0.0.1',
         u'ADDRESS_6': u'',
@@ -73,7 +70,7 @@ def test_host_custom_variables(default_cfg, site):
         u'networking': u'lan',
         u'piggyback': u'auto-piggyback',
         u'site': unicode(site.id),
-        u'snmp': u'no-snmp',
+        u'snmp_ds': u'no-snmp',
         u'tcp': u'tcp',
     }
 
@@ -119,16 +116,17 @@ def test_service_table(default_cfg, site):
 
 
 @pytest.fixture()
-def configure_service_tags(site, web):
+def configure_service_tags(site, web, default_cfg):
     web.set_ruleset(
         "service_tag_rules", {
             "ruleset": {
                 "": [{
                     "value": [("criticality", "prod")],
-                    "conditions": {
-                        "host_tags": [],
-                        "host_specs": ["livestatus-test-host"],
-                        "service_specs": ["CPU load$"],
+                    "condition": {
+                        "host_name": ["livestatus-test-host"],
+                        "service_description": [{
+                            "$regex": "CPU load$",
+                        }],
                     },
                 },],
             }

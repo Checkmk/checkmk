@@ -26,10 +26,8 @@
 
 
 # TODO unify with other if inventory plugins
-def inv_winperf_if(parsed, params):
-    _agent_timestamp, perf, _dhcp, _nic_names, _nic_index = parsed
-    node = inv_tree_list("networking.interfaces:")
-
+def inv_winperf_if(parsed, params, inventory_tree):
+    _agent_timestamp, perf, _dhcp = parsed
     usage_port_types = params.get(
         "usage_port_types",
         ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
@@ -37,6 +35,7 @@ def inv_winperf_if(parsed, params):
     def render_mac_address(bytestring):
         return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
 
+    interfaces = []
     total_ethernet_ports = 0
     available_ethernet_ports = 0
     for if_index, if_descr, if_type, if_speed, if_oper_status, \
@@ -67,9 +66,12 @@ def inv_winperf_if(parsed, params):
             if_available = None
 
         if_info["available"] = if_available
-        node.append(if_info)
+        interfaces.append(if_info)
 
-    node = inv_tree("networking.")
+    node = inventory_tree.get_list("networking.interfaces:")
+    node.extend(sorted(interfaces, key=lambda r: r.get('name')))
+
+    node = inventory_tree.get_dict("networking.")
     node["available_ethernet_ports"] = available_ethernet_ports
     node["total_ethernet_ports"] = total_ethernet_ports
     node["total_interfaces"] = len(perf)

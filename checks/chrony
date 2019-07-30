@@ -24,13 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
-
-factory_settings["ntp_time_default_levels"] = {
-    "ntp_levels": ntp_default_levels,
-    "alert_delay": (300, 3600),
-}
-
 # Example output from agent:
 # <<<chrony>>>
 # Reference ID    : 212.18.3.18 (ntp1.m-online.net)
@@ -46,30 +39,83 @@ factory_settings["ntp_time_default_levels"] = {
 # <<<chrony>>>
 # 506 Cannot talk to daemon
 
+ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
+
+factory_settings["ntp_time_default_levels"] = {
+    "ntp_levels": ntp_default_levels,
+    "alert_delay": (300, 3600),
+}
+
 
 def parse_chrony(info):
+    """
+    parse info list into dictionary
+
+    expected info:
+    [[u'Reference', u'ID', u':', u'0.0.0.0', u'()'],
+     [u'Stratum', u':', u'0'],
+     [u'Ref', u'time', u'(UTC)', u':', u'Thu', u'Jan', u'1', u'00:00:00', u'1970'],
+     ...
+    ]
+
+    parsed dictionary:
+    { u'Reference ID': u'0.0.0.0 ()',
+      u'Stratum': u'0',
+      u'Ref time(utc)': u'Thu Jan 1 00:00:00 1970',
+      ...
+    }
+
+    :param info: chrony output as lists
+    :return: dictionary
+    """
     parsed = {}
+
+    if is_error_message(info):
+        parsed["error"] = " ".join(info[0])
+        return parsed
+
     for line in info:
         if ":" in line:
-            varname, value = " ".join(line).split(":", 1)
-            parsed[varname.strip()] = value.strip()
+            key, value = [e.strip() for e in " ".join(line).split(":", 1)]
+            if key == "Reference ID":
+                parsed[key] = value
+                try:
+                    parsed['address'] = value.split(' ')[1]
+                except IndexError:
+                    pass
+            elif key == "System time":
+                try:
+                    parsed[key] = float(value.split(' ')[0]) * 1000
+                except ValueError:
+                    pass
+            elif key == "Stratum":
+                try:
+                    parsed[key] = int(value)
+                except ValueError:
+                    pass
     return parsed
 
 
-# We monitor all servers we have reached at least once
-def inventory_chrony(info):
-    parsed = parse_chrony(info)
-    if parsed:
-        return [(None, {})]
+def is_error_message(info):
+    return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 
-def check_chrony(_no_item, params, info):
-    parsed = parse_chrony(info)
-    if not parsed:
-        yield 2, "No status information, chronyd probably not running"
+def check_chrony(_item, params, parsed):
+    """
+    check if agent returned error message
+    check if chrony can reach NTP servers
+    check if sys_time_offset_offset is in range
+    check if stratum is too high
+
+    :param _item: <not used>
+    :param params: stratum and sys_time_offset_offset limits
+    :param parsed: dictionary
+    :return: status
+    """
+    if "error" in parsed:
+        yield 2, "%s" % parsed["error"]
         return
 
-    # Prepare parameters
     if isinstance(params, tuple):
         params = {
             "ntp_levels": params,
@@ -77,37 +123,38 @@ def check_chrony(_no_item, params, info):
         }
     crit_stratum, warn, crit = params["ntp_levels"]
 
-    # Check offset and stratum, output a few info texsts
-    offset = float(parsed["System time"].split()[0]) * 1000  # converted to ms
-    stratum = int(parsed["Stratum"])
+    ref_id = parsed.get("Reference ID")
+    address = parsed.get("address")
+    sys_time_offset = parsed.get("System time")
+    stratum = parsed.get("Stratum")
 
-    # Check stratum
-    infotext = "stratum %d" % stratum
-    if stratum >= crit_stratum:
-        yield 2, infotext + " (maximum allowed is %d)" % (crit_stratum - 1)
-    else:
-        yield 0, infotext
+    if address in [None, "", "()"]:
+        # Check reference id: if brackets are empty, NTP servers are unreachable
+        yield 1, "NTP servers unreachable. Reference ID: %s" % ref_id
+        return
 
-    # Check offset
-    status = 0
-    infotext = "offset %.4f ms" % offset
-    if abs(offset) >= crit:
-        status = 2
-    elif abs(offset) >= warn:
-        status = 1
-    if status:
-        infotext += " (warn/crit at %.4f/%.4f ms)" % (warn, crit)
-    yield status, infotext, [("offset", offset, warn, crit, 0, None)]
+    if stratum is not None:
+        yield check_levels(stratum,
+                           None, (crit_stratum, crit_stratum),
+                           human_readable_func=lambda v: "%d" % v,
+                           infoname="Stratum")
 
-    # Show additional information
-    yield 0, "reference: %s" % parsed["Reference ID"]
+    if sys_time_offset is not None:
+        yield check_levels(abs(sys_time_offset),
+                           "offset", (warn, crit),
+                           human_readable_func=lambda x: "%.4f ms" % x,
+                           infoname="Offset")
+
+    if ref_id is not None:
+        yield 0, "Reference ID: %s" % ref_id
 
 
 check_info["chrony"] = {
-    'check_function': check_chrony,
-    'inventory_function': inventory_chrony,
-    'service_description': 'NTP Time',
-    'has_perfdata': True,
-    'group': 'ntp_time',
-    'default_levels_variable': "ntp_time_default_levels",
+    "parse_function": parse_chrony,
+    "check_function": check_chrony,
+    "inventory_function": discover_single,
+    "service_description": "NTP Time",
+    "default_levels_variable": "ntp_time_default_levels",
+    "has_perfdata": True,
+    "group": "ntp_time"
 }

@@ -1,0 +1,13 @@
+Title: Fix missing var/check_mk/rrd in CEE
+Level: 2
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559888610
+
+The directory var/check_mk/rrd was missing in the 1.6.0b1 package
+which lead to a question to remove this directory during update from
+previous versions.

@@ -68,8 +68,10 @@ class CustomLinks(SidebarSnapin):
                     if isinstance(entry[1], type(True)):
                         idss = ids + [str(n)]
                         id_ = '/'.join(idss)
-                        html.begin_foldable_container(
-                            "customlinks", id_, isopen=entry[1], title=entry[0])
+                        html.begin_foldable_container("customlinks",
+                                                      id_,
+                                                      isopen=entry[1],
+                                                      title=entry[0])
                         render_list(idss, entry[2])
                         html.end_foldable_container()
                     elif isinstance(entry[1], str):
@@ -92,8 +94,8 @@ class CustomLinks(SidebarSnapin):
                         simplelink(linktext, entry[1], frame)
                     else:
                         html.write_text(
-                            _("Second part of tuple must be list or string, not %s\n") % str(
-                                entry[1]))
+                            _("Second part of tuple must be list or string, not %s\n") %
+                            str(entry[1]))
                 except Exception as e:
                     html.write_text(_("invalid entry %s: %s<br>\n") % (entry, e))
 

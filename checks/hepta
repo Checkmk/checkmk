@@ -35,8 +35,8 @@ def get_time(timefromdevice):
         timedecoded = (struct.unpack(DateAndTime[length], timefromdevice.encode('latin-1')))
         if length == 8:
             timedevice = time.strftime(
-                "%d-%m-%Y %H:%M:%S", time.strptime(
-                    str(timedecoded), "(%Y, %m, %d, %H, %M, %S, %f)"))
+                "%d-%m-%Y %H:%M:%S", time.strptime(str(timedecoded),
+                                                   "(%Y, %m, %d, %H, %M, %S, %f)"))
         else:
             offset = str(timedecoded[7]) + str(timedecoded[8]) + ":" + str(timedecoded[9])
             date = time.strftime(

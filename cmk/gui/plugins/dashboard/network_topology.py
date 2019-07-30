@@ -36,7 +36,6 @@ from cmk.gui.plugins.dashboard import (
 @dashlet_registry.register
 class NetworkTopologyDashlet(IFrameDashlet):
     """Dashlet that displays a NagVis automap"""
-
     @classmethod
     def type_name(cls):
         return "network_topology"

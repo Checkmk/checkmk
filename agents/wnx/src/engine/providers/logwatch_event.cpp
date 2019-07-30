@@ -2,28 +2,23 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/logwatch_event.h"
+
 #include <filesystem>
 #include <limits>
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
-
-#include "logger.h"
-
+#include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
-
-#include "providers/logwatch_event.h"
+#include "fmt/format.h"
+#include "logger.h"
 #include "providers/logwatch_event_details.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -70,7 +65,11 @@ static std::pair<std::string, std::string> ParseLine(
 
     auto name = name_body[0];
     cma::tools::AllTrim(name);
+    if (name.empty()) return {};
+
     if (name.back() == '\"' || name.back() == '\'') name.pop_back();
+    if (name.empty()) return {};
+
     if (name.front() == '\"' || name.front() == '\'') name.erase(name.begin());
     cma::tools::AllTrim(name);  // this is intended
     if (name.empty()) {
@@ -192,8 +191,9 @@ void LogWatchEvent::loadConfig() {
                     default_entry_ = entries_.size() - 1;
                 }
 
-            } else
-                entries_.pop_back();
+            } else {
+                if (!entries_.empty()) entries_.pop_back();
+            }
         }
         if (!default_found) {
             // making default entry
@@ -201,7 +201,7 @@ void LogWatchEvent::loadConfig() {
             entries_.back().init("*", "off", false);
             default_entry_ = entries_.size() - 1;
         }
-        XLOG::d("Loaded {} entries in LogWatch", count);
+        XLOG::l.t("Loaded [{}] entries in LogWatch", count);
 
     } catch (const std::exception& e) {
         XLOG::l(
@@ -278,8 +278,13 @@ void SaveEventlogOffsets(const std::string& FileName,
         }
 
         for (const auto& state : States) {
-            if (state.name_ != std::string("*"))
-                ofs << state.name_ << "|" << state.pos_ << std::endl;
+            if (state.name_ == std::string("*")) continue;
+
+            auto pos = state.pos_;
+
+            if (pos == cma::cfg::kInitialPos) pos = 0;
+
+            ofs << state.name_ << "|" << pos << std::endl;
         }
     }
 }
@@ -289,24 +294,24 @@ constexpr const char* S_EventLogRegPath =
     "SYSTEM\\CurrentControlSet\\Services\\Eventlog";
 
 // updates presented flag or add to the States
-void AddLogState(StateVector& States, bool FromConfig,
-                 const std::string LogName, bool ResetPosToNull) {
-    for (auto& state : States) {
-        if (cma::tools::IsEqual(state.name_, LogName)) {
-            XLOG::t("Old event log '{}' found", LogName);
+void AddLogState(StateVector& states, bool from_config,
+                 const std::string& log_name, SendMode send_mode) {
+    for (auto& state : states) {
+        if (cma::tools::IsEqual(state.name_, log_name)) {
+            XLOG::t("Old event log '{}' found", log_name);
 
             state.setDefaults();
-            state.in_config_ = FromConfig;
+            state.in_config_ = from_config;
             state.presented_ = true;
             return;
         }
     }
 
     // new added
-    uint64_t pos = ResetPosToNull ? 0 : cma::cfg::kInitialPos;
-    States.emplace_back(State(LogName, pos, true));
-    States.back().in_config_ = FromConfig;
-    XLOG::t("New event log '{}' added with pos {}", LogName, pos);
+    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kInitialPos;
+    states.emplace_back(State(log_name, pos, true));
+    states.back().in_config_ = from_config;
+    XLOG::t("New event log '{}' added with pos {}", log_name, pos);
 }
 
 // main API to add config entries to the engine
@@ -337,12 +342,13 @@ void AddConfigEntry(StateVector& States, const LogWatchEntry& Log,
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& States, std::vector<std::string> Logs,
-                         bool SendAll) {
-    for (auto& log : Logs) {
-        AddLogState(States, false, log, SendAll);
+int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
+                         SendMode send_mode) {
+    for (auto& log : logs) {
+        AddLogState(states, false, log, send_mode);
     };
-    return static_cast<int>(Logs.size());
+
+    return static_cast<int>(logs.size());
 }
 
 std::vector<std::string> GatherEventLogEntriesFromRegistry() {
@@ -398,9 +404,13 @@ std::string ReadDataFromLog(bool VistaApi, State& St, bool& LogExists) {
     }
 }
 
+LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
+
 void UpdateStatesByConfig(StateVector& States,
-                          const LogWatchEntryVector& ConfigEntries,
+                          const std::vector<LogWatchEntry>& ConfigEntries,
                           const LogWatchEntry* Default) {
+    LogWatchEntry default_entry = Default ? *Default : GenerateDefaultValue();
+
     // filtering states
     for (auto& s : States) {
         bool found = false;
@@ -420,10 +430,11 @@ void UpdateStatesByConfig(StateVector& States,
         if (found) continue;
 
         // not found - attempting to load default value
-        if (Default) {
-            s.hide_context_ = Default->context();
-            s.level_ = Default->level();
-        }
+        s.hide_context_ = !default_entry.context();
+        s.level_ = default_entry.level();
+
+        // if default level isn't off, then we set entry as configured
+        if (s.level_ != cfg::EventLevels::kOff) s.in_config_ = true;
     }
 }
 
@@ -448,9 +459,19 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
 std::string GenerateOutputFromStates(bool VistaApi, StateVector& States) {
     std::string out;
     for (auto& state : States) {
-        if (state.level_ == cma::cfg::EventLevels::kOff) continue;
+        if (state.level_ == cma::cfg::EventLevels::kOff) {
+            // if (state.pos_ == cma::cfg::kInitialPos) {
+            // update pos to last one
+            bool unused = false;
+
+            // updates position in state file for every(!) log presented
+            // even if the log is disabled
+            ReadDataFromLog(VistaApi, state, unused);
+            continue;
+        }
 #if 0
         // This Legacy Agent mode AB says this is NOT valid approach
+        // left te,porary as a reference
         if (state.presented_) {
             out += "[[[" + state.name_ + "]]]\n";
             out += ReadDataFromLog(state);
@@ -476,7 +497,7 @@ std::string GenerateOutputFromStates(bool VistaApi, StateVector& States) {
     return out;
 }
 
-std::string LogWatchEvent::makeBody() const {
+std::string LogWatchEvent::makeBody() {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
 
@@ -498,7 +519,8 @@ std::string LogWatchEvent::makeBody() const {
     if (logs.size() == 0) {
         XLOG::l("Registry has nothing to logwatch. This is STRANGE");
     }
-    UpdateEventLogStates(states, logs, send_all_);
+    UpdateEventLogStates(states, logs,
+                         send_all_ ? SendMode::all : SendMode::normal);
 
     // 2) Register additional, configured logs that are not in registry.
     //    Note: only supported with vista API enabled.

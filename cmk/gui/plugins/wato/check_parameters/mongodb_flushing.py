@@ -57,26 +57,24 @@ class RulespecCheckgroupParametersMongodbFlushing(CheckParameterRulespecWithoutI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "average_time",
-                    Tuple(
-                        title=_("Average flush time"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit="ms", default_value=50),
-                            Integer(title=_("Critical at"), unit="ms", default_value=100),
-                            Integer(title=_("Time interval"), unit="minutes", default_value=10),
-                        ]),
+        return Dictionary(elements=[
+            (
+                "average_time",
+                Tuple(title=_("Average flush time"),
+                      elements=[
+                          Integer(title=_("Warning at"), unit="ms", default_value=50),
+                          Integer(title=_("Critical at"), unit="ms", default_value=100),
+                          Integer(title=_("Time interval"), unit="minutes", default_value=10),
+                      ]),
+            ),
+            (
+                "last_time",
+                Tuple(
+                    title=_("Last flush time"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit="ms", default_value=50),
+                        Integer(title=_("Critical at"), unit="ms", default_value=100),
+                    ],
                 ),
-                (
-                    "last_time",
-                    Tuple(
-                        title=_("Last flush time"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit="ms", default_value=50),
-                            Integer(title=_("Critical at"), unit="ms", default_value=100),
-                        ],
-                    ),
-                ),
-            ],)
+            ),
+        ],)

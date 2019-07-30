@@ -23,10 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogCache.h"
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include <utility>
-#include "FileSystem.h"
 #include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
@@ -56,13 +56,13 @@ void LogCache::update() {
     addToIndex(std::make_unique<Logfile>(logger(), this, _mc->historyFilePath(),
                                          true));
 
-    fs::path dirpath = _mc->logArchivePath();
+    std::filesystem::path dirpath = _mc->logArchivePath();
     try {
-        for (const auto &entry : fs::directory_iterator(dirpath)) {
+        for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
             addToIndex(
                 std::make_unique<Logfile>(logger(), this, entry.path(), false));
         }
-    } catch (const fs::filesystem_error &e) {
+    } catch (const std::filesystem::filesystem_error &e) {
         Warning(logger()) << "updating log file index: " << e.what();
     }
 

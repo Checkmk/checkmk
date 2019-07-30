@@ -58,25 +58,20 @@ class RulespecCheckgroupParametersK8SPodsCpu(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("system",
-                 Tuple(
-                     title=_("System CPU usage"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at"))
-                     ],
-                 )),
-                ("user",
-                 Tuple(
-                     title=_("User CPU usage"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at"))
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("system",
+             Tuple(
+                 title=_("System CPU usage"),
+                 elements=[Percentage(title=_("Warning at")),
+                           Percentage(title=_("Critical at"))],
+             )),
+            ("user",
+             Tuple(
+                 title=_("User CPU usage"),
+                 elements=[Percentage(title=_("Warning at")),
+                           Percentage(title=_("Critical at"))],
+             )),
+        ],)
 
 
 @rulespec_registry.register
@@ -99,33 +94,32 @@ class RulespecCheckgroupParametersK8SPodsMemory(CheckParameterRulespecWithoutIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("rss",
-                 Tuple(
-                     title=_("Resident memory usage"),
-                     elements=[
-                         Filesize(title=_("Warning at")),
-                         Filesize(title=_("Critical at")),
-                     ],
-                 )),
-                ("swap",
-                 Tuple(
-                     title=_("Swap memory usage"),
-                     elements=[
-                         Filesize(title=_("Warning at")),
-                         Filesize(title=_("Critical at")),
-                     ],
-                 )),
-                ("usage_bytes",
-                 Tuple(
-                     title=_("Total memory usage"),
-                     elements=[
-                         Filesize(title=_("Warning at")),
-                         Filesize(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("rss",
+             Tuple(
+                 title=_("Resident memory usage"),
+                 elements=[
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
+                 ],
+             )),
+            ("swap",
+             Tuple(
+                 title=_("Swap memory usage"),
+                 elements=[
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
+                 ],
+             )),
+            ("usage_bytes",
+             Tuple(
+                 title=_("Total memory usage"),
+                 elements=[
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
+                 ],
+             )),
+        ],)
 
 
 @rulespec_registry.register
@@ -148,14 +142,13 @@ class RulespecCheckgroupParametersK8SPodsFs(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("usage_bytes",
-                 Tuple(
-                     title=_("Filesystem usage"),
-                     elements=[
-                         Filesize(title=_("Warning at")),
-                         Filesize(title=_("Critical at")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("usage_bytes",
+             Tuple(
+                 title=_("Filesystem usage"),
+                 elements=[
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
+                 ],
+             )),
+        ],)

@@ -66,16 +66,15 @@ class RulespecInventoryDfRules(HostRulespec):
             elements=[
                 ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
                 ("ignore_fs_types",
-                 ListChoice(
-                     title=_("Filesystem types to ignore"),
-                     choices=[
-                         ("tmpfs", "tmpfs"),
-                         ("nfs", "nfs"),
-                         ("smbfs", "smbfs"),
-                         ("cifs", "cifs"),
-                         ("iso9660", "iso9660"),
-                     ],
-                     default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
+                 ListChoice(title=_("Filesystem types to ignore"),
+                            choices=[
+                                ("tmpfs", "tmpfs"),
+                                ("nfs", "nfs"),
+                                ("smbfs", "smbfs"),
+                                ("cifs", "cifs"),
+                                ("iso9660", "iso9660"),
+                            ],
+                            default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
                 ("never_ignore_mountpoints",
                  ListOf(
                      TextUnicode(),
@@ -105,19 +104,19 @@ class RulespecFilesystemGroups(HostRulespec):
     @property
     def valuespec(self):
         return ListOf(
-            Tuple(
-                show_titles=True,
-                orientation="horizontal",
-                elements=[
-                    TextAscii(title=_("Name of group"),),
-                    TextAscii(
-                        title=_("Pattern for mount point (using * and ?)"),
-                        help=_("You can specify one or several patterns containing "
-                               "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
-                               "The filesystems matching the patterns will be monitored "
-                               "like one big filesystem in a single service."),
-                    ),
-                ]),
+            Tuple(show_titles=True,
+                  orientation="horizontal",
+                  elements=[
+                      TextAscii(title=_("Name of group"),),
+                      TextAscii(
+                          title=_("Pattern for mount point (using * and ?)"),
+                          help=_(
+                              "You can specify one or several patterns containing "
+                              "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                              "The filesystems matching the patterns will be monitored "
+                              "like one big filesystem in a single service."),
+                      ),
+                  ]),
             add_label=_("Add pattern"),
             title=_('Filesystem grouping patterns'),
             help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '

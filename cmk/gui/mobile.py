@@ -39,6 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.log import logger
 
 
 def mobile_html_head(title, ready_code=""):
@@ -57,11 +58,10 @@ def mobile_html_head(title, ready_code=""):
     html.stylesheet(href="themes/classic/theme.css")
 
     html.write(
-        html._render_opening_tag(
-            "link",
-            rel="apple-touch-icon",
-            href="themes/classic/images/ios_logo.png",
-            close_tag=True))
+        html._render_opening_tag("link",
+                                 rel="apple-touch-icon",
+                                 href="themes/classic/images/ios_logo.png",
+                                 close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
     if metrics.cmk_graphs_possible():
@@ -90,16 +90,15 @@ def mobile_html_foot():
 
 
 def jqm_header_button(pos, url, title, icon=""):
-    html.a(
-        '',
-        href=url,
-        class_="ui-btn-%s" % pos,
-        title=title,
-        **{
-            "data-direction": "reverse",
-            "data-icon": icon,
-            "data-iconpos": "notext"
-        })
+    html.a('',
+           href=url,
+           class_="ui-btn-%s" % pos,
+           title=title,
+           **{
+               "data-direction": "reverse",
+               "data-icon": icon,
+               "data-iconpos": "notext"
+           })
 
 
 def jqm_page_header(title, id_=None, left_button=None, right_button=None):
@@ -139,14 +138,13 @@ def jqm_page_navfooter(items, current, page_id):
             custom_css += ' ui-state-persist ui-btn-active'
         else:
             html.open_li()
-            html.open_a(
-                href=href,
-                class_=custom_css,
-                **{
-                    "data-transition": "slide",
-                    "data-icon": icon,
-                    "data-iconpos": "bottom"
-                })
+            html.open_a(href=href,
+                        class_=custom_css,
+                        **{
+                            "data-transition": "slide",
+                            "data-icon": icon,
+                            "data-iconpos": "bottom"
+                        })
             html.write(title)
             html.close_a()
             html.close_li()
@@ -163,7 +161,7 @@ def jqm_page_index(title, items):
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 
-    other_topics = list(set([x[0] for x in items if x[0] not in manual_sort]))
+    other_topics = list({x[0] for x in items if x[0] not in manual_sort})
 
     for topic in other_topics:
         jqm_page_index_topic_renderer(topic, items)
@@ -215,9 +213,8 @@ def page_login():
     html.end_form()
     html.open_div(id_="loginfoot")
     html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
-    html.div(
-        HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
-        class_="copyright")
+    html.div(HTML(_("&copy; <a target=\"_blank\" href=\"https://checkmk.com\">tribe29 GmbH</a>")),
+             class_="copyright")
     jqm_page_footer()
     mobile_html_foot()
 
@@ -226,10 +223,9 @@ def page_login():
 def page_index():
     title = _("Check_MK Mobile")
     mobile_html_head(title)
-    jqm_page_header(
-        title,
-        right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
-        id_="data")
+    jqm_page_header(title,
+                    right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+                    id_="data")
     items = []
     for view_name, view_spec in views.get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
@@ -254,13 +250,12 @@ def page_index():
     html.hr()
     html.open_ul(**{"data-role": "listview", "data-theme": "b", "data-inset": "true"})
     html.open_li()
-    html.a(
-        _("Classical web GUI"),
-        href="index.py?mobile=",
-        **{
-            "data-ajax": "false",
-            "data-transition": "fade"
-        })
+    html.a(_("Classical web GUI"),
+           href="index.py?mobile=",
+           **{
+               "data-ajax": "false",
+               "data-transition": "fade"
+           })
     html.close_li()
     html.close_ul()
 
@@ -297,6 +292,7 @@ def page_view():
         view_renderer = MobileViewRenderer(view)
         views.show_view(view, view_renderer)
     except Exception as e:
+        logger.exception()
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
@@ -305,7 +301,8 @@ def page_view():
 
 
 class MobileViewRenderer(views.ViewRenderer):
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               unfiltered_amount_of_rows):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
@@ -352,20 +349,25 @@ class MobileViewRenderer(views.ViewRenderer):
 
         elif page == "data":
             # Page: data rows of view
-            jqm_page_header(
-                title,
-                left_button=home,
-                right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
-                id_="data")
+            jqm_page_header(title,
+                            left_button=home,
+                            right_button=("javascript:document.location.reload();", _("Reload"),
+                                          "refresh"),
+                            id_="data")
             html.open_div(id_="view_results")
             if len(rows) == 0:
                 html.write(_("No hosts/services found."))
             else:
                 try:
-                    cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
+                    if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
+                                                             self.view.row_limit):
+                        cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit,
+                                                                     config.user)
+                        del rows[self.view.row_limit:]
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:
+                    logger.exception()
                     html.write(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, 'data', page_id)
@@ -380,8 +382,7 @@ class MobileViewRenderer(views.ViewRenderer):
 
 def show_filter_form(show_filters):
     # Sort filters
-    s = [(f.sort_index, f.title, f) for f in show_filters if f.available()]
-    s.sort()
+    s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
     html.begin_form("filter")
     html.open_ul(**{"data-role": "listview", "data-inset": "false"})

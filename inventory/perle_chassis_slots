@@ -79,21 +79,4 @@ def inv_perle_chassis_slots(info):
 
 inv_info['perle_chassis_slots'] = {
     'inv_function': inv_perle_chassis_slots,
-    # If you change snmp info please adapt the related check plugin
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.3.1',
-        [
-            '2',  # PERLE-MCR-MGT-MIB::mcrChassisSlotIndex
-            '3',  # PERLE-MCR-MGT-MIB::mcrDefinedModuleName
-            '4',  # PERLE-MCR-MGT-MIB::mcrModuleModelName
-            '6',  # PERLE-MCR-MGT-MIB::mcrModuleSerialNumber
-            '7',  # PERLE-MCR-MGT-MIB::mcrModuleBootloaderVersion
-            '8',  # PERLE-MCR-MGT-MIB::mcrModuleFirmwareVersion
-            '9',  # PERLE-MCR-MGT-MIB::mcrModuleoOutStandWarnAlarms
-            '10',  # PERLE-MCR-MGT-MIB::mcrModuleDiagStatus
-            '11',  # PERLE-MCR-MGT-MIB::mcrModuleTypeInserted
-            '19',  # PERLE-MCR-MGT-MIB::mcrModuleModelDesc
-        ]),
-    'snmp_scan_function': perle_scan_function,
-    'includes': ['perle.include'],
 }

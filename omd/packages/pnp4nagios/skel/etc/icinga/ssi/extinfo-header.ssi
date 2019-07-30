@@ -1,8 +1,0 @@
-<script src="/###SITE###/pnp4nagios/media/js/jquery-min.js" type="text/javascript"></script>
-<script src="/###SITE###/pnp4nagios/media/js/jquery.cluetip.js" type="text/javascript"></script>
-<script type="text/javascript">
-jQuery.noConflict();
-jQuery(document).ready(function() {
-  jQuery('a.tips').cluetip({ajaxCache: false, dropShadow: false,showTitle: false });
-  });
-</script>

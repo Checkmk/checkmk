@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
 import pytest
 import time
 import ast
@@ -35,7 +36,7 @@ class FakeStatusSocket(object):
 
     def get_response(self):
         response = ast.literal_eval(self._response)
-        assert type(response) == list
+        assert isinstance(response, list)
         return response
 
 
@@ -81,17 +82,17 @@ def event_status(settings, config, perfcounters, history):
 @pytest.fixture(scope="function")
 def event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                  event_status):
-    return cmk.ec.main.EventServer(
-        logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters,
-        lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
+    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config,
+                                   slave_status, perfcounters, lock_configuration, history,
+                                   event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
 def status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
                   event_status, event_server):
-    return cmk.ec.main.StatusServer(
-        logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status,
-        perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
+    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings,
+                                    config, slave_status, perfcounters, lock_configuration, history,
+                                    event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):
@@ -158,12 +159,12 @@ def ensure_core_and_get_connection(site, ec, core):
 
 @pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 def test_command_reload(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print "Old config load time: %s" % old_t
+    print("Old config load time: %s" % old_t)
     assert old_t > time.time() - 86400
 
     time.sleep(1)  # needed to have at least one second after EC start
@@ -171,14 +172,14 @@ def test_command_reload(site, ec, core):
     time.sleep(1)  # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print "New config load time: %s" % old_t
+    print("New config load time: %s" % old_t)
     assert new_t > old_t
 
 
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_status_table_via_core(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
     if core is None:
@@ -223,15 +224,15 @@ def test_status_table_via_core(site, ec, core):
     ]:
         assert column_name in status
 
-    assert type(status["status_event_limit_host"]) == int
-    assert type(status["status_event_limit_rule"]) == int
-    assert type(status["status_event_limit_overall"]) == int
+    assert isinstance(status["status_event_limit_host"], int)
+    assert isinstance(status["status_event_limit_rule"], int)
+    assert isinstance(status["status_event_limit_overall"], int)
 
 
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_rules_table_via_core(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
     if core is None:
@@ -239,7 +240,7 @@ def test_rules_table_via_core(site, ec, core):
     else:
         result = live.query_table_assoc("GET eventconsolerules\n")
 
-    assert type(result) == list
+    assert isinstance(result, list)
     #assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing
     # keys and types in the result set

@@ -10,10 +10,8 @@
 #include <string_view>
 
 #include "common/cfg_info.h"
-
-#include "section_header.h"
-
 #include "providers/internal.h"
+#include "section_header.h"
 
 namespace cma {
 
@@ -55,10 +53,32 @@ public:
         : loaded_(false)
         , context_(false)
         , level_(cma::cfg::EventLevels::kOff) {}
+
+    LogWatchEntry(const LogWatchEntry& Rhs)
+        : loaded_(Rhs.loaded_)
+        , context_(Rhs.context_)
+        , level_(Rhs.level_)
+        , name_(Rhs.name_) {}
+
+    LogWatchEntry& operator=(const LogWatchEntry& Rhs) {
+        loaded_ = Rhs.loaded_;
+        context_ = Rhs.context_;
+        level_ = Rhs.level_;
+        name_ = Rhs.name_;
+    }
+
+    LogWatchEntry(LogWatchEntry&& Rhs) = default;
+    LogWatchEntry& operator=(LogWatchEntry&& Rhs) = default;
+    ~LogWatchEntry() = default;
+
     // bool loadFrom(const YAML::Node Node) noexcept;
     bool loadFromMapNode(const YAML::Node Node) noexcept;
     bool loadFrom(std::string_view Line) noexcept;
     void init(std::string_view Name, std::string_view Param, bool Context);
+    LogWatchEntry& withDefault() {
+        init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn), true);
+        return *this;
+    }
 
     const std::string name() const noexcept {
         if (loaded_) return name_;
@@ -103,15 +123,18 @@ public:
 
     bool sendAll() const { return send_all_; }
 
+protected:
+    std::string makeBody() override;
+
 private:
     LogWatchEntryVector entries_;
     size_t default_entry_;
     bool send_all_;
     bool vista_api_;
-    virtual std::string makeBody() const override;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class LogWatchEventTest;
     FRIEND_TEST(LogWatchEventTest, Base);
+    FRIEND_TEST(LogWatchEventTest, TestDefaultEntry);
 #endif
 };
 
@@ -120,23 +143,25 @@ private:
 // ***********************************************************************
 // Read from registry registered sources and add them to the states vector
 std::vector<std::string> GatherEventLogEntriesFromRegistry();
+enum class SendMode { all, normal };
 
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& States, std::vector<std::string> Logs,
-                         bool SendAll);
+int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
+                         SendMode send_mode);
+
+LogWatchEntry GenerateDefaultValue();
 
 // Fix Values in states according to the config
 void UpdateStatesByConfig(StateVector& States,
                           const LogWatchEntryVector& Entries,
                           const LogWatchEntry* Default);
-
 // manual adding: two things possible
 // 1. added brand new
 // 2. existing marked as presented_
-void AddLogState(StateVector& States, bool FromConfig,
-                 const std::string LogName, bool SendAll);
+void AddLogState(StateVector& states, bool from_config,
+                 const std::string& log_name, SendMode send_mode);
 
 // to use for load entries of config
 void AddConfigEntry(StateVector& States, const LogWatchEntry&,

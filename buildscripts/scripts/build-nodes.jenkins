@@ -1,17 +1,26 @@
-def DISTRO_LIST = ["sles-11sp4", "sles-12", "sles-12sp1", "sles-12sp2", "sles-12sp3", "sles-12sp4", "sles-15", "debian-8", "debian-9", "ubuntu-14.04", "ubuntu-16.04", "ubuntu-17.10", "ubuntu-18.04", "ubuntu-18.10", "centos-6", "centos-7"]
+properties([
+  parameters([
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+  ])
+])
+def DISTRO_LIST = DISTROS.split(' ')
 def DOCKER_BUILDS = [:]
 
+currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
 node {
-    docker.image('devrechner:5010/ubuntu-18.04-common').inside('-u 0:0 --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
-        stage('checkout sources') {
-            checkout(scm)
-            dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
-                stash name: 'bw-build-gnu-toolchain', includes: 'bw-build-gnu-toolchain.sh'
-                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh './bw-build-gnu-toolchain.sh -d'
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker.image('ubuntu-18.04-common').pull()
+        docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+            stage('checkout sources') {
+                checkout(scm)
+                dir('buildscripts/infrastructure/build-nodes/gnu-toolchain/') {
+                    stash name: 'bw-build-gnu-toolchain', includes: 'bw-build-gnu-toolchain.sh'
+                    withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh './bw-build-gnu-toolchain.sh -d'
+                    }
                 }
+               stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile'
             }
-           stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/build-nodes/*/Dockerfile'
         }
     }
 }
@@ -19,14 +28,14 @@ node {
 DISTRO_LIST.each { DISTRO ->
     DOCKER_BUILDS[DISTRO] = {
         node {
-            docker.image('devrechner:5010/ubuntu-18.04-common').inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
-                stage('build' + DISTRO + ' image') {
-                    unstash name: 'dockerfiles'
-                    dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {
-                        unstash name: 'bw-build-gnu-toolchain'
-                        docker.withRegistry('http://10.9.1.101:5010', 'nexus') {
-                            sh "echo 'nameserver 10.1.1.10' > /etc/resolv.conf"
-                            def Image = docker.build(DISTRO, "--network infrastructure_local-infra .")
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image('ubuntu-18.04-common').pull()
+                docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
+                    stage('build' + DISTRO + ' image') {
+                        unstash name: 'dockerfiles'
+                        dir('buildscripts/infrastructure/build-nodes/' + DISTRO) {
+                            unstash name: 'bw-build-gnu-toolchain'
+                            def Image = docker.build(DISTRO, "--network ci_local-infra .")
                             Image.push()
                         }
                     }

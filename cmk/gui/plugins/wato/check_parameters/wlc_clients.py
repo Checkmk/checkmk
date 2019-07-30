@@ -57,24 +57,21 @@ class RulespecCheckgroupParametersWlcClients(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-            Dictionary(
-                title=_("Number of connections"),
-                elements=[
-                    ("levels",
-                     Tuple(
-                         title=_("Upper levels"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("connections")),
-                             Integer(title=_("Critical at"), unit=_("connections")),
-                         ])),
-                    ("levels_lower",
-                     Tuple(
-                         title=_("Lower levels"),
-                         elements=[
-                             Integer(title=_("Critical if below"), unit=_("connections")),
-                             Integer(title=_("Warning if below"), unit=_("connections")),
-                         ])),
-                ]),
+            Dictionary(title=_("Number of connections"),
+                       elements=[
+                           ("levels",
+                            Tuple(title=_("Upper levels"),
+                                  elements=[
+                                      Integer(title=_("Warning at"), unit=_("connections")),
+                                      Integer(title=_("Critical at"), unit=_("connections")),
+                                  ])),
+                           ("levels_lower",
+                            Tuple(title=_("Lower levels"),
+                                  elements=[
+                                      Integer(title=_("Critical if below"), unit=_("connections")),
+                                      Integer(title=_("Warning if below"), unit=_("connections")),
+                                  ])),
+                       ]),
             # old params = (crit_low, warn_low, warn, crit)
             forth=lambda v: isinstance(v, tuple) and {
                 "levels": (

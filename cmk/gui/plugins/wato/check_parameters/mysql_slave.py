@@ -59,22 +59,21 @@ class RulespecCheckgroupParametersMysqlSlave(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("seconds_behind_master",
-                 Tuple(
-                     title=_("Max. time behind the master"),
-                     help=_(
-                         "Compares the time which the slave can be behind the master. "
-                         "This rule makes the check raise warning/critical states if the time is equal to "
-                         "or above the configured levels."),
-                     elements=[
-                         Age(title=_("Warning at")),
-                         Age(title=_("Critical at")),
-                     ],
-                 )),
-            ],
-            optional_keys=None)
+        return Dictionary(elements=[
+            ("seconds_behind_master",
+             Tuple(
+                 title=_("Max. time behind the master"),
+                 help=_(
+                     "Compares the time which the slave can be behind the master. "
+                     "This rule makes the check raise warning/critical states if the time is equal to "
+                     "or above the configured levels."),
+                 elements=[
+                     Age(title=_("Warning at")),
+                     Age(title=_("Critical at")),
+                 ],
+             )),
+        ],
+                          optional_keys=None)
 
     @property
     def item_spec(self):

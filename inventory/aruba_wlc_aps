@@ -120,20 +120,4 @@ def inv_aruba_wlc_aps(info):
 
 inv_info['aruba_wlc_aps'] = {
     'inv_function': inv_aruba_wlc_aps,
-    # If you make changes here in snmp_info, don't forget to make
-    # these changes in the related check plugin, too.
-    "snmp_info": (
-        ".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1",
-        [
-            "3",  # wlanAPName
-            "19",  # wlanAPStatus
-            "22",  # wlanAPUnprovisioned
-            "2",  # wlanAPIpAddress
-            "4",  # wlanAPGroupName
-            "5",  # wlanAPModel
-            "6",  # wlanAPSerialNumber
-            "32",  # wlanAPSysLocation
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(".1.3.6.1.4.1.14823.1.1"
-                                                                          ),
 }

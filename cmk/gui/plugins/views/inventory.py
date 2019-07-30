@@ -93,11 +93,11 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         tree_id = "/" + str(row["invhist_time"])
         tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
 
-    parsed_path, attributes_key = inventory.parse_tree_path(invpath)
-    if attributes_key is None:
+    parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
+    if attribute_keys is None:
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                            attributes_key)
+                                            attribute_keys)
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -115,8 +115,8 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
 
 
 def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                     attributes_key):
-    if attributes_key == []:
+                                     attribute_keys):
+    if attribute_keys == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
         child = struct_tree.get_sub_attributes(parsed_path)
@@ -127,10 +127,12 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
     with html.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
             invpath = invpath[:-1]
-        if attributes_key == []:
+        if attribute_keys == []:
             tree_renderer.show_numeration(child, path=invpath)
-        else:
-            tree_renderer.show_attribute(child.get_child_data().get(attributes_key),
+        elif attribute_keys:
+            # In paint_host_inventory_tree we parse invpath and get
+            # a path and attribute_keys which may be either None, [], or ["KEY"].
+            tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
         code = html.drain()
     return "", code
@@ -166,11 +168,17 @@ def declare_inv_column(invpath, datatype, title, short=None):
     else:
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
+    is_leaf_node = invpath[-1] not in ":."
+
     # Declare column painter
     painter_spec = {
         "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
+        # Only leaf nodes can be shown in reports. There is currently no way to render trees.
+        # The HTML code would simply be stripped by the default rendering mechanism which does
+        # not look good for the HW/SW inventory tree
+        "printable": is_leaf_node,
         "load_inv": True,
         "paint": lambda row: paint_host_inventory_tree(row, invpath),
         "sorter": name,
@@ -180,14 +188,15 @@ def declare_inv_column(invpath, datatype, title, short=None):
     register_painter(name, painter_spec)
 
     # Sorters and Filters only for leaf nodes
-    if invpath[-1] not in ":.":
+    if is_leaf_node:
         # Declare sorter. It will detect numbers automatically
         register_sorter(
             name, {
+                "_inv_path": invpath,
                 "title": _("Inventory") + ": " + title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
-                "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
+                "cmp": lambda self, a, b: cmp_inventory_node(a, b, self._spec["_inv_path"]),
             })
 
         filter_info = _inv_filter_info().get(datatype, {})
@@ -823,8 +832,8 @@ class RowTableInventory(RowTable):
         self._info_name = info_name
         self._inventory_path = inventory_path
 
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return inv_multisite_table(self._info_name, self._inventory_path, columns, query,
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return inv_multisite_table(self._info_name, self._inventory_path, columns, headers,
                                    only_sites, limit, all_active_filters)
 
 
@@ -966,7 +975,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
         if struct_tree.is_empty():
             return False
 
-        parsed_path, unused_key = inventory.parse_tree_path(invpath)
+        parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
         if parsed_path:
             children = struct_tree.get_sub_children(parsed_path)
         else:
@@ -1274,8 +1283,8 @@ multisite_builtin_views["inv_hosts_ports"] = {
 
 
 class RowTableInventoryHistory(RowTable):
-    def query(self, view, columns, query, only_sites, limit, all_active_filters):
-        return inv_multisite_table("invhist", None, columns, query, only_sites, limit,
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        return inv_multisite_table("invhist", None, columns, headers, only_sites, limit,
                                    all_active_filters)
 
 
@@ -1541,14 +1550,13 @@ class NodeRenderer(object):
                 "ajax_inv_render_tree.py",
             )
 
-            if html.begin_foldable_container(
-                    "inv_%s%s" % (self._hostname, self._tree_id),
-                    invpath,
-                    False,
-                    header,
-                    icon=icon,
-                    fetch_url=fetch_url,
-                    tree_img="tree_black"):
+            if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id),
+                                             invpath,
+                                             False,
+                                             header,
+                                             icon=icon,
+                                             fetch_url=fetch_url,
+                                             tree_img="tree_black"):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
                     child.show(self, path=raw_invpath)
@@ -1611,9 +1619,8 @@ class NodeRenderer(object):
                 ],
                 filename="view.py",
             )
-            html.div(
-                html.render_a(_("Open this table for filtering / sorting"), href=url),
-                class_="invtablelink")
+            html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
+                     class_="invtablelink")
 
         self._show_numeration_table(titles, invpath, data)
 
@@ -1713,7 +1720,7 @@ class NodeRenderer(object):
         elif isinstance(value, str):
             try:
                 text = value.decode("utf-8")
-            except:
+            except UnicodeDecodeError:
                 text = value
             html.write_text(text)
         elif isinstance(value, unicode):
@@ -1776,13 +1783,16 @@ def ajax_inv_render_tree():
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
         struct_tree = inventory.load_filtered_and_merged_tree(row)
-        tree_renderer = AttributeRenderer(
-            site_id, hostname, "", invpath, show_internal_tree_paths=show_internal_tree_paths)
+        tree_renderer = AttributeRenderer(site_id,
+                                          hostname,
+                                          "",
+                                          invpath,
+                                          show_internal_tree_paths=show_internal_tree_paths)
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))
 
-    parsed_path, _attributes_key = inventory.parse_tree_path(invpath)
+    parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:

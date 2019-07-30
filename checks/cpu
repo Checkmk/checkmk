@@ -106,29 +106,27 @@ def check_cpu_threads(item, params, info):
 
     try:
         num_threads = int(info[0][3].split('/')[1])
-    except:
+    except Exception:
         yield (3, "invalid output from plugin")
         return
 
     absolute_levels = params.get("levels", (None, None))
-    yield check_levels(
-        num_threads,
-        'threads',
-        absolute_levels,
-        unit="threads",
-        human_readable_func=lambda x: "%.f" % x,
-        infoname="Count")
+    yield check_levels(num_threads,
+                       'threads',
+                       absolute_levels,
+                       unit="threads",
+                       human_readable_func=lambda x: "%.f" % x,
+                       infoname="Count")
 
     if len(info) > 1:
         max_threads = int(info[1][0])
         thread_usage = 100.0 * num_threads / max_threads
         relative_levels = params.get("levels_percent", (None, None))
-        yield check_levels(
-            thread_usage,
-            'thread_usage',
-            relative_levels,
-            human_readable_func=get_percent_human_readable,
-            infoname="Usage")
+        yield check_levels(thread_usage,
+                           'thread_usage',
+                           relative_levels,
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Usage")
 
 
 check_info["cpu.threads"] = {

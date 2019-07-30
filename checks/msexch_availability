@@ -26,12 +26,11 @@
 
 
 def check_msexch_availability(item, params, parsed):
-    yield wmi_yield_raw_persec(
-        parsed[""],
-        item,
-        "AvailabilityRequestssec",
-        label=" requests/sec",
-        perfvar="requests_per_sec")
+    yield wmi_yield_raw_persec(parsed[""],
+                               item,
+                               "AvailabilityRequestssec",
+                               label=" requests/sec",
+                               perfvar="requests_per_sec")
 
 
 check_info['msexch_availability'] = {

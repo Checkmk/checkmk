@@ -41,7 +41,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
     # be closer to 1000 l/s. (cf. https://www.apc.com/salestools/DRON-AAAR53/DRON-AAAR53_R1_EN.pdf)
     try:
         flow = float(info[0][0])
-    except:
+    except Exception:
         return
 
     state = 0

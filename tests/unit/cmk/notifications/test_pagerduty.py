@@ -31,10 +31,6 @@ from cmk.notification_plugins.pagerduty import pagerduty_msg
                 "host": "site1",
                 "host_address": "127.0.0.1",
                 "info": "Service Down",
-                "perfdata": {
-                    "last_updated": "Value=20.599114",
-                    "new_files": "Value=0"
-                }
             },
             "severity": "critical",
             "source": "127.0.0.1",
@@ -67,7 +63,6 @@ from cmk.notification_plugins.pagerduty import pagerduty_msg
                 "host": "win7vm",
                 "host_address": "10.3.1.239",
                 "info": "Packet received via smart PING",
-                "perfdata": {}
             },
             "severity": "info",
             "source": "10.3.1.239",

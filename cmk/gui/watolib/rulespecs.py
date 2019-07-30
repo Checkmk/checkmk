@@ -348,7 +348,8 @@ def get_rulegroup(group_name):
     except KeyError:
         group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
         rulespec_group_registry.register(group_class)
-    return group_class()
+    # Pylint does not detect the subclassing in LegacyRulespecSubGroup correctly. Disable the check here :(
+    return group_class()  # pylint: disable=abstract-class-instantiated
 
 
 def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
@@ -396,7 +397,7 @@ class Rulespec(object):
 
     @abc.abstractproperty
     def valuespec(self):
-        # type: () -> Optional[ValueSpec]
+        # type: () -> ValueSpec
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -411,6 +412,11 @@ class Rulespec(object):
 
     @abc.abstractproperty
     def is_for_services(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
+    @property
+    def is_binary_ruleset(self):
         # type: () -> bool
         raise NotImplementedError()
 
@@ -477,7 +483,6 @@ class Rulespec(object):
 
 class ABCHostRulespec(object):
     """Base class for all rulespecs managing host rule sets"""
-
     @property
     def is_for_services(self):
         return False
@@ -510,7 +515,6 @@ class ABCHostRulespec(object):
 
 class ABCServiceRulespec(object):
     """Base class for all rulespecs managing service rule sets"""
-
     @property
     def is_for_services(self):
         return True
@@ -549,10 +553,21 @@ class ABCServiceRulespec(object):
 
 class ABCBinaryRulespec(Rulespec):
     """Base class for all rulespecs that create a binary host/service rule list"""
-
     @property
     def valuespec(self):
-        return None
+        # type: () -> ValueSpec
+        return DropdownChoice(
+            choices=[
+                (True, _("Positive match (Add matching hosts to the set)")),
+                (False, _("Negative match (Exclude matching hosts from the set)")),
+            ],
+            default_value=True,
+        )
+
+    @property
+    def is_binary_ruleset(self):
+        # type: () -> bool
+        return True
 
     @abc.abstractproperty
     def title(self):
@@ -575,11 +590,15 @@ class BinaryServiceRulespec(ABCServiceRulespec, ABCBinaryRulespec):
 
 class ABCValueRulespec(Rulespec):
     """Base class for all rulespecs that create a host/service list with values"""
-
     @abc.abstractproperty
     def valuespec(self):
         # type: () -> ValueSpec
         raise NotImplementedError()
+
+    @property
+    def is_binary_ruleset(self):
+        # type: () -> bool
+        return False
 
     @property
     def title(self):
@@ -608,7 +627,6 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
     parameters affect the discovered services only, not the manually configured
     checks."""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()
@@ -663,7 +681,6 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
     parameters affect the discovered services only, not the manually configured
     checks."""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()
@@ -696,7 +713,6 @@ class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
-
     @abc.abstractproperty
     def check_group_name(self):
         raise NotImplementedError()
@@ -707,6 +723,7 @@ class ManualCheckParameterRulespec(HostRulespec):
 
     @property
     def valuespec(self):
+        # type: () -> ValueSpec
         """Wraps the parameter together with the other needed valuespecs
 
         This should not be overridden by specific manual checks. Normally the parameter_valuespec
@@ -969,17 +986,15 @@ class TimeperiodValuespec(ValueSpec):
         if is_active:
             value = self._get_timeperiod_value(value)
             self._get_timeperiod_valuespec().render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
+            html.buttonlink(toggle_url,
+                            _("%s timespecific parameters") % mode,
+                            class_=["toggle_timespecific_parameter"])
         else:
             value = self._get_timeless_value(value)
             r = self._enclosed_valuespec.render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
+            html.buttonlink(toggle_url,
+                            _("%s timespecific parameters") % mode,
+                            class_=["toggle_timespecific_parameter"])
             return r
 
     def value_to_text(self, value):
@@ -1023,9 +1038,8 @@ class TimeperiodValuespec(ValueSpec):
         return Dictionary(
             elements=[
                 (self.tp_default_value_key,
-                 Transform(
-                     self._enclosed_valuespec,
-                     title=_("Default parameters when no timeperiod matches"))),
+                 Transform(self._enclosed_valuespec,
+                           title=_("Default parameters when no timeperiod matches"))),
                 (self.tp_values_key,
                  ListOf(
                      Tuple(elements=[

@@ -44,8 +44,8 @@ def check_f5_bigip_interfaces(item, params, info):
             continue
 
         if int(ifstate) != 0:
-            return (2, "State of %s is %s" % (f5_bigip_interface_states.get(
-                ifstate, "unhandled (%d)" % ifstate), port))
+            return (2, "State of %s is %s" %
+                    (f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port))
 
         this_time = int(time.time())
         in_per_sec = get_rate("f5_interface.in.%s" % item, this_time, saveint(inbytes))

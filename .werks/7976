@@ -1,0 +1,13 @@
+Title: Backup/Restore: Fix broken restore when backup is not accessible
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563289632
+
+When a single backup is not accessible by the current site user, the restore
+page was previously not usable anymore. It is now skipping the not accessible
+backup instead of showing a "Permission denied" error.

@@ -1,11 +1,11 @@
 Title: Fixed possible hanging updates from 1.5 versions
-Level: 1
+Level: 2
 Component: omd
 Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1526282366
 
 When the "omd update" is executed as root user for a site, the update

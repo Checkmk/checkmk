@@ -1,0 +1,12 @@
+Title: mem.linux: Prevent from crashing due to missing Slab data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558082248
+Class: fix
+
+It is known that agent output may lack information about SReclaimable (Part of
+Slab, that might be reclaimed, such as caches) and Slab which lead to a crash
+of the check. This werk fixes this issue.

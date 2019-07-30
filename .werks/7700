@@ -1,0 +1,20 @@
+Title: mk_postgres: Fixed several problems
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1559288626
+
+Originally the version of the client tools was taken, but what really matters
+is the version of the server. Terminate the script, if the server can not be
+queried.
+
+In postgresql 9.2 the column state was introduced, which has to be queried to
+find the state of the sessions. The column state can be NULL.
+
+Here the order of the columns did not match with what the server side expects,
+with the result, that there was never any active connection shown in the
+web-gui.

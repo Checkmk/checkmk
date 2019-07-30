@@ -1,0 +1,16 @@
+Title: Download agent output: Fix timeouts in distributed setups
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1561466844
+
+When executing the action "Download agent output" (or SNMP walk) for a host
+that is montored by a remote site, this action could result in a timeout when
+it takes longer than 120 seconds to fetch the data from the monitored system.
+
+This has now been fixed by moving the background job execution to the remote
+site.

@@ -1,0 +1,11 @@
+Title: Fix broken 'cmk --flush HOST' command
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1562151435
+
+This command did not work in previous 1.6 releases.

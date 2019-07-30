@@ -158,7 +158,7 @@ try:
         elif o in ['-c', '--critical']:
             critical_patterns.append(a)
 
-except Exception, e:
+except Exception as e:
     bail_out(str(e))
 
 if server is None:

@@ -8,10 +8,13 @@
 # accessing pylint's innards. Not nice, but there is not much we can do about
 # this until pylint offers the API requested in the post above. Furthermore,
 # note that layout/indentation doesn't work too well in the hook below.
+
 init-hook=
     import inspect, os, sys
     config_file = inspect.stack()[2][0].f_locals["linter"].config_file
-    tests_dir = os.path.join(os.path.dirname(config_file), "tests")
+    tests_dir2 = os.path.join(os.path.dirname(config_file), "tests")
+    tests_dir3 = os.path.join(os.path.dirname(config_file), "tests-py3")
+    tests_dir = tests_dir3 if sys.version.split('.')[0] == '3' else tests_dir2
     sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest
 load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
@@ -36,7 +39,6 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
-    bare-except,
     broad-except,
     #---------------------------------------------------------------------------
     # Enabling this would enhance readability quite a bit and it might even
@@ -113,6 +115,8 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling the two spelling-related checks increases pylints runtime from
     # 11 min to 40 min, so we better keep those disabled for normal runs.
+    # NOTE: If we want to enable one of these checks, we need to add pyenchant
+    # to our dev dependencies.
     wrong-spelling-in-comment,
     wrong-spelling-in-docstring,
 

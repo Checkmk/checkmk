@@ -30,6 +30,7 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import errno
 import glob
 import os
 import shutil
@@ -166,8 +167,9 @@ class BackupEntityCollection(object):
         self._config = Config(config_file_path).load()
         self._cls = cls
         self._config_attr = config_attr
-        self.objects = dict(
-            [(ident, cls(ident, config)) for ident, config in self._config[config_attr].items()])
+        self.objects = dict([
+            (ident, cls(ident, config)) for ident, config in self._config[config_attr].items()
+        ])
 
     def get(self, ident):
         return self.objects[ident]
@@ -186,8 +188,9 @@ class BackupEntityCollection(object):
         self.objects[obj.ident()] = obj
 
     def save(self):
-        self._config[self._config_attr] = dict(
-            [(ident, obj.to_config()) for ident, obj in self.objects.items()])
+        self._config[self._config_attr] = dict([
+            (ident, obj.to_config()) for ident, obj in self.objects.items()
+        ])
         Config(self._config_path).save(self._config)
 
 
@@ -224,7 +227,7 @@ class MKBackupJob(object):
         try:
             os.unlink(self.state_file_path())
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -233,7 +236,7 @@ class MKBackupJob(object):
         try:
             state = json.load(file(self.state_file_path()))
         except IOError as e:
-            if e.errno == 2:  # not existant
+            if e.errno == errno.ENOENT:  # not existant
                 state = {
                     "state": None,
                     "started": None,
@@ -268,13 +271,12 @@ class MKBackupJob(object):
                and os.path.exists("/proc/%d" % state["pid"])
 
     def start(self, env=None):
-        p = subprocess.Popen(
-            self._start_command(),
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=open(os.devnull),
-            env=env)
+        p = subprocess.Popen(self._start_command(),
+                             close_fds=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=open(os.devnull),
+                             env=env)
         output = p.stdout.read()
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % output)
@@ -289,7 +291,7 @@ class MKBackupJob(object):
         try:
             os.killpg(pgid, signal.SIGTERM)
         except OSError as e:
-            if e.errno == 3:
+            if e.errno == errno.ESRCH:
                 pass
             else:
                 raise
@@ -304,7 +306,7 @@ class MKBackupJob(object):
             try:
                 os.killpg(pgid, signal.SIGKILL)
             except OSError as e:
-                if e.errno == 3:
+                if e.errno == errno.ESRCH:
                     pass
                 else:
                     raise
@@ -411,8 +413,8 @@ class Jobs(BackupEntityCollection):
                 delete_url = html.makeactionuri_contextless([("mode", "backup"),
                                                              ("_action", "delete"),
                                                              ("_job", job_ident)])
-                edit_url = html.makeuri_contextless([("mode", "edit_backup_job"), ("job",
-                                                                                   job_ident)])
+                edit_url = html.makeuri_contextless([("mode", "edit_backup_job"),
+                                                     ("job", job_ident)])
                 state_url = html.makeuri_contextless([("mode", "backup_job_state"),
                                                       ("job", job_ident)])
 
@@ -538,17 +540,17 @@ class PageBackup(object):
 
     def buttons(self):
         self.home_button()
-        html.context_button(
-            _("Backup targets"), html.makeuri_contextless([("mode", "backup_targets")]),
-            "backup_targets")
-        html.context_button(
-            _("Backup keys"), html.makeuri_contextless([("mode", "backup_keys")]), "backup_key")
+        html.context_button(_("Backup targets"),
+                            html.makeuri_contextless([("mode", "backup_targets")]),
+                            "backup_targets")
+        html.context_button(_("Backup keys"), html.makeuri_contextless([("mode", "backup_keys")]),
+                            "backup_key")
         if self._may_edit_config():
-            html.context_button(
-                _("New job"), html.makeuri_contextless([("mode", "edit_backup_job")]),
-                "backup_job_new")
-        html.context_button(
-            _("Restore"), html.makeuri_contextless([("mode", "backup_restore")]), "backup_restore")
+            html.context_button(_("New job"),
+                                html.makeuri_contextless([("mode", "edit_backup_job")]),
+                                "backup_job_new")
+        html.context_button(_("Restore"), html.makeuri_contextless([("mode", "backup_restore")]),
+                            "backup_restore")
 
     def _may_edit_config(self):
         return True
@@ -714,31 +716,29 @@ class PageEditBackupJob(object):
                  )),
                 ("schedule", self.vs_backup_schedule()),
                 ("compress",
-                 Checkbox(
-                     title=_("Compression"),
-                     help=_("Enable gzip compression of the backed up files. The tar archives "
-                            "created by the backup are gzipped during backup."),
-                     label=_("Compress the backed up files"))),
+                 Checkbox(title=_("Compression"),
+                          help=_("Enable gzip compression of the backed up files. The tar archives "
+                                 "created by the backup are gzipped during backup."),
+                          label=_("Compress the backed up files"))),
                 ("encrypt",
-                 Alternative(
-                     title=_("Encryption"),
-                     help=_("Enable encryption of the backed up files. The tar archives "
-                            "created by the backup are encrypted using the specified key "
-                            "during backup. You will need the private key and the "
-                            "passphrase to decrypt the backup."),
-                     style="dropdown",
-                     elements=[
-                         FixedValue(
-                             None,
-                             title=_("Do not encrypt the backup"),
-                             totext="",
-                         ),
-                         DropdownChoice(
-                             title=_("Encrypt the backup using the key:"),
-                             choices=self.backup_key_choices,
-                             invalid_choice="complain",
-                         ),
-                     ])),
+                 Alternative(title=_("Encryption"),
+                             help=_("Enable encryption of the backed up files. The tar archives "
+                                    "created by the backup are encrypted using the specified key "
+                                    "during backup. You will need the private key and the "
+                                    "passphrase to decrypt the backup."),
+                             style="dropdown",
+                             elements=[
+                                 FixedValue(
+                                     None,
+                                     title=_("Do not encrypt the backup"),
+                                     totext="",
+                                 ),
+                                 DropdownChoice(
+                                     title=_("Encrypt the backup using the key:"),
+                                     choices=self.backup_key_choices,
+                                     invalid_choice="complain",
+                                 ),
+                             ])),
             ] + self.custom_job_attributes(),
             optional_keys=[],
             render="form",
@@ -1038,9 +1038,9 @@ class PageBackupTargets(object):
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
         if self._may_edit_config():
-            html.context_button(
-                _("New backup target"), html.makeuri_contextless([("mode", "edit_backup_target")]),
-                "backup_target_edit")
+            html.context_button(_("New backup target"),
+                                html.makeuri_contextless([("mode", "edit_backup_target")]),
+                                "backup_target_edit")
 
     def action(self):
         if html.transaction_valid():
@@ -1053,8 +1053,8 @@ class PageBackupTargets(object):
 
             self._verify_not_used(target)
 
-            confirm = html.confirm(
-                _("Do you really want to delete this target?"), add_header=self.title())
+            confirm = html.confirm(_("Do you really want to delete this target?"),
+                                   add_header=self.title())
 
             if confirm is False:
                 return False
@@ -1108,8 +1108,8 @@ class PageEditBackupTarget(object):
         return self._title
 
     def buttons(self):
-        html.context_button(
-            _("Back"), html.makeuri_contextless([("mode", "backup_targets")]), "back")
+        html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup_targets")]),
+                            "back")
 
     def vs_backup_target(self):
         if self._new:
@@ -1322,7 +1322,13 @@ class BackupTargetLocal(BackupTargetType):
         self.verify_target_is_ready()
 
         for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
-            info = self._load_backup_info(path)
+            try:
+                info = self._load_backup_info(path)
+            except IOError as e:
+                if e.errno == errno.EACCES:
+                    continue  # Silently skip not permitted files
+                raise
+
             backups[info["backup_id"]] = info
 
         return backups
@@ -1548,13 +1554,13 @@ class PageBackupRestore(object):
     def buttons(self):
         html.context_button(_("Back"), html.makeuri_contextless([("mode", "backup")]), "back")
         if self._restore_is_running():
-            html.context_button(
-                _("Stop"), html.makeactionuri([("_action", "stop")]), "backup_restore_stop")
+            html.context_button(_("Stop"), html.makeactionuri([("_action", "stop")]),
+                                "backup_restore_stop")
 
         elif self._restore_was_started():
-            html.context_button(
-                _("Complete the restore"), html.makeactionuri([("_action", "complete")]),
-                "backup_restore_complete")
+            html.context_button(_("Complete the restore"),
+                                html.makeactionuri([("_action", "complete")]),
+                                "backup_restore_complete")
 
     def action(self):
         action = html.request.var("_action")
@@ -1591,8 +1597,9 @@ class PageBackupRestore(object):
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
-        confirm = html.confirm(
-            _("Do you really want to delete this backup?"), add_header=self.title(), method="GET")
+        confirm = html.confirm(_("Do you really want to delete this backup?"),
+                               add_header=self.title(),
+                               method="GET")
 
         if confirm is False:
             return False
@@ -1683,10 +1690,9 @@ class PageBackupRestore(object):
         )
 
     def _start_unencrypted_restore(self, backup_ident):
-        confirm = html.confirm(
-            _("Do you really want to start the restore of this backup?"),
-            add_header=self.title(),
-            method="GET")
+        confirm = html.confirm(_("Do you really want to start the restore of this backup?"),
+                               add_header=self.title(),
+                               method="GET")
         if confirm is False:
             return False
 
@@ -1696,11 +1702,10 @@ class PageBackupRestore(object):
             return None, _("The restore has been started.")
 
     def _stop_restore(self, backup_ident):
-        confirm = html.confirm(
-            _("Do you really want to stop the restore of this backup? This will "
-              "leave your environment in an undefined state."),
-            add_header=self.title(),
-            method="GET")
+        confirm = html.confirm(_("Do you really want to stop the restore of this backup? This will "
+                                 "leave your environment in an undefined state."),
+                               add_header=self.title(),
+                               method="GET")
 
         if confirm is False:
             return False

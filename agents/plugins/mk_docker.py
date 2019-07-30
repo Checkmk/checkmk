@@ -51,7 +51,7 @@ import logging
 
 try:
     import ConfigParser as configparser
-except NameError:  # Python3
+except ImportError:  # Python3
     import configparser
 
 try:
@@ -71,7 +71,6 @@ DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "docker.cfg")
 
 DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",
-    "api_version": "auto",
     "skip_sections": "",
     "container_id": "short",
 }
@@ -85,19 +84,18 @@ def parse_arguments(argv=None):
 
     prog, descr, epilog = __doc__.split('\n\n')
     parser = argparse.ArgumentParser(prog=prog, description=descr, epilog=epilog)
-    parser.add_argument(
-        "--debug", action="store_true", help='''Debug mode: raise Python exceptions''')
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help='''Verbose mode (for even more output use -vvv)''')
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        default=DEFAULT_CFG_FILE,
-        help='''Read config file (default: $MK_CONFDIR/docker.cfg)''')
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("-c",
+                        "--config-file",
+                        default=DEFAULT_CFG_FILE,
+                        help='''Read config file (default: $MK_CONFDIR/docker.cfg)''')
 
     args = parser.parse_args(argv)
 
@@ -121,7 +119,12 @@ def get_config(cfg_file):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
     section_name = "DOCKER" if config.sections() else "DEFAULT"
-    return dict(config.items(section_name))
+    conf_dict = dict(config.items(section_name))
+
+    skip_list = conf_dict.get("skip_sections", "").split(',')
+    conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
+
+    return conf_dict
 
 
 class Section(list):
@@ -160,16 +163,17 @@ def report_exception_to_server(exc, location):
 
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
+    API_VERSION = "auto"
 
     def __init__(self, config):
-        super(MKDockerClient, self).__init__(config['base_url'], version=config['api_version'])
+        super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
-            self.all_containers = [(c.attrs["Name"].lstrip('/'), c) for c in all_containers]
+            self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
         elif config['container_id'] == "long":
-            self.all_containers = [(c.attrs["Id"], c) for c in all_containers]
+            self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         else:
-            self.all_containers = [(c.attrs["Id"][:12], c) for c in all_containers]
+            self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self.node_info = self.info()
 
 
@@ -183,7 +187,6 @@ class AgentDispatcher(object):
     Once it comes to plugins and custom configuration the user needs to use
     a little more complex setup. Have a look at the documentation.
     '''
-
     @staticmethod
     def iter_socket(sock, descriptor):
         header = sock.recv(8)
@@ -253,8 +256,11 @@ class AgentDispatcher(object):
             LOGGER.info("failed to run bash in container")
             return None
 
-        result = container.exec_run(
-            'bash', environment=self.env_from_node, socket=True, stdin=True, stderr=False)
+        result = container.exec_run('bash',
+                                    environment=self.env_from_node,
+                                    socket=True,
+                                    stdin=True,
+                                    stderr=False)
         try:
             nbytes = result.sendall(self.agent_code)
         except AttributeError:
@@ -268,7 +274,6 @@ class AgentDispatcher(object):
 
 def time_it(func):
     '''Decorator to time the function'''
-
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
         before = time.time()
@@ -300,23 +305,16 @@ def set_version_info(client):
 #   '----------------------------------------------------------------------'
 
 
-def skippable(section):
-    '''Decorator to skip the section, if configured to do so'''
-
-    @functools.wraps(section)
-    def wrapped(client, config):
-        section_name = section.func_name.replace('section_', 'docker_')
-        skip_sections = [name.strip() for name in config.get("skip_sections", "").split(',')]
-        if section_name in skip_sections:
-            LOGGER.info("skipped section: %s", section_name)
-            return None
-        return section(client, config)
-
-    return wrapped
+def is_disabled_section(config, section_name):
+    '''Skip the section, if configured to do so'''
+    if section_name in config["skip_sections"]:
+        LOGGER.info("skipped section: %s", section_name)
+        return True
+    return False
 
 
 @time_it
-def section_node_info(client, _config):
+def section_node_info(client):
     LOGGER.debug(client.node_info)
     section = Section('node_info')
     section.append(json.dumps(client.node_info))
@@ -324,8 +322,7 @@ def section_node_info(client, _config):
 
 
 @time_it
-@skippable
-def section_node_disk_usage(client, _config):
+def section_node_disk_usage(client):
     '''docker system df'''
     section = Section('node_disk_usage')
     try:
@@ -372,8 +369,7 @@ def section_node_disk_usage(client, _config):
 
 
 @time_it
-@skippable
-def section_node_images(client, _config):
+def section_node_images(client):
     '''in subsections list [[[images]]] and [[[containers]]]'''
     section = Section('node_images')
 
@@ -385,69 +381,108 @@ def section_node_images(client, _config):
 
     LOGGER.debug(client.all_containers)
     section.append('[[[containers]]]')
-    for __, container in client.all_containers:
+    for container in client.all_containers.itervalues():
         section.append(json.dumps(container.attrs))
 
     section.write()
 
 
 @time_it
-@skippable
-def section_node_network(client, _config):
+def section_node_network(client):
     networks = client.networks.list(filters={'driver': 'bridge'})
     section = Section('node_network')
     section += [json.dumps(n.attrs) for n in networks]
     section.write()
 
 
-@time_it
-@skippable
-def section_container_client(client, _config):
-
+def section_container_node_name(client, container_id):
     node_name = client.node_info.get("Name")
-
-    # For the container status, we want information about *all* containers
-    for container_id, container in client.all_containers:
-        LOGGER.info("container (via client): %s", container_id)
-
-        section = Section('container_node_name', piggytarget=container_id)
-        section.append(json.dumps({"NodeName": node_name}))
-        section += Section('container_status')
-        section.append(json.dumps(container.attrs.get("State", {})))
-        section += Section('container_labels')
-        section.append(json.dumps(container.labels))
-        section += Section('container_network')
-        section.append(json.dumps(container.attrs.get("NetworkSettings", {})))
-        section.write()
+    section = Section('container_node_name', piggytarget=container_id)
+    section.append(json.dumps({"NodeName": node_name}))
+    section.write()
 
 
-@time_it
-@skippable
-def section_container_agent(client, _config):
+def section_container_status(client, container_id):
+    container = client.all_containers[container_id]
+    status = container.attrs.get("State", {})
+    healthcheck = container.attrs.get("Config", {}).get("Healthcheck")
+    if healthcheck:
+        status["Healthcheck"] = healthcheck
+    restart_policy = container.attrs.get("HostConfig", {}).get("RestartPolicy")
+    if restart_policy:
+        status["RestartPolicy"] = restart_policy
+    section = Section('container_status', piggytarget=container_id)
+    section.append(json.dumps(status))
+    section.write()
 
-    running_containers = [c for c in client.all_containers if c[1].status == "running"]
-    if not running_containers:
+
+def section_container_labels(client, container_id):
+    container = client.all_containers[container_id]
+    section = Section('container_labels', piggytarget=container_id)
+    section.append(json.dumps(container.labels))
+    section.write()
+
+
+def section_container_network(client, container_id):
+    container = client.all_containers[container_id]
+    network = container.attrs.get("NetworkSettings", {})
+    section = Section('container_network', piggytarget=container_id)
+    section.append(json.dumps(network))
+    section.write()
+
+
+def section_container_agent(client, container_id, dispatcher):
+    result = dispatcher.check_container(client.all_containers[container_id])
+    if not result:
         return
-
-    dispatcher = AgentDispatcher()
-    for container_id, container in running_containers:
-        LOGGER.info("container(via agent): %s", container_id)
-
-        result = dispatcher.check_container(container)
-        if result:
-            section = Section(piggytarget=container_id)
-            section.append(result)
-            section.write()
+    section = Section(piggytarget=container_id)
+    section.append(result)
+    section.write()
 
 
-SECTION_FUNCTIONS = (
-    section_node_info,
-    section_node_disk_usage,
-    section_node_images,
-    section_node_network,
-    section_container_client,
-    section_container_agent,
+NODE_SECTIONS = (
+    ('docker_node_info', section_node_info),
+    ('docker_node_disk_usage', section_node_disk_usage),
+    ('docker_node_images', section_node_images),
+    ('docker_node_network', section_node_network),
 )
+
+CONTAINER_API_SECTIONS = (
+    ('docker_container_node_name', section_container_node_name),
+    ('docker_container_status', section_container_status),
+    ('docker_container_labels', section_container_labels),
+    ('docker_container_network', section_container_network),
+)
+
+
+def call_node_sections(client, config):
+    for name, section in NODE_SECTIONS:
+        if is_disabled_section(config, name):
+            continue
+        try:
+            section(client)
+        except () if DEBUG else Exception as exc:
+            report_exception_to_server(exc, section.func_name)
+
+
+def call_container_sections(client, config):
+    dispatcher = AgentDispatcher()
+    for container_id, container in client.all_containers.iteritems():
+        LOGGER.info("container id: %s", container_id)
+        for name, section in CONTAINER_API_SECTIONS:
+            if is_disabled_section(config, name):
+                continue
+            try:
+                section(client, container_id)
+            except () if DEBUG else Exception as exc:
+                report_exception_to_server(exc, section.func_name)
+        if (container.status == "running" and
+                not is_disabled_section(config, 'docker_container_agent')):
+            try:
+                section_container_agent(client, container_id, dispatcher)
+            except () if DEBUG else Exception as exc:
+                report_exception_to_server(exc, "section_container_agent")
+
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -475,11 +510,9 @@ def main():
 
     set_version_info(client)
 
-    for section in SECTION_FUNCTIONS:
-        try:
-            section(client, config)
-        except () if DEBUG else Exception as exc:
-            report_exception_to_server(exc, section.__name__)
+    call_node_sections(client, config)
+
+    call_container_sections(client, config)
 
 
 if __name__ == "__main__":

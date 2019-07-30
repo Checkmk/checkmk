@@ -5,15 +5,14 @@
 #pragma once
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <strstream>
 
-#include "common/wtools.h"
-
 #include "common/cfg_info.h"
-#include "tools/_xlog.h"
-
+#include "common/wtools.h"
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include "tools/_xlog.h"
 
 // User defined converter required to logging correctly data from wstring
 template <>
@@ -43,6 +42,16 @@ namespace XLOG::details {
     XLOG::LogWindowsEventWarn(2, "My Warning {}", "warning!");
     XLOG::LogWindowsEventInfo(3, "My Information {}", "info!");
 #endif
+
+// converts "filename", 0 into "filename" and "filename", N into "filename.N"
+std::string MakeBackupLogName(std::string_view filename,
+                              unsigned int index) noexcept;
+
+// internal engine to print text in file with optional backing up
+// thread safe(no race condition)
+void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
+                              unsigned int max_backup_count,
+                              std::string_view text) noexcept;
 
 // check status of duplication
 bool IsDuplicatedOnStdio();
@@ -131,49 +140,63 @@ void LogWindowsEventInfo(int Code, const char* Format, Args&&... args) {
 #if defined(FMT_FORMAT_H_)
 namespace xlog {
 
+inline void AddCr(std::string& s) noexcept {
+    if (s.empty() || s.back() != '\n') s.push_back('\n');
+}
+
+inline void RmCr(std::string& s) noexcept {
+    if (!s.empty() && s.back() == '\n') s.pop_back();
+}
+
+inline bool IsNoCrFlag(int Flag) noexcept { return (Flag & kNoCr) != 0; }
+inline bool IsAddCrFlag(int Flag) noexcept { return (Flag & kAddCr) != 0; }
+
 // Public Engine to print all
 inline std::string formatString(int Fl, const char* Prefix,
                                 const char* String) {
     std::string s;
-    auto length = String ? strlen(String) : 0;
+    auto length = String != nullptr ? strlen(String) : 0;
     auto prefix = Fl & Flags::kNoPrefix ? nullptr : Prefix;
-    length += prefix ? strlen(prefix) : 0;
+    length += prefix != nullptr ? strlen(prefix) : 0;
     length++;
 
     try {
         s.reserve(length);
-        if (prefix) s = prefix;
+        if (prefix != nullptr) s = prefix;
         s += String;
     } catch (const std::exception&) {
         return {};
     }
 
-    if (Fl & kNoCr) {
-        if (s.back() == '\n') s.pop_back();
-    } else if (Fl & kAddCr) {
-        if (s.empty() || s.back() != '\n') s.push_back('\n');
+    if (IsNoCrFlag(Fl)) {
+        RmCr(s);
+    } else if (IsAddCrFlag(Fl)) {
+        AddCr(s);
     }
 
     return s;
 }
 
 namespace internal {
-enum Colors { kDefault, kRed, kGreen, kYellow, kPink, kCyan, kPinkLight };
+enum class Colors { dflt, red, green, yellow, pink, cyan, pink_light, white };
 
 static uint16_t GetColorAttribute(Colors color) {
     switch (color) {
-        case kRed:
+        case Colors::red:
             return FOREGROUND_RED;
-        case kGreen:
+        case Colors::green:
             return FOREGROUND_GREEN;
-        case kYellow:
+        case Colors::yellow:
             return FOREGROUND_RED | FOREGROUND_GREEN;
-        case kPink:
+        case Colors::pink:
             return FOREGROUND_RED | FOREGROUND_BLUE;
-        case kPinkLight:
+        case Colors::pink_light:
             return FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-        case kCyan:
+        case Colors::cyan:
             return FOREGROUND_GREEN | FOREGROUND_BLUE;
+        case Colors::white:
+            return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE |
+                   FOREGROUND_INTENSITY;
         default:
             return 0;
     }
@@ -182,12 +205,12 @@ static uint16_t GetColorAttribute(Colors color) {
 static int GetBitOffset(uint16_t color_mask) {
     if (color_mask == 0) return 0;
 
-    int bitOffset = 0;
+    int bit_offset = 0;
     while ((color_mask & 1) == 0) {
         color_mask >>= 1;
-        ++bitOffset;
+        ++bit_offset;
     }
-    return bitOffset;
+    return bit_offset;
 }
 
 static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
@@ -202,11 +225,11 @@ static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    static const int bg_bitOffset = GetBitOffset(background_mask);
-    static const int fg_bitOffset = GetBitOffset(foreground_mask);
+    static const int bg_bit_offset = GetBitOffset(background_mask);
+    static const int fg_bit_offset = GetBitOffset(foreground_mask);
 
-    if (((new_color & background_mask) >> bg_bitOffset) ==
-        ((new_color & foreground_mask) >> fg_bitOffset)) {
+    if (((new_color & background_mask) >> bg_bit_offset) ==
+        ((new_color & foreground_mask) >> fg_bit_offset)) {
         new_color ^= FOREGROUND_INTENSITY;  // invert intensity
     }
     return new_color;
@@ -217,8 +240,8 @@ inline void sendStringToDebugger(const char* String) {
     internal_PrintStringDebugger(String);
 }
 
-inline void sendStringToStdio(
-    const char* String, internal::Colors Color = internal::Colors::kDefault) {
+inline void sendStringToStdio(const char* String,
+                              internal::Colors Color = internal::Colors::dflt) {
     if (!XLOG::details::IsColoredOnStdio()) {
         internal_PrintStringStdio(String);
         return;
@@ -256,6 +279,13 @@ void ColoredOutputOnStdio(bool On);
 
 }  // namespace setup
 
+using Colors = xlog::internal::Colors;
+
+inline void SendStringToStdio(std::string_view string,
+                              Colors Color = Colors::dflt) {
+    return xlog::sendStringToStdio(string.data(), Color);
+}
+
 enum Mods : int {
     kCopy = 0,           // no changes in param`
     kDrop = 1,           // no output at all
@@ -282,7 +312,7 @@ enum Mods : int {
     kWarning   = 0x0C00,   // suspicious: Default XLOG::d
     kTrace     = 0x1000,   // function:   Default XLOG::t
     kInfo      = 0x1400,   // detailed info about state
-    kRsrv1     = 0x1800,   // 
+    kRsrv1     = 0x1800,   //
     kRsrv2     = 0x1c00,   //
                       // clang-format on
 
@@ -341,6 +371,8 @@ public:
         constructed_ = kConstructedValue;
     }
 
+    Emitter operator=(const Emitter& Rhs) = delete;
+
     ~Emitter() {
         if (copy_) flush();
     }
@@ -389,14 +421,14 @@ public:
             }
 
             std::lock_guard lk(lock_);
-            postProcessAndPrint(s.c_str());
+            postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -413,14 +445,14 @@ public:
 
             auto e = (*this).operator()(Flags);
             std::lock_guard lk(lock_);
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ = XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -465,14 +497,14 @@ public:
             auto s = fmt::format(Format, args...);
             auto e = *this;
             e.mods_ |= Modifications;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             auto e = *this;
             e.mods_ |= XLOG::kCritError;
-            e.postProcessAndPrint(s.c_str());
+            e.postProcessAndPrint(s);
             return s;
         }
     }
@@ -605,8 +637,6 @@ private:
         copy_ = true;
     }
 
-    Emitter operator=(const Emitter& Rhs) = delete;
-
     // this if for stream operations
     // called from destructor
     void flush() {
@@ -644,15 +674,6 @@ extern XLOG::Emitter stdio;  // only print
 
 // API:
 //
-// #TODO make ONE ENTRY we have to many methods to setup and to read setup
-// as in example below
-namespace setup {
-class VeryBestConfigForAgentFromSergey {
-    bool event_;
-    bool windbg_;
-};
-
-}  // namespace setup
 
 // bad example of engineering.
 // #TODO fix this make one entry point(Global Object)
@@ -685,3 +706,24 @@ bool IsEventLogEnabled();
 }  // namespace setup
 
 }  // namespace XLOG
+
+namespace cma::tools {
+// simple class to log time of execution, to be moved in separate header
+// will be extended with dtor(to dump) and other functions
+// Usage:
+// TimeLog tl(name);
+// .......
+// tl.writeLog(data_count);
+class TimeLog {
+public:
+    // time is set at the moment of creation
+    explicit TimeLog(const std::string& object_name);
+    // duration is measured here
+    void writeLog(size_t processed_bytes) const noexcept;
+
+private:
+    std::chrono::time_point<std::chrono::steady_clock> start_;
+    const std::string id_;
+};
+
+}  // namespace cma::tools

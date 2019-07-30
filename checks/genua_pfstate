@@ -35,7 +35,7 @@ genua_pfstate_default_levels = {"used": (None, None)}
 
 def inventory_genua_pfstate(info):
     # remove empty elements due to alternative enterprise id in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     if not info or not info[0]:
         return
@@ -55,7 +55,7 @@ def pfstate(st):
 
 def check_genua_pfstate(item, params, info):
     # remove empty elements due to alternative enterprise id in snmp_info
-    info = filter(None, info)
+    info = [_f for _f in info if _f]
 
     if info[0]:
         if len(info[0][0]) == 3:

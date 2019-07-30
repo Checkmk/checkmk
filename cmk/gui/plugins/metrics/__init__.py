@@ -60,6 +60,8 @@ from cmk.gui.plugins.metrics.utils import (
     P,
     scale_symbols,
     parse_color_into_hexrgb,
+    MAX_CORES,
+    indexed_color,
 )
 
 #.

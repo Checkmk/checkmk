@@ -90,30 +90,29 @@ class RulespecLogwatchRules(ServiceRulespec):
                 elements=[
                     ("reclassify_patterns",
                      ListOf(
-                         Tuple(
-                             help=_("This defines one logfile pattern rule"),
-                             show_titles=True,
-                             orientation="horizontal",
-                             elements=[
-                                 DropdownChoice(
-                                     title=_("State"),
-                                     choices=[
-                                         ('C', _('CRITICAL')),
-                                         ('W', _('WARNING')),
-                                         ('O', _('OK')),
-                                         ('I', _('IGNORE')),
-                                     ],
-                                 ),
-                                 RegExpUnicode(
-                                     title=_("Pattern (Regex)"),
-                                     size=40,
-                                     mode=RegExp.infix,
-                                 ),
-                                 TextUnicode(
-                                     title=_("Comment"),
-                                     size=40,
-                                 ),
-                             ]),
+                         Tuple(help=_("This defines one logfile pattern rule"),
+                               show_titles=True,
+                               orientation="horizontal",
+                               elements=[
+                                   DropdownChoice(
+                                       title=_("State"),
+                                       choices=[
+                                           ('C', _('CRITICAL')),
+                                           ('W', _('WARNING')),
+                                           ('O', _('OK')),
+                                           ('I', _('IGNORE')),
+                                       ],
+                                   ),
+                                   RegExpUnicode(
+                                       title=_("Pattern (Regex)"),
+                                       size=40,
+                                       mode=RegExp.infix,
+                                   ),
+                                   TextUnicode(
+                                       title=_("Comment"),
+                                       size=40,
+                                   ),
+                               ]),
                          title=_("Reclassify state matching regex pattern"),
                          help=
                          _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
@@ -401,9 +400,9 @@ class RulespecCheckgroupParametersLogwatchEc(CheckParameterRulespecWithoutItem):
                                             ],
                                         ),
                                     ],
-                                    match=lambda x: 4 if isinstance(x, tuple) else (
-                                        0 if not x else (2 if x == 'spool:' else (3 if x.startswith(
-                                            'spool:') else 1)))),
+                                    match=lambda x: 4 if isinstance(x, tuple) else
+                                    (0 if not x else (2 if x == 'spool:' else
+                                                      (3 if x.startswith('spool:') else 1)))),
                                 # migrate old (tcp, address, port) tuple to new dict
                                 forth=lambda v: (v[0], {
                                     "address": v[1],
@@ -478,6 +477,7 @@ class RulespecCheckgroupParametersLogwatchEc(CheckParameterRulespecWithoutItem):
                         'restrict_logfiles', 'expected_logfiles', 'logwatch_reclassify',
                         'separate_checks'
                     ],
+                    ignored_keys=['service_level'],
                 ),
             ],
             default_value='',

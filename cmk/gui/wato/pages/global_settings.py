@@ -95,11 +95,11 @@ class GlobalSettingsMode(WatoMode):
 
         html.open_div(class_="filter_buttons")
         if self._show_only_modified:
-            html.buttonlink(
-                html.makeuri([], delvars=["show_only_modified"]), _("Show all settings"))
+            html.buttonlink(html.makeuri([], delvars=["show_only_modified"]),
+                            _("Show all settings"))
         else:
-            html.buttonlink(
-                html.makeuri([("show_only_modified", "1")]), _("Show only modified settings"))
+            html.buttonlink(html.makeuri([("show_only_modified", "1")]),
+                            _("Show only modified settings"))
         html.close_div()
 
         at_least_one_painted = False
@@ -262,12 +262,11 @@ class EditGlobalSettingMode(WatoMode):
             msg = HTML(msg)
 
         self._save()
-        watolib.add_change(
-            "edit-configvar",
-            msg,
-            sites=self._affected_sites(),
-            domains=[self._config_variable.domain()],
-            need_restart=self._config_variable.need_restart())
+        watolib.add_change("edit-configvar",
+                           msg,
+                           sites=self._affected_sites(),
+                           domains=[self._config_variable.domain()],
+                           need_restart=self._config_variable.need_restart())
 
         return self._back_mode()
 
@@ -359,9 +358,9 @@ class ModeEditGlobals(GlobalSettingsMode):
         global_buttons()
 
         if config.user.may("wato.set_read_only"):
-            html.context_button(
-                _("Read only mode"), watolib.folder_preserving_link([("mode", "read_only")]),
-                "read_only")
+            html.context_button(_("Read only mode"),
+                                watolib.folder_preserving_link([("mode", "read_only")]),
+                                "read_only")
 
         if cmk.is_managed_edition():
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
@@ -396,11 +395,10 @@ class ModeEditGlobals(GlobalSettingsMode):
                 varname, "on" if self._current_settings[varname] else "off")
             watolib.save_global_settings(self._current_settings)
 
-            watolib.add_change(
-                "edit-configvar",
-                msg,
-                domains=[config_variable.domain()],
-                need_restart=config_variable.need_restart())
+            watolib.add_change("edit-configvar",
+                               msg,
+                               domains=[config_variable.domain()],
+                               need_restart=config_variable.need_restart())
 
             if action == "_reset":
                 return "globalvars", msg
@@ -426,8 +424,8 @@ class ModeEditGlobalSetting(EditGlobalSettingMode):
         return _("Global configuration settings for Check_MK")
 
     def buttons(self):
-        html.context_button(
-            _("Abort"), watolib.folder_preserving_link([("mode", "globalvars")]), "abort")
+        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "globalvars")]),
+                            "abort")
 
     def _back_mode(self):
         return "globalvars"

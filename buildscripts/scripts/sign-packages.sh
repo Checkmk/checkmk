@@ -17,45 +17,53 @@ if [ -z "$GPG_PASSPHRASE" ]; then
     exit 1
 fi
 
-export GNUPGHOME=/bauwelt/etc/.gnupg
+# /bauwelt/etc/.gnupg is mounted in RO mode, but the following gpg commands need RW access
+# to the directory. Copy the contents to the container for exclusive + RW access
+cp -a /bauwelt/etc/.gnupg /gnupg
+export GNUPGHOME=/gnupg
 
-echo "Sign RPM packages..."
-echo "$GPG_PASSPHRASE" | \
-    rpm \
-    	-D "%_signature gpg" \
-        -D "%_gpg_path $GNUPGHOME" \
-        -D "%_gpg_name Check_MK Software Release Signing Key (2018) <feedback@check-mk.org>" \
-	-D "%__gpg /usr/bin/gpg " -D "%_gpg_sign_cmd_extra_args --batch --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback" \
-	--resign \
-	$TARGET/*.rpm
+if ls $TARGET/*.rpm >/dev/null 2>&1; then
+    echo "+ Sign RPM packages..."
+    echo "$GPG_PASSPHRASE" |
+        rpm \
+            -D "%_signature gpg" \
+            -D "%_gpg_path $GNUPGHOME" \
+            -D "%_gpg_name $KEY_DESC" \
+            -D "%__gpg /usr/bin/gpg " -D "%_gpg_sign_cmd_extra_args --batch --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback" \
+            --resign \
+            $TARGET/*.rpm
 
-echo "Verify signed RPM packages..."
-for RPM in $TARGET/*.rpm; do
-    rpm -qp $RPM --qf='%-{NAME} %{SIGPGP:pgpsig}\n'
-    if ! rpm -qp $RPM --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
-        echo "ERROR: RPM not signed: $RPM"
-    fi
-done
+    echo "Verify signed RPM packages..."
+    for RPM in $TARGET/*.rpm; do
+        rpm -qp "$RPM" --qf='%-{NAME} %{SIGPGP:pgpsig}\n'
+        if ! rpm -qp "$RPM" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
+            echo "ERROR: RPM not signed: $RPM"
+        fi
+    done
+else
+    echo "+ Found no RPM to sign."
+fi
 
-echo "Sign DEB packages..."
-(
-    echo set timeout -1;\
-    echo spawn dpkg-sig -p --sign builder -k $KEY_ID $TARGET/*.deb; \
-    echo expect -exact \"The passphrase for ${KEY_ID}:\";\
-    echo send -- \"$GPG_PASSPHRASE\\r\";\
-    echo expect eof;\
-) | expect
+if ls $TARGET/*.deb >/dev/null 2>&1; then
+    echo "+ Sign DEB packages..."
+    echo "$GPG_PASSPHRASE" |
+        dpkg-sig -p \
+            -g '--batch --no-tty --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback' \
+            --sign builder -k $KEY_ID \
+            $TARGET/*.deb
 
-echo "Verify singed DEB packages..."
-for DEB in $TARGET/*.deb; do
-    dpkg-sig --verify $DEB
-done
+    echo "Verify singed DEB packages..."
+    for DEB in $TARGET/*.deb; do
+        dpkg-sig --verify "$DEB"
+    done
+else
+    echo "+ Found no DEB to sign."
+fi
 
-# Hashes der kopierten Dateien ablegen
-# (werden später auf der Webseite angezeigt)
-echo "Create HASHES file..."
-sha256sum *.cma >> HASHES || true
-sha256sum *.tar.gz >> HASHES || true
-sha256sum *.rpm >> HASHES || true
-sha256sum *.deb >> HASHES || true
-sha256sum *.cmk >> HASHES || true
+# Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
+echo "+ Create HASHES file..."
+sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
+sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true

@@ -1,37 +1,39 @@
 import pytest  # type: ignore
 
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 
 from cmk.gui.exceptions import MKGeneralException
+import cmk.gui.config as config
 import cmk.gui.watolib.rulesets as rulesets
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 
 
 def _rule(ruleset_name):
-    ruleset = rulesets.Ruleset(ruleset_name)
+    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
     return rulesets.Rule(hosts_and_folders.Folder.root_folder(), ruleset)
 
 
 @pytest.mark.parametrize(
-    "ruleset_name,default_value",
+    "ruleset_name,default_value,is_binary",
     [
         # non-binary host ruleset
-        ("inventory_processes_rules", None),
+        ("inventory_processes_rules", None, False),
         # binary host ruleset
-        ("only_hosts", True),
+        ("only_hosts", True, True),
         # non-binary service ruleset
-        ("checkgroup_parameters:local", None),
+        ("checkgroup_parameters:local", None, False),
         # binary service ruleset
-        ("clustered_services", True),
+        ("clustered_services", True, True),
     ])
-def test_rule_initialize(register_builtin_html, ruleset_name, default_value):
+def test_rule_initialize(register_builtin_html, ruleset_name, default_value, is_binary):
     rule = _rule(ruleset_name)
-    assert rule.tag_specs == []
-    assert rule.host_list == []
-    assert rule.item_list is None
+    assert isinstance(rule.conditions, rulesets.RuleConditions)
     assert rule.rule_options == {}
     assert rule.value == default_value
+    assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
 
 def test_rule_from_config_unhandled_format():
@@ -61,9 +63,9 @@ def test_rule_from_config_unhandled_format():
             ("VAL", ["HOSTLIST"]),
             {
                 "value": "VAL",
-                "item_list": None,
-                "host_list": ["HOSTLIST"],
-                "tag_specs": [],
+                "conditions": {
+                    'host_name': ['HOSTLIST'],
+                },
             },
         ),
         (
@@ -71,57 +73,80 @@ def test_rule_from_config_unhandled_format():
             ("VAL", ["tag", "specs"], ["HOSTLIST"]),
             {
                 "value": "VAL",
-                "item_list": None,
-                "host_list": ["HOSTLIST"],
-                "tag_specs": ["tag", "specs"],
+                "conditions": {
+                    'host_name': ['HOSTLIST'],
+                    'host_tags': {
+                        'specs': 'specs',
+                        'tag': 'tag',
+                    },
+                },
             },
         ),
         # binary host ruleset
         ("only_hosts", (["HOSTLIST"],), {
             "value": True,
-            "item_list": None,
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'host_name': ['HOSTLIST'],
+            }
         }),
         ("only_hosts", (
             rulesets.NEGATE,
             ["HOSTLIST"],
         ), {
             "value": False,
-            "item_list": None,
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'host_name': ['HOSTLIST'],
+            },
         }),
         # non-binary service ruleset
         ("checkgroup_parameters:local", ("VAL", ["HOSTLIST"], ["SVC", "LIST"]), {
             "value": "VAL",
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
         # binary service ruleset
         ("clustered_services", (["HOSTLIST"], ["SVC", "LIST"]), {
             "value": True,
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
         ("clustered_services", (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]), {
             "value": False,
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
     ])
 def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, rule_options):
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
-    rule = _rule(ruleset_name)
-    rule.from_config(rule_spec)
+    ruleset = rulesets.Ruleset(ruleset_name, ruleset_matcher.get_tag_to_group_map(config.tags))
+    ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
+    rule = ruleset.get_folder_rules(hosts_and_folders.Folder.root_folder())[0]
 
     for key, val in expected_attributes.items():
-        assert getattr(rule, key) == val
+        if key == "conditions":
+            assert rule.conditions._to_config() == val
+        else:
+            assert getattr(rule, key) == val
 
     if rule_options is not None:
         assert rule.rule_options == rule_options
@@ -146,91 +171,187 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             "inventory_processes_rules",
             {
                 "value": "VAL",
-                "conditions": {
-                    "host_specs": ["HOSTLIST"],
+                "condition": {
+                    'host_name': ['HOSTLIST'],
                 },
             },
             {
                 "value": "VAL",
-                "item_list": None,
-                "host_list": ["HOSTLIST"],
-                "tag_specs": [],
+                "conditions": {
+                    'host_name': ['HOSTLIST'],
+                },
             },
         ),
         (
             "inventory_processes_rules",
             {
                 "value": "VAL",
-                "conditions": {
-                    "host_tags": ["tag", "specs"],
-                    "host_specs": ["HOSTLIST"],
+                "condition": {
+                    'host_name': ['HOSTLIST'],
+                    'host_tags': {
+                        'specs': 'specs',
+                        'tag': 'tag',
+                    }
                 },
             },
             {
                 "value": "VAL",
-                "item_list": None,
-                "host_list": ["HOSTLIST"],
-                "tag_specs": ["tag", "specs"],
+                "conditions": {
+                    'host_name': ['HOSTLIST'],
+                    'host_tags': {
+                        'specs': 'specs',
+                        'tag': 'tag',
+                    },
+                },
+            },
+        ),
+        # $or tags
+        (
+            "inventory_processes_rules",
+            {
+                "value": "ORED_TAGS",
+                "condition": {
+                    'host_tags': {
+                        'specs': {
+                            "$or": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+            {
+                "value": "ORED_TAGS",
+                "conditions": {
+                    'host_tags': {
+                        'specs': {
+                            "$or": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+        ),
+        # $nor tags
+        (
+            "inventory_processes_rules",
+            {
+                "value": "NORED_TAGS",
+                "condition": {
+                    'host_tags': {
+                        'specs': {
+                            "$nor": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
+            },
+            {
+                "value": "NORED_TAGS",
+                "conditions": {
+                    'host_tags': {
+                        'specs': {
+                            "$nor": [
+                                'specs',
+                                'tag',
+                            ],
+                        }
+                    }
+                },
             },
         ),
         # binary host ruleset
         ("only_hosts", {
-            "conditions": {
-                "host_specs": ["HOSTLIST"],
+            "value": True,
+            "condition": {
+                'host_name': ['HOSTLIST'],
             },
         }, {
             "value": True,
-            "item_list": None,
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'host_name': ['HOSTLIST'],
+            },
         }),
         ("only_hosts", {
-            "negate": True,
-            "conditions": {
-                "host_specs": ["HOSTLIST"],
+            "value": False,
+            "condition": {
+                'host_name': ['HOSTLIST'],
             },
         }, {
             "value": False,
-            "item_list": None,
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'host_name': ['HOSTLIST'],
+            },
         }),
         # non-binary service ruleset
         ("checkgroup_parameters:local", {
             "value": "VAL",
-            "conditions": {
-                "host_specs": ["HOSTLIST"],
-                "service_specs": ["SVC", "LIST"],
+            "condition": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
             },
         }, {
             "value": "VAL",
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
         # binary service ruleset
         ("clustered_services", {
-            "conditions": {
-                "host_specs": ["HOSTLIST"],
-                "service_specs": ["SVC", "LIST"],
+            "value": True,
+            "condition": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
             },
         }, {
             "value": True,
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
         ("clustered_services", {
-            "negate": True,
-            "conditions": {
-                "host_specs": ["HOSTLIST"],
-                "service_specs": ["SVC", "LIST"],
+            "value": False,
+            "condition": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
             },
         }, {
             "value": False,
-            "item_list": ["SVC", "LIST"],
-            "host_list": ["HOSTLIST"],
-            "tag_specs": [],
+            "conditions": {
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+                'host_name': ['HOSTLIST']
+            },
         }),
     ])
 def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rule_options):
@@ -242,7 +363,10 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
     rule.from_config(rule_spec)
 
     for key, val in expected_attributes.items():
-        assert getattr(rule, key) == val
+        if key == "conditions":
+            assert rule.conditions._to_config() == val
+        else:
+            assert getattr(rule, key) == val
 
     if rule_options is not None:
         assert rule.rule_options == rule_options
@@ -250,21 +374,139 @@ def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rul
         assert rule.rule_options == {}
 
     # test for synchronous to_dict on the way
-    assert rule.to_dict_config() == rule_spec
+    rule_spec_for_config = rule_spec.copy()
+    assert rule.to_config() == rule_spec_for_config
+
+
+@pytest.mark.parametrize(
+    "wato_use_git,expected_result",
+    [
+        (True, """
+checkgroup_parameters.setdefault('local', [])
+
+checkgroup_parameters['local'] = [
+{'condition': {'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL'},
+{'condition': {'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL2'},
+] + checkgroup_parameters['local']
+
+"""),
+        # TODO: Can currently not be tested because it's PYTHONHASHSEED specific. The pprint test above is enough for the moment.
+        #    (False, """
+        #checkgroup_parameters.setdefault('local', [])
+        #
+        #checkgroup_parameters['local'] = [
+        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
+        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
+        #] + checkgroup_parameters['local']
+        #
+        #"""),
+    ])
+def test_ruleset_to_config(monkeypatch, wato_use_git, expected_result):
+    monkeypatch.setattr(config, "wato_use_git", wato_use_git)
+
+    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
+                               ruleset_matcher.get_tag_to_group_map(config.tags))
+    ruleset.from_config(hosts_and_folders.Folder.root_folder(), [
+        {
+            "value": "VAL",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+        {
+            "value": "VAL2",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+    ])
+    assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
+
+
+@pytest.mark.parametrize("wato_use_git,expected_result", [
+    (True, """
+checkgroup_parameters.setdefault('local', [])
+
+checkgroup_parameters['local'] = [
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL'},
+{'condition': {'host_folder': '%#%FOLDER_PATH%#%',
+               'host_name': ['HOSTLIST'],
+               'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}]},
+ 'value': 'VAL2'},
+] + checkgroup_parameters['local']
+
+"""),
+])
+def test_ruleset_to_config_sub_folder(monkeypatch, load_config, wato_use_git, expected_result):
+    monkeypatch.setattr(config, "wato_use_git", wato_use_git)
+
+    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
+                               ruleset_matcher.get_tag_to_group_map(config.tags))
+
+    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
+    hosts_and_folders.Folder.create_missing_folders("abc")
+    folder = hosts_and_folders.Folder.folder("abc")
+
+    ruleset.from_config(folder, [
+        {
+            "value": "VAL",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+        {
+            "value": "VAL2",
+            "condition": {
+                'host_name': ['HOSTLIST'],
+                'service_description': [{
+                    '$regex': 'SVC'
+                }, {
+                    '$regex': 'LIST'
+                }],
+            },
+        },
+    ])
+    assert ruleset.to_config(folder) == expected_result
 
 
 def test_rule_clone():
     rule = _rule("clustered_services")
     rule.from_config({
-        "negate": True,
-        "conditions": {
-            "host_specs": ["HOSTLIST"],
-            "service_specs": ["SVC", "LIST"],
+        "value": True,
+        "condition": {
+            'host_name': 'HOSTLIST',
+            'service_description': [{
+                '$regex': 'SVC'
+            }, {
+                '$regex': 'LIST'
+            }],
         },
     })
 
     cloned_rule = rule.clone()
 
-    assert rule.to_dict_config() == cloned_rule.to_dict_config()
+    assert rule.to_config() == cloned_rule.to_config()
     assert rule.folder == cloned_rule.folder
     assert rule.ruleset == cloned_rule.ruleset

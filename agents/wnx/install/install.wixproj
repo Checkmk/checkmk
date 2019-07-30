@@ -45,10 +45,14 @@
     <Folder Include="resources" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="resources\check_mk.dat" />
+    <Content Include="resources\checkmk.dat" />
+    <Content Include="resources\check_mk.ini" />
+    <Content Include="resources\check_mk.marker" />
+    <Content Include="resources\check_mk.user.yml" />
     <Content Include="resources\check_mk.yml" />
-    <Content Include="resources\faq.txt" />
     <Content Include="resources\GPL-V2.rtf" />
+    <Content Include="resources\readme.txt" />
+    <Content Include="version.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
@@ -57,10 +61,14 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>%40echo off
-%40if not "$(VS_DEPLOY)" == "YES" goto DoNotCopy
-%40copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-%40copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-%40:DoNotCopy</PostBuildEvent>
+if "$(VS_DEPLOY)" == "YES" goto copy_all
+if "$(VS_DEPLOY_MSI)" == "YES" goto copy_msi
+goto end
+:copy_all
+copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
+:copy_msi
+copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
+:end</PostBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

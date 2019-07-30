@@ -13,7 +13,6 @@
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
 
-
 # Load other config options. This hook needs
 # APACHE_TCP_PORT.
 if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
@@ -23,20 +22,21 @@ else
 fi
 
 case "$1" in
-    default)
-        echo "127.0.0.1"
+default)
+    echo "127.0.0.1"
     ;;
-    choices)
-        echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
+choices)
+    echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
     ;;
-    set)
-        APACHE_HOST=$2
-        cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
+set)
+    APACHE_HOST=$2
+    cat <<EOF >$OMD_ROOT/etc/apache/listen-port.conf
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
+ServerName $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
-        cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
+    cat <<EOF >$OMD_ROOT/etc/apache/proxy-port.conf
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
@@ -56,7 +56,7 @@ EOF
 </IfModule>
 EOF
     ;;
-    depends)
-        [ "$CONFIG_APACHE_MODE" = own ]
+depends)
+    [ "$CONFIG_APACHE_MODE" = own ]
     ;;
 esac

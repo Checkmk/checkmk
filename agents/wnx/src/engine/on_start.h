@@ -2,28 +2,35 @@
 // tools to control starting operations
 
 #pragma once
+#include <string>
+#include <string_view>
 
 namespace cma {
 
-enum StartTypes { kDefault = 99, kService = 0, kTest, kExe };
+enum class AppType { automatic = 99, srv = 0, test, exe, failed };
+enum class YamlCacheOp { nothing, update };
+constexpr const wchar_t* kTemporaryRoot = L"CMA_TEST_DIR";
+constexpr const wchar_t* kRemoteMachine = L"REMOTE_MACHINE";
+constexpr const wchar_t* kAutoReload = L"CMA_AUTO_RELOAD";
 
-StartTypes AppDefaultType();  // defined by main
+AppType AppDefaultType();  // defined by main
 
 // must be called on start
-bool OnStart(StartTypes Type = kDefault, bool UpdateCacheOnSuccess = false,
-             std::wstring ConfigFile = L"");
+bool OnStart(AppType Type = AppType::automatic,
+             const std::wstring& ConfigFile = L"");
 
-inline bool OnStartApp(bool UpdateCacheOnSuccess = true) {
-    return OnStart(kDefault, UpdateCacheOnSuccess);
-}
+bool LoadConfig(AppType Type, const std::wstring& ConfigFile);
+bool ReloadConfig();
+inline bool OnStartApp() { return OnStart(AppType::automatic); }
 
-inline bool OnStartTest(bool UpdateCacheOnSuccess = false) {
-    return OnStart(kTest, false);
-}
+inline bool OnStartTest() { return OnStart(AppType::test); }
 
 // recommended to be called on exit. BUT, PLEASE WAIT FOR ALL THREADS/ ASYNC
 void OnExit();  // #VIP will stop WMI and all services(in the future)
 
 bool ConfigLoaded();
+
+std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
+    std::wstring_view environment_variable);
 
 }  // namespace cma

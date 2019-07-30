@@ -134,13 +134,13 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
         try:
             radio_data_noise_floor = int(radio_data['noise_floor'])
             noise_floor_radios.append(radio_data_noise_floor)
-        except:
+        except Exception:
             radio_data_noise_floor = "None"
 
         try:
             radio_data_sessions = int(radio_data['sessions'])
             ap_sessions += radio_data_sessions
-        except:
+        except Exception:
             radio_data_sessions = "None"
 
         radio_rates = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -150,7 +150,7 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
                              (item, radio_number, nr), now, int(counter))
                 radio_rates.append(radio_rate)
                 ap_rates[nr] += radio_rate
-            except:
+            except Exception:
                 pass
 
         infotexts.append(("Radio %s: Input: %s/s, Output: %s/s, " + \

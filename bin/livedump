@@ -32,7 +32,7 @@ import time
 import livestatus
 
 # These variable will be substituted at 'make dist' time
-__version__ = "1.6.0i1"
+__version__ = "1.7.0i1"
 
 
 def dump_templates():
@@ -349,7 +349,7 @@ opt_check_interval = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     sys.stderr.write("%s\n\n" % err)
     usage()
     sys.exit(1)
@@ -402,7 +402,7 @@ try:
         sys.stdout.write("status\n")
     livedump_state()
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out(e)

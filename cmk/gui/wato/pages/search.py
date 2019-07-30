@@ -27,6 +27,7 @@
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+from cmk.gui.valuespec import TextAscii
 
 from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
@@ -66,13 +67,21 @@ class ModeSearch(WatoMode):
         # Show search form
         html.begin_form("edit_host", method="GET")
         html.prevent_password_auto_completion()
-        forms.header(_("General Properties"))
-        forms.section(_("Hostname"))
-        html.text_input("host_search_host")
+
+        basic_attributes = [
+            ("host_search_host", TextAscii(title=_("Hostname",)), ""),
+        ]
         html.set_focus("host_search_host")
 
         # Attributes
-        configure_attributes(False, {}, "host_search", parent=None, varprefix="host_search_")
+        configure_attributes(
+            new=False,
+            hosts={},
+            for_what="host_search",
+            parent=None,
+            varprefix="host_search_",
+            basic_attributes=basic_attributes,
+        )
 
         # Button
         forms.end()

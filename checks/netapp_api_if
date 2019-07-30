@@ -173,7 +173,7 @@ def check_netapp_api_if(item, params, parsed):
         if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
             if ifDescr in extra_info:
                 vif_group = extra_info[ifDescr]
-                for member_name, member_state in vif_group["grouped_if"]:
+                for member_name, member_state in sorted(vif_group["grouped_if"]):
                     if member_state is None or member_name == ifDescr:
                         continue  # Not a real member or the grouped interface itself
 
@@ -189,8 +189,17 @@ def check_netapp_api_if(item, params, parsed):
                     else:
                         yield state, "%s(%s)" % (member_name, if_statename(member_state))
 
-                if "speed_differs" in vif_group:
-                    yield 1, "Interfaces do not have the same speed"
+                speed_status, show_speed_differs = 1, True
+                if params and params.get('match_same_speed'):
+                    behaviour = params.get('match_same_speed')
+                    if behaviour == "check_and_crit":
+                        speed_status = 2
+                    elif behaviour == "check_and_display":
+                        speed_status = 0
+                    elif behaviour == "dont_show_and_check":
+                        show_speed_differs = False
+                if "speed_differs" in vif_group and show_speed_differs:
+                    yield speed_status, "Interfaces do not have the same speed"
 
 
 check_info["netapp_api_if"] = {

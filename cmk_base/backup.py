@@ -79,7 +79,7 @@ def do_backup(tarname):
             info.uid = 0
             info.gid = 0
             info.size = len(subdata)
-            info.mode = 0644
+            info.mode = 0o644
             info.type = tarfile.REGTYPE
             info.name = subtarname
             console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir,

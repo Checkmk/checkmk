@@ -1,0 +1,14 @@
+Title: Prevent "read only" host attributes from being cleaned up
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1559836339
+
+The different "read only" host attributes in WATO (e.g. Network scan result,
+created time, locked by, ...) could be reset to the default value using the
+host attribute cleanup dialog. These options will now be hidden from that
+dialog.

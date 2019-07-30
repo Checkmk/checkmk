@@ -61,7 +61,7 @@ def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params
             _write_crash_dump_agent_output(crash_dir, hostname)
 
         text += "\n" + "Crash dump:\n" + _pack_crash_dump(crash_dir) + "\n"
-    except:
+    except Exception:
         if cmk.utils.debug.enabled():
             raise
 

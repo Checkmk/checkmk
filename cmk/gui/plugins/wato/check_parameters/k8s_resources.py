@@ -58,33 +58,32 @@ class RulespecCheckgroupParametersK8SResources(CheckParameterRulespecWithoutItem
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('pods',
-                 Tuple(
-                     title=_('Pods'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Percentage(title=_("Warning above")),
-                         Percentage(title=_("Critical above")),
-                     ],
-                 )),
-                ('cpu',
-                 Tuple(
-                     title=_('CPU'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Percentage(title=_("Warning above")),
-                         Percentage(title=_("Critical above")),
-                     ],
-                 )),
-                ('memory',
-                 Tuple(
-                     title=_('Memory'),
-                     default_value=(80.0, 90.0),
-                     elements=[
-                         Percentage(title=_("Warning above")),
-                         Percentage(title=_("Critical above")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('pods',
+             Tuple(
+                 title=_('Pods'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Percentage(title=_("Warning above")),
+                     Percentage(title=_("Critical above")),
+                 ],
+             )),
+            ('cpu',
+             Tuple(
+                 title=_('CPU'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Percentage(title=_("Warning above")),
+                     Percentage(title=_("Critical above")),
+                 ],
+             )),
+            ('memory',
+             Tuple(
+                 title=_('Memory'),
+                 default_value=(80.0, 90.0),
+                 elements=[
+                     Percentage(title=_("Warning above")),
+                     Percentage(title=_("Critical above")),
+                 ],
+             )),
+        ],)

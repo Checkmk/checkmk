@@ -1,0 +1,92 @@
+Standard License Agreement for Icons8
+Version 1.3.1
+
+Introductory
+Dear Customer, This is a legal agreement between Icons8 and purchasers/users of our services, including but not limited to icons and illustrations.  Your use, download, or copying of an icon, symbol, or any part thereof from our website, constitutes your acceptance of the terms of this Agreement.
+
+Definitions
+For purposes of this License Agreement (i.e. “agreement”), “company”, “designer”, “licensor”, “we, us, or our” shall be synonymous with Icons8; and “You, your” or “licensee” shall be synonymous with the customer or users of our services. “Icons”, “illustrations”, or “graphics” to which this agreement pertains in relation to services provided by Icons8 shall be synonymous with “licensed materials”, or “licensed content”.
+
+License
+For valuable consideration, licensor grants to the licensee, a non-transferable, non-sublicenseable, and non-exclusive, worldwide license to use the licensed materials for Permitted Uses, as provided herein. All other rights in and to the licensed materials, including without restriction, copyright and other intellectual property rights relating to the Icons, are retained by the licensor, as the case may be.
+
+Permitted Uses
+Licensee may, subject to the Restrictions on Use stated herein, use, alter, crop, modify, or adapt the Licensed Materials in connection with the following permitted uses:
+•Internet and intranet
+•Desktop and mobile applications
+•Web templates for sale
+•Print media (provided that the licensee is not sublicensing, or allowing redistribution or re-use of the Icons), including but not limited to: advertising and promotional materials, editorial publications, and consumer merchandise
+•Broadcasts and theatrical exhibitions
+•Artworks intended for resale, provided these products are not intended to allow the re-distribution or re-use of the Licensed Materials
+
+Prohibited Uses
+Except as provided herein, Licensee may not:
+•Sublicense, sell, distribute, assign, convey, or otherwise transfer this license, nor any of licensee’s rights, duties, or obligations under this Agreement;
+•Modify, alter, or change any of the terms of this Agreement without our Company’s prior written consent;
+•Sell, license, or distribute its final product in such a manner that allows others to extract or access the Licensed Content as stand-alone files;
+•Distribute, post, or upload the Icons online in a downloadable format or enablethe Licensed Material to be accessed, downloaded, or distributed in any manner whatsoever;
+•Use of the Licensed Material in any way that infringes upon any copyright, trade name, trademark, or service mark;
+•Use of the Licensed Material within a work product for the purpose of creating a final product in which the Licensed Materials are going to be used (such as graphic editors, rapid prototyping tools and programming IDEs).
+•Ship, transport or export the Licensed Material into any country, or use the Material in any manner prohibited by export administration legislation or any other export laws, restrictions or regulations.
+
+License Usage
+A license is issued based upon the number of individual users who will have access to the Licensed Materials.  For purposes of this agreement, Licensed Materials may be downloaded unlimited times by the Licensee, on up to three electronic devices, and Licensee may save only one backup copy of each Icon.
+The Licensee is required under the terms of this Agreement to insert the icons into their own personal artwork, or software application.  If the Licensee requires distribution of the icons to coworkers or team-members in a raw form (such as PNG, SVG, EPS, or PDF formats), then a separate license may be purchased per user.  Please contact customer service at: https://icons8.com/contact for additional information on how to purchase multiple licenses.
+Your use of any Licensed Content in a manner not permitted under terms of this Agreement, constitutes copyright infringement, and we shall be entitled to exercise any and all rights and remedies in order to enforce these terms.  You understand and agree to be liable and responsible for any and all damages resulting from said infringement, including but not limited to legal and attorney fees.
+You are responsible for any and all appropriate sales or use tax imposed by any government authority or jurisdiction as a result of the license granted to you by Icons8.
+
+License Expiration
+This Standard License begins immediately upon the licensee’s acceptance and purchase of any licensed material, and is valid for the term specified within your particular licensing package that you agreed to upon purchase  (i.e. “licensing period”).
+This license covers the following aspects of the licensed material:
+•New features, fixes, and improvements to the software and API
+•New Icons
+•Email support
+After expiration and termination of this Standard License, the following features shall remain and be applicable to:
+•Licensed materials created before Expiration;
+•Using our web and desktop software with the Licensed Materials created prior to Expiration;
+Once terminated or expired, this License Agreement shall not apply to:
+•New icons, or newly purchased licensed materials;
+•Customer Support
+The licensee must obtain another license for any and all newly purchased Licensed Materials.
+
+Licensee Warranty
+The Licensee warrants and agrees to be responsible for the Licensed Materials. Under the terms of this Standard License, Licensee shall not permit the unauthorized display, distribution, use, or sharing of any licensed materials. The Licensee also agrees:
+•To indemnify and hold our company harmless from any and all: actions, proceedings, claims, unforeseen third party claims, demands, costs (including without restriction any legal costs, fees, or expenses), awards, and damages arising directly or indirectly from this agreement, or as a result of any breach or non-performance of this agreement by the Licensee.
+•Not to assign, transfer, or sublicense this agreement, or permit the unauthorized use of Licensed Materials, or any portion thereof for any purpose;
+•Not to assign or transfer it’s duties or obligations under this agreement, nor to  loan, rent, assign, or transfer any Licensing rights to any other person or entity;
+•That the Licensed Materials shall not infringe upon any third party rights whatsoever, and any liability for the infringement of third party rights shall rest with the Licensee.
+
+Licensor Warranty
+Pursuant to the terms of this Agreement and your purchased license, we warrant that the Licensed Content will not infringe on any copyright, or intellectual property rights of any third party.
+YOU UNDERSTAND AND AGREE THAT ANY AND ALL LICENSED CONTENT IS PROVIDED “AS IS” WITHOUT REPRESENTATION, WARRANTY OR CONDITION OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO THE IMPLIED WARRANTIES, REPRESENTATIONS, OR CONDITIONS OF MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. WE DO NOT WARRANT NOR GUARANTEE THAT THE CONTENT WILL MEET YOUR REQUIREMENTS OR THAT ITS USE WILL BE
+UNINTERRUPTED OR ERROR FREE. THE LICENSEE BEARS ALL RISK FOR USE OF SAID CONTENT.
+SHOULD THE CONTENT PROVE DEFECTIVE, YOU ASSUME ALL RISK AND COST FOR CORRECTIONS. IF YOU ARE DOWNLOADING CONTENT THAT IS IN A FLASH FORMAT OR FILE, EXCEPT AS EXPRESSLY PROVIDED HEREIN, WE MAKE NO REPRESENTATION OR WARRANTY RESPECTING THE LICENSED CONTENT WHATSOEVER, WHETHER AS TO OWNERSHIP, TECHNICAL OR LEGAL COMPLIANCE, OR OTHERWISE.
+
+Intellectual Property
+Licensed Material and all Icons are owned by Icons8 and are protected by U.S. Copyright law, as well as laws related to intellectual property rights. No title or intellectual property rights to the Licensed Content are transferred or assigned to the Licensee.  Licensor retains all rights not expressly granted by this License Agreement.
+Some of the Licensed Material may contain copyrighted content such as trademarks and/or movie characters. These icons shall be used in accordance with accepted trademark practice, as well as a professional standard of care.
+You may be required to identify trademark owner's name, under the provisions of this Agreement.
+Trademarks may only be used to identify printed or electronic material produced by the Icons.  You understand and agree that use of any trademark or service mark, does not give you any rights of ownership in that trademark. Except as otherwise stated herein, this License Agreement does not grant you any intellectual property rights, nor rights to royalties to the Licensed Materials.
+
+Limited Liability
+AT NO TIME SHALL ANY OF OUR REPRESENTATIVES, AFFILIATES, CONTENT PROVIDERS, OR THEIR RESPECTIVE DIRECTORS, OFFICERS, EMPLOYEES, OR AGENTS, BE LIABLE FOR ANY INCIDENTAL, INDIRECT, PUNITIVE, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) IN CONNECTION WITH ANY CLAIM, LOSS, DAMAGE, OR OTHER PROCEEDING ARISING UNDER THE TERMS OF THIS AGREEMENT, INCLUDING WITHOUT LIMITATION YOUR USE OF, RELIANCE UPON, ACCESS TO, OR EXPLOITATION OF THE CONTENT, OR ANY PART THEREOF, OR ANY RIGHTS GRANTED TO YOU HEREUNDER, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, WHETHER THE ACTION IS BASED ON CONTRACT, TORT (INCLUDING NEGLIGENCE), INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OR OTHERWISE. NO ACTION, REGARDLESS OF FORM OR NATURE, ARISING OUT OF THIS AGREEMENT MAY BE
+BROUGHT BY OR ON BEHALF OF YOU MORE THAN ONE (1) YEAR AFTER THE CAUSE OF ACTION FIRST AROSE.
+WE SHALL NOT BE LIABLE AT ANY TIME FOR ANY DAMAGES, COSTS OR LOSSES ARISING AS A RESULT OF MODIFICATIONS YOU HAVE MADE TO THE LICENSED CONTENT.
+NOTWITHSTANDING ANY OTHER TERMS UNDER THIS AGREEMENT, THE TOTAL MAXIMUM AGGREGATE LIABILITY UNDER THIS AGREEMENT AND ANY OTHER AGREEMENT UNDER WHICH WE HAVE LICENSED THE SAME CONTENT, REGARDLESS OF FILE SIZE, OR YOUR USE/EXPLOITATION OF ANY OR ALL LICENSED CONTENT IN ANY MANNER, OUR AGGREGATE LIABILITY SHALL BE LIMITED TO TEN ($10.00) US DOLLARS PER LICENSED CONTENT. SOME JURISDICTIONS DO NOT ALLOW THE LIMITATION OR EXCLUSION OF LIABILITY FOR INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO THE ABOVE LIMITATION OR EXCLUSION MAY NOT APPLY TO YOU.
+
+Termination and Breach
+If the Licensee violates any terms of this Agreement, it shall be construed as a “breach”.  In the event of breach, the Licensor shall give Licensee written notice of breach or default.  Licensee shall have seven (7) days in order to cure the default. If Licensee timely fails to cure the default, then this Agreement is deemed to have been automatically terminated, without any further notice to Licensee.
+Licensee acknowledges and agrees to be responsible and liable for any and all costs, fees, and legal fees, which Licensor may incur as a result of compelling Licensee’s performance under this Agreement.
+
+Disputes
+Any and all disputes regarding these terms shall be resolved in a professional and business-like manner, absent resolution, disputes shall be resolved by binding mediation, with the parties agreeing to share the cost and choice of an unbiased, third party mediator.
+The prevailing party shall be entitled to reimbursement of any and all costs and fees, including but not limited to attorney’s fees.
+
+Governing Law and General Provisions
+This Agreement will be governed by the laws in force in The United States of America and Delaware excluding the application of its conflicts of law rules. This Agreement will not be governed by the United Nations Convention on Contracts for the International Sale of Goods, (C.I.S.G.) the application of which is expressly excluded.
+If any part of this Agreement is found void and unenforceable, it will not affect the validity of the balance of the Agreement, which shall remain valid and enforceable according to its terms.
+
+Contact
+https://icons8.com/contact
+wedraw@icons8.com
++1 (724) 426-6708

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import errno
 import glob
 import os
 import subprocess
@@ -92,16 +93,15 @@ def _git_add_files():
 
 def _git_command(args):
     command = ["git"] + [a.encode("utf-8") for a in args]
-    logger.debug("GIT: Execute in %s: %s" % (cmk.utils.paths.default_config_dir,
-                                             subprocess.list2cmdline(command)))
+    logger.debug("GIT: Execute in %s: %s" %
+                 (cmk.utils.paths.default_config_dir, subprocess.list2cmdline(command)))
     try:
-        p = subprocess.Popen(
-            command,
-            cwd=cmk.utils.paths.default_config_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+        p = subprocess.Popen(command,
+                             cwd=cmk.utils.paths.default_config_dir,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             raise MKGeneralException(
                 _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
                 (subprocess.list2cmdline(command), e))
@@ -121,7 +121,7 @@ def _git_has_pending_changes():
                                 cwd=cmk.utils.paths.default_config_dir,
                                 stdout=subprocess.PIPE).stdout.read() != ""
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             return False  # ignore missing git command
         else:
             raise

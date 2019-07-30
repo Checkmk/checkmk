@@ -3,23 +3,33 @@
 
 import os
 import stat
+import subprocess
+import pytest  # type: ignore
 
 
-def test_setuid_binaries(site):
-    setuid_binaries = [
-        "bin/mkeventd_open514",
-        "lib/nagios/plugins/check_dhcp",
-        "lib/nagios/plugins/check_icmp",
-    ]
+@pytest.mark.parametrize("rel_path,expected_capability", [
+    ("bin/mkeventd_open514", "cap_net_bind_service+ep"),
+    ("lib/nagios/plugins/check_icmp", "cap_net_raw+ep"),
+    ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw+ep"),
+    ("lib/cmc/icmpsender", "cap_net_raw+ep"),
+    ("lib/cmc/icmpreceiver", "cap_net_raw+ep"),
+])
+def test_binary_capability(site, rel_path, expected_capability):
+    path = site.path(rel_path)
+    assert os.path.exists(path)
 
-    if site.version.edition() == "enterprise":
-        setuid_binaries += [
-            "lib/cmc/icmpreceiver",
-            "lib/cmc/icmpsender",
-        ]
+    # can not use "getcap" with PATH because some paths are not in sites PATH
+    getcap_bin = None
+    for candidate in ["/sbin/getcap", "/usr/sbin/getcap"]:
+        if os.path.exists(candidate):
+            getcap_bin = candidate
+            break
 
-    for rel_path in setuid_binaries:
-        path = os.path.join(site.root, rel_path)
-        assert os.path.exists(path)
-        assert os.stat(path).st_mode & stat.S_ISUID == stat.S_ISUID, \
-            "Missing setuid bit on %s" % path
+    if getcap_bin is None:
+        raise Exception("Unable to find getcap")
+
+    p = subprocess.Popen([getcap_bin, path], stdout=subprocess.PIPE)
+    stdout = p.stdout.read()
+
+    assert oct(stat.S_IMODE(os.stat(path).st_mode)) == '0750'
+    assert stdout == "%s = %s\n" % (path, expected_capability)

@@ -62,7 +62,7 @@ cmk_base.utils.register_sigint_handler()
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     console.error("ERROR: %s\n\n" % err)
     modes.get("help").handler_function()
     sys.exit(1)
@@ -71,24 +71,28 @@ except getopt.GetoptError, err:
 modes.process_general_options(opts)
 
 try:
+    # Now find the requested mode and execute it
+    mode_name, mode_args = None, None
+    for o, a in opts:
+        if modes.exists(o):
+            mode_name, mode_args = o, a
+            break
+
     # At least in case the config is needed, the checks are needed too, because
     # the configuration may refer to check config variable names.
-    if len(set.intersection(set(modes.non_checks_options()), [o[0] for o in opts])) == 0:
+    if mode_name not in modes.non_checks_options():
         config.load_all_checks(check_api.get_check_api_context)
 
     # Read the configuration files (main.mk, autochecks, etc.), but not for
     # certain operation modes that does not need them and should not be harmed
     # by a broken configuration
-    if len(set.intersection(set(modes.non_config_options()), [o[0] for o in opts])) == 0:
+    if mode_name not in modes.non_config_options():
         config.load()
 
-    # Now find the requested mode and execute it
     done, exit_status = False, 0
-    for o, a in opts:
-        if modes.exists(o):
-            exit_status = modes.call(o, a, opts, args)
-            done = True
-            break
+    if mode_name is not None and mode_args is not None:
+        exit_status = modes.call(mode_name, mode_args, opts, args)
+        done = True
 
     # When no mode was found, Check_MK is running the "check" mode
     if not done:
@@ -101,11 +105,11 @@ try:
     profiling.output_profile()
     sys.exit(exit_status)
 
-except MKTerminate, e:
+except MKTerminate as e:
     console.output("<Interrupted>\n", stream=sys.stderr)
     sys.exit(1)
 
-except (MKGeneralException, MKBailOut), e:
+except (MKGeneralException, MKBailOut) as e:
     sys.stderr.write("%s\n" % e)
     if cmk.utils.debug.enabled():
         raise

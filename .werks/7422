@@ -1,0 +1,13 @@
+Title: apt: add information about cache invalidation to the manual page
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560408547
+
+The manual page now describes how the check can be executed
+immediately after an update of a host. Furthermore an apt
+hook is provided in the treasures directory.

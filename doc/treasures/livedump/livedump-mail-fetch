@@ -129,7 +129,7 @@ try:
             raise Exception("Error from POP server: [%s]" % response)
             break
 
-except Exception, e:
+except Exception as e:
     sys.stderr.write(msg + "Error deleting message: %s" % e)
     sys.exit(1)
 

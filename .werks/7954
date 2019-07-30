@@ -1,0 +1,10 @@
+Title: esx_vsphere_counters: Add read/write latency
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563796629
+Class: feature
+
+In addition to the normalized latency, the service now also reports total read and write latency.

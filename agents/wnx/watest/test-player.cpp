@@ -5,24 +5,21 @@
 
 #include <time.h>
 
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_raii.h"
-
-#include "carrier.h"
-#include "player.h"
-#include "read_file.h"
-
-#include "cfg.h"
-#include "cfg_details.h"
-
 #include <chrono>
 #include <filesystem>
 
+#include "carrier.h"
+#include "cfg.h"
+#include "cfg_details.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
+#include "common/mailslot_transport.h"
+#include "common/wtools.h"
+#include "player.h"
+#include "read_file.h"
+#include "tools/_misc.h"
+#include "tools/_process.h"
+#include "tools/_raii.h"
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
@@ -105,36 +102,36 @@ TEST(PlayerTest, Extensions) {
     auto pshell = MakePowershellWrapper();
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
-    auto p = BuildCommand(L"a.exe");
+    auto p = ConstructCommandToExec(L"a.exe");
     auto p_expected = L"\"a.exe\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.cmd");
+    p = ConstructCommandToExec(L"a.cmd");
     p_expected = L"\"a.cmd\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.bat");
+    p = ConstructCommandToExec(L"a.bat");
     p_expected = L"\"a.bat\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.e");
+    p = ConstructCommandToExec(L"a.e");
     EXPECT_EQ(p.empty(), true);
-    p = BuildCommand(L"xxxxxxxxx");
+    p = ConstructCommandToExec(L"xxxxxxxxx");
     EXPECT_EQ(p.empty(), true);
 
-    p = BuildCommand(L"a.pl");
+    p = ConstructCommandToExec(L"a.pl");
     p_expected = L"perl.exe \"a.pl\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.py");
+    p = ConstructCommandToExec(L"a.py");
     p_expected = L"python.exe \"a.py\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.vbs");
+    p = ConstructCommandToExec(L"a.vbs");
     p_expected = L"cscript.exe //Nologo \"a.vbs\"";
     EXPECT_EQ(p, p_expected);
 
-    p = BuildCommand(L"a.ps1");
+    p = ConstructCommandToExec(L"a.ps1");
     p_expected =
         L"powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"a.ps1\"";
     EXPECT_EQ(p, p_expected);
@@ -143,15 +140,21 @@ TEST(PlayerTest, Extensions) {
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     {
-        std::string s = "@core\\";
+        std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
     }
 
     {
-        std::string s = "@user\\";
+        std::string s = "$BUILTIN_PLUGINS_PATH$\\";
+        auto result = cma::cfg::ReplacePredefinedMarkers(s);
+        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+    }
+
+    {
+        std::string s = "$CUSTOM_PLUGINS_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
         EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
     }
@@ -222,11 +225,11 @@ static cma::PathVector GetFolderStructure() {
     namespace fs = std::filesystem;
     fs::path tmp = cma::cfg::GetTempDir();
     if (!fs::exists(tmp) || !fs::is_directory(tmp) ||
-        tmp.u8string().find("\\temp") == 0 ||
-        tmp.u8string().find("\\temp") == std::string::npos) {
+        tmp.u8string().find("\\tmp") == 0 ||
+        tmp.u8string().find("\\tmp") == std::string::npos) {
         XLOG::l(XLOG::kStdio)("Cant create folder structure {} {} {}",
                               fs::exists(tmp), fs::is_directory(tmp),
-                              tmp.u8string().find("\\temp"));
+                              tmp.u8string().find("\\tmp"));
         return {};
     }
     PathVector pv;
@@ -312,7 +315,7 @@ TEST(PlayerTest, All) {
     EXPECT_TRUE(box.processes_.size() == 3);
 }
 
-TEST(PlayerTest, RealLifeInventory) {
+TEST(PlayerTest, RealLifeInventory_Long) {
     using namespace std::chrono;
     using namespace std;
     using namespace cma::cfg;

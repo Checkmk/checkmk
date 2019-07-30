@@ -10,18 +10,13 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-
+#include "common/cfg_info.h"
 #include "providers/spool.h"
-
-#include "test-tools.h"
+#include "read_file.h"
+#include "test_tools.h"
 
 static void CleanFolder(std::filesystem::path Dir) {
     namespace fs = std::filesystem;
@@ -68,7 +63,7 @@ TEST(SectionProviderSpool, BaseApi) {
     namespace fs = std::filesystem;
     fs::path dir = cma::cfg::GetSpoolDir();
     EXPECT_TRUE(cma::provider::IsDirectoryValid(dir));
-    EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "a"));
+    EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "<GTEST>"));
 
     ASSERT_TRUE(!dir.empty() &&
                 dir.u8string().find("\\spool") != std::string::npos);
@@ -89,7 +84,7 @@ TEST(SectionProviderSpool, BaseApi) {
 
 TEST(SectionProviderSpool, ReadFiles) {
     namespace fs = std::filesystem;
-    ON_OUT_OF_SCOPE(cma::OnStart(cma::kTest));
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
     SpoolProvider spool;
     fs::path dir = cma::cfg::GetSpoolDir();
@@ -113,10 +108,10 @@ TEST(SectionProviderSpool, ReadFiles) {
     EXPECT_TRUE(!ex.empty());
     auto table = cma::tools::SplitString(ex, "\n");
     EXPECT_EQ(table.size(), 4);
-    EXPECT_TRUE(cma::tools::Find(table, std::string("aaaa")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("bbbb")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("123456")));
-    EXPECT_TRUE(cma::tools::Find(table, std::string("9999")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("aaaa")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("bbbb")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("123456")));
+    EXPECT_TRUE(cma::tools::find(table, std::string("9999")));
 }
 
 }  // namespace cma::provider

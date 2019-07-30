@@ -152,6 +152,7 @@ from cmk.gui.wato.pages.activate_changes import (
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
 from cmk.gui.wato.pages.automation import ModeAutomationLogin, ModeAutomation
+import cmk.gui.wato.pages.fetch_agent_output
 from cmk.gui.wato.pages.backup import (
     ModeBackup,
     ModeBackupTargets,
@@ -245,7 +246,6 @@ from cmk.gui.wato.pages.rulesets import (
 from cmk.gui.wato.pages.search import ModeSearch
 from cmk.gui.wato.pages.services import (
     ModeDiscovery,
-    ModeFirstDiscovery,
     ModeAjaxExecuteCheck,
 )
 from cmk.gui.wato.pages.sites import (
@@ -282,8 +282,6 @@ syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
-NO_ITEM = watolib.NO_ITEM
-ENTRY_NEGATE_CHAR = watolib.ENTRY_NEGATE_CHAR
 from cmk.gui.plugins.wato import (
     may_edit_ruleset,
     monitoring_macro_help,
@@ -433,7 +431,7 @@ def page_handler():
 
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if html.is_transaction():
-        with watolib.exclusive_lock():
+        with store.lock_checkmk_configuration():
             _wato_page_handler(current_mode, mode_permissions, mode_class)
     else:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
@@ -442,7 +440,7 @@ def page_handler():
 def _wato_page_handler(current_mode, mode_permissions, mode_class):
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
-    except:
+    except Exception:
         # Snapshot must work in any case
         if current_mode == 'snapshot':
             pass
@@ -511,10 +509,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
             action_message = e.reason
             html.add_user_error(None, e.reason)
 
-    wato_html_head(
-        mode.title(),
-        show_body_start=display_options.enabled(display_options.H),
-        show_top_heading=display_options.enabled(display_options.T))
+    wato_html_head(mode.title(),
+                   show_body_start=display_options.enabled(display_options.H),
+                   show_top_heading=display_options.enabled(display_options.T))
 
     if display_options.enabled(display_options.B):
         # Show contexts buttons
@@ -541,8 +538,8 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
     if config.wato_use_git and html.is_transaction():
         watolib.git.do_git_commit()
 
-    wato_html_footer(
-        display_options.enabled(display_options.Z), display_options.enabled(display_options.H))
+    wato_html_footer(display_options.enabled(display_options.Z),
+                     display_options.enabled(display_options.H))
 
 
 def get_mode_permission_and_class(mode_name):
@@ -573,165 +570,6 @@ def ensure_mode_permissions(mode_permissions):
 def _show_read_only_warning():
     if cmk.gui.watolib.read_only.is_enabled():
         html.show_warning(cmk.gui.watolib.read_only.message())
-
-
-#.
-#   .--Agent-Output--------------------------------------------------------.
-#   |     _                    _         ___        _               _      |
-#   |    / \   __ _  ___ _ __ | |_      / _ \ _   _| |_ _ __  _   _| |_    |
-#   |   / _ \ / _` |/ _ \ '_ \| __|____| | | | | | | __| '_ \| | | | __|   |
-#   |  / ___ \ (_| |  __/ | | | ||_____| |_| | |_| | |_| |_) | |_| | |_    |
-#   | /_/   \_\__, |\___|_| |_|\__|     \___/ \__,_|\__| .__/ \__,_|\__|   |
-#   |         |___/                                    |_|                 |
-#   +----------------------------------------------------------------------+
-#   | Page for downloading the current agent output / SNMP walk of a host  |
-#   '----------------------------------------------------------------------'
-# TODO: This feature is used exclusively from the GUI. Why is the code in
-#       wato.py? The only reason is because the WATO automation is used. Move
-#       to better location.
-
-
-# TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
-# would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(Page):
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self):
-        super(AgentOutputPage, self).__init__()
-        self._from_vars()
-
-    def _from_vars(self):
-        config.user.need_permission("wato.download_agent_output")
-
-        host_name = html.request.var("host")
-        if not host_name:
-            raise MKGeneralException(_("The host is missing."))
-
-        ty = html.request.var("type")
-        if ty not in ["walk", "agent"]:
-            raise MKGeneralException(_("Invalid type specified."))
-        self._ty = ty
-
-        self._back_url = html.get_url_input("back_url")
-
-        init_wato_datastructures(with_wato_lock=True)
-
-        host = watolib.Folder.current().host(host_name)
-        if not host:
-            raise MKGeneralException(
-                _("Host is not managed by WATO. "
-                  "Click <a href=\"%s\">here</a> to go back.") % html.escaper.escape_attribute(
-                      self._back_url))
-        host.need_permission("read")
-        self._host = host
-
-        self._job = FetchAgentOutputBackgroundJob(self._host.site_id(), self._host.name(), self._ty)
-
-    @staticmethod
-    def file_name(site_id, host_name, ty):
-        return "%s-%s-%s.txt" % (site_id, host_name, ty)
-
-
-@page_registry.register_page("fetch_agent_output")
-class PageFetchAgentOutput(AgentOutputPage):
-    def page(self):
-        html.header(_("%s: Download agent output") % self._host.name())
-
-        html.begin_context_buttons()
-        if self._back_url:
-            html.context_button(_("Back"), self._back_url, "back")
-        html.end_context_buttons()
-
-        self._action()
-
-        if html.request.has_var("_start"):
-            try:
-                self._job.start()
-            except background_job.BackgroundJobAlreadyRunning:
-                pass
-
-        self._show_status(self._job)
-
-        html.footer()
-
-    def _action(self):
-        if not html.transaction_valid():
-            return
-
-        action_handler = gui_background_job.ActionHandler()
-
-        if action_handler.handle_actions() and action_handler.did_delete_job():
-            raise HTTPRedirect(
-                html.makeuri_contextless([
-                    ("host", self._host.name()),
-                    ("type", self._ty),
-                    ("back_url", self._back_url),
-                ]))
-
-    def _show_status(self, job):
-        job_snapshot = job.get_status_snapshot()
-
-        if job_snapshot.is_running():
-            html.h3(_("Current status of process"))
-            html.immediate_browser_redirect(0.8, html.makeuri([]))
-        elif job.exists():
-            html.h3(_("Result of last process"))
-
-        job_manager = gui_background_job.GUIBackgroundJobManager()
-        job_manager.show_job_details_from_snapshot(job_snapshot=job_snapshot)
-
-
-@gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
-    job_prefix = "agent-output-"
-
-    @classmethod
-    def gui_title(cls):
-        return _("Fetch agent output")
-
-    def __init__(self, site_id, host_name, ty):
-        self._site_id = site_id
-        self._host_name = host_name
-        self._ty = ty
-
-        job_id = "%s%s-%s-%s" % (self.job_prefix, site_id, host_name, ty)
-        title = _("Fetching %s of %s / %s") % (ty, site_id, host_name)
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
-
-        self.set_function(self._fetch_agent_output)
-
-    def _fetch_agent_output(self, job_interface):
-        job_interface.send_progress_update(_("Fetching '%s'...") % self._ty)
-
-        success, output, agent_data = watolib.check_mk_automation(self._site_id, "get-agent-output",
-                                                                  [self._host_name, self._ty])
-
-        if not success:
-            job_interface.send_progress_update(_("Failed: %s") % output)
-
-        preview_filepath = os.path.join(
-            job_interface.get_work_dir(),
-            AgentOutputPage.file_name(self._site_id, self._host_name, self._ty))
-        store.save_file(preview_filepath, agent_data)
-
-        download_url = html.makeuri_contextless([("host", self._host_name), ("type", self._ty)],
-                                                filename="download_agent_output.py")
-
-        button = html.render_icon_button(download_url, _("Download"), "agent_output")
-        job_interface.send_progress_update(_("Finished. Click on the icon to download the data."))
-        job_interface.send_result_message(_("%s Finished.") % button)
-
-
-@page_registry.register_page("download_agent_output")
-class PageDownloadAgentOutput(AgentOutputPage):
-    def page(self):
-        file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
-
-        html.set_output_format("text")
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
-
-        preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
-        html.write(file(preview_filepath).read())
 
 
 #.
@@ -788,8 +626,8 @@ def execute_network_scan_job():
         if config.site_is_local(folder.site_id()):
             found = cmk.gui.watolib.network_scan.do_network_scan(folder)
         else:
-            found = watolib.do_remote_automation(
-                config.site(folder.site_id()), "network-scan", [("folder", folder.path())])
+            found = watolib.do_remote_automation(config.site(folder.site_id()), "network-scan",
+                                                 [("folder", folder.path())])
 
         if not isinstance(found, list):
             raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
@@ -852,14 +690,14 @@ def add_scanned_hosts_to_folder(folder, found):
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    with watolib.exclusive_lock():
+    with store.lock_checkmk_configuration():
         folder.create_hosts(entries)
         folder.save()
 
 
 def save_network_scan_result(folder, result):
     # Reload the folder, lock WATO before to protect against concurrency problems.
-    with watolib.exclusive_lock():
+    with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = watolib.Folder.folder(folder.path())

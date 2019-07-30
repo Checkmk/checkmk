@@ -28,6 +28,7 @@ functionality is the locked file opening realized with the File() context
 manager."""
 
 import ast
+from contextlib import contextmanager
 import errno
 import fcntl
 import os
@@ -36,16 +37,52 @@ import tempfile
 import time
 from typing import Dict, List  # pylint: disable=unused-import
 
-import pathlib2 as pathlib
+try:
+    from pathlib import Path  # type: ignore
+except ImportError:
+    from pathlib2 import Path
 
 import cmk.utils.log
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.i18n import _
+from cmk.utils.paths import default_config_dir
 
 logger = cmk.utils.log.get_logger("store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
+
+#.
+#   .--Predefined----------------------------------------------------------.
+#   |          ____               _       __ _                _            |
+#   |         |  _ \ _ __ ___  __| | ___ / _(_)_ __   ___  __| |           |
+#   |         | |_) | '__/ _ \/ _` |/ _ \ |_| | '_ \ / _ \/ _` |           |
+#   |         |  __/| | |  __/ (_| |  __/  _| | | | |  __/ (_| |           |
+#   |         |_|   |_|  \___|\__,_|\___|_| |_|_| |_|\___|\__,_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Predefined locks                                                     |
+#   '----------------------------------------------------------------------'
+
+
+def configuration_lockfile():
+    return default_config_dir + "/multisite.mk"
+
+
+@contextmanager
+def lock_checkmk_configuration():
+    path = configuration_lockfile()
+    aquire_lock(path)
+    try:
+        yield
+    finally:
+        release_lock(path)
+
+
+# TODO: Use lock_checkmk_configuration() and nuke this!
+def lock_exclusive():
+    aquire_lock(configuration_lockfile())
+
 
 #.
 #.
@@ -62,12 +99,14 @@ logger = cmk.utils.log.get_logger("store")
 #   '----------------------------------------------------------------------'
 
 
-def mkdir(path, mode=0770):
-    pathlib.Path(path).mkdir(mode=mode, exist_ok=True)
+def mkdir(path, mode=0o770):
+    Path(path).mkdir(mode=mode, exist_ok=True)
 
 
-def makedirs(path, mode=0770):
-    pathlib.Path(path).mkdir(mode=mode, exist_ok=True, parents=True)
+def makedirs(path, mode=0o770):
+    if not isinstance(path, Path):
+        path = Path(path)
+    path.mkdir(mode=mode, exist_ok=True, parents=True)
 
 
 #.
@@ -186,7 +225,7 @@ def save_data_to_file(path, data, pretty=True):
 
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
-def save_file(path, content, mode=0660):
+def save_file(path, content, mode=0o660):
     tmp_path = None
     try:
         # Normally the file is already locked (when data has been loaded before with lock=True),
@@ -195,9 +234,10 @@ def save_file(path, content, mode=0660):
         # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
-        with tempfile.NamedTemporaryFile(
-                "w", dir=os.path.dirname(path), prefix=".%s.new" % os.path.basename(path),
-                delete=False) as tmp:
+        with tempfile.NamedTemporaryFile("w",
+                                         dir=os.path.dirname(path),
+                                         prefix=".%s.new" % os.path.basename(path),
+                                         delete=False) as tmp:
             tmp_path = tmp.name
             os.chmod(tmp_path, mode)
             tmp.write(content)
@@ -280,13 +320,13 @@ def aquire_lock(path, blocking=True):
     if have_lock(path):
         return True  # No recursive locking
 
-    logger.debug("Try aquire lock on %s", path)
+    logger.debug("Try aquire lock on %s", path.decode("utf-8"))
 
     # Create file (and base dir) for locking if not existant yet
     if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path), mode=0770)
+        os.makedirs(os.path.dirname(path), mode=0o770)
 
-    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+    fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
 
     # Handle the case where the file has been renamed in the meantime
     while True:
@@ -295,7 +335,7 @@ def aquire_lock(path, blocking=True):
             flags |= fcntl.LOCK_NB
 
         fcntl.flock(fd, flags)
-        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
+        fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break
@@ -304,7 +344,7 @@ def aquire_lock(path, blocking=True):
             fd = fd_new
 
     _acquired_locks[path] = fd
-    logger.debug("Got lock on %s", path)
+    logger.debug("Got lock on %s", path.decode("utf-8"))
 
 
 def try_aquire_lock(path):
@@ -320,7 +360,7 @@ def try_aquire_lock(path):
 def release_lock(path):
     if not have_lock(path):
         return  # no unlocking needed
-    logger.debug("Releasing lock on %s", path)
+    logger.debug("Releasing lock on %s", path.decode("utf-8"))
     fd = _acquired_locks.get(path)
     if fd is None:
         return
@@ -330,7 +370,7 @@ def release_lock(path):
         if e.errno != errno.EBADF:  # Bad file number
             raise
     _acquired_locks.pop(path, None)
-    logger.debug("Released lock on %s", path)
+    logger.debug("Released lock on %s", path.decode("utf-8"))
 
 
 def have_lock(path):
@@ -343,83 +383,3 @@ def release_all_locks():
     for path in list(_acquired_locks.iterkeys()):
         release_lock(path)
     _acquired_locks.clear()
-
-
-# Experimental but not used yet.
-## Simple class to offer locked file access via flock for cross process locking
-#class LockedOpen(object):
-#    def __init__(self, path, *args, **kwargs):
-#        self._path        = path
-#        self._open_args   = args
-#        self._open_kwargs = kwargs
-#        self._file_obj    = None
-#
-#
-#    def __enter__(self):
-#        # If not existant, create the file that the open can not fail in
-#        # read mode and the lock is possible
-#        if not os.path.exists(self._path):
-#            file(self._path, "a+")
-#
-#        f = file(self._path, *self._open_args, **self._open_kwargs)
-#
-#       # Handle the case where the file has been renamed while waiting
-#        while True:
-#            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-#            fnew = file(self._path, *self._open_args, **self._open_kwargs)
-#            if os.path.sameopenfile(f.fileno(), fnew.fileno()):
-#                fnew.close()
-#                break
-#            else:
-#                f.close()
-#                f = fnew
-#
-#        self._file_obj = f
-#        self._file_obj.__enter__()
-#        return self
-#
-#
-#    def __exit__(self, _exc_type, _exc_value, _traceback):
-#        result = self._file_obj.__exit__(_exc_type, _exc_value, _traceback)
-#        return result
-#
-#
-#    def __getattr__(self, name):
-#        return getattr(self._file_obj, name)
-#
-#
-## This class offers locked file opening. Read operations are made on the
-## locked file. All write operation go to a temporary file which replaces
-## the locked file while closing the object.
-#class LockedOpenWithTempfile(LockedOpen):
-#    def __init__(self, name, mode):
-#        super(LockedOpenWithTempfile, self).__init__(name, "r")
-#        self._new_file_obj = None
-#        self._new_file_mode = mode
-#
-#
-#    def __enter__(self):
-#        super(LockedOpenWithTempfile, self).__enter__()
-#        self._new_file_obj = tempfile.NamedTemporaryFile(self._new_file_mode,
-#                                dir=os.path.dirname(self._path),
-#                                prefix=os.path.basename(self._path)+"_tmp",
-#                                delete=False)
-#        self._new_file_obj.__enter__()
-#        return self
-#
-#
-#    def write(self, txt):
-#        self._new_file_obj.write(txt)
-#
-#
-#    def writelines(self, seq):
-#        self._new_file_obj.writelines(seq)
-#
-#
-#    def __exit__(self, _exc_type, _exc_value, _traceback):
-#        self._new_file_obj.__exit__(_exc_type, _exc_value, _traceback)
-#        os.rename(self._new_file_obj.name, self._path)
-#        return super(LockedOpenWithTempfile, self).__exit__(_exc_type, _exc_value, _traceback)
-#
-#
-#open = LockedOpenWithTempfile

@@ -7,7 +7,9 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 
+#include "common/wtools.h"
 #include "providers/internal.h"
 #include "section_header.h"
 
@@ -15,22 +17,13 @@ namespace cma {
 
 namespace provider {
 
-// Special Section
-constexpr const char* kOhm = "openhardwaremonitor";
-
-// Sections
-constexpr const char* kDotNetClrMemory = "dotnet_clrmemory";
-constexpr const char* kWmiWebservices = "wmi_webservices";
-constexpr const char* kWmiCpuLoad = "wmi_cpuload";
-constexpr const char* kMsExch = "msexch";
-
-constexpr const char* kSubSectionSystemPerf = "system_perf";
-constexpr const char* kSubSectionComputerSystem = "computer_system";
-
-// Path
-constexpr const wchar_t* kWmiPathOhm = L"Root\\OpenHardwareMonitor";
-constexpr const wchar_t* kWmiPathStd = L"Root\\Cimv2";
-
+namespace wmi {
+constexpr char kSepChar = cma::section::kPipeSeparator;
+constexpr std::wstring_view kSepString = cma::section::kPipeSeparatorString;
+}  // namespace wmi
+namespace ohm {
+constexpr char kSepChar = ',';
+}
 /*
     # wmi_cpuload
     ## system_perf
@@ -50,34 +43,53 @@ constexpr const wchar_t* kWmiPathStd = L"Root\\Cimv2";
 // #TODO think about noch mal, probably should be integrated with WMI
 class SubSection {
 public:
-    SubSection(const std::string& Name) : uniq_name_(Name) { setupByName(); }
+    enum class Type {
+        sub,  // [name]
+        full  //<<<name>>>
+    };
+
+    enum class Mode {
+        standard,     // in production
+        debug_forced  // for testing we could generate only headers
+    };
+    SubSection(std::string_view name, Type type)
+        : uniq_name_(name), type_(type) {
+        setupByName();
+    }
     virtual ~SubSection() {}
 
-    std::string getUniqName() const { return uniq_name_; }
+    std::string getUniqName() const noexcept { return uniq_name_; }
 
-    std::string generateContent() const;
+    std::string generateContent(Mode mode);
 
 protected:
     // *internal* function which correctly sets
     // all parameters
     void setupByName();
-    std::string makeBody() const;
+    std::string makeBody();
 
 private:
     std::wstring name_space_;      // WMI namespace "root\\Cimv2" for example
     std::wstring object_;          // WMI Object name
     const std::string uniq_name_;  // unique id of SUB section provider
+    std::string cache_;            // used to store WMI data to later reuse
+    Type type_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, WmiSubSection);
 #endif
 };
 
+// configuration
+SubSection::Type GetSubSectionType(std::string_view name) noexcept;
+bool IsHeaderless(std::string_view name) noexcept;
+
 class Wmi : public Asynchronous {
 public:
-    Wmi(const std::string& Name, char Separator = ',')
-        : Asynchronous(Name, Separator) {
+    Wmi(const std::string& name, char separator)
+        : Asynchronous(name, separator) {
         setupByName();
     }
 
@@ -91,29 +103,36 @@ public:
 protected:
     // *internal* function which correctly sets
     // all parameters
-    void setupByName();
-    virtual std::string makeBody() const override;
+    void setupByName() noexcept;
+    std::string makeBody() override;
 
 private:
     std::wstring name_space_;  // WMI namespace "root\\Cimv2" for example
     std::wstring object_;      // WMI Object name
+    std::string cache_;        // cached data to reuse
 
     std::vector<std::wstring> columns_;
 
     std::vector<SubSection>
         sub_objects_;  // Windows WMI Object name for the case when we have
 
+    SubSection::Mode subsection_mode_ = SubSection::Mode::standard;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ProviderTest;
-    FRIEND_TEST(ProviderTest, WmiAll);
+    friend class WmiProviderTest;
+    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, WmiSubSection);
+    FRIEND_TEST(WmiProviderTest, WmiOhm);
 #endif
 };
 
 // this is proposed API
-std::string GenerateTable(const std::wstring& NameSpace,
-                          const std::wstring& Object,
-                          const std::vector<std::wstring> Columns);
+std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
+    const std::wstring& NameSpace, const std::wstring& Object,
+    const std::vector<std::wstring> Columns, std::wstring_view separator);
 
+std::string WmiCachedDataHelper(std::string& cache_data,
+                                const std::string& wmi_data, char separator);
 }  // namespace provider
 
 };  // namespace cma

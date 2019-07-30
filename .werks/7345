@@ -1,0 +1,12 @@
+Title: Drop ancient scanparent_hosts configuration variable
+Level: 1
+Component: core
+Compatible: incomp
+Edition: cre
+Version: 1.6.0b1
+Date: 1556877957
+Class: fix
+
+The undocumented configuration variable <tt>scanparent_hosts</tt> was removed
+from Check_MK base. In the unlikely case you have configured this variable for
+some reason, you will have to remove it from your configuration.

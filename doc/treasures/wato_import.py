@@ -29,6 +29,7 @@
 # Author : Andreas Boesl ab@mathias-kettner.de
 # Updated: Set correct host_tag group for given tags
 
+from __future__ import print_function
 import os, pprint, sys, subprocess
 try:
     path = os.environ.pop('OMD_ROOT')
@@ -36,10 +37,10 @@ try:
     pathlokal = os.path.expanduser(pathlokal)
     csv_file = open(sys.argv[1], 'r')
 except:
-    print """Run this script inside a OMD site
+    print("""Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
-    wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None"""
+    wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None""")
     sys.exit()
 
 folders = {}
@@ -84,15 +85,15 @@ for folder in folders:
             for tag in name_tokens[1].split():
                 host_aux_tags |= set(aux_tag_mapping.get(tag, []))
                 if tag not in host_tag_mapping:
-                    print "Unknown host tag: %s" % tag
+                    print("Unknown host tag: %s" % tag)
                 else:
                     extra_infos.append("'tag_%s': '%s'" % (host_tag_mapping[tag], tag))
 
         extra_aux_tags = ""
         if host_aux_tags:
             extra_aux_tags = "|".join(host_aux_tags) + "|"
-        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ", "|"),
-                                                               extra_aux_tags)
+        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ",
+                                                                            "|"), extra_aux_tags)
 
         # WATO Alias extra info
         if alias:
@@ -121,6 +122,6 @@ for folder in folders:
     hosts_mk_file.close()
 
     wato_file = open(pathlokal + folder + '/.wato', 'w')
-    wato_file.write(
-        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % (len(folders[folder]), folder))
+    wato_file.write("{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" %
+                    (len(folders[folder]), folder))
     wato_file.close()

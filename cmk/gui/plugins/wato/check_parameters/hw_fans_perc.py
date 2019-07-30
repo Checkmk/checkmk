@@ -59,25 +59,24 @@ class RulespecCheckgroupParametersHwFansPerc(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Upper fan speed levels"),
-                     elements=[
-                         Percentage(title=_("warning if at")),
-                         Percentage(title=_("critical if at")),
-                     ],
-                 )),
-                ("levels_lower",
-                 Tuple(
-                     title=_("Lower fan speed levels"),
-                     elements=[
-                         Percentage(title=_("warning if below")),
-                         Percentage(title=_("critical if below")),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Upper fan speed levels"),
+                 elements=[
+                     Percentage(title=_("warning if at")),
+                     Percentage(title=_("critical if at")),
+                 ],
+             )),
+            ("levels_lower",
+             Tuple(
+                 title=_("Lower fan speed levels"),
+                 elements=[
+                     Percentage(title=_("warning if below")),
+                     Percentage(title=_("critical if below")),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

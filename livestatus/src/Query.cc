@@ -186,7 +186,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     }
 
     if (_columns.empty() && !doStats()) {
-        table.any_column([this](std::shared_ptr<Column> c) {
+        table.any_column([this](const auto &c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
@@ -194,9 +194,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         _show_column_headers = true;
     }
 
-    _filter = AndingFilter::make(Filter::Kind::row, std::move(filters));
-    _wait_condition = AndingFilter::make(Filter::Kind ::wait_condition,
-                                         std::move(wait_conditions));
+    _filter = AndingFilter::make(Filter::Kind::row, filters);
+    _wait_condition =
+        AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
 }
 
 void Query::invalidRequest(const std::string &message) const {
@@ -220,7 +220,7 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
         filters.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(connective(kind, std::move(subfilters)));
+    filters.push_back(connective(kind, subfilters));
 }
 
 void Query::parseNegateLine(char *line, FilterStack &filters) {
@@ -253,7 +253,7 @@ void Query::parseStatsAndOrLine(char *line,
     }
     std::reverse(subfilters.begin(), subfilters.end());
     _stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        connective(Filter::Kind::stats, std::move(subfilters))));
+        connective(Filter::Kind::stats, subfilters)));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -276,109 +276,109 @@ namespace {
 // cppcheck-suppress noConstructor
 class SumAggregation : public Aggregation {
 public:
-    void update(double value) override { _sum += value; }
-    double value() const override { return _sum; }
+    void update(double value) override { sum_ += value; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
-    double _sum{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class MinAggregation : public Aggregation {
 public:
     void update(double value) override {
-        if (_first || value < _sum) {
-            _sum = value;
+        if (first_ || value < sum_) {
+            sum_ = value;
         }
-        _first = false;
+        first_ = false;
     }
 
-    double value() const override { return _sum; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
-    bool _first{true};
+    bool first_{true};
     // NOTE: This default is wrong, the neutral element for min is +Inf. Apart
-    // from being more consistent, using it would remove the need for _first.
-    double _sum{0};
+    // from being more consistent, using it would remove the need for first_.
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class MaxAggregation : public Aggregation {
 public:
     void update(double value) override {
-        if (_first || value > _sum) {
-            _sum = value;
+        if (first_ || value > sum_) {
+            sum_ = value;
         }
-        _first = false;
+        first_ = false;
     }
 
-    double value() const override { return _sum; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
-    bool _first{true};
+    bool first_{true};
     // NOTE: This default is wrong, the neutral element for max is -Inf. Apart
-    // from being more consistent, using it would remove the need for _first.
-    double _sum{0};
+    // from being more consistent, using it would remove the need for first_.
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class AvgAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += value;
+        count_++;
+        sum_ += value;
     }
 
-    double value() const override { return _sum / _count; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
+    std::uint32_t count_{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class StdAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += value;
-        _sum_of_squares += value * value;
+        count_++;
+        sum_ += value;
+        sum_of_squares_ += value * value;
     }
 
-    double value() const override {
-        auto mean = _sum / _count;
-        return sqrt(_sum_of_squares / _count - mean * mean);
+    [[nodiscard]] double value() const override {
+        auto mean = sum_ / count_;
+        return sqrt(sum_of_squares_ / count_ - mean * mean);
     }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
-    double _sum_of_squares{0};
+    std::uint32_t count_{0};
+    double sum_{0};
+    double sum_of_squares_{0};
 };
 
 // cppcheck-suppress noConstructor
 class SumInvAggregation : public Aggregation {
 public:
-    void update(double value) override { _sum += 1.0 / value; }
-    double value() const override { return _sum; }
+    void update(double value) override { sum_ += 1.0 / value; }
+    [[nodiscard]] double value() const override { return sum_; }
 
 private:
-    double _sum{0};
+    double sum_{0};
 };
 
 // cppcheck-suppress noConstructor
 class AvgInvAggregation : public Aggregation {
 public:
     void update(double value) override {
-        _count++;
-        _sum += 1.0 / value;
+        count_++;
+        sum_ += 1.0 / value;
     }
 
-    double value() const override { return _sum / _count; }
+    [[nodiscard]] double value() const override { return sum_ / count_; }
 
 private:
-    std::uint32_t _count{0};
-    double _sum{0};
+    std::uint32_t count_{0};
+    double sum_{0};
 };
 
 std::map<std::string, AggregationFactory> stats_ops{
@@ -399,10 +399,10 @@ void Query::parseStatsLine(char *line) {
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
         column = _table.column(col_or_op);
-        auto relOp = relationalOperatorForName(nextStringArgument(&line));
+        auto rel_op = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
-            column->createFilter(Filter::Kind::stats, relOp, operand));
+            column->createFilter(Filter::Kind::stats, rel_op, operand));
     } else {
         column = _table.column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
@@ -416,9 +416,9 @@ void Query::parseStatsLine(char *line) {
 
 void Query::parseFilterLine(char *line, FilterStack &filters) {
     auto column = _table.column(nextStringArgument(&line));
-    auto relOp = relationalOperatorForName(nextStringArgument(&line));
+    auto rel_op = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
-    auto sub_filter = column->createFilter(Filter::Kind::row, relOp, operand);
+    auto sub_filter = column->createFilter(Filter::Kind::row, rel_op, operand);
     filters.push_back(std::move(sub_filter));
     _all_columns.insert(column);
 }
@@ -442,7 +442,7 @@ void Query::parseStatsGroupLine(char *line) {
 
 void Query::parseColumnsLine(char *line) {
     std::string str = line;
-    const std::string sep = " \t\n\v\f\r";
+    std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
         auto space = str.find_first_of(sep, pos);
         auto column_name =

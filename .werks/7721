@@ -1,0 +1,9 @@
+Title: fast_lta_volumes: Crash upon missing data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1558454631
+Class: fix
+

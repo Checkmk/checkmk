@@ -48,7 +48,7 @@ std::tuple<bool, size_t> Commander::encode(void *InOut, size_t InputSize,
 
     auto input_size = static_cast<DWORD>(InputSize);
     if (input_size == 0) return {true, 0};
-    if (!InOut) {
+    if (nullptr == InOut) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
@@ -72,7 +72,7 @@ std::tuple<bool, size_t> Commander::decode(void *InOut, size_t InputSize,
     auto input_size = static_cast<DWORD>(InputSize);
     if (input_size == 0) return {true, 0};
 
-    if (!InOut) {
+    if (nullptr == InOut) {
         XLOG::l.crit(XLOG_FLINE + " nullptr in param");
         return {false, 0};
     }
@@ -97,11 +97,11 @@ HCRYPTPROV Commander::obtainContext() {
 
     if ((algorithm_ == CALG_AES_128) || (algorithm_ == CALG_AES_192) ||
         (algorithm_ == CALG_AES_256)) {
-        res = ::CryptAcquireContext(&handle, NULL, MS_ENH_RSA_AES_PROV,
+        res = ::CryptAcquireContext(&handle, nullptr, MS_ENH_RSA_AES_PROV,
                                     PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
     } else {
-        res = ::CryptAcquireContext(&handle, NULL, MS_DEF_PROV, PROV_RSA_FULL,
-                                    CRYPT_VERIFYCONTEXT);
+        res = ::CryptAcquireContext(&handle, nullptr, MS_DEF_PROV,
+                                    PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     }
     if (!res) {
         XLOG::l.crit("Cannot obtain crypto context error is [{}]",
@@ -397,7 +397,7 @@ bool Commander::randomizeBuffer(void *Buffer, size_t BufferSize) const {
 std::unique_ptr<Commander> MakeCrypt() {
     auto pass = cma::cfg::groups::global.getPasword();
     if (!pass) {
-        XLOG::t.t("Nothing");
+        XLOG::t.t("Nothing.. ..");
         return {};
     }
 
@@ -413,7 +413,7 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t DataSize) const
         return {};
     }
 
-    if (!blockSize().value()) {
+    if (0 == blockSize().value()) {
         XLOG::l("Impossible situation, block is too short");
         return {};
     }

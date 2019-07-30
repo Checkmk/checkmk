@@ -233,8 +233,10 @@
     <ClInclude Include="..\..\include\tools\_xdbg.h" />
     <ClInclude Include="..\..\include\tools\_xlog.h" />
     <ClInclude Include="..\common\cfg_info.h" />
+    <ClInclude Include="..\common\cfg_yaml.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
     <ClInclude Include="..\common\version.h" />
+    <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
     <ClInclude Include="..\lwa\Configurable.h" />
     <ClInclude Include="..\lwa\Configuration.h" />
@@ -246,6 +248,8 @@
     <ClInclude Include="carrier.h" />
     <ClInclude Include="cfg.h" />
     <ClInclude Include="cfg_details.h" />
+    <ClInclude Include="cma_core.h" />
+    <ClInclude Include="commander.h" />
     <ClInclude Include="cvt.h" />
     <ClInclude Include="encryption.h" />
     <ClInclude Include="eventlog\eventlogbase.h" />
@@ -276,7 +280,6 @@
     <ClInclude Include="external_port.h" />
     <ClInclude Include="realtime.h" />
     <ClInclude Include="section_header.h" />
-    <ClInclude Include="service_api.h" />
     <ClInclude Include="service_processor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stdafx_defines.h" />
@@ -463,6 +466,7 @@
     <ClCompile Include="carrier.cpp" />
     <ClCompile Include="cfg.cpp" />
     <ClCompile Include="cma_core.cpp" />
+    <ClCompile Include="commander.cpp" />
     <ClCompile Include="cvt.cpp" />
     <ClCompile Include="encryption.cpp" />
     <ClCompile Include="eventlog\eventlogbase.cpp" />
@@ -492,7 +496,6 @@
     <ClCompile Include="providers\system_time.cpp" />
     <ClCompile Include="providers\wmi.cpp" />
     <ClCompile Include="realtime.cpp" />
-    <ClCompile Include="service_api.cpp" />
     <ClCompile Include="service_processor.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

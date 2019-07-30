@@ -2,26 +2,22 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/fileinfo.h"
+
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include "fmt/format.h"
-
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-#include "common/wtools.h"
-
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/wtools.h"
+#include "fmt/format.h"
 #include "glob_match.h"
-
 #include "logger.h"
-
-#include "providers/fileinfo.h"
 #include "providers/fileinfo_details.h"
+#include "tools/_raii.h"
+#include "tools/_xlog.h"
 
 namespace cma::provider::details {
 
@@ -53,8 +49,8 @@ std::filesystem::path GetOsPathWithCase(
 
     // Scan all path and read for every chunk correct representation
     // from OS
-    for (auto it = body.begin(), end = body.end(); it != end; ++it) {
-        head_part /= ReadBaseNameWithCase(head_part / *it);
+    for (const auto &part : body) {
+        head_part /= ReadBaseNameWithCase(head_part / part);
     }
 
     return head_part;
@@ -218,7 +214,7 @@ static void ProcessDirsAndFilesTables(PathVector &Dirs, PathVector &Files,
         if (ec) {  // not found, reporting only when error is serious
             if (ec.value() != 2) {  // 2 means NOT FOUND, this is ok
                 // low probability. Something really bad
-                XLOG::t("Cant access file {} status {}", entry.u8string(),
+                XLOG::t("Cant access file '{}' status [{}]", entry.u8string(),
                         ec.value());
             }
             continue;
@@ -259,8 +255,8 @@ static void AddVectorWithMove(PathVector &Files, PathVector &FoundFiles) {
 }
 
 // gtested internally
-PathVector FindFileBySplittedPath(const std::filesystem::path &Head,  // c:\ 
-                                  const std::filesystem::path &Body, // path
+PathVector FindFileBySplittedPath(const std::filesystem::path &Head,  // "c:\"
+                                  const std::filesystem::path &Body,  // path
                                   const std ::wstring &Mask) {  // c:\x\*x.txt
     // output storages:
     PathVector dirs = {Head};
@@ -317,7 +313,7 @@ PathVector FindFileBySplittedPath(const std::filesystem::path &Head,  // c:\
 // it/b/file
 // it/c/file
 
-PathVector FindFilesByMask(const std::wstring Mask) {
+PathVector FindFilesByMask(const std::wstring &Mask) {
     namespace fs = std::filesystem;
 
     // Trivial case, standard file, just return it back
@@ -337,11 +333,11 @@ PathVector FindFilesByMask(const std::wstring Mask) {
     return FindFileBySplittedPath(head_out, body_out, Mask);
 }
 
-bool ValidFileInfoPathEntry(const std::string Entry) {
+bool ValidFileInfoPathEntry(std::string_view entry) noexcept {
     namespace fs = std::filesystem;
-    if (Entry.empty()) return false;
+    if (entry.empty()) return false;
 
-    fs::path p = wtools::ConvertToUTF16(Entry);
+    fs::path p = wtools::ConvertToUTF16(entry);
     if (p.root_name().empty()) return false;
 
     if (p.root_directory().empty()) return false;
@@ -349,52 +345,135 @@ bool ValidFileInfoPathEntry(const std::string Entry) {
     return true;
 }
 
-// returns UTF8
-std::string MakeFileInfoString(const std::filesystem::path &FilePath) {
+std::string MakeFileInfoEntryModern(const std::filesystem::path &file_name,
+                                    bool stat_failed, uint64_t file_size,
+                                    int64_t seconds) {
+    if (stat_failed)
+        return file_name.u8string() + FileInfo::kSep +
+               std::string(FileInfo::kStatFailed) + "\n";
+
+    return fmt::format("{0}{1}{2}{1}{3}{1}{4}\n", file_name.u8string(),
+                       FileInfo::kSep, FileInfo::kOk, file_size, seconds);
+}
+
+std::string MakeFileInfoEntryLegacy(const std::filesystem::path &file_name,
+                                    bool stat_failed, uint64_t file_size,
+                                    int64_t seconds) {
+    if (stat_failed)
+        return fmt::format("{0}{1}{2}{1}{3}\n", file_name.u8string(),
+                           FileInfo::kSep, FileInfo::kMissing, seconds);
+
+    return fmt::format("{0}{1}{2}{1}{3}\n", file_name.u8string(),
+                       FileInfo::kSep, file_size, seconds);
+}
+
+std::tuple<uint64_t, int64_t, bool> GetFileStats(
+    const std::filesystem::path &file_path) {
     namespace fs = std::filesystem;
-    using namespace std;
-    // strange dances from legacy agent
-    // const auto finalPath = correctPathCase(FilePath, winapi);
     std::error_code ec;
-    auto file_size = fs::file_size(FilePath, ec);
+    auto file_size = fs::file_size(file_path, ec);
+    bool stat_failed = false;
     if (ec) {
-        XLOG::l.e("Cant get size of file {}  status {}", FilePath.u8string(),
-                  ec.value());
+        XLOG::l.e("Cant get size of file '{}'  status [{}]",
+                  file_path.u8string(), ec.value());
         file_size = 0;
+        stat_failed = true;
     }
 
     int64_t seconds = 0;
-    auto file_last_touch = fs::last_write_time(FilePath, ec);
+
+    auto file_last_touch = GetFileTimeSinceEpoch(file_path);
     if (ec) {
-        XLOG::l.e("Cant get las touch of file {} status {}",
-                  FilePath.u8string(), ec.value());
-        seconds = 0;
+        XLOG::l.e("Cant get last touch of file '{}' status [{}]",
+                  file_path.u8string(), ec.value());
+        seconds = cma::tools::SecondsSinceEpoch();
+        stat_failed = true;
     } else {
-        auto duration = chrono::duration_cast<chrono::seconds>(
-            file_last_touch.time_since_epoch());
+        auto duration =
+            std::chrono::duration_cast<std::chrono::seconds>(file_last_touch);
         seconds = duration.count();
     }
-    auto file_name = GetOsPathWithCase(FilePath);
-    return fmt::format("{}|{}|{}\n", file_name.u8string(), file_size, seconds);
+
+    return {file_size, seconds, stat_failed};
 }
 
-// single entry form config
-// path =
-std::string ProcessFileInfoPathEntry(const std::string Entry) {
-    // this is MUST
-    std::wstring mask = wtools::ConvertToUTF16(Entry);
+std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
+                                      FileInfo::Mode mode) {
+    std::string out =
+        file_name.u8string() + FileInfo::kSep + std::string(FileInfo::kMissing);
 
-    const auto filePaths = FindFilesByMask(mask);
-
-    if (filePaths.empty()) {
-        return wtools::ConvertToUTF8(
-            mask + L"|missing|" +
-            std::to_wstring(cma::tools::SecondsSinceEpoch()) + L"\n");
+    // #deprecated
+    if (mode == FileInfo::Mode::legacy) {
+        out += FileInfo::kSep + std::to_string(cma::tools::SecondsSinceEpoch());
     }
 
+    out += "\n";
+
+    return out;
+}
+
+std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
+                                        FileInfo::Mode mode) {
+    auto [file_size, seconds, stat_failed] = GetFileStats(file_name);
+
+    switch (mode) {
+        case FileInfo::Mode::legacy:
+            return MakeFileInfoEntryLegacy(file_name, stat_failed, file_size,
+                                           seconds);
+        case FileInfo::Mode::modern:
+            return MakeFileInfoEntryModern(file_name, stat_failed, file_size,
+                                           seconds);
+    }
+    // unreachable
+    return {};
+}
+
+std::string MakeFileInfoString(const std::filesystem::path &file_path,
+                               FileInfo::Mode mode) {
+    namespace fs = std::filesystem;
+    using namespace std;
+
+    std::error_code ec;
+    auto presented = fs::exists(file_path, ec);
+    auto file_name = GetOsPathWithCase(file_path);  // correct cases
+    if (!presented) return MakeFileInfoStringMissing(file_name, mode);
+
+    return MakeFileInfoStringPresented(file_name, mode);
+}
+
+static bool IsDriveLetterAtTheStart(std::string_view text) noexcept {
+    return text.size() > 2 && text[1] == ':' && std::isalpha(text[0]);
+}
+
+static void CorrectDriveLetterByEntry(std::string &ret,
+                                      std::string_view entry) {
+    // drive letter correction:
+    if (IsDriveLetterAtTheStart(entry) && IsDriveLetterAtTheStart(ret))
+        ret[0] = entry[0];
+}
+
+// single entry from config: a, b and c
+// path: [a,b,c]
+std::string ProcessFileInfoPathEntry(std::string_view entry,
+                                     FileInfo::Mode mode) {
+    // normal entry must be registered
+    if (!FileInfo::ContainsGlobSymbols(entry)) {
+        auto ret = MakeFileInfoString(entry, mode);
+        CorrectDriveLetterByEntry(ret, entry);
+        return ret;
+    }
+
+    // glob entries
+    auto mask = wtools::ConvertToUTF16(entry);
+    const auto file_paths = FindFilesByMask(mask);
+
+    if (file_paths.empty()) return {};
+
     std::string out;
-    for (const auto &entry : filePaths) {
-        out += MakeFileInfoString(entry);
+    for (const auto &f : file_paths) {
+        auto ret = MakeFileInfoString(f, mode);
+        CorrectDriveLetterByEntry(ret, entry);
+        out += ret;
     }
 
     return out;
@@ -423,7 +502,7 @@ std::optional<YAML::Node> GetPathArray() noexcept {
         }
 
         if (!finfo_section.IsMap()) {
-            XLOG::l("'{}' is not correct", groups::kFileInfo);
+            XLOG::d("'{}' is not correct", groups::kFileInfo);
             return {};
         }
 
@@ -450,42 +529,64 @@ std::optional<YAML::Node> GetPathArray() noexcept {
     }
 }
 
-std::string FileInfo::makeBody() const {
+// we are using static outside functions to avoid(extremely rare)
+// race condition. Theoretically any function can be called twice
+// and init of functions statics may be a bit dangerous
+static const std::string s_modern_sub_header =
+    "[[[header]]]\n"
+    "name|status|size|time\n"
+    "[[[content]]]\n";
+
+std::string FileInfo::generateFileList(YAML::Node path_array) {
     using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
-
-    // mandatory part of the output:
-    auto time_in = std::to_string(cma::tools::SecondsSinceEpoch());
-    std::string out = time_in + "\n";
-
-    // optional part of the output:
-    // #TODO rethink move to loadConfig
-    auto path_array_val = GetPathArray();
-    if (!path_array_val.has_value()) return out;
-
-    int i_pos = 0;
-    auto path_array = path_array_val.value();
-    for (auto it = path_array.begin(); it != path_array.end(); ++it) {
+    int i_pos = 0;  // logging variable
+    std::string out;
+    for (auto p : path_array) {
         try {
-            auto mask = it->as<std::string>();
+            auto mask = p.as<std::string>();
 
-            if (details::ValidFileInfoPathEntry(mask)) {
-                //
-                out += details::ProcessFileInfoPathEntry(mask);
-            } else {
-                XLOG::l.t("'{}.{}[{}] = {}' is not valid, skipping",
+            if (!details::ValidFileInfoPathEntry(mask)) {
+                XLOG::d.t("'{}.{}[{}] = {}' is not valid, skipping",
                           groups::kFileInfo, vars::kFileInfoPath, i_pos, mask);
+                continue;
             }
 
+            // mask is valid:
+            auto ret = details::ProcessFileInfoPathEntry(mask, mode_);
+            if (ret.empty()) continue;
+
+            out += ret;
         } catch (const std::exception &e) {
             XLOG::l(
-                "'{}.{}[{}]' is seriously not valid, skipping. Exception {}",
+                "'{}.{}[{}]' is seriously not valid, skipping. Exception '{}'",
                 groups::kFileInfo, vars::kFileInfoPath, i_pos, e.what());
         }
         i_pos++;
     }
 
+    if (mode_ == Mode::modern) return s_modern_sub_header + out;
+
     return out;
+}  // namespace provider
+
+std::string FileInfo::makeBody() {
+    // mandatory part of the output:
+    auto time_in = std::to_string(cma::tools::SecondsSinceEpoch());
+    auto out = time_in + "\n";
+
+    // optional part of the output:
+    // 1. Load array of path entries
+    auto path_array_val = GetPathArray();
+    if (!path_array_val.has_value()) return out;
+
+    // 2. process array
+    auto node = path_array_val.value();
+    return out + generateFileList(node);
+}
+
+bool FileInfo::ContainsGlobSymbols(std::string_view name) {
+    return std::any_of(name.begin(), name.end(),
+                       [](char c) { return c == '*' || c == '?'; });
 }
 
 }  // namespace provider

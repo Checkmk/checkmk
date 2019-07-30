@@ -27,91 +27,62 @@
 apc_ats_output_default_levels = {"output_voltage_max": (240, 250), "load_perc_max": (85, 95)}
 
 
-def inventory_apc_ats_output(info):
-    return [(x[0], "apc_ats_output_default_levels") for x in info]
+def parse_apc_ats_output(info):
+    parsed = {}
+    for index, voltage_str, current_str, perc_load_str, power_str in info:
+        for key, value_str, factor in [
+            ('voltage', voltage_str, 1),
+            ('current', current_str, 0.1),
+            ('perc_load', perc_load_str, 1),
+            ('power', power_str, 1),
+        ]:
+            try:
+                value = float(value_str) * factor
+            except ValueError:
+                continue
+            instance = parsed.setdefault(index, {})
+            instance[key] = value
+    return parsed
 
 
-def check_apc_ats_output(item, params, info):
-    for line in info:
-        if line[0] == item:
-            vac, watt, ampere, load_perc = map(int, line[1:])
-            ampere = ampere / 10
-            state = 0
-            messages = []
-            perf = []
+@get_parsed_item_data
+def check_apc_ats_output(item, params, data):
+    voltage = data.get("voltage")
+    power = data.get("power")
+    current = data.get("current")
+    perc_load = data.get("perc_load")
 
-            # Output Voltage Max
-            warn, crit = params.get('output_voltage_max', (None, None))
-            perf.append(('volt', vac, warn, crit))
-            base_msg = "%d Volt" % vac
-            if warn and crit:
-                levels = " its to high (Warning/Critical %d/%d)" % (warn, crit)
-            else:
-                levels = ""
-            if crit and vac > crit:
-                state = 2
-                base_msg += levels + "(!!)"
-            elif warn and vac > warn:
-                state = 1
-                base_msg += levels + "(!)"
+    if voltage is not None:
+        yield check_levels(
+            voltage,
+            'volt',
+            params.get('output_voltage_max',(None, None))\
+                       + params.get('output_voltage_min', (None, None)),
+            infoname="Voltage",
+            unit='V',
+        )
+    if power is not None:
+        yield 0, 'Power: %.2f W' % power
 
-            # Output Voltage Min
-            warn, crit = params.get('output_voltage_min', (None, None))
-            if warn and crit:
-                levels = " its to low (warn/crit %d/%d)" % (warn, crit)
-            else:
-                levels = ""
-            if crit and vac < crit:
-                state = 2
-                base_msg += levels + "(!!)"
-            elif warn and vac < warn:
-                state = max(state, 1)
-                base_msg += levels + "(!)"
+    if current is not None:
+        yield 0, 'Current: %.2f A' % current
 
-            messages.append(base_msg)
-
-            # Watt
-            perf.append(('watt', watt))
-            messages.append("%d Watt" % watt)
-
-            # Ampere and Percent Load
-            perf.append(("ampere", ampere))
-            messages.append("%d Ampere" % ampere)
-
-            warn, crit = params.get('load_perc_max', (None, None))
-            if warn and crit:
-                levels = " its to high (warn/crit %d/%d) " % (warn, crit)
-            else:
-                levels = ""
-            base_msg = "Load: %d%%" % load_perc
-            if crit and load_perc > crit:
-                state = 2
-                base_msg += " " + levels + "(!!)"
-            elif warn and load_perc > warn:
-                state = max(state, 1)
-                base_msg += " " + levels + "(!)"
-            warn, crit = params.get('load_perc_min', (None, None))
-            if warn and crit:
-                levels = " its to low (warn/crit %d/%d) " % (warn, crit)
-            else:
-                levels = ""
-            if crit and load_perc < crit:
-                state = 2
-                base_msg += " " + levels + "(!!)"
-            elif warn and load_perc < warn:
-                state = max(state, 1)
-                base_msg += " " + levels + "(!)"
-            perf.append(("load_perc", load_perc, warn, crit))
-            messages.append(base_msg)
-
-            return state, "Running with: " + ", ".join(messages), perf
-    return 3, "Power phase not found"
+    if perc_load is not None:
+        yield check_levels(
+            perc_load,
+            'load_perc',
+            params.get('load_perc_max', (None, None))\
+                       + params.get('load_perc_min', (None, None)),
+            infoname="Load",
+            unit='%',
+        )
 
 
 check_info["apc_ats_output"] = {
     "check_function": check_apc_ats_output,
+    "parse_function": parse_apc_ats_output,
     "group": "apc_ats_output",
-    "inventory_function": inventory_apc_ats_output,
+    "inventory_function": discover(default_params="apc_ats_output_default_levels"),
     "service_description": "Phase %s output",
     "has_perfdata": True,
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.318.1.3.11" in oid(".1.3.6.1.2.1.1.2.0"),
@@ -119,10 +90,9 @@ check_info["apc_ats_output"] = {
         ".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         [
             "1",  # atsOutputPhaseTableIndex
-            #"2", # atsOutputPhaseIndex 1-3 = Phase 1-3, 4 = Neutral
             "3",  # atsOutputVoltage (VAC)
-            "13",  # atsOutputPower (Watt)
             "4",  # atsOutputCurrent (0.1 AMPERE)
             "10",  # atsOutputPercentLoad
+            "13",  # atsOutputPower (Watt)
         ]),
 }

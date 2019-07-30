@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # "How to talk to the mkeventd", Python edition :-)
 
+from __future__ import print_function
 import json
 import os
 import socket
 
 
-class EventConsoleConnection:
+class EventConsoleConnection(object):
     def __init__(self, path, timeout=3):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.settimeout(timeout)
@@ -73,7 +74,7 @@ path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
 with EventConsoleConnection(path) as c:
     c.send_request("GET status\nOutputFormat: plain")
     for line in c:
-        print line
+        print(line)
 
 # read the whole response in one go
 with EventConsoleConnection(path) as c:

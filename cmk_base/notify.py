@@ -37,7 +37,6 @@
 #       to call and its parameters.
 
 import os
-import pprint
 import re
 import signal
 import subprocess
@@ -47,9 +46,14 @@ import time
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk.utils.debug
-from cmk.utils.notify import notification_message
+from cmk.utils.notify import (
+    find_wato_folder,
+    notification_message,
+    notification_result_message,
+)
 from cmk.utils.regex import regex
 import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -198,7 +202,7 @@ def do_notify(options, args):
             elif notify_mode == 'replay':
                 try:
                     replay_nr = int(args[1])
-                except:
+                except (IndexError, ValueError):
                     replay_nr = 0
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
@@ -276,8 +280,9 @@ def notify_notify(raw_context, analyse=False):
     notify_log_debug(events.render_context_dump(raw_context))
 
     _complete_raw_context_with_notification_vars(raw_context)
-    events.complete_raw_context(
-        raw_context, with_dump=config.notification_logging <= 10, log_func=notify_log)
+    events.complete_raw_context(raw_context,
+                                with_dump=config.notification_logging <= 10,
+                                log_func=notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -476,8 +481,8 @@ def notify_rulebased(raw_context, analyse=False):
                                    (contactstxt, plugintxt))
                         continue
 
-                    notify_log("   - cancelling notification of %s via %s" % (", ".join(overlap),
-                                                                              plugintxt))
+                    notify_log("   - cancelling notification of %s via %s" %
+                               (", ".join(overlap), plugintxt))
 
                     remaining = notify_contacts.difference(contacts)
                     if not remaining:
@@ -492,8 +497,8 @@ def notify_rulebased(raw_context, analyse=False):
                         notify_log("   - cannot modify notification of %s via %s: it is locked" %
                                    (contactstxt, plugintxt))
                         continue
-                    notify_log(
-                        "   - modifying notification of %s via %s" % (contactstxt, plugintxt))
+                    notify_log("   - modifying notification of %s via %s" %
+                               (contactstxt, plugintxt))
                 else:
                     notify_log("   - adding notification of %s via %s" % (contactstxt, plugintxt))
                 bulk = rbn_get_bulk_params(rule)
@@ -523,16 +528,15 @@ def notify_rulebased(raw_context, analyse=False):
     else:
         # Now do the actual notifications
         notify_log("Executing %d notifications:" % len(notifications))
-        entries = notifications.items()
-        entries.sort()
+        entries = sorted(notifications.items())
         for (contacts, plugin), (locked, params, bulk) in entries:
             verb = "would notify" if analyse else "notifying"
             contactstxt = ", ".join(contacts)
             plugintxt = plugin or "plain email"
             paramtxt = ", ".join(params) if params else "(no parameters)"
             bulktxt = "yes" if bulk else "no"
-            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" % (verb, contactstxt, plugintxt,
-                                                                       paramtxt, bulktxt))
+            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" %
+                       (verb, contactstxt, plugintxt, paramtxt, bulktxt))
 
             try:
                 plugin_context = create_plugin_context(raw_context, params)
@@ -602,8 +606,7 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
 # rule indices
 def user_notification_rules():
     user_rules = []
-    contactnames = config.contacts.keys()
-    contactnames.sort()
+    contactnames = sorted(config.contacts.keys())
     for contactname in contactnames:
         contact = config.contacts[contactname]
         for rule in contact.get("notification_rules", []):
@@ -702,7 +705,7 @@ def rbn_get_bulk_params(rule):
     elif method == "timeperiod":
         try:
             active = cmk_base.core.timeperiod_active(params["timeperiod"])
-        except:
+        except Exception:
             if cmk.utils.debug.enabled():
                 raise
             # If a livestatus connection error appears we will bulk the
@@ -737,7 +740,7 @@ def rbn_match_escalation(rule, context):
             notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
         else:
             notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
-        if notification_number < from_number or notification_number > to_number:
+        if not from_number <= notification_number <= to_number:
             return "The notification number %d does not lie in range %d ... %d" % (
                 notification_number, from_number, to_number)
 
@@ -846,8 +849,8 @@ def rbn_rule_contacts(rule, context):
             if disable_notifications_opts.get("disable", False):
                 start, end = disable_notifications_opts.get("timerange", (None, None))
                 if start is None or end is None:
-                    notify_log(
-                        "   - skipping contact %s: he/she has disabled notifications" % contactname)
+                    notify_log("   - skipping contact %s: he/she has disabled notifications" %
+                               contactname)
                     continue
                 elif start <= time.time() <= end:
                     notify_log(
@@ -1059,8 +1062,8 @@ def should_notify(context, entry):
                 skip = negate
                 break
         if skip:
-            notify_log(" - Skipping: host '%s' matches none of %s" % (hostname, ", ".join(
-                entry["only_hosts"])))
+            notify_log(" - Skipping: host '%s' matches none of %s" %
+                       (hostname, ", ".join(entry["only_hosts"])))
             return False
 
     # Check if the host has to be in a special service_level
@@ -1107,8 +1110,8 @@ def should_notify(context, entry):
                     skip = negate
                     break
             if skip:
-                notify_log(" - Skipping: service '%s' matches none of %s" % (servicedesc, ", ".join(
-                    entry["only_services"])))
+                notify_log(" - Skipping: service '%s' matches none of %s" %
+                           (servicedesc, ", ".join(entry["only_services"])))
                 return False
 
     # Check notification type
@@ -1379,10 +1382,10 @@ def notification_script_env(plugin_context):
             value = value[:max_length] + "...\nAttention: Removed remaining content because it was too long."
         return value.encode("utf-8")
 
-    notify_env = {
-        "NOTIFY_" + variable: format_(value) for variable, value in plugin_context.iteritems()
-    }
-    notify_env.update(os.environ)
+    notify_env = os.environ.copy()
+    notify_env.update(
+        {"NOTIFY_" + variable: format_(value) for variable, value in plugin_context.iteritems()})
+
     return notify_env
 
 
@@ -1421,10 +1424,7 @@ def create_spoolfile(data):
         os.makedirs(notification_spooldir)
     file_path = "%s/%s" % (notification_spooldir, fresh_uuid())
     notify_log("Creating spoolfile: %s" % file_path)
-
-    # First write into tempfile that is not handled by mknotifyd
-    file(file_path + ".new", "w").write(pprint.pformat(data))
-    os.rename(file_path + ".new", file_path)
+    store.save_data_to_file(file_path, data, pretty=True)
 
 
 # There are three types of spool files:
@@ -1436,7 +1436,7 @@ def handle_spoolfile(spoolfile):
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     notify_log("----------------------------------------------------------------------")
     try:
-        data = eval(file(spoolfile).read())
+        data = store.load_data_from_file(spoolfile)
         if "plugin" in data:
             plugin_context = data["context"]
             plugin = data["plugin"]
@@ -1538,13 +1538,6 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
     notify_log("        - stored in %s" % filename)
 
 
-def find_wato_folder(context):
-    for tag in context.get("HOSTTAGS", "").split():
-        if tag.startswith("/wato/"):
-            return tag[6:].rstrip("/")
-    return ""
-
-
 def create_bulk_dirname(bulk_path):
     dirname = os.path.join(notification_bulkdir, bulk_path[0], bulk_path[1],
                            ",".join([b.replace("/", "\\") for b in bulk_path[2:]]))
@@ -1552,7 +1545,7 @@ def create_bulk_dirname(bulk_path):
     # Remove non-Ascii-characters by special %02x-syntax
     try:
         str(dirname)
-    except:
+    except Exception:
         new_dirname = ""
         for char in dirname:
             if ord(char) <= 0 or ord(char) > 127:
@@ -1649,11 +1642,11 @@ def find_bulks(only_ripe):
                     if age >= interval:
                         notify_log("Bulk %s is ripe: age %d >= %d" % (bulk_dir, age, interval))
                     elif len(uuids) >= count:
-                        notify_log(
-                            "Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                        notify_log("Bulk %s is ripe: count %d >= %d" %
+                                   (bulk_dir, len(uuids), count))
                     else:
-                        notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" % (bulk_dir, age,
-                                                                                      len(uuids)))
+                        notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" %
+                                   (bulk_dir, age, len(uuids)))
                         if only_ripe:
                             continue
 
@@ -1661,30 +1654,32 @@ def find_bulks(only_ripe):
                 else:
                     try:
                         active = cmk_base.core.timeperiod_active(timeperiod)
-                    except:
+                    except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies
                         # that an ongoing connection error will hold back bulk
                         # notifications.
-                        notify_log("Error while checking activity of timeperiod %s: assuming active"
-                                   % timeperiod)
+                        notify_log(
+                            "Error while checking activity of timeperiod %s: assuming active" %
+                            timeperiod)
                         active = True
 
                     if active is True and len(uuids) < count:
                         # Only add a log entry every 10 minutes since timeperiods
                         # can be very long (The default would be 10s).
                         if now % 600 <= config.notification_bulk_interval:
-                            notify_log("Bulk %s is not ripe yet (timeperiod %s: active, count: %d)"
-                                       % (bulk_dir, timeperiod, len(uuids)))
+                            notify_log(
+                                "Bulk %s is not ripe yet (timeperiod %s: active, count: %d)" %
+                                (bulk_dir, timeperiod, len(uuids)))
 
                         if only_ripe:
                             continue
                     elif active is False:
-                        notify_log(
-                            "Bulk %s is ripe: timeperiod %s has ended" % (bulk_dir, timeperiod))
+                        notify_log("Bulk %s is ripe: timeperiod %s has ended" %
+                                   (bulk_dir, timeperiod))
                     elif len(uuids) >= count:
-                        notify_log(
-                            "Bulk %s is ripe: count %d >= %d" % (bulk_dir, len(uuids), count))
+                        notify_log("Bulk %s is ripe: count %d >= %d" %
+                                   (bulk_dir, len(uuids), count))
                     else:
                         notify_log("Bulk %s is ripe: timeperiod %s is not known anymore" %
                                    (bulk_dir, timeperiod))
@@ -1721,7 +1716,7 @@ def notify_bulk(dirname, uuids):
     unhandled_uuids = []
     for mtime, uuid in uuids:
         try:
-            params, context = eval(file(dirname + "/" + uuid).read())
+            params, context = store.load_data_from_file(dirname + "/" + uuid)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -1735,17 +1730,7 @@ def notify_bulk(dirname, uuids):
             unhandled_uuids.append((mtime, uuid))
             continue
 
-        part_block = []
-        part_block.append("\n")
-        for varname, value in context.items():
-            part_block.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
-        bulk_context.append(part_block)
-
-        # Do not forget to add this to the monitoring log. We create
-        # a single entry for each notification contained in the bulk.
-        # It is important later to have this precise information.
-        plugin_name = "bulk " + (plugin or "plain email")
-        _log_to_history(notification_message(plugin_name, context))
+        bulk_context.append(context)
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1754,12 +1739,29 @@ def notify_bulk(dirname, uuids):
         if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
-        # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]
-        bulk_context = [x for y in bulk_context for x in y]
+        context_lines = create_bulk_parameter_context(old_params)
+        for context in bulk_context:
+            # Do not forget to add this to the monitoring log. We create
+            # a single entry for each notification contained in the bulk.
+            # It is important later to have this precise information.
+            plugin_name = "bulk " + (plugin or "plain email")
+            _log_to_history(notification_message(plugin_name, context))
 
-        parameter_context = create_bulk_parameter_context(old_params)
-        context_text = "".join(parameter_context + bulk_context)
-        call_bulk_notification_script(plugin, context_text)
+            context_lines.append("\n")
+            for varname, value in context.iteritems():
+                line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
+                context_lines.append(line)
+
+        exitcode, output_lines = call_bulk_notification_script(plugin, context_lines)
+
+        for context in bulk_context:
+            _log_to_history(
+                notification_result_message(
+                    "bulk " + (plugin or "plain email"),
+                    context,
+                    exitcode,
+                    output_lines,
+                ))
     else:
         notify_log("No valid notification file left. Skipping this bulk.")
 
@@ -1784,7 +1786,7 @@ def notify_bulk(dirname, uuids):
             notify_log("Warning: cannot remove directory %s: %s" % (dirname, e))
 
 
-def call_bulk_notification_script(plugin, context_text):
+def call_bulk_notification_script(plugin, context_lines):
     path = path_to_notification_script(plugin)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin)
@@ -1802,7 +1804,7 @@ def call_bulk_notification_script(plugin, context_text):
                              stdin=subprocess.PIPE,
                              close_fds=True)
 
-        stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
+        stdout_txt, stderr_txt = p.communicate("".join(context_lines).encode("utf-8"))
         exitcode = p.returncode
 
         clear_notification_timeout()
@@ -1815,8 +1817,12 @@ def call_bulk_notification_script(plugin, context_text):
 
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
-    for line in (stdout_txt + stderr_txt).splitlines():
+
+    output_lines = (stdout_txt + stderr_txt).splitlines()
+    for line in output_lines:
         notify_log("%s: %s" % (plugin, line.rstrip()))
+
+    return exitcode, output_lines
 
 
 #.
@@ -1845,20 +1851,13 @@ def store_notification_backlog(raw_context):
             os.remove(path)
         return
 
-    try:
-        backlog = eval(file(path).read())[:config.notification_backlog - 1]
-    except:
-        backlog = []
-
-    backlog = [raw_context] + backlog
-    file(path, "w").write("%r\n" % backlog)
+    backlog = store.load_data_from_file(path, default=[],
+                                        lock=True)[:config.notification_backlog - 1]
+    store.save_data_to_file(path, [raw_context] + backlog, pretty=False)
 
 
 def raw_context_from_backlog(nr):
-    try:
-        backlog = eval(file(notification_logdir + "/backlog.mk").read())
-    except:
-        backlog = []
+    backlog = store.load_data_from_file(notification_logdir + "/backlog.mk", default=[])
 
     if nr < 0 or nr >= len(backlog):
         console.error("No notification number %d in backlog.\n" % nr)

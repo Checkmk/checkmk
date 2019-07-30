@@ -52,11 +52,16 @@ rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 %files
 %defattr(-,root,root)
 /opt/omd
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
-%attr(4750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpsender
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
+%attr(0750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(0750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%caps(cap_net_raw,cap_net_bind_service+ep) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(0750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
+%caps(cap_net_bind_service+ep) /opt/omd/versions/%{version}/bin/mkeventd_open514
+%attr(0750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpsender
+%caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpsender
+%attr(0750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
+%caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
 
 %pre
 groupadd -r omd 2>/dev/null || true

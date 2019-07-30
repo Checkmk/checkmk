@@ -23,6 +23,8 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
+import errno
 import ast
 import os
 import shutil
@@ -156,7 +158,7 @@ def _cleanup_legacy_replication_status():
     try:
         os.unlink(var_dir + "replication_status.mk")
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             pass  # Not existant -> OK
         else:
             raise
@@ -166,7 +168,7 @@ def clear_site_replication_status(site_id):
     try:
         os.unlink(_site_replication_status_path(site_id))
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             pass  # Not existant -> OK
         else:
             raise
@@ -522,7 +524,7 @@ class ActivateChangesManager(ActivateChanges):
         try:
             os.makedirs(os.path.dirname(self._info_path()))
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -554,7 +556,7 @@ class ActivateChangesManager(ActivateChanges):
             raise MKUserError(None, _("Can not start activation: %s") % e)
 
     def _create_snapshots(self):
-        with cmk.gui.watolib.utils.exclusive_lock():
+        with store.lock_checkmk_configuration():
             if not self._changes:
                 raise MKUserError(None, _("Currently there are no changes to activate."))
 
@@ -634,8 +636,10 @@ class ActivateChangesManager(ActivateChanges):
         # Add site-specific global settings
         site_specific_paths = [("file", "sitespecific", os.path.join(site_tmp_dir,
                                                                      "sitespecific.mk"))]
-        snapshot_creator.generate_snapshot(
-            snapshot_path, paths, site_specific_paths, reuse_identical_snapshots=True)
+        snapshot_creator.generate_snapshot(snapshot_path,
+                                           paths,
+                                           site_specific_paths,
+                                           reuse_identical_snapshots=True)
 
         shutil.rmtree(site_tmp_dir)
 
@@ -682,7 +686,7 @@ class ActivateChangesManager(ActivateChanges):
         try:
             os.makedirs(tmp_dir)
         except OSError as e:
-            if e.errno == 17:  # File exists
+            if e.errno == errno.EEXIST:
                 pass
             else:
                 raise
@@ -722,7 +726,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.load()
             site_activation.start()
             os._exit(0)
-        except:
+        except Exception:
             logger.exception()
 
     def _log_activation(self):
@@ -761,7 +765,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _do_housekeeping(self):
         """Cleanup stale activations in case it is needed"""
-        with cmk.gui.watolib.utils.exclusive_lock():
+        with store.lock_checkmk_configuration():
             for activation_id in self._existing_activation_ids():
                 # skip the current activation_id
                 if self._activation_id == activation_id:
@@ -784,8 +788,9 @@ class ActivateChangesManager(ActivateChanges):
                     delete = not manager.is_running()
                 finally:
                     if delete:
-                        shutil.rmtree("%s/%s" % (ActivateChangesManager.activation_tmp_base_dir,
-                                                 activation_id))
+                        shutil.rmtree(
+                            "%s/%s" %
+                            (ActivateChangesManager.activation_tmp_base_dir, activation_id))
 
     def _existing_activation_ids(self):
         ids = []
@@ -856,7 +861,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             try:
                 os.close(x)
             except OSError as e:
-                if e.errno == 9:  # Bad file descriptor
+                if e.errno == errno.EBADF:
                     pass
                 else:
                     raise
@@ -866,7 +871,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         try:
             self._do_run()
-        except:
+        except Exception:
             logger.exception()
 
     def _do_run(self):
@@ -1028,7 +1033,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             os.unlink(self._snapshot_file)
         except OSError as e:
-            if e.errno == 2:
+            if e.errno == errno.ENOENT:
                 pass  # Not existant -> OK
             else:
                 raise

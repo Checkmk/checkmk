@@ -691,7 +691,7 @@ def test_registered_datasources():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_registered_painters():
     expected = {
         'aggr_acknowledged': {
@@ -1289,7 +1289,7 @@ def test_registered_painters():
             'title': u'Host groups the host is member of'
         },
         'host_icons': {
-            'columns': set([
+            'columns': {
                 'host_scheduled_downtime_depth',
                 'host_in_check_period',
                 'host_downtimes_with_extra_info',
@@ -1316,7 +1316,7 @@ def test_registered_painters():
                 'host_check_command',
                 'host_name',
                 'host_notes_url_expanded',
-            ]),
+            },
             'printable': False,
             'short': u'Icons',
             'title': u'Host icons'
@@ -2635,7 +2635,7 @@ def test_registered_painters():
             'title': u'Service Graphs with Timerange Previews'
         },
         'service_icons': {
-            'columns': set([
+            'columns': {
                 'host_scheduled_downtime_depth',
                 'service_check_command',
                 'host_downtimes_with_extra_info',
@@ -2676,7 +2676,7 @@ def test_registered_painters():
                 'host_name',
                 'service_is_flapping',
                 'service_state',
-            ]),
+            },
             'printable': False,
             'short': u'Icons',
             'title': u'Service icons'
@@ -4004,7 +4004,7 @@ def test_registered_painters():
     names = cmk.gui.plugins.views.painter_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    known_keys = set([
+    known_keys = {
         "title",
         "columns",
         "short",
@@ -4012,7 +4012,7 @@ def test_registered_painters():
         "options",
         "printable",
         "load_inv",
-    ])
+    }
     for spec in expected.values():
         this_keys = set(spec.keys())
         assert not this_keys.difference(known_keys)
@@ -4058,6 +4058,7 @@ def test_legacy_register_painter(monkeypatch):
             "options": ["opt1"],
             "printable": False,
             "paint": rendr,
+            "groupby": "xyz",
         })
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
@@ -4070,12 +4071,13 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
     assert painter.render(row={}, cell=None) == "xyz"
+    assert painter.group_by(row={}) == "xyz"
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_registered_sorters():
     expected = {
         'aggr_group': {
@@ -5773,7 +5775,7 @@ def test_get_needed_join_columns(view):
         'service_description',
     ])
 
-@pytest.mark.usefixture("load_plugins")
+@pytest.mark.usefixtures("load_plugins")
 def test_create_view_basics():
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]

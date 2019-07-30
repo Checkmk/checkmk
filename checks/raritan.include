@@ -232,12 +232,11 @@ def check_raritan_sensors_temp(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]['state']
         reading, crit_lower, warn_lower, crit, warn = parsed[item]['sensor_data']
-        return check_temperature(
-            reading,
-            params,
-            "raritan_sensors_%s" % item,
-            dev_unit=parsed[item]['sensor_unit'],
-            dev_levels=(warn, crit),
-            dev_levels_lower=(warn_lower, crit_lower),
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(reading,
+                                 params,
+                                 "raritan_sensors_%s" % item,
+                                 dev_unit=parsed[item]['sensor_unit'],
+                                 dev_levels=(warn, crit),
+                                 dev_levels_lower=(warn_lower, crit_lower),
+                                 dev_status=state,
+                                 dev_status_name=state_readable)

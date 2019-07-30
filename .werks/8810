@@ -1,0 +1,10 @@
+Title: systemd_services: Extension of services classification functionality
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1563283599
+Class: feature
+
+The systemd services summary check plugin obtains the functionality to assess static and activatingin a separate batch. Regarding the activating services, a new WATO rule has been implemented which allows to specify "lenient" time periods.

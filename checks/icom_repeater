@@ -67,13 +67,13 @@ def parse_icom_repeater(info):
         elif line[1] == "TX PLL lock voltage":
             try:
                 parsed["tx_pll_lock_voltage"] = float(line[2][:-1])
-            except:
+            except Exception:
                 pass
 
         elif line[1] == "RX PLL lock voltage":
             try:
                 parsed["rx_pll_lock_voltage"] = float(line[2][:-1])
-            except:
+            except Exception:
                 pass
 
         elif line[1] == "Repeater frequency":
@@ -222,12 +222,11 @@ def inventory_icom_repeater_temp(parsed):
 
 
 def check_icom_repeater_temp(_no_item, params, parsed):
-    return check_temperature(
-        parsed["temp"],
-        params,
-        "icom_repeater_temp",
-        dev_unit=parsed["temp_devunit"],
-        dev_status=parsed["temp_devstatus"])
+    return check_temperature(parsed["temp"],
+                             params,
+                             "icom_repeater_temp",
+                             dev_unit=parsed["temp_devunit"],
+                             dev_status=parsed["temp_devstatus"])
 
 
 check_info["icom_repeater.temp"] = {

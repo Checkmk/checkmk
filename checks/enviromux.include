@@ -374,12 +374,11 @@ def enviromux_sems_scan_function(oid):
 def check_enviromux_temperature(item, params, parsed):
     dev_levels_lower = (parsed[item]['sensor_min'], parsed[item]['sensor_min'])
     dev_levels = (parsed[item]['sensor_max'], parsed[item]['sensor_max'])
-    return check_temperature(
-        parsed[item]['sensor_value'],
-        params,
-        item,
-        dev_levels_lower=dev_levels_lower,
-        dev_levels=dev_levels)
+    return check_temperature(parsed[item]['sensor_value'],
+                             params,
+                             item,
+                             dev_levels_lower=dev_levels_lower,
+                             dev_levels=dev_levels)
 
 
 def check_enviromux_voltage(item, params, parsed):

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import getopt
 import sys
 import xml.etree.ElementTree as ET
@@ -33,8 +34,10 @@ from requests.auth import HTTPBasicAuth
 
 
 def usage():
-    print "Usage:"
-    print "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}]\n"
+    print("Usage:")
+    print(
+        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}]\n"
+    )
 
 
 short_options = ""
@@ -42,7 +45,7 @@ long_options = ["piggyback", "servername=", "port=", "username=", "password="]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
+except getopt.GetoptError as err:
     usage()
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
@@ -83,7 +86,7 @@ try:
 
     xml = response.text
     data = ET.fromstring(xml)
-except Exception, e:
+except Exception as e:
     sys.stderr.write("Unable to connect. Credentials might be incorrect: %s\n" % e)
     sys.exit(1)
 
@@ -117,8 +120,8 @@ try:
         add_output("<<<<>>>>")
         add_output("<<<local>>>")
         add_output("0 Active_MQ - Found %s Queues in total" % count)
-except Exception, e:  # Probably an IndexError
+except Exception as e:  # Probably an IndexError
     sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)
     sys.exit(1)
 
-print "\n".join(output_lines)
+print("\n".join(output_lines))

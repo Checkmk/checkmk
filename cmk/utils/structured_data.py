@@ -73,7 +73,6 @@ from cmk.utils.exceptions import MKGeneralException
 
 class StructuredDataTree(object):
     """Interface for structured data tree"""
-
     def __init__(self):
         super(StructuredDataTree, self).__init__()
         self._root = Container()
@@ -291,7 +290,6 @@ class StructuredDataTree(object):
 
 class NodeAttribute(object):
     """Interface for all node attributes"""
-
     def is_empty(self):
         raise NotImplementedError()
 
@@ -511,31 +509,34 @@ class Container(NodeAttribute):
         sub_node = self._get_sub_node(path[:1])
         if sub_node is None:
             return None
+
         edge = path.pop(0)
         sub_node_abs_path = sub_node.get_absolute_path()
         if path:
             container = sub_node.get_node_container()
             if container is not None:
                 filtered = container.get_filtered_branch(path, keys, Container())
-                parent.add_child(edge, filtered, sub_node_abs_path)
-        else:
+                if filtered is not None:
+                    parent.add_child(edge, filtered, sub_node_abs_path)
+            return parent
+
+        if keys is None:
+            for child in sub_node.get_node_children():
+                parent.add_child(edge, child, sub_node_abs_path)
+            return parent
+
+        numeration = sub_node.get_node_numeration()
+        if numeration is not None:
             if keys:
-                container = sub_node.get_node_container()
-                if container is not None:
-                    parent.add_child(edge, container, sub_node_abs_path)
+                numeration = numeration.get_filtered_data(keys)
+            parent.add_child(edge, numeration, sub_node_abs_path)
 
-                numeration = sub_node.get_node_numeration()
-                if numeration is not None:
-                    filtered_numeration = numeration.get_filtered_data(keys)
-                    parent.add_child(edge, filtered_numeration, sub_node_abs_path)
+        attributes = sub_node.get_node_attributes()
+        if attributes is not None:
+            if keys:
+                attributes = attributes.get_filtered_data(keys)
+            parent.add_child(edge, attributes, sub_node_abs_path)
 
-                attributes = sub_node.get_node_attributes()
-                if attributes is not None:
-                    filtered_attributes = attributes.get_filtered_data(keys)
-                    parent.add_child(edge, filtered_attributes, sub_node_abs_path)
-            else:
-                for child in sub_node.get_node_children():
-                    parent.add_child(edge, child, sub_node_abs_path)
         return parent
 
     #   ---getting [sub] nodes/node attributes----------------------------------
@@ -634,7 +635,6 @@ class Container(NodeAttribute):
 
 class Leaf(NodeAttribute):
     """Interface for all primitive nodes/leaves"""
-
     def normalize_nodes(self):
         pass
 
@@ -652,8 +652,6 @@ class Leaf(NodeAttribute):
         for k, v in entries.iteritems():
             if k in keys:
                 filtered.setdefault(k, v)
-            else:
-                filtered.setdefault(k, None)
         return filtered
 
 
@@ -832,7 +830,9 @@ class Numeration(Leaf):
         filtered = Numeration()
         numeration = []
         for entry in self._numeration:
-            numeration.append(self._get_filtered_entries(entry, keys))
+            filtered_entry = self._get_filtered_entries(entry, keys)
+            if filtered_entry:
+                numeration.append(filtered_entry)
         filtered.set_child_data(numeration)
         return filtered
 
@@ -986,8 +986,9 @@ class Node(object):
             if self._children.get(child_type) is None \
                and foreign._children.get(child_type) is None:
                 continue
-            comparable_children.add((abs_path, self._children.get(child_type, child),
-                                     foreign._children.get(child_type, child)))
+            comparable_children.add(
+                (abs_path, self._children.get(child_type,
+                                              child), foreign._children.get(child_type, child)))
         return comparable_children
 
     def copy(self):

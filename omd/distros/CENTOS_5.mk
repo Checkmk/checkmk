@@ -1,5 +1,6 @@
 DISTRO_CODE       = el5
 OS_PACKAGES       =
+OS_PACKAGES      += libcap # needed for setting special file permissions
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES      += curl
@@ -41,7 +42,7 @@ APACHE_CONF_DIR   = /etc/httpd/conf.d
 APACHE_INIT_NAME  = httpd
 APACHE_USER       = apache
 APACHE_GROUP      = apache
-APACHE_BIN        = /usr/sbin/httpd
+APACHE_VERSION    = 2.2.3
 APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR = /usr/lib/httpd/modules
 APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules

@@ -5,23 +5,18 @@
 
 #include <filesystem>
 
+#include "cfg.h"
 #include "common/wtools.h"
+#include "glob_match.h"
+#include "providers/fileinfo.h"
+#include "providers/fileinfo_details.h"
+#include "service_processor.h"
+#include "test-utf-names.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
-#include "cfg.h"
-
-#include "providers/fileinfo.h"
-#include "providers/fileinfo_details.h"
-
-#include "glob_match.h"
-#include "service_processor.h"
-
-#include "test-utf-names.h"
-
 namespace cma::provider {
-
-std::string ProcessEntry(const std::string Entry);
 
 std::filesystem::path BuildTestUNC() {
     auto comp = cma::tools::win::GetEnv("COMPUTERNAME");
@@ -120,7 +115,7 @@ TEST(FileInfoTest, Globs) {
 TEST(FileInfoTest, Base) {
     using namespace cma::provider;
     using namespace cma::cfg;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     constexpr const char* hdr = "<<<fileinfo:sep(124)>>>\n";
 
     //
@@ -151,7 +146,7 @@ TEST(FileInfoTest, Base) {
         EXPECT_TRUE(!out.empty());
     }
     // reload config
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
 
     {
         FileInfo fi;
@@ -176,9 +171,202 @@ TEST(FileInfoTest, Base) {
     }
 }
 
+TEST(FileInfoTest, Misc) {
+    EXPECT_TRUE(FileInfo::ContainsGlobSymbols("ss*ddfff"));
+    EXPECT_TRUE(FileInfo::ContainsGlobSymbols("*"));
+    EXPECT_TRUE(FileInfo::ContainsGlobSymbols("?"));
+    EXPECT_TRUE(FileInfo::ContainsGlobSymbols("ss*ddfff?"));
+    EXPECT_FALSE(FileInfo::ContainsGlobSymbols("sddfff"));
+    EXPECT_FALSE(FileInfo::ContainsGlobSymbols("s_fff"));
+    EXPECT_FALSE(FileInfo::ContainsGlobSymbols(""));
+
+    EXPECT_EQ(FileInfo::kMissing, "missing");
+    EXPECT_EQ(FileInfo::kOk, "ok");
+    EXPECT_EQ(FileInfo::kStatFailed, "stat failed");
+}
+
+TEST(FileInfoTest, CheckDriveLetter) {
+    // boiler plating:
+
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+    tst::SafeCleanTempDir();
+    auto [a, b] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test););
+
+    std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
+                                                     {a / "a2.txt", "a2"}};
+
+    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+
+    auto cfg = cma::cfg::GetLoadedConfig();
+    auto fileinfo_node = cfg[groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+    auto value = a.u8string();
+    value[0] = std::tolower(value[0]);
+    auto str = fmt::format("['{}\\*.txt', 'c:\\weirdfile' ]", value);
+    fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
+    ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
+    {
+        FileInfo fi;
+        fi.mode_ = FileInfo::Mode::legacy;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 4);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
+        EXPECT_EQ(table[1][0], value[0]);
+        EXPECT_EQ(table[2][0], value[0]);
+        EXPECT_EQ(table[3][0], value[0]);
+    }
+    value[0] = std::toupper(value[0]);
+    str = fmt::format("['{}\\*.txt', 'C:\\weirdfile']", value);
+    fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
+    ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
+    {
+        FileInfo fi;
+        fi.mode_ = FileInfo::Mode::legacy;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 4);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
+        EXPECT_EQ(table[1][0], value[0]);
+        EXPECT_EQ(table[2][0], value[0]);
+        EXPECT_EQ(table[3][0], value[0]);
+    }
+}
+
+TEST(FileInfoTest, CheckOutput) {
+    // boiler plating:
+
+    namespace fs = std::filesystem;
+    using namespace cma::cfg;
+    tst::SafeCleanTempDir();
+    auto [a, b] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test););
+
+    std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
+                                                     {b / "b1.cmd", "b1"},
+                                                     {b / "b2.cmd", "b2"},
+                                                     {b / "b3.txt", "b3"},
+                                                     {a / "a2.cmd", "a2"}};
+
+    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+
+    auto cfg = cma::cfg::GetLoadedConfig();
+    auto fileinfo_node = cfg[groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+    auto str = fmt::format("['{}\\*.txt', '{}\\*.cmd', 'c:\\aaaaa.asdd']",
+                           a.u8string(), b.u8string());
+    fileinfo_node[vars::kFileInfoPath] = YAML::Load(str);
+    ASSERT_TRUE(fileinfo_node[vars::kFileInfoPath].IsSequence());
+    {
+        FileInfo fi;
+        fi.mode_ = FileInfo::Mode::legacy;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 5);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
+        table.erase(table.begin());
+
+        auto missing = table.back();
+        auto values = cma::tools::SplitString(missing, "|");
+        ASSERT_TRUE(values.size() == 3);
+        std::error_code ec;
+        EXPECT_FALSE(fs::exists(values[0], ec));
+        EXPECT_TRUE(values[1] == FileInfo::kMissing);
+        EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
+        table.pop_back();
+
+        for (auto line : table) {
+            auto values = cma::tools::SplitString(line, "|");
+            ASSERT_TRUE(values.size() == 3);
+            EXPECT_TRUE(fs::exists(values[0], ec));
+            EXPECT_TRUE(std::atoll(values[1].c_str()) == 2);
+            EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
+            auto f = std::any_of(
+                std::begin(data), std::end(data),
+                [values](std::tuple<fs::path, std::string_view> entry) {
+                    auto const& [path, _] = entry;
+                    return cma::tools::IsEqual(path.u8string(), values[0]);
+                });
+            EXPECT_TRUE(f);
+        }
+    }
+
+    {
+        FileInfo fi;
+        ASSERT_TRUE(fi.mode_ == FileInfo::Mode::legacy)
+            << "this value should be set by default";
+
+        fi.mode_ = FileInfo::Mode::modern;
+        auto out = fi.makeBody();
+
+        ASSERT_TRUE(!out.empty());
+        auto table = cma::tools::SplitString(out, "\n");
+        ASSERT_EQ(table.size(), 8);
+        EXPECT_TRUE(std::atoll(table[0].c_str()) > 0);
+        table.erase(table.begin());
+        EXPECT_EQ(table[0], "[[[header]]]");
+        table.erase(table.begin());
+        EXPECT_EQ(table[0], "name|status|size|time");
+        table.erase(table.begin());
+        EXPECT_EQ(table[0], "[[[content]]]");
+        table.erase(table.begin());
+
+        auto missing = table.back();
+        auto values = cma::tools::SplitString(missing, "|");
+        ASSERT_TRUE(values.size() == 2);
+        std::error_code ec;
+        EXPECT_FALSE(fs::exists(values[0], ec));
+        EXPECT_TRUE(values[1] == FileInfo::kMissing);
+        table.pop_back();
+
+        for (auto line : table) {
+            auto values = cma::tools::SplitString(line, "|");
+            ASSERT_TRUE(values.size() == 4);
+            EXPECT_TRUE(fs::exists(values[0], ec));
+            EXPECT_EQ(values[1], FileInfo::kOk);
+            EXPECT_TRUE(std::atoll(values[2].c_str()) == 2);
+            EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
+            auto f = std::any_of(
+                std::begin(data), std::end(data),
+                [values](std::tuple<fs::path, std::string_view> entry) {
+                    auto const& [path, _] = entry;
+                    return cma::tools::IsEqual(path.u8string(), values[0]);
+                });
+            EXPECT_TRUE(f);
+        }
+    }
+}
+
+TEST(FileInfoTest, YmlCheck) {
+    using namespace cma::cfg;
+    tst::YamlLoader w;
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto fileinfo_node = cfg[groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+
+    auto enabled = GetVal(groups::kFileInfo, vars::kEnabled, false);
+    EXPECT_TRUE(enabled);
+    auto paths = GetArray<std::string>(groups::kFileInfo, vars::kFileInfoPath);
+    EXPECT_EQ(paths.size(), 0);
+}
+
 TEST(FileInfoTest, Reality) {
     namespace fs = std::filesystem;
-    cma::OnStart(cma::kTest);
+    cma::OnStart(cma::AppType::test);
     ASSERT_TRUE(fs::exists("c:\\windows\\system32"))
         << "unit tests works for windows on c in windows folder";
 
@@ -317,6 +505,67 @@ TEST(FileInfoTest, Reality) {
     }
 }
 
+TEST(FileInfoTest, MakeFileInfoMiss) {
+    {
+        auto x =
+            details::MakeFileInfoStringMissing("aaa", FileInfo::Mode::legacy);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 3);
+        EXPECT_EQ(table[0], "aaa");
+        EXPECT_TRUE(table[1] == FileInfo::kMissing);
+        EXPECT_TRUE(std::stoll(table[2]) > 0);
+    }
+
+    {
+        auto x =
+            details::MakeFileInfoStringMissing("aaa", FileInfo::Mode::modern);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 2);
+        EXPECT_EQ(table[0], "aaa");
+        EXPECT_TRUE(table[1] == FileInfo::kMissing);
+    }
+}
+
+TEST(FileInfoTest, MakeFileInfoPres) {
+    const std::string fname = "c:\\Windows\\notepad.exe";
+    {
+        auto x =
+            details::MakeFileInfoStringPresented(fname, FileInfo::Mode::legacy);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 3);
+        EXPECT_EQ(table[0], fname);
+        EXPECT_TRUE(std::stoll(table[1]) > 0);
+        EXPECT_TRUE(std::stoll(table[2]) > 0);
+    }
+
+    {
+        auto x =
+            details::MakeFileInfoStringPresented(fname, FileInfo::Mode::modern);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 4);
+        EXPECT_EQ(table[0], fname);
+        EXPECT_EQ(table[1], FileInfo::kOk);
+        EXPECT_TRUE(std::stoll(table[2]) > 0);
+        EXPECT_TRUE(std::stoll(table[3]) > 0);
+    }
+}
+
 TEST(FileInfoTest, MakeFileInfo) {
     namespace fs = std::filesystem;
     {
@@ -325,7 +574,8 @@ TEST(FileInfoTest, MakeFileInfo) {
     }  // namespace fs=std::filesystem;
 
     {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXE");
+        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXE",
+                                             FileInfo::Mode::legacy);
         EXPECT_TRUE(!x.empty());
         ASSERT_EQ(x.back(), '\n');
         x.pop_back();
@@ -337,8 +587,43 @@ TEST(FileInfoTest, MakeFileInfo) {
         EXPECT_TRUE(std::stoll(table[2]) > 0);
     }
 
+    // "fname|ok|500|153334455\n"
     {
-        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXEs");
+        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXE",
+                                             FileInfo::Mode::modern);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 4);
+        EXPECT_EQ(table[0], "C:\\Windows\\notepad.exe");
+        EXPECT_EQ(table[1], FileInfo::kOk);
+        EXPECT_TRUE(std::stoll(table[2]) > 0);
+        EXPECT_TRUE(std::stoll(table[3]) > 0);
+    }
+
+    // "fname|stat failed\n" not possible to test
+    if (0) {
+        auto x = details::MakeFileInfoString(
+            "we do not know how to test this case in Windows",
+            FileInfo::Mode::modern);
+
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 4);
+        EXPECT_EQ(table[0], "C:\\Windows\\notepad.exe");
+        EXPECT_EQ(table[1], FileInfo::kOk);
+        EXPECT_TRUE(std::stoll(table[2]) > 0);
+        EXPECT_TRUE(std::stoll(table[3]) > 0);
+    }
+
+    {
+        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXEs",
+                                             FileInfo::Mode::legacy);
         EXPECT_TRUE(!x.empty());
         ASSERT_EQ(x.back(), '\n');
         x.pop_back();
@@ -346,8 +631,21 @@ TEST(FileInfoTest, MakeFileInfo) {
         auto table = cma::tools::SplitString(x, "|");
         EXPECT_EQ(table.size(), 3);
         EXPECT_EQ(table[0], "C:\\Windows\\notepad.EXEs");
-        EXPECT_TRUE(std::stoll(table[1]) == 0);
-        EXPECT_TRUE(std::stoll(table[2]) == 0);
+        EXPECT_TRUE(table[1] == FileInfo::kMissing);
+        EXPECT_TRUE(std::stoll(table[2]) != 0);
+    }
+
+    {
+        auto x = details::MakeFileInfoString("c:\\Windows\\notepad.EXEs",
+                                             FileInfo::Mode::modern);
+        EXPECT_TRUE(!x.empty());
+        ASSERT_EQ(x.back(), '\n');
+        x.pop_back();
+
+        auto table = cma::tools::SplitString(x, "|");
+        EXPECT_EQ(table.size(), 2);
+        EXPECT_EQ(table[0], "C:\\Windows\\notepad.EXEs");
+        EXPECT_TRUE(table[1] == FileInfo::kMissing);
     }
 }
 

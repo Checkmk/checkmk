@@ -34,20 +34,20 @@ from cmk.utils.i18n import _
 g_compiled_regexes = {}  # type: Dict[str, Pattern]
 
 
-def regex(pattern):
+def regex(pattern, flags=0):
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:
-        return g_compiled_regexes[pattern]
+        return g_compiled_regexes[(pattern, flags)]
     except KeyError:
         pass
 
     try:
-        reg = re.compile(pattern)
+        reg = re.compile(pattern, flags=flags)
     except Exception as e:
         raise MKGeneralException(_("Invalid regular expression '%s': %s") % (pattern, e))
 
-    g_compiled_regexes[pattern] = reg
+    g_compiled_regexes[(pattern, flags)] = reg
     return reg
 
 

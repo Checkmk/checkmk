@@ -69,14 +69,12 @@ class RulespecCheckgroupParametersCiscoMem(CheckParameterRulespecWithItem):
                          Tuple(
                              title=_("Specify levels in percentage of total RAM"),
                              elements=[
-                                 Percentage(
-                                     title=_("Warning at a usage of"),
-                                     unit=_("% of RAM"),
-                                     maxvalue=None),
-                                 Percentage(
-                                     title=_("Critical at a usage of"),
-                                     unit=_("% of RAM"),
-                                     maxvalue=None)
+                                 Percentage(title=_("Warning at a usage of"),
+                                            unit=_("% of RAM"),
+                                            maxvalue=None),
+                                 Percentage(title=_("Critical at a usage of"),
+                                            unit=_("% of RAM"),
+                                            maxvalue=None)
                              ],
                          ),
                          Tuple(

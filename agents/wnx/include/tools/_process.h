@@ -2,12 +2,12 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <shlobj.h>  // known path
+#include <windows.h>
 
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 #include "tools/_raii.h"
@@ -20,11 +20,11 @@ inline bool RunCommandAndWait(const std::wstring& Command) {
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
-    PROCESS_INFORMATION pi{0};
+    PROCESS_INFORMATION pi{nullptr};
     memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessW(NULL,  // stupid windows want null here
+    if (::CreateProcessW(nullptr,  // stupid windows want null here
                          const_cast<wchar_t*>(Command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
@@ -52,7 +52,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
     memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    if (::CreateProcessA(NULL,  // stupid windows want null here
+    if (::CreateProcessA(nullptr,  // stupid windows want null here
                          const_cast<char*>(Command.c_str()),  // win32!
                          nullptr,  // security attribute
                          nullptr,  // thread attribute
@@ -72,7 +72,7 @@ inline bool RunDetachedCommand(const std::string& Command) {
 // returns process id
 // used during auto update
 inline uint32_t RunStdCommand(
-    const std::wstring& Command,  // full command with arguments
+    std::wstring_view Command,   // full command with arguments
     bool Wait,                   // important flag! set false  when you are sure
     BOOL InheritHandle = FALSE,  // not optimal, but default
     HANDLE Stdio = 0,            // when we want to catch output
@@ -92,8 +92,8 @@ inline uint32_t RunStdCommand(
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
 
-    if (::CreateProcessW(NULL,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.c_str()),  // win32!
+    if (::CreateProcessW(nullptr,  // stupid windows want null here
+                         const_cast<wchar_t*>(Command.data()),  // win32!
                          nullptr,        // security attribute
                          nullptr,        // thread attribute
                          InheritHandle,  // handle inheritance
@@ -215,12 +215,6 @@ inline std::wstring GetTempFolder() {
     }
 
     return L"";
-}
-
-inline std::wstring GetCurrentFolder() noexcept {
-    wchar_t dir[MAX_PATH * 2] = L"";
-    GetCurrentDirectory(MAX_PATH * 2, dir);
-    return dir;
 }
 
 }  // namespace win

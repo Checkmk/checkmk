@@ -1,0 +1,28 @@
+Title: Fixed broken mail notifications with Nagios core (1.5.0p14 regression)
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b1
+Date: 1555485617
+
+Unfortunately, version 1.5.0p14 contained a bug that prevented mail
+notifications when using the Nagios core.  According to our knowledge users of
+the Microcore are not affected.
+
+The error is displayed as follows in var/log/notify.log:
+
+C+:
+2019-04-17 09:15:19 Preparing rule based notifications
+2019-04-17 09:15:19 Found 0 user specific rules
+2019-04-17 09:15:19 Global rule 'Notify all contacts of a host/service via HTML email'...
+2019-04-17 09:15:19  -> matches!
+2019-04-17 09:15:19    - adding notification of lm via mail
+2019-04-17 09:15:19 Executing 1 notifications:
+2019-04-17 09:15:19   * notifying lm via mail, parameters: host_subject, from, service_subject, disable_multiplexing, bulk: no
+2019-04-17 09:15:19      executing /omd/sites/stable/share/check_mk/notifications/mail
+2019-04-17 09:15:19      Output: Cannot send HTML email: empty destination email address
+2019-04-17 09:15:19      Plugin exited with code 2
+C-:

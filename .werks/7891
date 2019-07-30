@@ -1,0 +1,10 @@
+Title: systemd_units: allow to blacklist specific services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1561540856
+Class: feature
+
+In the current setup all available systemd services are monitored. This implementation allows to exclude specific services based upon regular expression match cases. It is also possible to provide multiple regular expressions.

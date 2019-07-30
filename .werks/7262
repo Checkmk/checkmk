@@ -1,0 +1,19 @@
+Title: Initial version of new Business Intelligence visualization
+Level: 2
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1562168932
+Class: feature
+
+This werk introduces the initial version of the new business intelligence visualiziation, which was mentioned at our last conference
+https://www.youtube.com/watch?v=zYfIBJkbKxA
+
+You can navigate to the new visualization through an icon, which is shown in the classical view.
+The new visualization enables you to view aggregations in a different perspective.
+
+A more elaborate documentation will be provided later on. Some first notes.
+
+You can create layout templates for a group of aggregations. These templates can be assigned in the aggregation configuration.
+You can also specifically assign a layout to one aggregation.

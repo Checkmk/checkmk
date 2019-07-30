@@ -44,8 +44,8 @@ def test_site_context_exists(monkeypatch):
 
 
 def test_site_context_is_empty(monkeypatch):
-    monkeypatch.setattr(
-        os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"])
+    monkeypatch.setattr(os, "listdir", lambda p: []
+                        if p == "/omd/sites/dingeling" else ["abc", "version"])
 
     site = omdlib.main.SiteContext("dingeling")
     assert site.is_empty()

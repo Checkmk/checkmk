@@ -33,7 +33,10 @@ import ctypes.util
 from contextlib import contextmanager
 from typing import Generator  # pylint: disable=unused-import
 
-from pathlib2 import Path  # pylint: disable=unused-import
+try:
+    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.store
 from cmk.utils.exceptions import MKGeneralException
@@ -103,34 +106,32 @@ def closefrom(lowfd):
     os.closerange(lowfd, highfd)
 
 
-# TODO: Change API and call sites to work with Path() objects
 def lock_with_pid_file(path):
-    # type: (str) -> None
+    # type: (Path) -> None
     """
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
     """
-    if not cmk.utils.store.try_aquire_lock(path):
+    if not cmk.utils.store.try_aquire_lock(str(path)):
         raise MKGeneralException("Failed to aquire PID file lock: "
                                  "Another process is already running")
 
     # Now that we have the lock we are allowed to write our pid to the file.
     # The pid can then be used by the init script.
-    with file(path, "w") as f:
-        f.write("%d\n" % os.getpid())
+    with path.open("w", encoding="utf-8") as f:
+        f.write(u"%d\n" % os.getpid())
 
 
-# TODO: Change API and call sites to work with Path() objects
 def _cleanup_locked_pid_file(path):
-    # type: (str) -> None
+    # type: (Path) -> None
     """Cleanup the lock + file acquired by the function above"""
-    if not cmk.utils.store.have_lock(path):
+    if not cmk.utils.store.have_lock(str(path)):
         return
 
-    cmk.utils.store.release_lock(path)
+    cmk.utils.store.release_lock(str(path))
 
     try:
-        os.remove(path)
+        path.unlink()
     except OSError:
         pass
 
@@ -139,11 +140,11 @@ def _cleanup_locked_pid_file(path):
 def pid_file_lock(path):
     # type: (Path) -> Generator[None, None, None]
     """Context manager for PID file based locking"""
-    lock_with_pid_file("%s" % path)
+    lock_with_pid_file(path)
     try:
         yield
     finally:
-        _cleanup_locked_pid_file("%s" % path)
+        _cleanup_locked_pid_file(path)
 
 
 def set_cmdline(cmdline):

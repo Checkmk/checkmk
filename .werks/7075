@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1547802040
 
 When persisted sections of Check_MK in <tt>var/check_mk/persisted/*</tt> and

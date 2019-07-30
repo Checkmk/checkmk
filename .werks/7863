@@ -1,0 +1,11 @@
+Title: chrony: Fixed detection of unreachable NTP servers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1562857079
+Class: fix
+
+This werk fixes the problem of chrony check not be able to detect when no NTP server is reachable.
+

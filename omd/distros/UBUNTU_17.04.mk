@@ -3,6 +3,7 @@ DISTRO_CODE     = zesty
 # Check_MK build specific packages below
 #
 OS_PACKAGES     =
+OS_PACKAGES    += libcap2-bin # needed for setting special file permissions
 OS_PACKAGES    += cron # needed for sites cron jobs
 OS_PACKAGES    += time # needed for mk-job
 OS_PACKAGES    += traceroute # needed for Check_MK parent scan
@@ -54,7 +55,7 @@ APACHE_CONF_DIR   = /etc/apache2/conf.d
 APACHE_INIT_NAME  = apache2
 APACHE_USER       = www-data
 APACHE_GROUP      = www-data
-APACHE_BIN        = /usr/sbin/apache2
+APACHE_VERSION    = 2.4.25
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2/modules
 APACHE_MODULE_DIR_64 = /usr/lib/apache2/modules

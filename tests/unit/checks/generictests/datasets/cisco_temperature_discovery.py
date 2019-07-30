@@ -82,4 +82,4 @@ checks = {'dom': [(u'Ethernet1/1 Lane 1 Transceiver Receive Power Sensor',
                      [('output_signal_power_dbm', 0.0, -1.3, 1.699, None, None)])])]}
 
 
-mock_host_conf = {'dom': {'admin_states': ['1', '3']}}
+mock_host_conf_merged = {'dom': {'admin_states': ['1', '3']}}

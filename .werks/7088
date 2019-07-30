@@ -1,11 +1,12 @@
 Title: omd update can now be performed without access to source version
 Level: 2
 Component: omd
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 1.6.0i1
+State: unknown
+Version: 1.7.0i1
 Date: 1550473857
-Class: feature
 
 The "omd update" procedure, which is used to perform a version update for a
 site, always needed access to the previous version, the new version and the
@@ -24,10 +25,10 @@ Technical detail:
 <li>The meta files are saved for the first time during "omd create"</li>
 <li>The meta files are updated to the new version during each "omd update"</li>
 <li>The files are copied to the sites <tt>.version_meta</tt> directory.</li>
-<li>The directory <tt>/omd/versions/[version]/skel is copied.</li>
-<li>The file <tt>/omd/versions/[version]/share/omd/skel.permissions is copied.</li>
+<li>The directory <tt>/omd/versions/[version]/skel</tt> is copied.</li>
+<li>The file <tt>/omd/versions/[version]/share/omd/skel.permissions</tt> is copied.</li>
 <li>A file <tt><tt>.version_meta/version</tt> is created.</li>
 <li>When an update is performed, the meta files are used if they are available
 and up-to-date. In case they don't fit these conditiones, the previous version
 files need to be available as before this werk.</li>
-<li>
+</ul>

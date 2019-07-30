@@ -112,8 +112,8 @@ def parse_cisco_ip_sla(info):
             ('Text', None, '', None),
             ('Connection lost occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
             ('Timeout occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
-            ('Completion time over treshold occured', lambda x: 'yes' if x == '1' else 'no', '',
-             'option'),
+            ('Completion time over treshold occured', lambda x: 'yes'
+             if x == '1' else 'no', '', 'option'),
         ),
         (  # rttMonLatestRttOperEntry
             ('Latest RTT completion time', int, 'ms/us', 'level'),

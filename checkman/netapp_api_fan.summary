@@ -1,0 +1,11 @@
+title: NetApp Filer: FANs Summary
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the state of the shelfes FAN sensors and groups them for a NetApp filer summary.
+ The checks goes CRIT when at least one fan fails and highlights the concerning units
+
+inventory:
+ One service is discovered for all fans together.

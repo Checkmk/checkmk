@@ -19,9 +19,6 @@
     <Filter Include="data">
       <UniqueIdentifier>{fab2d1a0-f758-4e0d-ba44-8f07c5363ce4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="snippets">
-      <UniqueIdentifier>{72740dc8-3dcb-4307-b833-889320cc5828}</UniqueIdentifier>
-    </Filter>
     <Filter Include="lwa">
       <UniqueIdentifier>{96efc889-0a49-4c63-a0bd-5010caf93b62}</UniqueIdentifier>
     </Filter>
@@ -75,9 +72,6 @@
     <ClInclude Include="..\..\include\tools\_process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="service_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -123,18 +117,6 @@
     <ClInclude Include="carrier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="providers\fileinfo.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\logwatch_event.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\logwatch_event_details.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="eventlog\eventlogvista.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="providers\plugins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -149,18 +131,6 @@
     </ClInclude>
     <ClInclude Include="eventlog\eventlogbase.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\mrpe.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\ohm.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="providers\spool.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cvt.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lwa\stringutil.h">
       <Filter>lwa</Filter>
@@ -177,23 +147,65 @@
     <ClInclude Include="..\lwa\types.h">
       <Filter>lwa</Filter>
     </ClInclude>
-    <ClInclude Include="cap.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="providers\fileinfo.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="upgrade.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="providers\ohm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\mrpe.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="onlyfrom.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="encryption.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="providers\perf_counters_cl.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\spool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="upgrade.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\logwatch_event_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\logwatch_event.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="install_api.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eventlog\eventlogvista.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="encryption.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cvt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="realtime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="section_header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cma_core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\wnx_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cfg_yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commander.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -213,9 +225,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="async_answer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="service_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="providers\p_perf_counters.cpp">
@@ -408,6 +417,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="install_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="realtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="commander.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

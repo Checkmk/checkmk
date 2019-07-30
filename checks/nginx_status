@@ -32,9 +32,11 @@
 # 127.0.0.1 80 Reading: 0 Writing: 1 Waiting: 0
 
 
-def nginx_status_parse(info):
-    if len(info) != 4:
-        return {}  # skip unknown data format
+def parse_nginx_status(info):
+    if len(info) % 4 != 0:
+        # Every instance block consists of four lines
+        # Multiple block may occur.
+        return {}
 
     data = {}
     for i, line in enumerate(info):
@@ -58,29 +60,21 @@ def nginx_status_parse(info):
     return data
 
 
-def inventory_nginx_status(info):
-    return [(item, {}) for item in nginx_status_parse(info)]
-
-
-def check_nginx_status(item, params, info):
+@get_parsed_item_data
+def check_nginx_status(item, params, data):
     if params is None:
         params = {}
 
-    all_data = nginx_status_parse(info)
-    if item not in all_data:
-        return 3, 'Unable to find instance in agent output'
-    data = all_data[item]
-
     # Add some more values, derived from the raw ones...
-    data['requests_per_conn'] = data['requests'] / data['handled']
+    computed_values = {}
+    computed_values['requests_per_conn'] = data['requests'] / data['handled']
 
     this_time = int(time.time())
     for key in ['accepted', 'handled', 'requests']:
         per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
-        data['%s_per_sec' % key] = per_sec
+        computed_values['%s_per_sec' % key] = per_sec
 
-    perfdata = data.items()
-    perfdata.sort()
+    perfdata = sorted(data.items())
 
     worst_state = 0
 
@@ -96,22 +90,23 @@ def check_nginx_status(item, params, info):
     output = [
         'Active: %d%s (%d reading, %d writing, %d waiting)' %
         (data['active'], conn_txt, data['reading'], data['writing'], data['waiting']),
-        'Requests: %0.2f/s (%0.2f/Connection)' % (data['requests_per_sec'],
-                                                  data['requests_per_conn']),
+        'Requests: %0.2f/s (%0.2f/Connection)' %
+        (computed_values['requests_per_sec'], computed_values['requests_per_conn']),
     ]
 
     if data['accepted'] == data['handled']:
-        output.append('Accepted/Handled: %0.2f/s' % data['accepted_per_sec'])
+        output.append('Accepted/Handled: %0.2f/s' % computed_values['accepted_per_sec'])
     else:
-        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' % (data['accepted_per_sec'],
-                                                               data['handled_per_sec']))
+        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' %
+                      (computed_values['accepted_per_sec'], computed_values['handled_per_sec']))
 
     return worst_state, ', '.join(output), perfdata
 
 
 check_info['nginx_status'] = {
+    "parse_function": parse_nginx_status,
     "check_function": check_nginx_status,
-    "inventory_function": inventory_nginx_status,
+    "inventory_function": discover(),
     "service_description": "Nginx %s Status",
     "has_perfdata": True,
     "group": "nginx_status"

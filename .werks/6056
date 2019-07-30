@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1525628120
 
 A new "Analyze configuration" test warns you in case a omdadmin user with the pre

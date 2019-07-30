@@ -2,20 +2,22 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
+#include "providers/mem.h"
+
 #include <iostream>
 #include <string>
 
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
-#include "providers/mem.h"
-
 namespace cma {
 
 namespace provider {
 
-std::string Mem::makeBody() const {
-    XLOG::t(XLOG_FUNC + " entering");
+std::string Mem::makeBody() {
+    // the log output disabled because it
+    // may be quite annoying during realtime monitoring
+    // XLOG::t(XLOG_FUNC + " entering");
 
     // windows
     MEMORYSTATUSEX stat;

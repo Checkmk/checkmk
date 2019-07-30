@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1534246898
 
 In addition to the problem that has been fixed with #6446, the werk #5535 introduced a problem when

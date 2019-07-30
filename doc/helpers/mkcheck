@@ -1,40 +1,13 @@
 #!/usr/bin/python
+"""mkcheck generates a check plugin template or empty man page and prints it to stdout."""
 
-import os, sys, getopt, time
-
-
-def usage():
-    sys.stdout.write("""
-DESCRIPTION:
-  This script creates a basic check file or if '-m'
-  specified a manual page.
-  You have to specify at least one name.
-
-  The created check or manual page are saved to
-  the current directory.
-
-  It is recommended to run this script in the checks folder
-  if you want to create a check or in the manual page folder
-  if you want to create a man page.
-
-USAGE: mkcheck [OPTS] ARGS
-
-OPTIONS:
- -h, --help        Show this help
- -s                Adds SNMP info and scan function
- -p                Adds parse function
- -m                Creates the manual page instead of
-                   the check
-
-""")
-
-
-def stderr(msg):
-    sys.stderr.write("ERROR: %s\n" % msg)
+import sys
+import argparse
+import time
 
 
 def header():
-    return """#!/usr/bin/python
+    return r"""#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -43,7 +16,7 @@ def header():
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner %s             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner {year}             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -60,60 +33,12 @@ def header():
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# example output
-
-
-""" % time.gmtime(time.time())[0]
+""".format(year=time.gmtime(time.time())[0])
 
 
-def get_check_content(check_name, has_parse=False, is_snmp=False):
-    if has_parse:
-        info_str = "parsed"
-        pprint_info = ""
-        check_info_parse = \
-          "    'parse_function'        : parse_%s,\n" % check_name
-
-        parse_func_info = ("def parse_%s(info):\n" + \
-          "    pprint.pprint(info)\n" + \
-          "    parsed = {}\n" + \
-          "    return parsed\n\n\n") % check_name
-    else:
-        info_str = "info"
-        parse_func_info = ""
-        check_info_parse = ""
-        pprint_info = "    pprint.pprint(info)\n"
-
-    inventory_func_info = ("def inventory_%s(%s):\n%s" + \
-          "    return []\n\n\n") % (check_name, info_str, pprint_info)
-
-    check_func_info = ("def check_%s(item, params, %s):\n" + \
-          "    return 3, 'not yet implemented'\n\n\n") % (check_name, info_str)
-
-    if is_snmp:
-        snmp_content = \
-          "    'snmp_info'             : ('', []),\n" + \
-          "    'snmp_scan_function'    : lambda oid: True,\n"
-    else:
-        snmp_content = ""
-
-    check_info_title = "check_info['%s'] = {\n" % check_name
-    check_info_keys = ("{1}" + \
-          "    'inventory_function'    : inventory_{0},\n" + \
-          "    'check_function'        : check_{0},\n" + \
-          "    'service_description'   : 'DESCR',\n{2}").format(
-          check_name, check_info_parse, snmp_content)
-
-    return header() + parse_func_info + inventory_func_info + \
-           check_func_info + check_info_title + check_info_keys + '}'
-
-
-def get_man_content(check_name, is_snmp=False):
-    snmp_info = ""
-    if is_snmp:
-        snmp_info = " snmp"
+def mkcheck_m():
     return """title:
-agents:%s
+agents:
 catalog:
 license: GPL
 distribution: check_mk
@@ -121,67 +46,93 @@ description:
 
 item:
 
-inventory:""" % snmp_info
+inventory:
+"""
 
 
-def main(cmdl_args):
-    opts_short = "hspm"
-    opts_long = ["help"]
+def get_check_info_str(name, parse, snmp, decorate):
+    if parse:
+        parse_function_str = """
+def parse_{name}(info):
+    parsed = {{}}
+    return parsed
 
-    try:
-        opts, args = getopt.getopt(cmdl_args, opts_short, opts_long)
-    except Exception, err:
-        stderr(err)
-        sys.exit(1)
+""".format(name=name)
 
-    is_snmp = False
-    has_parse = False
-    create_man = False
-    create_check = True
-    for o, a in opts:
-        if o in ["-h", "--help"]:
-            usage()
-            sys.exit(0)
-        elif o == "-s":
-            is_snmp = True
-        elif o == "-p":
-            has_parse = True
-        elif o == "-m":
-            create_man = True
-            create_check = False
+        parse_str = """
+    'parse_function': parse_{name},""".format(name=name)
 
-    if len(args) > 0:
-        check_names = args
+        info_str = "parsed"
+
     else:
-        usage()
-        stderr("specifiy exactly one check name")
-        sys.exit(1)
+        parse_function_str = ""
+        parse_str = ""
+        info_str = "info"
 
-    whereiam = os.getcwd()
-    for check_name in check_names:
-        filename = "%s/%s" % (whereiam, check_name)
-        if create_check:
-            if os.path.isfile(filename):
-                stderr("check already exists")
-            else:
-                check_content = get_check_content(check_name, has_parse=has_parse, is_snmp=is_snmp)
-                try:
-                    check_f = file(filename, 'w')
-                    check_f.write(check_content)
-                except Exception, err:
-                    stderr(err)
+    if snmp:
+        snmp_str = """
+    'snmp_info': ('', []),
+    'snmp_scan_function': lambda oid: True,"""
 
-        if create_man:
-            if os.path.isfile(filename):
-                stderr("man page already exists")
-            else:
-                man_content = get_man_content(check_name, is_snmp=is_snmp)
-                try:
-                    man_f = file(filename, 'w')
-                    man_f.write(man_content)
-                except Exception, err:
-                    stderr(err)
+    else:
+        snmp_str = ""
+
+    if decorate:
+        decorator_str = "@get_parsed_item_data\n"
+        decorator_info_str = "data"
+    else:
+        decorator_str = ""
+        decorator_info_str = info_str
+
+    return """{parse_function}
+def inventory_{name}({info}):
+    return []
+
+
+{decorator}def check_{name}(item, params, {decorator_info}):
+    return 3, 'not yet implemented'
+
+
+check_info['{name}'] = {{{parse}
+    'inventory_function': inventory_{name},
+    'check_function': check_{name},
+    'service_description': 'DESCR',{snmp}
+}}
+""".format(name=name,
+           decorator=decorator_str,
+           decorator_info=decorator_info_str,
+           info=info_str,
+           parse=parse_str,
+           parse_function=parse_function_str,
+           snmp=snmp_str)
+
+
+def parse_arguments(argv):
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--snmp", action="store_true", help="Add SNMP scan and info")
+    parser.add_argument("--parse", action="store_true", help="Add parse function")
+    parser.add_argument("--decorate", action="store_true", help="Decorate check function")
+    parser.add_argument("--man", action="store_true", help="Man page of check plugin")
+    parser.add_argument("name", help="Check plugin name")
+    return parser.parse_args(argv)
+
+
+def main():
+    argv = sys.argv[1:]
+    args = parse_arguments(argv)
+
+    if args.man:
+        check_info_str = mkcheck_m()
+    elif args.name:
+        check_info_str = header() + get_check_info_str(
+            args.name, parse=args.parse, snmp=args.snmp, decorate=args.decorate)
+    else:
+        sys.stdout.write('Please specify a check plugin name.\n')
+        sys.exit()
+
+    sys.stdout.write(check_info_str)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

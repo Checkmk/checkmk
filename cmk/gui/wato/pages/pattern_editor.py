@@ -42,6 +42,8 @@ from cmk.gui.plugins.wato import (
     ConfigHostname,
 )
 
+import cmk_base.export
+
 
 @mode_registry.register
 class ModePatternEditor(WatoMode):
@@ -65,6 +67,9 @@ class ModePatternEditor(WatoMode):
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
+
+        if self._item and not self._hostname:
+            raise MKUserError(None, _("You need to specify a host name to test file matching."))
 
     def title(self):
         if not self._hostname and not self._item:
@@ -149,22 +154,21 @@ class ModePatternEditor(WatoMode):
         for folder, rulenr, rule in ruleset.get_rules():
             # Check if this rule applies to the given host/service
             if self._hostname:
+                service_desc = cmk_base.export.service_description(self._hostname, "logwatch",
+                                                                   self._item)
+
                 # If hostname (and maybe filename) try match it
                 rule_matches = rule.matches_host_and_item(watolib.Folder.current(), self._hostname,
-                                                          self._item)
-            elif self._item:
-                # If only a filename is given
-                rule_matches = rule.matches_item(self._item)
+                                                          self._item, service_desc)
             else:
                 # If no host/file given match all rules
                 rule_matches = True
 
-            html.begin_foldable_container(
-                "rule",
-                "%s" % abs_rulenr,
-                True,
-                HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
-                indent=False)
+            html.begin_foldable_container("rule",
+                                          "%s" % abs_rulenr,
+                                          True,
+                                          HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
+                                          indent=False)
             with table_element("pattern_editor_rule_%d" % abs_rulenr, sortable=False) as table:
                 abs_rulenr += 1
 

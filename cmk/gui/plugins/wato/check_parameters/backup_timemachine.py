@@ -57,14 +57,13 @@ class RulespecCheckgroupParametersBackupTimemachine(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("age",
-                 Tuple(
-                     title=_("Maximum age of latest timemachine backup"),
-                     elements=[
-                         Age(title=_("Warning if older than"), default_value=86400),
-                         Age(title=_("Critical if older than"), default_value=172800)
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("age",
+             Tuple(
+                 title=_("Maximum age of latest timemachine backup"),
+                 elements=[
+                     Age(title=_("Warning if older than"), default_value=86400),
+                     Age(title=_("Critical if older than"), default_value=172800)
+                 ],
+             )),
+        ],)

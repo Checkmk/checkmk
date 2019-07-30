@@ -3,13 +3,16 @@
 
 import collections
 import pytest  # type: ignore
+
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.labels import DiscoveredHostLabelsStore
+
 from cmk_base.discovered_labels import (
     DiscoveredHostLabels,
-    DiscoveredHostLabelsStore,
     DiscoveredServiceLabels,
-    DiscoveredServiceLabelsStore,
+    ServiceLabel,
 )
 
 
@@ -93,12 +96,10 @@ def discovered_host_labels_dir(tmp_path, monkeypatch):
     return path
 
 
-def test_discovered_host_labels_store_file_path(discovered_host_labels_dir):
-    assert DiscoveredHostLabelsStore("host").file_path == discovered_host_labels_dir / "host.mk"
-
-
-def test_discovered_host_labels_store_save(labels, discovered_host_labels_dir):
+def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     store = DiscoveredHostLabelsStore("host")
+
+    labels = DiscoveredHostLabels(StructuredDataTree())
     labels["xyz"] = "äbc"
     label_dict = labels.to_dict()
 
@@ -109,37 +110,17 @@ def test_discovered_host_labels_store_save(labels, discovered_host_labels_dir):
     assert store.load() == label_dict
 
 
-def test_discovered_host_labels_store_load_default(discovered_host_labels_dir):
-    store = DiscoveredHostLabelsStore("host")
-    assert not store.file_path.exists()  # pylint: disable=no-member
-    assert store.load() == {}
+def test_service_label():
+    name, value = u"äbc", u"d{--lulu--}dd"
+    l = ServiceLabel(name, value)
+    assert l.name == name
+    assert l.value == value
+    assert l.label == u"%s:%s" % (name, value)
 
 
-@pytest.fixture()
-def discovered_service_labels_dir(tmp_path, monkeypatch):
-    path = tmp_path / "var" / "check_mk" / "discovered_service_labels"
-    monkeypatch.setattr(cmk.utils.paths, "discovered_service_labels_dir", path)
-    return path
+def test_service_label_validation():
+    with pytest.raises(MKGeneralException, match="Invalid label name"):
+        ServiceLabel("übc", u"abc")
 
-
-def test_discovered_service_labels_store_file_path(discovered_service_labels_dir):
-    assert DiscoveredServiceLabelsStore(
-        "host", "SÄRVICE").file_path == discovered_service_labels_dir / "host" / "SÄRVICE.mk"
-
-
-def test_discovered_service_labels_store_save(labels, discovered_service_labels_dir):
-    store = DiscoveredServiceLabelsStore("host", "SÄRVICE")
-    labels["xyz"] = "äbc"
-    label_dict = labels.to_dict()
-
-    assert not store.file_path.exists()  # pylint: disable=no-member
-
-    store.save(label_dict)
-    assert store.file_path.exists()  # pylint: disable=no-member
-    assert store.load() == label_dict
-
-
-def test_discovered_service_labels_store_load_default(discovered_service_labels_dir):
-    store = DiscoveredServiceLabelsStore("host", "SÄRVICE")
-    assert not store.file_path.exists()  # pylint: disable=no-member
-    assert store.load() == {}
+    with pytest.raises(MKGeneralException, match="Invalid label value"):
+        ServiceLabel(u"äbc", "übc")

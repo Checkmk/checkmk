@@ -59,25 +59,24 @@ class RulespecCheckgroupParametersGenericNumber(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Upper levels"),
-                     elements=[
-                         Float(title="Warning at"),
-                         Float(title="Critical at"),
-                     ],
-                 )),
-                ("levels_lower",
-                 Tuple(
-                     title=_("Lower levels"),
-                     elements=[
-                         Float(title="Warning below"),
-                         Float(title="Critical below"),
-                     ],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ("levels",
+             Tuple(
+                 title=_("Upper levels"),
+                 elements=[
+                     Float(title="Warning at"),
+                     Float(title="Critical at"),
+                 ],
+             )),
+            ("levels_lower",
+             Tuple(
+                 title=_("Lower levels"),
+                 elements=[
+                     Float(title="Warning below"),
+                     Float(title="Critical below"),
+                 ],
+             )),
+        ],)
 
     @property
     def item_spec(self):

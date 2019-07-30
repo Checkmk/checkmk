@@ -88,11 +88,10 @@ class RulespecCheckgroupParametersFcPort(CheckParameterRulespecWithItem):
                      ],
                  )),
                 ("assumed_speed",
-                 Float(
-                     title=_("Assumed link speed"),
-                     help=_("If the automatic detection of the link speed does "
-                            "not work you can set the link speed here."),
-                     unit=_("Gbit/s"))),
+                 Float(title=_("Assumed link speed"),
+                       help=_("If the automatic detection of the link speed does "
+                              "not work you can set the link speed here."),
+                       unit=_("Gbit/s"))),
                 ("rxcrcs",
                  Tuple(
                      title=_("CRC errors rate"),

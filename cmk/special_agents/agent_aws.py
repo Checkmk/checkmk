@@ -33,7 +33,6 @@ import json
 import logging
 import sys
 import time
-import errno
 from typing import (  # pylint: disable=unused-import
     Union, NamedTuple, Any, List,
 )
@@ -41,10 +40,11 @@ from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
 from cmk.utils.paths import tmp_dir
-import cmk.utils.store as store
 import cmk.utils.password_store
-
-from cmk.special_agents.utils import datetime_serializer
+from cmk.special_agents.utils import (
+    datetime_serializer,
+    DataCache,
+)
 
 AWSStrings = Union[bytes, unicode]
 
@@ -386,11 +386,11 @@ AWSEC2InstFPGATypes = [
     'f1.16xlarge',
 ]
 
-AWSEC2InstTypes = (
-    AWSEC2InstGeneralTypes + AWSEC2InstPrevGeneralTypes + AWSEC2InstMemoryTypes +
-    AWSEC2InstPrevMemoryTypes + AWSEC2InstComputeTypes + AWSEC2InstPrevComputeTypes +
-    AWSEC2InstAcceleratedComputeTypes + AWSEC2InstStorageTypes + AWSEC2InstPrevStorageTypes +
-    AWSEC2InstDenseStorageTypes + AWSEC2InstGPUTypes + AWSEC2InstPrevGPUTypes + AWSEC2InstFPGATypes)
+AWSEC2InstTypes = (AWSEC2InstGeneralTypes + AWSEC2InstPrevGeneralTypes + AWSEC2InstMemoryTypes +
+                   AWSEC2InstPrevMemoryTypes + AWSEC2InstComputeTypes + AWSEC2InstPrevComputeTypes +
+                   AWSEC2InstAcceleratedComputeTypes + AWSEC2InstStorageTypes +
+                   AWSEC2InstPrevStorageTypes + AWSEC2InstDenseStorageTypes + AWSEC2InstGPUTypes +
+                   AWSEC2InstPrevGPUTypes + AWSEC2InstFPGATypes)
 
 # (On-Demand, Reserved, Spot)
 
@@ -485,7 +485,6 @@ class ResultDistributor(object):
     Mediator which distributes results from sections
     in order to reduce queries to AWS account.
     """
-
     def __init__(self):
         self._colleagues = []
 
@@ -535,17 +534,17 @@ AWSComputedContent = NamedTuple("AWSComputedContent", [
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
-class AWSSection(object):
+class AWSSection(DataCache):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, client, region, config, distributor=None):
+        cache_dir = AWSCacheFilePath / region / config.hostname
+        super(AWSSection, self).__init__(cache_dir, self.name)
         self._client = client
         self._region = region
         self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results = {}
-        self._cache_file_dir = AWSCacheFilePath / self._region / self._config.hostname
-        self._cache_file = AWSCacheFilePath / self._region / self._config.hostname / self.name
 
     @abc.abstractproperty
     def name(self):
@@ -579,7 +578,7 @@ class AWSSection(object):
             colleague_contents.cache_timestamp,
             float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
-        raw_data = self._get_raw_content(colleague_contents, use_cache=use_cache)
+        raw_data = self.get_data(colleague_contents, use_cache=use_cache)
         raw_content = AWSRawContent(raw_data, self.cache_timestamp if use_cache else time.time())
         assert isinstance(
             raw_content,
@@ -621,50 +620,7 @@ class AWSSection(object):
             final_results.append(result)
         return AWSSectionResults(final_results, computed_content.cache_timestamp)
 
-    def _get_raw_content(self, colleague_contents, use_cache=False):
-        # Cache is only used if the age is lower than section interval AND
-        # the collected data from colleagues are not newer
-        self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if (use_cache and self.get_validity_from_args(colleague_contents) and
-                self._cache_is_recent_enough()):
-            raw_content = self._read_from_cache()
-        else:
-            raw_content = self.get_live_data(colleague_contents)
-            # TODO: Write cache only when _compute_section_content succeeded?
-            if use_cache:
-                self._write_to_cache(raw_content)
-        return raw_content
-
-    @property
-    def cache_timestamp(self):
-        if not self._cache_file.exists():
-            return None
-
-        try:
-            return self._cache_file.stat().st_mtime
-        except OSError as e:
-            if e.errno == 2:
-                logging.info("No such file or directory %s (calculate age)", self._cache_file)
-                return None
-            logging.info("Cannot calculate cache file age: %s", e)
-            raise
-
-    def _cache_is_recent_enough(self):
-        mtime = self.cache_timestamp
-        if mtime is None:
-            return False
-
-        age = time.time() - mtime
-        if 0 <= age < self.cache_interval:
-            return True
-
-        if age < 0:
-            logging.info("Cache file from future considered invalid: %s", self._cache_file)
-        else:
-            logging.info("Cache file %s is outdated", self._cache_file)
-        return False
-
-    def get_validity_from_args(self, colleague_contents):
+    def get_validity_from_args(self, colleague_contents):  # pylint: disable=arguments-differ
         my_cache_timestamp = self.cache_timestamp
         if my_cache_timestamp is None:
             return False
@@ -672,28 +628,6 @@ class AWSSection(object):
             logging.info("Colleague data is newer than cache file %s", self._cache_file)
             return False
         return True
-
-    def _read_from_cache(self):
-        try:
-            with self._cache_file.open(encoding="utf-8") as f:
-                raw_content = f.read().strip()
-        except IOError as e:
-            if e.errno == errno.ENOENT:
-                logging.info("No such file or directory %s (read from cache)", self._cache_file)
-                return None
-            else:
-                logging.info("Cannot read from cache file: %s", e)
-                raise
-        try:
-            content = json.loads(raw_content)
-        except ValueError as e:
-            logging.info("Cannot load raw content: %s", e)
-            content = None
-        return content
-
-    def _write_to_cache(self, raw_content):
-        json_dump = json.dumps(raw_content, default=datetime_serializer)
-        store.save_file(str(self._cache_file), json_dump)
 
     @abc.abstractmethod
     def _get_colleague_contents(self):
@@ -709,7 +643,7 @@ class AWSSection(object):
         pass
 
     @abc.abstractmethod
-    def get_live_data(self, colleague_contents):
+    def get_live_data(self, colleague_contents):  # pylint: disable=arguments-differ
         """
         Call API methods, eg. 'response = ec2_client.describe_instances()' and
         extract content from raw content.  Raw contents basically consist of
@@ -1193,8 +1127,8 @@ class EC2Summary(AWSSectionGeneric):
         ]
 
     def _compute_content(self, raw_content, colleague_contents):
-        return AWSComputedContent(
-            self._format_instances(raw_content.content), raw_content.cache_timestamp)
+        return AWSComputedContent(self._format_instances(raw_content.content),
+                                  raw_content.cache_timestamp)
 
     def _format_instances(self, instances):
         return {_get_ec2_piggyback_hostname(inst, self._region): inst for inst in instances}
@@ -1236,8 +1170,8 @@ class EC2Labels(AWSSectionLabels):
             ec2_piggyback_hostname = inst_id_to_ec2_piggyback_hostname_map.get(tag['ResourceId'])
             if not ec2_piggyback_hostname:
                 continue
-            computed_content.setdefault(ec2_piggyback_hostname, {}).setdefault(
-                tag['Key'], tag['Value'])
+            computed_content.setdefault(ec2_piggyback_hostname,
+                                        {}).setdefault(tag['Key'], tag['Value'])
 
         return AWSComputedContent(computed_content, raw_content.cache_timestamp)
 
@@ -1916,8 +1850,8 @@ class ELBSummaryGeneric(AWSSectionGeneric):
         self._resource = resource
         super(ELBSummaryGeneric, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['%s_names' % resource]
-        self._tags = self._prepare_tags_for_api_response(
-            self._config.service_config['%s_tags' % resource])
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['%s_tags' %
+                                                                                     resource])
 
     @property
     def name(self):
@@ -1936,14 +1870,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
     def get_live_data(self, colleague_contents):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers(colleague_contents):
-            load_balancer_name = load_balancer['LoadBalancerName']
-            try:
-                response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
-            except botocore.exceptions.ClientError as e:
-                # If there are no tags attached to a bucket we receive a 'ClientError'
-                logging.info("%s/%s: No tags set, %s", self.name, load_balancer_name, e)
-                response = {}
-
+            response = self._get_load_balancer_tags(load_balancer)
             tagging = [
                 tag for tag_descr in self._get_response_content(response, 'TagDescriptions')
                 for tag in tag_descr['Tags']
@@ -1953,6 +1880,19 @@ class ELBSummaryGeneric(AWSSectionGeneric):
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
 
+    def _get_load_balancer_tags(self, load_balancer):
+        try:
+            if self._resource == "elb":
+                return self._client.describe_tags(
+                    LoadBalancerNames=[load_balancer['LoadBalancerName']])
+            elif self._resource == "elbv2":
+                return self._client.describe_tags(ResourceArns=[load_balancer['LoadBalancerArn']])
+            return {}
+        except botocore.exceptions.ClientError as e:
+            # If there are no tags attached to a bucket we receive a 'ClientError'
+            logging.info("%s/%s: No tags set, %s", self.name, load_balancer['LoadBalancerName'], e)
+            return {}
+
     def _describe_load_balancers(self, colleague_contents):
         if self._tags is None and self._names is not None:
             if colleague_contents.content:
@@ -1961,9 +1901,20 @@ class ELBSummaryGeneric(AWSSectionGeneric):
                     if load_balancer['LoadBalancerName'] in self._names
                 ]
             response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
+
         else:
+            if colleague_contents.content:
+                return colleague_contents.content
+
             response = self._client.describe_load_balancers()
-        return self._get_response_content(response, 'LoadBalancerDescriptions')
+
+        if self._resource == "elb":
+            response_key = "LoadBalancerDescriptions"
+        elif self._resource == "elbv2":
+            response_key = "LoadBalancers"
+        else:
+            response_key = None
+        return self._get_response_content(response, response_key)
 
     def _matches_tag_conditions(self, tagging):
         if self._names is not None:
@@ -1987,12 +1938,12 @@ class ELBSummaryGeneric(AWSSectionGeneric):
 
 class ELBLabelsGeneric(AWSSectionLabels):
     def __init__(self, client, region, config, distributor=None, resource=""):
-        super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
         self._resource = resource
+        super(ELBLabelsGeneric, self).__init__(client, region, config, distributor=distributor)
 
     @property
     def name(self):
-        return "elb_generic_labels"
+        return "%s_generic_labels" % self._resource
 
     @property
     def cache_interval(self):
@@ -2280,8 +2231,8 @@ class ELBv2TargetGroups(AWSSectionGeneric):
                     response, 'TargetHealthDescriptions')
                 target_group['TargetHealthDescriptions'] = target_group_health_descrs
 
-            load_balancers.setdefault(load_balancer_dns_name, []).append((load_balancer_type,
-                                                                          target_groups))
+            load_balancers.setdefault(load_balancer_dns_name, []).append(
+                (load_balancer_type, target_groups))
         return load_balancers
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -2321,7 +2272,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_summary')
+        colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
@@ -2407,7 +2358,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('elb_summary')
+        colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
@@ -2490,8 +2441,8 @@ AWSRDSLimitNameMap = {
     "DBSubnetGroups": ("db_subnet_groups", "DB subnet groups"),
     "SubnetsPerDBSubnetGroup": ("subnet_per_db_subnet_groups", "Subnet per DB subnet groups"),
     "AllocatedStorage": ("allocated_storage", "Allocated storage"),
-    "AuthorizationsPerDBSecurityGroup": ("auths_per_db_security_groups",
-                                         "Authorizations per DB security group"),
+    "AuthorizationsPerDBSecurityGroup":
+        ("auths_per_db_security_groups", "Authorizations per DB security group"),
     "DBClusterRoles": ("db_cluster_roles", "DB cluster roles"),
 }
 
@@ -2831,7 +2782,6 @@ class AWSSectionsUSEast(AWSSections):
     Some clients like CostExplorer only work with US East region:
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
-
     def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
@@ -2888,12 +2838,18 @@ class AWSSectionsGeneric(AWSSections):
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
 
         elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
-        elb_summary = ELBSummaryGeneric(
-            elb_client, region, config, elb_summary_distributor, resource='elb')
+        elb_summary = ELBSummaryGeneric(elb_client,
+                                        region,
+                                        config,
+                                        elb_summary_distributor,
+                                        resource='elb')
 
         elbv2_limits = ELBv2Limits(elbv2_client, region, config, elbv2_limits_distributor)
-        elbv2_summary = ELBSummaryGeneric(
-            elbv2_client, region, config, elbv2_summary_distributor, resource='elbv2')
+        elbv2_summary = ELBSummaryGeneric(elbv2_client,
+                                          region,
+                                          config,
+                                          elbv2_summary_distributor,
+                                          resource='elbv2')
 
         s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
@@ -3030,120 +2986,111 @@ AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
 ])
 
 AWSServices = [
-    AWSServiceAttributes(
-        key="ce",
-        title="Costs and usage",
-        global_service=True,
-        filter_by_names=False,
-        filter_by_tags=False,
-        limits=False),
-    AWSServiceAttributes(
-        key="ec2",
-        title="Elastic Compute Cloud (EC2)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="ebs",
-        title="Elastic Block Storage (EBS)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="s3",
-        title="Simple Storage Service (S3)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="elb",
-        title="Classic Load Balancing (ELB)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="elbv2",
-        title="Application and Network Load Balancing (ELBv2)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="rds",
-        title="Relational Database Service (RDS)",
-        global_service=False,
-        filter_by_names=True,
-        filter_by_tags=True,
-        limits=True),
-    AWSServiceAttributes(
-        key="cloudwatch",
-        title="Cloudwatch",
-        global_service=False,
-        filter_by_names=False,
-        filter_by_tags=False,
-        limits=True),
+    AWSServiceAttributes(key="ce",
+                         title="Costs and usage",
+                         global_service=True,
+                         filter_by_names=False,
+                         filter_by_tags=False,
+                         limits=False),
+    AWSServiceAttributes(key="ec2",
+                         title="Elastic Compute Cloud (EC2)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="ebs",
+                         title="Elastic Block Storage (EBS)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="s3",
+                         title="Simple Storage Service (S3)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="elb",
+                         title="Classic Load Balancing (ELB)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="elbv2",
+                         title="Application and Network Load Balancing (ELBv2)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="rds",
+                         title="Relational Database Service (RDS)",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=True),
+    AWSServiceAttributes(key="cloudwatch",
+                         title="Cloudwatch",
+                         global_service=False,
+                         filter_by_names=False,
+                         filter_by_tags=False,
+                         limits=True),
 ]
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Log messages from AWS library 'boto3' and 'botocore'.")
+    parser.add_argument("--verbose",
+                        action="store_true",
+                        help="Log messages from AWS library 'boto3' and 'botocore'.")
     parser.add_argument(
         "--no-cache",
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
 
-    parser.add_argument(
-        "--access-key-id", required=True, help="The access key ID for your AWS account.")
-    parser.add_argument(
-        "--secret-access-key", required=True, help="The secret access key for your AWS account.")
-    parser.add_argument(
-        "--regions",
-        nargs='+',
-        help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWSRegions]))
+    parser.add_argument("--access-key-id",
+                        required=True,
+                        help="The access key ID for your AWS account.")
+    parser.add_argument("--secret-access-key",
+                        required=True,
+                        help="The secret access key for your AWS account.")
+    parser.add_argument("--regions",
+                        nargs='+',
+                        help="Regions to use:\n%s" %
+                        "\n".join(["%-15s %s" % e for e in AWSRegions]))
 
     parser.add_argument(
         "--global-services",
         nargs='+',
-        help="Global services to monitor:\n%s" % "\n".join(
-            ["%-15s %s" % (e.key, e.title) for e in AWSServices if e.global_service]))
+        help="Global services to monitor:\n%s" %
+        "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if e.global_service]))
 
     parser.add_argument(
         "--services",
         nargs='+',
-        help="Services per region to monitor:\n%s" % "\n".join(
-            ["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]))
+        help="Services per region to monitor:\n%s" %
+        "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]))
 
     for service in AWSServices:
         if service.filter_by_names:
-            parser.add_argument(
-                '--%s-names' % service.key, nargs='+', help="Names for %s" % service.title)
+            parser.add_argument('--%s-names' % service.key,
+                                nargs='+',
+                                help="Names for %s" % service.title)
         if service.filter_by_tags:
-            parser.add_argument(
-                '--%s-tag-key' % service.key,
-                nargs=1,
-                action='append',
-                help="Tag key for %s" % service.title)
-            parser.add_argument(
-                '--%s-tag-values' % service.key,
-                nargs='+',
-                action='append',
-                help="Tag values for %s" % service.title)
+            parser.add_argument('--%s-tag-key' % service.key,
+                                nargs=1,
+                                action='append',
+                                help="Tag key for %s" % service.title)
+            parser.add_argument('--%s-tag-values' % service.key,
+                                nargs='+',
+                                action='append',
+                                help="Tag values for %s" % service.title)
         if service.limits:
-            parser.add_argument(
-                '--%s-limits' % service.key,
-                action="store_true",
-                help="Monitor limits for %s" % service.title)
+            parser.add_argument('--%s-limits' % service.key,
+                                action="store_true",
+                                help="Monitor limits for %s" % service.title)
 
     parser.add_argument(
         "--s3-requests",
@@ -3153,8 +3100,10 @@ def parse_arguments(argv):
     parser.add_argument("--cloudwatch-alarms", nargs='*')
 
     parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
-    parser.add_argument(
-        '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
+    parser.add_argument('--overall-tag-values',
+                        nargs='+',
+                        action='append',
+                        help="Overall tag values")
 
     parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
@@ -3174,10 +3123,9 @@ def setup_logging(opt_debug, opt_verbose):
 
 
 def create_session(access_key_id, secret_access_key, region):
-    return boto3.session.Session(
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        region_name=region)
+    return boto3.session.Session(aws_access_key_id=access_key_id,
+                                 aws_secret_access_key=secret_access_key,
+                                 region_name=region)
 
 
 class AWSConfig(object):

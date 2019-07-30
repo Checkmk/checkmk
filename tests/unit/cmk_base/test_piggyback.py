@@ -52,9 +52,8 @@ def test_get_piggyback_raw_data_outdate_old_pigs():
                                             "test-host") == [('source1', '<<<check_mk>>>\nlala\n')]
 
     # Fake age the test-host piggyback file
-    os.utime(
-        str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
-        (time.time() - 10, time.time() - 10))
+    os.utime(str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
+             (time.time() - 10, time.time() - 10))
 
     piggyback.store_piggyback_raw_data("source1", {"test-host2": [
         u"<<<check_mk>>>",
@@ -109,3 +108,44 @@ def test_store_piggyback_raw_data_second_source():
                                                        ('source1', '<<<check_mk>>>\nlala\n'),
                                                        ('source2', '<<<check_mk>>>\nlulu\n'),
                                                    ],)
+
+
+def test_get_source_and_piggyback_hosts():
+    cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+
+    piggyback.store_piggyback_raw_data("source1", {
+        "test-host2": [
+            u"<<<check_mk>>>",
+            u"source1",
+        ],
+        "test-host": [
+            u"<<<check_mk>>>",
+            u"source1",
+        ]
+    })
+
+    # Fake age the test-host piggyback file
+    os.utime(str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
+             (time.time() - 10, time.time() - 10))
+
+    piggyback.store_piggyback_raw_data("source1", {"test-host2": [
+        u"<<<check_mk>>>",
+        u"source1",
+    ]})
+
+    piggyback.store_piggyback_raw_data("source2", {
+        "test-host2": [
+            u"<<<check_mk>>>",
+            u"source2",
+        ],
+        "test-host": [
+            u"<<<check_mk>>>",
+            u"source2",
+        ]
+    })
+
+    assert sorted(list(piggyback.get_source_and_piggyback_hosts())) == sorted([
+        ('source1', 'test-host2'),
+        ('source2', 'test-host'),
+        ('source2', 'test-host2'),
+    ])

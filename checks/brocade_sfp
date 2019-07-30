@@ -45,10 +45,10 @@ def parse_brocade_sfp(info):
             "phystate": int(fcport_info[1]),
             "opstate": int(fcport_info[2]),
             "admstate": int(fcport_info[3]),
-            "voltage": float(values[1]) / 1000,  # mV -> V
-            "current": float(values[2]) / 1000,  # mA -> A
-            "rx_power": float(values[3]),  # dBm
-            "tx_power": float(values[4]),  # dBm
+            "voltage": as_float(values[1]) / 1000,  # mV -> V
+            "current": as_float(values[2]) / 1000,  # mA -> A
+            "rx_power": as_float(values[3]),  # dBm
+            "tx_power": as_float(values[4]),  # dBm
             "is_isl": bool(port_index in isl_ports),
         }
 
@@ -59,17 +59,15 @@ def inventory_brocade_sfp(parsed):
     settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
     number_of_ports = len(parsed)
     for port_index, port_info in parsed.iteritems():
-        if brocade_fcport_inventory_this_port(
-                admstate=port_info["admstate"],
-                phystate=port_info["phystate"],
-                opstate=port_info["opstate"],
-                settings=settings):
-            yield brocade_fcport_getitem(
-                number_of_ports=number_of_ports,
-                index=port_index,
-                portname=port_info["port_name"],
-                is_isl=port_info["is_isl"],
-                settings=settings), {}
+        if brocade_fcport_inventory_this_port(admstate=port_info["admstate"],
+                                              phystate=port_info["phystate"],
+                                              opstate=port_info["opstate"],
+                                              settings=settings):
+            yield brocade_fcport_getitem(number_of_ports=number_of_ports,
+                                         index=port_index,
+                                         portname=port_info["port_name"],
+                                         is_isl=port_info["is_isl"],
+                                         settings=settings), {}
 
 
 #   .--Temperature---------------------------------------------------------.

@@ -1,9 +1,9 @@
 Title: Agent Updater: Make executable format rule optional again
-Level: 1
+Level: 2
 Component: agents
 Compatible: compat
 Edition: cee
-Version: 1.6.0i1
+Version: 1.6.0b1
 Date: 1546947942
 Class: fix
 

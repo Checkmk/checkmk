@@ -499,14 +499,6 @@ table.data th.sort:hover {
     color: #000;
 }
 
-table.data th.asc {
-    /* color: #CBDCF2; */
-}
-
-table.data th.desc {
-    /* color: #CBDCF2; */
-}
-
 table.data th.tablegap {
     background-color: transparent; /* none; */
 }
@@ -1354,6 +1346,22 @@ table.data tr.notification_context table {
    margin-top: 3px;
 }
 
+table.data tr.ac_test_details td {
+  padding: 8px;
+
+  p, ul, table {
+    margin: 8px 0;
+
+    &:first-child:not(:last-child) {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
 td.sla_spec table td,
 td.invtree table td,
 td.agent_config table.rulesets table td,
@@ -1535,21 +1543,20 @@ table.data.job_table> tbody > tr > td.job_pid{
     text-align: right;
 }
 
+/* Tags */
 .tagify {
   $self: &;
-  $tagMargin: 0 0 2px 5px;
-  $tagPad: .1em .3em;
 
   border: none;
 
   #{ $self }__input {
-    padding: $tagPad;
-    margin: $tagMargin;
+    padding: $tag-padding;
+    margin: $tag-margin;
   }
 
   &[readonly] {
     tag > div {
-      padding: $tagPad;
+      padding: $tag-padding;
     }
   }
 
@@ -1557,9 +1564,9 @@ table.data.job_table> tbody > tr > td.job_pid{
     margin: 0 0 2px 5px;
 
     > div {
-      padding: $tagPad;
-      padding-right: nth($tagPad, 2) * 5;
-      margin: $tagMargin;
+      padding: $tag-padding;
+      padding-right: nth($tag-padding, 2) * 5;
+      margin: $tag-margin;
       color: #fff;
     }
 
@@ -1578,7 +1585,20 @@ table.data.job_table> tbody > tr > td.job_pid{
       opacity: 0.5;
       box-shadow: none;
     }
+  }
 
+  // Display input always non-colored
+  &:not([readonly]) tag {
+    > div::before {
+      background: #cccfdb;
+    }
+
+    > div {
+      color: #000;
+    }
+  }
+
+  tag, &[readonly] tag {
     > div::before {
       top: 0;
       right: 0;

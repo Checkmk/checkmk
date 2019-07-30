@@ -165,7 +165,7 @@ def check_oracle_performance(item, _no_params, parsed):
             yield 0, "Library cache hit ratio: %.1f%%" % pin_ratio, \
                   [('oracle_library_cache_hit_ratio', pin_ratio)]
 
-    yield 0, ", ".join(infotexts), perfdata
+    yield 0, ", ".join(sorted(infotexts)), sorted(perfdata)
     return
 
 

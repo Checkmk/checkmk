@@ -42,46 +42,53 @@
 #        Status: Normal, Version: 2.0.13000
 
 
+def add_key_values(data_dict, line):
+    '''
+    Finally we can add the rest of information to a node in a
+    subsection. When splitting the lines we sometimes get lines
+    belonging to the last entry. These information is then added
+    to the last known entry.
+    '''
+    for token in (entry.split(': ') for entry in line):
+        if len(token) > 1:
+            name = token[0].strip()
+            data_dict[name] = token[1].strip()
+        else:
+            if not isinstance(data_dict[name], list):
+                data_dict[name] = [data_dict[name]]
+            data_dict[name].append(token[0].replace(" ", ""))
+
+
 def parse_scaleio_mdm(info):
     # parsing this section is horrible. But I will guide you...
     parsed, id_, node = {}, "", ""
     for line in info:
         # A subsection starts with one of the following:
-        if line[0].lower() in [ "cluster:", "master mdm:", "slave mdms:", \
-                                "tie-breakers:", "standby mdms:"]:
+        if line[0].lower() in ("cluster:", "master mdm:", "slave mdms:", \
+                               "tie-breakers:", "standby mdms:"):
             id_ = line[0].strip(":")
-            parsed[id_] = {}
+            data = parsed.setdefault(id_, {})
+            continue
+        if id_ not in parsed:
+            continue
+
         # The first subsection is different and entries can be parsed
         # directly. Hooray!
-        elif id_ == "Cluster" and id_ in parsed:
-            nl = [entry.split(': ') for entry in line]
-            for l in nl:
-                parsed[id_][l[0].strip()] = l[1].strip()
+        if id_ == "Cluster":
+            add_key_values(data, line)
         # The other subsections can have several nodes. Each node
         # starts with his name and has already some more information.
         # Sometimes there is information about a role inside of the
         # cluster. This is handled by the entry "Role"!
-        elif id_ in parsed and "name" in line[0].lower():
+        elif "name" in line[0].lower():
             node = line[0].split(": ")[1]
             node_id = line[1].split(": ")
 
-            parsed[id_][node] = {node_id[0].strip(): node_id[1].strip()}
+            data[node] = {node_id[0].strip(): node_id[1].strip()}
             if len(line) == 3:
-                parsed[id_][node][u'Role'] = line[2].strip()
-        # Finally we can add the rest of information to a node in a
-        # subsection. When splitting the lines we sometimes get lines
-        # belonging to the last entry. These information is then added
-        # to the last known entry.
-        elif id_ in parsed and node in parsed[id_] and id_ != "Cluster":
-            nl = [entry.split(': ') for entry in line]
-            for l in nl:
-                if len(l) > 1:
-                    name = l[0].strip()
-                    parsed[id_][node][name] = l[1].strip()
-                else:
-                    if not isinstance(parsed[id_][node][name], list):
-                        parsed[id_][node][name] = [parsed[id_][node][name]]
-                    parsed[id_][node][name].append(l[0].replace(" ", ""))
+                data[node][u'Role'] = line[2].strip()
+        elif node in data:
+            add_key_values(data[node], line)
 
     return parsed
 
@@ -91,7 +98,7 @@ def inventory_scaleio_mdm(parsed):
         yield None, {}
 
 
-def check_scaleio_mdm(item, params, parsed):
+def check_scaleio_mdm(_no_item, _no_params, parsed):
     translate_status = {
         "Normal": 0,
         "Degraded": 1,
@@ -100,7 +107,7 @@ def check_scaleio_mdm(item, params, parsed):
         "Not synchronized": 1,
     }
 
-    data = get_scaleio_data("Cluster", parsed)
+    data = parsed.get("Cluster")
     if data:
         state = 0
         status = data["State"]
@@ -117,7 +124,7 @@ def check_scaleio_mdm(item, params, parsed):
 
     for role in ["Master MDM", "Slave MDMs", "Tie-Breakers", "Standby MDMs"]:
         state, nodes = 0, []
-        for node in parsed.get(role, {}):
+        for node in sorted(parsed.get(role, {})):
             nodes.append(node)
             status = parsed[role][node].get("Status", "Normal")
             if status != "Normal":

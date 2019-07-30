@@ -60,7 +60,7 @@ def read_config():
         execfile(config_file, globals(), globals())
     except IOError:
         pass  # ignore non existant config
-    except Exception, e:
+    except Exception as e:
         terminate('Invalid configuration: %s' % e)
 
 
@@ -121,7 +121,7 @@ def load_plugins():
             verbose('Loading plugin: %s' % path)
             try:
                 execfile(path, plugins[f], plugins[f])
-            except Exception, e:
+            except Exception as e:
                 error('Exception while loading plugin "%s": %s' % (path, e))
 
     # Now transform all path patterns to absolute paths for really existing files
@@ -160,7 +160,7 @@ def delete_file(path, reason):
                 os.unlink(path)
 
         return True
-    except Exception, e:
+    except Exception as e:
         error('Error while deleting %s: %s' % (path, e))
     return False
 
@@ -174,7 +174,7 @@ def delete_files_and_base_directory(path, reason):
             os.unlink(path + "/" + f)
         os.rmdir(path)
         return True
-    except Exception, e:
+    except Exception as e:
         error('Error while deleting %s: %s' % (path, e))
     return False
 
@@ -216,8 +216,8 @@ def cleanup_oldest_files():
     # check diskspace against configuration
     bytes_free = get_free_space()
     if not opt_force and above_threshold(bytes_free):
-        verbose(
-            'Free space is above threshold of %s. Nothing to be done.' % fmt_bytes(min_free_bytes))
+        verbose('Free space is above threshold of %s. Nothing to be done.' %
+                fmt_bytes(min_free_bytes))
         return
 
     # the scheduling of the cleanup job is supposed to be equal for
@@ -250,7 +250,7 @@ def do_cleanup_abandoned_host_files():
 
     try:
         site_hosts = get_configured_hosts()
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
 

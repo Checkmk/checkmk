@@ -5,5 +5,6 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -var --delete ./ $ROOT/share/check_mk/checkman/
+echo "TARGET: $ROOT/share/check_mk/checkman"
+sudo rsync -ar --delete ./ $ROOT/share/check_mk/checkman/
 sudo rm -f $ROOT/share/check_mk/checkman/.f12

@@ -1,13 +1,12 @@
 #include "stdafx.h"
 
+#include "eventlogvista.h"
+
 #include <algorithm>
 #include <cstdint>
 
-#include "tools/_raii.h"
-
 #include "logger.h"
-
-#include "eventlogvista.h"
+#include "tools/_raii.h"
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the
@@ -32,7 +31,12 @@ public:
     EventLogRecordVista(EVT_HANDLE EventHandle, EVT_HANDLE RenderHandle)
         : event_handle_(EventHandle) {
         if (g_evt.render == nullptr) {
-            XLOG::l("SHIT EvtRender function not found in wevtapi.dll");
+            XLOG::l("EvtRender function not found in wevtapi.dll");
+            return;
+        }
+
+        if (event_handle_ == nullptr) {
+            XLOG::l.bp("INVALID CALL: No more entries");
             return;
         }
 
@@ -194,9 +198,7 @@ public:
         // null character within the required buffer size! Later, this would
         // cause the socket output to be cut at the 1st null character, so
         // we need to trim trailing null away here.
-        while (!result.empty() && result.back() == L'\0') {
-            result.pop_back();
-        }
+        while (!result.empty() && result.back() == L'\0') result.pop_back();
 
         std::replace_if(
             result.begin(), result.end(),
@@ -347,7 +349,12 @@ void EventLogVista::seek(uint64_t record_id) {
         if (g_evt.next) {
             EVT_HANDLE event_handle = nullptr;
             g_evt.next(log_handle, 1, &event_handle, INFINITE, 0, &num_events);
-            ON_OUT_OF_SCOPE(if (event_handle) g_evt.close(event_handle));
+            if (event_handle == nullptr) {
+                XLOG::t("Record [{}] not found in '{}'", record_id,
+                        wtools::ConvertToUTF8(log_name_));
+                return;
+            }
+            ON_OUT_OF_SCOPE(g_evt.close(event_handle));
 
             EventLogRecordVista record(event_handle, render_context_);
             if ((record_id < record.recordId()) ||

@@ -35,6 +35,13 @@ def _state_for(exit_code):
     return cmk.utils.defines.service_state_name(exit_code, "UNKNOWN")
 
 
+def find_wato_folder(context):
+    for tag in context.get("HOSTTAGS", "").split():
+        if tag.startswith("/wato/"):
+            return tag[6:].rstrip("/")
+    return ""
+
+
 def notification_message(plugin, context):
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
@@ -78,5 +85,5 @@ def notification_result_message(plugin, context, exit_code, output):
         spec = hostname
     state = _state_for(exit_code)
     comment = " -- ".join(output)
-    output = output[-1]
-    return "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output, comment)
+    short_output = output[-1] if output else ""
+    return "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, short_output, comment)

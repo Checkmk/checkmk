@@ -1,0 +1,18 @@
+Title: SW/HW inventory filters only query for information when configured
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1560944348
+Class: fix
+
+Currently all Checkmk filters are enabled by default although when
+unconfigured they remain passive. Most filters process data directly from
+the livestatus query but inventory filters perform a new query to obtain
+the SW/HW inventory of the host. Now inventory filters only query for data
+to filter for when they are actively configured, instead of gathering data
+at first and then deciding how to filter.
+
+This fix increases the performance of the views, as fewer queries are done
+it thus speeds up the time to show a view.

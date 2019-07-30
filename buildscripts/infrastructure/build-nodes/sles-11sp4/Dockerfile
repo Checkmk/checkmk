@@ -1,4 +1,4 @@
-FROM 10.9.1.101:5010/sles-11sp4-base
+FROM 10.9.1.101:4000/sles-11sp4-base
 
 SHELL ["/bin/bash", "-c"]
 

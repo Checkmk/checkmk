@@ -19,23 +19,24 @@ else
 fi
 
 case "$1" in
-    default)
-        # Scan for a free port number by looking at the
-        # configuration of the other sites...
-        PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000)
-        echo "$PORT"
+default)
+    # Scan for a free port number by looking at the
+    # configuration of the other sites...
+    PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000)
+    echo "$PORT"
     ;;
-    choices)
-        echo "[1-9][0-9]{0,4}"
+choices)
+    echo "[1-9][0-9]{0,4}"
     ;;
-    set)
-        PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
-        cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
+set)
+    PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
+    cat <<EOF >$OMD_ROOT/etc/apache/listen-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
+ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-        cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
+    cat <<EOF >$OMD_ROOT/etc/apache/proxy-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
@@ -54,12 +55,12 @@ EOF
   </Location>
 </IfModule>
 EOF
-        if [ "$PORT" != "$2" ] ; then
-            echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
-            echo "$PORT"
-        fi
+    if [ "$PORT" != "$2" ]; then
+        echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
+        echo "$PORT"
+    fi
     ;;
-    depends)
-        [ "$CONFIG_APACHE_MODE" = own ]
+depends)
+    [ "$CONFIG_APACHE_MODE" = own ]
     ;;
 esac

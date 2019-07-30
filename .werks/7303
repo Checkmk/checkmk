@@ -1,0 +1,13 @@
+Title: smart: Handle snmp data without normalized values correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b1
+Date: 1557497625
+Class: fix
+
+SNMP data may contain strings "---" for the OIDs which represent the normalized
+value and threshold. For the "Reallocated Event Count" missing valid data
+resulted in a crash of the check function. This werk fixes this by adding proper
+handling of this edge case.

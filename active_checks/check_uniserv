@@ -38,7 +38,7 @@ try:
         STREET_NR = sys.argv[6]
         CITY = sys.argv[7]
         REGEX = sys.argv[8]
-except:
+except IndexError:
     sys.stdout.write(
         " Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n"
     )

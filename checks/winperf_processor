@@ -37,6 +37,26 @@ def inventory_winperf_util(info):
             pass
 
 
+def _clamp_percentage(value):
+    '''clamp percentage to the range 0-100
+
+    Due to timing invariancies the measured level can become > 100%.
+    This makes users unhappy, so cut it off.
+    '''
+    return min(100.0, max(0.0, value))
+
+
+def _get_secs_per_sec(raw_value, key, this_time, wrapped):
+    ticks = int(raw_value)
+    try:
+        ticks_per_sec =\
+            get_rate("winperf_util.%s" % key, this_time, ticks, onwrap=RAISE)
+    except MKCounterWrapped:
+        return True, 0.0
+    # 1 tick = 100ns, convert to seconds
+    return wrapped, ticks_per_sec / 10000000.0
+
+
 def check_winperf_util(_no_item, params, info):
     if not info:
         return
@@ -45,86 +65,53 @@ def check_winperf_util(_no_item, params, info):
 
     what_map = {"-232": "util", "-96": "user", "-94": "privileged"}
 
-    winperf_lines = []
-    for line in info[1:]:
-        if line[0] in what_map:
-            winperf_lines.append(line)
-
+    winperf_lines = [l for l in info[1:] if l[0] in what_map]
     if not winperf_lines:
         return
 
     wrapped = False
-    matched = False
     for line in winperf_lines:
-        if line[0] in what_map:
-            matched = True
-            what = what_map[line[0]]
-            # Windows sends one counter for each CPU plus one counter that
-            # sums up to total (called _Total). We only need that last value.
-            ticks = int(line[-2])
-            num_cpus = len(line) - 3
-            try:
-                ticks_per_sec =\
-                    get_rate("winperf_util.%s" % what, this_time, ticks, onwrap = RAISE)
-            except MKCounterWrapped:
-                wrapped = True
-                ticks_per_sec = 0
-            # We get the value of the PERF_100NSEC_TIMER_INV here.
-            # This counter type shows the average percentage of active time observed
-            # during the sample interval. This is an inverse counter. Counters of this
-            # type calculate active time by measuring the time that the service was
-            # inactive and then subtracting the percentage of active time from 100 percent.
-            #
-            # 1 tick = 100ns, convert to seconds
-            cpusecs_per_sec = ticks_per_sec / 10000000.0
 
-            if what == "util":
-                used_perc = 100.0 * (1 - cpusecs_per_sec)
-            else:
-                used_perc = 100.0 * cpusecs_per_sec
+        what = what_map[line[0]]
+        # Windows sends one counter for each CPU plus one counter that
+        # sums up to total (called _Total). We only need that last value.
+        wrapped, cpusecs_per_sec = _get_secs_per_sec(line[-2], what, this_time, wrapped)
 
-            # Due to timeing invariancies the measured level can become > 100%.
-            # This makes users unhappy, so cut it off.
-            if used_perc < 0:
-                used_perc = 0
-            elif used_perc > 100:
-                used_perc = 100
+        # We get the value of the PERF_100NSEC_TIMER_INV here.
+        # This counter type shows the average percentage of active time observed
+        # during the sample interval. This is an inverse counter. Counters of this
+        # type calculate active time by measuring the time that the service was
+        # inactive and then subtracting the percentage of active time from 100 percent.
+        if what == "util":
+            used_perc = _clamp_percentage(100.0 * (1 - cpusecs_per_sec))
+            cores = []
+            for i, raw_core_ticks in enumerate(line[1:-2]):
+                wrapped, core_cpusecs_per_sec = _get_secs_per_sec(raw_core_ticks, "core%d.util" % i,
+                                                                  this_time, wrapped)
+                core_used_perc = _clamp_percentage(100.0 * (1 - core_cpusecs_per_sec))
+                cores.append(("core%d" % i, core_used_perc))
 
-            if what == "util":
-                cores = []
-                for i in range(num_cpus):
-                    core_ticks = int(line[1 + i])
-                    try:
-                        core_ticks_per_sec = get_rate(
-                            "winperf_util.core%d.util" % i, this_time, core_ticks, onwrap=RAISE)
-                    except MKCounterWrapped:
-                        wrapped = True
-                        core_ticks_per_sec = 0
-                    core_cpusecs_per_sec = core_ticks_per_sec / 10000000.0
-                    core_used_perc = 100.0 * (1 - core_cpusecs_per_sec)
-                    # clamp percentage to the range 0-100
-                    core_used_perc = min(100.0, max(0.0, core_used_perc))
-                    cores.append(("core%d" % i, core_used_perc))
-
-                if not wrapped:
-                    for status, infotext, perfdata in check_cpu_util(used_perc, params, this_time,
-                                                                     cores):
-                        if perfdata and perfdata[0][0] == "util":
-                            perfdata[0] = perfdata[0][:5] + (num_cpus,)
-                        yield status, infotext, perfdata
-            elif what == "user":
-                yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
-            else:  # privileged
-                yield 0, "%s perc: %.1f %%" % (what, used_perc)
-
-    if not matched:
-        return
+            if not wrapped:
+                for status, infotext, perfdata in check_cpu_util(used_perc, params, this_time,
+                                                                 cores):
+                    if perfdata and perfdata[0][0] == "util":
+                        perfdata[0] = perfdata[0][:5] + (len(cores),)
+                    yield status, infotext, perfdata
+        elif what == "user":
+            used_perc = _clamp_percentage(100.0 * cpusecs_per_sec)
+            yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]
+        else:  # privileged
+            used_perc = _clamp_percentage(100.0 * cpusecs_per_sec)
+            yield 0, "%s perc: %.1f %%" % (what, used_perc)
 
     if wrapped:
         # all counters initialized, NOW we can raise the exception
         raise MKCounterWrapped("Counter wrap, skipping checks this time")
 
-    yield 0, "%d CPUs" % num_cpus
+    try:
+        yield 0, "%d CPUs" % len(cores)
+    except NameError:
+        pass
 
 
 check_info["winperf_processor.util"] = {

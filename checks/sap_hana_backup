@@ -31,14 +31,14 @@ factory_settings['sap_hana_backup'] = {
 
 def parse_sap_hana_backup(info):
     parsed = {}
-    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+    for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
         for line in lines:
             if len(line) < 5:
                 continue
 
             backup_time_readable = line[1].rsplit(".", 1)[0]
-            parsed.setdefault(
-                ("%s %s" % (sid_instance, line[0]), node), {
+            parsed.setdefault("%s - %s" % (sid_instance, line[0]), {}).setdefault(
+                node, {
                     "sys_end_time": time.mktime(
                         time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")),
                     "backup_time_readable": backup_time_readable,
@@ -50,18 +50,19 @@ def parse_sap_hana_backup(info):
 
 
 def inventory_sap_hana_backup(parsed):
-    for (sid_instance_backup_type, _node) in parsed.iterkeys():
-        yield sid_instance_backup_type, {}
+    for sid in parsed.iterkeys():
+        yield sid, {}
 
 
-def check_sap_hana_backup(item, params, parsed):
-    for (sid_instance_backup_type, node), data in parsed.iteritems():
-        if item != sid_instance_backup_type:
-            continue
+@get_parsed_item_data
+def check_sap_hana_backup(item, params, node_data):
+    now = time.time()
 
-        if node:
-            yield 0, 'On node: %s' % node
+    nodes = [n for n in node_data.keys() if n]
+    if nodes:
+        yield 0, 'Nodes: %s' % ", ".join(nodes)
 
+    for data in node_data.itervalues():
         state_name = data['state_name']
         if state_name == 'failed':
             state = 2
@@ -74,12 +75,11 @@ def check_sap_hana_backup(item, params, parsed):
         yield state, "Status: %s" % state_name
 
         yield 0, "Last: %s" % data['backup_time_readable']
-        yield check_levels(
-            time.time() - data['sys_end_time'],
-            "backup_age",
-            params['backup_age'],
-            human_readable_func=get_age_human_readable,
-            infoname="Age")
+        yield check_levels(now - data['sys_end_time'],
+                           "backup_age",
+                           params['backup_age'],
+                           human_readable_func=get_age_human_readable,
+                           infoname="Age")
 
         comment = data["comment"]
         if comment:
@@ -88,6 +88,10 @@ def check_sap_hana_backup(item, params, parsed):
         message = data["message"]
         if message:
             yield 0, "Message: %s" % message
+
+        # It ONE physical device and at least two nodes.
+        # Thus we only need to check the first one.
+        return
 
 
 check_info['sap_hana_backup'] = {

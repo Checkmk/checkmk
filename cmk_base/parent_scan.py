@@ -48,10 +48,7 @@ def do_scan_parents(hosts):
     config_cache = config.get_config_cache()
 
     if not hosts:
-        hosts = [
-            h for h in config_cache.all_active_realhosts()
-            if config_cache.in_binary_hostlist(h, config.scanparent_hosts)
-        ]
+        hosts = config_cache.all_active_realhosts()
 
     parent_hosts = []
     parent_ips = {}
@@ -106,8 +103,8 @@ def do_scan_parents(hosts):
                         parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
                         if config.monitoring_host:
-                            parent_rules.append((config.monitoring_host,
-                                                 [gateway]))  # make Nagios a parent of gw
+                            parent_rules.append(
+                                (config.monitoring_host, [gateway]))  # make Nagios a parent of gw
                 parent_rules.append((gateway, [host]))
             elif host != config.monitoring_host and config.monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
@@ -164,11 +161,10 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
             console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
             procs.append((host, ip,
-                          subprocess.Popen(
-                              command,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT,
-                              close_fds=True)))
+                          subprocess.Popen(command,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT,
+                                           close_fds=True)))
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -192,8 +188,8 @@ def scan_parents_of(config_cache, hosts, silent=False, settings=None):
 
         if exitstatus:
             dot(tty.red, '*')
-            gateways.append((None, "failed", 0,
-                             "Traceroute failed with exit code %d" % (exitstatus & 255)))
+            gateways.append(
+                (None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
@@ -326,7 +322,7 @@ def _ip_to_hostname(config_cache, ip):
         for host in config_cache.all_active_realhosts():
             try:
                 cache[ip_lookup.lookup_ipv4_address(host)] = host
-            except:
+            except Exception:
                 pass
     else:
         cache = cmk_base.config_cache.get_dict("ip_to_hostname")
@@ -337,5 +333,5 @@ def _ip_to_hostname(config_cache, ip):
 def _ip_to_dnsname(ip):
     try:
         return socket.gethostbyaddr(ip)[0]
-    except:
+    except Exception:
         return None

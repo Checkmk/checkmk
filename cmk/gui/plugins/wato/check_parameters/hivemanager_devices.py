@@ -69,44 +69,43 @@ class RulespecCheckgroupParametersHivemanagerDevices(CheckParameterRulespecWithI
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('max_clients',
-                 Tuple(
-                     title=_("Number of clients"),
-                     help=_("Number of clients connected to a Device."),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("clients")),
-                         Integer(title=_("Critical at"), unit=_("clients")),
-                     ],
-                 )),
-                ('max_uptime',
-                 Tuple(
-                     title=_("Maximum uptime of Device"),
-                     elements=[
-                         Age(title=_("Warning at")),
-                         Age(title=_("Critical at")),
-                     ],
-                 )),
-                ('alert_on_loss',
-                 FixedValue(
-                     False,
-                     totext="",
-                     title=_("Do not alert on connection loss"),
-                 )),
-                ("warn_states",
-                 ListChoice(
-                     title=_("States treated as warning"),
-                     choices=hivemanger_states,
-                     default_value=['Maybe', 'Major', 'Minor'],
-                 )),
-                ("crit_states",
-                 ListChoice(
-                     title=_("States treated as critical"),
-                     choices=hivemanger_states,
-                     default_value=['Critical'],
-                 )),
-            ],)
+        return Dictionary(elements=[
+            ('max_clients',
+             Tuple(
+                 title=_("Number of clients"),
+                 help=_("Number of clients connected to a Device."),
+                 elements=[
+                     Integer(title=_("Warning at"), unit=_("clients")),
+                     Integer(title=_("Critical at"), unit=_("clients")),
+                 ],
+             )),
+            ('max_uptime',
+             Tuple(
+                 title=_("Maximum uptime of Device"),
+                 elements=[
+                     Age(title=_("Warning at")),
+                     Age(title=_("Critical at")),
+                 ],
+             )),
+            ('alert_on_loss',
+             FixedValue(
+                 False,
+                 totext="",
+                 title=_("Do not alert on connection loss"),
+             )),
+            ("warn_states",
+             ListChoice(
+                 title=_("States treated as warning"),
+                 choices=hivemanger_states,
+                 default_value=['Maybe', 'Major', 'Minor'],
+             )),
+            ("crit_states",
+             ListChoice(
+                 title=_("States treated as critical"),
+                 choices=hivemanger_states,
+                 default_value=['Critical'],
+             )),
+        ],)
 
     @property
     def item_spec(self):

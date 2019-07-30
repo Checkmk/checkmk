@@ -158,6 +158,16 @@ def parse_bluenet2_powerrail(info):
         "25": (2, "child alarm"),
         "26": (1, "child warning"),
         "27": (2, "lost child"),
+        "36": (1, "update in progress"),
+        "37": (2, "update error"),
+        "38": (1, "ongoing switch"),
+        "39": (2, "high"),
+        "40": (1, "low"),
+        "41": (2, "alarm"),
+        "42": (1, "warning"),
+        "43": (0, "ok"),
+        "44": (1, "disabled"),
+        "45": (1, "fw version too new"),
     }
 
     map_phase_types = {
@@ -305,12 +315,11 @@ def inventory_bluenet2_powerrail_temp(parsed):
 def check_bluenet2_powerrail_temp(item, params, parsed):
     if item in parsed["sensors"].get("temp", {}):
         reading, (state, state_readable) = parsed["sensors"]["temp"][item]
-        return check_temperature(
-            reading,
-            params,
-            "bluenet2_powerrail_temp_%s" % item,
-            dev_status=state,
-            dev_status_name=state_readable)
+        return check_temperature(reading,
+                                 params,
+                                 "bluenet2_powerrail_temp_%s" % item,
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info["bluenet2_powerrail.temp"] = {

@@ -1,0 +1,12 @@
+Title: Removed "cmk --donate" command
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1560758689
+
+The command was built to send real monitoring data to the Checkmk demo site. It was
+rarely used and has been removed now.

@@ -28,14 +28,16 @@
 # and creates a number of random services with random states.
 # Call it with the hostname as the first argument.
 
+from __future__ import print_function
 import os
 import sys
 import time
+import ast
 import random
 
 try:
     hostname = sys.argv[1]
-except:
+except IndexError:
     hostname = "unknown"
 
 state_dir = os.getenv("OMD_ROOT", "") + "/tmp/check_mk/ds_random/"
@@ -43,8 +45,8 @@ if not os.path.exists(state_dir):
     os.makedirs(state_dir)
 state_file = state_dir + hostname
 try:
-    history = eval(file(state_file).read())
-except:
+    history = ast.literal_eval(file(state_file).read())
+except (OSError, SyntaxError, IOError):
     history = {}
 
 services = [
@@ -59,7 +61,7 @@ services = [
     "Gnogomatic Garglebox",
 ]
 
-print '<<<local>>>'
+print('<<<local>>>')
 state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 state_texts = [
     "Everying is OK now",
@@ -83,7 +85,7 @@ for service in services:
             history[service] = (now, new_state)
     else:
         new_state = last_state
-    print "%d %s - %s - %s" % (new_state, service.replace(" ", "_"), state_names[new_state],
-                               state_texts[new_state])
+    print("%d %s - %s - %s" %
+          (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state]))
 
 file(state_file, "w").write("%r\n" % history)

@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from __future__ import print_function
 import subprocess
 import re
 import os
@@ -116,7 +117,7 @@ def _execute_backup(site, job_id="testjob"):
         assert "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76" in stdout
 
     # Extract and return backup id
-    print stdout
+    print(stdout)
     matches = re.search(
         r"Backup-ID:\s+(Check_MK-[a-zA-Z0-9_+\.-]+-%s-complete)" % job_id.replace("-", "\\+"),
         stdout)

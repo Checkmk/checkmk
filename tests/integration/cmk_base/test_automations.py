@@ -1,3 +1,4 @@
+from __future__ import print_function
 # pylint: disable=redefined-outer-name
 import re
 import os
@@ -13,7 +14,7 @@ import cmk.utils.paths
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
-    print "Applying default config"
+    print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
     })
@@ -58,7 +59,7 @@ def test_cfg(web, site):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     site.delete_dir("var/check_mk/agent_output")
 
@@ -98,7 +99,7 @@ def _execute_automation(site,
     if args:
         args = ["--"] + args
 
-    print ["cmk", "--automation", cmd] + args
+    print(["cmk", "--automation", cmd] + args)
     p = site.execute(["cmk", "--automation", cmd] + args,
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE,

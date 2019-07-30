@@ -2,6 +2,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import collections
 import pytest  # type: ignore
 
@@ -15,7 +16,7 @@ def default_cfg(request, site, web):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
-    print "Applying default config (%s)" % config.core
+    print("Applying default config (%s)" % config.core)
     create_linux_test_host(request, web, site, "livestatus-test-host")
     create_linux_test_host(request, web, site, "livestatus-test-host.domain")
     web.discover_services("livestatus-test-host")

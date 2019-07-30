@@ -5,6 +5,7 @@
 # the default caching and handling of global options affecting the
 # caching is checked
 
+from __future__ import print_function
 import pytest  # type: ignore
 from testlib import web, repo_path  # pylint: disable=unused-import
 
@@ -19,7 +20,7 @@ import cmk_base.automations
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
-    print "Applying default config"
+    print("Applying default config")
     web.add_host("ds-test-host1", attributes={
         "ipaddress": "127.0.0.1",
     })
@@ -70,7 +71,7 @@ def test_cfg(web, site):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     cmk.utils.debug.disable()
 

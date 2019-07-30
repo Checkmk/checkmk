@@ -417,15 +417,15 @@ inventory_displayhints.update({
         "title": _("Discovered host labels"),
         "keyorder": [
             "label",
-            "inventory_plugin_name",
+            "plugin_name",
         ],
     },
     ".software.applications.check_mk.host_labels:*.label": {
         "title": _("Label"),
         "paint": "cmk_label",
     },
-    ".software.applications.check_mk.host_labels:*.inventory_plugin_name": {
-        "title": _("Discovered by inventory plugin"),
+    ".software.applications.check_mk.host_labels:*.plugin_name": {
+        "title": _("Discovered by plugin"),
     },
     ".software.applications.docker.": {
         "icon": "docker", "title": "Docker", "keyorder": [

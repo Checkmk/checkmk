@@ -26,7 +26,7 @@
 
 import abc
 import collections
-from typing import Text, List, Dict  # pylint: disable=unused-import
+from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -68,27 +68,29 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-    def __init__(self, inventory_tree, *args):
+    def __init__(self, *args):
+        self._plugin_name = {}
         super(DiscoveredHostLabels, self).__init__(*args)
-        self._inventory_tree = inventory_tree
 
-    # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
-    # inventory API.
-    # TODO: Cleanup these different argument
-    def add_label(self, key, value, plugin_name):  # pylint: disable=arguments-differ
-        """Add a label to the collection of discovered labels and inventory tree
+    def add_label(self, label):
+        # type: (HostLabel) -> None
+        self._labels[label.name] = label.value
+        self._plugin_name[label.name] = label.plugin_name
 
-        Add it to the inventory tree for debugging purposes
+    # TODO: Once we redesign the hw/sw inventory plugin API check if we can
+    # move it to the inventory API.
+    def add_labels_to_inventory_tree(self, inventory_tree):
+        """Add a label + plugin to the inventory tree
         """
-        self[key] = value
-        labels = self._inventory_tree.get_list("software.applications.check_mk.host_labels:")
-        labels.append({
-            "label": (key, value),
-            "inventory_plugin_name": plugin_name,
-        })
+        inv_labels = inventory_tree.get_list("software.applications.check_mk.host_labels:")
+        for label_id, label_value in self._labels.iteritems():
+            inv_labels.append({
+                "label": (label_id, label_value),
+                "plugin_name": self._plugin_name[label_id],
+            })
 
 
-class ServiceLabel(object):
+class ABCLabel(object):
     """Representing a service label in Checkmk
 
     This class is meant to be exposed to the check API. It will be usable in
@@ -121,6 +123,27 @@ class ServiceLabel(object):
     @property
     def label(self):
         return "%s:%s" % (self._name, self._value)
+
+
+class ServiceLabel(ABCLabel):
+    pass
+
+
+class HostLabel(ABCLabel):
+    """Representing a host label in Checkmk during runtime
+
+    Besides the label itself it keeps the information which plugin discovered the host label
+    """
+    __slots__ = ["_plugin_name"]
+
+    def __init__(self, name, value, plugin_name=None):
+        # type: (Text, Text, Optional[str]) -> None
+        super(HostLabel, self).__init__(name, value)
+        self._plugin_name = plugin_name
+
+    @property
+    def plugin_name(self):
+        return self._plugin_name
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):

@@ -40,23 +40,25 @@ def parse_statgrab_mem(info):
         memused_kb = parsed['mem.used']
         totalswap_kb = parsed['swap.total']
         swapused_kb = parsed['swap.used']
-        instance = {
-            "MemTotal": totalmem_kb,
-            "MemFree": totalmem_kb - memused_kb,
-            "SwapTotal": totalswap_kb,
-            "SwapFree": totalswap_kb - swapused_kb,
-        }
-        if 'mem.cache' in parsed:
-            instance.setdefault("Cached", parsed['mem.cache'])
-        return instance
-
     except KeyError:
         return {}
+
+    instance = {
+        "MemTotal": totalmem_kb,
+        "MemFree": totalmem_kb - memused_kb,
+        "SwapTotal": totalswap_kb,
+        "SwapFree": totalswap_kb - swapused_kb,
+    }
+
+    if 'mem.cache' in parsed:
+        instance["Cached"] = parsed['mem.cache']
+
+    return instance
 
 
 def inventory_statgrab_mem(parsed):
     if parsed:
-        return [(None, 'memused_default_levels')]
+        yield None, 'memused_default_levels'
 
 
 def check_statgrab_mem(_no_item, params, parsed):

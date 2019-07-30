@@ -9,9 +9,9 @@ import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
 
 @pytest.fixture()
-def htpasswd_file(tmpdir):
-    htpasswd_file = tmpdir.join("htpasswd")
-    htpasswd_file.write(
+def htpasswd_file(tmp_path):
+    htpasswd_file = tmp_path / "htpasswd"
+    htpasswd_file.write_text(
         (
             # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
             u"bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/\n"
@@ -21,8 +21,8 @@ def htpasswd_file(tmpdir):
             u"locked:!NEr3kqi287FQc\n"
             # A >= 1.6 sha256 hashed password
             u"sha256user:$5$rounds=535000$5IFtH0zYpQ6STBre$Nkem2taHfBFswWj3xERRpmEI.20G5is0VBcPpUuf3J2\n"
-        ).encode("utf-8"),
-        mode="wb")
+        ),
+        encoding="utf-8")
     return pathlib.Path(htpasswd_file)
 
 

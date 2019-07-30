@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from pathlib2 import Path
 import pytest
 
@@ -10,8 +12,8 @@ import cmk_base.config as config
 
 
 @pytest.fixture(autouse=True)
-def patch_cmk_paths(monkeypatch, tmpdir):
-    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", "%s" % tmpdir)
+def patch_cmk_paths(monkeypatch, tmp_path):
+    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", str(tmp_path))
 
 
 def test_man_page_exists_only_shipped():
@@ -19,15 +21,15 @@ def test_man_page_exists_only_shipped():
     assert man_pages.man_page_exists("not_existant") == False
 
 
-def test_man_page_exists_both_dirs(tmpdir):
-    f1 = tmpdir.join("file1")
-    f1.write("x")
+def test_man_page_exists_both_dirs(tmp_path):
+    f1 = tmp_path / "file1"
+    f1.write_text(u"x", encoding="utf-8")
 
     assert man_pages.man_page_exists("file1") == True
     assert man_pages.man_page_exists("file2") == False
 
-    f2 = tmpdir.join("if")
-    f2.write("x")
+    f2 = tmp_path / "if"
+    f2.write_text(u"x", encoding="utf-8")
 
     assert man_pages.man_page_exists("if") == True
 
@@ -37,23 +39,23 @@ def test_man_page_path_only_shipped():
     assert man_pages.man_page_path("not_existant") is None
 
 
-def test_man_page_path_both_dirs(tmpdir):
-    f1 = tmpdir.join("file1")
-    f1.write("x")
+def test_man_page_path_both_dirs(tmp_path):
+    f1 = tmp_path / "file1"
+    f1.write_text(u"x", encoding="utf-8")
 
-    assert man_pages.man_page_path("file1") == Path(tmpdir) / "file1"
+    assert man_pages.man_page_path("file1") == tmp_path / "file1"
     assert man_pages.man_page_path("file2") is None
 
-    f2 = tmpdir.join("if")
-    f2.write("x")
+    f2 = tmp_path / "if"
+    f2.write_text(u"x", encoding="utf-8")
 
-    assert man_pages.man_page_path("if") == Path(tmpdir) / "if"
+    assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
-def test_all_man_pages(tmpdir):
-    tmpdir.join(".asd").write("")
-    tmpdir.join("asd~").write("")
-    tmpdir.join("if").write("")
+def test_all_man_pages(tmp_path):
+    (tmp_path / ".asd").write_text(u"", encoding="utf-8")
+    (tmp_path / "asd~").write_text(u"", encoding="utf-8")
+    (tmp_path / "if").write_text(u"", encoding="utf-8")
 
     pages = man_pages.all_man_pages()
 
@@ -61,7 +63,7 @@ def test_all_man_pages(tmpdir):
     assert ".asd" not in pages
     assert "asd~" not in pages
 
-    assert pages["if"] == "%s/if" % tmpdir
+    assert pages["if"] == str(tmp_path / "if")
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 

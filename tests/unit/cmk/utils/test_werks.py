@@ -8,10 +8,10 @@ import cmk.utils.werks
 
 
 @pytest.fixture(scope="function")
-def precompiled_werks(tmpdir, monkeypatch):
+def precompiled_werks(tmp_path, monkeypatch):
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cmk.utils.werks.write_precompiled_werks(Path(tmpdir) / "werks", all_werks)
-    monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmpdir))
+    cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", all_werks)
+    monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
 @pytest.mark.parametrize("edition", [
@@ -19,8 +19,8 @@ def precompiled_werks(tmpdir, monkeypatch):
     "cee",
     "cme",
 ])
-def test_write_precompiled_werks(edition, tmpdir, monkeypatch):
-    tmp_dir = "%s" % tmpdir
+def test_write_precompiled_werks(edition, tmp_path, monkeypatch):
+    tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
     cre_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cre"])

@@ -96,21 +96,6 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     assert store.load() == label_dict
 
 
-def test_discovered_host_labels_store_to_inventory_tree(discovered_host_labels_dir):
-    labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc", plugin_name="plugin_name_1"))
-
-    tree = StructuredDataTree()
-    labels.add_labels_to_inventory_tree(tree)
-
-    inv_labels = tree.get_list("software.applications.check_mk.host_labels:")
-    assert inv_labels == [
-        {
-            "label": (u"xyz", u"äbc"),
-            "plugin_name": "plugin_name_1"
-        },
-    ]
-
-
 def test_service_label():
     name, value = u"äbc", u"d{--lulu--}dd"
     l = ServiceLabel(name, value)

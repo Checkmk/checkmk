@@ -38,7 +38,6 @@ import cmk.utils.store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
-from cmk.utils.labels import DiscoveredHostLabelsStore
 import cmk.utils.debug
 
 import cmk_base.utils
@@ -51,7 +50,6 @@ import cmk_base.data_sources as data_sources
 import cmk_base.cleanup
 import cmk_base.decorator
 import cmk_base.check_api as check_api
-from cmk_base.discovered_labels import DiscoveredHostLabels
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -118,7 +116,7 @@ def do_inv_check(hostname, options):
     status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
     sources = data_sources.DataSources(hostname, ipaddress)
-    old_timestamp, inventory_tree, status_data_tree, discovered_host_labels = _do_inv_for(
+    old_timestamp, inventory_tree, status_data_tree = _do_inv_for(
         sources,
         multi_host_sections=None,
         host_config=host_config,
@@ -126,8 +124,7 @@ def do_inv_check(hostname, options):
         do_status_data_inv=host_config.do_status_data_inventory,
     )
 
-    if (inventory_tree.is_empty() and status_data_tree.is_empty() and
-            discovered_host_labels.is_empty()):
+    if inventory_tree.is_empty() and status_data_tree.is_empty():
         infotexts.append("Found no data")
 
     else:
@@ -160,9 +157,6 @@ def do_inv_check(hostname, options):
         if not status_data_tree.is_empty():
             infotexts.append("Found %s status entries" % status_data_tree.count_entries())
 
-        if not discovered_host_labels.is_empty():
-            infotexts.append("Found %s host labels" % len(discovered_host_labels))
-
     for source in sources.get_data_sources():
         source_state, source_output, _source_perfdata = source.get_summary_result_for_inventory()
         # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
@@ -181,7 +175,7 @@ def do_inventory_actions_during_checking_for(sources, multi_host_sections, host_
     if not do_status_data_inventory:
         _cleanup_status_data(hostname)
 
-    if not do_status_data_inventory and not host_config.do_host_label_discovery:
+    if not do_status_data_inventory:
         return  # nothing to do here
 
     # This is called during checking, but the inventory plugins are not loaded yet
@@ -210,13 +204,12 @@ def _cleanup_status_data(hostname):
 
 
 def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_data_inv):
-    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree, DiscoveredHostLabels]
+    # type: (data_sources.DataSources, data_sources.MultiHostSections, config.HostConfig, Optional[str], bool) -> Tuple[Optional[float], StructuredDataTree, StructuredDataTree]
     hostname = host_config.hostname
 
     _initialize_inventory_tree()
     inventory_tree = g_inv_tree
     status_data_tree = StructuredDataTree()
-    discovered_host_labels = DiscoveredHostLabels()
 
     node = inventory_tree.get_dict("software.applications.check_mk.cluster.")
     if host_config.is_cluster:
@@ -225,9 +218,8 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
     else:
         node["is_cluster"] = False
         _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
-                             inventory_tree, status_data_tree, discovered_host_labels)
+                             inventory_tree, status_data_tree)
 
-    discovered_host_labels.add_labels_to_inventory_tree(inventory_tree)
     inventory_tree.normalize_nodes()
     old_timestamp = _save_inventory_tree(hostname, inventory_tree)
     _run_inventory_export_hooks(host_config, inventory_tree)
@@ -236,11 +228,6 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
         "Found %s%s%d%s inventory entries" %
         (tty.bold, tty.yellow, inventory_tree.count_entries(), tty.normal)
     ]
-
-    if host_config.do_host_label_discovery:
-        DiscoveredHostLabelsStore(hostname).save(discovered_host_labels.to_dict())
-        success_msg.append("and %s%s%d%s host labels" %
-                           (tty.bold, tty.yellow, len(discovered_host_labels), tty.normal))
 
     console.section_success(", ".join(success_msg))
 
@@ -252,7 +239,7 @@ def _do_inv_for(sources, multi_host_sections, host_config, ipaddress, do_status_
             "Found %s%s%d%s status entries" %
             (tty.bold, tty.yellow, status_data_tree.count_entries(), tty.normal))
 
-    return old_timestamp, inventory_tree, status_data_tree, discovered_host_labels
+    return old_timestamp, inventory_tree, status_data_tree
 
 
 def _do_inv_for_cluster(host_config, inventory_tree):
@@ -268,7 +255,7 @@ def _do_inv_for_cluster(host_config, inventory_tree):
 
 
 def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ipaddress,
-                         inventory_tree, status_data_tree, discovered_host_labels):
+                         inventory_tree, status_data_tree):
     for source in sources.get_data_sources():
         if isinstance(source, data_sources.SNMPDataSource):
             source.set_on_error("raise")
@@ -321,7 +308,6 @@ def _do_inv_for_realhost(host_config, sources, multi_host_sections, hostname, ip
         for dynamic_arg_name, dynamic_arg_value in [
             ("inventory_tree", inventory_tree),
             ("status_data_tree", status_data_tree),
-            ("discovered_host_labels", discovered_host_labels),
         ]:
             if dynamic_arg_name in inv_function_args:
                 inv_function_args.remove(dynamic_arg_name)

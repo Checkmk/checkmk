@@ -2554,25 +2554,6 @@ class HostConfig(object):
         return params.get('status_data_inventory', False)
 
     @property
-    def do_host_label_discovery(self):
-        # type: () -> bool
-
-        # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
-        rules = active_checks.get('cmk_inv')
-        if rules is None:
-            return True
-
-        entries = self._config_cache.host_extra_conf(self.hostname, rules)
-
-        if not entries:
-            return True  # No matching rule -> disable
-
-        # Convert legacy rules to current dict format (just like the valuespec)
-        params = {} if entries[0] is None else entries[0]
-
-        return params.get("host_label_inventory", True)
-
-    @property
     def service_level(self):
         # type: () -> Optional[int]
         entries = self._config_cache.host_extra_conf(self.hostname, host_service_levels)

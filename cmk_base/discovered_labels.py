@@ -77,18 +77,6 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         self._labels[label.name] = label.value
         self._plugin_name[label.name] = label.plugin_name
 
-    # TODO: Once we redesign the hw/sw inventory plugin API check if we can
-    # move it to the inventory API.
-    def add_labels_to_inventory_tree(self, inventory_tree):
-        """Add a label + plugin to the inventory tree
-        """
-        inv_labels = inventory_tree.get_list("software.applications.check_mk.host_labels:")
-        for label_id, label_value in self._labels.iteritems():
-            inv_labels.append({
-                "label": (label_id, label_value),
-                "plugin_name": self._plugin_name[label_id],
-            })
-
 
 class ABCLabel(object):
     """Representing a service label in Checkmk

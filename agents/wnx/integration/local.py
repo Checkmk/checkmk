@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset: 4 -*-
+from __future__ import print_function
 import configparser
 import yaml
 from contextlib import contextmanager

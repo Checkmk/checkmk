@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import os
 import sys
 import livestatus
@@ -58,12 +59,12 @@ sites = {
 
 c = livestatus.MultiSiteConnection(sites)
 c.set_prepend_site(True)
-print c.query("GET hosts\nColumns: name state\n")
+print(c.query("GET hosts\nColumns: name state\n"))
 c.set_prepend_site(False)
-print c.query("GET hosts\nColumns: name state\n")
+print(c.query("GET hosts\nColumns: name state\n"))
 
 # Beware: When doing stats, you need to aggregate yourself:
-print sum(c.query_column("GET hosts\nStats: state >= 0\n"))
+print(sum(c.query_column("GET hosts\nStats: state >= 0\n")))
 
 # Detect errors:
 sites = {
@@ -87,7 +88,7 @@ sites = {
 
 c = livestatus.MultiSiteConnection(sites)
 for name, state in c.query("GET hosts\nColumns: name state\n"):
-    print "%-15s: %d" % (name, state)
-print "Dead sites:"
+    print("%-15s: %d" % (name, state))
+print("Dead sites:")
 for sitename, info in c.dead_sites().items():
-    print "%s: %s" % (sitename, info["exception"])
+    print("%s: %s" % (sitename, info["exception"]))

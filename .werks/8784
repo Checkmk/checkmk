@@ -1,0 +1,14 @@
+Title: bulk notifications were sent multiple times
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1564468209
+
+Werk #8783 introduced a bug where bulk notifications
+were not cleaned up and sent multiple times. All
+notification scripts that produce no plugin output
+like e.g. asciimail are affected.

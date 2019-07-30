@@ -195,7 +195,7 @@ ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
 # unicode (Python2) -> str (Python 3)
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
 #+  from __future__ import print_function
 #-    print "Foo"
 #+    print("Foo")

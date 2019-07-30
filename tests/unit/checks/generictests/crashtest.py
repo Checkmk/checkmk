@@ -30,6 +30,7 @@ append new files)
 Note that this will only work, if the crash report contains the
 local variables 'parsed' or 'info'.
 """
+from __future__ import print_function
 import base64
 import json
 import os

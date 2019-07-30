@@ -1,3 +1,4 @@
+from __future__ import print_function
 import math
 import time
 from pprint import pprint
@@ -59,7 +60,7 @@ def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result)
     """
     with on_time(utcdate, timezone):
         timestamp = time.time()
-        print timestamp
+        print(timestamp)
 
         slices = prediction.time_slices(timestamp, horizon, period_info, timegroup)
         pprint([('ontz', x, time.ctime(x), time.ctime(y)) for x, y in slices])

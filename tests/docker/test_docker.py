@@ -26,6 +26,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import sys
 import os
 import subprocess
@@ -171,7 +172,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         assert "STARTING SITE" in output
         assert "### CONTAINER STARTED" in output
     finally:
-        print "Log so far: %s" % c.logs()
+        print("Log so far: %s" % c.logs())
 
     return c
 

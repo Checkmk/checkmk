@@ -173,7 +173,10 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
-from cmk_base.discovered_labels import DiscoveredServiceLabels as ServiceLabels, ServiceLabel  # pylint: disable=unused-import
+from cmk_base.discovered_labels import (  # pylint: disable=unused-import
+    DiscoveredServiceLabels as ServiceLabels, ServiceLabel, DiscoveredHostLabels as HostLabels,
+    HostLabel,
+)
 Service = _check_api_utils.Service
 
 network_interface_scan_registry = _snmp_utils.MutexScanRegistry()

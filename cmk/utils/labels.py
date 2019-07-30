@@ -80,7 +80,10 @@ class LabelManager(object):
 
     def _discovered_labels_of_host(self, hostname):
         # type: (str) -> Dict
-        return DiscoveredHostLabelsStore(hostname).load()
+        return {
+            label_id: label["value"]
+            for label_id, label in DiscoveredHostLabelsStore(hostname).load().iteritems()
+        }
 
     def labels_of_service(self, ruleset_matcher, hostname, service_desc):
         # type: (RulesetMatcher, str, Text) -> Dict

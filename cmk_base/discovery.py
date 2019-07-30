@@ -34,6 +34,7 @@ from cmk.utils.regex import regex
 import cmk.utils.tty as tty
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.crash_reporting
@@ -53,7 +54,10 @@ import cmk_base.decorator
 import cmk_base.snmp_scan as snmp_scan
 from cmk_base.exceptions import MKParseFunctionError
 from cmk_base.check_utils import DiscoveredService
-from cmk_base.discovered_labels import DiscoveredServiceLabels
+from cmk_base.discovered_labels import (
+    DiscoveredServiceLabels,
+    DiscoveredHostLabels,
+)
 
 # Run the discovery queued by check_discovery() - if any
 _marked_host_discovery_timeout = 120
@@ -153,11 +157,11 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
 
     console.step("Executing discovery plugins (%d)" % len(check_plugin_names))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(check_plugin_names))
-    discovered_services = _discover_services(hostname,
-                                             ipaddress,
-                                             sources,
-                                             multi_host_sections,
-                                             on_error=on_error)
+    discovered_services, discovered_host_labels = _discover_services(hostname,
+                                                                     ipaddress,
+                                                                     sources,
+                                                                     multi_host_sections,
+                                                                     on_error=on_error)
 
     # There are three ways of how to merge existing and new discovered checks:
     # 1. -II without --checks=
@@ -170,38 +174,77 @@ def _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_p
     #    --> just add new services
     #        only_new is True
 
-    result = []  # type: List[DiscoveredService]
+    new_services = []  # type: List[DiscoveredService]
 
     if not check_plugin_names and not only_new:
         existing_services = []  # type: List[DiscoveredService]
     else:
         existing_services = autochecks.parse_autochecks_file(hostname)
 
-    # Parse old items into a dict (ct, item) -> parameters_unresolved
+    # Take over old items if -I is selected or if -II is selected with
+    # --checks= and the check type is not one of the listed ones
     for existing_service in existing_services:
-        # Take over old items if -I is selected or if -II
-        # is selected with --checks= and the check type is not
-        # one of the listed ones
         if only_new or (check_plugin_names and
                         existing_service.check_plugin_name not in check_plugin_names):
-            result.append(existing_service)
+            new_services.append(existing_service)
 
     services_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
     for discovered_service in discovered_services:
-        if discovered_service not in result:
-            result.append(discovered_service)
+        if discovered_service not in new_services:
+            new_services.append(discovered_service)
             services_per_plugin.setdefault(discovered_service.check_plugin_name, 0)
             services_per_plugin[discovered_service.check_plugin_name] += 1
 
-    autochecks.save_autochecks_file(hostname, result)
+    autochecks.save_autochecks_file(hostname, new_services)
+
+    new_host_labels, host_labels_per_plugin = \
+        _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new)
+    DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
+
+    messages = []
 
     if services_per_plugin:
         for check_plugin_name, count in sorted(services_per_plugin.items()):
             console.verbose("%s%3d%s %s\n" %
                             (tty.green + tty.bold, count, tty.normal, check_plugin_name))
-        console.section_success("Found %d services" % sum(services_per_plugin.values()))
+        messages.append("Found %d services" % sum(services_per_plugin.values()))
     else:
-        console.section_success("Found nothing%s" % (only_new and " new" or ""))
+        messages.append("Found no%s services" % (only_new and " new" or ""))
+
+    if host_labels_per_plugin:
+        messages.append("%d host labels" % sum(host_labels_per_plugin.values()))
+    else:
+        messages.append("no%s host labels" % (only_new and " new" or ""))
+
+    console.section_success(", ".join(messages))
+
+
+def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names, only_new):
+    # type: (str, DiscoveredHostLabels, Optional[List[str]], bool) -> Tuple[DiscoveredHostLabels, Dict[check_table.CheckPluginName, int]]
+
+    new_host_labels = DiscoveredHostLabels()
+
+    if not check_plugin_names and not only_new:
+        existing_host_labels = DiscoveredHostLabels()
+    else:
+        existing_host_labels = DiscoveredHostLabels.from_dict(
+            DiscoveredHostLabelsStore(hostname).load())
+
+    # Take over old items if -I is selected or if -II is selected with
+    # --checks= and the check type is not one of the listed ones
+    for existing_label in existing_host_labels.itervalues():
+        if only_new or (check_plugin_names and
+                        existing_label.plugin_name not in check_plugin_names):
+            new_host_labels.add_label(existing_label)
+
+    host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
+    for discovered_label in discovered_host_labels.itervalues():
+        if discovered_label.name not in new_host_labels:
+            new_host_labels.add_label(discovered_label)
+            host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
+            host_labels_per_plugin[discovered_label.plugin_name] += 1
+
+    return new_host_labels, host_labels_per_plugin
 
 
 # determine changed services on host.
@@ -259,11 +302,14 @@ def discover_on_host(config_cache,
         multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
         # Compute current state of new and existing checks
-        services = _get_host_services(host_config,
-                                      ipaddress,
-                                      sources,
-                                      multi_host_sections,
-                                      on_error=on_error)
+        services, discovered_host_labels = _get_host_services(host_config,
+                                                              ipaddress,
+                                                              sources,
+                                                              multi_host_sections,
+                                                              on_error=on_error)
+
+        # TODO: Implement handling in next commit
+        _x = discovered_host_labels
 
         # Create new list of checks
         new_items = []  # type: List[DiscoveredService]
@@ -358,11 +404,14 @@ def check_discovery(hostname, ipaddress):
     multi_host_sections = _get_host_sections_for_discovery(
         sources, use_caches=data_sources.abstract.DataSource.get_may_use_cache_file())
 
-    services = _get_host_services(host_config,
-                                  ipaddress,
-                                  sources,
-                                  multi_host_sections,
-                                  on_error="raise")
+    services, discovered_host_labels = _get_host_services(host_config,
+                                                          ipaddress,
+                                                          sources,
+                                                          multi_host_sections,
+                                                          on_error="raise")
+
+    # TODO: Implement handling in next commit
+    _x = discovered_host_labels
 
     need_rediscovery = False
 
@@ -736,18 +785,24 @@ def schedule_discovery_check(hostname):
 # "warn"   -> output a warning on stderr
 # "raise"  -> let the exception come through
 def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> List[DiscoveredService]
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[List[DiscoveredService], DiscoveredHostLabels]
     # Set host name for host_name()-function (part of the Check API)
     # (used e.g. by ps-discovery)
     check_api_utils.set_hostname(hostname)
 
     discovered_services = []  # type: List[DiscoveredService]
+    discovered_host_labels = DiscoveredHostLabels()
     try:
         for check_plugin_name in sources.get_check_plugin_names():
             try:
-                discovered_services += list(
-                    _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name,
-                                       on_error))
+                for entry in _execute_discovery(multi_host_sections, hostname, ipaddress,
+                                                check_plugin_name, on_error):
+                    if isinstance(entry, DiscoveredService):
+                        discovered_services.append(entry)
+                    elif isinstance(entry, DiscoveredHostLabels):
+                        for host_label in entry.itervalues():
+                            host_label.plugin_name = check_plugin_name
+                            discovered_host_labels.add_label(host_label)
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as e:
@@ -767,7 +822,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                     discovered_service.item) not in check_table_formatted:
                 discovered_services.remove(discovered_service)
 
-        return discovered_services
+        return discovered_services, discovered_host_labels
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
@@ -797,7 +852,7 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
-    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[DiscoveredService]
+    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels]]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -841,9 +896,8 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
 
         # Now do the actual discovery
         discovered_items = _execute_discovery_function(discovery_function, section_content)
-        for discovered_service in _validate_discovered_items(hostname, check_plugin_name,
-                                                             discovered_items):
-            yield discovered_service
+        for entry in _validate_discovered_items(hostname, check_plugin_name, discovered_items):
+            yield entry
     except Exception as e:
         if on_error == "warn":
             console.warning("  Exception in discovery function of check type '%s': %s" %
@@ -884,12 +938,17 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, check_table.CheckPluginName, List) -> Iterator[DiscoveredService]
+    # type: (str, check_table.CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels]]
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
             parameters_unresolved = entry.parameters
             service_labels = entry.service_labels
+            yield entry.host_labels
+
+        elif isinstance(entry, DiscoveredHostLabels):
+            yield entry
+            continue
 
         elif isinstance(entry, tuple):
             service_labels = DiscoveredServiceLabels()
@@ -945,7 +1004,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
 def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     if host_config.is_cluster:
         return _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error)
 
@@ -954,9 +1013,10 @@ def _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     hostname = host_config.hostname
-    services = _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error)
+    services, discovered_host_labels = _get_discovered_services(hostname, ipaddress, sources,
+                                                                multi_host_sections, on_error)
 
     config_cache = config.get_config_cache()
     # Identify clustered services
@@ -970,12 +1030,12 @@ def _get_node_services(host_config, ipaddress, sources, multi_host_sections, on_
             services[(discovered_service.check_plugin_name,
                       discovered_service.item)] = ("clustered_" + check_source, discovered_service)
 
-    return _merge_manual_services(host_config, services, on_error)
+    return _merge_manual_services(host_config, services, on_error), discovered_host_labels
 
 
 # Part of _get_node_services that deals with discovered services
 def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error):
-    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+    # type: (str, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     # Create a dict from check_plugin_name/item to check_source/paramstring
     services = {}  # type: DiscoveredServicesTable
 
@@ -988,8 +1048,8 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
     sources.enforce_check_plugin_names(check_plugin_names)
 
     # Handle discovered services -> "new"
-    discovered_services = _discover_services(hostname, ipaddress, sources, multi_host_sections,
-                                             on_error)
+    discovered_services, discovered_host_labels = _discover_services(hostname, ipaddress, sources,
+                                                                     multi_host_sections, on_error)
     for discovered_service in discovered_services:
         services.setdefault((discovered_service.check_plugin_name, discovered_service.item),
                             ("new", discovered_service))
@@ -1000,7 +1060,7 @@ def _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, 
         check_source = "vanished" if table_id not in services else "old"
         services[table_id] = check_source, existing_service
 
-    return services
+    return services, discovered_host_labels
 
 
 # TODO: Rename or extract disabled services handling
@@ -1053,7 +1113,7 @@ def _merge_manual_services(host_config, services, on_error):
 
 
 def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, on_error):
-    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> DiscoveredServicesTable
+    # type: (config.HostConfig, Optional[str], data_sources.DataSources, data_sources.MultiHostSections, str) -> Tuple[DiscoveredServicesTable, DiscoveredHostLabels]
     config_cache = config.get_config_cache()
 
     # Get setting from cluster SNMP data source
@@ -1063,8 +1123,9 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
             do_snmp_scan = source.get_do_snmp_scan()
 
     cluster_items = {}  # type: DiscoveredServicesTable
+    cluster_host_labels = DiscoveredHostLabels()
     if not host_config.nodes:
-        return cluster_items
+        return cluster_items, cluster_host_labels
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
@@ -1078,8 +1139,10 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
             on_error=on_error,
         )
 
-        services = _get_discovered_services(node, node_ipaddress, node_sources, multi_host_sections,
-                                            on_error)
+        services, discovered_host_labels = _get_discovered_services(node, node_ipaddress,
+                                                                    node_sources,
+                                                                    multi_host_sections, on_error)
+        cluster_host_labels.update(discovered_host_labels)
         for check_source, discovered_service in services.values():
             if host_config.hostname != config_cache.host_of_clustered_service(
                     node, discovered_service.description):
@@ -1109,7 +1172,7 @@ def _get_cluster_services(host_config, ipaddress, sources, multi_host_sections, 
             # In all other cases either both must be "new" or "vanished" -> let it be
 
     # Now add manual and active serivce and handle ignored services
-    return _merge_manual_services(host_config, cluster_items, on_error)
+    return _merge_manual_services(host_config, cluster_items, on_error), cluster_host_labels
 
 
 CheckPreviewEntry = Tuple[str, str, Optional[str], check_table.Item, str, check_table.
@@ -1138,7 +1201,11 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
-    services = _get_host_services(host_config, ipaddress, sources, multi_host_sections, on_error)
+    services, discovered_host_labels = _get_host_services(host_config, ipaddress, sources,
+                                                          multi_host_sections, on_error)
+
+    # TODO: Implement this in the next commit
+    _x = discovered_host_labels
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():

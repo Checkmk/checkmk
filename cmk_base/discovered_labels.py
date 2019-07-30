@@ -68,14 +68,22 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-    def __init__(self, *args):
-        self._plugin_name = {}
-        super(DiscoveredHostLabels, self).__init__(*args)
+    @classmethod
+    def from_dict(cls, dict_labels):
+        labels = cls()
+        for k, v in dict_labels.iteritems():
+            if isinstance(v, unicode):
+                # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
+                continue
+            labels.add_label(HostLabel.from_dict(k, v))
+        return labels
 
     def add_label(self, label):
         # type: (HostLabel) -> None
-        self._labels[label.name] = label.value
-        self._plugin_name[label.name] = label.plugin_name
+        self._labels[label.name] = label
+
+    def to_dict(self):
+        return {label.name: label.to_dict() for label in self._labels.itervalues()}
 
 
 class ABCLabel(object):
@@ -124,6 +132,10 @@ class HostLabel(ABCLabel):
     """
     __slots__ = ["_plugin_name"]
 
+    @classmethod
+    def from_dict(cls, name, dict_label):
+        return cls(name, dict_label["value"], dict_label["plugin_name"])
+
     def __init__(self, name, value, plugin_name=None):
         # type: (Text, Text, Optional[str]) -> None
         super(HostLabel, self).__init__(name, value)
@@ -131,7 +143,19 @@ class HostLabel(ABCLabel):
 
     @property
     def plugin_name(self):
+        # type: () -> Optional[str]
         return self._plugin_name
+
+    @plugin_name.setter
+    def plugin_name(self, plugin_name):
+        # type: (str) -> None
+        self._plugin_name = plugin_name
+
+    def to_dict(self):
+        return {
+            "value": self.value,
+            "plugin_name": self.plugin_name,
+        }
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):

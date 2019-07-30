@@ -1,0 +1,17 @@
+Title: ps: Option to include process arguments in long-output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564562329
+Class: feature
+
+This Werk adds an option to include process arguments in the long-output
+of the service.
+If specified in the ruleset "State and count of processes", the list of
+all the matching processes and their details in the long-output will
+include up to the first N characters of each processes' arguments.
+
+<b>Note:</b> This feature must be used with care, as the output may
+include sensitive data like credentials.

@@ -6199,7 +6199,7 @@ ram_used_swap_translation = {
         "scale": MB
     },
     "memused": {
-        "name": "total_used",
+        "name": "mem_lnx_total_used",
         "auto_graph": False,
         "scale": MB
     },
@@ -10511,6 +10511,7 @@ graph_info["active_and_inactive_memory"] = {
 graph_info["ram_used"] = {
     "title": _("RAM used"),
     "metrics": [("mem_used", "area"),],
+    "conflicting_metrics": ["swap_used"],
     "scalars": [
         ("mem_used:max#000000", "Maximum"),
         ("mem_used:warn", "Warning"),

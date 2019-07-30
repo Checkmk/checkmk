@@ -24,18 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import os, pprint, sys, operator
 
 
 def usage():
-    print "Usage: ./migrate_oldcmk2wato start\n"
-    print "  This script tries to convert a WATO-less Check_MK configuration into WATO."
-    print "  It scans for *.mk files in the current folder and creates a respective WATO folder"
-    print "  for each file found. The content of the file is splitted into a hosts.mk and rules.mk"
-    print "  As an alternative, you can configure where to put the content of the source *.mk files"
-    print "  (have a look at the config section within the script)"
-    print "  After the conversion is finished, you can see the unconverted data in the file unconverted.info"
-    print "  \nNote: This script is still under development an not close to completion"
+    print("Usage: ./migrate_oldcmk2wato start\n")
+    print("  This script tries to convert a WATO-less Check_MK configuration into WATO.")
+    print("  It scans for *.mk files in the current folder and creates a respective WATO folder")
+    print("  for each file found. The content of the file is splitted into a hosts.mk and rules.mk")
+    print(
+        "  As an alternative, you can configure where to put the content of the source *.mk files")
+    print("  (have a look at the config section within the script)")
+    print(
+        "  After the conversion is finished, you can see the unconverted data in the file unconverted.info"
+    )
+    print("  \nNote: This script is still under development an not close to completion")
 
 
 if len(sys.argv) != 2 or sys.argv[1] != "start":
@@ -43,7 +47,7 @@ if len(sys.argv) != 2 or sys.argv[1] != "start":
     sys.exit(0)
 
 if not os.environ.get("OMD_SITE"):
-    print "Please run this script as site user"
+    print("Please run this script as site user")
     sys.exit(0)
 
 confd_folder = os.path.expanduser("~/etc/check_mk/conf.d")
@@ -404,14 +408,14 @@ def create_wato_folder(filename, file_vars):
 #   +----------------------------------------------------------------------+
 
 # Parse files
-print "Parsing files"
-print "#############"
+print("Parsing files")
+print("#############")
 for filename in os.listdir("."):
     try:
         if not os.path.isfile(filename) or not filename.endswith(".mk"):
             continue
 
-        print "Process file: %s" % filename
+        print("Process file: %s" % filename)
         file_vars = {
             "all_hosts": [],  # converted
             "extra_host_conf": {
@@ -439,8 +443,8 @@ for filename in os.listdir("."):
         execfile(filename, globals(), file_vars)
         all_file_vars[filename] = file_vars
     except Exception as e:
-        print "Error parsing file %s: %s" % (filename, e)
-print ""
+        print("Error parsing file %s: %s" % (filename, e))
+print("")
 
 # Pre-process files, deterime global IP addresses and parent relationships
 for filename, file_vars in all_file_vars.items():
@@ -466,19 +470,19 @@ for filename, file_vars in all_file_vars.items():
     create_wato_folder(filename, file_vars)
 
 # Debug, shows overall tag usage
-print "Tag usage statistics"
-print "####################"
+print("Tag usage statistics")
+print("####################")
 tag_counts = sorted(available_tags.items(), key=operator.itemgetter(1), reverse=True)
 for key, value in tag_counts:
-    print "%-20s %s" % (key, value)
-print ""
+    print("%-20s %s" % (key, value))
+print("")
 
 # Create hosttags.mk file
-print "hosttags.mk"
-print "###########"
+print("hosttags.mk")
+print("###########")
 
-print "Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)" % os.path.expanduser(
-    "~")
+print("Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)" %
+      os.path.expanduser("~"))
 tag_template = "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
 extra_host_tags = []
 for tag in new_host_tags:
@@ -502,24 +506,24 @@ wato_host_tags += [\n\
     "extra_host_tags": "\n".join(extra_host_tags)
 }
 file(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
-print ""
+print("")
 
 # Write all configuration (hosts.mk/rules.mk) files
-print "Writing configuration files"
-print "###########################"
+print("Writing configuration files")
+print("###########################")
 for dirname, content in result_files.items():
     filepath = "%s/%s/%s" % (confd_folder, wato_folder, dirname)
     if not os.path.exists(filepath):
         os.makedirs(filepath)
     for filename, text in content.items():
-        print "Writing %s... %s" % (filepath, filename)
+        print("Writing %s... %s" % (filepath, filename))
         file("%s/%s" % (filepath, filename), "w").write(text)
-    print ""
+    print("")
 
 if unconverted_data or partial_unconverted_data:
-    print """##################################################
+    print("""##################################################
 # Unconverted data remains (see unconverted.info)#
-##################################################"""
+##################################################""")
 
     # Write all unconverted data into the file unconverted.info
     file("unconverted.info", "w").write(unconverted_data + """

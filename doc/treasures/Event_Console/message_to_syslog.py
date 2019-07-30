@@ -28,13 +28,14 @@
 # like the integrated syslogserver of mkeventd.
 #
 # Bastian Kuhn, bk@mathias-kettner.de
+from __future__ import print_function
 import time
 import socket
 import sys
 
 if len(sys.argv) < 6:
-    print 'This script sends a message via upd to a syslogserver'
-    print 'Usage: %s SYSLOGSERVER HOSTNAME PRIO APPLICATION "MESSAGE"' % sys.argv[0]
+    print('This script sends a message via upd to a syslogserver')
+    print('Usage: %s SYSLOGSERVER HOSTNAME PRIO APPLICATION "MESSAGE"' % sys.argv[0])
     sys.exit()
 
 host = sys.argv[1]

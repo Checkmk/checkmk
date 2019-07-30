@@ -1,0 +1,11 @@
+Title: emc_datadomain_temps: Do not discover missing temperature sensors
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p21
+Date: 1564477842
+
+

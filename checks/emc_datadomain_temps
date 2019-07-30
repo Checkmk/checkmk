@@ -33,7 +33,8 @@ def format_emc_datadomain_temp(descr, encid, index, new_format):
 
 def inventory_emc_datadomain_temps(info):
     for encid, index, descr, reading, status in info:
-        yield format_emc_datadomain_temp(descr, encid, index, True), {}
+        if status != "2":
+            yield format_emc_datadomain_temp(descr, encid, index, True), {}
 
 def check_emc_datadomain_temps(item, params, info):
     state_table = {

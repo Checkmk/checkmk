@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
 import errno
 import os
 import sys
@@ -90,7 +91,7 @@ class Worker(threading.Thread):
             response = self.client.get(url.url_without_host())
         except AssertionError as e:
             if "This view can only be used in mobile mode" in "%s" % e:
-                print "Skipping mobile mode view checking"
+                print("Skipping mobile mode view checking")
                 return
             else:
                 raise
@@ -438,7 +439,7 @@ class TestCrawler(object):
         except KeyboardInterrupt:
             for t in workers:
                 t.stop()
-            print "Waiting for workers to finish..."
+            print("Waiting for workers to finish...")
         finally:
             self.update_total_stats(finished)
             self.save_stats()

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import os, sys, stat
 
 opt_debug = "-d" in sys.argv or "--debug" in sys.argv
@@ -620,21 +621,21 @@ try:
 
         detect_pnp()
 
-    print "# Result of autodetection"
+    print("# Result of autodetection")
     for var, value in result.items():
-        print
+        print()
         descr = target_values.get(var)
         if descr:
-            print "# %s" % descr
+            print("# %s" % descr)
         else:
-            print "# (unknown value)"
-        print "%s='%s'" % (var, value)
+            print("# (unknown value)")
+        print("%s='%s'" % (var, value))
 
     for var, descr in target_values.items():
         if var not in result:
-            print
-            print "# %s" % descr
-            print "# NOT DETECTED: %s" % var
+            print()
+            print("# %s" % descr)
+            print("# NOT DETECTED: %s" % var)
 
 except Sorry as e:
     sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.reason)

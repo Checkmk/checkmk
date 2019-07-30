@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Modes for services and discovery"""
+from __future__ import print_function
 
 import ast
 import os
@@ -432,7 +433,7 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
     def discover(self, request, job_interface):
         # type: (StartDiscoveryRequest, BackgroundProcessInterface) -> None
         """Target function of the background job"""
-        print "Starting job..."
+        print("Starting job...")
         if request.options.action == DiscoveryAction.SCAN:
             self._jobstatus.update_status({"title": _("Full scan")})
             self._perform_service_scan(request)
@@ -443,7 +444,7 @@ class ServiceDiscoveryBackgroundJob(watolib.WatoBackgroundJob):
 
         else:
             raise NotImplementedError()
-        print "Completed."
+        print("Completed.")
 
     def _perform_service_scan(self, request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new

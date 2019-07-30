@@ -232,7 +232,10 @@ fi
 
 # Check all relevant files in case no PYTHON_FILES is set via environment
 PYTHON_FILES=${PYTHON_FILES-$($REPO_PATH/tests/find-python-files)}
-PYTHON_FILES=$(echo "$PYTHON_FILES" | grep -v "$REPO_PATH/agents/plugins")
+# Exclude python files which can be installed on client hosts
+PYTHON_FILES=$(echo "$PYTHON_FILES" |\
+               grep -v "$REPO_PATH/agents/plugins" |\
+               grep -v "$REPO_PATH/doc/treasures/downtime")
 
 FIXER_OPTS=""
 for FIXER in $ENABLED_FIXERS; do

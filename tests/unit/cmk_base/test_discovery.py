@@ -6,7 +6,6 @@ import pytest  # type: ignore
 import cmk_base.discovery as discovery
 from cmk_base.check_api_utils import Service
 from cmk_base.discovered_labels import (
-    DiscoveredServiceLabelsOfHost,
     DiscoveredServiceLabels,
     ServiceLabel,
 )
@@ -51,30 +50,3 @@ def test_discovered_service_eq():
     assert s1 not in set([s3])
     assert s1 not in set([s4])
     assert s1 in set([s5])
-
-
-def test_discovered_service_labels_of_host():
-    def discovery_function():
-        yield Service(item=u"itäm1",
-                      parameters=None,
-                      service_labels=DiscoveredServiceLabels(ServiceLabel(u"bla", u"blüb"),))
-        yield Service(item=u"itäm1",
-                      parameters=None,
-                      service_labels=DiscoveredServiceLabels(ServiceLabel(u"bla", u"bläb"),))
-        yield Service(item=u"itäm2",
-                      parameters=None,
-                      service_labels=DiscoveredServiceLabels(ServiceLabel(u"blä", u"bläb"),))
-
-    labels = DiscoveredServiceLabelsOfHost()
-
-    for service in discovery_function():
-        labels.add_labels(service.item, service.service_labels)
-
-    assert labels.to_dict() == {
-        u"itäm1": {
-            u"bla": u"bläb",
-        },
-        u"itäm2": {
-            u"blä": u"bläb",
-        },
-    }

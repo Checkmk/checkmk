@@ -267,6 +267,7 @@ def discover_on_host(config_cache,
         "self_removed": 0,
         "self_kept": 0,
         "self_total": 0,
+        "self_new_host_labels": 0,
         "clustered_new": 0,
         "clustered_vanished": 0,
     }
@@ -306,9 +307,6 @@ def discover_on_host(config_cache,
                                                               sources,
                                                               multi_host_sections,
                                                               on_error=on_error)
-
-        # TODO: Implement handling in next commit
-        _x = discovered_host_labels
 
         # Create new list of checks
         new_items = []  # type: List[DiscoveredService]
@@ -356,6 +354,12 @@ def discover_on_host(config_cache,
         if cmk.utils.debug.enabled():
             raise
         err = str(e)
+
+    if mode != "remove":
+        new_host_labels, host_labels_per_plugin = \
+            _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names=None, only_new=True)
+        DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
+        counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
 
     counts["self_total"] = counts["self_new"] + counts["self_kept"]
     return counts, err
@@ -408,9 +412,6 @@ def check_discovery(hostname, ipaddress):
                                                           sources,
                                                           multi_host_sections,
                                                           on_error="raise")
-
-    # TODO: Implement handling in next commit
-    _x = discovered_host_labels
 
     need_rediscovery = False
 
@@ -473,6 +474,20 @@ def check_discovery(hostname, ipaddress):
             long_infotexts.append(
                 u"ignored: %s: %s" %
                 (discovered_service.check_plugin_name, discovered_service.description))
+
+    _new_host_labels, host_labels_per_plugin = \
+        _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names=None, only_new=True)
+    if host_labels_per_plugin:
+        infotexts.append("%d new host labels" % sum(host_labels_per_plugin.values()))
+        status = cmk_base.utils.worst_service_state(status,
+                                                    params.get("severity_new_host_label", 1))
+
+        if params.get("inventory_rediscovery", False):
+            mode = params["inventory_rediscovery"]["mode"]
+            if mode in (0, 2, 3):
+                need_rediscovery = True
+    else:
+        infotexts.append("no new host labels")
 
     if need_rediscovery:
         if host_config.is_cluster and host_config.nodes:
@@ -611,7 +626,7 @@ def _discover_marked_host_exists(config_cache, hostname):
 
 def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
     hostname = host_config.hostname
-    services_changed = False
+    something_changed = False
 
     mode_table = {0: "new", 1: "remove", 2: "fixall", 3: "refresh"}
 
@@ -654,17 +669,22 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
                result["self_removed"] == 0 and\
                result["self_kept"] == result["self_total"] and\
                result["clustered_new"] == 0 and\
-               result["clustered_vanished"] == 0:
+               result["clustered_vanished"] == 0 and\
+               result["self_new_host_labels"] == 0:
                 console.verbose("  nothing changed.\n")
             else:
                 console.verbose("  %(self_new)s new, %(self_removed)s removed, "\
-                                "%(self_kept)s kept, %(self_total)s total services. "\
+                                "%(self_kept)s kept, %(self_total)s total services "
+                                "and %(self_new_host_labels)s new host labels. "\
                                 "clustered new %(clustered_new)s, clustered vanished %(clustered_vanished)s" % result)
 
                 # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
                 #       the activation decision is based on the discovery configuration of the node
                 if redisc_params["activation"]:
-                    services_changed = True
+                    something_changed = True
+
+                # Enforce base code creating a new host config object after this change
+                config_cache.invalidate_host_config(hostname)
 
                 # Now ensure that the discovery service is updated right after the changes
                 schedule_discovery_check(hostname)
@@ -678,7 +698,7 @@ def _discover_marked_host(config_cache, host_config, now_ts, oldest_queued):
     else:
         console.verbose("  skipped: %s\n" % why_not)
 
-    return services_changed
+    return something_changed
 
 
 def _queue_age():

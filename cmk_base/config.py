@@ -2678,6 +2678,12 @@ class ConfigCache(object):
         host_config = self._host_configs[hostname] = config_class(self, hostname)
         return host_config
 
+    def invalidate_host_config(self, hostname):
+        try:
+            del self._host_configs[hostname]
+        except KeyError:
+            pass
+
     def _get_host_paths(self, config_host_paths):
         """Reference hostname -> dirname including /"""
         host_dirs = {}

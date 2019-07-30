@@ -62,7 +62,7 @@ import signal
 import shlex
 from subprocess import *
 
-OMD_VERSION = "1.5.0p21.cme"
+OMD_VERSION = "1.5.0p22.cme"
 
 # Some global variables
 opt_verbose = False

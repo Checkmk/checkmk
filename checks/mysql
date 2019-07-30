@@ -256,7 +256,6 @@ check_info['mysql.galerasync'] = {
     "inventory_function"      : inventory_mysql_galerasync,
     "check_function"          : check_mysql_galerasync,
     "service_description"     : "MySQL Galera Sync %s",
-    "has_perfdata"            : False,
 }
 
 #.
@@ -286,7 +285,6 @@ check_info['mysql.galeradonor'] = {
     "inventory_function"      : inventory_mysql_galeradonor,
     "check_function"          : check_mysql_galeradonor,
     "service_description"     : "MySQL Galera Donor %s",
-    "has_perfdata"            : False,
 }
 
 #.
@@ -316,7 +314,6 @@ check_info['mysql.galerastartup'] = {
     "inventory_function"      : inventory_mysql_galerastartup,
     "check_function"          : check_mysql_galerastartup,
     "service_description"     : "MySQL Galera Startup %s",
-    "has_perfdata"            : False,
 }
 
 #.
@@ -387,5 +384,4 @@ check_info['mysql.galerastatus'] = {
     "inventory_function"      : inventory_mysql_galerastatus,
     "check_function"          : check_mysql_galerastatus,
     "service_description"     : "MySQL Galera Status %s",
-    "has_perfdata"            : False,
 }

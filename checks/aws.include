@@ -142,7 +142,7 @@ def check_aws_limits(aws_service, params, parsed):
     - performance data: aws_%s_%s % AWS resource, resource_key
     """
     long_output = []
-    levels_reached = []
+    levels_reached = set()
     max_state = 0
     perfdata = []
     for resource_key, resource_title, limit, amount, human_readable_func in parsed:
@@ -172,7 +172,7 @@ def check_aws_limits(aws_service, params, parsed):
 
         max_state = max(state, max_state)
         if state:
-            levels_reached.append(resource_title)
+            levels_reached.add(resource_title)
             infotext += ", %s%s" % (extrainfo, state_markers[state])
         long_output.append(infotext)
 

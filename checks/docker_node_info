@@ -39,6 +39,12 @@ def parse_docker_node_info(info):
     return loaded
 
 
+def discover_docker_node_info(info):
+    if info:
+        yield HostLabels(HostLabel(u"cmk/docker_object", u"node"))
+        yield (None, {})
+
+
 @append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
@@ -51,7 +57,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 check_info['docker_node_info'] = {
     'includes': ['docker.include', 'legacy_docker.include'],
     'parse_function': parse_docker_node_info,
-    'inventory_function': discover_single,
+    'inventory_function': discover_docker_node_info,
     'check_function': check_docker_node_info,
     'service_description': 'Docker node info',
 }

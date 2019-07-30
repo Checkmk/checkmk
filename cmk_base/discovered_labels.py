@@ -151,26 +151,3 @@ class DiscoveredServiceLabels(ABCDiscoveredLabels):
     def add_label(self, label):
         # type: (ServiceLabel) -> None
         self._labels[label.name] = label.value
-
-
-class DiscoveredServiceLabelsOfHost(object):
-    """Manages the discovered labels of all services of one host
-
-    During the service discovery in Checkmk base code, this class
-    is used to collect all discovered labels.
-    """
-    __slots__ = ["_service_labels"]
-
-    def __init__(self, **kwargs):
-        super(DiscoveredServiceLabelsOfHost, self).__init__()
-        self._service_labels = kwargs  # type: Dict[Text, DiscoveredServiceLabels]
-
-    def add_labels(self, service_desc, service_labels):
-        # type: (Text, DiscoveredServiceLabels) -> None
-        self._service_labels[service_desc] = service_labels
-
-    def to_dict(self):
-        return {
-            service_descr: service_labels.to_dict()
-            for service_descr, service_labels in self._service_labels.items()
-        }

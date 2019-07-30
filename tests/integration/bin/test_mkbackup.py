@@ -12,8 +12,8 @@ from testlib import web, InterProcessLock  # pylint: disable=unused-import
 
 
 @pytest.fixture()
-def backup_path(tmpdir):
-    backup_path = '%s/backup' % tmpdir
+def backup_path(tmp_path):
+    backup_path = str(tmp_path / 'backup')
 
     if not os.path.exists(backup_path):
         os.makedirs(backup_path)

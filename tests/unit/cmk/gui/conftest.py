@@ -40,9 +40,9 @@ def load_config(register_builtin_html):
 
 
 @pytest.fixture()
-def load_plugins(register_builtin_html, monkeypatch, tmpdir):
+def load_plugins(register_builtin_html, monkeypatch, tmp_path):
     import cmk.gui.modules as modules
-    config_dir = Path("%s" % tmpdir) / "var/check_mk/web"
+    config_dir = tmp_path / "var/check_mk/web"
     config_dir.mkdir(parents=True)  # pylint: disable=no-member
     monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
     modules.load_all_plugins()

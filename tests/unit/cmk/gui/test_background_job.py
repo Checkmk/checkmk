@@ -43,8 +43,8 @@ def test_registered_background_jobs_attributes():
 
 
 @pytest.fixture(autouse=True)
-def job_base_dir(tmpdir, monkeypatch):
-    var_dir = Path("%s" % tmpdir)
+def job_base_dir(tmp_path, monkeypatch):
+    var_dir = tmp_path
 
     log_dir = var_dir / "log"
     log_dir.mkdir()  # pylint: disable=no-member

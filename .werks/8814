@@ -1,4 +1,4 @@
-Title: netstat: something
+Title: netstat: Support of netstat functionality for Solaris Operating System 
 Level: 1
 Component: checks
 Class: feature
@@ -8,4 +8,4 @@ State: unknown
 Version: 1.6.0b5
 Date: 1564142952
 
-Addition of netstat functionality for solaris
+This is an agent plugin which allows users to include netstat services in their monitoring site

@@ -7,7 +7,6 @@ import pytest  # type: ignore
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.structured_data import StructuredDataTree
 
 from cmk_base.discovered_labels import (
     DiscoveredHostLabels,
@@ -64,7 +63,20 @@ def test_discovered_labels_len(labels):
     assert len(labels) == 2
 
 
-def test_discovered_labels_to_dict(labels):
+def test_discovered_labels_merge(labels):
+    labels["äbc"] = "123"
+    labels["xyz"] = "blä"
+
+    merge_labels = labels.__class__()
+    merge_labels["xyz"] = "blüb"
+
+    labels.update(merge_labels)
+    assert labels["äbc"] == "123"
+    assert labels["xyz"] == "blüb"
+
+
+def test_discovered_service_labels_to_dict():
+    labels = DiscoveredServiceLabels()
     assert labels.to_dict() == {}
 
     labels["äbc"] = "123"
@@ -74,6 +86,40 @@ def test_discovered_labels_to_dict(labels):
         "äbc": "123",
         "xyz": "blä",
     }
+
+
+def test_discovered_host_labels_to_dict():
+    labels = DiscoveredHostLabels()
+    assert labels.to_dict() == {}
+
+    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+    labels.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+
+    assert labels.to_dict() == {
+        u"äbc": {
+            "value": u"123",
+            "plugin_name": "plugin_1",
+        },
+        u"xyz": {
+            "value": u"blä",
+            "plugin_name": "plugin_2",
+        },
+    }
+
+
+def test_discovered_host_labels_from_dict():
+    label_dict = {
+        u"äbc": {
+            "value": u"123",
+            "plugin_name": "plugin_1",
+        },
+        u"xyz": {
+            "value": u"blä",
+            "plugin_name": "plugin_2",
+        },
+    }
+    labels = DiscoveredHostLabels.from_dict(label_dict)
+    assert labels.to_dict() == label_dict
 
 
 @pytest.fixture()
@@ -96,17 +142,19 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir):
     assert store.load() == label_dict
 
 
-def test_service_label():
+@pytest.mark.parametrize("cls", [HostLabel, ServiceLabel])
+def test_label(cls):
     name, value = u"äbc", u"d{--lulu--}dd"
-    l = ServiceLabel(name, value)
+    l = cls(name, value)
     assert l.name == name
     assert l.value == value
     assert l.label == u"%s:%s" % (name, value)
 
 
-def test_service_label_validation():
+@pytest.mark.parametrize("cls", [HostLabel, ServiceLabel])
+def test_label_validation(cls):
     with pytest.raises(MKGeneralException, match="Invalid label name"):
-        ServiceLabel("übc", u"abc")
+        cls("übc", u"abc")
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
-        ServiceLabel(u"äbc", "übc")
+        cls(u"äbc", "übc")

@@ -1976,8 +1976,8 @@ def core_notification_result_log(plugin, context, exit_code, output):
         spec = hostname
     state = core_state_names().get(exit_code, "")
     comment = " -- ".join(output)
-    output = output[-1]
-    log_message = "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output, comment)
+    short_output = output[-1] if output else ""
+    log_message = "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, short_output, comment)
 
     _send_livestatus_command("LOG;%s" % log_message)
 

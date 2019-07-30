@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import subprocess
 import re
@@ -54,7 +55,7 @@ def test_package_sizes(version_path, what, min_size, max_size):
         if os.path.basename(pkg).startswith("check-mk-enterprise-"):
             sizes.append(os.stat(pkg).st_size)
 
-    print "%s: Smallest is %s and largest is %s)." % (what, min(sizes), max(sizes))
+    print("%s: Smallest is %s and largest is %s)." % (what, min(sizes), max(sizes)))
 
     for pkg in _get_package_paths(version_path, what):
         if os.path.basename(pkg).startswith("check-mk-enterprise-"):
@@ -112,7 +113,7 @@ def test_files_not_in_version_path(version_path, cmk_version, what):
     }
 
     for pkg in _get_package_paths(version_path, what):
-        print "Testing %s" % pkg
+        print("Testing %s" % pkg)
 
         if what == "rpm":
             paths = subprocess.check_output(["rpm", "-qlp", pkg]).splitlines()
@@ -123,7 +124,7 @@ def test_files_not_in_version_path(version_path, cmk_version, what):
                 paths.append(line.split()[5].lstrip("."))
 
         omd_version = _get_omd_version(cmk_version, pkg)
-        print "Checking OMD version: %s" % omd_version
+        print("Checking OMD version: %s" % omd_version)
 
         for path in paths:
             is_allowed = any(

@@ -1,4 +1,5 @@
 """Submodule providing the `run` function of generictests package"""
+from __future__ import print_function
 from ast import literal_eval
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \

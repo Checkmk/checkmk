@@ -1,5 +1,6 @@
 # -*- encoding: utf-8
 # pylint: disable=redefined-outer-name
+from __future__ import print_function
 import imp
 import os
 import re

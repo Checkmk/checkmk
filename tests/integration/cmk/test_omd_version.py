@@ -4,8 +4,8 @@ import cmk
 
 # Would move this to unit tests, but it would not work, because the
 # unit tests monkeypatch the cmk.omd_version() function
-def test_omd_version(tmpdir, monkeypatch):
-    link_path = "%s" % tmpdir.dirpath("version")
+def test_omd_version(tmp_path, monkeypatch):
+    link_path = str(tmp_path / "version")
 
     monkeypatch.setattr(cmk.utils.paths, 'omd_root', os.path.dirname(link_path))
 

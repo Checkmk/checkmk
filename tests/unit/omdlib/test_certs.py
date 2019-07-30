@@ -13,8 +13,8 @@ CA_NAME = "test-ca"
 
 
 @pytest.fixture
-def ca(tmpdir, monkeypatch):
-    p = Path("%s" % tmpdir) / "ca"
+def ca(tmp_path, monkeypatch):
+    p = tmp_path / "ca"
     return certs.CertificateAuthority(p, CA_NAME)
 
 

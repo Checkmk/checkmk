@@ -125,7 +125,7 @@ ps:
     # This is required for the additional ps feature below.
     use_wmi: yes
     # Include the whole path of a process and its arguments in the process list.
-    full_path: yes
+    full_path: no
 
 winperf:
     enabled: yes

@@ -31,7 +31,7 @@ def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     expected = [
         re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
-        r'(%s|\w+)\s+\w+\s+\d+\s+\d+\s+\d+\s+\d{1,3}%s\s+%s' % (drive, re.escape('%'), drive)
+        r'(%s.*|\w+)\s+\w+\s+\d+\s+\d+\s+\d+\s+\d{1,3}%s\s+%s' % (drive, re.escape('%'), drive)
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']

@@ -1565,28 +1565,6 @@ def test_host_config_do_status_data_inventory(monkeypatch, result, ruleset):
     assert config_cache.get_host_config("abc").do_status_data_inventory == result
 
 
-@pytest.mark.parametrize("result,ruleset", [
-    (True, None),
-    (True, []),
-    (True, [(None, [], config.ALL_HOSTS, {})]),
-    (True, [({}, [], config.ALL_HOSTS, {})]),
-    (True, [({
-        "host_label_inventory": True
-    }, [], config.ALL_HOSTS, {})]),
-    (False, [({
-        "host_label_inventory": False
-    }, [], config.ALL_HOSTS, {})]),
-])
-def test_host_config_do_host_label_discovery_for(monkeypatch, result, ruleset):
-    ts = Scenario().add_host("abc")
-    ts.set_option("active_checks", {
-        "cmk_inv": ruleset,
-    })
-    config_cache = ts.apply(monkeypatch)
-
-    assert config_cache.get_host_config("abc").do_host_label_discovery == result
-
-
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", None),
     ("testhost2", 10),

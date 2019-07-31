@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import json
 
 from cmk.utils.paths import tmp_dir
 
@@ -57,7 +58,17 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         for source_hostname, source_raw_data in entries:
             self._source_hostnames.add(source_hostname)
             raw_data += source_raw_data
-        return raw_data
+
+        return raw_data + self._get_source_labels_section(self._source_hostnames)
+
+    def _get_source_labels_section(self, source_hostnames):
+        """Return a <<<labels>>> agent section which adds the piggyback sources
+        to the labels of the current host"""
+        if not source_hostnames:
+            return ""
+
+        labels = {"cmk/piggyback_source_%s" % name: "yes" for name in source_hostnames}
+        return '<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels)
 
     def _get_raw_data(self):
         """Returns the current raw data of this data source

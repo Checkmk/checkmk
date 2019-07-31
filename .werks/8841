@@ -1,0 +1,44 @@
+Title: Change internal mechanic of discovered host labels
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564596311
+Class: feature
+
+The discovered host labels which were introduced during the first beta
+versions of Checkmk 1.6 had to be reworked for some reasons. The new
+implementation is now based on the Service discovery mechanism, which
+makes several things a lot easier for us.
+
+Host labels are now discovered during the procedure of Checkmk service
+discovery. All discovery functions of the checks are able to either
+discover services and host labels.
+
+<ul>
+<li>The "Check_MK Discovery" service tells you about new found host labels,
+just like about services.</li>
+<li>You can use the "Service discovery" page of WATO to view the discovered
+host labels. New discovered host labels now trigger a warning state by default.
+This state can be configured using the "Periodic service discovery" ruleset.
+<li>The automatic activation function, that can be configured in the "Periodic
+service discovery" ruleset may be used to automatically add new host labels on
+a regular base.</li>
+<li>Whenever you execute a service discovery (via command line, GUI or API),
+the host labels will also be discovered.</li>
+<li>CEE: The DCD can immediately add host labels when you have enabled the
+service discovery for a DCD connection.</li>
+</ul>
+
+Check programmers: You may add something like this to your discovery
+functions for creating host labels:
+
+C+:
+    yield HostLabels(
+        HostLabel(u"os", u"Windows"),
+        HostLabel(u"type", u"security"),
+    )
+C-:
+
+This adds two host labels os:Windows and type:security to the host.

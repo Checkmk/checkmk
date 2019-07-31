@@ -127,8 +127,12 @@ class AutomationDiscovery(DiscoveryAutomation):
             result, error = discovery.discover_on_host(config_cache, host_config, how, do_snmp_scan,
                                                        use_caches, on_error)
             counts[hostname] = [
-                result["self_new"], result["self_removed"], result["self_kept"],
-                result["self_total"]
+                result["self_new"],
+                result["self_removed"],
+                result["self_kept"],
+                result["self_total"],
+                result["self_new_host_labels"],
+                result["self_total_host_labels"],
             ]
 
             if error is not None:

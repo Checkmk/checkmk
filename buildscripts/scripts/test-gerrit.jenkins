@@ -60,12 +60,20 @@ node {
         }
         
         stage("Python futurize") {
-            if (CHANGED_PYTHON_FILES != "") {
+            CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
+            if (CHANGED_TEST_FUTURIZE_FILE != "") {
                 dir('tests') {
-                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-python-futurize"
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-python-futurize"
                 }
             } else {
-                println "No python files changed. Skipping."
+                println "test-futurize did not change."
+                if (CHANGED_PYTHON_FILES != "") {
+                    dir('tests') {
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env ; PYTHON_FILES='${CHANGED_PYTHON_FILES}' make --quiet test-python-futurize"
+                    }
+                } else {
+                    println "No python files changed. Skipping."
+                }
             }
         }
         

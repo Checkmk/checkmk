@@ -11,71 +11,69 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 
-def test_load_data_from_file_not_existing(tmpdir):
-    data = store.load_data_from_file("%s/x" % tmpdir)
+def test_load_data_from_file_not_existing(tmp_path):
+    data = store.load_data_from_file(str(tmp_path / "x"))
     assert data is None
 
-    data = store.load_data_from_file("%s/x" % tmpdir, "DEFAULT")
+    data = store.load_data_from_file(str(tmp_path / "x"), "DEFAULT")
     assert data == "DEFAULT"
 
 
-def test_load_data_from_file_empty(tmpdir):
-    locked_file = tmpdir.join("test")
-    locked_file.write("")
-    data = store.load_data_from_file("%s/x" % tmpdir, "DEF")
+def test_load_data_from_file_empty(tmp_path):
+    locked_file = tmp_path / "test"
+    locked_file.write_text(u"", encoding="utf-8")
+    data = store.load_data_from_file(str(tmp_path / "x"), "DEF")
     assert data == "DEF"
 
 
-def test_load_data_not_locked(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("[1, 2]")
+def test_load_data_not_locked(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"[1, 2]", encoding="utf-8")
 
-    store.load_data_from_file("%s" % locked_file)
-    assert store.have_lock("%s" % locked_file) is False
+    store.load_data_from_file(str(locked_file))
+    assert store.have_lock(str(locked_file)) is False
 
 
-def test_load_data_from_file_locking(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("[1, 2]")
+def test_load_data_from_file_locking(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"[1, 2]", encoding="utf-8")
 
-    data = store.load_data_from_file("%s" % locked_file, lock=True)
+    data = store.load_data_from_file(str(locked_file), lock=True)
     assert data == [1, 2]
-    assert store.have_lock("%s" % locked_file) is True
+    assert store.have_lock(str(locked_file)) is True
 
 
-def test_load_data_from_not_permitted_file(tmpdir):
-    locked_file = tmpdir.join("test")
-    locked_file.write("[1, 2]")
-    os.chmod("%s" % locked_file, 0o200)
+def test_load_data_from_not_permitted_file(tmp_path):
+    locked_file = tmp_path / "test"
+    locked_file.write_text(u"[1, 2]", encoding="utf-8")
+    os.chmod(str(locked_file), 0o200)
 
     with pytest.raises(MKGeneralException) as e:
-        store.load_data_from_file("%s" % locked_file)
-    assert "%s" % locked_file in "%s" % e
+        store.load_data_from_file(str(locked_file))
+    assert str(locked_file) in "%s" % e
     assert "Permission denied" in "%s" % e
 
 
-def test_load_data_from_file_dict(tmpdir):
-    locked_file = tmpdir.join("test")
-    locked_file.write(repr({"1": 2, "ä": u"ß"}))
+def test_load_data_from_file_dict(tmp_path):
+    locked_file = tmp_path / "test"
+    locked_file.write_bytes(repr({"1": 2, "ä": u"ß"}))
 
-    data = store.load_data_from_file("%s" % locked_file)
+    data = store.load_data_from_file(str(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
     assert isinstance(data["ä"], unicode)
     assert data["ä"] == u"ß"
 
 
-def test_save_data_to_file(tmpdir):
-    f = tmpdir.join("test")
-    path = "%s" % f
+def test_save_data_to_file(tmp_path):
+    path = str(tmp_path / "test")
 
     store.save_data_to_file(path, [2, 3])
     assert store.load_data_from_file(path) == [2, 3]
 
 
-def test_save_data_to_file_pretty(tmpdir):
-    f = tmpdir.join("test")
-    path = "%s" % f
+def test_save_data_to_file_pretty(tmp_path):
+    path = str(tmp_path / "test")
 
     data = {
         "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
@@ -90,9 +88,8 @@ def test_save_data_to_file_pretty(tmpdir):
     assert store.load_data_from_file(path) == data
 
 
-def test_save_data_to_file_not_pretty(tmpdir):
-    f = tmpdir.join("test")
-    path = "%s" % f
+def test_save_data_to_file_not_pretty(tmp_path):
+    path = str(tmp_path / "test")
 
     data = {
         "asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
@@ -107,26 +104,26 @@ def test_save_data_to_file_not_pretty(tmpdir):
     assert store.load_data_from_file(path) == data
 
 
-def test_acquire_lock_not_existing(tmpdir):
-    store.aquire_lock("%s/asd" % tmpdir)
+def test_acquire_lock_not_existing(tmp_path):
+    store.aquire_lock(str(tmp_path / "asd"))
 
 
-def test_acquire_lock(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
+def test_acquire_lock(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
 
-    path = "%s" % locked_file
+    path = str(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
 
-def test_acquire_lock_twice(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
+def test_acquire_lock_twice(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
 
-    path = "%s" % locked_file
+    path = str(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -139,11 +136,11 @@ def test_release_lock_not_locked():
     store.release_lock("/asdasd/aasdasd")
 
 
-def test_release_lock(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
+def test_release_lock(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
 
-    path = "%s" % locked_file
+    path = str(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -152,11 +149,11 @@ def test_release_lock(tmpdir):
     assert store.have_lock(path) is False
 
 
-def test_release_lock_already_closed(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
+def test_release_lock_already_closed(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
 
-    path = "%s" % locked_file
+    path = str(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -168,14 +165,14 @@ def test_release_lock_already_closed(tmpdir):
     assert store.have_lock(path) is False
 
 
-def test_release_all_locks(tmpdir):
-    locked_file1 = tmpdir.join("locked_file1")
-    locked_file1.write("")
-    locked_file2 = tmpdir.join("locked_file2")
-    locked_file2.write("")
+def test_release_all_locks(tmp_path):
+    locked_file1 = tmp_path / "locked_file1"
+    locked_file1.write_text(u"", encoding="utf-8")
+    locked_file2 = tmp_path / "locked_file2"
+    locked_file2.write_text(u"", encoding="utf-8")
 
-    path1 = "%s" % locked_file1
-    path2 = "%s" % locked_file2
+    path1 = str(locked_file1)
+    path2 = str(locked_file2)
 
     assert store.have_lock(path1) is False
     store.aquire_lock(path1)
@@ -190,11 +187,11 @@ def test_release_all_locks(tmpdir):
     assert store.have_lock(path2) is False
 
 
-def test_release_all_locks_already_closed(tmpdir):
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
+def test_release_all_locks_already_closed(tmp_path):
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
 
-    path = "%s" % locked_file
+    path = str(locked_file)
 
     assert store.have_lock(path) is False
     store.aquire_lock(path)
@@ -233,7 +230,7 @@ class LockTestThread(threading.Thread):
                 time.sleep(0.1)
 
 
-def test_locking(tmpdir):
+def test_locking(tmp_path):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
     store1 = sys.modules["cmk.utils.store"]
     del sys.modules["cmk.utils.store"]
@@ -242,9 +239,9 @@ def test_locking(tmpdir):
 
     assert store1 != store2
 
-    locked_file = tmpdir.join("locked_file")
-    locked_file.write("")
-    path = "%s" % locked_file
+    locked_file = tmp_path / "locked_file"
+    locked_file.write_text(u"", encoding="utf-8")
+    path = str(locked_file)
 
     t1 = LockTestThread(store1, path)
     t1.start()

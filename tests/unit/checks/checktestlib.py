@@ -3,6 +3,7 @@ import copy
 import mock
 import pytest
 from cmk_base.item_state import MKCounterWrapped
+from cmk_base.discovered_labels import DiscoveredHostLabels
 
 
 class Tuploid(object):
@@ -282,6 +283,9 @@ class DiscoveryResult(object):
             # discovering nothing is valid!
             return
         for entry in result:
+            # TODO: Silently skip host label results for the moment
+            if isinstance(entry, DiscoveredHostLabels):
+                continue
             self.entries.append(DiscoveryEntry(entry))
         self.entries.sort(key=repr)
 

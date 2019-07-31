@@ -223,6 +223,10 @@ local:
 mrpe:
     enabled: yes
 
+    # Allows to run MRPE scripts in parallel, this parameter is intended only
+    # for experienced users and developers.
+    parallel: no
+
     # 60 is default, this is safe value, because mrpe checks are relative fast ->
     # hitting this timeout is virtually not possible
     timeout: 60

@@ -158,7 +158,7 @@ public:
         if (process_) return false;
         id_ = L"blind";
         std::string command_line;
-        if (User.empty()) command_line = "runas /User:" + User + " ";
+        if (!User.empty()) command_line = "runas /User:" + User + " ";
         command_line += CommandLine;
 
         exec_ = wtools::ConvertToUTF16(CommandLine);

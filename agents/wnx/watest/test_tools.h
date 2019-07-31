@@ -41,6 +41,23 @@ inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
     return ini_file;
 }
 
+inline std::filesystem::path CreateWorkFile(const std::filesystem::path& Name,
+                                            const std::string& Text) {
+    namespace fs = std::filesystem;
+
+    auto path = Name;
+
+    std::ofstream ofs(path.u8string(), std::ios::binary);
+
+    if (!ofs) {
+        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        return {};
+    }
+
+    ofs << Text << "\n";
+    return path;
+}
+
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
     fs::path temp_dir = cma::cfg::GetTempDir();

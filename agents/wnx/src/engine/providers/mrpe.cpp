@@ -4,6 +4,7 @@
 
 #include "providers/mrpe.h"
 
+#include <execution>
 #include <filesystem>
 #include <regex>
 #include <string>
@@ -70,20 +71,22 @@ void MrpeProvider::addParsedConfig() {
     addParsedChecks();
     addParsedIncludes();
 
-    auto end = std::remove_if(
-        entries_.begin(),      // from
-        entries_.end(),        // to
-        [](MrpeEntry entry) {  // lambda to delete
-            auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
-            if (!ok) {
-                XLOG::d("The file '{}' is no valid", entry.full_path_name_);
-            }
-            return !ok;
-        }  //
-    );
+    if constexpr (kMrpeRemoveAbsentFiles) {
+        auto end = std::remove_if(
+            entries_.begin(),      // from
+            entries_.end(),        // to
+            [](MrpeEntry entry) {  // lambda to delete
+                auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
+                if (!ok) {
+                    XLOG::d("The file '{}' is no valid", entry.full_path_name_);
+                }
+                return !ok;
+            }  //
+        );
 
-    // actual remove
-    entries_.erase(end, entries_.end());
+        // actual remove
+        entries_.erase(end, entries_.end());
+    }
 }
 
 void MrpeProvider::addParsedChecks() {
@@ -92,7 +95,7 @@ void MrpeProvider::addParsedChecks() {
     }
 }
 
-std::pair<std::string, std::filesystem::path> parseIncludeEntry(
+std::pair<std::string, std::filesystem::path> ParseIncludeEntry(
     const std::string &entry) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
@@ -114,57 +117,62 @@ std::pair<std::string, std::filesystem::path> parseIncludeEntry(
     fs::path path = potential_path;  // last is path
     if (path.is_relative()) path = cma::cfg::GetUserDir() / path;
 
-    if (!cma::tools::IsValidRegularFile(path)) {
-        XLOG::d(
-            "File '{}' is not valid or missing for entry '{}' in config '{}'",
-            path.u8string(), entry, yml_name);
-        return {};
-    }
     return {include_user, path};
+}
+
+void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
+                         std::vector<MrpeEntry> &entries) {
+    std::ifstream ifs(path);
+    if (!ifs) {
+        XLOG::d("mrpe: File is bad '{}'", path.u8string());
+        return;
+    }
+
+    std::string line;
+    for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
+        cma::tools::AllTrim(line);
+        if (line.empty() || line[0] == '#' || line[0] == ';')
+            continue;  // skip empty lines and comments
+
+        // split up line at = sign
+        auto tokens = cma::tools::SplitString(line, "=", 2);
+        if (tokens.size() != 2) {
+            XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path.u8string(),
+                    lineno);
+            continue;
+        }
+
+        auto &var = tokens[0];
+        auto &value = tokens[1];
+        cma::tools::AllTrim(var);
+        cma::tools::StringLower(var);
+
+        if (var == "check") {
+            cma::tools::AllTrim(value);
+            entries.emplace_back(user, value);
+        } else {
+            XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line,
+                    path.u8string(), lineno);
+        }
+    }
 }
 
 void MrpeProvider::addParsedIncludes() {
     using namespace cma::tools;
     namespace fs = std::filesystem;
 
-    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
-
     for (const auto &entry : includes_) {
-        auto [user, path] = parseIncludeEntry(entry);
+        auto [user, path] = ParseIncludeEntry(entry);
 
         if (path.empty()) continue;
 
-        std::ifstream ifs(path);
-        if (!ifs) {
-            XLOG::d("File is bad for '{}' in '{}'", entry, yml_name);
+        if (!cma::tools::IsValidRegularFile(path)) {
+            XLOG::d("File '{}' is not valid or missing for entry '{}'",
+                    path.u8string(), entry);
             continue;
         }
 
-        std::string line;
-        for (unsigned lineno = 1; std::getline(ifs, line); ++lineno) {
-            AllTrim(line);
-            if (line.empty() || line[0] == '#' || line[0] == ';')
-                continue;  // skip empty lines and comments
-
-            // split up line at = sign
-            auto tokens = SplitString(line, "=", 2);
-            if (tokens.size() != 2) {
-                XLOG::d("Invalid entry '{}' in '{}'", entry, yml_name);
-                continue;
-            }
-
-            auto &var = tokens[0];
-            auto &value = tokens[1];
-            AllTrim(var);
-            std::transform(var.cbegin(), var.cend(), var.begin(), tolower);
-
-            if (var == "check") {
-                AllTrim(value);
-                entries_.emplace_back(user, value);
-            } else {
-                XLOG::t("Strange entry '{}' in '{}'", entry, yml_name);
-            }
-        }
+        AddCfgFileToEntries(user, path, entries_);
     }
 }
 
@@ -253,57 +261,71 @@ void FixCrCnForMrpe(std::string &str) {
     });
 }
 
-void MrpeProvider::updateSectionStatus() {
+std::string ExecMrpeEntry(const MrpeEntry &entry,
+                          std::chrono::milliseconds timeout) {
     using namespace std::chrono;
-    accu_.clear();
-    for (const auto &entry : entries_) {
-        auto hdr = fmt::format("({}) {} ", entry.exe_name_, entry.description_);
-        XLOG::t("{} run", hdr);
+    auto hdr = fmt::format("({}) {} ", entry.exe_name_, entry.description_);
+    XLOG::t("{} run", hdr);
 
-        TheMiniBox minibox;
-        auto started =
-            minibox.startBlind(entry.command_line_, entry.run_as_user_);
-        if (!started) {
-            XLOG::l("Failed to start minibox sync {}", entry.command_line_);
-            continue;
-        }
-
-        auto proc_id = minibox.getProcessId();
-        auto success = minibox.waitForEnd(seconds(timeout_), true);
-
-        if (success) {
-            minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                                       uint32_t Code,
-                                       const std::vector<char> &Data) {
-                auto data = wtools::ConditionallyConvertFromUTF16(Data);
-                cma::tools::AllTrim(data);
-                // replace and fix output
-                FixCrCnForMrpe(data);
-                data += "\n";
-
-                if (cma::cfg::LogMrpeOutput())
-                    XLOG::t(
-                        "Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
-                hdr += std::to_string(Code) + " ";
-                accu_ += hdr;
-                accu_ += data;
-            });
-
-        } else {
-            //
-            XLOG::d("Wait on Timeout or Broken {}", entry.command_line_);
-        }
-
-        minibox.clean();
+    TheMiniBox minibox;
+    auto started = minibox.startBlind(entry.command_line_, entry.run_as_user_);
+    if (!started) {
+        XLOG::l("Failed to start minibox sync {}", entry.command_line_);
+        // result is copy-pasted from the legacy agent
+        return hdr + "3 Unable to execute - plugin may be missing.\n";
     }
+
+    auto proc_id = minibox.getProcessId();
+    auto success = minibox.waitForEnd(timeout, true);
+    ON_OUT_OF_SCOPE(minibox.clean());
+
+    if (success) {
+        std::string accu;
+        minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                                   uint32_t Code,
+                                   const std::vector<char> &Data) {
+            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+            cma::tools::AllTrim(data);
+            // replace and fix output
+            FixCrCnForMrpe(data);
+            data += "\n";
+
+            if (cma::cfg::LogMrpeOutput())
+                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+            hdr += std::to_string(Code) + " ";
+            accu = hdr + data;
+        });
+        return accu;
+    }
+    //
+    XLOG::d("Wait on Timeout or Broken {}", entry.command_line_);
+    return {};
 }
+
+void MrpeProvider::updateSectionStatus() {}
 
 std::string MrpeProvider::makeBody() {
     using namespace cma::cfg;
+    using namespace std::chrono;
     XLOG::t(XLOG_FUNC + " entering");
 
-    return accu_;
+    std::string out;
+    std::mutex lock;
+    auto parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, kParallelMrpe);
+    if (parallel) {
+        std::for_each(std::execution::par_unseq, entries_.begin(),
+                      entries_.end(), [&out, &lock, this](auto &&entry) {
+                          auto ret = ExecMrpeEntry(entry, seconds(timeout_));
+                          std::lock_guard lk(lock);
+                          out += ret;
+                      });
+    } else
+        for (const auto &entry : entries_) {
+            out += ExecMrpeEntry(entry, seconds(timeout_));
+        }
+
+    return out;
 }
 
 }  // namespace cma::provider

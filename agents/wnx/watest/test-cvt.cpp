@@ -276,7 +276,7 @@ TEST(CvtTest, MrpeSection) {
     cma::provider::MrpeProvider mrpe;
     mrpe.loadConfig();
     auto entries = mrpe.entries();
-    ASSERT_EQ(entries.size(), 0);
+    ASSERT_EQ(entries.size(), 3);
     auto checks = mrpe.checks();
     ASSERT_EQ(checks.size(), 3);
     auto includes = mrpe.includes();

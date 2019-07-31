@@ -155,7 +155,8 @@ const char* const kPsFullPath = "full_path";  // bool
 const char* const kFileInfoPath = "path";  // sequence
 
 // group "mrpe"
-const char* const kMrpeConfig = "config";  // sequence
+const char* const kMrpeConfig = "config";      // sequence
+const char* const kMrpeParallel = "parallel";  // boool
 
 }  // namespace vars
 }  // namespace cma::cfg

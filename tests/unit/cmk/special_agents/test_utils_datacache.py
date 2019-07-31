@@ -17,21 +17,21 @@ class KeksDose(DataCache):
         return "live data"
 
 
-def test_datacache_init(tmpdir):
-    tcache = KeksDose(tmpdir, 'test')
+def test_datacache_init(tmp_path):
+    tcache = KeksDose(tmp_path, 'test')
     assert isinstance(tcache._cache_file_dir, Path)
     assert isinstance(tcache._cache_file, Path)
     assert not tcache.debug
 
-    tc_debug = KeksDose(tmpdir, 'test', debug=True)
+    tc_debug = KeksDose(tmp_path, 'test', debug=True)
     assert tc_debug.debug
 
     with pytest.raises(TypeError):
         DataCache('foo', 'bar')  # pylint: disable=abstract-class-instantiated
 
 
-def test_datacache_timestamp(tmpdir):
-    tcache = KeksDose(tmpdir, 'test')
+def test_datacache_timestamp(tmp_path):
+    tcache = KeksDose(tmp_path, 'test')
 
     assert tcache.cache_timestamp is None  # file doesn't exist yet
 
@@ -39,8 +39,8 @@ def test_datacache_timestamp(tmpdir):
     assert tcache.cache_timestamp == tcache._cache_file.stat().st_mtime
 
 
-def test_datacache_valid(monkeypatch, tmpdir):
-    tcache = KeksDose(tmpdir, 'test')
+def test_datacache_valid(monkeypatch, tmp_path):
+    tcache = KeksDose(tmp_path, 'test')
     tcache._write_to_cache('cached data')
 
     valid_time = tcache.cache_timestamp + tcache.cache_interval - 1
@@ -57,8 +57,8 @@ def test_datacache_valid(monkeypatch, tmpdir):
     assert tcache.get_data(True) == 'live data'
 
 
-def test_datacache_validity(monkeypatch, tmpdir):
-    tcache = KeksDose(tmpdir, 'test')
+def test_datacache_validity(monkeypatch, tmp_path):
+    tcache = KeksDose(tmp_path, 'test')
     tcache._write_to_cache('cached data')
 
     invalid_time = tcache.cache_timestamp + tcache.cache_interval + 1

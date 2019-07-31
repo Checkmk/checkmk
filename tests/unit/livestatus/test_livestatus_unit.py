@@ -33,14 +33,14 @@ def test_ensure_bytestr(source, bytestr):
 
 
 @pytest.fixture
-def ca(tmpdir, monkeypatch):
-    p = Path("%s" % tmpdir) / "etc" / "ssl"
+def ca(tmp_path, monkeypatch):
+    p = tmp_path / "etc" / "ssl"
     return certs.CertificateAuthority(p, "ca-name")
 
 
 @pytest.fixture()
-def sock_path(monkeypatch, tmpdir):
-    omd_root = Path("%s" % tmpdir)
+def sock_path(monkeypatch, tmp_path):
+    omd_root = tmp_path
     sock_path = omd_root / "tmp" / "run" / "live"
     monkeypatch.setenv("OMD_ROOT", "%s" % omd_root)
     # Will be fixed with pylint >2.0
@@ -69,7 +69,7 @@ def test_quote_dict(inp, expected_result):
     assert result == expected_result
 
 
-def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
+def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmp_path):
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
 
@@ -158,15 +158,15 @@ def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
 @pytest.mark.parametrize("tls", [True, False])
 @pytest.mark.parametrize("verify", [True, False])
 @pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
-def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
+def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
     ca.initialize()
 
-    ssl_dir = Path("%s/var/ssl" % tmpdir)
+    ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with ssl_dir.joinpath("ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(ca.ca_path.joinpath("ca.pem").open(encoding="utf-8").read())
 
-    monkeypatch.setenv("OMD_ROOT", "%s" % tmpdir)
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
 
     if ca_file_path is not None:
         ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
@@ -177,7 +177,7 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
                                            ca_file_path=ca_file_path)
 
     if ca_file_path is None:
-        ca_file_path = "%s/var/ssl/ca-certificates.crt" % tmpdir
+        ca_file_path = tmp_path / "var/ssl/ca-certificates.crt"
 
     sock = live._create_socket(socket.AF_INET)
 
@@ -189,7 +189,7 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
     assert len(sock.context.get_ca_certs()) == 1
-    assert live.tls_ca_file_path == ca_file_path
+    assert live.tls_ca_file_path == str(ca_file_path)
 
 
 def test_create_socket_not_existing_ca_file():
@@ -201,12 +201,12 @@ def test_create_socket_not_existing_ca_file():
         live._create_socket(socket.AF_INET)
 
 
-def test_create_socket_no_cert(tmpdir):
-    open("%s/z.pem" % tmpdir, "wb")
+def test_create_socket_no_cert(tmp_path):
+    open(str(tmp_path / "z.pem"), "wb")
     live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
                                            tls=True,
                                            verify=True,
-                                           ca_file_path="%s/z.pem" % tmpdir)
+                                           ca_file_path=str(tmp_path / "z.pem"))
     with pytest.raises(livestatus.MKLivestatusConfigError,
                        match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)

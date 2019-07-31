@@ -2654,6 +2654,10 @@ class ConfigCache(object):
         self._cache_is_tcp_check = cmk_base.runtime_cache.get_dict("is_tcp_check")
         self._cache_section_name_of = {}
 
+        self._cache_match_object_service = {}
+        self._cache_match_object_service_checkgroup = {}
+        self._cache_match_object_host = {}
+
         # Host lookup
 
         self._all_configured_hosts = set()
@@ -2932,11 +2936,17 @@ class ConfigCache(object):
         item in the service_description field), you need to use the
         ruleset_match_object_for_checkgroup_parameters()
         """
-        return RulesetMatchObject(
-            host_name=hostname,
-            service_description=svc_desc,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
-        )
+
+        cache_id = (hostname, svc_desc)
+        if cache_id in self._cache_match_object_service:
+            return self._cache_match_object_service[cache_id]
+
+        result = RulesetMatchObject(host_name=hostname,
+                                    service_description=svc_desc,
+                                    service_labels=self.labels.labels_of_service(
+                                        self.ruleset_matcher, hostname, svc_desc))
+        self._cache_match_object_service[cache_id] = result
+        return result
 
     def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
         # type: (str, Text, Text) -> RulesetMatchObject
@@ -2947,11 +2957,34 @@ class ConfigCache(object):
         these host conditions. Adding these attributes here would be
         consequent, but create some overhead.
         """
-        return RulesetMatchObject(
-            host_name=hostname,
-            service_description=item,
-            service_labels=self.labels.labels_of_service(self.ruleset_matcher, hostname, svc_desc),
-        )
+
+        cache_id = (hostname, item, svc_desc)
+        if cache_id in self._cache_match_object_service_checkgroup:
+            return self._cache_match_object_service_checkgroup[cache_id]
+
+        result = RulesetMatchObject(host_name=hostname,
+                                    service_description=item,
+                                    service_labels=self.labels.labels_of_service(
+                                        self.ruleset_matcher, hostname, svc_desc))
+        self._cache_match_object_service_checkgroup[cache_id] = result
+        return result
+
+    def ruleset_match_object_of_host(self, hostname):
+        # type: (str) -> RulesetMatchObject
+        """Construct the object that is needed to match the host rulesets
+
+        Please note that the host attributes like host_folder and host_tags are
+        not set in the object, because the rule optimizer already processes all
+        these host conditions. Adding these attributes here would be
+        consequent, but create some overhead.
+        """
+
+        if hostname in self._cache_match_object_host:
+            return self._cache_match_object_host[hostname]
+
+        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
+        self._cache_match_object_host[hostname] = match_object
+        return match_object
 
     def get_autochecks_of(self, hostname):
         # type: (str) -> List[cmk_base.check_utils.Service]
@@ -2984,41 +3017,44 @@ class ConfigCache(object):
             return result
 
     def host_extra_conf_merged(self, hostname, ruleset):
-        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
-        return self.ruleset_matcher.get_host_ruleset_merged_dict(match_object, ruleset)
+        return self.ruleset_matcher.get_host_ruleset_merged_dict(
+            self.ruleset_match_object_of_host(hostname), ruleset)
 
     def host_extra_conf(self, hostname, ruleset):
-        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
         return list(
-            self.ruleset_matcher.get_host_ruleset_values(match_object, ruleset, is_binary=False))
+            self.ruleset_matcher.get_host_ruleset_values(
+                self.ruleset_match_object_of_host(hostname), ruleset, is_binary=False))
 
     # TODO: Cleanup external in_binary_hostlist call sites
     def in_binary_hostlist(self, hostname, ruleset):
-        match_object = ruleset_matcher.RulesetMatchObject(hostname, service_description=None)
-        return self.ruleset_matcher.is_matching_host_ruleset(match_object, ruleset)
+        return self.ruleset_matcher.is_matching_host_ruleset(
+            self.ruleset_match_object_of_host(hostname), ruleset)
 
     def service_extra_conf(self, hostname, description, ruleset):
         """Compute outcome of a service rule set that has an item."""
-        match_object = self.ruleset_match_object_of_service(hostname, description)
         return list(
-            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False))
+            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
+                hostname, description),
+                                                            ruleset,
+                                                            is_binary=False))
 
     def get_service_ruleset_value(self, hostname, description, ruleset, deflt):
         """Compute first match service ruleset outcome with fallback to a default value"""
-        match_object = self.ruleset_match_object_of_service(hostname, description)
         return next(
-            self.ruleset_matcher.get_service_ruleset_values(match_object, ruleset, is_binary=False),
-            deflt)
+            self.ruleset_matcher.get_service_ruleset_values(self.ruleset_match_object_of_service(
+                hostname, description),
+                                                            ruleset,
+                                                            is_binary=False), deflt)
 
     def service_extra_conf_merged(self, hostname, description, ruleset):
-        match_object = self.ruleset_match_object_of_service(hostname, description)
-        return self.ruleset_matcher.get_service_ruleset_merged_dict(match_object, ruleset)
+        return self.ruleset_matcher.get_service_ruleset_merged_dict(
+            self.ruleset_match_object_of_service(hostname, description), ruleset)
 
     def in_boolean_serviceconf_list(self, hostname, description, ruleset):
         # type: (str, Text, List) -> bool
         """Compute outcome of a service rule set that just say yes/no"""
-        match_object = self.ruleset_match_object_of_service(hostname, description)
-        return self.ruleset_matcher.is_matching_service_ruleset(match_object, ruleset)
+        return self.ruleset_matcher.is_matching_service_ruleset(
+            self.ruleset_match_object_of_service(hostname, description), ruleset)
 
     def all_active_hosts(self):
         # type: () -> Set[str]

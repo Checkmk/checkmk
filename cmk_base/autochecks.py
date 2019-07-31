@@ -61,7 +61,8 @@ class AutochecksManager(object):
 
         # Extract of the autochecks. This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of = {}  # type: Dict[Tuple[str, Text], DiscoveredServiceLabels]
+        self._discovered_labels_of = {}  # type: Dict[str, Dict[Text, DiscoveredServiceLabels]]
+        self._raw_autochecks_cache = {}  # type: Dict[str, List[Service]]
 
     def get_autochecks_of(self, hostname):
         # type: (str) -> List[Service]
@@ -71,33 +72,38 @@ class AutochecksManager(object):
         services = self._read_autochecks_of(hostname)
         self._autochecks[hostname] = services
 
-        for service in services:
-            self._discovered_labels_of[(hostname, service.description)] = service.service_labels
-
         return services
 
     def discovered_labels_of(self, hostname, service_desc):
         # type: (str, Text) -> DiscoveredServiceLabels
-        if (hostname, service_desc) in self._discovered_labels_of:
-            return self._discovered_labels_of[(hostname, service_desc)]
+        # Check if the autochecks for the given hostname were already read
+        # The service in question might have no entry in the autochecks file
+        # In this scenario it gets an empty DiscoveredServiceLabels entry
+        host_results = self._discovered_labels_of.get(hostname)
+        if host_results is not None:
+            service_result = host_results.get(service_desc)
+            if service_result is None:
+                host_results[service_desc] = DiscoveredServiceLabels()
+            return host_results[service_desc]
 
-        result = DiscoveredServiceLabels()
         # Only read the raw autochecks here. Do not compute the effective check parameters,
         # because that would invole ruleset matching which in would require the labels to
         # be already computed.
-        for service in self._read_raw_autochecks_of(hostname):
-            if service.description == service_desc:
-                result = service.service_labels
-                break
+        # The following function reads the autochecks and populates the the discovered labels cache
+        self._read_raw_autochecks_cached(hostname)
+        result = self._discovered_labels_of.get(hostname, {}).get(service_desc)
+        if result is None:
+            # The service was not present in the autochecks, create an empty instance
+            result = DiscoveredServiceLabels()
+            self._discovered_labels_of.setdefault(hostname, {})[service_desc] = result
 
-        self._discovered_labels_of[(hostname, service_desc)] = result
         return result
 
     def _read_autochecks_of(self, hostname):
         # type: (str) -> List[Service]
         """Read automatically discovered checks of one host"""
         autochecks = []
-        for service in self._read_raw_autochecks_of(hostname):
+        for service in self._read_raw_autochecks_cached(hostname):
             autochecks.append(
                 Service(
                     check_plugin_name=service.check_plugin_name,
@@ -109,16 +115,31 @@ class AutochecksManager(object):
                 ))
         return autochecks
 
+    def _read_raw_autochecks_cached(self, hostname):
+        if hostname in self._raw_autochecks_cache:
+            return self._raw_autochecks_cache[hostname]
+
+        raw_autochecks = self._read_raw_autochecks_of(hostname)
+        self._raw_autochecks_cache[hostname] = raw_autochecks
+
+        # create cache from autocheck labels
+        self._discovered_labels_of.setdefault(hostname, {})
+        for service in raw_autochecks:
+            self._discovered_labels_of[hostname][service.description] = service.service_labels
+
+        return raw_autochecks
+
     # TODO: use store.load_data_from_file()
     # TODO: Common code with parse_autochecks_file? Cleanup.
     def _read_raw_autochecks_of(self, hostname):
-        # type: (str) -> Iterator[Service]
+        # type: (str) -> List[Service]
         """Read automatically discovered checks of one host"""
         basedir = cmk.utils.paths.autochecks_dir
         filepath = basedir + '/' + hostname + '.mk'
 
+        result = []  # type: List[Service]
         if not os.path.exists(filepath):
-            return
+            return result
 
         check_config = config.get_check_variables()
         try:
@@ -133,12 +154,12 @@ class AutochecksManager(object):
                                      stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
-            return
+            return result
         except Exception as e:
             cmk_base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
             if cmk.utils.debug.enabled():
                 raise
-            return
+            return result
 
         for entry in autochecks_raw:
             labels = DiscoveredServiceLabels()
@@ -160,13 +181,16 @@ class AutochecksManager(object):
             except Exception:
                 continue  # ignore
 
-            yield Service(
-                check_plugin_name=str(entry["check_plugin_name"]),
-                item=item,
-                description=description,
-                parameters=entry["parameters"],
-                service_labels=labels,
-            )
+            result.append(
+                Service(
+                    check_plugin_name=str(entry["check_plugin_name"]),
+                    item=item,
+                    description=description,
+                    parameters=entry["parameters"],
+                    service_labels=labels,
+                ))
+
+        return result
 
 
 def resolve_paramstring(check_plugin_name, parameters_unresolved):

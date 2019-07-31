@@ -1529,6 +1529,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
         "host_name": "xyz",
         "service_description": "bla blä",
         "service_labels": {},
+        "service_cache_id": ('bla bl\xc3\xa4', None),
     }
 
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
@@ -1539,6 +1540,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
         "service_labels": {
             u"abc": u"xä"
         },
+        "service_cache_id": ('CPU load', 4654151214158602053),
     }
 
 

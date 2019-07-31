@@ -3917,3 +3917,195 @@ multisite_builtin_views.update({
         'topic': _('Other')
     },
 })
+
+multisite_builtin_views['docker_nodes'] = {
+    'description':
+        _('Overall state of all docker nodes, with counts of services in the various states.'),
+    'title': _('Docker nodes'),
+    'topic': _('Docker'),
+    'browser_reload': 30,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_acknowledged': {
+            'is_host_acknowledged': '-1'
+        },
+        'host_check_command': {
+            'host_check_command': ''
+        },
+        'host_in_notification_period': {
+            'is_host_in_notification_period': '-1'
+        },
+        'host_in_service_period': {
+            'is_host_in_service_period': '-1'
+        },
+        'host_labels': {
+            'host_label': '[{"value":"cmk/docker_object:node"}]'
+        },
+        'host_notifications_enabled': {
+            'is_host_notifications_enabled': '-1'
+        },
+        'host_scheduled_downtime_depth': {
+            'is_host_scheduled_downtime_depth': '-1'
+        },
+        'host_tags': {
+            'host_tag_0_grp': '',
+            'host_tag_0_op': '',
+            'host_tag_0_val': '',
+            'host_tag_1_grp': '',
+            'host_tag_1_op': '',
+            'host_tag_1_val': '',
+            'host_tag_2_grp': '',
+            'host_tag_2_op': '',
+            'host_tag_2_val': ''
+        },
+        'hostalias': {
+            'hostalias': '',
+            'neg_hostalias': ''
+        },
+        'hostgroups': {
+            'hostgroups': '',
+            'neg_hostgroups': ''
+        },
+        'hostregex': {
+            'host_regex': '',
+            'neg_host_regex': ''
+        },
+        'hoststate': {
+            'hoststate_filled': '1',
+            'hst0': 'on',
+            'hst1': 'on',
+            'hst2': 'on',
+            'hstp': 'on'
+        },
+        'opthost_contactgroup': {
+            'neg_opthost_contact_group': '',
+            'opthost_contact_group': ''
+        },
+        'opthostgroup': {
+            'neg_opthost_group': '',
+            'opthost_group': ''
+        },
+        'siteopt': {
+            'site': ''
+        }
+    },
+    'datasource': 'hosts',
+    'force_checkboxes': False,
+    'group_painters': [('sitealias', '', None),],
+    'hidden': False,
+    'hidebutton': False,
+    'icon': None,
+    'layout': 'table',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'docker_nodes',
+    'num_columns': 3,
+    'painters': host_view_painters,
+    'play_sounds': False,
+    'public': False,
+    'single_infos': [],
+    'sorters': [
+        ('site', False),
+        ('site_host', False),
+    ],
+    'user_sortable': True,
+}
+
+multisite_builtin_views['docker_containers'] = {
+    'description':
+        _('Overall state of all docker containers, with counts of services in the various states.'),
+    'title': _('Docker containers'),
+    'topic': _('Docker'),
+    'browser_reload': 30,
+    'column_headers': 'pergroup',
+    'context': {
+        'host_acknowledged': {
+            'is_host_acknowledged': '-1'
+        },
+        'host_check_command': {
+            'host_check_command': ''
+        },
+        'host_in_notification_period': {
+            'is_host_in_notification_period': '-1'
+        },
+        'host_in_service_period': {
+            'is_host_in_service_period': '-1'
+        },
+        'host_labels': {
+            'host_label': '[{"value":"cmk/docker_object:container"}]'
+        },
+        'host_notifications_enabled': {
+            'is_host_notifications_enabled': '-1'
+        },
+        'host_scheduled_downtime_depth': {
+            'is_host_scheduled_downtime_depth': '-1'
+        },
+        'host_tags': {
+            'host_tag_0_grp': '',
+            'host_tag_0_op': '',
+            'host_tag_0_val': '',
+            'host_tag_1_grp': '',
+            'host_tag_1_op': '',
+            'host_tag_1_val': '',
+            'host_tag_2_grp': '',
+            'host_tag_2_op': '',
+            'host_tag_2_val': ''
+        },
+        'hostalias': {
+            'hostalias': '',
+            'neg_hostalias': ''
+        },
+        'hostgroups': {
+            'hostgroups': '',
+            'neg_hostgroups': ''
+        },
+        'hostregex': {
+            'host_regex': '',
+            'neg_host_regex': ''
+        },
+        'hoststate': {
+            'hoststate_filled': '1',
+            'hst0': 'on',
+            'hst1': 'on',
+            'hst2': 'on',
+            'hstp': 'on'
+        },
+        'opthost_contactgroup': {
+            'neg_opthost_contact_group': '',
+            'opthost_contact_group': ''
+        },
+        'opthostgroup': {
+            'neg_opthost_group': '',
+            'opthost_group': ''
+        },
+        'siteopt': {
+            'site': ''
+        }
+    },
+    'datasource': 'hosts',
+    'force_checkboxes': False,
+    'group_painters': [('sitealias', '', None),],
+    'hidden': False,
+    'hidebutton': False,
+    'icon': None,
+    'layout': 'table',
+    'mobile': False,
+    'mustsearch': False,
+    'name': 'docker_nodes',
+    'num_columns': 3,
+    'painters': host_view_painters + [
+        ('host_docker_node', None, None),
+        ('perfometer', None, '', 'CPU utilization'),
+        ('perfometer', None, '', 'CPU utilization'),
+        ('perfometer', None, '', 'Memory used'),
+        ('perfometer', None, '', 'Uptime'),
+    ],
+    'play_sounds': False,
+    'public': False,
+    'single_infos': [],
+    'sorters': [
+        ('site', False),
+        ('site_host', False),
+    ],
+    'user_sortable': True,
+}

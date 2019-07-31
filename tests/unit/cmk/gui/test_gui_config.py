@@ -306,6 +306,8 @@ def test_registered_permissions():
         'view.downtimes',
         'view.downtimes_of_host',
         'view.downtimes_of_service',
+        'view.docker_containers',
+        'view.docker_nodes',
         'view.ec_event',
         'view.ec_event_mobile',
         'view.ec_events',

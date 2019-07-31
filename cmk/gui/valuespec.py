@@ -603,9 +603,8 @@ class RegExp(TextAscii):
             help_text.append(_("The match is performed case insensitive."))
 
         help_text.append(
-            _("Please note that any backslashes need to be escaped using a backslash, "
-              "for example you need to insert <tt>C:\\\\windows\\\\</tt> if you want to match "
-              "<tt>c:\\windows\\</tt>."))
+            _("Read more about <a href=\"https://checkmk.com/cms_regexes.html\" target=\"_blank\">regular "
+              "expression matching in Checkmk</a> in our user manual."))
 
         return " ".join(help_text)
 

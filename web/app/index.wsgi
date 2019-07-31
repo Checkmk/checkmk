@@ -177,7 +177,7 @@ class Application(object):
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
-        modules.load_all_plugins()
+        self._load_all_plugins()
 
         # Clean up left over livestatus + connection objects (which are
         # globally stored in sites module).  This is a quick fix for the 1.5
@@ -217,6 +217,14 @@ class Application(object):
         self._ensure_general_access()
         handler()
 
+    def _load_all_plugins(self):
+        # Optimization: in case of the graph ajax call only check the metrics module. This
+        # improves the performance for these requests.
+        # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
+        # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
+        only_modules = ["metrics"] if html.myfile == "ajax_graph" else None
+        modules.load_all_plugins(only_modules=only_modules)
+
     def _show_exception_info(self, e):
         html.write_text("%s" % e)
         if config.debug:
@@ -254,7 +262,7 @@ class Application(object):
         # a second plugin loading when the user is really using a custom localized GUI.
         # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
         if cmk.gui.i18n.get_current_language() != previous_language:
-            modules.load_all_plugins()
+            self._load_all_plugins()
 
     def _fail_silently(self):
         """Ajax-Functions want no HTML output in case of an error but

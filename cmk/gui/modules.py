@@ -55,7 +55,7 @@ import cmk.utils.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import current_app
 
 import cmk.gui.plugins.main_modules
 
@@ -105,13 +105,11 @@ g_all_modules_loaded = False
 
 
 # Call the load_plugins() function in all modules
-def load_all_plugins():
+def load_all_plugins(only_modules=None):
     global g_all_modules_loaded
-
-    # Optimization: in case of the graph ajax call only check the metrics module. This
-    # improves the performance for these requests.
-    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-    only_modules = ["metrics"] if html.myfile == "ajax_graph" and g_all_modules_loaded else None
+    # Initially, we have to load all modules, regardless of any optimization.
+    if not g_all_modules_loaded:
+        only_modules = None
 
     need_plugins_reload = _local_web_plugins_have_changed()
 

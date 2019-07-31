@@ -150,6 +150,8 @@ def test_find_missing_manpages():
     assert len(checks_sorted) > 1000
 
     for check_plugin_name, check in checks_sorted:
+        if check_plugin_name == "labels":
+            continue  # this check's discovery function can only create labels, never a service
         assert check_plugin_name in all_check_manuals, "Manpage missing: %s" % check_plugin_name
 
 

@@ -1,6 +1,7 @@
 import time
 import pprint
 import pytest
+import shutil
 from testlib import repo_path, cmk_path, cmc_path, cme_path, CMKWebSession
 
 from cmk.utils.exceptions import MKGeneralException
@@ -515,13 +516,13 @@ def test_structured_data_StructuredDataTree_is_equal(tree_x, tree_y):
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmpdir):
+def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_path):
     try:
-        tree.save_to("%s" % tmpdir, "foo", False)
-        loaded_tree = StructuredDataTree().load_from("%s" % tmpdir.join("foo"))
+        tree.save_to(str(tmp_path), "foo", False)
+        loaded_tree = StructuredDataTree().load_from(str(tmp_path / "foo"))
         assert tree.is_equal(loaded_tree)
     finally:
-        tmpdir.remove()
+        shutil.rmtree(str(tmp_path))
 
 
 @pytest.mark.parametrize("tree,result",

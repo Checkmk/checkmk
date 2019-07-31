@@ -269,6 +269,7 @@ def discover_on_host(config_cache,
         "self_kept": 0,
         "self_total": 0,
         "self_new_host_labels": 0,
+        "self_total_host_labels": 0,
         "clustered_new": 0,
         "clustered_vanished": 0,
     }
@@ -361,6 +362,7 @@ def discover_on_host(config_cache,
             _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin_names=None, only_new=True)
         DiscoveredHostLabelsStore(hostname).save(new_host_labels.to_dict())
         counts["self_new_host_labels"] = sum(host_labels_per_plugin.values())
+        counts["self_total_host_labels"] = len(new_host_labels)
 
     counts["self_total"] = counts["self_new"] + counts["self_kept"]
     return counts, err

@@ -1203,7 +1203,7 @@ CheckPreviewTable = List[CheckPreviewEntry]
 
 # TODO: Can't we reduce the duplicate code here? Check out the "checking" code
 def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
-    # type: (str, bool, bool, str) -> CheckPreviewTable
+    # type: (str, bool, bool, str) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1224,9 +1224,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
     services, discovered_host_labels = _get_host_services(host_config, ipaddress, sources,
                                                           multi_host_sections, on_error)
-
-    # TODO: Implement this in the next commit
-    _x = discovered_host_labels
 
     table = []  # type: CheckPreviewTable
     for check_source, discovered_service in services.values():
@@ -1348,4 +1345,4 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                       discovered_service.description, exitcode, output, perfdata,
                       discovered_service.service_labels.to_dict()))
 
-    return table
+    return table, discovered_host_labels

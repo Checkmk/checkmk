@@ -5202,6 +5202,48 @@ class PainterServiceLabels(Painter):
                                  label_sources=get_label_sources(row, "service"))
 
 
+@painter_registry.register
+class PainterHostDockerNode(Painter):
+    @property
+    def ident(self):
+        return "host_docker_node"
+
+    @property
+    def title(self):
+        return _("Docker node")
+
+    @property
+    def short_title(self):
+        return _("Node")
+
+    @property
+    def columns(self):
+        return ["host_labels", "host_label_sources"]
+
+    def render(self, row, cell):
+        source_hosts = [
+            k[21:]
+            for k in get_labels(row, "host").iterkeys()
+            if k.startswith("cmk/piggyback_source_")
+        ]
+
+        if not source_hosts:
+            return "", ""
+
+        # TODO: Detect the docker node sources correctly
+        # TODO: Handle multiple nodes
+        host_name = source_hosts[0]
+
+        url = html.makeuri_contextless(
+            [
+                ("view_name", "host"),
+                ("host", host_name),
+            ],
+            filename="view.py",
+        )
+        return "", html.render_a(host_name, href=url)
+
+
 class AbstractPainterSpecificMetric(Painter):
     @property
     def ident(self):

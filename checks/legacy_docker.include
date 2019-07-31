@@ -55,7 +55,7 @@ def append_deprecation_warning(check_function):
             results = check_function(item, params, parsed)
             if isinstance(results, tuple):
                 yield results
-            else:
+            elif results is not None:
                 for result in results:
                     yield result
         except catch_these:

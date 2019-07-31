@@ -886,7 +886,7 @@ class Rule(object):
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        if self.ruleset.ruleset.is_for_services:
+        if self.ruleset.rulespec.is_for_services:
             if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
                 return
         else:

@@ -610,7 +610,7 @@ bool TheMiniProcess::stop() {
 
     process_id_ = 0;
     process_name_.clear();
-    CloseHandle(process_handle_);
+    CloseHandle(handle);
     process_handle_ = INVALID_HANDLE_VALUE;
 
     // check status and reset handle if required

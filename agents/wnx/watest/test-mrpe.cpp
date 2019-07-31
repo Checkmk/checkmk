@@ -49,17 +49,14 @@ TEST(SectionProviderMrpe, Construction) {
     EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
-    EXPECT_EQ(mrpe.accu_.size(), 0);
     EXPECT_EQ(mrpe.checks_.size(), 0);
     EXPECT_EQ(mrpe.entries_.size(), 0);
     EXPECT_EQ(mrpe.includes_.size(), 0);
     auto out = mrpe.makeBody();
     EXPECT_TRUE(out.empty());
-    mrpe.accu_.push_back('a');
-    mrpe.accu_.push_back('\n');
     out = mrpe.generateContent(cma::section::kUseEmbeddedName);
-    // very simple : concatenate accu_ and makeHeader
-    EXPECT_EQ(out, "<<<mrpe>>>\na\n") << out;
+
+    EXPECT_TRUE(out.empty());
 }
 
 void replaceYamlSeq(const std::string Group, const std::string SeqName,
@@ -82,12 +79,30 @@ TEST(SectionProviderMrpe, SmallApi) {
     EXPECT_EQ(s, "a b\1\1");
 
     {
-        auto [user, path] = cma::provider::parseIncludeEntry(
+        auto [user, path] = cma::provider::ParseIncludeEntry(
             "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
         EXPECT_EQ(user, "sk");
         EXPECT_EQ(path.u8string(),
                   wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
                       "mrpe_checks.cfg");
+    }
+
+    {
+        auto [user, path] = cma::provider::ParseIncludeEntry(
+            " = $CUSTOM_AGENT_PATH$\\mpe_cecks.cfg  ");
+        EXPECT_TRUE(user.empty());
+        EXPECT_EQ(path.u8string(),
+                  wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
+                      "mpe_cecks.cfg");
+    }
+
+    {
+        auto [user, path] = cma::provider::ParseIncludeEntry(
+            " = '$CUSTOM_AGENT_PATH$\\mpe_cecks.cfg'  ");
+        EXPECT_TRUE(user.empty());
+        EXPECT_EQ(path.u8string(),
+                  wtools::ConvertToUTF8(cma::cfg::GetUserDir()) + "\\" +
+                      "mpe_cecks.cfg");
     }
 }
 
@@ -140,7 +155,10 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     mrpe.addParsedConfig();
     EXPECT_EQ(mrpe.includes_.size(), 3);
     EXPECT_EQ(mrpe.checks_.size(), 2);
-    EXPECT_EQ(mrpe.entries_.size(), 4);
+    if (kMrpeRemoveAbsentFiles)
+        EXPECT_EQ(mrpe.entries_.size(), 4);
+    else
+        EXPECT_EQ(mrpe.entries_.size(), 5);
 }
 
 TEST(SectionProviderMrpe, YmlCheck) {
@@ -156,6 +174,79 @@ TEST(SectionProviderMrpe, YmlCheck) {
     EXPECT_TRUE(enabled);
     auto paths = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
     EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
+}
+
+static auto CreateMrpeFiles(std::filesystem::path cfg_dir,
+                            std::filesystem::path file_dir) {
+    auto mrpe_file_1 =
+        tst::CreateWorkFile(file_dir / "mrpe1.bat", "@echo output_of_mrpe1");
+
+    auto mrpe_file_2 =
+        tst::CreateWorkFile(file_dir / "mrpe2.bat", "@echo output_of_mrpe2");
+
+    std::string text = fmt::format(
+        "# a\n"
+        "  ;\n"  // expected clean
+        "check = Type '{}'\n"
+        "\n"
+        "check = Type '{}'\n"
+        "check = BadFile 'sss.bat'\n",
+        mrpe_file_1.u8string(), mrpe_file_2.u8string());
+
+    auto cfg_file = tst::CreateWorkFile(cfg_dir / "mrpe_check.cfg", text);
+    return std::make_tuple(cfg_file, mrpe_file_1, mrpe_file_2);
+}
+
+TEST(SectionProviderMrpe, ProcessCfg) {
+    tst::SafeCleanTempDir();
+    auto [cfg_dir, file_dir] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    auto [cfg_file, mrpe_file_1, mrpe_file_2] =
+        CreateMrpeFiles(cfg_dir, file_dir);
+
+    std::vector<MrpeEntry> entries;
+
+    AddCfgFileToEntries("", cfg_file, entries);
+    ASSERT_EQ(entries.size(), 3);
+    EXPECT_EQ(entries[0].command_line_, mrpe_file_1.u8string());
+    EXPECT_EQ(entries[1].command_line_, mrpe_file_2.u8string());
+    std::filesystem::path missing = cma::cfg::GetUserDir();
+    missing /= "sss.bat";
+    EXPECT_EQ(entries[2].command_line_, missing.u8string());
+    auto result_1 = ExecMrpeEntry(entries[0], std::chrono::seconds(10));
+    EXPECT_FALSE(result_1.empty());
+    {
+        auto table_1 = cma::tools::SplitString(result_1, " ");
+        EXPECT_EQ(table_1.size(), 4);
+        EXPECT_EQ(table_1[0],
+                  std::string("(") + mrpe_file_1.filename().u8string() + ")");
+        EXPECT_EQ(table_1[1], "Type");
+        EXPECT_EQ(table_1[2], "0");
+        EXPECT_EQ(table_1[3], "output_of_mrpe1\n");
+    }
+    {
+        auto result_2 = ExecMrpeEntry(entries[1], std::chrono::seconds(10));
+        auto table_2 = cma::tools::SplitString(result_2, " ");
+        EXPECT_FALSE(result_2.empty());
+        EXPECT_EQ(table_2.size(), 4);
+        EXPECT_EQ(table_2[0],
+                  std::string("(") + mrpe_file_2.filename().u8string() + ")");
+        EXPECT_EQ(table_2[1], "Type");
+        EXPECT_EQ(table_2[2], "0");
+        EXPECT_EQ(table_2[3], "output_of_mrpe2\n");
+    }
+    auto result_missing = ExecMrpeEntry(entries[2], std::chrono::seconds(10));
+    {
+        EXPECT_FALSE(result_missing.empty());
+        auto table_missing = cma::tools::SplitString(result_missing, " ", 3);
+        EXPECT_EQ(table_missing.size(), 4);
+        EXPECT_EQ(table_missing[0], "(sss.bat)");
+        EXPECT_EQ(table_missing[1], "BadFile");
+        EXPECT_EQ(table_missing[2], "3");
+        EXPECT_EQ(table_missing[3],
+                  "Unable to execute - plugin may be missing.\n");
+    }
 }
 
 TEST(SectionProviderMrpe, Run) {
@@ -193,22 +284,45 @@ TEST(SectionProviderMrpe, Run) {
     mrpe.addParsedConfig();
     EXPECT_EQ(mrpe.entries_.size(), 2);
     mrpe.updateSectionStatus();
-    auto accu = mrpe.accu_;
-    ASSERT_TRUE(!accu.empty());
-    auto table = cma::tools::SplitString(accu, "\n");
-    ASSERT_EQ(table.size(), 2);
 
-    auto& e0 = mrpe.entries_[0];
+    // sequential
+    yaml[groups::kMrpe][vars::kMrpeParallel] = false;
     {
-        auto hdr =
-            fmt::format("({})", e0.exe_name_) + " " + e0.description_ + " 0";
-        EXPECT_TRUE(table[0].find(hdr) == 0);
+        auto accu = mrpe.makeBody();
+        ASSERT_TRUE(!accu.empty());
+        auto table = cma::tools::SplitString(accu, "\n");
+        ASSERT_EQ(table.size(), 2);
+
+        auto& e0 = mrpe.entries_[0];
+        {
+            auto hdr = fmt::format("({})", e0.exe_name_) + " " +
+                       e0.description_ + " 0";
+            EXPECT_TRUE(table[0].find(hdr) == 0);
+        }
+        auto& e1 = mrpe.entries_[1];
+        {
+            auto hdr = fmt::format("({})", e1.exe_name_) + " " +
+                       e1.description_ + " 0";
+            EXPECT_TRUE(table[1].find(hdr) == 0);
+        }
     }
-    auto& e1 = mrpe.entries_[1];
+
+    yaml[groups::kMrpe][vars::kMrpeParallel] = true;
     {
-        auto hdr =
+        auto accu = mrpe.makeBody();
+        ASSERT_TRUE(!accu.empty());
+        auto table = cma::tools::SplitString(accu, "\n");
+        ASSERT_EQ(table.size(), 2);
+
+        auto& e0 = mrpe.entries_[0];
+        auto hdr0 =
+            fmt::format("({})", e0.exe_name_) + " " + e0.description_ + " 0";
+
+        auto& e1 = mrpe.entries_[1];
+        auto hdr1 =
             fmt::format("({})", e1.exe_name_) + " " + e1.description_ + " 0";
-        EXPECT_TRUE(table[1].find(hdr) == 0);
+        { EXPECT_TRUE(table[0].find(hdr0) == 0 || table[1].find(hdr0) == 0); }
+        { EXPECT_TRUE(table[0].find(hdr1) == 0 || table[1].find(hdr1) == 0); }
     }
 }  // namespace cma::provider
 

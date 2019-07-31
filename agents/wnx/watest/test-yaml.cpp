@@ -827,6 +827,17 @@ TEST(AgentConfig, WorkScenario) {
             EXPECT_TRUE(name != "");
         }
     }
+
+    // mrpe
+    {
+        auto mrpe_on = GetVal(groups::kMrpe, vars::kEnabled, false);
+        EXPECT_TRUE(mrpe_on);
+
+        auto mrpe_timeout = GetVal(groups::kMrpe, vars::kTimeout, 31);
+        EXPECT_EQ(mrpe_timeout, 60);
+        auto mrpe_parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, true);
+        EXPECT_FALSE(mrpe_parallel);
+    }
 }
 
 TEST(AgentConfig, UTF16LE) {

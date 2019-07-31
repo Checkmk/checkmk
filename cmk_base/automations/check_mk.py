@@ -170,8 +170,12 @@ class AutomationTryDiscovery(Automation):
         with redirect_output(cStringIO.StringIO()) as buf:
             cmk.utils.log.setup_console_logging()
             cmk.utils.log.set_verbosity(1)
-            result = self._execute_discovery(args)
-            return {"output": buf.getvalue(), "check_table": result}
+            check_preview_table, host_labels = self._execute_discovery(args)
+            return {
+                "output": buf.getvalue(),
+                "check_table": check_preview_table,
+                "host_labels": host_labels.to_dict(),
+            }
 
     def _execute_discovery(self, args):
         use_caches = False

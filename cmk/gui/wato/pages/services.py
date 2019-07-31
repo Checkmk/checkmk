@@ -34,7 +34,7 @@ import pprint
 import sys
 import re
 from hashlib import sha256
-from typing import NamedTuple, Text, List, Optional  # pylint: disable=unused-import
+from typing import Dict, NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
 import cmk
 import cmk.utils.store
@@ -46,6 +46,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
+from cmk.gui.view_utils import render_labels
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
@@ -78,6 +79,7 @@ DiscoveryResult = NamedTuple("DiscoveryResult", [
     ("job_status", dict),
     ("check_table_created", int),
     ("check_table", list),
+    ("host_labels", dict),
 ])
 
 
@@ -351,6 +353,7 @@ def _get_check_table_from_remote(request):
             },
             check_table=check_table,
             check_table_created=time.time(),
+            host_labels={},
         )
 
 
@@ -496,6 +499,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             job_status=job_status,
             check_table_created=check_table_created,
             check_table=result["check_table"],
+            host_labels=result.get("host_labels", {}),
         )
 
     def _check_table_file_path(self):
@@ -950,8 +954,36 @@ class DiscoveryPageRenderer(object):
     def render(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
         with html.plugged():
+            if discovery_result.check_table or self._is_active(discovery_result):
+                self._show_action_buttons(discovery_result)
+            self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, request)
             return html.drain()
+
+    def _show_discovered_host_labels(self, discovery_result):
+        # type: (DiscoveryResult) -> None
+        if not discovery_result.host_labels:
+            return
+
+        host_labels_by_plugin = {}  # type: Dict[str, Dict[Text, Text]]
+        for label_id, label in discovery_result.host_labels.iteritems():
+            host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
+
+        with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
+            table.groupheader(_("Discovered host labels"))
+            for plugin_name, labels in sorted(host_labels_by_plugin.iteritems(),
+                                              key=lambda x: x[0]):
+                table.row()
+                labels_html = render_labels(
+                    labels,
+                    "host",
+                    with_links=False,
+                    label_sources={
+                        k: "discovered" for k in discovery_result.host_labels.iterkeys()
+                    },
+                )
+                table.text_cell(_("Check plugin"), plugin_name)
+                table.cell(_("Host labels"), labels_html)
 
     def _show_discovery_details(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
@@ -968,8 +1000,6 @@ class DiscoveryPageRenderer(object):
                   "cluster. This is done using the <a href=\"%s\">%s</a> ruleset.") %
                 (url, _("Clustered services")))
             return
-
-        self._show_action_buttons(discovery_result)
 
         if not discovery_result.check_table:
             return

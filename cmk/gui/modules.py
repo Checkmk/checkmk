@@ -111,21 +111,13 @@ def load_all_plugins():
     # Optimization: in case of the graph ajax call only check the metrics module. This
     # improves the performance for these requests.
     # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-    if html.myfile == "ajax_graph" and g_all_modules_loaded:
-        only_modules = ["metrics"]
-    else:
-        only_modules = None
+    only_modules = ["metrics"] if html.myfile == "ajax_graph" and g_all_modules_loaded else None
 
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
-        if only_modules is not None and module.__name__ not in only_modules:
-            continue
-        try:
-            module.load_plugins  # just check if this function exists
-        except AttributeError:
-            pass
-        else:
+        if (only_modules is None or module.__name__ in only_modules) and \
+           hasattr(module, "load_plugins"):
             module.load_plugins(force=need_plugins_reload)
 
     # TODO: Clean this up once we drop support for the legacy plugins
@@ -138,13 +130,15 @@ def load_all_plugins():
 
 
 def _cmk_gui_top_level_modules():
-    return [
-        module for name, module in sys.modules.items()
-        # None entries are only an import optimization of cPython and can be removed:
-        # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-        if module is not None and ((name.startswith("cmk.gui.") and len(name.split(".")) == 3) or (
-            name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4) or
-                                   (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4))
+    return [module \
+            for name, module in sys.modules.items()
+            # None entries are only an import optimization of cPython and can be removed:
+            # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
+            if module is not None
+            # top level modules only, please...
+            if (name.startswith("cmk.gui.") and len(name.split(".")) == 3 or
+                name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4 or
+                name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)
     ]
 
 

@@ -168,7 +168,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert isinstance(data, tuple)
     assert len(data) == 2
 
-    assert data[0]["xxxhost"] == [0, 0, 0, 0]
+    assert data[0]["xxxhost"] == [0, 0, 0, 0, 0, 0]
     assert data[1] == {"xxxhost": ''}
 
 

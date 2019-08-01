@@ -57,6 +57,7 @@ from cmk_base.check_utils import DiscoveredService
 from cmk_base.discovered_labels import (
     DiscoveredServiceLabels,
     DiscoveredHostLabels,
+    HostLabel,
 )
 
 # Run the discovery queued by check_discovery() - if any
@@ -820,6 +821,9 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
                                                 check_plugin_name, on_error):
                     if isinstance(entry, DiscoveredService):
                         discovered_services.append(entry)
+                    elif isinstance(entry, HostLabel):
+                        entry.plugin_name = check_plugin_name
+                        discovered_host_labels.add_label(entry)
                     elif isinstance(entry, DiscoveredHostLabels):
                         for host_label in entry.itervalues():
                             host_label.plugin_name = check_plugin_name
@@ -873,7 +877,7 @@ def _get_host_sections_for_discovery(sources, use_caches):
 
 
 def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_name, on_error):
-    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels]]
+    # type: (data_sources.MultiHostSections, str, Optional[str], str, str) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     # Skip this check type if is ignored for that host
     if config.service_ignored(hostname, check_plugin_name, None):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
@@ -959,7 +963,7 @@ def _execute_discovery_function(discovery_function, section_content):
 
 
 def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
-    # type: (str, check_table.CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels]]
+    # type: (str, check_table.CheckPluginName, List) -> Iterator[Union[DiscoveredService, DiscoveredHostLabels, HostLabel]]
     for entry in discovered_items:
         if isinstance(entry, check_api_utils.Service):
             item = entry.item
@@ -967,7 +971,7 @@ def _validate_discovered_items(hostname, check_plugin_name, discovered_items):
             service_labels = entry.service_labels
             yield entry.host_labels
 
-        elif isinstance(entry, DiscoveredHostLabels):
+        elif isinstance(entry, (DiscoveredHostLabels, HostLabel)):
             yield entry
             continue
 

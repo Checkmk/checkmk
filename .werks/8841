@@ -35,10 +35,8 @@ Check programmers: You may add something like this to your discovery
 functions for creating host labels:
 
 C+:
-    yield HostLabels(
-        HostLabel(u"os", u"Windows"),
-        HostLabel(u"type", u"security"),
-    )
+    yield HostLabel(u"os", u"Windows")
+    yield HostLabel(u"type", u"security")
 C-:
 
 This adds two host labels os:Windows and type:security to the host.

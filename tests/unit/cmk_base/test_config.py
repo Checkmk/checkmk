@@ -1535,14 +1535,13 @@ def test_host_ruleset_match_object_of_service(monkeypatch):
     }
 
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
+    service_labels = {u"abc": u"xä"}
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
         "host_name": "test-host",
         "service_description": "CPU load",
-        "service_labels": {
-            u"abc": u"xä"
-        },
-        "service_cache_id": ('CPU load', 4654151214158602053),
+        "service_labels": service_labels,
+        "service_cache_id": ('CPU load', obj._generate_hash(service_labels)),
     }
 
 

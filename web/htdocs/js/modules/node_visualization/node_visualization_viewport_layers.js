@@ -20,7 +20,7 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
 //        this.translation_info.selectAll("td#Simulation").text("Alpha: " + this.viewport.layout_manager.force_style.simulation.alpha().toFixed(3) +
 //                                        " Tick("+node_visualization_layout_styles.tick_count+"): " + node_visualization_layout_styles.tick_duration)
 
-//        this._update_chunk_boundaries()
+        this._update_chunk_boundaries()
         if (this.overlay_active == this.viewport.layout_manager.edit_layout)
             return
 
@@ -1129,19 +1129,20 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
 
         this._use_line_style = "diagonal"
-        this._render_line_style()
     }
 
-    _render_line_style() {
-        var select = this.div_selection.selectAll("select").data([null])
-        select = select.enter().append("div")
-                        .style("position", "absolute")
-                        .style("top", "50px")
+    render_line_style(into_selection) {
+        let line_style_div = into_selection.selectAll("select").data([null])
+
+
+        let line_style_div_enter = line_style_div.enter()
+        line_style_div_enter.append("label").text("Line style")
+
+        let select = line_style_div_enter.append("select")
                         .style("pointer-events", "all")
-                        .append("select").merge(select)
                         .style("width", "200px")
 
-        var options = select.on("change", ()=>this._line_style())
+        let options = select.on("change", ()=>this._line_style())
                .selectAll("option")
                .data(["line", "diagonal", "elbow"])
         options.exit().remove()
@@ -1154,7 +1155,6 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
     _line_style() {
         this._use_line_style = d3.select(d3.event.target).property("value")
-
         this.links_selection.selectAll(".link_element").each(link_data=>this._remove_link(link_data)).remove()
         this.update_data()
         this.update_gui(true)
@@ -1241,7 +1241,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
     update_gui(force=false) {
         this._update_position_of_context_menu()
-        if (!force && this.viewport.layout_manager.force_style.simulation.alpha() < 0.10) {
+        if (!force && node_visualization_layout_styles.force_simulation._simulation.alpha() < 0.10) {
             return
         }
 

@@ -118,6 +118,17 @@ export function get_bounding_rect(list_of_coords) {
 }
 
 export function get_bounding_rect_of_rotated_vertices(vertices, rotation_in_rad) {
+    // TODO: check this
+    // Vertices with less than 3 elements will fail
+    if (vertices.length < 3)
+        return {
+            x_min: vertices[0].x,
+            x_max: vertices[0].x+10,
+            y_min: vertices[0].y,
+            y_max: vertices[0].y+10,
+            width: 10,
+            height: 10}
+
     let cos_x = Math.cos(rotation_in_rad)
     let sin_x = Math.sin(rotation_in_rad)
     let rotated_vertices = []

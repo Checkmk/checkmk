@@ -142,6 +142,7 @@ export class AbstractLayoutStyle {
                             })
                             .on("change", ()=>{
                                 this._layout_manager.dragging = false
+                                this._layout_manager.create_undo_step()
                             })
         rows_enter.append("td").classed("text", true)
         rows = rows_enter.merge(rows)
@@ -194,11 +195,11 @@ export class AbstractLayoutStyle {
         this._update_options_in_input_field()
         this.force_style_translation()
         this.translate_coords()
-
         this.update_data()
         
 
-        this._layout_manager.compute_node_positions_from_list_of_nodes(this.style_root_node.descendants())
+        if (this.style_root_node)
+            this._layout_manager.compute_node_positions_from_list_of_nodes(this.style_root_node.descendants())
         this._layout_manager.viewport.update_data_of_layers()
         this._layout_manager.viewport.update_gui_of_layers()
     }
@@ -405,6 +406,114 @@ export class AbstractLayoutStyle {
 //#   |                                                                    |
 //#   +--------------------------------------------------------------------+
 
+class ForceSimulation {
+    constructor() {
+        this._simulation = d3.forceSimulation();
+        this._simulation.alphaMin(0.10)
+        this._simulation.on("tick", () => this.tick_called())
+        this._setup_forces()
+        this._all_nodes = {}
+        this._all_links = {}
+        this._viewport = null
+    }
+
+    register_viewport(viewport) {
+        this._viewport = viewport
+    }
+
+    tick_called() {
+        if (!this._viewport) {
+            return
+        }
+
+        let update_start = window.performance.now()
+        this._viewport.update_gui_of_layers()
+        this._viewport.layout_manager.translate_layout()
+        this._viewport.layout_manager.compute_node_positions()
+        tick_duration = window.performance.now() - update_start
+    }
+
+    _setup_forces() {
+        this._update_charge_force()
+        this._update_collision_force()
+        this._update_center_force()
+        this._update_link_force()
+    }
+
+    _update_charge_force() {
+        let charge_force = d3.forceManyBody().strength((d) => {
+            if (d.force != null) {
+                return d.force;
+            }
+            if (d._children)
+                return d.data.force_options.force_aggregator
+            else
+                return d.data.force_options.force_node})
+                    .distanceMax(800)
+        this._simulation.force("charge_force", charge_force)
+    }
+
+    _update_collision_force() {
+        let collide_force = d3.forceCollide(d=>{
+                if (d.data.collision_force != null) {
+                    return d.data.collision_force;
+                }
+                if (d._children)
+                    return d.data.force_options.collision_force_aggregator
+                else
+                    return d.data.force_options.collision_force_node
+        })
+        this._simulation.force("collide", collide_force)
+    }
+
+    _update_center_force() {
+        let forceX = d3.forceX(d=>{
+                return d.data.chunk.coords.x + d.data.chunk.coords.width/2
+        }).strength(d=>{
+                if (d.parent != null)
+                    return d.data.force_options.center_force / 300
+                return d.data.force_options.center_force / 100})
+        let forceY = d3.forceY(d=>{
+                return d.data.chunk.coords.y + d.data.chunk.coords.height/2
+        }).strength(d=>{
+                if (d.parent != null)
+                    return d.data.force_options.center_force / 300
+                return d.data.force_options.center_force / 100})
+        this._simulation.force("x", forceX)
+        this._simulation.force("y", forceY)
+
+        this._simulation.force("charge_force").distanceMax(800)
+    }
+
+    _update_link_force() {
+        let link_force = d3.forceLink(this._all_links)
+                            .id(function (d) {return d.data.id})
+                            .distance(d=>{
+                                if (d.source._children)
+                                    return d.source.data.force_options.link_force_aggregator
+                                else
+                                    return d.source.data.force_options.link_force_node})
+                            .strength(d=>d.source.data.force_options.link_strength/100)
+        this._simulation.force("links", link_force);
+    }
+
+    update_nodes_and_links(all_nodes, all_links) {
+        this._all_nodes = all_nodes
+        this._all_links = all_links
+        this._simulation.nodes(this._all_nodes)
+        this._setup_forces()
+    }
+
+    restart_with_alpha(alpha) {
+        if (this._simulation.alpha() < 0.12)
+            this._simulation.restart();
+        this._simulation.alpha(alpha);
+    }
+}
+
+export let force_simulation = new ForceSimulation()
+
+
 export class LayoutStyleForce extends AbstractLayoutStyle {
     type() {
         return "force"
@@ -419,23 +528,21 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
     }
 
     compute_id(node) {
-        return "force"
+        return this.type() + "_" + node.data.id
     }
 
     id() {
-        return "force"
+        return this.compute_id(this.style_root_node)
     }
 
     constructor(layout_manager, style_config, node, selection) {
         super(layout_manager, style_config, node, selection)
-        this.simulation = d3.forceSimulation();
-        this.simulation.alphaMin(0.10)
-// TODO: determine best alphaDecay
-//        this.simulation.alphaDecay(0.01)
-        this._setup_forces()
     }
 
-    get_matcher() {}
+    force_style_translation() {
+        force_simulation._setup_forces()
+        force_simulation.restart_with_alpha(0.5)
+    }
 
     get_style_options() {
         return [{id: "center_force", values: {default: 5, min: 0, max: 100}, option_type:"range",
@@ -450,7 +557,7 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
                  text: "Link distance leaf", value: this.style_config.options.link_force_node},
                 {id: "link_force_aggregator", values: {default: 30, min: -10, max: 300}, option_type:"range",
                  text: "Link distance branches", value: this.style_config.options.link_force_aggregator},
-                {id: "link_strength", values: {default: 30, min: 0, max: 300}, option_type:"range",
+                {id: "link_strength", values: {default: 30, min: 0, max: 100}, option_type:"range",
                  text: "Link strength", value: this.style_config.options.link_strength},
                 {id: "collision_force_node", values: {default: 15, min: 0, max: 150}, option_type:"range",
                  text: "Collision box leaf", value: this.style_config.options.collision_force_node},
@@ -458,93 +565,7 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
                  text: "Collision box branch", value: this.style_config.options.collision_force_aggregator}]
     }
 
-    // TODO: remove with base functionality
-    get_config() {
-        return {
-            type: this.type(),
-            options: this.style_config.options
-        }
-    }
-
-    size_changed() {
-        this._update_center_force()
-        this.restart_with_alpha(0.5)
-    }
-
-    _setup_forces() {
-        // Gravity
-        let charge_force = d3.forceManyBody().strength((d) => {
-            if (d.force != null) {
-                return d.force;
-            }
-            if (d._children)
-                return this.style_config.options.force_aggregator
-            else
-                return this.style_config.options.force_node})
-                    .distanceMax(this.style_config.options.maxdistance)
-        this.simulation.force("charge_force", charge_force)
-
-        // Collision
-        let collide_force = d3.forceCollide(d=>{
-                if (d.data.collision_force != null) {
-                    return d.data.collision_force;
-                }
-                if (d._children)
-                    return this.style_config.options.collision_force_aggregator
-                else
-                    return this.style_config.options.collision_force_node
-        })
-        this.simulation.force("collide", collide_force)
-    }
-
-    _update_center_force() {
-        let hierarchy_list = this._layout_manager.viewport.get_hierarchy_list()
-        if (hierarchy_list.length == 0)
-            return
-
-        this.forceX = d3.forceX(d=>{
-                return d.data.chunk.coords.x + d.data.chunk.coords.width/2
-        }).strength(d=>{
-                if (d.parent != null)
-                    this.style_config.options.center_force / 300
-                return this.style_config.options.center_force / 100})
-        this.forceY = d3.forceY(d=>{
-                return d.data.chunk.coords.y + d.data.chunk.coords.height/2
-        }).strength(d=>{
-                if (d.parent != null)
-                    this.style_config.options.center_force / 300
-                return this.style_config.options.center_force / 100})
-        this.simulation.force("x", this.forceX)
-        this.simulation.force("y", this.forceY)
-    }
-
     update_data() {
-        // TODO: use links based on get_all_links
-        let all_nodes = []
-        let all_links = []
-        this._update_center_force()
-        this._layout_manager.viewport.get_hierarchy_list().forEach(partition=>{
-            all_nodes = all_nodes.concat(partition.nodes)
-            partition.nodes.slice(1).forEach(node=>{
-                if (node.data.invisible)
-                    return
-            })
-        })
-        this.simulation.nodes(all_nodes)
-
-        all_links = this._layout_manager.viewport.get_all_links()
-
-        // Links
-        let link_force = d3.forceLink(all_links)
-                            .id(function (d) {return d.data.id})
-                            .distance(d=>{
-                                if (d.source._children)
-                                    return this.style_config.options.link_force_aggregator
-                                else
-                                    return this.style_config.options.link_force_node})
-//                            .strength(this.style_config.options.link_strength/10)
-        this.simulation.force("links", link_force);
-        this.restart_with_alpha(0.7)
         this.simulation.on("tick", () => this.tick_called())
     }
 
@@ -552,12 +573,6 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
             let update_start = window.performance.now()
             this._layout_manager.viewport.update_gui_of_layers()
             tick_duration = window.performance.now() - update_start
-    }
-
-    restart_with_alpha(alpha) {
-        if (this.simulation.alpha() < 0.12)
-            this.simulation.restart();
-        this.simulation.alpha(alpha);
     }
 }
 
@@ -696,6 +711,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 
     drag_end() {
         this._layout_manager.dragging = false
+        this._layout_manager.create_undo_step()
     }
 
     add_optional_transition(selection_with_node_data) {
@@ -750,14 +766,19 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
             if (node.data.use_style && node != this.style_root_node) {
                 if (node.data.use_style.style_config.options.include_parent_rotation) {
                     let rad = node.data.use_style.style_config.options.rotation / 180 * Math.PI
-                    let bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, rad)
+                    let bounding_rect = {height: 10, width: 10}
+                    if (node.data.use_style._no_rotation_vertices)
+                        bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, rad)
                     return [bounding_rect.height * 1.1 + 100, bounding_rect.width * 1.1 + 100]
                 }
 
 
                 let node_rad = node.data.use_style.style_config.options.rotation / 180 * Math.PI
                 node_rad = node_rad + Math.PI - rad
-                let bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, node_rad)
+
+                let bounding_rect = {height: 10, width: 10}
+                if (node.data.use_style._no_rotation_vertices)
+                    bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(node.data.use_style._no_rotation_vertices, node_rad)
 
                 let extra_width = 0
                 if (node.data.use_style.type() == "hierarchy")

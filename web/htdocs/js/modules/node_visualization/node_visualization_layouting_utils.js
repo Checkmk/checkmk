@@ -22,10 +22,6 @@ export class LayoutStyleFactory {
         return this.style_templates[style_config.type]
     }
 
-    get_default_style_config(style_name, node) {
-
-    }
-
     // Creates a style instance with the given style_config
     instantiate_style(style_config, node, selection) {
         return new (this.get_style_class(style_config))(this.layout_manager, style_config, node, selection)

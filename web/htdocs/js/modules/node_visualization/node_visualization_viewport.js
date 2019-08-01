@@ -279,6 +279,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.feed_data_timestamp = Math.floor(new Date().getTime()/1000)
         this.data_to_show = data_to_show
 
+        // TODO: fix marked obsolete handling
         this._node_chunk_list.forEach(node_chunk=>node_chunk.marked_obsolete=true)
 
 
@@ -303,6 +304,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         // {
         //   id:                 ID to identify this chunk
         //   hierarchy:          nodes in hierarchical order
+        //   tree:               hierarchy tree
         //   nodes:              nodes as list
         //   links:              links between nodes
         //                       These are either provided in the rawdata or

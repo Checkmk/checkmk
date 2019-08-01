@@ -36,12 +36,14 @@
 
 
 def inventory_liebert_system(parsed):
-    return [(parsed['System Model Number'], {})]
+    model = parsed.get('System Model Number')
+    if model:
+        yield model, {}
 
 
 def check_liebert_system(_no_item, params, parsed):
     state = 0
-    for key, value in parsed.iteritems():
+    for key, value in sorted(parsed.iteritems()):
         if key == "System Status" and not "Normal Operation" in value:
             yield 2, "%s: %s" % (key, value)
         else:
@@ -49,7 +51,7 @@ def check_liebert_system(_no_item, params, parsed):
 
 
 check_info['liebert_system'] = {
-    'parse_function': parse_liebert_without_unit,
+    'parse_function': lambda info: parse_liebert_without_unit(info, str),
     'inventory_function': inventory_liebert_system,
     'check_function': check_liebert_system,
     'service_description': 'Status %s',

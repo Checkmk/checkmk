@@ -888,41 +888,45 @@ function get_oraversion () {
     fi
 
     # remove possible existing variables
-    unset AT_LEAST_ORACLE_180 AT_LEAST_ORACLE_122 AT_LEAST_ORACLE_121 AT_LEAST_ORACLE_112 AT_LEAST_ORACLE_111 AT_LEAST_ORACLE_102 AT_LEAST_ORACLE_101 AT_LEAST_ORACLE_92
+    unset AT_LEAST_ORACLE_190 AT_LEAST_ORACLE_180 AT_LEAST_ORACLE_122 AT_LEAST_ORACLE_121 AT_LEAST_ORACLE_112 AT_LEAST_ORACLE_111 AT_LEAST_ORACLE_102 AT_LEAST_ORACLE_101 AT_LEAST_ORACLE_92
 
-    if [ "$ORACLE_VERSION" = '18.0' ] ; then
+    if [ "$ORACLE_VERSION" = '19.0' ] ; then
+        AT_LEAST_ORACLE_190=yes
+    fi
+
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' ] ; then
         AT_LEAST_ORACLE_180=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' ] ; then
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' ] ; then
         AT_LEAST_ORACLE_122=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' ] ; then
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' ] ; then
         AT_LEAST_ORACLE_121=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' ] ; then
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' ] ; then
         AT_LEAST_ORACLE_112=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
          -o "$ORACLE_VERSION" = '11.1' ] ; then
         AT_LEAST_ORACLE_111=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
          -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' ] ; then
         AT_LEAST_ORACLE_102=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
          -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
          -o "$ORACLE_VERSION" = '10.1' ] ; then
         AT_LEAST_ORACLE_101=yes
     fi
 
-    if [ "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+    if [ "$ORACLE_VERSION" = '19.0' -o "$ORACLE_VERSION" = '18.0' -o "$ORACLE_VERSION" = '12.2' -o "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
          -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
          -o "$ORACLE_VERSION" = '10.1' -o "$ORACLE_VERSION" = '9.2' ] ; then
         AT_LEAST_ORACLE_92=yes

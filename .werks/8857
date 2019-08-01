@@ -1,0 +1,43 @@
+Title: Docker container: Add hook functions to docker entrypoint
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564670893
+Class: feature
+
+With this change it is possible to to execute custom hook scripts during the
+container startup. This is useful in case you want to integrate your own
+logic into containers based on the Checkmk images.
+
+These hooks have been created:
+
+pre-create - 
+post-create
+pre-start
+post-start
+
+To use them you need to 
+
+At these steps, all scripts within docker-entrypoint.d/hook-name are executed.
+
+root@7ac2dc47037e:/# tree docker-entrypoint.d/
+docker-entrypoint.d/
+|-- post-create
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- post-start
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- pre-create
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+`-- pre-start
+    |-- 01_foo.sh
+    |-- 02_bar.sh
+    `-- 03_baz.sh
+

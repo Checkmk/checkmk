@@ -141,7 +141,7 @@ def test_automation_discovery_single_host(test_cfg, site):
 
     assert len(data[0]) == 1
     assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
 
     assert data[1] == {}
 
@@ -157,8 +157,8 @@ def test_automation_discovery_multiple_hosts(test_cfg, site):
     assert len(data[0]) == 2
     assert "modes-test-host" in data[0]
     assert "modes-test-host2" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
-    assert len(data[0]["modes-test-host2"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
+    assert len(data[0]["modes-test-host2"]) == 6
 
     assert data[1] == {}
 
@@ -169,7 +169,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert isinstance(data, tuple)
     assert len(data) == 2
 
-    assert data[0]["xxxhost"] == [0, 0, 0, 0]
+    assert data[0]["xxxhost"] == [0, 0, 0, 0, 0, 0]
     assert data[1] == {"xxxhost": ''}
 
 
@@ -181,7 +181,7 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
 
     assert len(data[0]) == 1
     assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
 
     assert data[1] == {}
 

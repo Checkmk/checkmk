@@ -26,6 +26,7 @@
 """Utiliy module for holding generic methods that implement handling
 of console input / output"""
 
+import logging
 import sys
 
 import cmk.utils.tty as tty
@@ -64,7 +65,7 @@ def verbose(text, *args, **kwargs):
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text, *args, **kwargs):
-    if logger.is_very_verbose():
+    if logger.isEnabledFor(logging.DEBUG):
         verbose(text, *args, **kwargs)
 
 

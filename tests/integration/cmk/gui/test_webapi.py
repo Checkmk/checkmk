@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# pylint: disable=redefined-outer-name
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import base64
 import copy
@@ -380,6 +380,43 @@ def test_write_host_tags(web, site):
 
     finally:
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
+
+
+def test_write_host_labels(web, site):
+    try:
+        web.add_host("test-host-lan",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         'labels': {
+                             'blä': 'blüb'
+                         }
+                     },
+                     verify_set_attributes=False)
+
+        hosts = web.get_all_hosts(effective_attributes=True)
+        assert hosts["test-host-lan"]["attributes"]["labels"] == {u'blä': u'blüb'}
+
+        cfg = {
+            "FOLDER_PATH": "/",
+            "all_hosts": [],
+            "host_tags": {},
+            "host_labels": {},
+            "ipaddresses": {},
+            "host_attributes": {},
+        }
+
+        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+
+        assert cfg["host_labels"]["test-host-lan"] == {
+            u"blä": u"blüb",
+        }
+
+        for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
+            assert isinstance(label_id, unicode)
+            assert isinstance(label_value, unicode)
+
+    finally:
+        web.delete_hosts(["test-host-lan"])
 
 
 # TODO: Parameterize test for cme / non cme

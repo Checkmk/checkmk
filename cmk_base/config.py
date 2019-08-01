@@ -374,7 +374,10 @@ def _verify_no_deprecated_check_rulesets():
 
 
 def all_nonfunction_vars():
-    return {name for name, value in globals().items() if name[0] != '_' and not callable(value)}
+    return {
+        name for name, value in globals().items()
+        if name[0] != '_' and not hasattr(value, '__call__')
+    }
 
 
 class PackedConfig(object):
@@ -767,7 +770,7 @@ def service_description(hostname, check_plugin_name, item):
 
             # Can be a fucntion to generate the old description more flexible.
             old_descr = _old_service_descriptions[check_plugin_name]
-            if callable(old_descr):
+            if hasattr(old_descr, '__call__'):
                 add_item, descr_format = old_descr(item)
             else:
                 descr_format = old_descr

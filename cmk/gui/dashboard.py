@@ -1391,7 +1391,7 @@ def page_edit_dashlet():
     elif isinstance(params, (Dictionary, Transform)):
         vs_type = params
 
-    elif callable(params):
+    elif hasattr(params, '__call__'):
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params()
 

@@ -169,7 +169,7 @@ def test_pages_register(monkeypatch, capsys):
         sys.stdout.write("123")
 
     handler = cmk.gui.pages.get_page_handler("123handler")
-    assert callable(handler)
+    assert hasattr(handler, '__call__')
 
     handler()
     assert capsys.readouterr()[0] == "123"
@@ -185,7 +185,7 @@ def test_pages_register_handler(monkeypatch, capsys):
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
 
     handler = cmk.gui.pages.get_page_handler("234handler")
-    assert callable(handler)
+    assert hasattr(handler, '__call__')
 
     handler()
     assert capsys.readouterr()[0] == "234"

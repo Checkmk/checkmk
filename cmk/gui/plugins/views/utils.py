@@ -1757,13 +1757,13 @@ class Cell(object):
 
     def _get_short_title(self, painter):
         # TODO: Hack for the SLA painters. Find a better way
-        if callable(painter.short_title):
+        if hasattr(painter.short_title, '__call__'):
             return painter.short_title(self.painter_parameters())
         return painter.short_title
 
     def _get_long_title(self, painter):
         # TODO: Hack for the SLA painters. Find a better way
-        if callable(painter.title):
+        if hasattr(painter.title, '__call__'):
             return painter.title(self.painter_parameters())
         return painter.title
 

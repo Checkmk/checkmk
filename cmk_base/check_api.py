@@ -632,7 +632,7 @@ def validate_filter(filter_function):
     # type: (Callable) -> Callable
     """Validate function argument is a callable and return it"""
 
-    if callable(filter_function):
+    if hasattr(filter_function, '__call__'):
         return filter_function
     elif filter_function is not None:
         raise ValueError("Filtering function is not a callable,"
@@ -738,7 +738,7 @@ def discover(selector=None, default_params=None):
 
         return discoverer
 
-    if callable(selector):
+    if hasattr(selector, '__call__'):
         return _discovery(selector)
 
     if selector is None and default_params is None:

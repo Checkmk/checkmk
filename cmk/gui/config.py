@@ -308,7 +308,10 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return {name for name, value in var_dict.items() if name[0] != '_' and not callable(value)}
+    return {
+        name for name, value in var_dict.items()
+        if name[0] != '_' and not hasattr(value, '__call__')
+    }
 
 
 def get_language(default=None):

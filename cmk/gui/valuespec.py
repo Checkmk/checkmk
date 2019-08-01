@@ -3582,7 +3582,7 @@ class Dictionary(ValueSpec):
         return value
 
     def _get_elements(self):
-        if callable(self._elements) or isinstance(self._elements, types.MethodType):
+        if hasattr(self._elements, '__call__') or isinstance(self._elements, types.MethodType):
             return self._elements()
         elif isinstance(self._elements, list):
             return self._elements

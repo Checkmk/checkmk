@@ -490,7 +490,7 @@ class MockHostExtraConf(object):
 
     def __call__(self, _hostname, _ruleset):
         # ensure the default value is sane
-        if callable(self.config):
+        if hasattr(self.config, '__call__'):
             return self.config(_hostname, _ruleset)
 
         if self.target == "host_extra_conf" and isinstance(self.config, dict):

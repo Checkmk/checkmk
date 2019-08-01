@@ -59,7 +59,7 @@ if os.path.exists("validate_checks"):
     os.chdir('../../')
 defaults_path = 'defaults'
 #autochecks = []
-execfile('check_mk')
+exec (open('check_mk').read())
 __name__ = '__main__'
 
 
@@ -155,7 +155,7 @@ global_vars = {}
 invalid_global_vars = {}
 for check in get_checks():
     vars_before_check = all_nonfunction_vars()
-    execfile('checks/%s' % check)
+    exec (open('checks/%s' % check).read())
     vars_after_check = all_nonfunction_vars()
 
     global_vars[check] = []
@@ -166,7 +166,7 @@ for check in get_checks():
 # Load all perfometers
 perfometers = {}
 for f in get_perfometer_files():
-    execfile('web/plugins/perfometer/' + f)
+    exec (open('web/plugins/perfometer/' + f).read())
 
 SCORE_START = 10
 

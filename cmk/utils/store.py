@@ -128,7 +128,7 @@ def makedirs(path, mode=0o770):
 
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
-# that are read with execfile().
+# that are read with exec().
 def load_mk_file(path, default=None, lock=False):
     if default is None:
         raise MKGeneralException(
@@ -141,7 +141,7 @@ def load_mk_file(path, default=None, lock=False):
 
     try:
         try:
-            execfile(path, globals(), default)
+            exec (open(path).read(), globals(), default)
         except IOError as e:
             if e.errno != errno.ENOENT:  # No such file or directory
                 raise

@@ -116,7 +116,7 @@ unconverted_data = ""  # complete  unconverted sections
 
 # host tags stuff
 if os.path.exists(hosttags_file):
-    execfile(hosttags_file, globals(), host_tags_info)
+    exec (open(hosttags_file).read(), globals(), host_tags_info)
 
 map_tag_to_taggroup = {}
 map_tag_to_auxtags = {}
@@ -440,7 +440,7 @@ for filename in os.listdir("."):
             "ALL_SERVICES": "$ALL_SERVICES$",  # Placeholder
             "ANY_USER": "$ANY_USER$",  # Placeholder
         }
-        execfile(filename, globals(), file_vars)
+        exec (open(filename).read(), globals(), file_vars)
         all_file_vars[filename] = file_vars
     except Exception as e:
         print("Error parsing file %s: %s" % (filename, e))

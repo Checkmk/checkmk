@@ -248,7 +248,7 @@ class ConfigDomainDiskspace(ConfigDomain):
 
     def load(self, site_specific=False):
         cleanup_settings = {}
-        execfile(self.diskspace_config, {}, cleanup_settings)
+        exec (open(self.diskspace_config).read(), {}, cleanup_settings)
 
         if not cleanup_settings:
             return {}

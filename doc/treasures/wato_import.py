@@ -61,7 +61,7 @@ for line in csv_file:
 csv_file.close()
 
 host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}
-execfile("%s/../../multisite.d/wato/hosttags.mk" % pathlokal, globals(), host_tags_info)
+exec (open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(), globals(), host_tags_info)
 
 host_tag_mapping = {}
 aux_tag_mapping = {}

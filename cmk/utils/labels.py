@@ -137,7 +137,11 @@ class ABCDiscoveredLabelsStore(object):
 
     def load(self):
         # type: () -> Dict
-        return cmk.utils.store.load_data_from_file(str(self.file_path), default={})
+        # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
+        return {
+            k: v for k, v in cmk.utils.store.load_data_from_file(str(
+                self.file_path), default={}).iteritems() if isinstance(v, dict)
+        }
 
     def save(self, labels):
         # type: (Dict) -> None

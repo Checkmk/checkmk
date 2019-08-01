@@ -237,7 +237,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
                     "FOLDER_PATH": None,
                 })
 
-            execfile(_f, global_dict, global_dict)
+            exec (open(_f).read(), global_dict, global_dict)
 
             _new_hosts = set(all_hosts).difference(_hosts_before)
             _new_clusters = set(clusters.keys()).difference(_clusters_before)

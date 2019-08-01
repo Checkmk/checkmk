@@ -68,20 +68,27 @@ def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expe
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(mk_logwatch, tmpdir):
-    fake_config_dir = tmpdir.mkdir("test")
-    fake_config_dir.mkdir("logwatch.d").join("custom.cfg").open('w')
+def test_get_config_files(mk_logwatch, tmp_path):
+    fake_config_dir = tmp_path / "test"
+    fake_config_dir.mkdir()
+    (fake_config_dir / "logwatch.d").mkdir()
+    (fake_config_dir / "logwatch.d").joinpath("custom.cfg").open(mode="w")
 
-    expected = ['%s/logwatch.cfg' % fake_config_dir, '%s/logwatch.d/custom.cfg' % fake_config_dir]
+    expected = [
+        str(fake_config_dir / "logwatch.cfg"),
+        str(fake_config_dir / "logwatch.d/custom.cfg")
+    ]
 
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(mk_logwatch, tmpdir):
+def test_iter_config_lines(mk_logwatch, tmp_path):
     """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
     # setup
-    fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
-    fake_config_file.write("# this is a comment\nthis is a line   ")
+    fake_config_path = tmp_path / "test"
+    fake_config_path.mkdir()
+    fake_config_file = fake_config_path.joinpath("logwatch.cfg")
+    fake_config_file.write_text(u"# this is a comment\nthis is a line   ", encoding="utf-8")
     files = [str(fake_config_file)]
 
     read = list(mk_logwatch.iter_config_lines(files))
@@ -225,11 +232,14 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     assert status_filename == statusfile
 
 
-def test_read_status(mk_logwatch, tmpdir):
+def test_read_status(mk_logwatch, tmp_path):
     # setup
-    fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
-    fake_status_file.write("""/var/log/messages|7767698|32455445
-/var/test/x12134.log|12345|32444355""")
+    fake_status_path = tmp_path / "test"
+    fake_status_path.mkdir()
+    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
+    fake_status_file.write_text(u"""/var/log/messages|7767698|32455445
+/var/test/x12134.log|12345|32444355""",
+                                encoding="utf-8")
     file_path = str(fake_status_file)
 
     # execution
@@ -241,16 +251,18 @@ def test_read_status(mk_logwatch, tmpdir):
     }
 
 
-def test_save_status(mk_logwatch, tmpdir):
-    fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
-    fake_status_file.write("")
+def test_save_status(mk_logwatch, tmp_path):
+    fake_status_path = tmp_path / "test"
+    fake_status_path.mkdir()
+    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
+    fake_status_file.write_text(u"", encoding="utf-8")
     file_path = str(fake_status_file)
     fake_status = {
         '/var/log/messages': (7767698, 32455445),
         '/var/test/x12134.log': (12345, 32444355)
     }
     mk_logwatch.save_status(fake_status, file_path)
-    assert sorted(fake_status_file.read().splitlines()) == [
+    assert sorted(fake_status_file.read_text().splitlines()) == [
         '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
     ]
 

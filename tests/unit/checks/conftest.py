@@ -10,9 +10,9 @@ def check_manager():
 
 # patch cmk.utils.paths
 @pytest.fixture(autouse=True, scope="function")
-def patch_cmk_utils_paths(monkeypatch, tmpdir):
+def patch_cmk_utils_paths(monkeypatch, tmp_path):
     import cmk.utils.paths
-    var_dir_path = tmpdir / 'var/check_mk'
+    var_dir_path = tmp_path / 'var' / 'check_mk'
     # don't mkdir, check should be able to handle that.
     monkeypatch.setattr(cmk.utils.paths, "var_dir", str(var_dir_path))
 

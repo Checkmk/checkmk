@@ -15,24 +15,24 @@ ERRPT_OUTPUT = [
 ]
 
 
-def _prepare_mock_errpt(tmpdir, errpt_output):
-    errpt_name = str(tmpdir.join('errpt'))
+def _prepare_mock_errpt(tmp_path, errpt_output):
+    errpt_name = str(tmp_path.joinpath('errpt'))
     errpt_script = ''.join(['#!/bin/sh\n'] + ['echo "%s"\n' % line for line in errpt_output])
     with open(errpt_name, 'w') as errpt_file:
         errpt_file.write(errpt_script)
     os.chmod(errpt_name, 0o777)  # nosec
 
 
-def _get_env(tmpdir):
+def _get_env(tmp_path):
     env = os.environ.copy()
-    env.update({"PATH": '%s:%s' % (tmpdir, os.getenv("PATH")), "MK_VARDIR": "%s" % tmpdir})
+    env.update({"PATH": '%s:%s' % (tmp_path, os.getenv("PATH")), "MK_VARDIR": str(tmp_path)})
     return env
 
 
 class StateFile(object):
-    def __init__(self, tmpdir):
+    def __init__(self, tmp_path):
         super(StateFile, self).__init__()
-        self.name = str(tmpdir.join('mk_logwatch_aix.last_reported'))
+        self.name = str(tmp_path.joinpath('mk_logwatch_aix.last_reported'))
 
     def set(self, state):
         if state is None:
@@ -74,11 +74,11 @@ def _format_expected(lines):
             [[], [], []],
         ),
     ])
-def test_mk_logwatch_aix(tmpdir, errpt_output, last_reported, expectations):
+def test_mk_logwatch_aix(tmp_path, errpt_output, last_reported, expectations):
 
-    _prepare_mock_errpt(tmpdir, errpt_output)
-    env = _get_env(tmpdir)
-    statefile = StateFile(tmpdir)
+    _prepare_mock_errpt(tmp_path, errpt_output)
+    env = _get_env(tmp_path)
+    statefile = StateFile(tmp_path)
 
     for state, expected in zip(last_reported, expectations):
 

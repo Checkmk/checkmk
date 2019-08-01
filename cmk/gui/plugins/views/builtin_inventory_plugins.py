@@ -438,10 +438,11 @@ inventory_displayhints.update({
             "registry",
         ]
     },
-    ".software.applications.docker.num_containers_total": {"title": _("# Containers")},
-    ".software.applications.docker.num_containers_running": {"title": _("# Containers running")},
-    ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped")},
-    ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused")},
+    ".software.applications.docker.version": {"title": _("Version")},
+    ".software.applications.docker.num_containers_total": {"title": _("# Containers"), "short": _("Containers"),},
+    ".software.applications.docker.num_containers_running": {"title": _("# Containers running"), "short": _("Running"),},
+    ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped"), "short": _("Stopped"),},
+    ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused"), "short": _("Paused"),},
     ".software.applications.docker.num_images": {"title": _("# Images")},
     ".software.applications.docker.images:": {
         "title": _("Images"),
@@ -449,6 +450,7 @@ inventory_displayhints.update({
         "view": "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
+    ".software.applications.docker.images:*.size": {"paint": "size"},
     ".software.applications.docker.images:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
     ".software.applications.docker.images:*.repotags": {"title": _("Repository/Tag"), "paint": "csv_labels"},

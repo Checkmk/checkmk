@@ -33,12 +33,12 @@
 # 4 - BLUE:   availability is unknown
 # 5 - GREY:   unlicensed
 MAP_SERVER_STATUS = {
-    0: (1, "is disabled"),
-    1: (0, "is up and available"),
-    2: (2, "is currently not available"),
-    3: (2, "is not available"),
-    4: (1, "availability is unknown"),
-    5: (3, "is unlicensed")
+    '0': (1, "is disabled"),
+    '1': (0, "is up and available"),
+    '2': (2, "is currently not available"),
+    '3': (2, "is not available"),
+    '4': (1, "availability is unknown"),
+    '5': (3, "is unlicensed")
 }
 
 MAP_ENABLED = {
@@ -76,12 +76,13 @@ def parse_f5_bigip_vserver(info):
     for line in info:
         instance = vservers.setdefault(
             line[0], {
-                "ip_address": get_ip_address_human_readable(line[4]),
+                "status": line[1],
                 "enabled": line[2],
                 "detail": line[3],
+                "ip_address": get_ip_address_human_readable(line[4]),
             })
+
         for key, index in [
-            ("status", 1),
             ("connections_duration_min", 5),
             ("connections_duration_max", 6),
             ("connections_duration_mean", 7),
@@ -103,7 +104,7 @@ def parse_f5_bigip_vserver(info):
 
 def inventory_f5_bigip_vserver(parsed):
     for name, vserver in parsed.items():
-        if vserver["status"][0] in [1, 4]:  # Green and Blue
+        if vserver["status"] in ('1', '4'):  # Green and Blue
             yield name, {}
 
 
@@ -141,31 +142,29 @@ def check_f5_bigip_vserver(_item, params, data):
     if params is None:
         params = {}
 
-    state = int(data["enabled"] not in MAP_ENABLED)
-    enabled = MAP_ENABLED.get(data["enabled"], "in unknown state")
-    yield state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled)
+    enabled_state = int(data["enabled"] not in MAP_ENABLED)
+    enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
+    yield enabled_state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled_txt)
 
-    state, state_readable = MAP_SERVER_STATUS.get(data["status"][0],
-                                                  (3, "Unhandled status (%d)" % data["status"][0]))
-    state = params.get('state', {}).get(state_readable.replace(' ', '_'), state)
+    state_map = params.get('state', {})
+    state, state_readable = MAP_SERVER_STATUS.get(data["status"],
+                                                  (3, "Unhandled status (%s)" % data["status"]))
+    state = state_map.get(state_readable.replace(' ', '_'), state)
 
-    output = "State %s, Detail: %s" % (state_readable, data["detail"][0])
+    detail = data["detail"]
+    # Special handling: Statement from the network team:
+    # Not available => uncritical when the childrens are down
+    if data["status"] == '3' and detail.lower() == "the children pool member(s) are down":
+        state = state_map.get("children_pool_members_down_if_not_available", 0)
 
-    # Special handling
-    if data["status"][0] == 3:  # not available
-        # Statement from the network team, it's uncritical when the childrens are down
-        if data["detail"][0].lower() == "The children pool member(s) are down".lower():
-            state = params.get('state', {}).get("children_pool_members_down_if_not_available", 0)
-
-    yield state, output
+    yield state, "State %s, Detail: %s" % (state_readable, detail)
 
     aggregation = get_aggregated_values(data)
 
-    # Current number of connections
-    yield 0, "Client connections: %d" % aggregation["connections"], aggregation.items()
-
-    # New connections per time
-    yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
+    if "connections" in aggregation:
+        yield 0, "Client connections: %d" % aggregation["connections"], sorted(aggregation.items())
+    if "connections_rate" in aggregation:
+        yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
 
     aggregation["if_total_octets"] = aggregation["if_in_octets"] + aggregation["if_out_octets"]
     aggregation["if_total_pkts"] = aggregation["if_in_pkts"] + aggregation["if_out_pkts"]
@@ -194,21 +193,21 @@ check_info["f5_bigip_vserver"] = {
     "service_description"     : "Virtual Server %s",
     "has_perfdata"            : True,
     "snmp_info"               : (".1.3.6.1.4.1.3375.2.2.10", [
-                                    "13.2.1.1", # ltmVsStatusName
-                                    "13.2.1.2", # ltmVsStatusAvailState
-                                    "13.2.1.3", # ltmVsStatusEnabledState
-                                    "13.2.1.5", # ltmVsStatusDetailReason
-                                    "1.2.1.3",  # IP Address
-                                    "2.3.1.2",  # min conn duration
-                                    "2.3.1.3",  # max conn duration
-                                    "2.3.1.4",  # mean connection duration
-                                    "2.3.1.6",  # Client Packets In
-                                    "2.3.1.8",  # Client Packets Out
-                                    "2.3.1.7",  # Client Bytes In
-                                    "2.3.1.9",  # Client Bytes Out
-                                    "2.3.1.11", # Client Total Connections
-                                    "2.3.1.12", # Client Current Connections
-                                    "2.3.1.25", # packet_velocity_asic Total Connections
+                                    "13.2.1.1", #  0 ltmVsStatusName
+                                    "13.2.1.2", #  1 ltmVsStatusAvailState
+                                    "13.2.1.3", #  2 ltmVsStatusEnabledState
+                                    "13.2.1.5", #  3 ltmVsStatusDetailReason
+                                    "1.2.1.3",  #  4 IP Address
+                                    "2.3.1.2",  #  5 min conn duration
+                                    "2.3.1.3",  #  6 max conn duration
+                                    "2.3.1.4",  #  7 mean connection duration
+                                    "2.3.1.6",  #  8 Client Packets In
+                                    "2.3.1.8",  #  9 Client Packets Out
+                                    "2.3.1.7",  # 10 Client Bytes In
+                                    "2.3.1.9",  # 11 Client Bytes Out
+                                    "2.3.1.11", # 12 Client Total Connections
+                                    "2.3.1.12", # 13 Client Current Connections
+                                    "2.3.1.25", # 14 packet_velocity_asic Total Connections
                                ]),
     "snmp_scan_function"      : lambda oid: ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") \
                                       and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),

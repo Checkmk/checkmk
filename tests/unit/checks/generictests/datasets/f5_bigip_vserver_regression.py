@@ -10,7 +10,7 @@ info = [
      u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
     [u'/Common/www.wurmhole.univ_HTTP2HTTPS', u'4', u'1', (u"The children pool member(s) either don't"
      u" have service checking enabled, or service check results are not available yet"),
-     u'\xd4;xI', u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
+     u'\xd4;xI', u'', u'', u'', u'', u'', u'', u'', u'42', u'0', u''],
     [u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', u'4', u'1', (u"The children pool member(s) either"
      u" don't have service checking enabled, or service check results are not available yet"),
      u'\xd4;xK', u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
@@ -33,22 +33,27 @@ checks = {
     '': [
         (u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}, [
             (0, u'Virtual Server with IP 212.59.120.75 is enabled', []),
-            (1, u'State availability is unknown, Detail: T', []),
+            (1, (u'State availability is unknown, Detail: The children pool member(s) either'
+                 u' don\'t have service checking enabled, or service check results are not'
+                 u' available yet'), []),
             (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
-            (0, 'Rate: 0.00/sec', []),
         ]),
         (u'/Common/www.wurmhole.univ', {}, []),
         (u'/Common/www.wurmhole.univ_HTTP2HTTPS', {}, [
             (0, u'Virtual Server with IP 212.59.120.73 is enabled', []),
-            (1, u'State availability is unknown, Detail: T', []),
-            (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
+            (1, (u'State availability is unknown, Detail: The children pool member(s) either'
+                 u' don\'t have service checking enabled, or service check results are not'
+                 u' available yet'), []),
+            (0, 'Client connections: 0', [
+                ('connections', 0, None, None, None, None),
+                ('connections_rate', 0, None, None, None, None),
+            ]),
             (0, 'Rate: 0.00/sec', []),
         ]),
         (u'/Common/starfleet.space', {}, [
             (1, u'Virtual Server with IP 222.202.255.237 is in unknown state', []),
-            (1, u'State availability is unknown, Detail: T', []),
+            (1, u'State availability is unknown, Detail: To infinity and beyond!', []),
             (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
-            (0, 'Rate: 0.00/sec', []),
         ]),
     ],
 }

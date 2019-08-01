@@ -77,8 +77,14 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.iteritems())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+
+    labels = [
+        (tag_template % ":".join(l)).encode("utf-8") for l in sorted(host_config.labels.iteritems())
+    ]
+    console.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
         parents_list = host_config.nodes

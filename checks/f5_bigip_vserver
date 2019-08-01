@@ -140,23 +140,10 @@ def check_f5_bigip_vserver(_item, params, data):
     if params is None:
         params = {}
 
-    aggregation = get_aggregated_values(data)
-
-    # Current number of connections
-    yield 0, "Client connections: %d" % aggregation["connections"], aggregation.items()
-
-    # New connections per time
-    yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
-
     state, state_readable = MAP_SERVER_STATUS.get(data["status"][0],
                                                   (3, "Unhandled status (%d)" % data["status"][0]))
     state = params.get('state', {}).get(state_readable.replace(' ', '_'), state)
 
-    # vserver["enabled"]
-    # 0 - none
-    # 1 - enabled
-    # 2 - disabled
-    # 3 - disabledbyparent
     enabled = MAP_ENABLED[data["enabled"][0]]
 
     output = "Virtual Server with IP %s is %s, State %s, Detail: %s" % (data["ip"][0],\
@@ -169,6 +156,14 @@ def check_f5_bigip_vserver(_item, params, data):
             state = params.get('state', {}).get("children_pool_members_down_if_not_available", 0)
 
     yield state, output
+
+    aggregation = get_aggregated_values(data)
+
+    # Current number of connections
+    yield 0, "Client connections: %d" % aggregation["connections"], aggregation.items()
+
+    # New connections per time
+    yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
 
     aggregation["if_total_octets"] = aggregation["if_in_octets"] + aggregation["if_out_octets"]
     aggregation["if_total_pkts"] = aggregation["if_in_pkts"] + aggregation["if_out_pkts"]

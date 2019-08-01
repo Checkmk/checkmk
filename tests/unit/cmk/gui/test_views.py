@@ -5717,7 +5717,7 @@ def test_register_sorter(monkeypatch):
     assert sorter.ident == "abc"
     assert sorter.title == "A B C"
     assert sorter.columns == ["x"]
-    assert sorter.cmp.__name__ == cmpfunc.__name__
+    assert sorter.cmp.__name__ == '<lambda>'
 
 
 def test_get_needed_regular_columns(view):

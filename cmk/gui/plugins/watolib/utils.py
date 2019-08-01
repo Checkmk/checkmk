@@ -92,7 +92,7 @@ class ConfigDomain(object):
             return {}
 
         try:
-            execfile(filename, settings, settings)
+            exec (open(filename).read(), settings, settings)
 
             # FIXME: Do not modify the dict while iterating over it.
             for varname in list(settings.keys()):

@@ -83,7 +83,7 @@ def goto_werksdir():
 
 def load_config():
     global g_last_werk
-    execfile("config", globals(), globals())
+    exec (open("config").read(), globals(), globals())
     try:
         g_last_werk = int(file(".last").read())
     except:

@@ -37,7 +37,7 @@ import os
 settings = {}
 config_file = os.path.join(os.environ.get("MK_CONFDIR", "/etc/check_mk"), "memcached.cfg")
 if os.path.exists(config_file):
-    execfile(config_file, settings, settings)
+    exec (open(config_file).read(), settings, settings)
 
 if 'instances' in settings:
     print("<<<memcached>>>")

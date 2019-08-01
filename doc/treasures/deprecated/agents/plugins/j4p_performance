@@ -67,7 +67,7 @@ if instance is None:
     instance = str(port)
 
 if os.path.exists(conffile):
-    execfile(conffile)
+    exec (open(conffile).read())
 
 # We have to deal with socket timeouts. Python > 2.6
 # supports timeout parameter for the urllib2.urlopen method

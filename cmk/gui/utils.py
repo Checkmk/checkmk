@@ -183,7 +183,7 @@ def load_web_plugins(forwhat, globalvars):
 
             try:
                 if fn.endswith(".py") and not os.path.exists(file_path + "c"):
-                    execfile(file_path, globalvars)
+                    exec (open(file_path).read(), globalvars)
 
                 elif fn.endswith(".pyc"):
                     code_bytes = file(file_path).read()[8:]

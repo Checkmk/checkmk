@@ -805,7 +805,7 @@ class MKBackupStream(object):
 
         variables = {"keys": {}}
         if os.path.exists(path):
-            execfile(path, variables, variables)
+            exec (open(path).read(), variables, variables)
         return variables["keys"]
 
 

@@ -151,7 +151,7 @@ class BIManagement(object):
             }
             vars_.update(self._bi_constants)
             if os.path.exists(filename):
-                execfile(filename, vars_, vars_)
+                exec (open(filename).read(), vars_, vars_)
             else:
                 exec (bi_example, vars_, vars_)
 

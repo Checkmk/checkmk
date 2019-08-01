@@ -50,6 +50,7 @@
 import abc
 import copy
 import errno
+import logging
 from multiprocessing.pool import ThreadPool
 from multiprocessing import TimeoutError
 import os
@@ -67,7 +68,6 @@ import six
 
 import cmk
 import cmk.utils.paths
-import cmk.utils.log
 
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -239,7 +239,7 @@ class LDAPUserConnector(UserConnector):
     def connect_server(self, server):
         try:
             trace_args = {}
-            if self._logger.isEnabledFor(cmk.utils.log.DEBUG):
+            if self._logger.isEnabledFor(logging.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_args["trace_level"] = 2

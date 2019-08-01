@@ -1,8 +1,8 @@
+import logging
 import time
 import multiprocessing
 import sys
 import pytest  # type: ignore
-from pathlib2 import Path
 import testlib  # type: ignore
 
 import cmk.utils.paths
@@ -16,9 +16,9 @@ import cmk.gui.log
 
 @pytest.fixture(autouse=True)
 def debug_logging():
-    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.DEBUG})
+    cmk.gui.log.set_log_levels({"cmk.web": logging.DEBUG})
     yield
-    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.INFO})
+    cmk.gui.log.set_log_levels({"cmk.web": logging.INFO})
 
 
 def test_registered_background_jobs():

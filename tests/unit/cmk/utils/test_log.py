@@ -1,4 +1,5 @@
 import pytest  # type: ignore
+import logging
 import cmk.utils.log
 
 
@@ -38,22 +39,22 @@ def test_set_verbosity():
     l = cmk.utils.log.get_logger("test_logger")
     assert l.getEffectiveLevel() == cmk.utils.log.INFO
     assert l.is_verbose() is False
-    assert l.is_very_verbose() is False
+    assert l.isEnabledFor(logging.DEBUG) is False
 
     cmk.utils.log.set_verbosity(0)
     assert l.getEffectiveLevel() == cmk.utils.log.INFO
     assert l.is_verbose() is False
-    assert l.is_very_verbose() is False
+    assert l.isEnabledFor(logging.DEBUG) is False
 
     cmk.utils.log.set_verbosity(1)
     assert l.getEffectiveLevel() == cmk.utils.log.VERBOSE
     assert l.is_verbose() is True
-    assert l.is_very_verbose() is False
+    assert l.isEnabledFor(logging.DEBUG) is False
 
     cmk.utils.log.set_verbosity(2)
     assert l.getEffectiveLevel() == cmk.utils.log.DEBUG
     assert l.is_verbose() is True
-    assert l.is_very_verbose() is True
+    assert l.isEnabledFor(logging.DEBUG) is True
 
     with pytest.raises(NotImplementedError):
         cmk.utils.log.set_verbosity(3)

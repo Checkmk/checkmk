@@ -87,9 +87,6 @@ class CMKLogger(_logger_class):
     def is_verbose(self):
         return self.isEnabledFor(VERBOSE)
 
-    def is_very_verbose(self):
-        return self.isEnabledFor(DEBUG)
-
 
 _logging.setLoggerClass(CMKLogger)
 

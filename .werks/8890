@@ -1,0 +1,17 @@
+Title: Windows Agent 1.6: Configuration reloading had been restructured
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564672891
+Class: feature
+
+By default the Agent reloads the configuration files only on the start.
+
+To manually reload all configuration files you can use command line:
+check_mk_agent.exe reload_config
+
+To automatically reload configuration files on every connect(the behavior 
+from beta 4 and earlier) you can set the environment variable CMA_AUTO_RELOAD 
+to yes

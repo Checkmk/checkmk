@@ -48,8 +48,11 @@ class RulesetMatchObject(object):
         self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels
-        self.service_cache_id = (self.service_description, hash(frozenset(self.service_labels))
+        self.service_cache_id = (self.service_description, self._generate_hash(self.service_labels))
                                  if self.service_labels else None)
+
+    def _generate_hash(self, service_labels):
+        return hash(frozenset(self.service_labels))
 
     def to_dict(self):
         # type: () -> Dict

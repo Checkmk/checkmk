@@ -90,13 +90,6 @@ class CMKLogger(_logger_class):
     def is_very_verbose(self):
         return self.isEnabledFor(DEBUG)
 
-    def set_format(self, fmt):
-        handler = _logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(get_formatter(fmt))
-
-        del self.handlers[:]  # Remove all previously existing handlers
-        self.addHandler(handler)
-
 
 _logging.setLoggerClass(CMKLogger)
 

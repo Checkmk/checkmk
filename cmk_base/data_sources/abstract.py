@@ -29,6 +29,8 @@ import os
 import socket
 import time
 import abc
+import logging
+import sys
 
 import cmk.utils.log
 
@@ -95,8 +97,11 @@ class DataSource(object):
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
         self._logger.propagate = False
-        self._logger.set_format(" %s[%s%s%s]%s %%(message)s" %
-                                (tty.bold, tty.normal, self.id(), tty.bold, tty.normal))
+        handler = logging.StreamHandler(stream=sys.stdout)
+        fmt = " %s[%s%s%s]%s %%(message)s" % (tty.bold, tty.normal, self.id(), tty.bold, tty.normal)
+        handler.setFormatter(logging.Formatter(fmt))
+        del self._logger.handlers[:]  # Remove all previously existing handlers
+        self._logger.addHandler(handler)
 
     def run(self, hostname=None, ipaddress=None, get_raw_data=False):
         """Wrapper for self._execute() that unifies several things:

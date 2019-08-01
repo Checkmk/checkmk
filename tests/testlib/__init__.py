@@ -1324,7 +1324,8 @@ class CMKWebSession(WebSession):
                  attributes=None,
                  cluster_nodes=None,
                  create_folders=True,
-                 expect_error=False):
+                 expect_error=False,
+                 verify_set_attributes=True):
         if attributes is None:
             attributes = {}
 
@@ -1341,15 +1342,16 @@ class CMKWebSession(WebSession):
 
         assert result is None
 
-        host = self.get_host(hostname)
+        if verify_set_attributes:
+            host = self.get_host(hostname)
 
-        assert host["hostname"] == hostname
-        assert host["path"] == folder
+            assert host["hostname"] == hostname
+            assert host["path"] == folder
 
-        # Ignore the automatically generated meta_data attribute for the moment
-        del host["attributes"]["meta_data"]
+            # Ignore the automatically generated meta_data attribute for the moment
+            del host["attributes"]["meta_data"]
 
-        assert host["attributes"] == attributes
+            assert host["attributes"] == attributes
 
     # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
     def add_hosts(self, create_hosts):

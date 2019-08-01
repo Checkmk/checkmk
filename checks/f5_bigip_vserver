@@ -107,22 +107,18 @@ def inventory_f5_bigip_vserver(parsed):
 
 
 def get_aggregated_values(vserver):
-    summed_values = {}
+    aggregation = collections.Counter()
     now = time.time()
 
+    counter_keys = {
+        "if_in_pkts", "if_out_pkts", "if_in_octets", "if_out_octets", "connections_rate",
+        "packet_velocity_asic"
+    }
     # Calculate counters
-    for what in [
-            "if_in_pkts",
-            "if_out_pkts",
-            "if_in_octets",
-            "if_out_octets",
-            "connections_rate",
-            "packet_velocity_asic",
-    ]:
-        summed_values.setdefault(what, 0)
+    for what in counter_keys & set(vserver.keys()):
         for idx, entry in enumerate(vserver[what]):
             rate = get_rate("%s.%s" % (what, idx), now, entry)
-            summed_values[what] += rate
+            aggregation[what] += rate
 
     # Calucate min/max/sum/mean values
     for what, function in [
@@ -131,13 +127,11 @@ def get_aggregated_values(vserver):
         ("connections", sum),
         ("connections_duration_mean", lambda x: float(sum(x) / len(x))),
     ]:
-        value_list = [x for x in vserver[what] if x != 0]
-        if not value_list:
-            summed_values[what] = 0
-        else:
-            summed_values[what] = function(value_list)
+        value_list = vserver.get(what)
+        if value_list:
+            aggregation[what] = function(value_list)
 
-    return summed_values
+    return aggregation
 
 
 @get_parsed_item_data
@@ -146,13 +140,13 @@ def check_f5_bigip_vserver(_item, params, data):
     if params is None:
         params = {}
 
-    summed_values = get_aggregated_values(data)
+    aggregation = get_aggregated_values(data)
 
     # Current number of connections
-    yield 0, "Client connections: %d" % summed_values["connections"], summed_values.items()
+    yield 0, "Client connections: %d" % aggregation["connections"], aggregation.items()
 
     # New connections per time
-    yield 0, "Rate: %.2f/sec" % summed_values["connections_rate"]
+    yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
 
     state, state_readable = MAP_SERVER_STATUS.get(data["status"][0],
                                                   (3, "Unhandled status (%d)" % data["status"][0]))
@@ -176,15 +170,14 @@ def check_f5_bigip_vserver(_item, params, data):
 
     yield state, output
 
-    summed_values[
-        "if_total_octets"] = summed_values["if_in_octets"] + summed_values["if_out_octets"]
-    summed_values["if_total_pkts"] = summed_values["if_in_pkts"] + summed_values["if_out_pkts"]
+    aggregation["if_total_octets"] = aggregation["if_in_octets"] + aggregation["if_out_octets"]
+    aggregation["if_total_pkts"] = aggregation["if_in_pkts"] + aggregation["if_out_pkts"]
     for param_var, levels in params.items():
         if param_var == "state":
             continue
         if param_var.endswith("_lower") and isinstance(levels, tuple):
             levels = (None, None) + levels
-        value = summed_values[param_var.rstrip("_lower")]
+        value = aggregation[param_var.rstrip("_lower")]
         state, infotext, _extra_perfdata = check_levels(
             value,
             param_var,

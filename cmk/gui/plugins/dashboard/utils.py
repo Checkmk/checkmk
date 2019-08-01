@@ -304,7 +304,7 @@ class Dashlet(object):
             return None
 
         urlfunc = self._dashlet_spec['urlfunc']
-        if callable(urlfunc):
+        if hasattr(urlfunc, '__call__'):
             return urlfunc()
 
         if '.' in urlfunc:

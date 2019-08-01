@@ -2009,7 +2009,7 @@ def get_painter_title_for_choices(painter):
     if painter.columns == ["site"]:
         info_title = _("Site")
 
-    if callable(painter.title):
+    if hasattr(painter.title, '__call__'):
         title = painter.title()
     else:
         title = painter.title

@@ -34,7 +34,7 @@ def reference_result(deviation):
     ]
     if isinstance(deviation, tuple):
         reference[deviation[0]] = deviation[1]
-    if callable(deviation):
+    if hasattr(deviation, '__call__'):
         deviation(reference)
 
     return reference

@@ -676,7 +676,7 @@ def test_registered_datasources():
         ds = ds_class()
         spec = expected[ds.ident]
         assert ds.title == spec["title"]
-        if callable(ds.table):
+        if hasattr(ds.table, '__call__'):
             assert ("func", ds.table.__name__) == spec["table"]
         elif isinstance(ds.table, tuple):
             assert spec["table"][0] == "tuple"
@@ -4022,17 +4022,17 @@ def test_registered_painters():
         spec = expected[painter.ident]
 
         if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert callable(painter.title)
+            assert hasattr(painter.title, '__call__')
         else:
             assert painter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
-            assert callable(painter.columns)
+            assert hasattr(painter.columns, '__call__')
         else:
             assert painter.columns == spec["columns"]
 
         if isinstance(spec.get("short"), tuple) and spec["short"][0] == "func":
-            assert callable(painter.short_title)
+            assert hasattr(painter.short_title, '__call__')
         else:
             assert painter.short_title == spec.get("short", spec["title"])
 
@@ -5687,12 +5687,12 @@ def test_registered_sorters():
         spec = expected[sorter.ident]
 
         if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert callable(sorter.title)
+            assert hasattr(sorter.title, '__call__')
         else:
             assert sorter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
-            assert callable(sorter.columns)
+            assert hasattr(sorter.columns, '__call__')
         else:
             assert sorter.columns == spec["columns"]
 

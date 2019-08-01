@@ -632,7 +632,7 @@ def inv_titleinfo(invpath, node):
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
-        if callable(title):
+        if hasattr(title, '__call__'):
             title = title(node)
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",

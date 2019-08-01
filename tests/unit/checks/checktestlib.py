@@ -247,7 +247,7 @@ def assertCheckResultsEqual(actual, expected):
         for suba, sube in zip(actual.subresults, expected.subresults):
             assertBasicCheckResultsEqual(suba, sube)
         len_ac, len_ex = len(actual.subresults), len(expected.subresults)
-        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (len_ac, len_ex)
+        assert len_ac == len_ex, "expected %d subresults, but got %d instead" % (len_ex, len_ac)
 
 
 class DiscoveryEntry(Tuploid):

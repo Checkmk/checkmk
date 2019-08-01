@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 """Defaults for rule pack and configuration"""
 
+import logging
 from typing import Any, AnyStr, Dict, List  # pylint: disable=unused-import
-import cmk.utils.log
 
 from cmk.utils.i18n import _
 
@@ -57,12 +57,12 @@ def default_config():
         "debug_rules": False,
         "rule_optimizer": True,
         "log_level": {
-            "cmk.mkeventd": cmk.utils.log.INFO,
-            "cmk.mkeventd.EventServer": cmk.utils.log.INFO,
-            "cmk.mkeventd.EventServer.snmp": cmk.utils.log.INFO,
-            "cmk.mkeventd.EventStatus": cmk.utils.log.INFO,
-            "cmk.mkeventd.StatusServer": cmk.utils.log.INFO,
-            "cmk.mkeventd.lock": cmk.utils.log.INFO,
+            "cmk.mkeventd": logging.INFO,
+            "cmk.mkeventd.EventServer": logging.INFO,
+            "cmk.mkeventd.EventServer.snmp": logging.INFO,
+            "cmk.mkeventd.EventStatus": logging.INFO,
+            "cmk.mkeventd.StatusServer": logging.INFO,
+            "cmk.mkeventd.lock": logging.INFO,
         },
         "log_rulehits": False,
         "log_messages": False,

@@ -58,17 +58,8 @@ from typing import Any  # pylint: disable=unused-import
 # levels, this would force us to log normal stuff with a WARNING level, which
 # looks wrong.
 
-# Users should be able to set log levels without importing "logging"
-
-CRITICAL = _logging.CRITICAL
-ERROR = _logging.ERROR
-WARNING = _logging.WARNING
-INFO = _logging.INFO
-DEBUG = _logging.DEBUG
-
 # We need an additional log level between INFO and DEBUG to reflect the
 # verbose() and vverbose() mechanisms of Check_MK.
-
 VERBOSE = 15
 
 _logger_class = _logging.getLoggerClass()  # type: Any
@@ -94,7 +85,7 @@ _logging.setLoggerClass(CMKLogger)
 # Python 2.7+
 logger = _logging.getLogger("cmk")
 logger.addHandler(_logging.NullHandler())
-logger.setLevel(INFO)
+logger.setLevel(_logging.INFO)
 
 
 def get_logger(name):
@@ -177,13 +168,13 @@ def set_verbosity(verbosity):
       2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
-        logger.setLevel(INFO)
+        logger.setLevel(_logging.INFO)
 
     elif verbosity == 1:
         logger.setLevel(VERBOSE)
 
     elif verbosity == 2:
-        logger.setLevel(DEBUG)
+        logger.setLevel(_logging.DEBUG)
 
     else:
         raise NotImplementedError()

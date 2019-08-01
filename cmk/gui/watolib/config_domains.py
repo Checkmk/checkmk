@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import errno
+import logging
 import os
 import re
 import signal
@@ -148,7 +149,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
     def default_globals(self):
         return {
             "liveproxyd_log_levels": {
-                "cmk.liveproxyd": cmk.utils.log.INFO,
+                "cmk.liveproxyd": logging.INFO,
             },
             "liveproxyd_default_connection_params":
                 ConfigDomainLiveproxy.connection_params_defaults(),

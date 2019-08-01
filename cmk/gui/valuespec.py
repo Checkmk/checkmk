@@ -41,6 +41,7 @@ from enum import Enum
 import hashlib
 import ipaddress  # type: ignore
 import json
+import logging
 import math
 import numbers
 import os
@@ -4859,15 +4860,15 @@ class SiteChoice(DropdownChoice):
 
 class LogLevelChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs.setdefault("default_value", cmk.utils.log.INFO)
+        kwargs.setdefault("default_value", logging.INFO)
         kwargs.update({
             "choices": [
-                (cmk.utils.log.CRITICAL, _("Critical")),
-                (cmk.utils.log.ERROR, _("Error")),
-                (cmk.utils.log.WARNING, _("Warning")),
-                (cmk.utils.log.INFO, _("Informational")),
+                (logging.CRITICAL, _("Critical")),
+                (logging.ERROR, _("Error")),
+                (logging.WARNING, _("Warning")),
+                (logging.INFO, _("Informational")),
                 (cmk.utils.log.VERBOSE, _("Verbose")),
-                (cmk.utils.log.DEBUG, _("Debug")),
+                (logging.DEBUG, _("Debug")),
             ],
         })
         super(LogLevelChoice, self).__init__(**kwargs)

@@ -197,29 +197,3 @@ def set_verbosity(verbosity):
 
     else:
         raise NotImplementedError()
-
-
-# TODO: Experiment. Not yet used.
-class LogMixin(object):
-    """Inherit from this class to provide logging support.
-
-    Makes a logger available via "self.logger" for objects and
-    "self.cls_logger" for the class.
-    """
-    __parent_logger = None
-    __logger = None
-    __cls_logger = None
-
-    @property
-    def _logger(self):
-        if not self.__logger:
-            parent = self.__parent_logger or logger
-            self.__logger = parent.getChild('.'.join([self.__class__.__name__]))
-        return self.__logger
-
-    @classmethod
-    def _cls_logger(cls):
-        if not cls.__cls_logger:
-            parent = cls.__parent_logger or logger
-            cls.__cls_logger = parent.getChild('.'.join([cls.__name__]))
-        return cls.__cls_logger

@@ -1102,8 +1102,8 @@ class APICallOther(APICallCollection):
                 hostname, counts[hostname][3])
             watolib.add_service_change(host, "set-autochecks", message)
 
-        msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d"
-               ) % tuple(counts[hostname])
+        msg = _("Service discovery successful. Added %d, removed %d, kept %d, total %d services "
+                "and %d new, %d total host labels") % tuple(counts[hostname])
         return msg
 
     def _activate_changes(self, request):

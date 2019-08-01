@@ -1,0 +1,10 @@
+Title: Fix adding single service metrics to custom graphs
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0b5
+Date: 1564644431
+Class: fix
+
+

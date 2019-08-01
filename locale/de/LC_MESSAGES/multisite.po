@@ -478,6 +478,10 @@ msgstr "%s größer als"
 msgid "%s latency"
 msgstr "%s Latenz"
 
+#, fuzzy, python-format
+msgid "%s matching labels: %s"
+msgstr "Host mit übereinstimmenden Labels: %s"
+
 #, python-format
 msgid "%s may be missing, if must not be empty if it is set."
 msgstr "%s fehlt (möglicherweise) - darf nicht leer sein, wenn gesetzt."
@@ -1324,6 +1328,16 @@ msgstr ""
 "automatisch OK, da er nicht exakt ermitteln kann wie der Speicherbedarf der "
 "Apache-Prozesse sein wird.</p>"
 
+#, python-format
+msgid ""
+"<p>The control group information is currently only specified by the linux "
+"agent (cgroup). If it is present and this rule is set, the inventory will "
+"only trigger if the control group of the corresponding process matches. For "
+"instance: you can use this rule to exclude all processes belonging to a "
+"docker container by specifying the expression \"%s\" (without the quotes), "
+"and selecting \"%s\".</p>"
+msgstr ""
+
 msgid ""
 "<p>The process name may contain one or more occurances of <tt>%s</tt>. If you "
 "do this, then the pattern must be a regular expression and be prefixed with "
@@ -1542,10 +1556,11 @@ msgstr ""
 "dieser Regel aufgelistet werden, benutzen den Schnittstellen-Check mit 32bit-"
 "Zählern."
 
+#, fuzzy
 msgid ""
 "A delay can be configured here so that multiple changes can be activated in "
-"one go. This avoids frequent core reloads in situations with frequent "
-"services changes."
+"one go. This avoids frequent activation of changes in situations with "
+"frequent services changes."
 msgstr ""
 "Hier kann eine Verzögerung konfiguriert werden, so dass mehrere Änderungen "
 "auf einmal aktiviert werden können. Dadurch werden häufige Core-Reloads in "
@@ -4416,8 +4431,11 @@ msgstr ""
 "tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs (die "
 "relativ zu <tt>check_mk/</tt> sind) verwenden."
 
-msgid "An optional comment that explains the purpose of this rule."
-msgstr "Ein optionaler Kommentar, der die Aufgabe der Regel beschreibt."
+msgid ""
+"An optional comment that may be used to explain the purpose of this object. "
+"The comment is only visible in this dialog and may help other users "
+"understanding the intentions of the configured attributes."
+msgstr ""
 
 msgid "Analyse"
 msgstr "Analyse"
@@ -5097,8 +5115,13 @@ msgstr "Automatisches Löschen von Hosts ohne Huckepackdaten"
 msgid "Automatically discover LDAP server"
 msgstr "LDAP-Server automatisch ermitteln"
 
-msgid "Automatically execute service discovery"
-msgstr "Automatische Ausführung der Serviceerkennung"
+#, fuzzy
+msgid ""
+"Automatically execute a service discovery on all new hosts created by this "
+"connection. New services will be added to the monitoring in this step."
+msgstr ""
+"Bei der Serviceerkennung von Brocade-Switchen werden nur solche Ports in die "
+"Überwachung aufgenommen, bei denen der operative Status hier gelistet ist."
 
 msgid "Automatically invalidate notification"
 msgstr "Alarm automatisch verwerfen"
@@ -8512,6 +8535,11 @@ msgstr "Konfiguration der Check_MK Hardware/Software-Inventur"
 msgid "Configuration of update plugin"
 msgstr "Konfiguration des Updateplugins"
 
+msgid ""
+"Configuration options for the creation of piggyback hosts. The first matching "
+"rule is used. You have to specify at least one rule to create hosts."
+msgstr ""
+
 msgid "Configuration variable:"
 msgstr "Konfigurationsvariable:"
 
@@ -9206,6 +9234,10 @@ msgstr "Suche verfeinern"
 
 msgid "Control encryption of data sent from agent to host."
 msgstr "Verschlüsselung der Daten vom Agenten"
+
+#, fuzzy
+msgid "Control group:"
+msgstr "Kontaktgruppen"
 
 msgid "Controller"
 msgstr "Controller"
@@ -12970,6 +13002,18 @@ msgstr ""
 msgid "Do you really want to switch the event daemon to %s mode?"
 msgstr "Wollen Sie den Ereignis Daemon in %s Modus umschalten?"
 
+#, fuzzy
+msgid "Docker Containers"
+msgstr "Docker Container"
+
+#, fuzzy
+msgid "Docker Disk Usage"
+msgstr "Docker Node Festplattennutzung"
+
+#, fuzzy
+msgid "Docker Disk Usage Count"
+msgstr "Nachrichtenanzahl"
+
 msgid "Docker containers"
 msgstr "Docker Container"
 
@@ -13221,8 +13265,8 @@ msgstr ""
 "Aggregation nur einmal haben. Hinweis: Sie können im Titel der der Toplevel-"
 "Aggregation Argumente verwenden, wie <tt>Host $HOST$</tt>."
 
-#, python-format
-msgid "Duplicate tag id in auxilary tags: %s"
+#, fuzzy, python-format
+msgid "Duplicate tag ID \"%s\" in auxilary tags"
 msgstr "Doppeltes Hostmerkmal: %s"
 
 msgid "Duration"
@@ -13267,6 +13311,10 @@ msgstr "Dynamische Konfiguration"
 
 msgid "Dynamic Token Bucket"
 msgstr "Dynamischer Token Bucket"
+
+#, fuzzy
+msgid "Dynamic config"
+msgstr "Dynamische Konfiguration"
 
 msgid "Dynamic configuration"
 msgstr "Dynamische Konfiguration"
@@ -14662,6 +14710,10 @@ msgstr "Jeden (Rundruf)"
 msgid "Exact RWVDMS name or regex"
 msgstr "Genauer RWVDMS-Name oder Regex"
 
+#, fuzzy
+msgid "Exact content of the operating system control group info"
+msgstr "Exakter Name des Betriebssystembenutzers"
+
 msgid "Exact match"
 msgstr "Genaue Übereinstimmung"
 
@@ -15694,12 +15746,6 @@ msgstr "Gruppen-Filter (nur in speziellen Situationen)"
 msgid "Filter aggregations"
 msgstr "Aggregationen"
 
-msgid "Filter by name"
-msgstr "Nach Name filtern"
-
-msgid "Filter by source host"
-msgstr "Filtern nach Quellhost"
-
 msgid "Filter files by age"
 msgstr "Filtern von Dateien nach Alter"
 
@@ -15919,9 +15965,6 @@ msgstr "Ordner"
 #, python-format
 msgid "Folder %s does not exist"
 msgstr "Der Ordner %s existiert nicht"
-
-msgid "Folder Properties"
-msgstr "Ordnereigenschaften"
 
 msgid "Folder Selection"
 msgstr "Ordnerauswahl"
@@ -16865,6 +16908,10 @@ msgstr ""
 msgid "Group"
 msgstr "Gruppe"
 
+#, fuzzy
+msgid "Group \"Activate changes\" for up to"
+msgstr "Aktivierung gruppieren bis zu"
+
 msgid "Group Base DN"
 msgstr "Gruppen Base DN"
 
@@ -16873,9 +16920,6 @@ msgstr "Gruppen Basis-DN"
 
 msgid "Group Werks by"
 msgstr "Werks gruppieren nach"
-
-msgid "Group activation for up to"
-msgstr "Aktivierung gruppieren bis zu"
 
 msgid "Group discovery and activation for up to"
 msgstr "Gruppenerkennung und aktivierung für bis zu"
@@ -18460,10 +18504,6 @@ msgstr "Hostverwaltung"
 msgid "Host match list"
 msgstr "Host-Bedingungen"
 
-#, python-format
-msgid "Host matching labels: %s"
-msgstr "Host mit übereinstimmenden Labels: %s"
-
 msgid "Host name"
 msgstr "Hostname"
 
@@ -18871,8 +18911,8 @@ msgstr "Sichtbarkeit von Hosts/Services (Webservice, Veraltet)"
 msgid "Hosts: %d created, %d modified, %d deleted"
 msgstr "Hosts: %d erstellt, %d geändert, %d gelöscht"
 
-#, python-format
-msgid "Hosts: %d total, %d succeeded, %d skipped, %d failed"
+#, fuzzy, python-format
+msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Hosts: %d total, %d erfolgreich, %d übersprungen, %d gescheitert"
 
 msgid "Hostsystem sensor alerts"
@@ -24345,10 +24385,6 @@ msgstr ""
 msgid "Make stored reports available for other users"
 msgstr "Gespeicherte Bereichte für alle Benutzer sichtbar machen"
 
-#, python-format
-msgid "Make the outcome of the ruleset <b>%s</b><br>"
-msgstr "Ausgabe des Regelsatzes <b>%s</b><br>"
-
 msgid ""
 "Make the rule match only if the event has a certain syslog facility. Messages "
 "not having a facility are classified as <tt>user</tt>."
@@ -24649,6 +24685,10 @@ msgstr "Servicegruppen"
 
 msgid "Match Service Groups (regex)"
 msgstr "Servicegruppen matchen (Regex)"
+
+#, fuzzy
+msgid "Match all control groups"
+msgstr "Hostgruppen"
 
 msgid "Match all nodes"
 msgstr "Alle Nodes"
@@ -25852,6 +25892,14 @@ msgstr "Monitoring State wenn ein Service überhaupt nicht gefunden wird."
 msgid "Monitoring state if service is active"
 msgstr "Monitoring State falls der Service aktiv ist"
 
+#, fuzzy
+msgid "Monitoring state if service is failed"
+msgstr "Monitoring State falls der Service aktiv ist"
+
+#, fuzzy
+msgid "Monitoring state if service is inactive"
+msgstr "Monitoring State falls der Service aktiv ist"
+
 msgid "Monitoring state requirement"
 msgstr "Überwachungszustandsanforderung"
 
@@ -26419,6 +26467,9 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
+msgid "Negative match (Exclude matching hosts from the set)"
+msgstr ""
+
 msgid "Negotiate SSL"
 msgstr "SSL-Verbindungsaufbau"
 
@@ -26565,7 +26616,8 @@ msgstr "Netzwerke"
 msgid "Never analyzed/vacuumed tables"
 msgstr "Niemals ausgewertete/vakuumierte Tabellen"
 
-msgid "Never do activate changes in the following time ranges"
+#, fuzzy
+msgid "Never do \"Activate changes\" in the following time ranges"
 msgstr "Niemals Änderungen in folgenden Zeitbereichen aktivieren"
 
 msgid "Never do discovery or activate changes in the following time ranges"
@@ -28292,6 +28344,13 @@ msgstr ""
 "echten Updateserver kommuniziert. Wenn Sie selbstsignierte Zertifikate "
 "nutzen, tragen Sie diese Zertifikate hier ein."
 
+msgid "Only add hosts from matching source hosts"
+msgstr ""
+
+#, fuzzy
+msgid "Only add matching hosts"
+msgstr "Keine passenden Hostname"
+
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
 "check plugins. Note: Host notifications never match this rule if this option "
@@ -28304,16 +28363,19 @@ msgstr ""
 msgid "Only bulk notifications during the following timeperiod"
 msgstr "Sammelalarme nur während der folgenden Zeitperiode erzeugen"
 
-msgid "Only care about hosts that match one of these regular expressions."
-msgstr ""
-"Nur Hosts behandeln, die auf einen der angegebenen regulären Ausdrücke passen."
-
+#, fuzzy
 msgid ""
-"Only care about hosts that receive piggyback data from hosts matching one of "
-"these regular expressions."
+"Only care about hosts that receive piggyback data from hosts which name "
+"matches one of these regular expressions."
 msgstr ""
 "Nur Hosts behandeln, die ihre Huckepack-Daten von einem Host erhalten, auf "
 "einen der angegebenen regulären Ausdrücke passen."
+
+#, fuzzy
+msgid ""
+"Only care about hosts with names that match one of these regular expressions."
+msgstr ""
+"Nur Hosts behandeln, die auf einen der angegebenen regulären Ausdrücke passen."
 
 msgid "Only check during the following times of the day"
 msgstr "Nur während der folgenden Tageszeiten prüfen"
@@ -28515,6 +28577,10 @@ msgstr "Betriebssystemressourcen"
 
 msgid "Operating speed"
 msgstr "Ausführungsgeschwindigkeit"
+
+#, fuzzy
+msgid "Operating system control group information"
+msgstr "Service-Kontaktinformation"
 
 msgid "Operating systems"
 msgstr "Betriebssysteme"
@@ -29865,24 +29931,28 @@ msgstr "Empfangene Phantom Unterbrechungen"
 msgid "Phase"
 msgstr "Phase"
 
-#, python-format
-msgid "Phase 1: Executing on %r"
+#, fuzzy, python-format
+msgid "Phase 1: Executing on site \"%s\""
 msgstr "Phase 1: Ausführung auf %r"
 
-#, python-format
-msgid "Phase 1: Fetching from %r"
+#, fuzzy, python-format
+msgid "Phase 1: Fetching from site \"%s\""
 msgstr "Phase 1: Holen von %r"
 
-msgid "Phase 2: Activation"
+#, fuzzy
+msgid "Phase 2: Activating changes"
 msgstr "Phase 2: Aktivierung"
 
-msgid "Phase 2: Extract result"
+#, fuzzy
+msgid "Phase 2: Extracting result"
 msgstr "Phase 2: Ergebnis extrahieren"
 
-msgid "Phase 2: Fetch existing hosts"
+#, fuzzy
+msgid "Phase 2: Fetching existing hosts"
 msgstr "Phase 2: Bestehende Hosts holen"
 
-msgid "Phase 2: Update config"
+#, fuzzy
+msgid "Phase 2: Updating config"
 msgstr "Phase 2: Aktualisieren der Konfiguration"
 
 msgid "Phase Merging"
@@ -29932,6 +30002,10 @@ msgstr "Klavier"
 
 msgid "Piggyback"
 msgstr "Huckepack"
+
+#, fuzzy
+msgid "Piggyback creation options"
+msgstr "Huckepack-Informationen für andere Hosts"
 
 msgid "Piggyback data"
 msgstr "Huckepackdaten"
@@ -30186,15 +30260,6 @@ msgstr ""
 "wurde bevor Sie die Instanz starten."
 
 msgid ""
-"Please note that any backslashes need to be escaped using a backslash, for "
-"example you need to insert <tt>C:\\\\windows\\\\</tt> if you want to match "
-"<tt>c:\\windows\\</tt>."
-msgstr ""
-"Bitte beachten Sie, dass alle Backslashes (<tt>\\</tt>) mit einem weiteren "
-"Backslash entwertet werden müssen. Beispielsweise müssen Sie <tt>C:\\\\windows"
-"\\\\</tt> eingeben, wenn Sie auf <tt>c:\\windows\\</tt> prüfen wollen."
-
-msgid ""
 "Please note that if you specify and also if you modify levels here, the "
 "change is activated only during an inventory.  Saving this rule is not "
 "enough. This is due to the nature of inventory rules."
@@ -30340,7 +30405,8 @@ msgstr "Bitte mindestens 10 Zeichen für Geheimtext verwenden."
 msgid "Please specify a tag ID"
 msgstr "Bitte eine Merkmal ID angeben."
 
-msgid "Please specify a title for your tag group."
+#, fuzzy, python-format
+msgid "Please specify a title for your tag group \"%s\"."
 msgstr "Bitte geben Sie einen Titel für Ihre Tag-Gruppe an."
 
 msgid "Please specify a title."
@@ -30364,6 +30430,10 @@ msgstr "Bitte einen Alias angeben."
 
 msgid "Please specify an application name"
 msgstr "Bitte einen Anwendungsnamen angeben"
+
+#, fuzzy
+msgid "Please specify at least one \"Piggyback creation option\""
+msgstr "Bitte mindestens ein Merkmal angeben"
 
 msgid "Please specify at least one condition or this rule will never match."
 msgstr ""
@@ -30603,8 +30673,8 @@ msgstr "Verfügbare Ports"
 msgid "Position"
 msgstr "Position"
 
-msgid "Positive / Negative"
-msgstr "Positiv / Negativ"
+msgid "Positive match (Add matching hosts to the set)"
+msgstr ""
 
 msgid "Possible are 'user', 'operator', 'admin'"
 msgstr "Möglich sind 'user', 'operator', 'admin'"
@@ -31381,6 +31451,10 @@ msgstr "Zufalls-Hosts"
 msgid "Random delay"
 msgstr "Zufällige zusätzliche Verzögerung"
 
+#, fuzzy
+msgid "Random hosts"
+msgstr "Zufalls-Hosts"
+
 msgid "Randomize password"
 msgstr "Zufallsgesteuertes Passwort"
 
@@ -31453,6 +31527,11 @@ msgstr "Leselatenz"
 
 msgid "Read logs from beginning"
 msgstr "Logs von Anfang an auslesen"
+
+msgid ""
+"Read more about <a href=\"https://checkmk.com/cms_regexes.html\" target="
+"\"_blank\">regular expression matching in Checkmk</a> in our user manual."
+msgstr ""
 
 msgid "Read only mode"
 msgstr "Schreibschutz"
@@ -31685,9 +31764,6 @@ msgstr "Referenzwert für Magic Faktor"
 msgid "Referer"
 msgstr "Referer"
 
-msgid "Refine Search"
-msgstr "Suche verfeinern"
-
 msgid "Refine search"
 msgstr "Suche verfeinern"
 
@@ -31801,6 +31877,10 @@ msgid "Regular expression match"
 msgstr "Regulären Ausdruck prüfen"
 
 msgid "Regular expression matching command line"
+msgstr "Auf Befehlszeile passender regulärer Ausdruck"
+
+#, fuzzy
+msgid "Regular expression matching control group info"
 msgstr "Auf Befehlszeile passender regulärer Ausdruck"
 
 msgid "Regular expression matching tasks"
@@ -34657,8 +34737,8 @@ msgid ""
 "configured check intervals."
 msgstr "Services, die schon länger als erwartet nicht mehr aktualisiert wurden."
 
-#, python-format
-msgid "Services: %d total, %d added, %d removed, %d kept"
+#, fuzzy, python-format
+msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr "Services: %d gesamt, %d hinzugefügt, %d entfernt, %d behalten"
 
 msgid "Services: CRIT"
@@ -36422,11 +36502,13 @@ msgstr ""
 msgid "Specify the protocol used to connect to the management board."
 msgstr "Bestimmen Sie das Protokoll für die Verbindung zum Management-Board."
 
-msgid "Specify the site of your choice"
-msgstr "Wählen Sie die gewünschte Instanz"
-
 msgid "Specify the site that should monitor this host."
 msgstr "Bestimmen Sie die Instanz die diesen Host monitoren soll."
+
+msgid ""
+"Specify the site, this connector should run on. Only piggyback data from that "
+"site is being processed."
+msgstr ""
 
 msgid "Specify time since last successful backup"
 msgstr "Zeit seit dem letzten erfolgreichen Backup"
@@ -37875,8 +37957,16 @@ msgstr "Merkmal ID"
 msgid "Tag choices"
 msgstr "Tag-Auswahl"
 
+#, fuzzy
+msgid "Tag group ID"
+msgstr "Tag-Gruppen"
+
 msgid "Tag groups"
 msgstr "Tag-Gruppen"
+
+#, fuzzy
+msgid "Tag groups with only one choice must have a tag ID."
+msgstr "Merkmale mit nur einem Wert müssen eine ID haben."
 
 msgid "Tag value"
 msgstr "Wert des Merkmals"
@@ -37891,8 +37981,8 @@ msgstr "Merkmale"
 msgid "Tags (with titles)"
 msgstr "Merkmake (mit Titeln)"
 
-#, python-format
-msgid "Tags IDs must be unique. You've used <b>%s</b> twice."
+#, fuzzy, python-format
+msgid "Tags IDs must be unique. You've used \"%s\" twice."
 msgstr ""
 "Merkmal IDs müssen eindeutig sein. Sie haben <b>%s</b> zwei Mal verwendet."
 
@@ -37923,9 +38013,6 @@ msgstr "Tags des Hosts"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Tags, die dieses Hilfsmerkmal nutzen"
-
-msgid "Tags with only one choice must have an ID."
-msgstr "Merkmale mit nur einem Wert müssen eine ID haben."
 
 msgid "Take n'th best state for n = "
 msgstr "Nehme den n.-besten Zustand mit n = "
@@ -40098,13 +40185,6 @@ msgstr ""
 "zusammengesetzt: db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
-"The internal ID of the tag is used as it's unique identifier It cannot be "
-"changed later."
-msgstr ""
-"Die interne ID des Tags wird als eindeutige Kennung verwendet. Sie kann "
-"später nicht mehr geändert werden."
-
-msgid ""
 "The interval the connection will be executed to check the available piggyback "
 "and update the configuration."
 msgstr ""
@@ -41387,13 +41467,21 @@ msgstr ""
 "Das Tag '%s' ist mehrfach ausgewählt. Ein Tag kann nur einmal ausgewählt "
 "werden."
 
-#, python-format
-msgid "The tag ID %s is used twice."
+#, fuzzy, python-format
+msgid "The tag ID \"%s\" does already exist in the list of auxiliary tags."
+msgstr "Diese Merkmal ID existiert bereits in der Liste der Hilfs-Merkmale."
+
+#, fuzzy, python-format
+msgid "The tag ID \"%s\" is used twice."
 msgstr "Die Tag-ID %s wird zweimal verwendet."
 
-#, python-format
-msgid "The tag group %s is reserved for internal use."
+#, fuzzy, python-format
+msgid "The tag group \"%s\" is reserved for internal use."
 msgstr "Die Tag-Gruppe %s ist für den internen Gebrauch reserviert."
+
+#, fuzzy, python-format
+msgid "The tag group ID \"%s\" is used twice."
+msgstr "Die Tag-ID %s wird zweimal verwendet."
 
 msgid "The target has been deleted."
 msgstr "Das Ziel wurde gelöscht."
@@ -41831,6 +41919,12 @@ msgid "There job \"%s\" is not encrypted"
 msgstr "Der Sicherungs-Job \"%s\" ist nicht verschlüsselt"
 
 msgid ""
+"These attributes will be set for all hosts that are managed by this "
+"connection. In case you change these attributes, they will be changed for all "
+"hosts during next execution of the connection."
+msgstr ""
+
+msgid ""
 "These backup targets can not be edited here. You need to open the device "
 "backup management."
 msgstr ""
@@ -42132,6 +42226,12 @@ msgid ""
 msgstr ""
 "Diese ID wird bereits von einer anderen Verbindung verwendet. Bitte wählen "
 "Sie eine andere."
+
+#, fuzzy
+msgid "This ID is used as it's unique identifier. It cannot be changed later."
+msgstr ""
+"Die interne ID des Tags wird als eindeutige Kennung verwendet. Sie kann "
+"später nicht mehr geändert werden."
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Dieser Regelsatz definiert Schwellwerte für Feuchtigkeitssensoren"
@@ -43696,6 +43796,14 @@ msgstr ""
 "Der reguläre Ausdruck muss auf den <i>Anfang</i> der vollständigen "
 "Befehlszeile des Tasks mit allen Argumenten passen"
 
+#, fuzzy
+msgid ""
+"This regex must match the <i>beginning</i> of the complete control group "
+"information"
+msgstr ""
+"Der reguläre Ausdruck muss auf den <i>Anfang</i> des vollständigen "
+"Benutzernamens passen"
+
 msgid ""
 "This regex must match the <i>beginning</i> of the complete path of the node "
 "as reported by the agent"
@@ -44214,9 +44322,6 @@ msgstr "Dieses Regelpaket wird über das MKP %s bereitgestellt."
 
 msgid "This rule representation can be used for Web API calls."
 msgstr "Die Regeldarstellung kann in Web-API-Aufrufen verwendet werden."
-
-msgid "This rule results in a positive outcome."
-msgstr "Diese Regel führt zu einem positiven Ergebnis."
 
 msgid ""
 "This rule selects the ALLNET IP Sensoric agent, which fetches /xml/sensordata."
@@ -45079,9 +45184,6 @@ msgid ""
 msgstr ""
 "Diese Tabelle würde mehr als %d Zeilen enthalten. Da eine Begrenzung "
 "konfiguriert ist, wurde der Rest der Zeilen nicht geholt und dargestellt."
-
-msgid "This tag id does already exist in the list of auxiliary tags."
-msgstr "Diese Merkmal ID existiert bereits in der Liste der Hilfs-Merkmale."
 
 msgid ""
 "This text is a regular expression that is being searched in the output of the "
@@ -46472,6 +46574,9 @@ msgstr "UTF-8"
 msgid "Un"
 msgstr "Un"
 
+msgid "Unable to analyze matching, because \"service\" parameter is missing"
+msgstr ""
+
 #, python-format
 msgid ""
 "Unable to apply new hosttag configuration. The following tags are still in "
@@ -46766,8 +46871,9 @@ msgstr "Unbekannte Instanz (%s)"
 msgid "Unknown tag %s"
 msgstr "Unbekanntes Tag %s"
 
-msgid "Unknown tag group"
-msgstr "Unbekannte Merkmalsgruppe %s"
+#, fuzzy, python-format
+msgid "Unknown tag group \"%s\""
+msgstr "Unbekannte Tag-Gruppe %s"
 
 #, python-format
 msgid "Unknown tag group %s"
@@ -47699,6 +47805,13 @@ msgid "Use the status of the service..."
 msgstr "Den Zustand verwenden von Service..."
 
 msgid "Use this condition to select hosts based on the configured host labels."
+msgstr ""
+"Verwenden Sie diese Bedingung, um Hosts basierend auf den konfigurierten Host-"
+"Labels auszuwählen."
+
+#, fuzzy
+msgid ""
+"Use this condition to select services based on the configured service labels."
 msgstr ""
 "Verwenden Sie diese Bedingung, um Hosts basierend auf den konfigurierten Host-"
 "Labels auszuwählen."
@@ -51210,10 +51323,12 @@ msgstr ""
 "Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
 "Jobs verwendet wird: %s"
 
-msgid "You can not override a builtin auxiliary tag."
+#, fuzzy, python-format
+msgid "You can not override the builtin auxiliary tag \"%s\"."
 msgstr "Sie können eingebaute Hilfs-Merkmale nicht überschreiben."
 
-msgid "You can not override a builtin tag group."
+#, fuzzy, python-format
+msgid "You can not override the builtin tag group \"%s\"."
 msgstr "Sie können eingebaute Merkmalsgruppen nicht überschreiben."
 
 msgid "You can not use \"public\" as first level of a custom path"
@@ -51483,11 +51598,14 @@ msgstr ""
 "Sie können hier andere Zeitperioden angeben. Deren Zeiten werden von dieser "
 "Zeitperiode abgezogen."
 
+#, fuzzy
 msgid ""
 "You can use report scheduler macros here: <ul><li><tt>$DATE$</tt>: The "
-"current date in <tt>%Y-%m-%d</tt> format</li><li><tt>$TITLE$</tt>: The title "
-"of the schedule</li><li><tt>$PERIODNAME$</tt>: The name of the scheduling "
-"period</li></ul>"
+"current date in <tt>%Y-%m-%d</tt> format</li><li><tt>$DATE_YEAR$</tt>: The "
+"current year in <tt>%Y</tt> format</li><li><tt>$DATE_MONTH$</tt>: The current "
+"month in <tt>%m</tt> format</li><li><tt>$DATE_DAY$</tt>: The current day in "
+"<tt>%d</tt> format</li><li><tt>$TITLE$</tt>: The title of the schedule</"
+"li><li><tt>$PERIODNAME$</tt>: The name of the scheduling period</li></ul>"
 msgstr ""
 "Hier können Sie Berichtsplan-Macros nutzen: <ul><li><tt>$DATE$</tt>: Das "
 "aktuell Datum im Format: <tt>%Y-%m-%d</tt></li><li><tt>$TITLE$</tt>: Der "
@@ -52068,6 +52186,10 @@ msgstr "Sie müssen eine URL in den Eigenschaften des Dashlets angeben"
 
 msgid "You need to specify a backup job."
 msgstr "Sie müssen einen Sicherungs-Job auswählen."
+
+#, fuzzy
+msgid "You need to specify a host name to test file matching."
+msgstr "Sie müssen Levels größer als 0 Bytes angeben."
 
 msgid "You need to specify levels of at least 0 bytes."
 msgstr "Sie müssen Levels größer als 0 Bytes angeben."
@@ -52694,6 +52816,10 @@ msgstr "inaktiv"
 
 msgid "down"
 msgstr "heruntergefahren"
+
+#, fuzzy
+msgid "dynamic configuration connection"
+msgstr "Konfigurationsverbindung"
 
 msgid "eWON Discovery"
 msgstr "eWON-Serviceerkennung"
@@ -53721,9 +53847,6 @@ msgstr ""
 msgid "this host"
 msgstr "dieser Host"
 
-msgid "this rule results in a negative outcome."
-msgstr "Diese Regel führt zu einem negativen Ergebnis."
-
 msgid "threads"
 msgstr "Threads"
 
@@ -53934,6 +54057,52 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "An optional comment that explains the purpose of this rule."
+#~ msgstr "Ein optionaler Kommentar, der die Aufgabe der Regel beschreibt."
+
+#~ msgid "Automatically execute service discovery"
+#~ msgstr "Automatische Ausführung der Serviceerkennung"
+
+#~ msgid "Filter by name"
+#~ msgstr "Nach Name filtern"
+
+#~ msgid "Filter by source host"
+#~ msgstr "Filtern nach Quellhost"
+
+#~ msgid "Folder Properties"
+#~ msgstr "Ordnereigenschaften"
+
+#~ msgid "Make the outcome of the ruleset <b>%s</b><br>"
+#~ msgstr "Ausgabe des Regelsatzes <b>%s</b><br>"
+
+#~ msgid ""
+#~ "Please note that any backslashes need to be escaped using a backslash, for "
+#~ "example you need to insert <tt>C:\\\\windows\\\\</tt> if you want to match "
+#~ "<tt>c:\\windows\\</tt>."
+#~ msgstr ""
+#~ "Bitte beachten Sie, dass alle Backslashes (<tt>\\</tt>) mit einem weiteren "
+#~ "Backslash entwertet werden müssen. Beispielsweise müssen Sie <tt>C:\\"
+#~ "\\windows\\\\</tt> eingeben, wenn Sie auf <tt>c:\\windows\\</tt> prüfen "
+#~ "wollen."
+
+#~ msgid "Positive / Negative"
+#~ msgstr "Positiv / Negativ"
+
+#~ msgid "Refine Search"
+#~ msgstr "Suche verfeinern"
+
+#~ msgid "Specify the site of your choice"
+#~ msgstr "Wählen Sie die gewünschte Instanz"
+
+#~ msgid "This rule results in a positive outcome."
+#~ msgstr "Diese Regel führt zu einem positiven Ergebnis."
+
+#~ msgid "Unknown tag group"
+#~ msgstr "Unbekannte Merkmalsgruppe %s"
+
+#~ msgid "this rule results in a negative outcome."
+#~ msgstr "Diese Regel führt zu einem negativen Ergebnis."
 
 #~ msgid ""
 #~ "Choose how to monitor the docker node. If you are experiencing performance "

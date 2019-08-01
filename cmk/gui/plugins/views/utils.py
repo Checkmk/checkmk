@@ -1021,7 +1021,7 @@ def register_sorter(ident, spec):
             "title": property(lambda s: s._spec["title"]),
             "columns": property(lambda s: s._spec["columns"]),
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": spec["cmp"],
+            "cmp": lambda self, r1, r2: spec["cmp"](r1, r2),
         })
     sorter_registry.register(cls)
 

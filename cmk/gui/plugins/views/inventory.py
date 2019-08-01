@@ -821,7 +821,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
         column, {
             "title": _("Inventory") + ": " + title,
             "columns": [column],
-            "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
         })
 
     filter_registry.register(filter_class)

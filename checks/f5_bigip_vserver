@@ -24,26 +24,65 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Current server status
+# vserver["status"]
+# 0 - NONE:   disabled
+# 1 - GREEN:  available in some capacity
+# 2 - YELLOW: not currently available
+# 3 - RED:    not available
+# 4 - BLUE:   availability is unknown
+# 5 - GREY:   unlicensed
+MAP_SERVER_STATUS = {
+    '0': (1, "is disabled"),
+    '1': (0, "is up and available"),
+    '2': (2, "is currently not available"),
+    '3': (2, "is not available"),
+    '4': (1, "availability is unknown"),
+    '5': (3, "is unlicensed")
+}
+
+MAP_ENABLED = {
+    '0': "NONE",
+    '1': "enabled",
+    '2': "disabled",
+    '3': "disabled by parent",
+}
+
+# Check configured limits
+MAP_PARAM_TO_TEXT = {
+    "if_in_octets": "Incoming bytes",
+    "if_out_octets": "Outgoing bytes",
+    "if_total_octets": "Total bytes",
+    "if_in_pkts": "Incoming packets",
+    "if_out_pkts": "Outgoing packets",
+    "if_total_pkts": "Total packets",
+}
+
+
+def get_ip_address_human_readable(ip_addr):
+    """
+    u'\xc2;xJ'  ->  '194.59.120.74'
+    """
+    ip_addr = "".join(chr(ord(x)) for x in ip_addr)
+    if len(ip_addr) == 4:
+        return socket.inet_ntop(socket.AF_INET, ip_addr)
+    if len(ip_addr) == 16:
+        return socket.inet_ntop(socket.AF_INET6, ip_addr)
+    return "-"
+
 
 def parse_f5_bigip_vserver(info):
-    def ip_from_string(ip):
-        if len(ip) == 4:
-            ip = "".join(chr(ord(x)) for x in ip)
-            return socket.inet_ntop(socket.AF_INET, ip)
-        elif len(ip) == 16:
-            ip = "".join([chr(ord(x)) for x in ip])
-            return socket.inet_ntop(socket.AF_INET6, ip)
-        return "-"
-
     vservers = {}
     for line in info:
-        instance = vservers.setdefault(line[0], {
-            "ip": ip_from_string(line[4]),
-            "detail": line[3],
-        })
+        instance = vservers.setdefault(
+            line[0], {
+                "status": line[1],
+                "enabled": line[2],
+                "detail": line[3],
+                "ip_address": get_ip_address_human_readable(line[4]),
+            })
+
         for key, index in [
-            ("status", 1),
-            ("enabled", 2),
             ("connections_duration_min", 5),
             ("connections_duration_max", 6),
             ("connections_duration_mean", 7),
@@ -65,120 +104,101 @@ def parse_f5_bigip_vserver(info):
 
 def inventory_f5_bigip_vserver(parsed):
     for name, vserver in parsed.items():
-        if vserver["status"][0] in [1, 4]:  # Green and Blue
+        if vserver["status"] in ('1', '4'):  # Green and Blue
             yield name, {}
 
 
-def check_f5_bigip_vserver(item, params, parsed):
+def get_aggregated_values(vserver):
+    aggregation = collections.Counter()
+    now = time.time()
+
+    counter_keys = {
+        "if_in_pkts", "if_out_pkts", "if_in_octets", "if_out_octets", "connections_rate",
+        "packet_velocity_asic"
+    }
+    # Calculate counters
+    for what in counter_keys & set(vserver.keys()):
+        for idx, entry in enumerate(vserver[what]):
+            rate = get_rate("%s.%s" % (what, idx), now, entry)
+            aggregation[what] += rate
+
+    # Calucate min/max/sum/mean values
+    for what, function in [
+        ("connections_duration_min", min),
+        ("connections_duration_max", max),
+        ("connections", sum),
+        ("connections_duration_mean", lambda x: float(sum(x) / len(x))),
+    ]:
+        value_list = vserver.get(what)
+        if value_list:
+            aggregation[what] = function(value_list)
+
+    for unit in ("octets", "pkts"):
+        in_key = "if_in_%s" % unit
+        out_key = "if_out_%s" % unit
+        if in_key in aggregation or out_key in aggregation:
+            aggregation["if_total_%s" % unit] = aggregation[in_key] + aggregation[out_key]
+
+    return aggregation
+
+
+def iter_counter_params():
+    for unit, hr_function in (
+        ("octets", lambda x: get_bytes_human_readable(x, base=1000.0)),
+        ("pkts", lambda x: "%s" % x),
+    ):
+        for direction in ("in", "out", "total"):
+            for boundary in ("", "_lower"):
+                yield direction, unit, boundary, hr_function
+
+
+@get_parsed_item_data
+def check_f5_bigip_vserver(_item, params, data):
     # Need compatibility to version with _no_params
     if params is None:
         params = {}
 
-    if item in parsed:
-        vserver = parsed[item]
+    enabled_state = int(data["enabled"] not in MAP_ENABLED)
+    enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
+    yield enabled_state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled_txt)
 
-        summed_values = {}
-        now = time.time()
+    state_map = params.get('state', {})
+    state, state_readable = MAP_SERVER_STATUS.get(data["status"],
+                                                  (3, "Unhandled status (%s)" % data["status"]))
+    state = state_map.get(state_readable.replace(' ', '_'), state)
 
-        # Calculate counters
-        for what in [
-                "if_in_pkts",
-                "if_out_pkts",
-                "if_in_octets",
-                "if_out_octets",
-                "connections_rate",
-                "packet_velocity_asic",
-        ]:
-            summed_values.setdefault(what, 0)
-            for idx, entry in enumerate(vserver[what]):
-                rate = get_rate("%s.%s" % (what, idx), now, entry)
-                summed_values[what] += rate
+    detail = data["detail"]
+    # Special handling: Statement from the network team:
+    # Not available => uncritical when the childrens are down
+    if data["status"] == '3' and detail.lower() == "the children pool member(s) are down":
+        state = state_map.get("children_pool_members_down_if_not_available", 0)
 
-        # Calucate min/max/sum/mean values
-        for what, function in [
-            ("connections_duration_min", min),
-            ("connections_duration_max", max),
-            ("connections", sum),
-            ("connections_duration_mean", lambda x: float(sum(x) / len(x))),
-        ]:
-            value_list = [x for x in vserver[what] if x != 0]
-            if not value_list:
-                summed_values[what] = 0
-            else:
-                summed_values[what] = function(value_list)
+    yield state, "State %s, Detail: %s" % (state_readable, detail)
 
-        # Current number of connections
-        yield 0, "Client connections: %d" % summed_values["connections"], summed_values.items()
+    aggregation = get_aggregated_values(data)
 
-        # New connections per time
-        yield 0, "Rate: %.2f/sec" % summed_values["connections_rate"]
+    if "connections" in aggregation:
+        yield 0, "Client connections: %d" % aggregation["connections"], sorted(aggregation.items())
+    if "connections_rate" in aggregation:
+        yield 0, "Connections rate: %.2f/sec" % aggregation["connections_rate"]
 
-        # Current server status
-        # vserver["status"]
-        # 0 - NONE:   disabled
-        # 1 - GREEN:  available in some capacity
-        # 2 - YELLOW: not currently available
-        # 3 - RED:    not available
-        # 4 - BLUE:   availability is unknown
-        # 5 - GREY:   unlicensed
-        map_server_status = {
-            0: (1, "is disabled"),
-            1: (0, "is up and available"),
-            2: (2, "is currently not available"),
-            3: (2, "is not available"),
-            4: (1, "availability is unknown"),
-            5: (3, "is unlicensed")
-        }
-        state, state_readable = map_server_status.get(
-            vserver["status"][0], (3, "Unhandled status (%d)" % vserver["status"][0]))
-        state = params.get('state', {}).get(state_readable.replace(' ', '_'), state)
-
-        # vserver["enabled"]
-        # 0 - none
-        # 1 - enabled
-        # 2 - disabled
-        # 3 - disabledbyparent
-        enabled = ["NONE", "enabled", "disabled", "disabled by parent"][vserver["enabled"][0]]
-
-        output = "Virtual Server with IP %s is %s, State %s, Detail: %s" % (vserver["ip"][0],\
-                 enabled, state_readable, vserver["detail"][0])
-
-        # Special handling
-        if vserver["status"][0] == 3:  # not available
-            # Statement from the network team, it's uncritical when the childrens are down
-            if vserver["detail"][0].lower() == "The children pool member(s) are down".lower():
-                state = params.get('state', {}).get("children_pool_members_down_if_not_available",
-                                                    0)
-
-        yield state, output
-
-        # Check configured limits
-        map_paramvar_to_text = {
-            "if_in_octets": "Incoming Bytes",
-            "if_out_octets": "Outgoing Bytes",
-            "if_total_octets": "Total Bytes",
-            "if_in_pkts": "Incoming Packets",
-            "if_out_pkts": "Outgoing Packets",
-            "if_total_pkts": "Total Packets",
-        }
-        summed_values[
-            "if_total_octets"] = summed_values["if_in_octets"] + summed_values["if_out_octets"]
-        summed_values["if_total_pkts"] = summed_values["if_in_pkts"] + summed_values["if_out_pkts"]
-        for param_var, levels in params.items():
-            if param_var == "state":
-                continue
-            if param_var.endswith("_lower") and isinstance(levels, tuple):
-                levels = (None, None) + levels
-            value = summed_values[param_var.rstrip("_lower")]
-            state, infotext, _extra_perfdata = check_levels(
-                value,
-                param_var,
-                levels,
-                human_readable_func=lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0)
-                if "octets" in p else str(x),
-                infoname=map_paramvar_to_text[param_var.rstrip("_lower")])
-            if state:
-                yield state, infotext
+    for direction, unit, boundary, hr_function in iter_counter_params():
+        key = "if_%s_%s" % (direction, unit)
+        levels = params.get("%s%s" % (key, boundary))
+        if levels is None or key not in aggregation:
+            continue
+        if boundary == "_lower" and isinstance(levels, tuple):
+            levels = (None, None) + levels
+        state, infotext, _extra_perfdata = check_levels(
+            aggregation[key],
+            None,
+            levels,
+            human_readable_func=hr_function,
+            infoname=MAP_PARAM_TO_TEXT[key],
+            unit="/sec",
+        )
+        if state:
+            yield state, infotext
 
 
 check_info["f5_bigip_vserver"] = {
@@ -189,21 +209,21 @@ check_info["f5_bigip_vserver"] = {
     "service_description"     : "Virtual Server %s",
     "has_perfdata"            : True,
     "snmp_info"               : (".1.3.6.1.4.1.3375.2.2.10", [
-                                    "13.2.1.1", # ltmVsStatusName
-                                    "13.2.1.2", # ltmVsStatusAvailState
-                                    "13.2.1.3", # ltmVsStatusEnabledState
-                                    "13.2.1.5", # ltmVsStatusDetailReason
-                                    "1.2.1.3",  # IP Address
-                                    "2.3.1.2",  # min conn duration
-                                    "2.3.1.3",  # max conn duration
-                                    "2.3.1.4",  # mean connection duration
-                                    "2.3.1.6",  # Client Packets In
-                                    "2.3.1.8",  # Client Packets Out
-                                    "2.3.1.7",  # Client Bytes In
-                                    "2.3.1.9",  # Client Bytes Out
-                                    "2.3.1.11", # Client Total Connections
-                                    "2.3.1.12", # Client Current Connections
-                                    "2.3.1.25", # packet_velocity_asic Total Connections
+                                    "13.2.1.1", #  0 ltmVsStatusName
+                                    "13.2.1.2", #  1 ltmVsStatusAvailState
+                                    "13.2.1.3", #  2 ltmVsStatusEnabledState
+                                    "13.2.1.5", #  3 ltmVsStatusDetailReason
+                                    "1.2.1.3",  #  4 IP Address
+                                    "2.3.1.2",  #  5 min conn duration
+                                    "2.3.1.3",  #  6 max conn duration
+                                    "2.3.1.4",  #  7 mean connection duration
+                                    "2.3.1.6",  #  8 Client Packets In
+                                    "2.3.1.8",  #  9 Client Packets Out
+                                    "2.3.1.7",  # 10 Client Bytes In
+                                    "2.3.1.9",  # 11 Client Bytes Out
+                                    "2.3.1.11", # 12 Client Total Connections
+                                    "2.3.1.12", # 13 Client Current Connections
+                                    "2.3.1.25", # 14 packet_velocity_asic Total Connections
                                ]),
     "snmp_scan_function"      : lambda oid: ".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") \
                                       and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),

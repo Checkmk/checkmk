@@ -105,7 +105,7 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
     return _logging.Formatter(format_str)
 
 
-def setup_console_logging(stream=None, formatter=None):
+def setup_console_logging():
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -113,35 +113,20 @@ def setup_console_logging(stream=None, formatter=None):
     This can be used for existing command line applications which were
     using sys.stdout.write() or print() before.
     """
-    if stream is None:
-        stream = sys.stdout
-
-    if formatter is None:
-        formatter = get_formatter("%(message)s")
-
-    setup_logging_handler(stream, formatter)
+    setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-def open_log(log_file_path, fallback_to=None):
+def open_log(log_file_path):
     """Open logfile and fall back to stderr if this is not successfull
     The opened file() object is returned.
     """
-    if fallback_to is None:
-        fallback_to = sys.stderr
-
-    logfile = None
     try:
         logfile = file(log_file_path, "a")
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
-
-        if fallback_to:
-            logfile = fallback_to
-
-    if logfile:
-        setup_logging_handler(logfile)
-
+        logfile = sys.stderr
+    setup_logging_handler(logfile)
     return logfile
 
 

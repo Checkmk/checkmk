@@ -4101,7 +4101,7 @@ def main():
 
     pid_path = None
     try:
-        cmk.utils.log.open_log(sys.stderr)
+        cmk.utils.log.setup_logging_handler(sys.stderr)
         cmk.utils.log.set_verbosity(settings.options.verbosity)
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)

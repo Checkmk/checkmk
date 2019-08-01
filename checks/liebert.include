@@ -25,7 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_liebert(info):
+def parse_liebert(info, type_func=None):
+    if type_func is None:
+        type_func = float
+
     parsed = {}
     used_names = set()
 
@@ -49,14 +52,17 @@ def parse_liebert(info):
                 continue
             name = get_item_name(element[0])
             try:
-                parsed[name] = [float(element[1]), element[2]]
+                parsed[name] = [type_func(element[1]), element[2]]
             except ValueError:
                 continue
 
     return parsed
 
 
-def parse_liebert_without_unit(info):
+def parse_liebert_without_unit(info, type_func=None):
+    if type_func is None:
+        type_func = float
+
     parsed = {}
     used_names = set()
 
@@ -82,7 +88,7 @@ def parse_liebert_without_unit(info):
                 continue
             name = get_item_name(element[0])
             try:
-                parsed[name] = float(element[1])
+                parsed[name] = type_func(element[1])
             except ValueError:
                 continue
 

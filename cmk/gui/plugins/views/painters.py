@@ -35,6 +35,7 @@ from cmk.utils.defines import short_service_state_name, short_host_state_name
 
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
+import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, current_app
@@ -5230,18 +5231,44 @@ class PainterHostDockerNode(Painter):
         if not source_hosts:
             return "", ""
 
-        # TODO: Detect the docker node sources correctly
-        # TODO: Handle multiple nodes
-        host_name = source_hosts[0]
+        # We need the labels of the piggyback hosts to know which of them is
+        # the docker node. We can not do livestatus queries per host/row here.
+        # For this reason we perform a single query for all hosts of the users
+        # sites which is then cached to prevent additional queries.
+        host_labels = _get_host_labels()
 
-        url = html.makeuri_contextless(
-            [
-                ("view_name", "host"),
-                ("host", host_name),
-            ],
-            filename="view.py",
-        )
-        return "", html.render_a(host_name, href=url)
+        docker_nodes = [
+            h for h in source_hosts if host_labels.get(h, {}).get("cmk/docker_object") == "node"
+        ]
+
+        content = []
+        for host_name in docker_nodes:
+            url = html.makeuri_contextless(
+                [
+                    ("view_name", "host"),
+                    ("host", host_name),
+                ],
+                filename="view.py",
+            )
+            content.append(html.render_a(host_name, href=url))
+        return "", HTML(", ").join(content)
+
+
+def _get_host_labels():
+    """Returns a map of all known hosts with their host labels
+
+    It is important to cache this query per request and also try to use the
+    liveproxyd query cached.
+    """
+    cache_id = "host_labels"
+    if cache_id in current_app.g:
+        return current_app.g[cache_id]
+
+    query = "GET hosts\nColumns: name labels\nCache: reload\n"
+    host_labels = {name: labels for name, labels in sites.live().query(query)}
+
+    current_app.g[cache_id] = host_labels
+    return host_labels
 
 
 class AbstractPainterSpecificMetric(Painter):

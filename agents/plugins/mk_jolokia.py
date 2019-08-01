@@ -553,7 +553,7 @@ def yield_configured_instances(custom_config=None):
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        execfile(conffile, {}, custom_config)
+        exec (open(conffile).read(), {}, custom_config)
 
     # Generate list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list of dicts).

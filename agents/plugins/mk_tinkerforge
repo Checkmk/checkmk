@@ -254,7 +254,7 @@ def read_config(env):
     cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")
 
     if os.path.isfile(cfg_path):
-        execfile(cfg_path, settings, settings)
+        exec (open(cfg_path).read(), settings, settings)
     return settings
 
 

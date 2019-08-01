@@ -71,7 +71,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
 
             _load_plugin_includes(f, plugin_context)
 
-            execfile(f, plugin_context)
+            exec (open(f).read(), plugin_context)
             loaded_files.add(file_name)
         except Exception as e:
             console.error("Error in inventory plugin file %s: %s\n", f, e)
@@ -107,7 +107,7 @@ def _load_plugin_includes(check_file_path, plugin_context):
     for name in config.includes_of_plugin(check_file_path):
         path = _include_file_path(name)
         try:
-            execfile(path, plugin_context)
+            exec (open(path).read(), plugin_context)
         except Exception as e:
             console.error("Error in include file %s: %s\n", path, e)
             if cmk.utils.debug.enabled():

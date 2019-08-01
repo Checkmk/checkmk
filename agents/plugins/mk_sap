@@ -151,7 +151,7 @@ config_file = MK_CONFDIR + '/sap.cfg'
 
 cfg = {}
 if os.path.exists(config_file):
-    execfile(config_file)
+    exec (open(config_file).read())
     if isinstance(cfg, dict):
         cfg = [cfg]
 else:

@@ -68,7 +68,7 @@ def get_config():
         "ssl_ports": [443],
     }
     if os.path.exists(config_file):
-        execfile(config_file, config)
+        exec (open(config_file).read(), config)
     return config
 
 

@@ -60,26 +60,21 @@ logger = cmk.utils.log.get_logger("web")
 
 
 def init_logging():
-    _setup_web_log_logging()
-
-
-def _setup_web_log_logging():
-    del logger.root.handlers[:]  # First remove all handlers
-
     handler = _logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
-
     handler.setFormatter(cmk.utils.log.get_formatter())
-
-    # Setup logging for the root logger to be able to get library log entries in the
-    # log of the web application
-    logger.root.addHandler(handler)
+    root = _logging.getLogger()
+    del root.handlers[:]  # Remove all previously existing handlers
+    root.addHandler(handler)
 
 
 def set_log_levels(log_levels):
-    # Setup logging for the root logger to be able to get library log entries in the
-    # log of the web application
-    logger.root.setLevel(log_levels["cmk.web"])
-    cmk.utils.log.logger.setLevel(log_levels["cmk.web"])
+    for name, level in _augmented_log_levels(log_levels).iteritems():
+        _logging.getLogger(name).setLevel(level)
 
-    for logger_name, level in log_levels.items():
-        _logging.getLogger(logger_name).setLevel(level)
+
+# To see log entries from libraries and non-GUI code, reuse cmk.web's level.
+def _augmented_log_levels(log_levels):
+    root_level = log_levels.get("cmk.web")
+    all_levels = {} if root_level is None else {"": root_level, "cmk": root_level}
+    all_levels.update(log_levels)
+    return all_levels

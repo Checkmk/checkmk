@@ -1,23 +1,6 @@
 #!/bin/bash
 set -e -o pipefail
 
-HOOKROOT=/docker-entrypoint.d
-
-function exec_hook() {
-    HOOKDIR=$HOOKROOT/$1
-    if pushd $HOOKDIR 2>&1>/dev/null; then 
-        for hook in ./*; do
-            echo "### Running $HOOKDIR/$hook"
-           ./$hook
-        done
-    fi
-    popd 2>&1>/dev/null
-}
-
-
-
-exec_hook pre-create
-
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
     exit 1
@@ -60,8 +43,6 @@ if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     fi
 fi
 
-exec_hook post-create
-
 # In case of an update (see update procedure docs) the container is started
 # with the data volume mounted (the site is not re-created). In this
 # situation only the site data directory is available and the "system level"
@@ -91,12 +72,8 @@ if [ -n "$1" ]; then
     exec "$@"
 fi
 
-exec_hook pre-start
-
 echo "### STARTING SITE"
 omd start "$CMK_SITE_ID"
-
-exec_hook post-start
 
 echo "### STARTING CRON"
 cron -f &

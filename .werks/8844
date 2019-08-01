@@ -1,0 +1,11 @@
+Title: Fix TypeError when sorting view by some columns
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1564669030
+
+

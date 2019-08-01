@@ -1,0 +1,10 @@
+Title: Command line parameter version added to the Windows Agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564671828
+Class: feature
+
+

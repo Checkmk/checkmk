@@ -50,12 +50,12 @@ MAP_ENABLED = {
 
 # Check configured limits
 MAP_PARAM_TO_TEXT = {
-    "if_in_octets": "Incoming Bytes",
-    "if_out_octets": "Outgoing Bytes",
-    "if_total_octets": "Total Bytes",
-    "if_in_pkts": "Incoming Packets",
-    "if_out_pkts": "Outgoing Packets",
-    "if_total_pkts": "Total Packets",
+    "if_in_octets": "Incoming bytes",
+    "if_out_octets": "Outgoing bytes",
+    "if_total_octets": "Total bytes",
+    "if_in_pkts": "Incoming packets",
+    "if_out_pkts": "Outgoing packets",
+    "if_total_pkts": "Total packets",
 }
 
 
@@ -133,7 +133,23 @@ def get_aggregated_values(vserver):
         if value_list:
             aggregation[what] = function(value_list)
 
+    for unit in ("octets", "pkts"):
+        in_key = "if_in_%s" % unit
+        out_key = "if_out_%s" % unit
+        if in_key in aggregation or out_key in aggregation:
+            aggregation["if_total_%s" % unit] = aggregation[in_key] + aggregation[out_key]
+
     return aggregation
+
+
+def iter_counter_params():
+    for unit, hr_function in (
+        ("octets", lambda x: get_bytes_human_readable(x, base=1000.0)),
+        ("pkts", lambda x: "%s" % x),
+    ):
+        for direction in ("in", "out", "total"):
+            for boundary in ("", "_lower"):
+                yield direction, unit, boundary, hr_function
 
 
 @get_parsed_item_data
@@ -164,23 +180,23 @@ def check_f5_bigip_vserver(_item, params, data):
     if "connections" in aggregation:
         yield 0, "Client connections: %d" % aggregation["connections"], sorted(aggregation.items())
     if "connections_rate" in aggregation:
-        yield 0, "Rate: %.2f/sec" % aggregation["connections_rate"]
+        yield 0, "Connections rate: %.2f/sec" % aggregation["connections_rate"]
 
-    aggregation["if_total_octets"] = aggregation["if_in_octets"] + aggregation["if_out_octets"]
-    aggregation["if_total_pkts"] = aggregation["if_in_pkts"] + aggregation["if_out_pkts"]
-    for param_var, levels in params.items():
-        if param_var == "state":
+    for direction, unit, boundary, hr_function in iter_counter_params():
+        key = "if_%s_%s" % (direction, unit)
+        levels = params.get("%s%s" % (key, boundary))
+        if levels is None or key not in aggregation:
             continue
-        if param_var.endswith("_lower") and isinstance(levels, tuple):
+        if boundary == "_lower" and isinstance(levels, tuple):
             levels = (None, None) + levels
-        value = aggregation[param_var.rstrip("_lower")]
         state, infotext, _extra_perfdata = check_levels(
-            value,
-            param_var,
+            aggregation[key],
+            None,
             levels,
-            human_readable_func=lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0)
-            if "octets" in p else str(x),
-            infoname=MAP_PARAM_TO_TEXT[param_var.rstrip("_lower")])
+            human_readable_func=hr_function,
+            infoname=MAP_PARAM_TO_TEXT[key],
+            unit="/sec",
+        )
         if state:
             yield state, infotext
 

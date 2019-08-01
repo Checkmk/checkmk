@@ -29,15 +29,15 @@ discovery = {
 checks = {
     '': [
         (u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}, [
+            (1, u'Virtual Server with IP 2 is enabled, State availability is unknown, Detail: T', []),
             (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
             (0, 'Rate: 0.00/sec', []),
-            (1, u'Virtual Server with IP 2 is enabled, State availability is unknown, Detail: T', []),
         ]),
         (u'/Common/www.wurmhole.univ', {}, []),
         (u'/Common/www.wurmhole.univ_HTTP2HTTPS', {}, [
+            (1, u'Virtual Server with IP 2 is enabled, State availability is unknown, Detail: T', []),
             (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
             (0, 'Rate: 0.00/sec', []),
-            (1, u'Virtual Server with IP 2 is enabled, State availability is unknown, Detail: T', []),
         ]),
     ],
 }

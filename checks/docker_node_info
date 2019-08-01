@@ -41,7 +41,7 @@ def parse_docker_node_info(info):
 
 def discover_docker_node_info(info):
     if info:
-        yield HostLabels(HostLabel(u"cmk/docker_object", u"node"))
+        yield HostLabel(u"cmk/docker_object", u"node")
         yield (None, {})
 
 

@@ -809,6 +809,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value, varprefix):
+        self.valuespec().validate_datatype(value, varprefix + self.name())
         self.valuespec().validate_value(value, varprefix + self.name())
 
 

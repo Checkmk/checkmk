@@ -41,12 +41,12 @@ MAP_SERVER_STATUS = {
     5: (3, "is unlicensed")
 }
 
-# vserver["enabled"]
-# 0 - none
-# 1 - enabled
-# 2 - disabled
-# 3 - disabledbyparent
-MAP_ENABLED = ("NONE", "enabled", "disabled", "disabled by parent")
+MAP_ENABLED = {
+    '0': "NONE",
+    '1': "enabled",
+    '2': "disabled",
+    '3': "disabled by parent",
+}
 
 # Check configured limits
 MAP_PARAM_TO_TEXT = {
@@ -74,13 +74,14 @@ def get_ip_address_human_readable(ip_addr):
 def parse_f5_bigip_vserver(info):
     vservers = {}
     for line in info:
-        instance = vservers.setdefault(line[0], {
-            "ip": get_ip_address_human_readable(line[4]),
-            "detail": line[3],
-        })
+        instance = vservers.setdefault(
+            line[0], {
+                "ip_address": get_ip_address_human_readable(line[4]),
+                "enabled": line[2],
+                "detail": line[3],
+            })
         for key, index in [
             ("status", 1),
-            ("enabled", 2),
             ("connections_duration_min", 5),
             ("connections_duration_max", 6),
             ("connections_duration_mean", 7),
@@ -140,14 +141,15 @@ def check_f5_bigip_vserver(_item, params, data):
     if params is None:
         params = {}
 
+    state = int(data["enabled"] not in MAP_ENABLED)
+    enabled = MAP_ENABLED.get(data["enabled"], "in unknown state")
+    yield state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled)
+
     state, state_readable = MAP_SERVER_STATUS.get(data["status"][0],
                                                   (3, "Unhandled status (%d)" % data["status"][0]))
     state = params.get('state', {}).get(state_readable.replace(' ', '_'), state)
 
-    enabled = MAP_ENABLED[data["enabled"][0]]
-
-    output = "Virtual Server with IP %s is %s, State %s, Detail: %s" % (data["ip"][0],\
-             enabled, state_readable, data["detail"][0])
+    output = "State %s, Detail: %s" % (state_readable, data["detail"][0])
 
     # Special handling
     if data["status"][0] == 3:  # not available

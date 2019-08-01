@@ -72,9 +72,6 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
     def from_dict(cls, dict_labels):
         labels = cls()
         for k, v in dict_labels.iteritems():
-            if isinstance(v, unicode):
-                # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
-                continue
             labels.add_label(HostLabel.from_dict(k, v))
         return labels
 

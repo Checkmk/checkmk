@@ -15,7 +15,7 @@ info = [
      u" don't have service checking enabled, or service check results are not available yet"),
      u'\xd4;xK', u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
     [u'/Common/starfleet.space', u'4', u'', u"To infinity and beyond!", u'\xde\xca\xff\xed', u'', u'',
-     u'', u'', u'', u'', u'', u'', u'0', u''],
+     u'', u'', u'42', u'32', u'', u'', u'0', u''],
 ]
 
 
@@ -48,12 +48,24 @@ checks = {
                 ('connections', 0, None, None, None, None),
                 ('connections_rate', 0, None, None, None, None),
             ]),
-            (0, 'Rate: 0.00/sec', []),
+            (0, 'Connections rate: 0.00/sec', []),
         ]),
-        (u'/Common/starfleet.space', {}, [
+        (u'/Common/starfleet.space', {
+            "if_in_octets": (-23, 42),
+            "if_total_pkts_lower": (100, 200),
+            "if_total_pkts": (300, 400),
+        }, [
             (1, u'Virtual Server with IP 222.202.255.237 is in unknown state', []),
             (1, u'State availability is unknown, Detail: To infinity and beyond!', []),
-            (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
+            (0, 'Client connections: 0', [
+                ('connections', 0, None, None, None, None),
+                ('if_in_octets', 0.0, None, None, None, None),
+                ('if_out_pkts', 0.0, None, None, None, None),
+                ('if_total_octets', 0.0, None, None, None, None),
+                ('if_total_pkts', 0.0, None, None, None, None),
+            ]),
+            (1, 'Incoming bytes: 0.00 B/sec (warn/crit at -23.00 B/sec/42.00 B/sec)', []),
+            (2, 'Total packets: 0.0/sec (warn/crit below 100.0/sec/200.0/sec)', []),
         ]),
     ],
 }

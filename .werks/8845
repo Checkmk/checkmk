@@ -1,0 +1,16 @@
+Title: Web-API: Prevent adding wrong encoded labels to hosts / rulesets
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564686442
+Class: fix
+
+In previous 1.6 releases the Web API did not validate the labels that
+could e.g. be added to hosts strictly enough. When using "python" as
+"request_format" this could result in a broken configuration, leading
+to exceptions in several places of the GUI.
+
+The Web API now ensures the received labes are all unicode strings as
+Checkmk expects.

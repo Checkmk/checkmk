@@ -4334,6 +4334,17 @@ class Labels(ValueSpec):
 
         return labels
 
+    def validate_datatype(self, value, varprefix):
+        for k, v in value.iteritems():
+            if not isinstance(k, unicode):
+                raise MKUserError(
+                    varprefix,
+                    _("The label ID %r is of type %s, but should be unicode") % (k, type(k)))
+            if not isinstance(v, unicode):
+                raise MKUserError(
+                    varprefix,
+                    _("The label value %r is of type %s, but should be unicode") % (k, type(v)))
+
     def value_to_text(self, value):
         from cmk.gui.view_utils import render_labels
         label_sources = {k: self._label_source.value for k in value.keys()

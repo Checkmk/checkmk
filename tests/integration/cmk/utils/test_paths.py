@@ -1,4 +1,5 @@
 import os
+import importlib
 from pathlib2 import Path
 
 import cmk.utils.paths
@@ -30,7 +31,7 @@ def test_paths_in_omd_root(monkeypatch):
     try:
         with monkeypatch.context() as m:
             m.setitem(os.environ, 'OMD_ROOT', omd_root)
-            reload(cmk.utils.paths)
+            importlib.reload(cmk.utils.paths)
             _check_paths(omd_root)
     finally:
-        reload(cmk.utils.paths)
+        importlib.reload(cmk.utils.paths)

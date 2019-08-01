@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -5355,9 +5355,8 @@ msgstr "Größe der durchschnittlichen Schreibanfrage"
 msgid "Averaging"
 msgstr "Durchschnittsbildung"
 
-#, fuzzy
 msgid "Averaging for total CPU utilization"
-msgstr "Schwellwerte für die gesamte CPU-Auslastung"
+msgstr "Mittelung der gesamte CPU-Auslastung"
 
 msgid "Azure Agent Info"
 msgstr "Azure Agent Info"
@@ -17728,7 +17727,6 @@ msgstr ""
 "Hier sehen Sie alle Hosts, die eine negative Antwort an den Updateserver "
 "gesendet haben."
 
-#, fuzzy
 msgid ""
 "Here you can select default parameters that are being set for detected "
 "services. Note: the preferred way for setting parameters is to use the rule "
@@ -17737,10 +17735,10 @@ msgid ""
 "active, while a change in this rule requires a re-discovery of the services."
 msgstr ""
 "Hier können Sie Standardeinstellungen vornehmen, die für neu erkannte "
-"Services verwendet werden sollen. Hinweis: Der empfohlene Weg um Parameter zu "
-"setzen ist der Regelsatz <a href='wato.py?varname=checkgroup_parameters"
-"%3Apsmode=edit_ruleset'>Zustand und Anzahl von Prozessen</a>. Dort wird eine "
-"Änderung direkt aktiv, während hier eine neue Serviceerkennung notwendig ist."
+"Services verwendet werden sollen. Hinweis: Es ist empfohlen, den Regelsatz <a "
+"href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'>Zustand "
+"und Anzahl von Prozessen</a> zu verwenden. Dort wird eine Änderung direkt "
+"aktiv, während hier eine Service-Neuerkennung notwendig ist."
 
 msgid ""
 "Here you can set a custom label for new issues. If not set, 'monitoring' will "
@@ -23027,9 +23025,8 @@ msgstr "Anzulegende Ordner-Ebenen"
 msgid "Levels on CPU utilization of a single process"
 msgstr "Schwellwerte für die CPU Auslastung eines einzelnen Prozesses"
 
-#, fuzzy
 msgid "Levels on IO wait (UNIX only)"
-msgstr "Schwellwerte für Disk Wait (IO Wait)"
+msgstr "Schwellwerte für IO-Wait (nur UNIX)"
 
 #, fuzzy
 msgid "Levels on availability in percent"
@@ -23055,9 +23052,8 @@ msgstr "Schwellen für aktive Verbindungen"
 msgid "Levels on single cores"
 msgstr "Schwellen für die einzelne Kerne"
 
-#, fuzzy
 msgid "Levels on steal CPU utilization (UNIX only)"
-msgstr "Schwellwerte für die Steal-CPU-Auslastung"
+msgstr "Schwellwerte für die Steal-CPU-Auslastung (nur UNIX)"
 
 msgid "Levels on temperature decrease per period"
 msgstr "Schwellwerte für Temperaturabfall pro Zeitperiode"
@@ -41327,9 +41323,8 @@ msgstr ""
 "Der Service ist nicht in einer der selektierten Servicegruppen. Für "
 "Hostalarme wird diese Bedingung ignoriert."
 
-#, fuzzy
 msgid "The service name"
-msgstr "Servicename"
+msgstr "Der Servicename"
 
 msgid ""
 "The sidebar can be configured to regularly check for pending popup "
@@ -49913,13 +49908,12 @@ msgstr ""
 "Wenn dies konfiguriert ist, werden die erstellen Berichte unter <tt>%s</tt> "
 "gespeichert."
 
-#, fuzzy
 msgid ""
 "When this option is activated then the CPU utilization is being averaged "
 "<b>before</b> the levels on total CPU utilization are being applied."
 msgstr ""
-"Wenn diese Option aktiviert ist, wird ein Durchschnitt über die CPU-"
-"Auslastung  berechnet, bevor diese mit den Schwellwerten verglichen wird."
+"Wenn diese Option aktiviert ist, wird die CPU-Auslastung gemittelt <b>bevor</"
+"b> die Schwellwerte angewendet werden."
 
 msgid ""
 "When this option is activated then the block rate is being averaged "

@@ -206,7 +206,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         except MKTerminate:
             raise
         except Exception as e:
-            self._logger.error("Exception in background function", exc_info=True)
+            self._logger.exception("Exception in background function")
             job_interface.send_exception(_("Exception: %s") % (e))
 
     def _open_stdout_and_stderr(self):
@@ -493,7 +493,7 @@ class BackgroundJob(object):
             p = self._background_process_class(job_parameters)
             p.start()
         except Exception as e:
-            self._logger.error("Error while starting subprocess: %s", e, exc_info=True)
+            self._logger.exception("Error while starting subprocess: %s", e)
             os._exit(1)
         os._exit(0)
 

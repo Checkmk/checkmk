@@ -25,6 +25,7 @@ constexpr std::string_view kRealtimeParam = "rt";
 constexpr std::string_view kHelpParam = "help";
 constexpr std::string_view kVersionParam = "version";
 constexpr std::string_view kReloadConfigParam = "reload_config";
+constexpr std::string_view kRemoveLegacyParam = "remove_legacy";
 
 constexpr std::string_view kExecParam = "exec";             // runs as app
 constexpr std::string_view kAdhocParam = "adhoc";           // runs as app

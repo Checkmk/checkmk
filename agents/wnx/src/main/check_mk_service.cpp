@@ -42,11 +42,13 @@ void PrintMain() {
             "\t{2:<{0}} - generates test output\n"
             "\t{3:<{0}} - version of the Agent\n"
             "\t{4:<{0}} - reload configuration files of the Agent\n"
-            "\t{5:<{0}} - usage\n",
+            "\t{5:<{0}} - remove Legacy Agent if installed\n"
+            "\t{6:<{0}} - usage\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
-            kLegacyTestParam, kVersionParam, kReloadConfigParam, kHelpParam);
+            kLegacyTestParam, kVersionParam, kReloadConfigParam,
+            kRemoveLegacyParam, kHelpParam);
     });
 }
 
@@ -499,6 +501,11 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
 
     if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
         cma::srv::ExecReloadConfig();
+        return 0;
+    }
+
+    if (param == wtools::ConvertToUTF16(kRemoveLegacyParam)) {
+        cma::srv::ExecRemoveLegacyAgent();
         return 0;
     }
 

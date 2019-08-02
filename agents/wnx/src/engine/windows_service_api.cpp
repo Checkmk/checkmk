@@ -517,6 +517,50 @@ int ExecReloadConfig() {
     return 0;
 }
 
+// returns codes for main
+// 0 - no more Legacy Agent
+// 1 - legacy agent is here
+// 2 - bad uninstall
+int ExecRemoveLegacyAgent() {
+    using namespace cma::cfg;
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::SendStringToStdio("Removing Legacy Agent...\n", XLOG::Colors::white);
+    ON_OUT_OF_SCOPE(XLOG::SendStringToStdio("Done.", XLOG::Colors::white););
+
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is absent, no need to uninstall\n",
+            XLOG::Colors::green);
+        return 0;
+    }
+
+    XLOG::SendStringToStdio("This operation may be long, please, wait\n",
+                            XLOG::Colors::yellow);
+    auto result = UninstallProduct(cma::cfg::products::kLegacyAgent);
+    if (result) {
+        XLOG::SendStringToStdio("Successful execution of the uninstall file\n",
+                                XLOG::Colors::green);
+        if (!upgrade::FindLegacyAgent().empty()) {
+            XLOG::SendStringToStdio(
+                "Legacy Agent is not removed, probably you have to have to be in Elevated Mode\n",
+                XLOG::Colors::red);
+            return 2;
+        }
+    } else {
+        XLOG::SendStringToStdio("Failed Execution of uninstall file\n",
+                                XLOG::Colors::red);
+    }
+
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio("Legacy Agent looks as removed\n",
+                                XLOG::Colors::cyan);
+        return 0;
+    }
+
+    return 1;
+}
+
 int ExecShowConfig(std::string_view sec) {
     XLOG::setup::ColoredOutputOnStdio(true);
     using namespace cma::cfg;
@@ -809,9 +853,8 @@ int ServiceAsService(
     // reachable only on service stop
 }
 
-// we are setting service as restartable using more or less suitable parameters
-// set
-// returns false if failed call
+// we are setting service as restartable using more or less suitable
+// parameters set returns false if failed call
 bool ConfigureServiceAsRestartable(SC_HANDLE handle) {
     SERVICE_FAILURE_ACTIONS service_fail_actions;
     SC_ACTION fail_actions[3];

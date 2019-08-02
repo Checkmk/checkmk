@@ -1,3 +1,6 @@
+import tarfile
+import StringIO
+import base64
 import cmk_base.crash_reporting as crash_reporting
 
 
@@ -34,3 +37,31 @@ def test_cmk_base_crash_report_from_exception():
 
     assert crash.crash_info["exc_type"] == "ValueError"
     assert crash.crash_info["exc_value"] == "DING"
+
+
+def test_cmk_base_crash_report_save():
+    try:
+        raise ValueError("DINGELING")
+    except Exception:
+        crash = crash_reporting.CMKBaseCrashReport.from_exception()
+        crash.save_to_crash_dir()
+
+    crash2 = crash_reporting.CMKBaseCrashReport({})
+    crash2.from_crash_dir("base")
+
+    assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
+    assert crash.crash_info["time"] == crash2.crash_info["time"]
+
+
+def test_cmk_base_crash_report_get_packed():
+    try:
+        raise ValueError("DINGELING")
+    except Exception:
+        crash = crash_reporting.CMKBaseCrashReport.from_exception()
+        crash.save_to_crash_dir()
+
+    b64tgz = crash.get_packed()
+    tgz = base64.b64decode(b64tgz)
+    buf = StringIO.StringIO(tgz)
+    with tarfile.open(mode="r:gz", fileobj=buf) as tar:
+        assert tar.getnames() == ["crash.info"]

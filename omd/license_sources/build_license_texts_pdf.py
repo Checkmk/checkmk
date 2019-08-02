@@ -3,10 +3,9 @@
 found under ./license_texts/"""
 
 import sys
-import os
 import traceback
 from pathlib2 import Path
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib.styles import ParagraphStyle as PS
 from reportlab.lib.units import inch
@@ -25,7 +24,7 @@ class MyDocTemplate(BaseDocTemplate):
 
     def __init__(self, filename, **kw):
         self.allowSplitting = 0
-        apply(BaseDocTemplate.__init__, (self, filename), kw)
+        BaseDocTemplate.__init__(self, filename, **kw)
         template = PageTemplate('normal', [Frame(2.5 * cm, 2.5 * cm, 15 * cm, 25 * cm, id='F1')])
         self.addPageTemplates(template)
 
@@ -44,7 +43,8 @@ class MyDocTemplate(BaseDocTemplate):
             E = [level, text, self.page]
             # If we have a bookmark name append that to our notify data
             bn = getattr(flowable, '_bookmarkName', None)
-            if bn is not None: E.append(bn)
+            if bn is not None:
+                E.append(bn)
             self.notify('TOCEntry', tuple(E))
 
 
@@ -91,7 +91,6 @@ def main():
     title = PS(name='Title', fontSize=24, leading=16)
     h1 = PS(name='Heading1', fontSize=16, leading=16)
     normal = PS(name='Normal', fontSize=8)
-    centered = PS(name='centered', fontSize=18, leading=16, alignment=1, spaceAfter=20)
     spacer = Spacer(width=0, height=2 * cm)
 
     story = []

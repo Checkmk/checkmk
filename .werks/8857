@@ -13,18 +13,27 @@ logic into containers based on the Checkmk images.
 
 These hooks have been created:
 
-pre-create - 
-post-create
-pre-start
-post-start
+pre-create - Is executed on the very first container startup before the Checkmk
+             site in the container is created  with "omd create".
+post-create - Is executed after site has been created and internal "omd config" is done.
+pre-update - Is executed after a volume has been moved to a container basing on an image
+            with another Checkmk version. Is called before "omd update" is executed.
+post-update - Is executed after a volume has been moved to a container basing on an image
+            with another Checkmk version. Is called after "omd update" was executed.
+pre-start - Is executed each time when the container is started before "omd start"
+post-start - Is executed each time when the container is started after "omd start"
 
-To use them you need to 
+To use them you need to either mount the scripts into your container or create
+a custom image based on our container images. Your scripts need to be located
+in one of the below directories and need to be executable.
 
-At these steps, all scripts within docker-entrypoint.d/hook-name are executed.
-
-root@7ac2dc47037e:/# tree docker-entrypoint.d/
+C+:
 docker-entrypoint.d/
 |-- post-create
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- post-update
 |   |-- 01_foo.sh
 |   |-- 02_bar.sh
 |   `-- 03_baz.sh
@@ -36,8 +45,12 @@ docker-entrypoint.d/
 |   |-- 01_foo.sh
 |   |-- 02_bar.sh
 |   `-- 03_baz.sh
+|-- pre-update
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
 `-- pre-start
     |-- 01_foo.sh
     |-- 02_bar.sh
     `-- 03_baz.sh
-
+C-:

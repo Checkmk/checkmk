@@ -589,7 +589,7 @@ class ModeDistributedMonitoring(WatoMode):
                 error = "%s" % e
 
             except Exception as e:
-                logger.exception()
+                logger.exception("error logging in")
                 if config.debug:
                     raise
                 html.add_user_error("_name", error)
@@ -841,7 +841,7 @@ class ReplicationStatusFetcher(object):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
-                logger.exception()
+                logger.exception("error collecting replication results from site %s" % site_id)
                 html.show_error("%s: %s" % (site_id, e))
 
         self._logger.debug("Got results")

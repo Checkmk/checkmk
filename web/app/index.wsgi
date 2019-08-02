@@ -146,7 +146,7 @@ class Application(object):
                 logger.error("%s: %s" % (plain_title, e))
 
         except Exception as e:
-            logger.exception()
+            logger.exception("error processing WSGI request")
             if self._plain_error():
                 html.set_output_format("text")
                 html.write(_("Internal error") + ": %s\n" % e)
@@ -160,7 +160,7 @@ class Application(object):
             try:
                 self._teardown()
             except:
-                logger.exception()
+                logger.exception("error cleaning up after WSGI request")
                 raise
 
     def _teardown(self):

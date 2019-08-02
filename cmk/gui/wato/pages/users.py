@@ -132,7 +132,7 @@ class ModeUsers(WatoMode):
 
                 self._job_snapshot = job.get_status_snapshot()
             except Exception:
-                logger.exception()
+                logger.exception("error syncing users")
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.request.var("_bulk_delete_users"):

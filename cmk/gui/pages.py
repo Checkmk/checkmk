@@ -80,7 +80,7 @@ class AjaxPage(Page):
         except Exception as e:
             if config.debug:
                 raise
-            logger.exception()
+            logger.exception("error calling AJAX page handler")
             response = {"result_code": 1, "result": "%s" % e}
 
         html.write(json.dumps(response))

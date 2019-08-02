@@ -31,20 +31,7 @@ import cmk.utils.paths
 
 
 class CMKWebLogger(_logging.getLoggerClass()):
-    def exception(self, *args, **kwargs):
-        """Logs an optional message together with the traceback of the
-        last exception to the current logger (-> web.log)"""
-        # FIXME: Ugly Kung Fu to make the msg positional argument optional. This
-        # is a consequence of the cruel hack to change exceptions's signature,
-        # something which we shouldn't do: Either fix all the call sites or
-        # introduce another method.
-        if args:
-            msg = args[0]
-            args = args[1:]
-        else:
-            msg = 'Internal error'
-        msg = kwargs.pop('msg', msg)
-
+    def exception(self, msg, *args, **kwargs):
         from cmk.gui.globals import html
         if html.in_context():
             msg = "%s %s" % (html.request.requested_url, msg)

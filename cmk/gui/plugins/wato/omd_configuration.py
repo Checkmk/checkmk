@@ -428,7 +428,7 @@ class ConfigDomainApache(ConfigDomain):
 
             return []
         except Exception:
-            logger.exception()
+            logger.exception("error reloading apache")
             return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
 
     def _write_config_file(self):
@@ -545,7 +545,7 @@ class ConfigDomainRRDCached(ConfigDomain):
 
             return []
         except Exception:
-            logger.exception()
+            logger.exception("error restarting rrdcached")
             return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
 
     def _write_config_file(self):

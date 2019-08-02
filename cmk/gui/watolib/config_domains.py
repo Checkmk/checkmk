@@ -139,7 +139,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pass
 
         except Exception as e:
-            logger.exception()
+            logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
                 _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
                   "for further information.") % e)
@@ -243,7 +243,7 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)
         except Exception:
-            logger.exception()
+            logger.exception("error updating trusted CAs")
             return [
                 "Failed to create trusted CA file '%s': %s" %
                 (self.trusted_cas_file, traceback.format_exc())
@@ -277,7 +277,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except IOError:
-                    logger.exception()
+                    logger.exception("error updating CA")
 
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful

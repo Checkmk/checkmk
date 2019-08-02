@@ -1008,7 +1008,7 @@ def show_filter(f):
             f.display()
             html.write(html.drain())
     except Exception as e:
-        logger.exception()
+        logger.exception("error showing filter")
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)

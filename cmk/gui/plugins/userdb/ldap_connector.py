@@ -367,7 +367,7 @@ class LDAPUserConnector(UserConnector):
             return server
         except Exception:
             self._logger.info('  DISCOVERY: Failed to discover a server from domain %r' % domain)
-            self._logger.exception()
+            self._logger.exception("error discovering LDAP server")
             self._logger.info('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
 

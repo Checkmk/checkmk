@@ -289,8 +289,16 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 
         ohm_engine.resetError();
         if (running) ohm_process_.start(ohm_exe.wstring());
-    } else
+    } else {
+        if (!ohm_process_.running()) {
+            XLOG::l.i("OHM is not running by Agent");
+            if (wtools::FindProcess(cma::provider::ohm::kExeModuleWide)) {
+                XLOG::l.i("OHM is found: REUSE running OHM");
+                return true;
+            }
+        }
         ohm_process_.start(ohm_exe.wstring());
+    }
     return true;
 }
 
@@ -411,6 +419,27 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
                                           : cma::cfg::kTestingMailSlot;
 
+#if 0
+    // ARtificial memory allocator in thread
+    std::vector<std::string> z;
+
+    auto alloca = std::thread([&z]() {
+        for (;;) {
+            std::string s =
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            z.push_back(s);
+            ::Sleep(100);
+        }
+    });
+#endif
     cma::MailSlot mailbox(mailslot_name, 0);
     using namespace cma::carrier;
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());

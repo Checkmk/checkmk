@@ -95,6 +95,7 @@ base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_l
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
+crash_dir = Path(var_dir, "crashes")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")

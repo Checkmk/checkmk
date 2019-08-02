@@ -27,6 +27,7 @@
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
+import abc
 import base64
 import inspect
 import os
@@ -36,10 +37,21 @@ import time
 import traceback
 import subprocess
 import json
+import tarfile
+import StringIO
+import urllib
+from typing import (Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
+
+try:
+    from pathlib import Path  # type: ignore # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path
 
 import six
 
 import cmk
+import cmk.utils.paths
+import cmk.utils.store
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -51,22 +63,120 @@ class RobustJSONEncoder(json.JSONEncoder):
         return "%s" % o
 
 
-def crash_info_to_string(crash_info):
-    return json.dumps(crash_info, cls=RobustJSONEncoder)
+class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
+    """Base class for the component specific crash report types"""
+
+    # TODO: Can not use this with python 2
+    #@abc.abstractclassmethod
+    @classmethod
+    def type(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def from_exception(cls, details=None, type_specific_attributes=None):
+        # type: (Dict, Dict) -> ABCCrashReport
+        """Create a crash info object from the current exception context
+
+        details - Is an optional dictionary of crash type specific attributes
+                  that are added to the "details" key of the crash_info.
+        type_specific_attributes - Crash type specific class attributes that
+                                   are set as attributes on the crash objects.
+        """
+        attributes = {
+            "crash_info": _get_generic_crash_info(cls.type(), details or {}),
+        }
+        attributes.update(type_specific_attributes or {})
+        return cls(**attributes)
+
+    def __init__(self, crash_info):
+        # type: (Dict) -> None
+        super(ABCCrashReport, self).__init__()
+        self.crash_info = crash_info
+
+    def ident(self):
+        # type: () -> Tuple[Text, ...]
+        """Return the identity in form of a tuple of a single crash report.
+
+        With this default ident method a single crash per type will be kept by
+        Checkmk at a time. In case sub classes want a different behavior, this
+        needs to be overridden. For example checks use the host name + service
+        description to keep one crash per service."""
+        return (self.type(),)
+
+    def ident_to_text(self):
+        # type: () -> Text
+        """Returns the textual representation of the identity
+
+        The parts are separated with "@" signs. The "@" signs found in the parts are
+        replaced with "~" which is not allowed to be in the single parts. E.g.
+        service descriptions don't have such signs."""
+        return "@".join([p.replace("@", "~") for p in self.ident()])
+
+    def crash_dir(self, ident_text=None):
+        # type: (Optional[Text]) -> Path
+        """Returns the path to the crash directory of the current or given crash report"""
+        if ident_text is None:
+            ident_text = self.ident_to_text()
+        return cmk.utils.paths.crash_dir / self.type() / ident_text
+
+    def local_crash_report_url(self):
+        # type: () -> Text
+        """Returns the site local URL to the current crash report"""
+        return "crash.py?%s" % urllib.urlencode([("component", self.type()),
+                                                 ("ident", self.ident_to_text())])
+
+    def save_to_crash_dir(self):
+        """Save the crash report instance to it's crash report directory"""
+        self._prepare_crash_dump_directory()
+        cmk.utils.store.save_file(os.path.join(self.crash_dir(), "crash.info"),
+                                  self._crash_info_to_string(self.crash_info) + "\n")
+
+    def _prepare_crash_dump_directory(self):
+        crash_dir = self.crash_dir()
+
+        if not os.path.exists(crash_dir):
+            os.makedirs(crash_dir)
+
+        # Remove all files of former crash reports
+        for f in os.listdir(crash_dir):
+            try:
+                os.unlink(os.path.join(crash_dir, f))
+            except OSError:
+                pass
+
+    def _crash_info_to_string(self, crash_info):
+        return json.dumps(crash_info, cls=RobustJSONEncoder)
+
+    def from_crash_dir(self, ident_text):
+        """Populate the crash info from the crash directory"""
+        text = open(os.path.join(self.crash_dir(ident_text), "crash.info")).read()
+        self.crash_info = self._crash_info_from_string(text)
+
+    def _crash_info_from_string(self, text):
+        return json.loads(text)
+
+    # Returns a string that contains a base64 encoded and gzipped tar archive
+    def get_packed(self):
+        """Returns a base64 encoded byte string representing the current crash report"""
+        buf = StringIO.StringIO()
+        with tarfile.open(mode="w:gz", fileobj=buf) as tar:
+            for filename in os.listdir(self.crash_dir()):
+                tar.add(os.path.join(self.crash_dir(), filename), filename)
+
+        return base64.b64encode(buf.getvalue())
 
 
-# The top level keys of the crash info dict are standardized
-def create_crash_info(crash_type, details=None, version=None):
-    if details is None:
-        details = {}
+def _get_generic_crash_info(type_name, details):
+    # type: (Text, Dict) -> Dict
+    """Produces the crash info data structure.
 
-    if version is None:
-        version = cmk.__version__
-
+    The top level keys of the crash info dict are standardized and need
+    to be set for all crash reports."""
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     tb_list = traceback.extract_tb(exc_traceback)
 
+    # TODO: This may be cleaned up by using reraising with python 3
     # MKParseFunctionError() are re raised exceptions originating from the
     # parse functions of checks. They have the original traceback object saved.
     # The formated stack of these tracebacks is somehow relative to the calling
@@ -74,8 +184,8 @@ def create_crash_info(crash_type, details=None, version=None):
     # to concatenate the traceback of the MKParseFunctionError() and the original
     # exception.
     # Re-raising exceptions will be much easier with Python 3.x.
-    if exc_type.__name__ == "MKParseFunctionError":
-        tb_list += traceback.extract_tb(exc_value.exc_info()[2])
+    if exc_type and exc_value and exc_type.__name__ == "MKParseFunctionError":
+        tb_list += traceback.extract_tb(exc_value.exc_info()[2])  # type: ignore
 
     # Unify different string types from exception messages to a unicode string
     try:
@@ -84,23 +194,23 @@ def create_crash_info(crash_type, details=None, version=None):
         exc_txt = str(exc_value).decode("utf-8")
 
     return {
-        "crash_type": crash_type,
+        "crash_type": type_name,
         "time": time.time(),
-        "os": get_os_info(),
-        "version": version,
+        "os": _get_os_info(),
+        "version": cmk.__version__,
         "edition": cmk.edition_short(),
         "core": _current_monitoring_core(),
         "python_version": sys.version,
         "python_paths": sys.path,
-        "exc_type": exc_type.__name__,
+        "exc_type": exc_type.__name__ if exc_type else None,
         "exc_value": exc_txt,
         "exc_traceback": tb_list,
-        "local_vars": get_local_vars_of_last_exception(),
+        "local_vars": _get_local_vars_of_last_exception(),
         "details": details,
     }
 
 
-def get_os_info():
+def _get_os_info():
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
@@ -136,11 +246,11 @@ def _current_monitoring_core():
     return p.communicate()[0]
 
 
-def get_local_vars_of_last_exception():
+def _get_local_vars_of_last_exception():
     local_vars = {}
     try:
         for key, val in inspect.trace()[-1][0].f_locals.items():
-            local_vars[key] = format_var_for_export(val)
+            local_vars[key] = _format_var_for_export(val)
     except IndexError:
         # please don't crash in the attempt to report a crash.
         # Don't know why inspect.trace() causes an IndexError but it does happen
@@ -149,27 +259,27 @@ def get_local_vars_of_last_exception():
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        format_var_for_export(pprint.pformat(local_vars), maxsize=5 * 1024 * 1024))
+        _format_var_for_export(pprint.pformat(local_vars), maxsize=5 * 1024 * 1024))
 
 
-def format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
+def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
     if maxdepth == 0:
         return "Max recursion depth reached"
 
     if isinstance(val, dict):
         val = val.copy()
         for item_key, item_val in val.items():
-            val[item_key] = format_var_for_export(item_val, maxdepth - 1)
+            val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
 
     elif isinstance(val, list):
         val = val[:]
         for index, item in enumerate(val):
-            val[index] = format_var_for_export(item, maxdepth - 1)
+            val[index] = _format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
         new_val = ()
         for item in val:
-            new_val += (format_var_for_export(item, maxdepth - 1),)
+            new_val += (_format_var_for_export(item, maxdepth - 1),)
         val = new_val
 
     # Check and limit size

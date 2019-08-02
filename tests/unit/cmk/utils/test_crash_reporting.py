@@ -1,5 +1,11 @@
 import copy
-import cmk.utils.crash_reporting as crash_reporting
+from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export
+
+
+class UnitTestCrashReport(ABCCrashReport):
+    @classmethod
+    def type(cls):
+        return "test"
 
 
 def test_format_var_for_export_strip_nested_dict():
@@ -14,7 +20,7 @@ def test_format_var_for_export_strip_nested_dict():
     }
 
     var = copy.deepcopy(orig_var)
-    formated = crash_reporting.format_var_for_export(var)
+    formated = _format_var_for_export(var)
 
     # Stripped?
     assert formated["a"]["b"]["c"]["d"] == "Max recursion depth reached"
@@ -31,7 +37,7 @@ def test_format_var_for_export_strip_large_data():
     }
 
     var = copy.deepcopy(orig_var)
-    formated = crash_reporting.format_var_for_export(var)
+    formated = _format_var_for_export(var)
 
     # Stripped?
     assert formated["a"]["y"].endswith("(1 bytes stripped)")
@@ -50,7 +56,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
     }
 
     var = copy.deepcopy(orig_var)
-    formated = crash_reporting.format_var_for_export(var)
+    formated = _format_var_for_export(var)
 
     # Stripped?
     assert formated["a"]["b"]["c"][0] == "Max recursion depth reached"

@@ -32,9 +32,7 @@ import cStringIO as StringIO
 
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.crash_reporting as crash_reporting
 
-import cmk_base.config as config
 import cmk_base.utils
 import cmk_base.check_utils
 
@@ -81,26 +79,27 @@ def _prepare_crash_dump_directory(crash_dir):
 
 def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
                                  params, description, info, text):
+    pass
+    # TODO: Temporarily disabled
+    #config_cache = config.get_config_cache()
+    #host_config = config_cache.get_host_config(hostname)
 
-    config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
-
-    crash_info = crash_reporting.create_crash_info(
-        "check",
-        details={
-            "check_output": text,
-            "host": hostname,
-            "is_cluster": host_config.is_cluster,
-            "description": description,
-            "check_type": check_plugin_name,
-            "item": item,
-            "params": params,
-            "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
-            "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
-            "manual_check": is_manual_check,
-        })
-    open(crash_dir + "/crash.info",
-         "w").write(crash_reporting.crash_info_to_string(crash_info) + "\n")
+    #crash_info = crash_reporting.create_crash_info(
+    #    "check",
+    #    details={
+    #        "check_output": text,
+    #        "host": hostname,
+    #        "is_cluster": host_config.is_cluster,
+    #        "description": description,
+    #        "check_type": check_plugin_name,
+    #        "item": item,
+    #        "params": params,
+    #        "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
+    #        "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
+    #        "manual_check": is_manual_check,
+    #    })
+    #open(crash_dir + "/crash.info",
+    #     "w").write(crash_reporting.crash_info_to_string(crash_info) + "\n")
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name):

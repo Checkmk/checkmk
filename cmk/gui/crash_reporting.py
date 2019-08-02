@@ -474,33 +474,35 @@ def show_agent_output(tardata):
 
 
 def create_crash_dump_info_file(tar, what):
-    crash_info = cmk.utils.crash_reporting.create_crash_info(
-        what,
-        details={
-            "page": html.myfile + ".py",
-            "vars": {
-                key: "***" if value in ["password", "_password"] else value
-                for key, value in html.request.itervars()
-            },
-            "username": config.user.id,
-            "user_agent": html.request.user_agent,
-            "referer": html.request.referer,
-            "is_mobile": html.is_mobile(),
-            "is_ssl_request": html.request.is_ssl_request,
-            "language": cmk.gui.i18n.get_current_language(),
-            "request_method": html.request.request_method,
-        },
-        version=get_version(what))
+    pass
+    # TODO: Temporarily disabled
+    #crash_info = cmk.utils.crash_reporting.create_crash_info(
+    #    what,
+    #    details={
+    #        "page": html.myfile + ".py",
+    #        "vars": {
+    #            key: "***" if value in ["password", "_password"] else value
+    #            for key, value in html.request.itervars()
+    #        },
+    #        "username": config.user.id,
+    #        "user_agent": html.request.user_agent,
+    #        "referer": html.request.referer,
+    #        "is_mobile": html.is_mobile(),
+    #        "is_ssl_request": html.request.is_ssl_request,
+    #        "language": cmk.gui.i18n.get_current_language(),
+    #        "request_method": html.request.request_method,
+    #    },
+    #    version=get_version(what))
 
-    content = cStringIO.StringIO()
-    content.write(cmk.utils.crash_reporting.crash_info_to_string(crash_info))
-    content.seek(0)
+    #content = cStringIO.StringIO()
+    #content.write(cmk.utils.crash_reporting.crash_info_to_string(crash_info))
+    #content.seek(0)
 
-    tarinfo = tarfile.TarInfo(name="crash.info")
-    content.seek(0, os.SEEK_END)
-    tarinfo.size = content.tell()
-    content.seek(0)
-    tar.addfile(tarinfo=tarinfo, fileobj=content)
+    #tarinfo = tarfile.TarInfo(name="crash.info")
+    #content.seek(0, os.SEEK_END)
+    #tarinfo.size = content.tell()
+    #content.seek(0)
+    #tar.addfile(tarinfo=tarinfo, fileobj=content)
 
 
 def create_gui_crash_report(what):

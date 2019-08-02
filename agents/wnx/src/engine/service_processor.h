@@ -604,6 +604,9 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, StartStopExe);
+
+    friend class SectionProviderOhm;
+    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhm);
 #endif
 };
 

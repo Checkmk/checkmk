@@ -37,6 +37,7 @@ node {
         print "Changed python files: ${CHANGED_PYTHON_FILES}"
         CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
+        CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
@@ -78,7 +79,9 @@ node {
         }
         
         stage("Python linting") {
-            if (CHANGED_PYTHON_FILES != "") {
+            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON_FILES == "") {
+                println "Neither .pylintrc nor python files changed. Skipping."
+            } else {
                 dir('tests') {
                     withEnv(["WORKDIR=${WORKSPACE}/tmp",
                          'PYLINT_ARGS=--output-format=cmk_parseable']) {
@@ -87,15 +90,17 @@ node {
                         sh ". /bauwelt/bin/bw-setup-jenkins-env && make -C .. --what-if Pipfile.lock .venv && make test-pylint"
                     }
                 }
-            } else {
-                println "No python files changed. Skipping."
             }
         }
         
         stage("Python3 linting") {
+            if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON3_FILES == "") {
+                println "Neither .pylintrc nor python3 files changed. Skipping."
+            } else {
                 dir('tests-py3') {
                     sh 'make test-pylint'
                 }
+            }
         }
 
         stage("Python unit tests") {

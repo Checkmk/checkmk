@@ -1887,4 +1887,43 @@ bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
     return true;
 }
 
+constexpr std::string_view kWmicUninstallCommand =
+    "wmic product where name=\"{}\" call uninstall /nointeractive";
+std::string CreateWmicCommand(std::string_view product_name) noexcept {
+    return fmt::format(kWmicUninstallCommand, product_name);
+}
+
+std::filesystem::path CreateWmicUninstallFile(
+    std::filesystem::path temp_dir, std::string_view product_name) noexcept {
+    auto file = temp_dir / "exec_uninstall.cmd";
+    try {
+        std::ofstream ofs(file.u8string());
+        ofs << CreateWmicCommand(product_name);
+        ofs.close();
+        if (std::filesystem::exists(file)) return file;
+        XLOG::l("Attempt to create '{}' file is failed", file.u8string());
+        return {};
+    } catch (const std::exception& e) {
+        XLOG::l("Attempt to create '{}' file is failed with exception {}",
+                file.u8string(), e.what());
+    }
+
+    return {};
+}
+
+bool UninstallProduct(std::string_view name) {
+    if constexpr (tgt::IsWindows()) {
+        std::filesystem::path temp = cma::cfg::GetTempDir();
+        auto fname = CreateWmicUninstallFile(temp, name);
+        if (fname.empty()) return false;
+        auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
+        if (pid == 0) {
+            XLOG::l("Failed to start '{}'", fname.u8string());
+        }
+        return true;
+    }
+
+    return false;
+}
+
 }  // namespace cma::cfg

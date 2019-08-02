@@ -212,6 +212,16 @@ def process_level_elements():
              ],
              default_value="disable",
          )),
+        ('process_info_arguments',
+         Integer(
+             title=_("Include process arguments in long-output"),
+             label=_("Include per-process arguments (security risk!)"),
+             help=_("If non-zero, the the list of all the matching processes and their details"
+                    " in the long-output will include up to the first N arguments of each"
+                    " processes. Please note this may include sensitive data like credentials,"
+                    " and is strongly discouraged."),
+             default_value=0,
+         )),
         ('icon',
          UserIconOrAction(
              title=_("Add custom icon or action"),

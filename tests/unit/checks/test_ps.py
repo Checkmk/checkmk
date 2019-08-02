@@ -884,3 +884,26 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         reference.insert(4, (1, single_msg, []))
 
     assertCheckResultsEqual(output, CheckResult(reference))
+
+
+PROCESSES = [
+    [("name", ("/bin/sh", "")), ("user", ("root", "")), ("virtual size", (1234, "kB")),
+     ("arguments", ("--feen-gibt-es-nicht quark --invert", ""))],
+]
+
+
+@pytest.mark.parametrize("processes, formatted_list, html_flag", [
+    (PROCESSES, (
+        "name /bin/sh, user root, virtual size 1234kB,"
+        " arguments --feen-gibt-es-nicht quark --invert\r\n"
+    ), False),
+    (PROCESSES, (
+        "<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
+        "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
+        "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"
+    ), True),
+])
+def test_format_process_list(check_manager, processes, formatted_list, html_flag):
+    check = check_manager.get_check("ps")
+    format_process_list = check.context["format_process_list"]
+    assert format_process_list(processes, html_flag) == formatted_list

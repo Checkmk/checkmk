@@ -632,6 +632,10 @@ def check_ps_process_capture(parsed, params, cpu_cores):
             ps_aggregator.lifetimes(process_info, process)
             ps_aggregator.cpu_usage(process_info, process)
 
+        include_args = params.get("process_info_arguments", 0)
+        if include_args:
+            process.append(("args", (' '.join(command_line[1:])[:include_args], "")))
+
         ps_aggregator.append(process)
 
     return ps_aggregator

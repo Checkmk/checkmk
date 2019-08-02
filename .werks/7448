@@ -1,0 +1,8 @@
+Title: Fix RRD Metadata update script for Filesystem checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564749233
+Class: fix

@@ -170,7 +170,7 @@ class AutomationTryDiscovery(Automation):
     def execute(self, args):
         with redirect_output(cStringIO.StringIO()) as buf:
             log.setup_console_logging()
-            log.logger.setLevel(log.verbosity_to_log_level(1))
+            log.logger.setLevel(log.VERBOSE)
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
                 "output": buf.getvalue(),

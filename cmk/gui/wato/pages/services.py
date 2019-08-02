@@ -301,14 +301,17 @@ def _get_check_table(request):
         return execute_discovery_job(request)
 
     discovery_result = _get_check_table_from_remote(request)
-    discovery_result.check_table = _add_missing_service_labels(discovery_result.check_table)
+    discovery_result = _add_missing_service_labels(discovery_result)
     return discovery_result
 
 
 # 1.6.0b4 introduced the service labels column which might be missing when
 # fetching information from remote sites.
-def _add_missing_service_labels(check_table):
-    return [(e + ({},) if len(e) < 11 else e) for e in check_table]
+def _add_missing_service_labels(discovery_result):
+    # type: (DiscoveryResult) -> DiscoveryResult
+    d = discovery_result._asdict()
+    d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
+    return DiscoveryResult(**d)
 
 
 def _get_check_table_from_remote(request):

@@ -40,7 +40,7 @@ import json
 import tarfile
 import StringIO
 import urllib
-from typing import (Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
+from typing import (Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 
 try:
     from pathlib import Path  # type: ignore # pylint: disable=unused-import
@@ -70,6 +70,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     #@abc.abstractclassmethod
     @classmethod
     def type(cls):
+        # type: () -> Text
         raise NotImplementedError()
 
     @classmethod
@@ -117,7 +118,7 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the path to the crash directory of the current or given crash report"""
         if ident_text is None:
             ident_text = self.ident_to_text()
-        return cmk.utils.paths.crash_dir / self.type() / ident_text
+        return cmk.utils.paths.crash_dir / self.type() / ident_text  # type: ignore
 
     def local_crash_report_url(self):
         # type: () -> Text
@@ -126,12 +127,15 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
                                                  ("ident", self.ident_to_text())])
 
     def save_to_crash_dir(self):
+        # type: () -> None
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory()
         cmk.utils.store.save_file(os.path.join(self.crash_dir(), "crash.info"),
-                                  self._crash_info_to_string(self.crash_info) + "\n")
+                                  (self._crash_info_to_string(self.crash_info) +
+                                   "\n").encode("utf-8"))
 
     def _prepare_crash_dump_directory(self):
+        # type: () -> None
         crash_dir = self.crash_dir()
 
         if not os.path.exists(crash_dir):
@@ -145,18 +149,21 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
                 pass
 
     def _crash_info_to_string(self, crash_info):
+        # type: (Dict) -> Text
         return json.dumps(crash_info, cls=RobustJSONEncoder)
 
     def from_crash_dir(self, ident_text):
+        # type: (Text) -> None
         """Populate the crash info from the crash directory"""
         text = open(os.path.join(self.crash_dir(ident_text), "crash.info")).read()
         self.crash_info = self._crash_info_from_string(text)
 
     def _crash_info_from_string(self, text):
+        # type: (Text) -> Dict
         return json.loads(text)
 
-    # Returns a string that contains a base64 encoded and gzipped tar archive
     def get_packed(self):
+        # type: () -> Text
         """Returns a base64 encoded byte string representing the current crash report"""
         buf = StringIO.StringIO()
         with tarfile.open(mode="w:gz", fileobj=buf) as tar:
@@ -176,7 +183,7 @@ def _get_generic_crash_info(type_name, details):
 
     tb_list = traceback.extract_tb(exc_traceback)
 
-    # TODO: This may be cleaned up by using reraising with python 3
+    # TODO: This ma be cleaned up by using reraising with python 3
     # MKParseFunctionError() are re raised exceptions originating from the
     # parse functions of checks. They have the original traceback object saved.
     # The formated stack of these tracebacks is somehow relative to the calling
@@ -211,6 +218,7 @@ def _get_generic_crash_info(type_name, details):
 
 
 def _get_os_info():
+    # type: () -> Text
     if "OMD_ROOT" in os.environ:
         return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
@@ -231,12 +239,13 @@ def _get_os_info():
     if "PRETTY_NAME" in info:
         return info["PRETTY_NAME"]
     elif info:
-        return info
+        return "%s" % info
 
     return "UNKNOWN"
 
 
 def _current_monitoring_core():
+    # type: () -> Text
     p = subprocess.Popen(["omd", "config", "show", "CORE"],
                          close_fds=True,
                          shell=False,
@@ -247,6 +256,7 @@ def _current_monitoring_core():
 
 
 def _get_local_vars_of_last_exception():
+    # type: () -> Text
     local_vars = {}
     try:
         for key, val in inspect.trace()[-1][0].f_locals.items():
@@ -263,6 +273,7 @@ def _get_local_vars_of_last_exception():
 
 
 def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
+    # type: (Any, int, int) -> Any
     if maxdepth == 0:
         return "Max recursion depth reached"
 
@@ -277,7 +288,7 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
             val[index] = _format_var_for_export(item, maxdepth - 1)
 
     elif isinstance(val, tuple):
-        new_val = ()
+        new_val = ()  # type: Tuple
         for item in val:
             new_val += (_format_var_for_export(item, maxdepth - 1),)
         val = new_val

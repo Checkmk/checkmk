@@ -1,0 +1,10 @@
+Title: check_mk_agent.linux: Modification of agent's encryption functionality in order to accomodate for newer digest functions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1565158736
+Class: feature
+
+The agent's encryption functionality is updated with this change. Previously restricted to the usage of md5 as sole digest function, this implementation automatically selects and uses sha-2 if the user's openssl version is deemed suitable. 

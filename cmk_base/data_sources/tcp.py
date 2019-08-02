@@ -130,13 +130,13 @@ class TCPDataSource(CheckMKAgentDataSource):
         if encryption_settings["use_regular"] == "enforce" and output_is_plaintext:
             raise MKAgentError(
                 "Agent output is plaintext but encryption is enforced by configuration")
-
         if not output_is_plaintext and encryption_settings["use_regular"] in ["enforce", "allow"]:
             try:
                 # simply check if the protocol is an actual number
-                int(output[0:2])
+                protocol = int(output[0:2])
 
-                output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
+                output = self._decrypt_package(output[2:], encryption_settings["passphrase"],
+                                               protocol)
             except ValueError:
                 raise MKAgentError("Unsupported protocol version: %s" % output[:2])
             except Exception as e:
@@ -150,9 +150,15 @@ class TCPDataSource(CheckMKAgentDataSource):
 
         return output
 
-    def _decrypt_package(self, encrypted_pkg, encryption_key):
+    def _decrypt_package(self, encrypted_pkg, encryption_key, protocol):
         from Cryptodome.Cipher import AES
-        from hashlib import md5
+        if protocol == 2:
+            from hashlib import sha256 as encrypt_digest
+        elif protocol == 3:
+            # Python 2 only allows sha-2, Python 3 allows sha-3 adjusts in the future
+            from hashlib import sha256 as encrypt_digest
+        else:
+            from hashlib import md5 as encrypt_digest
 
         unpad = lambda s: s[0:-ord(s[-1])]
 
@@ -160,14 +166,13 @@ class TCPDataSource(CheckMKAgentDataSource):
         def derive_key_and_iv(password, key_length, iv_length):
             d = d_i = ''
             while len(d) < key_length + iv_length:
-                d_i = md5(d_i + password).digest()
+                d_i = encrypt_digest(d_i + password).digest()
                 d += d_i
             return d[:key_length], d[key_length:key_length + iv_length]
 
         key, iv = derive_key_and_iv(encryption_key, 32, AES.block_size)
         decryption_suite = AES.new(key, AES.MODE_CBC, iv)
         decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
-
         # Strip of fill bytes of openssl
         return unpad(decrypted_pkg)
 

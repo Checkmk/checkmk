@@ -810,7 +810,14 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value, varprefix):
-        self.valuespec().validate_datatype(value, varprefix + self.name())
+        # TODO: Would be really good to enable this to prevent unexpected data
+        # types being written to the configuration. For the moment we can not
+        # enable this because of the Web API: When using JSON as request_format
+        # the JSON modules decodes all strings to unicode strings which are not
+        # accepted by some attribute valuespecs which base on e.g. TextAscii.
+        # This should be solved during Python3 transformation where we will
+        # finally make a huge switch to unicode strings in many places.
+        #self.valuespec().validate_datatype(value, varprefix + self.name())
         self.valuespec().validate_value(value, varprefix + self.name())
 
 

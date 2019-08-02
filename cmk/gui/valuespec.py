@@ -4334,7 +4334,7 @@ class Labels(ValueSpec):
 
         return labels
 
-    def validate_datatype(self, value, varprefix):
+    def validate_value(self, value, varprefix):
         for k, v in value.iteritems():
             if not isinstance(k, unicode):
                 raise MKUserError(

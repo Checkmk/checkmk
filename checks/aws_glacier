@@ -103,7 +103,7 @@ def check_aws_glacier_summary(item, params, parsed):
     sum_size = 0
     largest_vault = None
     largest_vault_size = 0
-    for vault_name in parsed:
+    for vault_name in sorted(parsed):
         vault_size = parsed.get(vault_name).get('SizeInBytes', 0)
         sum_size += vault_size
         if vault_size >= largest_vault_size:

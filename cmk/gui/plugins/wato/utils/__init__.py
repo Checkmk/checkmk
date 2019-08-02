@@ -736,10 +736,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def help(self):
-        return _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
-                 "Use these rules in order to define parameters like filesystem levels, "
-                 "levels for CPU load and other things for services that have been found "
-                 "by the automatic service discovery of Check_MK.")
+        return _("Parameters for checks found by the Check_MK service discovery")
 
 
 @rulespec_group_registry.register

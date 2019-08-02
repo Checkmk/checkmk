@@ -31,7 +31,7 @@ from typing import List  # pylint: disable=unused-import
 import cmk
 import cmk.utils.tty as tty
 import cmk.utils.paths
-import cmk.utils.log
+import cmk.utils.log as log
 import cmk.utils.debug
 import cmk.utils.store
 from cmk.utils.exceptions import MKBailOut
@@ -90,7 +90,7 @@ _verbosity = 0
 def option_verbosity():
     global _verbosity
     _verbosity += 1
-    cmk.utils.log.set_verbosity(verbosity=_verbosity)
+    log.logger.setLevel(log.verbosity_to_log_level(_verbosity))
 
 
 modes.register_general_option(

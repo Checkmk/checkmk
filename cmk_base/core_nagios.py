@@ -982,7 +982,7 @@ logger = cmk.utils.log.get_logger("base")
 
 # TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
 #       The later regular argument parsing is handling this correctly. Try to clean this up.
-cmk.utils.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
+cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(len([ a for a in sys.argv if a in [ "-v", "--verbose"] ])))
 
 if '-d' in sys.argv:
     cmk.utils.debug.enable()

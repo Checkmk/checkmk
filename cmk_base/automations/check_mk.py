@@ -38,6 +38,7 @@ from typing import Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unu
 
 import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 from cmk.utils.exceptions import MKGeneralException
 
@@ -168,8 +169,8 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         with redirect_output(cStringIO.StringIO()) as buf:
-            cmk.utils.log.setup_console_logging()
-            cmk.utils.log.set_verbosity(1)
+            log.setup_console_logging()
+            log.logger.setLevel(log.verbosity_to_log_level(1))
             check_preview_table, host_labels = self._execute_discovery(args)
             return {
                 "output": buf.getvalue(),

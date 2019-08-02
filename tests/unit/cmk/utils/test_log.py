@@ -1,14 +1,14 @@
 import logging
 import pytest  # type: ignore
-import cmk.utils.log
+import cmk.utils.log as log
 
 
 def test_get_logger():
-    l = cmk.utils.log.get_logger("asd")
+    l = log.get_logger("asd")
     assert l.name == "cmk.asd"
-    assert l.parent == cmk.utils.log.logger
+    assert l.parent == log.logger
 
-    l = cmk.utils.log.get_logger("asd.aaa")
+    l = log.get_logger("asd.aaa")
     assert l.name == "cmk.asd.aaa"
 
 
@@ -17,18 +17,18 @@ def test_setup_console_logging(capsys):
     assert out == ""
     assert err == ""
 
-    cmk.utils.log.get_logger("test").info("test123")
+    log.get_logger("test").info("test123")
 
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
 
-    cmk.utils.log.setup_console_logging()
-    l = cmk.utils.log.get_logger("test")
+    log.setup_console_logging()
+    l = log.get_logger("test")
     l.info("test123")
 
-    # Cleanup handler registered with cmk.utils.log.setup_console_logging()
-    cmk.utils.log.logger.handlers.pop()
+    # Cleanup handler registered with log.setup_console_logging()
+    log.logger.handlers.pop()
 
     out, err = capsys.readouterr()
     assert out == "test123\n"
@@ -36,25 +36,25 @@ def test_setup_console_logging(capsys):
 
 
 def test_set_verbosity():
-    l = cmk.utils.log.get_logger("test_logger")
+    l = log.get_logger("test_logger")
     assert l.getEffectiveLevel() == logging.INFO
     assert l.is_verbose() is False
     assert l.isEnabledFor(logging.DEBUG) is False
 
-    cmk.utils.log.set_verbosity(0)
+    log.logger.setLevel(log.verbosity_to_log_level(0))
     assert l.getEffectiveLevel() == logging.INFO
     assert l.is_verbose() is False
     assert l.isEnabledFor(logging.DEBUG) is False
 
-    cmk.utils.log.set_verbosity(1)
-    assert l.getEffectiveLevel() == cmk.utils.log.VERBOSE
+    log.logger.setLevel(log.verbosity_to_log_level(1))
+    assert l.getEffectiveLevel() == log.VERBOSE
     assert l.is_verbose() is True
     assert l.isEnabledFor(logging.DEBUG) is False
 
-    cmk.utils.log.set_verbosity(2)
+    log.logger.setLevel(log.verbosity_to_log_level(2))
     assert l.getEffectiveLevel() == logging.DEBUG
     assert l.is_verbose() is True
     assert l.isEnabledFor(logging.DEBUG) is True
 
-    with pytest.raises(NotImplementedError):
-        cmk.utils.log.set_verbosity(3)
+    with pytest.raises(ValueError):
+        log.logger.setLevel(log.verbosity_to_log_level(3))

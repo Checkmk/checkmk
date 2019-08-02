@@ -145,7 +145,7 @@ def setup_logging_handler(stream, formatter=None):
     logger.addHandler(handler)
 
 
-def set_verbosity(verbosity):
+def verbosity_to_log_level(verbosity):
     """Values for "verbosity":
 
       0: enables INFO and above
@@ -153,13 +153,9 @@ def set_verbosity(verbosity):
       2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
-        logger.setLevel(_logging.INFO)
-
-    elif verbosity == 1:
-        logger.setLevel(VERBOSE)
-
-    elif verbosity == 2:
-        logger.setLevel(_logging.DEBUG)
-
-    else:
-        raise NotImplementedError()
+        return _logging.INFO
+    if verbosity == 1:
+        return VERBOSE
+    if verbosity == 2:
+        return _logging.DEBUG
+    raise ValueError()

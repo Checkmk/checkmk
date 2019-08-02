@@ -42,7 +42,7 @@ def snmpsim(site, request, tmp_path_factory):
     snmpsimd_path = "%s/.venv/bin/snmpsimd.py" % cmk_path()
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
-    log.set_verbosity(2)
+    log.logger.setLevel(log.verbosity_to_log_level(2))
     debug.enable()
     cmd = [
         "%s/bin/python" % site.root,
@@ -101,7 +101,7 @@ def snmpsim(site, request, tmp_path_factory):
 
     yield
 
-    log.set_verbosity(0)
+    log.logger.setLevel(log.verbosity_to_log_level(0))
     debug.disable()
 
     logger.debug("Stopping snmpsimd...")

@@ -58,7 +58,7 @@ import cmk.ec.export
 import cmk.ec.history
 import cmk.ec.settings
 import cmk.ec.snmp
-import cmk.utils.log
+import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.render
@@ -3201,7 +3201,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self):
         self._logger.info("Closing this logfile")
-        cmk.utils.log.open_log(str(self.settings.paths.log_file.value))
+        log.open_log(str(self.settings.paths.log_file.value))
         self._logger.info("Opened new logfile")
 
     # Erase our current state and history!
@@ -4095,18 +4095,18 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 def main():
     os.unsetenv("LANG")
-    logger = cmk.utils.log.get_logger("mkeventd")
+    logger = log.get_logger("mkeventd")
     settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.utils.paths.omd_root),
                                         pathlib.Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:
-        cmk.utils.log.setup_logging_handler(sys.stderr)
-        cmk.utils.log.set_verbosity(settings.options.verbosity)
+        log.setup_logging_handler(sys.stderr)
+        log.logger.setLevel(log.verbosity_to_log_level(settings.options.verbosity))
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:
-            cmk.utils.log.open_log(str(settings.paths.log_file.value))
+            log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)

@@ -196,7 +196,7 @@ class AutomationTryDiscovery(Automation):
             on_error = "raise"
             args = args[1:]
         else:
-            on_error = "ignore"
+            on_error = "warn"
 
         data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]

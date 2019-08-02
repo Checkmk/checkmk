@@ -199,7 +199,10 @@ class ModeDiscovery(WatoMode):
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
             show_discovered_labels=show_discovered_labels,
-            ignore_errors=bool(html.request.var("ignoreerrors")),
+            # Continue discovery even when one discovery function raises an exception. The detail
+            # output will show which discovery function failed. This is better than failing the
+            # whole discovery.
+            ignore_errors=True,
         )
 
     def title(self):

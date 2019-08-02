@@ -1608,8 +1608,6 @@ def prepare_and_populate_tmpfs(site):
         chown_tree(site.tmp_dir, site.name)
     _create_livestatus_tcp_socket_link(site)
 
-    ok()
-
 
 def prepare_tmpfs(site):
     if tmpfs_mounted(site.name):
@@ -1642,6 +1640,7 @@ def prepare_tmpfs(site):
                          stderr=subprocess.STDOUT)
     exit_code = p.wait()
     if exit_code == 0:
+        ok()
         return  # Fine: Mounted
 
     sys.stdout.write(p.stdout.read())

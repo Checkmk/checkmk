@@ -99,17 +99,18 @@ def update_files(args, hostname, servicedesc, item, source):
 
     filepath = get_info_file(hostname, servicedesc, source)
     if not os.path.exists(filepath):
-        return
+        return False
 
     metrics = get_metrics(filepath, source)
     perfvar = cmk.utils.pnp_cleanup(item)
 
-    logger.info('Analyzing %s', filepath)
-    if perfvar in metrics and 'fs_used' not in metrics:
-        if args.dry_run:
-            logger.info("   Will be updated ")
-            return
+    update_condition = perfvar in metrics and 'fs_used' not in metrics
+    if args.dry_run and update_condition:
+        logger.info(filepath)
+        return True
 
+    logger.info('Analyzing %s', filepath)
+    if update_condition:
         if source == 'cmc':
             r_metrics = ['fs_used' if x == perfvar else x for x in metrics]
             cmk_base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
@@ -167,17 +168,38 @@ def update_pnp_info_files(perfvar, newvar, filepath):
 
 
 def update_service_info(config_cache, hostnames, args):
+    pnp_files_present = False
+    if args.dry_run:
+        logger.info("Files to be updated:")
+
     for hostname in hostnames:
-        for check_plugin_name, item, _ in config_cache.get_autochecks_of(hostname):
-            if check_plugin_name in CHECKS_USING_DF_INCLUDE:
-                servicedesc = config.service_description(hostname, check_plugin_name, item)
-                update_files(args, hostname, servicedesc, item, 'cmc')
-                update_files(args, hostname, servicedesc, item, 'pnp4nagios')
+        for service in config_cache.get_autochecks_of(hostname):
+            if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
+                servicedesc = config.service_description(hostname, service.check_plugin_name,
+                                                         service.item)
+                update_files(args, hostname, servicedesc, service.item, 'cmc')
+                pnp_files_present |= update_files(args, hostname, servicedesc, service.item,
+                                                  'pnp4nagios')
+
+    if args.dry_run and pnp_files_present:
+        logger.info("Journal files will be updates")
+        return
 
 
-def _ask_for_confirmation_backup():
-    sys.stdout.write("This migration script will update the metric names of your rrd files, "
-                     "info files, and rrd chached journal.")
+def _ask_for_confirmation_backup(args):
+    sys.stdout.write("This migration script will update the metric names of:\n"
+                     " - RRD info files (CMC) in path %s\n"
+                     " - RRD filenames (Nagios format) in path %s\n"
+                     " - RRD Journal Cache in path %s\n\n" %
+                     (Path(cmk.utils.paths.omd_root, "/var/check_mk/rrd/"),
+                      Path(cmk.utils.paths.omd_root, "/var/pnp4nagios/perfdata/"),
+                      Path(cmk.utils.paths.omd_root, '/var/rrdcached/')))
+    if args.dry_run:
+        return True
+
+    sys.stdout.write("For an explicit List of files to be modified "
+                     "run this script with the dry run option -n\n")
+
     while "Invalid answer":
         reply = str(
             six.moves.input("Do you have a Backup and want to proceed? [y/N]: ")).lower().strip()
@@ -209,7 +231,7 @@ def main():
     if not (site.is_stopped() or args.dry_run):
         raise RuntimeError('The site needs to be stopped to run this script')
 
-    if not _ask_for_confirmation_backup():
+    if not _ask_for_confirmation_backup(args):
         sys.exit(1)
 
     config_cache = config.get_config_cache()

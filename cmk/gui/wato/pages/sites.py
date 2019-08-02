@@ -1068,7 +1068,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         try:
             cert_details = self._fetch_certificate_details()
         except Exception as e:
-            logger.error("Failed to fetch peer certificate", exc_info=True)
+            logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
             return
 
@@ -1121,7 +1121,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         try:
             cert_details = self._fetch_certificate_details()
         except Exception as e:
-            logger.error("Failed to fetch peer certificate", exc_info=True)
+            logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
             return
 

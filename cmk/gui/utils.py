@@ -191,7 +191,7 @@ def load_web_plugins(forwhat, globalvars):
                     exec(code, globalvars)  # yapf: disable
 
             except Exception as e:
-                logger.error("Failed to load plugin %s: %s", file_path, e, exc_info=True)
+                logger.exception("Failed to load plugin %s: %s", file_path, e)
                 _failed_plugins[forwhat].append((file_path, e))
 
 

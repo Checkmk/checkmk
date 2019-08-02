@@ -4,14 +4,17 @@ set -e -o pipefail
 HOOKROOT=/docker-entrypoint.d
 
 function exec_hook() {
-    HOOKDIR=$HOOKROOT/$1
-    if pushd "$HOOKDIR" >/dev/null 2>&1; then
-        for hook in ./*; do
-            echo "### Running $HOOKDIR/$hook"
-            ./"$hook"
+    HOOKDIR="$HOOKROOT/$1"
+    if [ -d "$HOOKDIR" ]; then
+        pushd "$HOOKDIR" >/dev/null
+        for hook in *; do
+            if [ ! -d "$hook" ] && [ -x "$hook" ]; then
+                echo "### Running $HOOKDIR/$hook"
+                ./"$hook" || true
+            fi
         done
+        popd >/dev/null
     fi
-    popd >/dev/null 2>&1
 }
 
 if [ -z "$CMK_SITE_ID" ]; then

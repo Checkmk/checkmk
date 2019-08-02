@@ -55,6 +55,7 @@ import cmk_base.config as config
 import cmk_base.profiling as profiling
 from cmk_base.modes import modes
 import cmk_base.check_api as check_api
+import cmk_base.crash_reporting
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
@@ -115,5 +116,9 @@ except (MKGeneralException, MKBailOut) as e:
         raise
     sys.exit(3)
 
+except Exception:
+    crash = cmk_base.crash_reporting.CMKBaseCrashReport.from_exception()
+    crash.save_to_crash_dir()
+    raise
 finally:
     profiling.output_profile()

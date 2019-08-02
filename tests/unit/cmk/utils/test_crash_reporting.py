@@ -1,4 +1,8 @@
+# pylint: disable=redefined-outer-name
 import copy
+import pytest  # type: ignore
+
+import cmk.utils.paths
 from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export
 
 
@@ -6,6 +10,38 @@ class UnitTestCrashReport(ABCCrashReport):
     @classmethod
     def type(cls):
         return "test"
+
+    def ident(self):
+        return ("m@y", "ident")
+
+
+@pytest.fixture()
+def crash():
+    try:
+        raise ValueError("XYZ")
+    except ValueError:
+        return UnitTestCrashReport.from_exception()
+
+
+def test_crash_report_type(crash):
+    assert crash.type() == "test"
+
+
+def test_crash_report_ident(crash):
+    assert crash.ident() == ("m@y", "ident")
+
+
+def test_crash_report_ident_to_text(crash):
+    assert crash.ident_to_text() == "m~y@ident"
+
+
+def test_crash_report_crash_dir(crash):
+    assert crash.crash_dir() == cmk.utils.paths.crash_dir.joinpath(crash.type(),
+                                                                   crash.ident_to_text())
+
+
+def test_crash_report_local_crash_report_url(crash):
+    assert crash.local_crash_report_url() == "crash.py?component=test&ident=m%7Ey%40ident"
 
 
 def test_format_var_for_export_strip_nested_dict():

@@ -26,15 +26,30 @@
 """Check_MK base specific code of the crash reporting"""
 
 import os
+import sys
 import base64
 import tarfile
 import cStringIO as StringIO
 
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.crash_reporting as crash_reporting
 
 import cmk_base.utils
 import cmk_base.check_utils
+
+
+class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
+    @classmethod
+    def type(cls):
+        return "base"
+
+    @classmethod
+    def from_exception(cls, details=None, type_specific_attributes=None):
+        return super(CMKBaseCrashReport, cls).from_exception(details={
+            "argv": sys.argv,
+            "env": dict(os.environ),
+        })
 
 
 # Create a crash dump with a backtrace and the agent output.

@@ -99,6 +99,7 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
+    monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")
     monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
                         os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",

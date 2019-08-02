@@ -227,4 +227,17 @@ TEST(SectionProviderOhm, StartStop) {
     EXPECT_EQ(oprocess.thread_handle_, INVALID_HANDLE_VALUE);
     EXPECT_TRUE(ret);
 }
+
+TEST(SectionProviderOhm, ConditionallyStartOhm) {
+    ServiceProcessor sp;
+    wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
+    auto found = wtools::FindProcess(cma::provider::ohm::kExeModuleWide);
+    ASSERT_EQ(found, 0);
+    auto ret = sp.conditionallyStartOhm();
+    found = wtools::FindProcess(cma::provider::ohm::kExeModuleWide);
+    ASSERT_EQ(found, 1);
+    ret = sp.conditionallyStartOhm();
+    found = wtools::FindProcess(cma::provider::ohm::kExeModuleWide);
+    ASSERT_EQ(found, 1);
+}
 }  // namespace cma::srv

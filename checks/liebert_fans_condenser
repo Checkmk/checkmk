@@ -24,51 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# example output
 factory_settings["liebert_fans_condenser_default_levels"] = {
-        'levels'    : (80, 90),
+    'levels': (80, 90),
 }
 
 
-def inventory_liebert_fans_condenser(parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            yield ( key, {})
-
-
-def check_liebert_fans_condenser(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if item == key and not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "Speed: %.1f%s" % (value, unit), [ ('filehandler_perc', value, warn, crit) ]
-
-            state = levels_liebert(value, warn, crit,)
-            if state > 0:
-                yield state, "warn/crit at %s/%s" % (warn, crit)
-
-            if params.has_key('levels_lower'):
-                warn_lower, crit_lower = params['levels_lower']
-                state_lower = levels_liebert(value, warn_lower, crit_lower, 'lower')
-                if state_lower > 0:
-                    yield state_lower, "warn/crit below %s/%s" % (warn_lower, crit_lower)
+@get_parsed_item_data
+def check_liebert_fans_condenser(_item, params, data):
+    levels = params['levels'] + params.get('levels_lower', (None, None))
+    yield check_levels_backport(data[0], 'filehandler_perc', levels, unit=data[1])
 
 
 check_info['liebert_fans_condenser'] = {
-    'parse_function'          : parse_liebert,
-    'inventory_function'      : inventory_liebert_fans_condenser,
-    'check_function'          : check_liebert_fans_condenser,
-    'service_description'     : '%s',
-    'snmp_info'               : ('.1.3.6.1.4.1.476.1.42.3.9.20.1', [
-                                          '10.1.2.1.5276', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                                          '20.1.2.1.5276', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                                          '30.1.2.1.5276', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                                ]),
-    'snmp_scan_function'      : scan_liebert,
-    'includes'                : [ 'liebert.include' ],
-    'group'                   : 'hw_fans_perc',
-    'default_levels_variable' : 'liebert_fans_condenser_default_levels',
-    'has_perfdata'            : True,
+    'parse_function': parse_liebert,
+    'inventory_function': discover(),
+    'check_function': check_liebert_fans_condenser,
+    'service_description': '%s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+        [
+            '10.1.2.1.5276',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            '20.1.2.1.5276',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            '30.1.2.1.5276',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ]),
+    'snmp_scan_function': scan_liebert,
+    'includes': ['liebert.include', 'backport.include'],
+    'group': 'hw_fans_perc',
+    'default_levels_variable': 'liebert_fans_condenser_default_levels',
+    'has_perfdata': True,
 }

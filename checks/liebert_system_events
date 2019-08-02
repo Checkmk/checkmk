@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.100.4618 Ambient Air Temperature Sensor Issue
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.100.4618 Inactive Event
@@ -36,14 +35,11 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.100.4651 Active Warning
 # and much more...
 
-def inventory_liebert_system_events(parsed):
-    yield (None, {})
 
-
-def check_liebert_system_events(_no_item, params, parsed):
+def check_liebert_system_events(_no_item, _no_params, parsed):
     no_event = True
     for key, value in parsed.iteritems():
-        if value == "" and key == "":
+        if not (value or key):
             continue
         if not value.lower() == "inactive event":
             no_event = False
@@ -54,15 +50,17 @@ def check_liebert_system_events(_no_item, params, parsed):
 
 
 check_info['liebert_system_events'] = {
-    'parse_function'          : parse_liebert_without_unit,
-    'inventory_function'      : inventory_liebert_system_events,
-    'check_function'          : check_liebert_system_events,
-    'service_description'     : 'System events',
-    'snmp_info'               : ('.1.3.6.1.4.1.476.1.42.3.9.20.1', [
-                                          '10.1.2.100', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                                          '20.1.2.100', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                                ]),
-    'snmp_scan_function'      : scan_liebert,
-    'includes'                : [ 'liebert.include' ],
-    'handle_empty_info'       : True,
+    'parse_function': lambda info: parse_liebert_without_unit(info, str),
+    'inventory_function': discover_single,
+    'check_function': check_liebert_system_events,
+    'service_description': 'System events',
+    'snmp_info': (
+        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+        [
+            '10.1.2.100',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            '20.1.2.100',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+        ]),
+    'snmp_scan_function': scan_liebert,
+    'includes': ['liebert.include', 'backport.include'],
+    'handle_empty_info': True,
 }

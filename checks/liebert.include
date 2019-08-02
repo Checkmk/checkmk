@@ -24,9 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def parse_liebert(info):
+
+def parse_liebert(info, type_func=None):
+    if type_func is None:
+        type_func = float
+
     parsed = {}
     used_names = set()
+
     def get_item_name(name):
         counter = 2
         new_name = name
@@ -47,16 +52,20 @@ def parse_liebert(info):
                 continue
             name = get_item_name(element[0])
             try:
-                parsed[name] = [float(element[1]), element[2]]
+                parsed[name] = [type_func(element[1]), element[2]]
             except ValueError:
                 continue
 
     return parsed
 
 
-def parse_liebert_without_unit(info):
+def parse_liebert_without_unit(info, type_func=None):
+    if type_func is None:
+        type_func = float
+
     parsed = {}
     used_names = set()
+
     def get_item_name(name):
         counter = 2
         new_name = name
@@ -69,7 +78,6 @@ def parse_liebert_without_unit(info):
                 break
         return new_name
 
-
     parsed = {}
 
     for line in info:
@@ -80,7 +88,7 @@ def parse_liebert_without_unit(info):
                 continue
             name = get_item_name(element[0])
             try:
-                parsed[name] = float(element[1])
+                parsed[name] = type_func(element[1])
             except ValueError:
                 continue
 
@@ -90,6 +98,7 @@ def parse_liebert_without_unit(info):
 def scan_liebert(oid):
 
     return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.476.1.42')
+
 
 def levels_liebert(value, warn, crit, sorting="upper"):
     state = 0
@@ -115,6 +124,6 @@ def check_temp_unit(output):
     value = float(output[0])
     unit = output[1]
     if unit == "deg F":
-        value = 5.0/9.0*(value-32)
+        value = 5.0 / 9.0 * (value - 32)
 
     return value

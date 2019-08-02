@@ -24,48 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5078 Cooling Capacity (Primary)
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5078 0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5078 %
 
-
 factory_settings['liebert_cooling_default_levels'] = {
-            'levels' : (80, 90),
+    'levels': (80, 90),
 }
 
 
-def inventory_liebert_cooling(parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            yield (key, {})
+@get_parsed_item_data
+def check_liebert_cooling(_item, params, data):
+    # TODO: what's this filehandler nonsense about?
+    yield check_levels_backport(data[0], 'filehandler_perc', params['levels'], unit=data[1])
 
-
-def check_liebert_cooling(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "%s%s" % (value, unit), [ ('filehandler_perc', value, warn, crit) ]
-
-            state = levels_liebert(value, warn, crit, 'higher')
-            if state > 0:
-                yield state, "(warn/crit below %s%s/%s%s)" % (warn, unit, crit, unit)
 
 check_info['liebert_cooling'] = {
-    'parse_function'          : parse_liebert,
-    'inventory_function'      : inventory_liebert_cooling,
-    'check_function'          : check_liebert_cooling,
-    'service_description'     : '%s',
-    'snmp_info'               : ('.1.3.6.1.4.1.476.1.42.3.9.20.1', [
-                                          '10.1.2.1.5078', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                                          '20.1.2.1.5078', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                                          '30.1.2.1.5078', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                                ]),
-    'snmp_scan_function'      : scan_liebert,
-    'includes'                : [ 'liebert.include' ],
-    'has_perfdata'            : True,
-    'default_levels_variable' : 'liebert_cooling_default_levels',
+    'parse_function': parse_liebert,
+    'inventory_function': discover(),
+    'check_function': check_liebert_cooling,
+    'service_description': '%s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+        [
+            '10.1.2.1.5078',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            '20.1.2.1.5078',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            '30.1.2.1.5078',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ]),
+    'snmp_scan_function': scan_liebert,
+    'includes': ['liebert.include', 'backport.include'],
+    'has_perfdata': True,
+    'default_levels_variable': 'liebert_cooling_default_levels',
 }

@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5298.1 Pump Hours
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5298.2 Pump Hours
@@ -39,43 +38,36 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5299.1 hr
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5299.2 hr
 
-def inventory_liebert_pump(parsed):
-    for key, values in parsed.iteritems():
-        if "threshold" in key.lower():
-            continue
-        elif not "Unavailable" in values[0]:
-            yield (key, {})
 
+def check_liebert_pump(item, _no_params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        return
 
-def check_liebert_pump(item, params, parsed):
-    for key, values in parsed.iteritems():
+    # TODO: this should be done in the parse function, per OID end.
+    for key, (value, _unit) in parsed.iteritems():
         if "Threshold" in key and key.replace(" Threshold", "") == item:
-            crit = int(values[0])
+            crit = value
 
-    for key, values in parsed.iteritems():
-        if key == item and not "Unavailable" in values[0]:
-            value = int(values[0])
-            unit = values[1]
-            yield 0, "%s %s" % (value, unit)
-
-            if value >= crit:
-                yield 2, "(Threshold at %s %s)" % (crit, unit)
+    yield check_levels_backport(data[0], None, (crit, crit), unit=data[1])
 
 
 check_info['liebert_pump'] = {
-    'parse_function'          : parse_liebert,
-    'inventory_function'      : inventory_liebert_pump,
-    'check_function'          : check_liebert_pump,
-    'service_description'     : '%s',
-    'snmp_info'               : ('.1.3.6.1.4.1.476.1.42.3.9.20.1', [
-                                          '10.1.2.1.5298', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                                          '20.1.2.1.5298', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                                          '30.1.2.1.5298', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                                          '10.1.2.1.5299', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                                          '20.1.2.1.5299', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                                          '30.1.2.1.5299', #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                                ]),
-    'snmp_scan_function'      : scan_liebert,
-    'includes'                : [ 'liebert.include' ],
-    'has_perfdata'            : True,
+    'parse_function': parse_liebert,
+    'inventory_function': discover(lambda key, _value: "threshold" not in key.lower()),
+    'check_function': check_liebert_pump,
+    'service_description': '%s',
+    'snmp_info': (
+        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+        [
+            '10.1.2.1.5298',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            '20.1.2.1.5298',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            '30.1.2.1.5298',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            '10.1.2.1.5299',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            '20.1.2.1.5299',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            '30.1.2.1.5299',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ]),
+    'snmp_scan_function': scan_liebert,
+    'includes': ['liebert.include', 'backport.include'],
+    'has_perfdata': True,
 }

@@ -5,13 +5,13 @@ HOOKROOT=/docker-entrypoint.d
 
 function exec_hook() {
     HOOKDIR=$HOOKROOT/$1
-    if pushd "$HOOKDIR" > /dev/null 2>&1; then 
+    if pushd "$HOOKDIR" >/dev/null 2>&1; then
         for hook in ./*; do
             echo "### Running $HOOKDIR/$hook"
-           ./"$hook"
+            ./"$hook"
         done
     fi
-    popd > /dev/null 2>&1
+    popd >/dev/null 2>&1
 }
 
 if [ -z "$CMK_SITE_ID" ]; then
@@ -25,7 +25,7 @@ trap 'omd stop '"$CMK_SITE_ID"'; exit 0' SIGTERM SIGHUP SIGINT
 # TODO: Syslog is only added to support postfix. Can we please find a better solution?
 if [ ! -z "$MAIL_RELAY_HOST" ]; then
     echo "### PREPARE POSTFIX (Hostname: $HOSTNAME, Relay host: $MAIL_RELAY_HOST)"
-    echo "$HOSTNAME" > /etc/mailname
+    echo "$HOSTNAME" >/etc/mailname
     postconf -e myorigin="$HOSTNAME"
     postconf -e mydestination="$(hostname -a), $(hostname -A), localhost.localdomain, localhost"
     postconf -e relayhost="$MAIL_RELAY_HOST"
@@ -45,7 +45,7 @@ fi
 # Check for a file in the directory because the directory itself might have
 # been pre-created by docker when the --tmpfs option is used to create a
 # site tmpfs below tmp.
-if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
+if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ]; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
     exec_hook pre-create
     omd create --no-tmpfs -u 1000 -g 1000 --admin-password "$CMK_PASSWORD" "$CMK_SITE_ID"
@@ -57,7 +57,6 @@ if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     fi
     exec_hook post-create
 fi
-
 
 # In case of an update (see update procedure docs) the container is started
 # with the data volume mounted (the site is not re-created). In this
@@ -71,7 +70,7 @@ if ! getent passwd "$CMK_SITE_ID" >/dev/null; then
     useradd -u 1000 -d "/omd/sites/$CMK_SITE_ID" -c "OMD site $CMK_SITE_ID" -g "$CMK_SITE_ID" -G omd -s /bin/bash "$CMK_SITE_ID"
 fi
 if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
-    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" > "/omd/apache/$CMK_SITE_ID.conf"
+    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" >"/omd/apache/$CMK_SITE_ID.conf"
 fi
 
 # In case the version symlink is dangling we are in an update situation: The

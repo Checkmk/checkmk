@@ -354,7 +354,7 @@ class LDAPUserConnector(UserConnector):
     def _discover_nearest_dc(self, domain):
         cached_server = self._get_nearest_dc_from_cache()
         if cached_server:
-            self._logger.info(_('Using cached DC %s') % cached_server)
+            self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
         import ad  # pylint: disable=import-error
@@ -378,7 +378,7 @@ class LDAPUserConnector(UserConnector):
             pass
 
     def _cache_nearest_dc(self, server):
-        self._logger.debug(_('Caching nearest DC %s') % server)
+        self._logger.debug('Caching nearest DC %s' % server)
         cmk.utils.store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):

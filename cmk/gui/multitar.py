@@ -112,7 +112,7 @@ class SnapshotCreationBase(object):
         self._statistics = {"rsync": [], "tar": {}}
 
     def output_statistics(self):
-        self._logger.debug(_("============= Snapshot creation statistics ============="))
+        self._logger.debug("============= Snapshot creation statistics =============")
         for line in self._statistics["rsync"]:
             self._logger.debug("RSYNC: %s" % line)
 

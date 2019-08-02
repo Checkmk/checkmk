@@ -143,7 +143,7 @@ class Application(object):
                 self._response.status_code = httplib.BAD_GATEWAY
 
             if ty in [MKConfigError, MKGeneralException]:
-                logger.error(_("%s: %s") % (plain_title, e))
+                logger.error("%s: %s" % (plain_title, e))
 
         except Exception as e:
             logger.exception()

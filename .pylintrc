@@ -17,11 +17,12 @@ init-hook=
     tests_dir = tests_dir3 if sys.version.split('.')[0] == '3' else tests_dir2
     sys.path.insert(0, os.environ.get("TEST_PATH", tests_dir))
     import conftest
-load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
+load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization,pylint.extensions.bad_builtin
 jobs=0
 # TODO: Why do we need persistence?
 persistent=yes
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
+bad-functions=callable
 
 [MESSAGES CONTROL]
 disable=

@@ -52,6 +52,7 @@ import six
 import cmk
 import cmk.utils.paths
 import cmk.utils.store
+import cmk.utils.plugin_registry
 
 
 # The default JSON encoder raises an exception when detecting unknown types. For the crash
@@ -294,3 +295,14 @@ def _format_var_for_export(val, maxdepth=4, maxsize=1024 * 1024):
             val = val[:maxsize] + "... (%d bytes stripped)" % (size - maxsize)
 
     return val
+
+
+class CrashReportRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ABCCrashReport
+
+    def plugin_name(self, plugin_class):
+        return plugin_class.type()
+
+
+crash_report_registry = CrashReportRegistry()

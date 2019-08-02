@@ -39,6 +39,7 @@ import cmk_base.utils
 import cmk_base.check_utils
 
 
+@crash_reporting.crash_report_registry.register
 class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):

@@ -1,7 +1,13 @@
 import tarfile
 import StringIO
 import base64
+import cmk.utils.crash_reporting
 import cmk_base.crash_reporting as crash_reporting
+
+
+def test_cmk_base_report_registry():
+    assert cmk.utils.crash_reporting.crash_report_registry["base"] \
+            == crash_reporting.CMKBaseCrashReport
 
 
 def _check_generic_crash_info(crash):

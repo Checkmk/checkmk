@@ -40,7 +40,7 @@ import json
 import tarfile
 import StringIO
 import urllib
-from typing import (Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
+from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 
 try:
     from pathlib import Path  # type: ignore # pylint: disable=unused-import
@@ -62,6 +62,43 @@ class RobustJSONEncoder(json.JSONEncoder):
     # pylint: disable=method-hidden
     def default(self, o):
         return "%s" % o
+
+
+class CrashReportStore(object):
+    """Caring about the persistance of crash reports in the local site"""
+    def save(self, crash):
+        # type: (ABCCrashReport) -> None
+        """Save the crash report instance to it's crash report directory"""
+        self._prepare_crash_dump_directory(crash)
+
+        for key, value in crash.serialize().iteritems():
+            fname = "crash.info" if key == "crash_info" else key
+            cmk.utils.store.save_file(str(crash.crash_dir() / fname),
+                                      json.dumps(value, cls=RobustJSONEncoder) + "\n")
+
+    def _prepare_crash_dump_directory(self, crash):
+        # type: (ABCCrashReport) -> None
+        crash_dir = crash.crash_dir()
+        crash_dir.mkdir(parents=True, exist_ok=True)
+
+        # Remove all files of former crash reports
+        for f in crash_dir.iterdir():
+            try:
+                f.unlink()
+            except OSError:
+                pass
+
+    def load(self, type_name, ident_text):
+        # type: (Text, Text) -> ABCCrashReport
+        """Populate the crash info from the crash directory"""
+        cls = crash_report_registry[type_name]
+        serialized = {}
+        for file_path in cls({}).crash_dir(ident_text).iterdir():
+            with file_path.open(encoding="utf-8") as f:
+                key = "crash_info" if file_path.name == "crash.info" else file_path.name
+                serialized[key] = json.load(f)
+
+        return ABCCrashReport.deserialize(serialized)
 
 
 class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
@@ -89,6 +126,30 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         }
         attributes.update(type_specific_attributes or {})
         return cls(**attributes)
+
+    @classmethod
+    def deserialize(cls, serialized):
+        # type: (Type[ABCCrashReport], dict) -> ABCCrashReport
+        """Deserialize the object"""
+        cls = crash_report_registry[serialized["crash_info"]["crash_type"]]
+        return cls(**serialized)
+
+    def _serialize_attributes(self):
+        # type: () -> dict
+        """Serialize object type specific attributes for transport"""
+        return {"crash_info": self.crash_info}
+
+    def serialize(self):
+        # type: () -> Dict
+        """Serialize the object
+
+        Nested structures are allowed. Only objects that can be handled by
+        ast.literal_eval() are allowed.
+        """
+        if self.crash_info is None:
+            raise TypeError("No crash information available")
+
+        return self._serialize_attributes()
 
     def __init__(self, crash_info):
         # type: (Dict) -> None
@@ -126,36 +187,6 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the site local URL to the current crash report"""
         return "crash.py?%s" % urllib.urlencode([("component", self.type()),
                                                  ("ident", self.ident_to_text())])
-
-    def save_to_crash_dir(self):
-        # type: () -> None
-        """Save the crash report instance to it's crash report directory"""
-        self._prepare_crash_dump_directory()
-        cmk.utils.store.save_file(str(self.crash_dir() / "crash.info"),
-                                  (self._crash_info_to_string(self.crash_info) +
-                                   "\n").encode("utf-8"))
-
-    def _prepare_crash_dump_directory(self):
-        # type: () -> None
-        crash_dir = self.crash_dir()
-        crash_dir.mkdir(parents=True, exist_ok=True)
-
-        # Remove all files of former crash reports
-        for f in crash_dir.iterdir():
-            try:
-                f.unlink()
-            except OSError:
-                pass
-
-    def _crash_info_to_string(self, crash_info):
-        # type: (Dict) -> Text
-        return json.dumps(crash_info, cls=RobustJSONEncoder)
-
-    def from_crash_dir(self, ident_text):
-        # type: (Text) -> None
-        """Populate the crash info from the crash directory"""
-        with self.crash_dir(ident_text).joinpath("crash.info").open(encoding="utf-8") as f:
-            self.crash_info = json.load(f)
 
     def get_packed(self):
         # type: () -> Text

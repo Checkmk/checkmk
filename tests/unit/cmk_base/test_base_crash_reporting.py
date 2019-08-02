@@ -50,10 +50,9 @@ def test_cmk_base_crash_report_save():
         raise ValueError("DINGELING")
     except Exception:
         crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        crash.save_to_crash_dir()
+        crash_reporting.CrashReportStore().save(crash)
 
-    crash2 = crash_reporting.CMKBaseCrashReport({})
-    crash2.from_crash_dir("base")
+    crash2 = crash_reporting.CrashReportStore().load("base", "base")
 
     assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
     assert crash.crash_info["time"] == crash2.crash_info["time"]
@@ -64,7 +63,7 @@ def test_cmk_base_crash_report_get_packed():
         raise ValueError("DINGELING")
     except Exception:
         crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        crash.save_to_crash_dir()
+        crash_reporting.CrashReportStore().save(crash)
 
     b64tgz = crash.get_packed()
     tgz = base64.b64decode(b64tgz)

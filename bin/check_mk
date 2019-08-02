@@ -118,7 +118,7 @@ except (MKGeneralException, MKBailOut) as e:
 
 except Exception:
     crash = cmk_base.crash_reporting.CMKBaseCrashReport.from_exception()
-    crash.save_to_crash_dir()
+    cmk_base.crash_reporting.CrashReportStore().save(crash)
     raise
 finally:
     profiling.output_profile()

@@ -38,6 +38,8 @@ import cmk.utils.crash_reporting as crash_reporting
 import cmk_base.utils
 import cmk_base.check_utils
 
+CrashReportStore = crash_reporting.CrashReportStore
+
 
 @crash_reporting.crash_report_registry.register
 class CMKBaseCrashReport(crash_reporting.ABCCrashReport):

@@ -130,21 +130,19 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         # type: () -> None
         """Save the crash report instance to it's crash report directory"""
         self._prepare_crash_dump_directory()
-        cmk.utils.store.save_file(os.path.join(self.crash_dir(), "crash.info"),
+        cmk.utils.store.save_file(str(self.crash_dir() / "crash.info"),
                                   (self._crash_info_to_string(self.crash_info) +
                                    "\n").encode("utf-8"))
 
     def _prepare_crash_dump_directory(self):
         # type: () -> None
         crash_dir = self.crash_dir()
-
-        if not os.path.exists(crash_dir):
-            os.makedirs(crash_dir)
+        crash_dir.mkdir(parents=True, exist_ok=True)
 
         # Remove all files of former crash reports
-        for f in os.listdir(crash_dir):
+        for f in crash_dir.iterdir():
             try:
-                os.unlink(os.path.join(crash_dir, f))
+                f.unlink()
             except OSError:
                 pass
 
@@ -155,20 +153,16 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
     def from_crash_dir(self, ident_text):
         # type: (Text) -> None
         """Populate the crash info from the crash directory"""
-        text = open(os.path.join(self.crash_dir(ident_text), "crash.info")).read()
-        self.crash_info = self._crash_info_from_string(text)
-
-    def _crash_info_from_string(self, text):
-        # type: (Text) -> Dict
-        return json.loads(text)
+        with self.crash_dir(ident_text).joinpath("crash.info").open(encoding="utf-8") as f:
+            self.crash_info = json.load(f)
 
     def get_packed(self):
         # type: () -> Text
         """Returns a base64 encoded byte string representing the current crash report"""
         buf = StringIO.StringIO()
         with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-            for filename in os.listdir(self.crash_dir()):
-                tar.add(os.path.join(self.crash_dir(), filename), filename)
+            for f in self.crash_dir().iterdir():
+                tar.add(str(f), f.name)
 
         return base64.b64encode(buf.getvalue())
 

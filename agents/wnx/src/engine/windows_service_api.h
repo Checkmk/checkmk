@@ -40,6 +40,7 @@ int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
 
 int ExecReloadConfig();
+int ExecRemoveLegacyAgent();
 
 int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,

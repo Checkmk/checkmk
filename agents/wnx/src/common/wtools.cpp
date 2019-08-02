@@ -441,7 +441,7 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         throw GetLastError();  // crash here - we have rights
         return;
     }
-    XLOG::l.i("Damned handlers registered");
+    XLOG::l.i("Service handlers registered");
 
     try {
         using namespace cma::cfg;
@@ -450,12 +450,27 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
 
         cap::Install();
         upgrade::UpgradeLegacy(upgrade::Force::no);
-
         // Perform service-specific initialization.
         processor_->startService();
 
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
+
+        auto uninstall_legacy =
+            GetVal(groups::kGlobal, vars::kGlobalRemoveLegacy, false);
+
+        if (uninstall_legacy) {
+            if (!cma::cfg::upgrade::FindLegacyAgent().empty()) {
+                auto x = std::thread([]() {
+                    XLOG::l.i("Config requested remove of Legacy Agent");
+                    auto result =
+                        UninstallProduct(cma::cfg::products::kLegacyAgent);
+                    XLOG::l.i("Result of remove of Legacy Agent is [{}]",
+                              result);
+                });
+                if (x.joinable()) x.join();
+            }
+        }
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,

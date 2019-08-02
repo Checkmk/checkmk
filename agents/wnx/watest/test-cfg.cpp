@@ -194,6 +194,20 @@ TEST(CmaCfg, LogFileLocation) {
 }
 }  // namespace details
 
+TEST(CmaCfg, RemoveLegacy_Long) {
+    namespace fs = std::filesystem;
+    auto temp_dir = cma::cfg::GetTempDir();
+    auto path = cma::cfg::CreateWmicUninstallFile(temp_dir, "zzz");
+    EXPECT_TRUE(!path.empty());
+    EXPECT_TRUE(fs::exists(path));
+    auto content = cma::tools::ReadFileInString(path.wstring().c_str());
+    ON_OUT_OF_SCOPE(fs::remove(path););
+    ASSERT_TRUE(content.has_value());
+    EXPECT_EQ(content.value(), cma::cfg::CreateWmicCommand("zzz"));
+    auto result = cma::cfg::UninstallProduct("zzz");
+    EXPECT_TRUE(result);
+}
+
 TEST(CmaCfg, SmallFoos) {
     auto s = ConstructTimeString();
     EXPECT_TRUE(!s.empty());

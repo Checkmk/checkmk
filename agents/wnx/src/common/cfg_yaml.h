@@ -50,6 +50,8 @@ const char* const kGlobalEncrypt = "encrypted";       // bool
 const char* const kGlobalPassword = "passphrase";     // string
 const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
 
+const char* const kGlobalRemoveLegacy = "remove_legacy";  // bool
+
 const char* const kRealTime = "realtime";    // map
 const char* const kRtTimeout = "timeout";    // int
 const char* const kRtPort = "port";          // int

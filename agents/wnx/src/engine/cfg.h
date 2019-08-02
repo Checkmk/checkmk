@@ -1063,6 +1063,15 @@ void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
     const std::filesystem::path& dir) noexcept;
 std::string ConstructTimeString();
+
+namespace products {
+constexpr std::string_view kLegacyAgent = "Check_mk Agent";
+}
+
+std::string CreateWmicCommand(std::string_view product_name) noexcept;
+bool UninstallProduct(std::string_view name);
+std::filesystem::path CreateWmicUninstallFile(
+    std::filesystem::path temp_dir, std::string_view product_name) noexcept;
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

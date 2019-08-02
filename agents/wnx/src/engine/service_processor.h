@@ -407,7 +407,6 @@ private:
 
     // We wait here for all answers from all providers, internal and external.
     // The call is *blocking*
-    // #TODO gtest
     // #TODO break waiting
     cma::srv::AsyncAnswer::DataBlock getAnswer(int Count) {
         using namespace std::chrono;

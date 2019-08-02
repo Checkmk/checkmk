@@ -292,7 +292,7 @@ def page_view():
         view_renderer = MobileViewRenderer(view)
         views.show_view(view, view_renderer)
     except Exception as e:
-        logger.exception()
+        logger.exception("error showing mobile view")
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
@@ -367,7 +367,7 @@ class MobileViewRenderer(views.ViewRenderer):
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:
-                    logger.exception()
+                    logger.exception("error rendering mobile view")
                     html.write(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, 'data', page_id)

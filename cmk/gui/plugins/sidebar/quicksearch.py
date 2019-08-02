@@ -90,7 +90,7 @@ class QuicksearchSnapin(SidebarSnapin):
         except MKException as e:
             html.show_error(e)
         except Exception as e:
-            logger.exception()
+            logger.exception("error generating quicksearch results")
             if config.debug:
                 raise
             html.show_error(traceback.format_exc())

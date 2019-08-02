@@ -465,7 +465,7 @@ class SidebarRenderer(object):
                     "cmk.ajax.get_url(\"%s\", cmk.utils.update_contents, \"snapin_%s\")" %
                     (refresh_url, name))
         except Exception as e:
-            logger.exception()
+            logger.exception("error rendering snapin %s" % name)
             write_snapin_exception(e)
         html.close_div()
         html.close_div()

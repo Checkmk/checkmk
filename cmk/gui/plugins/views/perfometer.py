@@ -249,7 +249,7 @@ class PainterPerfometer(Painter):
             if title is None and h is None:
                 return "", ""
         except Exception as e:
-            logger.exception()
+            logger.exception("error rendering performeter")
             if config.debug:
                 raise
             return " ".join(classes), _("Exception: %s") % e
@@ -299,7 +299,7 @@ class SorterPerfometer(Sorter):
             p2 = Perfometer(r2)
             return cmp(p1.sort_value(), p2.sort_value())
         except Exception:
-            logger.exception()
+            logger.exception("error sorting perfometer values")
             if config.debug:
                 raise
             return 0

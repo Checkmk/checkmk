@@ -771,7 +771,7 @@ class Rule(object):
             self._initialize()
             self._parse_rule(rule_config)
         except Exception:
-            logger.exception()
+            logger.exception("error parsing rule")
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
     def _parse_rule(self, rule_config):
@@ -922,7 +922,7 @@ class Rule(object):
         try:
             value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
         except Exception as e:
-            logger.exception()
+            logger.exception("error searching ruleset %s" % self.ruleset.title())
             html.show_warning(
                 _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
                 (self.ruleset.title(), self.folder.title(), self.to_config(), e))

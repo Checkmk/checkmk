@@ -550,7 +550,7 @@ class ActivateChangesManager(ActivateChanges):
                 hooks.call("pre-distribute-changes",
                            cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
         except Exception as e:
-            logger.exception()
+            logger.exception("error calling pre-distribute-changes hook")
             if config.debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
@@ -727,7 +727,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.start()
             os._exit(0)
         except Exception:
-            logger.exception()
+            logger.exception("error starting site activation for site %s" % site_id)
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
@@ -872,7 +872,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             self._do_run()
         except Exception:
-            logger.exception()
+            logger.exception("error running activate changes")
 
     def _do_run(self):
         try:
@@ -893,7 +893,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             self._set_done_result(configuration_warnings)
         except Exception as e:
-            logger.exception()
+            logger.exception("error activating changes")
             self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
 
         finally:

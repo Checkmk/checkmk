@@ -1321,7 +1321,7 @@ def ajax_sync():
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         html.write('OK Started synchronization\n')
     except Exception as e:
-        logger.exception()
+        logger.exception("error synchronizing user DB")
         if config.debug:
             raise
         else:

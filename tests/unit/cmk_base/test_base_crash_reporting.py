@@ -46,13 +46,14 @@ def test_cmk_base_crash_report_from_exception():
 
 
 def test_cmk_base_crash_report_save():
+    store = crash_reporting.CrashReportStore()
     try:
         raise ValueError("DINGELING")
     except Exception:
         crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        crash_reporting.CrashReportStore().save(crash)
+        store.save(crash)
 
-    crash2 = crash_reporting.CrashReportStore().load("base", "base")
+    crash2 = store.load_from_directory(crash.crash_dir())
 
     assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
     assert crash.crash_info["time"] == crash2.crash_info["time"]

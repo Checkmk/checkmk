@@ -88,12 +88,11 @@ class CrashReportStore(object):
             except OSError:
                 pass
 
-    def load(self, type_name, ident_text):
-        # type: (Text, Text) -> ABCCrashReport
-        """Populate the crash info from the crash directory"""
-        cls = crash_report_registry[type_name]
+    def load_from_directory(self, crash_dir):
+        # type: (Path) -> ABCCrashReport
+        """Populate the crash info from the given crash directory"""
         serialized = {}
-        for file_path in cls({}).crash_dir(ident_text).iterdir():
+        for file_path in crash_dir.iterdir():
             with file_path.open(encoding="utf-8") as f:
                 key = "crash_info" if file_path.name == "crash.info" else file_path.name
                 serialized[key] = json.load(f)

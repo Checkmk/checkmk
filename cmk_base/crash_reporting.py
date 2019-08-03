@@ -27,9 +27,8 @@
 
 import os
 import sys
-import base64
-import tarfile
-import cStringIO as StringIO
+import traceback
+from typing import (Text, Tuple)  # pylint: disable=unused-import
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -37,6 +36,7 @@ import cmk.utils.crash_reporting as crash_reporting
 
 import cmk_base.utils
 import cmk_base.check_utils
+import cmk_base.config as config
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -55,95 +55,115 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
         })
 
 
-# Create a crash dump with a backtrace and the agent output.
-# This is put into a directory per service. The content is then
-# put into a tarball, base64 encoded and put into the long output
-# of the check :-)
-def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
-                      info):
+def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, params, description,
+                            info):
+    """Create a crash dump from an exception occured during check execution
+
+    The crash dump is put into a tarball, base64 encoded and appended to the long output
+    of the check. The GUI (cmk.gui.crash_reporting) is able to parse it and send it to
+    the Checkmk team.
+    """
     text = "check failed - please submit a crash report!"
     try:
-        crash_dir = cmk.utils.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace(
-            "/", "\\")
-        _prepare_crash_dump_directory(crash_dir)
-
-        _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
-                                     params, description, info, text)
-
-        # TODO: Add caches of all data sources
-        if cmk_base.check_utils.is_snmp_check(check_plugin_name):
-            _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name)
-        else:
-            _write_crash_dump_agent_output(crash_dir, hostname)
-
-        text += "\n" + "Crash dump:\n" + _pack_crash_dump(crash_dir) + "\n"
+        crash = CheckCrashReport.from_exception_and_context(
+            hostname=hostname,
+            check_plugin_name=check_plugin_name,
+            item=item,
+            is_manual_check=is_manual_check,
+            params=params,
+            description=description,
+            info=info,
+            text=text,
+        )
+        CrashReportStore().save(crash)
+        text += "\n" + "Crash dump:\n" + crash.get_packed() + "\n"
+        return text
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-
-    return text
-
-
-def _prepare_crash_dump_directory(crash_dir):
-    if not os.path.exists(crash_dir):
-        os.makedirs(crash_dir)
-    # Remove all files of former crash reports
-    for f in os.listdir(crash_dir):
-        try:
-            os.unlink(crash_dir + "/" + f)
-        except OSError:
-            pass
+        return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
-def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, is_manual_check,
-                                 params, description, info, text):
-    pass
-    # TODO: Temporarily disabled
-    #config_cache = config.get_config_cache()
-    #host_config = config_cache.get_host_config(hostname)
+@crash_reporting.crash_report_registry.register
+class CheckCrashReport(crash_reporting.ABCCrashReport):
+    @classmethod
+    def type(cls):
+        return "check"
 
-    #crash_info = crash_reporting.create_crash_info(
-    #    "check",
-    #    details={
-    #        "check_output": text,
-    #        "host": hostname,
-    #        "is_cluster": host_config.is_cluster,
-    #        "description": description,
-    #        "check_type": check_plugin_name,
-    #        "item": item,
-    #        "params": params,
-    #        "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
-    #        "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
-    #        "manual_check": is_manual_check,
-    #    })
-    #open(crash_dir + "/crash.info",
-    #     "w").write(crash_reporting.crash_info_to_string(crash_info) + "\n")
+    @classmethod
+    def from_exception_and_context(cls, hostname, check_plugin_name, item, is_manual_check, params,
+                                   description, info, text):
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+
+        snmp_info, agent_output = None, None
+        if cmk_base.check_utils.is_snmp_check(check_plugin_name):
+            snmp_info = _read_snmp_info(hostname)
+        else:
+            agent_output = _read_agent_output(hostname)
+
+        return cls.from_exception(
+            details={
+                "check_output": text,
+                "host": hostname,
+                "is_cluster": host_config.is_cluster,
+                "description": description,
+                "check_type": check_plugin_name,
+                "item": item,
+                "params": params,
+                "uses_snmp": cmk_base.check_utils.is_snmp_check(check_plugin_name),
+                "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
+                "manual_check": is_manual_check,
+            },
+            type_specific_attributes={
+                "snmp_info": snmp_info,
+                "agent_output": agent_output,
+            },
+        )
+
+    def __init__(self, crash_info, snmp_info, agent_output):
+        super(CheckCrashReport, self).__init__(crash_info)
+        self.snmp_info = snmp_info
+        self.agent_output = agent_output
+
+    def ident(self):
+        # type: () -> Tuple[Text, Text]
+        """The identitfy of the crash report
+        This makes Check_MK keep one report for each host/service"""
+        return (self.crash_info["details"]["host"], self.crash_info["details"]["description"])
+
+    def _serialize_attributes(self):
+        # type: () -> dict
+        """Serialize object type specific attributes for transport"""
+        attributes = super(CheckCrashReport, self)._serialize_attributes()
+        attributes.update({
+            "snmp_info": self.snmp_info,
+            "agent_output": self.agent_output,
+        })
+        return attributes
 
 
-def _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name):
-    cachefile = "%s/snmp/%s" % (cmk.utils.paths.data_source_cache_dir, hostname)
-    if os.path.exists(cachefile):
-        open(crash_dir + "/snmp_info", "w").write(open(cachefile).read())
+def _read_snmp_info(hostname):
+    cachefile_path = "%s/snmp/%s" % (cmk.utils.paths.data_source_cache_dir, hostname)
+    if not os.path.exists(cachefile_path):
+        return
+
+    with open(cachefile_path) as f:
+        return f.read()
 
 
-def _write_crash_dump_agent_output(crash_dir, hostname):
+def _read_agent_output(hostname):
     try:
         import cmk_base.cee.real_time_checks as real_time_checks
     except ImportError:
         real_time_checks = None
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
-        open(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
-    else:
-        cachefile = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname)
-        if os.path.exists(cachefile):
-            open(crash_dir + "/agent_output", "w").write(open(cachefile).read())
+        return real_time_checks.get_rtc_package()
 
+    cachefile = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname)
+    if not os.path.exists(cachefile):
+        return
 
-def _pack_crash_dump(crash_dir):
-    buf = StringIO.StringIO()
-    with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-        for filename in os.listdir(crash_dir):
-            tar.add(os.path.join(crash_dir, filename), filename)
-
-    return base64.b64encode(buf.getvalue())
+    with open(cachefile) as f:
+        return f.read()

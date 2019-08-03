@@ -336,7 +336,7 @@ def execute_check(config_cache, multi_host_sections, hostname, ipaddress, check_
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
-        result = 3, cmk_base.crash_reporting.create_crash_dump(
+        result = 3, cmk_base.crash_reporting.create_check_crash_dump(
             hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
             params, description, section_content), []
 

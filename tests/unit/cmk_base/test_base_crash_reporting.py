@@ -1,8 +1,11 @@
 import tarfile
 import StringIO
 import base64
+
 import cmk.utils.crash_reporting
 import cmk_base.crash_reporting as crash_reporting
+
+from testlib.base import Scenario
 
 
 def test_cmk_base_report_registry():
@@ -71,3 +74,65 @@ def test_cmk_base_crash_report_get_packed():
     buf = StringIO.StringIO(tgz)
     with tarfile.open(mode="r:gz", fileobj=buf) as tar:
         assert tar.getnames() == ["crash.info"]
+
+
+def test_check_crash_report_from_exception(monkeypatch):
+    Scenario().apply(monkeypatch)
+    try:
+        raise Exception("DING")
+    except Exception:
+        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+            hostname="testhost",
+            check_plugin_name="uptime",
+            item=None,
+            is_manual_check=False,
+            params=None,
+            description=u"Uptime",
+            info="X",
+            text=u"Output",
+        )
+
+    _check_generic_crash_info(crash)
+
+    assert crash.type() == "check"
+    assert crash.crash_info["exc_type"] == "Exception"
+    assert crash.crash_info["exc_value"] == "DING"
+
+    for key, (ty, value) in {
+            "check_output": (unicode, "Output"),
+            "host": (str, "testhost"),
+            "is_cluster": (bool, False),
+            "description": (unicode, "Uptime"),
+            "check_type": (str, "uptime"),
+            "item": (type(None), None),
+            "params": (type(None), None),
+            "uses_snmp": (bool, False),
+            "inline_snmp": (bool, False),
+            "manual_check": (bool, False),
+    }.items():
+        assert key in crash.crash_info["details"]
+        assert isinstance(crash.crash_info["details"][key], ty), \
+                "Key %r has wrong type: %r" % (key, type(crash.crash_info["details"][key]))
+        assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
+
+
+def test_check_crash_report_save(monkeypatch):
+    Scenario().apply(monkeypatch)
+    store = crash_reporting.CrashReportStore()
+    try:
+        raise Exception("DING")
+    except Exception:
+        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+            hostname="testhost",
+            check_plugin_name="uptime",
+            item=None,
+            is_manual_check=False,
+            params=None,
+            description=u"Uptime",
+            info="X",
+            text=u"Output",
+        )
+        store.save(crash)
+
+    crash2 = store.load_from_directory(crash.crash_dir())
+    assert crash2.crash_info["exc_value"] == "DING"

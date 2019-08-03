@@ -28,7 +28,8 @@
 import os
 import sys
 import traceback
-from typing import (Text, Tuple)  # pylint: disable=unused-import
+from typing import (Optional, Text, Tuple)  # pylint: disable=unused-import
+from pathlib2 import Path
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -144,26 +145,30 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
 
 
 def _read_snmp_info(hostname):
-    cachefile_path = "%s/snmp/%s" % (cmk.utils.paths.data_source_cache_dir, hostname)
-    if not os.path.exists(cachefile_path):
-        return
-
-    with open(cachefile_path) as f:
-        return f.read()
+    # type: (str) -> Optional[Text]
+    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
+    try:
+        with cache_path.open(encoding="utf-8") as f:
+            return f.read()
+    except IOError:
+        pass
+    return None
 
 
 def _read_agent_output(hostname):
+    # type: (str) -> Optional[Text]
     try:
         import cmk_base.cee.real_time_checks as real_time_checks
     except ImportError:
-        real_time_checks = None
+        real_time_checks = None  # type: ignore
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
         return real_time_checks.get_rtc_package()
 
-    cachefile = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname)
-    if not os.path.exists(cachefile):
-        return
-
-    with open(cachefile) as f:
-        return f.read()
+    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
+    try:
+        with cache_path.open(encoding="utf-8") as f:
+            return f.read()
+    except IOError:
+        pass
+    return None

@@ -1,9 +1,12 @@
 import tarfile
 import StringIO
 import base64
+from pathlib2 import Path
 
 import cmk.utils.crash_reporting
 import cmk_base.crash_reporting as crash_reporting
+import cmk_base.check_api as check_api
+import cmk_base.config as config
 
 from testlib.base import Scenario
 
@@ -136,3 +139,63 @@ def test_check_crash_report_save(monkeypatch):
 
     crash2 = store.load_from_directory(crash.crash_dir())
     assert crash2.crash_info["exc_value"] == "DING"
+
+
+def test_check_crash_report_read_agent_output(monkeypatch):
+    Scenario().apply(monkeypatch)
+    config.load_checks(
+        check_api.get_check_api_context,
+        ["%s/uptime" % cmk.utils.paths.checks_dir,
+         "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
+
+    cache_path = Path(cmk.utils.paths.tcp_cache_dir, "testhost")
+    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    with cache_path.open("w", encoding="utf-8") as f:
+        f.write(u"<<<abc>>>\nblablub\n")
+
+    try:
+        raise Exception("DING")
+    except Exception:
+        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+            hostname="testhost",
+            check_plugin_name="uptime",
+            item=None,
+            is_manual_check=False,
+            params=None,
+            description=u"Uptime",
+            info="X",
+            text=u"Output",
+        )
+
+    assert crash.agent_output == u"<<<abc>>>\nblablub\n"
+    assert crash.snmp_info is None
+
+
+def test_check_crash_report_read_snmp_info(monkeypatch):
+    Scenario().apply(monkeypatch)
+    config.load_checks(
+        check_api.get_check_api_context,
+        ["%s/uptime" % cmk.utils.paths.checks_dir,
+         "%s/snmp_uptime" % cmk.utils.paths.checks_dir])
+
+    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", "testhost")
+    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    with cache_path.open("w", encoding="utf-8") as f:
+        f.write(u"[]\n")
+
+    try:
+        raise Exception("DING")
+    except Exception:
+        crash = crash_reporting.CheckCrashReport.from_exception_and_context(
+            hostname="testhost",
+            check_plugin_name="snmp_uptime",
+            item=None,
+            is_manual_check=False,
+            params=None,
+            description=u"Uptime",
+            info="X",
+            text=u"Output",
+        )
+
+    assert crash.agent_output is None
+    assert crash.snmp_info == u"[]\n"

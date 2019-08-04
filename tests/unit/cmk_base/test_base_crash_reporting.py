@@ -11,7 +11,7 @@ import cmk_base.config as config
 from testlib.base import Scenario
 
 
-def test_cmk_base_report_registry():
+def test_cmk_base_crash_report_registry():
     assert cmk.utils.crash_reporting.crash_report_registry["base"] \
             == crash_reporting.CMKBaseCrashReport
 

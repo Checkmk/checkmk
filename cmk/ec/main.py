@@ -67,6 +67,7 @@ import cmk.utils.profile
 import cmk.utils.render
 import cmk.utils.regex
 import cmk.utils.debug
+from cmk.ec.crash_reporting import ECCrashReport, CrashReportStore
 
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
@@ -4166,6 +4167,8 @@ def main():
     except Exception:
         if settings.options.debug:
             raise
+
+        CrashReportStore().save(ECCrashReport.from_exception())
         bail_out(logger, traceback.format_exc())
 
     finally:

@@ -37,39 +37,30 @@
 #   per type to the page_types dictionary. Or add some management object
 #   for this
 
-import os
+import functools
 import json
+import os
 
-import cmk.utils.store as store
-
+import cmk.gui.config as config
+import cmk.gui.forms as forms
 import cmk.gui.pages
 import cmk.gui.sites as sites
-import cmk.gui.config as config
-from cmk.gui.table import table_element
-import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
+import cmk.utils.store as store
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html
+from cmk.gui.i18n import _, _u
+from cmk.gui.permissions import declare_permission, declare_permission_section, permission_registry
+from cmk.gui.table import table_element
 from cmk.gui.valuespec import (
     ID,
-    Dictionary,
-    Checkbox,
-    TextUnicode,
-    TextAreaUnicode,
     CascadingDropdown,
+    Checkbox,
+    Dictionary,
     DualListChoice,
     Optional,
-)
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
-
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKGeneralException,
-    MKAuthException,
-)
-from cmk.gui.permissions import (
-    permission_registry,
-    declare_permission_section,
-    declare_permission,
+    TextAreaUnicode,
+    TextUnicode,
 )
 
 #   .--Base----------------------------------------------------------------.
@@ -169,7 +160,8 @@ class Base(object):
             topic.sort()
 
         sorted_topics = topics.items()
-        sorted_topics.sort(cmp=lambda t1, t2: cmp(t1[1][0], t2[1][0]))
+        sorted_topics.sort(
+            key=functools.cmp_to_key(lambda t1, t2: (t1[1][0] > t2[1][0]) - (t1[1][0] < t2[1][0])))
 
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
@@ -273,7 +265,8 @@ class Base(object):
     @classmethod
     def instances_sorted(cls):
         instances = cls.__instances.values()
-        instances.sort(cmp=lambda a, b: cmp(a.title(), b.title()))
+        instances.sort(key=functools.cmp_to_key(lambda a, b: (a.title() > b.title()) -
+                                                (a.title() < b.title())))
         return instances
 
     # Stub function for the list of all pages. In case of Overridable
@@ -707,7 +700,9 @@ class Overridable(Base):
             if page.is_mine_and_may_have_own():
                 pages[page.name()] = page
 
-        return sorted(pages.values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+            return sorted(pages.values(),
+                          key=functools.cmp_to_key(lambda a, b: (a.title() > b.title()) -
+                                                   (a.title() < b.title())))
 
     @classmethod
     def page_choices(cls):

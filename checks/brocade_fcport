@@ -98,6 +98,13 @@ factory_settings["brocade_fcport_default_levels"] = {
 }
 
 
+def _try_int(int_str):
+    try:
+        return int(int_str)
+    except ValueError:
+        return None
+
+
 def _get_if_table_offset(speed_info):
     # http://community.brocade.com/t5/Fibre-Channel-SAN/SNMP-FC-port-speed/td-p/64980
     # says that "1073741824" from if-table correlates with index 1 from
@@ -152,12 +159,12 @@ def parse_brocade_fcport(info):
                 txwords = 0
                 rxwords = 0
 
-        try:
-            islspeed = None
-            if index in isl_ports:
-                islspeed = isl_speed_map.get(isl_ports[index])
+        islspeed = None
+        if index in isl_ports:
+            islspeed = isl_speed_map.get(isl_ports[index])
 
-            parsed.append({
+        try:
+            data = {
                 "index": int(index),
                 "phystate": int(phystate),
                 "opstate": int(opstate),
@@ -174,13 +181,16 @@ def parse_brocade_fcport(info):
                 "brocade_speed": brocade_speed,
                 "portname": portname,
                 "porttype": porttype,
-                "ifspeed": int(ifspeed),
+                "ifspeed": _try_int(ifspeed),
                 "is_isl": index in isl_ports,
                 "islspeed": islspeed,  # Might be None
                 "bbcredits": bbcredits,  # Might be None
-            })
+            }
         except ValueError:
             continue
+
+        parsed.append(data)
+
     return parsed
 
 
@@ -210,6 +220,24 @@ def inventory_brocade_fcport(parsed):
     return inventory
 
 
+def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, if_speed, params):
+    # Lookup port speed in ISL table for ISL ports (older switches do not provide this
+    # information in the normal table)
+    if is_isl and isl_speed is not None:
+        return "ISL speed: %.0f Gbit/s", isl_speed
+
+    brocade_speed_value = brocade_fcport_speed.get(brocade_speed, "unknown")
+    if brocade_speed_value not in ("auto-Neg", "unknown"):
+        return "%.0f Gbit/s", float(brocade_speed_value.replace("Gbit", ""))
+
+    if if_speed:
+        # use actual speed of port if available
+        return "Speed: %g Gbit/s", if_speed / 1000
+
+    # let user specify assumed speed via check parameter, default is 2.0
+    return "Assumed speed: %g Gbit/s", params["assumed_speed"]
+
+
 def check_brocade_fcport(item, params, parsed):
     found_entry = None
     for if_entry in parsed:
@@ -234,7 +262,7 @@ def check_brocade_fcport(item, params, parsed):
     is_isl = found_entry["is_isl"]
     isl_speed = found_entry["islspeed"]
     bbcredits = found_entry["bbcredits"]
-    speed = found_entry["ifspeed"]
+    speed = found_entry.get("ifspeed")
 
     this_time = time.time()
     average = params.get("average")  # range in minutes
@@ -245,30 +273,11 @@ def check_brocade_fcport(item, params, parsed):
     perfdata = []
     perfaverages = []
 
-    # Lookup port speed in ISL table for ISL ports (older switches do not provide this
-    # information in the normal table)
-    if is_isl and isl_speed is not None:
-        gbit = isl_speed
-        speedmsg = ("ISL speed: %.0f Gbit/s" % isl_speed)
+    speedmsg, gbit = _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, speed, params)
+    output.append(speedmsg % gbit)
 
-    else:  # no ISL port
-        if brocade_fcport_speed.get(brocade_speed, "unknown") in ["auto-Neg", "unknown"]:
-            if speed > 0:
-                # use actual speed of port if available
-                gbit = speed / 1000
-                speedmsg = "Speed: %g Gbit/s" % gbit
-            else:
-                # let user specify assumed speed via check parameter, default is 2.0
-                gbit = params.get("assumed_speed")
-                speedmsg = "Assumed speed: %g Gbit/s" % gbit
-        else:
-            gbit = float(brocade_fcport_speed[brocade_speed].replace("Gbit", ""))
-            speedmsg = "%.0f Gbit/s" % gbit
-
-    output.append(speedmsg)
-
-    # convert gbit netto link-rate to Byte/s (8/10 enc)
-    wirespeed = gbit * 1000000000.0 * 0.8 / 8
+    # convert gbit netto link-rate to Byte/s (8/10 enc) -> 10 bits per byte
+    wirespeed = gbit * 1e8
     in_bytes = 4 * get_rate("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
     out_bytes = 4 * get_rate("brocade_fcport.txwords.%s" % index, this_time, txwords)
 

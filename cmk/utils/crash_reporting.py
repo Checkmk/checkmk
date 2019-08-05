@@ -91,13 +91,17 @@ class CrashReportStore(object):
     def load_from_directory(self, crash_dir):
         # type: (Path) -> ABCCrashReport
         """Populate the crash info from the given crash directory"""
+        return ABCCrashReport.deserialize(self.load_serialized_from_directory(crash_dir))
+
+    def load_serialized_from_directory(self, crash_dir):
+        # type: (Path) -> Dict[str, Any]
+        """Load the raw serialized crash report from the given directory"""
         serialized = {}
         for file_path in crash_dir.iterdir():
             with file_path.open(encoding="utf-8") as f:
                 key = "crash_info" if file_path.name == "crash.info" else file_path.name
                 serialized[key] = json.load(f)
-
-        return ABCCrashReport.deserialize(serialized)
+        return serialized
 
 
 class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):

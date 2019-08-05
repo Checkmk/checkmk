@@ -335,3 +335,24 @@ class VisualInfoEventHistory(VisualInfo):
             ('event_id', Integer(title=_('Event ID'),)),
             ('history_line', Integer(title=_('History Line Number'),)),
         ]
+
+
+@visual_info_registry.register
+class VisualInfoCrash(VisualInfo):
+    @property
+    def ident(self):
+        return "crash"
+
+    @property
+    def title(self):
+        return _('Crash report')
+
+    @property
+    def title_plural(self):
+        return _('Crash reports')
+
+    @property
+    def single_spec(self):
+        return [
+            ('crash_id', TextUnicode(title=_('Crash ID'),)),
+        ]

@@ -33,6 +33,11 @@ import ast
 import ssl
 from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
 
+try:
+    from cmk.gui.i18n import _
+except ImportError:
+    _ = lambda x: x
+
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
 #   |                   / ___| | ___ | |__   __ _| |___                    |
@@ -76,6 +81,12 @@ class MKLivestatusException(Exception):
     def __str__(self):
         return str(self.parameter)
 
+    def plain_title(self):
+        return _("Livestatus problem")
+
+    def title(self):
+        return _("Livestatus problem")
+
 
 class MKLivestatusSocketError(MKLivestatusException):
     pass
@@ -96,6 +107,12 @@ class MKLivestatusQueryError(MKLivestatusException):
 class MKLivestatusNotFoundError(MKLivestatusException):
     def __str__(self):
         return "No matching entries found for query %s" % str(self.parameter)
+
+    def plain_title(self):
+        return _("Livestatus-data not found")
+
+    def title(self):
+        return _("Data not found")
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):

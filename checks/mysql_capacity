@@ -95,16 +95,14 @@ def check_mysql_size(item, params, parsed):
             if params:
                 state = 0
                 warn, crit = params
-                warn_b = warn * 1024
-                crit_b = crit * 1024
-                perfdata = [("database_size", size, warn_b, crit_b)]
-                if size > crit_b:
+                perfdata = [("database_size", size, warn, crit)]
+                if size > crit:
                     state = 2
-                elif size > warn_b:
+                elif size > warn:
                     state = 1
                 if state:
-                    infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn_b),
-                                                           get_bytes_human_readable(crit_b))
+                    infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
+                                                           get_bytes_human_readable(crit))
             else:
                 state = 0
                 perfdata = [("database_size", size)]

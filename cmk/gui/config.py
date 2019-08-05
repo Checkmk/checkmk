@@ -1010,7 +1010,7 @@ def sorted_sites():
     sorted_choices = []
     for site_id, s in user.authorized_sites():
         sorted_choices.append((site_id, s['alias']))
-    return sorted(sorted_choices, key=lambda k: k[1], cmp=lambda a, b: cmp(a.lower(), b.lower()))
+    return sorted(sorted_choices, key=lambda k: k[1].lower())
 
 
 def site(site_id):

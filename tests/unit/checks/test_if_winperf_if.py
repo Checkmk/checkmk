@@ -495,8 +495,6 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
                 PerfValue('outdisc', 0.0, None, None, None, None),
                 PerfValue('outerr', 0.0, None, None, None, None),
                 PerfValue('outqlen', 0, None, None, None, None),
-                PerfValue('in', 0.0, None, None, None, None),
-                PerfValue('out', 1073741824.0, None, None, None, None)
             ])
     ])
     assert result_8 == CheckResult([
@@ -515,8 +513,6 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
                 PerfValue('outdisc', 0.0, None, None, None, None),
                 PerfValue('outerr', 0.0, None, None, None, None),
                 PerfValue('outqlen', 0, None, None, None, None),
-                PerfValue('in', 0.0, None, None, None, None),
-                PerfValue('out', 1073741824.0, None, None, None, None)
             ])
     ])
     assert result_dag_net == CheckResult([
@@ -535,7 +531,5 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
                 PerfValue('outdisc', 0.0, None, None, None, None),
                 PerfValue('outerr', 0.0, None, None, None, None),
                 PerfValue('outqlen', 0, None, None, None, None),
-                PerfValue('in', 0.0, None, None, None, None),
-                PerfValue('out', 2147483648.0, None, None, None, None)
             ])
     ])

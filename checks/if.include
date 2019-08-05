@@ -1036,7 +1036,6 @@ def check_if_common_single(item,
                                               average)
                     infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
                     dsname = "%s_avg_%d" % (what, average)
-                    perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
                     traffic = traffic_avg  # apply levels to average traffic
                     title = "%s average %d" % (what.title(), average)
                 else:
@@ -1052,7 +1051,6 @@ def check_if_common_single(item,
                                       infoname=title)
                 state = max(state, result[0])
                 infotext += ", " + result[1]
-                perfdata += result[2]
 
                 if speed:
                     perc_used = 100.0 * traffic / speed

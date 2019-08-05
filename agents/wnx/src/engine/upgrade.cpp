@@ -10,6 +10,7 @@
 
 #include "cvt.h"
 #include "glob_match.h"
+#include "install_api.h"
 #include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
@@ -1398,3 +1399,76 @@ bool PatchStateHash(const std::filesystem::path& ini,
 }
 
 }  // namespace cma::cfg::upgrade
+
+namespace cma::cfg::rm_lwa {
+
+bool IsRequestedByRegistry() {
+    using namespace cma::install;
+    return std::wstring(registry::kMsiRemoveLegacyRequest) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiRemoveLegacy,
+                                    registry::kMsiRemoveLegacyDefault);
+}
+
+void SetAlreadyRemoved() {
+    using namespace cma::install;
+    XLOG::l.i("Disabling in registry request to remove Legacy Agent");
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyAlready);
+}
+
+bool IsAlreadyRemoved() {
+    using namespace cma::install;
+    return std::wstring(registry::kMsiRemoveLegacyAlready) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiRemoveLegacy,
+                                    registry::kMsiRemoveLegacyDefault);
+}
+
+bool IsToRemove() {
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::t("No legacy agent - nothing to do");
+        return false;
+    }
+
+    if (IsAlreadyRemoved()) {
+        XLOG::l.i(
+            "The Legacy Agent is already removed. "
+            "To remove the Legacy Agent again, please, "
+            "use command line or set registry entry HKLM\\{}\\{} to \"1\"",
+            wtools::ConvertToUTF8(cma::install::registry::GetMsiRegistryPath()),
+            wtools::ConvertToUTF8(cma::install::registry::kMsiRemoveLegacy));
+        return false;
+    }
+
+    if (cma::cfg::GetVal(groups::kGlobal, vars::kGlobalRemoveLegacy, false)) {
+        XLOG::l.i("Config requests to remove Legacy Agent");
+        return true;
+    }
+
+    if (IsRequestedByRegistry()) {
+        XLOG::l.i("Registry requests to remove Legacy Agent");
+        return true;
+    }
+
+    return false;
+}
+
+void Execute() {
+    if (!IsToRemove()) return;
+
+    using namespace cma::cfg;
+
+    // un-installation self
+    auto x = std::thread([]() {
+        XLOG::l.i("Requested remove of Legacy Agent...");
+        auto result = UninstallProduct(products::kLegacyAgent);
+        if (result) SetAlreadyRemoved();
+
+        XLOG::l.i("Result of remove of Legacy Agent is [{}]", result);
+    });
+
+    if (x.joinable()) x.join();
+}
+}  // namespace cma::cfg::rm_lwa

@@ -9,12 +9,34 @@
 #include <string>
 #include <string_view>
 
+#include "tools/_tgt.h"
+
 namespace cma {
 
 namespace install {
 enum class UpdateType { exec_normal, exec_quiet };
 enum class UpdateProcess { execute, skip };
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
+
+namespace registry
+
+{
+// Names are from WIX Msi, please, check that they are in sync
+const std::wstring kMsiInfoPath64 = L"SOFTWARE\\WOW6432Node\\checkmkservice";
+const std::wstring kMsiInfoPath32 = L"SOFTWARE\\checkmkservice";
+
+const std::wstring kMsiInstallFolder = L"Install_Folder";
+const std::wstring kMsiInstallService = L"Install_Service";
+
+const std::wstring kMsiRemoveLegacy = L"Remove_Legacy";
+const std::wstring kMsiRemoveLegacyDefault = L"";
+const std::wstring kMsiRemoveLegacyRequest = L"1";
+const std::wstring kMsiRemoveLegacyAlready = L"0";
+
+inline const std::wstring GetMsiRegistryPath() {
+    return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
+}
+};  // namespace registry
 
 // TEST(InstallAuto, TopLevel)
 // set StartUpdateProcess to 'skip' to test functionality

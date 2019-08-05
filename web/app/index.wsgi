@@ -40,6 +40,7 @@ import cmk.gui.modules as modules
 import cmk.gui.pages as pages
 import cmk.gui.login as login
 import cmk.gui.log as log
+import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.htmllib
 import cmk.gui.http
 import cmk.gui.globals
@@ -101,15 +102,12 @@ class Application(object):
             logger.error("%s: %s", e.plain_title(), e)
 
         except Exception as e:
-            logger.exception("error processing WSGI request")
-            if self._plain_error():
-                html.set_output_format("text")
-                html.write(_("Internal error") + ": %s\n" % e)
-            elif not self._fail_silently():
-                crash_handler = pages.get_page_handler("gui_crash")
-                if not crash_handler:
-                    raise
-                crash_handler()
+            crash = crash_reporting.GUICrashReport.from_exception()
+            crash_reporting.CrashReportStore().save(crash)
+
+            logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+            crash_reporting.show_crash_dump_message(crash, self._plain_error(),
+                                                    self._fail_silently())
 
         finally:
             try:
@@ -148,6 +146,7 @@ class Application(object):
                 try:
                     handler()
                 except Exception as e:
+                    # TODO: This misses correct error handling (log to web.log, crash reporting)
                     self._show_exception_info(e)
                 raise FinalizeRequest(httplib.OK)
 

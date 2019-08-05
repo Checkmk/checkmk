@@ -1,6 +1,3 @@
-import tarfile
-import StringIO
-import base64
 from pathlib2 import Path
 
 import cmk.utils.crash_reporting
@@ -63,20 +60,6 @@ def test_cmk_base_crash_report_save():
 
     assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
     assert crash.crash_info["time"] == crash2.crash_info["time"]
-
-
-def test_cmk_base_crash_report_get_packed():
-    try:
-        raise ValueError("DINGELING")
-    except Exception:
-        crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        crash_reporting.CrashReportStore().save(crash)
-
-    b64tgz = crash.get_packed()
-    tgz = base64.b64decode(b64tgz)
-    buf = StringIO.StringIO(tgz)
-    with tarfile.open(mode="r:gz", fileobj=buf) as tar:
-        assert tar.getnames() == ["crash.info"]
 
 
 def test_check_crash_report_from_exception(monkeypatch):

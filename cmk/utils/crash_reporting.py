@@ -37,8 +37,6 @@ import time
 import traceback
 import subprocess
 import json
-import tarfile
-import StringIO
 import urllib
 from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 
@@ -190,16 +188,6 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
         """Returns the site local URL to the current crash report"""
         return "crash.py?%s" % urllib.urlencode([("component", self.type()),
                                                  ("ident", self.ident_to_text())])
-
-    def get_packed(self):
-        # type: () -> Text
-        """Returns a base64 encoded byte string representing the current crash report"""
-        buf = StringIO.StringIO()
-        with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-            for f in self.crash_dir().iterdir():
-                tar.add(str(f), f.name)
-
-        return base64.b64encode(buf.getvalue())
 
 
 def _get_generic_crash_info(type_name, details):

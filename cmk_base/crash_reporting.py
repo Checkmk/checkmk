@@ -77,7 +77,7 @@ def create_check_crash_dump(hostname, check_plugin_name, item, is_manual_check, 
             text=text,
         )
         CrashReportStore().save(crash)
-        text += "\n" + "Crash dump:\n" + crash.get_packed() + "\n"
+        text += "(Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
         if cmk.utils.debug.enabled():

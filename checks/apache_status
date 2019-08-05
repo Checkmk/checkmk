@@ -159,9 +159,8 @@ def check_apache_status(item, params, info):
     perfdata = []
 
     # Sort keys
-    data.sort(cmp=lambda x, y: cmp(
-        _apache_status_fields.get(x[0], (0, None))[0],
-        _apache_status_fields.get(y[0], (0, None))[0]))
+    data.sort(key=functools.cmp_to_key(lambda x, y: (_apache_status_fields.get(x[0], (0, None))[
+        0] - _apache_status_fields.get(y[0], (0, None))[0])))
 
     for key, value in data:
         if key not in _apache_status_fields.keys():

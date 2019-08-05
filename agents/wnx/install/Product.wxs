@@ -459,6 +459,9 @@ just to signal that real build script was not called -->
     </Feature>
 
     <Property Id="INSTALLSERVICE" Value="1" />
+    <!-- must be disabled to avoid hitting check box
+    <Property Id="WIXUI_REMOVELEGACY" Value="0" />
+    -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER_SERVICE"/>
     <WixVariable Id="WixUILicenseRtf" Value="resources\GPL-V2.rtf" />
     <UIRef Id="CmkWixUI_InstallDir"/>
@@ -553,15 +556,24 @@ just to signal that real build script was not called -->
       
       <!-- not required anybmore -->
       <Component Id="RegistryEntries"
-                 Guid="F95DD079-D93F-441B-9D38-CA6D9500C6A7"
+                 Guid="{9B5A1A5F-3A59-4608-AF54-EBE04D3F0BD1}"
                  >
         <RegistryKey Root="HKLM"
-                     Key="Software\check_mk_service"
+                     Key="Software\checkmkservice"
                      ForceCreateOnInstall="yes"
                      ForceDeleteOnUninstall="yes">
+          
           <RegistryValue Type="string"
                          Name="Install_Folder"
                          Value="[INSTALLFOLDER_SERVICE]"/>
+          
+          <RegistryValue Type="string"
+                         Name="Remove_Legacy"
+                         Value="[WIXUI_REMOVELEGACY]"/>
+          
+          <RegistryValue Type="string"
+                         Name="Install_Service"
+                         Value="[INSTALLSERVICE]"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

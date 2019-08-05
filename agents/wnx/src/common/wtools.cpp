@@ -450,27 +450,15 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
 
         cap::Install();
         upgrade::UpgradeLegacy(upgrade::Force::no);
+
         // Perform service-specific initialization.
         processor_->startService();
 
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
-        auto uninstall_legacy =
-            GetVal(groups::kGlobal, vars::kGlobalRemoveLegacy, false);
+        cma::cfg::rm_lwa::Execute();
 
-        if (uninstall_legacy) {
-            if (!cma::cfg::upgrade::FindLegacyAgent().empty()) {
-                auto x = std::thread([]() {
-                    XLOG::l.i("Config requested remove of Legacy Agent");
-                    auto result =
-                        UninstallProduct(cma::cfg::products::kLegacyAgent);
-                    XLOG::l.i("Result of remove of Legacy Agent is [{}]",
-                              result);
-                });
-                if (x.joinable()) x.join();
-            }
-        }
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
@@ -1675,8 +1663,23 @@ uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
     return Default;
 }
 
-// gtest [+]
-// returns data from the root machine registry
+// returns true on success
+bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+                      std::wstring_view value) {
+    HKEY hKey;
+    auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
+                              REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
+                              &hKey, NULL);
+    if (ERROR_SUCCESS != ret) return false;
+
+    /** Set full application path with a keyname to registry */
+    ret = RegSetValueEx(hKey, key.data(), 0, REG_SZ,
+                        reinterpret_cast<const BYTE*>(value.data()),
+                        static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
+    return ERROR_SUCCESS == ret;
+}
+
+// returns true on success
 bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept {
     auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),

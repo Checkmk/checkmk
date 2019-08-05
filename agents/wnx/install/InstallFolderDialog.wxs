@@ -27,6 +27,7 @@
         <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
         <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)" />
         <Control Id="InstallServiceCheckbox" Type="CheckBox" X="20" Y="160" Width="290" Height="17" Property="INSTALLSERVICE" CheckBoxValue="1" Text="Install and start service." />
+        <Control Id="RemoveLegacyAgentCheckbox" Type="CheckBox" X="20" Y="180" Width="290" Height="17" Property="WIXUI_REMOVELEGACY" CheckBoxValue="1" Text="Remove Legacy Agent." />
       </Dialog>
     </UI>
   </Fragment>

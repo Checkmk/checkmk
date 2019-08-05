@@ -11,6 +11,7 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "install_api.h"
 #include "providers/mrpe.h"
 #include "read_file.h"
 #include "service_processor.h"
@@ -18,6 +19,7 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
+#include "upgrade.h"
 #include "yaml-cpp/yaml.h"
 
 // we want to avoid those data public
@@ -193,6 +195,52 @@ TEST(CmaCfg, LogFileLocation) {
     }
 }
 }  // namespace details
+
+TEST(CmaCfg, RemoveLegacy_Base) {
+    using namespace cma::install;
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio(
+            "To test Agent, you have to install Legacy Agent",
+            XLOG::Colors::yellow);
+        return;
+    }
+    // set default
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyDefault);
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_FALSE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    // set already
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyAlready);
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_TRUE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    // set request
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyRequest);
+    EXPECT_TRUE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_FALSE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_TRUE(rm_lwa::IsToRemove());
+
+    // set already with high-level API
+    rm_lwa::SetAlreadyRemoved();
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_TRUE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    ON_OUT_OF_SCOPE(wtools::SetRegistryValue(
+        registry::GetMsiRegistryPath(), registry::kMsiRemoveLegacy,
+        registry::kMsiRemoveLegacyDefault));
+}
 
 TEST(CmaCfg, RemoveLegacy_Long) {
     namespace fs = std::filesystem;

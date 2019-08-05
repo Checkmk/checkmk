@@ -980,13 +980,15 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 // return false only when something wrong with registry
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
-// gtest [+]
 // returns data from the root machine registry
 uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                           uint32_t Default) noexcept;
 
-// gtest [+]
-// returns data from the root machine registry
+// returns true on success
+bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+                      std::wstring_view value);
+
+// returns true on success
 bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept;
 

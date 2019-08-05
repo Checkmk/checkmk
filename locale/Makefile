@@ -28,6 +28,7 @@ update-%:
 	         -L python --from-code=utf-8 --omit-header \
 		 -o scanned.po \
 		 ../../../web/app/index.wsgi \
+		 ../../../livestatus/api/python/livestatus.py \
 		 $$(find -L ../../../cmk -type f -name "*.py") 2>&1 < /dev/null | \
 		 sed '/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d' ; \
 	cat ../../header scanned.po > new.po ; \

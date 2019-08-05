@@ -117,33 +117,23 @@ class Application(object):
                 livestatus.MKLivestatusException,
         ) as e:
             # TODO: Refactor all the special cases handled here to simplify the exception handling
-            ty = type(e)
-            if ty == livestatus.MKLivestatusNotFoundError:
-                title = _("Data not found")
-                plain_title = _("Livestatus-data not found")
-            elif isinstance(e, livestatus.MKLivestatusException):
-                title = _("Livestatus problem")
-                plain_title = _("Livestatus problem")
-            else:
-                title = e.title()
-                plain_title = e.plain_title()
-
             if self._plain_error():
                 html.set_output_format("text")
-                html.write("%s: %s\n" % (plain_title, e))
+                html.write("%s: %s\n" % (e.plain_title(), e))
             elif not self._fail_silently():
-                html.header(title)
+                html.header(e.title())
                 html.show_error(e)
                 html.footer()
 
             # Some exception need to set a specific HTTP status code
+            ty = type(e)
             if ty == MKUnauthenticatedException:
                 self._response.status_code = httplib.UNAUTHORIZED
             elif ty == livestatus.MKLivestatusException:
                 self._response.status_code = httplib.BAD_GATEWAY
 
             if ty in [MKConfigError, MKGeneralException]:
-                logger.error("%s: %s" % (plain_title, e))
+                logger.error("%s: %s" % (e.plain_title(), e))
 
         except Exception as e:
             logger.exception("error processing WSGI request")

@@ -1,0 +1,11 @@
+Title: brocade_fcport: Discover ports despite missing speed info
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564989125
+Class: feature
+
+Previously, ports for which the device did not send an interface speed information
+could not be discovered.

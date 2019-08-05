@@ -24,22 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.views as views
+import functools
+
 import cmk.gui.config as config
-import cmk.gui.visuals as visuals
 import cmk.gui.metrics as metrics
 import cmk.gui.utils
 import cmk.gui.view_utils
-from cmk.gui.plugins.views.utils import (
-    PainterOptions,
-    command_registry,
-)
-
-from cmk.gui.i18n import _
+import cmk.gui.views as views
+import cmk.gui.visuals as visuals
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.views.utils import PainterOptions, command_registry
 
 
 def mobile_html_head(title, ready_code=""):
@@ -157,7 +155,8 @@ def jqm_page_navfooter(items, current, page_id):
 def jqm_page_index(title, items):
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
-    items.sort(cmp=lambda a, b: cmp((a[0], a[2]), (b[0], b[2])))
+    items.sort(key=functools.cmp_to_key(lambda a, b: ((a[0], a[2]) > (b[0], b[2])) -
+                                        ((a[0], a[2]) < (b[0], b[2]))))
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 

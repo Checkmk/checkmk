@@ -35,38 +35,35 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import abc
+import functools
+import json
 import math
 import string
-import json
 import traceback
 
 import six
 
-import cmk.utils
-import cmk.utils.render
-import cmk.utils.plugin_registry
-from cmk.utils.regex import regex
-
-import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.sites as sites
 import cmk.gui.i18n
 import cmk.gui.pages
-from cmk.gui.i18n import _
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
+import cmk.utils
+import cmk.utils.plugin_registry
+import cmk.utils.render
+from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import html
-
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
-
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.metrics.utils import (  # pylint: disable=unused-import
-    unit_info, metric_info, check_metrics, perfometer_info, graph_info, scalar_colors, KB, MB, GB,
-    TB, PB, m, K, M, G, T, P, evaluate, get_graph_range, replace_expressions,
-    generic_graph_template, scale_symbols, hsv_to_hexrgb, render_color, parse_color,
-    parse_color_into_hexrgb, render_color_icon, darken_color, get_palette_color_by_index,
-    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates, MAX_CORES,
-    indexed_color,
+    GB, KB, MAX_CORES, MB, PB, TB, G, K, M, P, T, check_metrics, darken_color, evaluate,
+    generic_graph_template, get_graph_range, get_graph_templates, get_palette_color_by_index,
+    graph_info, hsv_to_hexrgb, indexed_color, m, metric_info, parse_color, parse_color_into_hexrgb,
+    parse_perf_data, perfometer_info, perfvar_translation, render_color, render_color_icon,
+    replace_expressions, scalar_colors, scale_symbols, translate_metrics, unit_info,
 )
+from cmk.utils.regex import regex
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -1004,8 +1001,8 @@ def render_metrics_table(translated_metrics, host_name, service_description):
     output = "<table class=metricstable>"
     for metric_name, metric in sorted(
             translated_metrics.items(),
-            cmp=lambda a, b: cmp(a[1]["title"], b[1]["title"]),
-    ):
+            key=functools.cmp_to_key(lambda a, b: (a[1]["title"] > b[1]["title"]) -
+                                     (a[1]["title"] < b[1]["title"]))):
         output += "<tr>"
         output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
         output += "<td>%s:</td>" % metric["title"]

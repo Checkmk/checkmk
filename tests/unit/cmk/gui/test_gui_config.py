@@ -19,6 +19,27 @@ from cmk.gui.permissions import (
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
+def test_sorted_sites(mocker):
+    mocker.patch.object(config.user,
+                        "authorized_sites",
+                        return_value=[('site1', {
+                            'alias': 'Site 1'
+                        }), ('site3', {
+                            'alias': 'Site 3'
+                        }), ('site5', {
+                            'alias': 'Site 5'
+                        }), ('site23', {
+                            'alias': 'Site 23'
+                        }), ('site6', {
+                            'alias': 'Site 6'
+                        }), ('site12', {
+                            'alias': 'Site 12'
+                        })])
+    expected = [('site1', 'Site 1'), ('site12', 'Site 12'), ('site23', 'Site 23'),
+                ('site3', 'Site 3'), ('site5', 'Site 5'), ('site6', 'Site 6')]
+    assert config.sorted_sites() == expected
+
+
 def test_registered_permission_sections():
     expected_sections = [
         ('graph_collection', (50, u'Graph Collections', True)),

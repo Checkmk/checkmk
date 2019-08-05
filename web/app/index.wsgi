@@ -107,33 +107,20 @@ class Application(object):
         except FinalizeRequest as e:
             self._response.status_code = e.status
 
-        except (
-                MKUserError,
-                MKAuthException,
-                MKUnauthenticatedException,
-                MKConfigError,
-                MKGeneralException,
-                livestatus.MKLivestatusNotFoundError,
-                livestatus.MKLivestatusException,
-        ) as e:
-            # TODO: Refactor all the special cases handled here to simplify the exception handling
-            if self._plain_error():
-                html.set_output_format("text")
-                html.write("%s: %s\n" % (e.plain_title(), e))
-            elif not self._fail_silently():
-                html.header(e.title())
-                html.show_error(e)
-                html.footer()
+        except (livestatus.MKLivestatusNotFoundError, MKUserError, MKAuthException) as e:
+            self._render_exception(e)
 
-            # Some exception need to set a specific HTTP status code
-            ty = type(e)
-            if ty == MKUnauthenticatedException:
-                self._response.status_code = httplib.UNAUTHORIZED
-            elif ty == livestatus.MKLivestatusException:
-                self._response.status_code = httplib.BAD_GATEWAY
+        except livestatus.MKLivestatusException as e:
+            self._render_exception(e)
+            self._response.status_code = httplib.BAD_GATEWAY
 
-            if ty in [MKConfigError, MKGeneralException]:
-                logger.error("%s: %s" % (e.plain_title(), e))
+        except MKUnauthenticatedException as e:
+            self._render_exception(e)
+            self._response.status_code = httplib.UNAUTHORIZED
+
+        except (MKConfigError, MKGeneralException) as e:
+            self._render_exception(e)
+            logger.error("%s: %s" % (e.plain_title(), e))
 
         except Exception as e:
             logger.exception("error processing WSGI request")
@@ -152,6 +139,15 @@ class Application(object):
             except:
                 logger.exception("error cleaning up after WSGI request")
                 raise
+
+    def _render_exception(self, e):
+        if self._plain_error():
+            html.set_output_format("text")
+            html.write("%s: %s\n" % (e.plain_title(), e))
+        elif not self._fail_silently():
+            html.header(e.title())
+            html.show_error(e)
+            html.footer()
 
     def _teardown(self):
         """Final steps that are performed after each handled HTTP request"""

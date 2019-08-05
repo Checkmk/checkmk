@@ -42,23 +42,15 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5518 deg C
 
 
-def inventory_liebert_temp_general(parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            yield (key, {})
-
-
-def check_liebert_temp_general(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if key == item and not "Unavailable" in values[0]:
-            value = check_temp_unit(values)
-
-            yield check_temperature(value, params, "check_liebert_fluid_temp.%s" % item)
+@get_parsed_item_data
+def check_liebert_temp_general(item, params, data):
+    value = check_temp_unit(data)
+    yield check_temperature(value, params, "check_liebert_fluid_temp.%s" % item)
 
 
 check_info['liebert_temp_general'] = {
     'parse_function': parse_liebert,
-    'inventory_function': inventory_liebert_temp_general,
+    'inventory_function': discover(),
     'check_function': check_liebert_temp_general,
     'service_description': '%s',
     'snmp_info': (

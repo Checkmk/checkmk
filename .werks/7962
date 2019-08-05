@@ -1,0 +1,11 @@
+Title: Fix various bugs in the liebert* check plugins
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1564662479
+
+

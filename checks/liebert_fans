@@ -34,38 +34,15 @@ factory_settings["liebert_fans_default_levels"] = {
 }
 
 
-def inventory_liebert_fans(parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            yield (key, {})
-
-
-def check_liebert_fans(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if item == key and not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "Speed: %.1f%s" % (value, unit), [('filehandler_perc', value, warn, crit)]
-
-            state = levels_liebert(
-                value,
-                warn,
-                crit,
-            )
-            if state > 0:
-                yield state, "warn/crit at %s/%s" % (warn, crit)
-
-            if params.has_key('levels_lower'):
-                warn_lower, crit_lower = params['levels_lower']
-                state_lower = levels_liebert(value, warn_lower, crit_lower, 'lower')
-                if state_lower > 0:
-                    yield state_lower, "warn/crit below %s/%s" % (warn_lower, crit_lower)
+@get_parsed_item_data
+def check_liebert_fans(_item, params, data):
+    levels = params['levels'] + params.get('levels_lower', (None, None))
+    yield check_levels(data[0], 'filehandler_perc', levels, unit=data[1])
 
 
 check_info['liebert_fans'] = {
     'parse_function': parse_liebert,
-    'inventory_function': inventory_liebert_fans,
+    'inventory_function': discover(),
     'check_function': check_liebert_fans,
     'service_description': '%s',
     'snmp_info': (

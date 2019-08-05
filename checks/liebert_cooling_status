@@ -28,21 +28,10 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5302 Free Cooling Status
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5302 off
 
-
-def inventory_liebert_cooling_status(parsed):
-    for key in parsed.iterkeys():
-        yield (key, {})
-
-
-def check_liebert_cooling_status(item, params, parsed):
-    for value in parsed.itervalues():
-        yield 0, value
-
-
 check_info['liebert_cooling_status'] = {
-    'parse_function': parse_liebert_without_unit,
-    'inventory_function': inventory_liebert_cooling_status,
-    'check_function': check_liebert_cooling_status,
+    'parse_function': lambda info: parse_liebert_without_unit(info, str),
+    'inventory_function': discover(),
+    'check_function': get_parsed_item_data(lambda _item, _no_params, data: (0, data)),
     'service_description': '%s',
     'snmp_info': (
         '.1.3.6.1.4.1.476.1.42.3.9.20.1',

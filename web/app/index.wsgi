@@ -47,7 +47,7 @@ import cmk.gui.http
 import cmk.gui.globals
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import AppContext, RequestContext, html
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -67,21 +67,9 @@ class Application(object):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(environ)
         self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
-
-        # Register application object for access from other modules
-        cmk.gui.globals.current_app.set_current(self)
-
-        # Initialize some simple per request global namespace. Nothing fancy here.
-        # Each request starts with a fresh instance.
-        self.g = {}
-
-        # Create an object that contains all data about the request and
-        # helper functions for creating valid HTML. Parse URI and
-        # store results in the request object for later usage.
-        h = cmk.gui.htmllib.html(self._request, self._response)
-        cmk.gui.globals.html.set_current(h)
-
-        self._process_request()
+        with AppContext(self):
+            with RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
+                self._process_request()
 
     def _process_request(self):
         try:
@@ -147,7 +135,6 @@ class Application(object):
         userdb.finalize()
         sites.disconnect()
         html.finalize()
-        cmk.gui.globals.html.unset_current()
 
     def _handle_request(self):
         html.init_modes()

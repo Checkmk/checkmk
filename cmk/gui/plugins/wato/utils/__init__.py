@@ -41,7 +41,7 @@ import six
 import cmk.utils.plugin_registry
 import cmk.utils.store
 
-from cmk.gui.globals import current_app
+from cmk.gui.globals import g
 import cmk.gui.mkeventd
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -2248,7 +2248,7 @@ def rule_option_elements(disabling=True):
 
 def get_check_information():
     cache_id = "automation_get_check_information"
-    if cache_id not in current_app.g:
-        current_app.g[cache_id] = watolib.check_mk_local_automation("get-check-information")
+    if cache_id not in g:
+        g[cache_id] = watolib.check_mk_local_automation("get-check-information")
 
-    return current_app.g[cache_id]
+    return g[cache_id]

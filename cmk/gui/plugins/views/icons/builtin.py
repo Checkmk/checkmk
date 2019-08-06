@@ -64,7 +64,7 @@ import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -951,10 +951,10 @@ class StarsIcon(Icon):
         return "stars"
 
     def render(self, what, row, tags, custom_vars):
-        stars = current_app.g.get("stars")
+        stars = g.get("stars")
         if stars is None:
             stars = set(config.user.load_file("favorites", []))
-            current_app.g["stars"] = stars
+            g["stars"] = stars
 
         if what == "host":
             starred = row["host_name"] in stars

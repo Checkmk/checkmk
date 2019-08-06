@@ -32,7 +32,7 @@ import subprocess
 import cmk.utils
 
 import cmk.gui.config as config
-from cmk.gui.globals import current_app
+from cmk.gui.globals import g
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
@@ -44,7 +44,7 @@ def add_message(message):
 
 def _git_messages():
     """Initializes the request global data structure and returns it"""
-    return current_app.g.setdefault("wato_git_messages", [])
+    return g.setdefault("wato_git_messages", [])
 
 
 def do_git_commit():

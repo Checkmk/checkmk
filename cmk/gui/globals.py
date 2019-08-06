@@ -24,39 +24,79 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# This is our home-grown version of flask.globals and flask.ctx. It
+# can be removed when fully do things the flasky way.
+
 # Imports are needed for type hints. These type hints are useful for
 # editors completion of "html" object methods and for mypy.
+from functools import partial
 from typing import Union  # pylint: disable=unused-import
+
+from werkzeug.local import LocalProxy
+from werkzeug.local import LocalStack
+
 import cmk.gui.htmllib  # pylint: disable=unused-import
 
+######################################################################
+# application context
 
-class Proxy(object):
-    def __init__(self, name):
-        super(Proxy, self).__init__()
-        self._proxy_name = name
-        self._current_obj = None
-
-    def set_current(self, obj):
-        self._current_obj = obj
-
-    def unset_current(self):
-        self._current_obj = None
-
-    def in_context(self):
-        return self._current_obj is not None
-
-    def __getattribute__(self, name):
-        if name in ["set_current", "unset_current", "in_context", "_current_obj", "_proxy_name"]:
-            return object.__getattribute__(self, name)
-
-        h = self._current_obj
-        if h is None:
-            raise AttributeError("Not in %s context" % self._proxy_name)
-        return getattr(h, name)
-
-    def __repr__(self):
-        return repr(self._current_obj)
+_app_ctx_stack = LocalStack()
 
 
-html = Proxy(name="html")  # type: Union[cmk.gui.htmllib.html, Proxy]
-current_app = Proxy(name="application")
+def _lookup_app_object(name):
+    top = _app_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of application context.")
+    return getattr(top, name)
+
+
+class AppContext(object):
+    def __init__(self, app):
+        self.app = app
+        self.g = {}
+
+    def __enter__(self):
+        _app_ctx_stack.push(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        _app_ctx_stack.pop()
+
+
+current_app = LocalProxy(partial(_lookup_app_object, "app"))
+g = LocalProxy(partial(_lookup_app_object, "g"))
+
+######################################################################
+# request context
+
+_request_ctx_stack = LocalStack()
+
+
+def _lookup_req_object(name):
+    top = _request_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of request context.")
+    return getattr(top, name)
+
+
+class RequestContext(object):
+    def __init__(self, html_obj):
+        self.html = html_obj
+
+    def __enter__(self):
+        _request_ctx_stack.push(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        _request_ctx_stack.pop()
+
+
+# NOTE: Flask offers the proxies below, and we should go into that direction,
+# too. But currently our html class is a swiss army knife with tons of
+# resposibilites which we should really, really split up...
+#
+# request = LocalProxy(partial(_lookup_req_object, "request"))
+# session = LocalProxy(partial(_lookup_req_object, "session"))
+
+html = LocalProxy(partial(_lookup_req_object,
+                          "html"))  # type: Union[cmk.gui.htmllib.html, LocalProxy]

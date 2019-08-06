@@ -44,7 +44,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 
 
@@ -268,7 +268,7 @@ def _load_inventory_tree(hostname):
     if not hostname:
         return
 
-    inventory_tree_cache = current_app.g.setdefault("inventory", {})
+    inventory_tree_cache = g.setdefault("inventory", {})
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
@@ -311,13 +311,13 @@ def _get_permitted_inventory_paths():
     None in case the user is allowed to see the whole tree.
     """
     cache_varname = "permitted_inventory_paths"
-    if cache_varname in current_app.g:
-        return current_app.g[cache_varname]
+    if cache_varname in g:
+        return g[cache_varname]
 
     user_groups = userdb.contactgroups_of_user(config.user.id)
 
     if not user_groups:
-        current_app.g[cache_varname] = None
+        g[cache_varname] = None
         return None
 
     forbid_whole_tree = False
@@ -326,11 +326,11 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            current_app.g[cache_varname] = None
+            g[cache_varname] = None
             return None
 
         if inventory_paths == "allow_all":
-            current_app.g[cache_varname] = None
+            g[cache_varname] = None
             return None
 
         elif inventory_paths == "forbid_all":
@@ -347,10 +347,10 @@ def _get_permitted_inventory_paths():
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
-        current_app.g[cache_varname] = []
+        g[cache_varname] = []
         return []
 
-    current_app.g[cache_varname] = permitted_paths
+    g[cache_varname] = permitted_paths
     return permitted_paths
 
 

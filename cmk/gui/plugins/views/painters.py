@@ -38,7 +38,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.valuespec import (
     Timerange,
     TextAscii,
@@ -5256,13 +5256,13 @@ def _get_host_labels():
     liveproxyd query cached.
     """
     cache_id = "host_labels"
-    if cache_id in current_app.g:
-        return current_app.g[cache_id]
+    if cache_id in g:
+        return g[cache_id]
 
     query = "GET hosts\nColumns: name labels\nCache: reload\n"
     host_labels = {name: labels for name, labels in sites.live().query(query)}
 
-    current_app.g[cache_id] = host_labels
+    g[cache_id] = host_labels
     return host_labels
 
 
@@ -5295,14 +5295,14 @@ class AbstractPainterSpecificMetric(Painter):
     @property
     def parameters(self):
         cache_id = "painter_specific_metric_choices"
-        if cache_id in current_app.g:
-            choices = current_app.g[cache_id]
+        if cache_id in g:
+            choices = g[cache_id]
         else:
             choices = []
             for key, value in metrics.metric_info.iteritems():
                 choices.append((key, value.get("title")))
             choices.sort(key=lambda x: x[1])
-            current_app.g[cache_id] = choices
+            g[cache_id] = choices
 
         return Dictionary(elements=[
             ("metric",

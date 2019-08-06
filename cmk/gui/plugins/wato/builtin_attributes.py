@@ -32,7 +32,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
@@ -474,18 +474,18 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         """Returns the current configuration of the tag_group criticality"""
         cache_id = "criticality_choices"
 
-        if cache_id in current_app.g:
-            return current_app.g[cache_id]
+        if cache_id in g:
+            return g[cache_id]
 
         tags = cmk.utils.tags.TagConfig()
         tags.parse_config(watolib.TagConfigFile().load_for_reading())
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:
-            current_app.g[cache_id] = []
+            g[cache_id] = []
             return []
 
-        current_app.g[cache_id] = criticality_group.get_tag_choices()
-        return current_app.g[cache_id]
+        g[cache_id] = criticality_group.get_tag_choices()
+        return g[cache_id]
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""

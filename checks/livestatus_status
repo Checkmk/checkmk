@@ -103,40 +103,33 @@ def check_livestatus_status(item, params, sections):
 
     # Check Performance counters
     this_time = time.time()
-    status_counters = [
-        # factor,calc_rate,column,format,title
-        (1, True, "%.1f/s", "host_checks", "HostChecks"),
-        (1, True, "%.1f/s", "service_checks", "ServiceChecks"),
-        (1, True, "%.1f/s", "forks", "ProcessCreations"),
-        (1, True, "%.1f/s", "connections", "LivestatusConnects"),
-        (1, True, "%.1f/s", "requests", "LivestatusRequests"),
-        (1, True, "%.1f/s", "log_messages", "LogMessages"),
-    ]
+    for key, title in [
+        ("host_checks", "HostChecks"),
+        ("service_checks", "ServiceChecks"),
+        ("forks", "ProcessCreations"),
+        ("connections", "LivestatusConnects"),
+        ("requests", "LivestatusRequests"),
+        ("log_messages", "LogMessages"),
+    ]:
+        value = get_rate("livestatus_status.%s.%s" % (item, key), this_time, float(status[key]))
+        yield 0, ("%s: %.1f/s" % (title, value)), [(key, value)]
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
 
-        status_counters += [
-            # factor, calc_rate, format, column, title
-            (1, False, "%.3fs", "average_latency_generic", "Average check latency"),
-            (1, False, "%.3fs", "average_latency_cmk", "Average Check_MK latency"),
-            (100, False, "%.1f%%", "helper_usage_generic", "Check helper usage"),
-            (100, False, "%.1f%%", "helper_usage_cmk", "Check_MK helper usage"),
-            (100, False, "%.1f%%", "livestatus_usage", "Livestatus usage"),
-            (1, False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
-        ]
+        for factor, human_func, key, title in [
+            (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Check_MK latency"),
+            (100, get_percent_human_readable, "helper_usage_generic", "Check helper usage"),
+            (100, get_percent_human_readable, "helper_usage_cmk", "Check_MK helper usage"),
+            (100, get_percent_human_readable, "livestatus_usage", "Livestatus usage"),
+            (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
+        ]:
+            value = factor * float(status[key])
+            yield check_levels(value, key, None, human_readable_func=human_func, infoname=title)
 
-    for factor, calc_rate, fmt, counter, title in status_counters:
-        value = factor * float(status[counter])
-
-        if calc_rate:
-            value = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, value)
-
-        yield 0, ("%s: %s" % (title, fmt % value)), [(counter, value)]
-
-    yield 0, "%d Hosts" % int(status["num_hosts"]), [("monitored_hosts", int(status["num_hosts"]))]
-    yield 0, "%d Services" % int(status["num_services"]), [("monitored_services",
-                                                            int(status["num_services"]))]
+    yield check_levels(status["num_hosts"], item, None, unit="Hosts", human_readable_func=int)
+    yield check_levels(status["num_services"], item, None, unit="Services", human_readable_func=int)
 
     # Output some general information
     yield 0, "Core version: %s" % status["program_version"]

@@ -26,99 +26,67 @@
 
 import abc
 import ast
-import time
+import json
 import os
 import pprint
+import time
 import traceback
-import json
-from typing import Dict, Optional, List  # pylint: disable=unused-import
+from typing import Dict, List, Optional  # pylint: disable=unused-import
 
 import livestatus
 
-import cmk.utils.paths
-
-import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
-import cmk.gui.inventory as inventory
-import cmk.gui.visuals as visuals
-import cmk.gui.sites as sites
 import cmk.gui.i18n
+import cmk.gui.inventory as inventory
 import cmk.gui.pages
+import cmk.gui.plugins.views.availability
+import cmk.gui.plugins.views.inventory
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
 import cmk.gui.view_utils
+import cmk.gui.visuals as visuals
+import cmk.gui.weblib as weblib
+import cmk.utils.paths
 from cmk.gui.display_options import display_options
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    Integer,
-    ListChoice,
-    Dictionary,
-    FixedValue,
-    IconSelector,
-    ListOf,
-    Tuple,
-    TextUnicode,
-    Alternative,
-    CascadingDropdown,
-)
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.i18n import _u, _
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import html
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKGeneralException,
-    MKUserError,
-    MKInternalError,
-)
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    VisualType,
-)
-from cmk.gui.plugins.views.icons.utils import (
-    icon_and_action_registry,
-    Icon,
-)
-from cmk.gui.plugins.views.utils import (
-    command_registry,
-    layout_registry,
-    data_source_registry,
-    painter_registry,
-    Painter,
-    sorter_registry,
-    get_permitted_views,
-    get_all_views,
-    painter_exists,
-    PainterOptions,
-    get_tag_groups,
-    _parse_url_sorters,
-    SorterEntry,
-)
-
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
-from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
-    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
-    link_to_view, url_to_view, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
-    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
-    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, register_legacy_command, register_painter, register_sorter,
-)
-
+from cmk.gui.i18n import _, _u
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.permissions import PermissionSection, declare_permission, permission_section_registry
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # pylint: disable=unused-import
-    multisite_icons_and_actions, get_multisite_icons, get_icons, iconpainter_columns,
+    get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
 )
-
-import cmk.gui.plugins.views.inventory
-import cmk.gui.plugins.views.availability
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
+from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
+    Cell, JoinCell, Painter, PainterOptions, SorterEntry, _parse_url_sorters, cmp_custom_variable,
+    cmp_insensitive_string, cmp_ip_address, cmp_num_split, cmp_service_name_equiv,
+    cmp_simple_number, cmp_simple_string, cmp_string_list, command_registry, data_source_registry,
+    declare_1to1_sorter, declare_simple_sorter, format_plugin_output, get_all_views, get_custom_var,
+    get_perfdata_nth_value, get_permitted_views, get_tag_groups, get_view_infos, group_value,
+    inventory_displayhints, is_stale, join_row, layout_registry, link_to_view,
+    multisite_builtin_views, paint_age, paint_host_list, paint_stalified, painter_exists,
+    painter_registry, register_command_group, register_legacy_command, register_painter,
+    register_sorter, replace_action_url_macros, row_id, sorter_registry, transform_action_url,
+    url_to_view, view_hooks, view_is_enabled, view_title,
+)
+from cmk.gui.plugins.visuals.utils import VisualType, visual_info_registry, visual_type_registry
+from cmk.gui.valuespec import (
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    IconSelector,
+    Integer,
+    ListChoice,
+    ListOf,
+    TextUnicode,
+    Tuple,
+)
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.views
@@ -635,7 +603,8 @@ def _register_host_tag_sorters():
 
 
 def _cmp_host_tag(r1, r2, tgid):
-    return cmp(_get_tag_group_value(r1, "host", tgid), _get_tag_group_value(r2, "host", tgid))
+    return (_get_tag_group_value(r1, "host", tgid) > _get_tag_group_value(r2, "host", tgid)) - (
+        _get_tag_group_value(r1, "host", tgid) < _get_tag_group_value(r2, "host", tgid))
 
 
 def _get_tag_group_value(row, what, tag_group_id):

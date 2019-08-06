@@ -65,6 +65,6 @@ def cmp_config_paths(a, b):
     """
     pa = a.parts
     pb = b.parts
-    return  ((pa[:-1] > pb[:-1]) - (pa[:-1] < pb[:-1])) or \
-            ((len(pa) > len(pb))-(len(pa) < len(pb))) or \
-            ((pa > pb) - (pa < pb))
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)

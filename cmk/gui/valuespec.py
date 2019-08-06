@@ -37,7 +37,7 @@
 
 import abc
 import base64
-import functools
+from enum import Enum
 import hashlib
 import ipaddress  # type: ignore
 import json
@@ -51,26 +51,27 @@ import sre_constants
 import time
 import types
 import urlparse
-from enum import Enum
-from StringIO import StringIO
 from UserDict import DictMixin
-
-import six
-from Cryptodome.PublicKey import RSA
+from StringIO import StringIO
 from PIL import Image  # type: ignore
 
-import livestatus
-import cmk.gui.forms as forms
-import cmk.gui.utils as utils
-import cmk.utils.defines as defines
+from Cryptodome.PublicKey import RSA
+import six
+
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+import cmk.utils.defines as defines
+
+import cmk.gui.forms as forms
+import cmk.gui.utils as utils
+from cmk.gui.i18n import _
+from cmk.gui.pages import page_registry, Page, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, Page, page_registry
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.plugins.metrics import metric_info
+
+import livestatus
 
 
 def _type_name(v):
@@ -2163,7 +2164,7 @@ class RadioChoice(DropdownChoice):
 
         if self._sorted:
             choices = self._choices[:]
-            choices.sort(key=functools.cmp_to_key(lambda a, b: (a[1] > b[1]) - (a[1] < b[1])))
+            choices.sort(cmp=lambda a, b: cmp(a[1], b[1]))
         else:
             choices = self._choices
 
@@ -2475,7 +2476,7 @@ class OptionalDropdownChoice(DropdownChoice):
             if val == value:
                 defval = str(n)
         if self._sorted:
-            options.sort(key=functools.cmp_to_key(lambda a, b: (a[1] > b[1]) - (a[1] < b[1])))
+            options.sort(cmp=lambda a, b: cmp(a[1], b[1]))
         options.append(("other", self._otherlabel))
         html.dropdown(
             varprefix,

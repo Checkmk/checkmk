@@ -23,47 +23,54 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import copy
-import functools
-import json
+
 import os
+import copy
 import sys
 import traceback
-from typing import Callable, Dict, List, Type  # pylint: disable=unused-import
+import json
+from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 
-import cmk.gui.config as config
-import cmk.gui.forms as forms
-import cmk.gui.i18n
-import cmk.gui.metrics as metrics
 import cmk.gui.pages
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
-import cmk.utils.store as store
-from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.globals import html
-from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
-from cmk.gui.permissions import declare_permission, permission_registry
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate, FilterUnicodeFilter, filter_registry, visual_info_registry,
-    visual_type_registry,
-)
-from cmk.gui.table import table_element
 from cmk.gui.valuespec import (
-    ABCPageListOfMultipleGetChoice,
     Dictionary,
+    ListChoice,
+    ValueSpec,
+    ListOfMultiple,
+    ABCPageListOfMultipleGetChoice,
     FixedValue,
     IconSelector,
-    ListChoice,
-    ListOfMultiple,
-    TextAreaUnicode,
-    TextAscii,
     TextUnicode,
-    ValueSpec,
+    TextAscii,
+    TextAreaUnicode,
 )
+import cmk.gui.config as config
+import cmk.gui.forms as forms
+from cmk.gui.table import table_element
+import cmk.gui.userdb as userdb
+import cmk.gui.pagetypes as pagetypes
+import cmk.utils.store as store
+import cmk.gui.metrics as metrics
+import cmk.gui.i18n
+from cmk.gui.i18n import _u, _
+from cmk.gui.globals import html
+
+from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
+    visual_type_registry,
+    filter_registry,
+)
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
+    Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
+)
+from cmk.gui.permissions import permission_registry
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.visuals
@@ -460,9 +467,7 @@ def page_list(what,
         except MKUserError as e:
             html.user_error(e)
 
-    keys_sorted = sorted(visuals.keys(),
-                         key=functools.cmp_to_key(lambda a, b: -((a[0] > b[0]) - (a[0] < b[0])) or
-                                                  (a[1] > b[1]) - (a[1] < b[1])))
+    keys_sorted = sorted(visuals.keys(), cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
@@ -1474,8 +1479,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
     # sort buttons somehow
     visuals = available_visuals.values()
-    visuals.sort(key=functools.cmp_to_key(lambda b, a: (a.get('icon') > b.get('icon')) -
-                                          (a.get('icon') < b.get('icon'))))
+    visuals.sort(cmp=lambda b, a: cmp(a.get('icon'), b.get('icon')))
 
     for visual in visuals:
         name = visual["name"]

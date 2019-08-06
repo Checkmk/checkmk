@@ -1033,15 +1033,14 @@ class CREFolder(BaseFolder):
             msg = "/".join(folder.title_path_without_root())
             choices.append((folder_path, msg))
 
-        choices.sort(cmp=lambda a, b: cmp(a[1].lower(), b[1].lower()))
+        choices.sort(key=lambda x: x[1].lower())
         return choices
 
     def subfolders_sorted_by_title(self):
-        return sorted(self.all_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.all_subfolders().values(), key=lambda x: x.title())
 
     def visible_subfolders_sorted_by_title(self):
-        return sorted(self.visible_subfolders().values(),
-                      cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.visible_subfolders().values(), key=lambda x: x.title())
 
     def site_id(self):
         if "site" in self._attributes:

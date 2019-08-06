@@ -26,6 +26,7 @@
 """Modes for managing folders"""
 
 import abc
+import functools
 import json
 
 import cmk.gui.config as config
@@ -400,7 +401,7 @@ class ModeFolder(WatoMode):
         show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
         hostnames = self._folder.hosts().keys()
-        hostnames.sort(cmp=utils.cmp_num_split)
+        hostnames.sort(key=functools.cmp_to_key(utils.cmp_num_split))
         search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom

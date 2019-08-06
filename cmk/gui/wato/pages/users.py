@@ -219,8 +219,6 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
 
         entries = users.items()
-        entries.sort(
-            cmp=lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
         html.begin_form("bulk_delete_form", method="POST")
 
@@ -230,7 +228,7 @@ class ModeUsers(WatoMode):
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - config.user_online_maxage
-            for uid, user in entries:
+            for uid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
                 # Checkboxes
@@ -782,7 +780,7 @@ class ModeEditUser(WatoMode):
         # Roles
         forms.section(_("Roles"))
         entries = self._roles.items()
-        entries.sort(cmp=lambda a, b: cmp((a[1]["alias"], a[0]), (b[1]["alias"], b[0])))
+        entries.sort(key=lambda x: (x[1]["alias"], x[0]))
         is_member_of_at_least_one = False
         for role_id, role in entries:
             if not self._is_locked("roles"):

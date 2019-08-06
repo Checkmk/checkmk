@@ -103,8 +103,7 @@ def load_notification_scripts():
 def user_script_choices(what):
     scripts = load_user_scripts(what)
     choices = [(name, info["title"]) for (name, info) in scripts.items()]
-    choices.sort(cmp=lambda a, b: cmp(a[1], b[1]))
-    choices = [(k, _u(v)) for k, v in choices]
+    choices = [(k, _u(v)) for k, v in sorted(choices, key=lambda x: x[1])]
     return choices
 
 

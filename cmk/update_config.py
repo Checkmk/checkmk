@@ -57,7 +57,7 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.modules
 import cmk.gui.config
 import cmk.gui.htmllib as htmllib
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request, Response
 
 
@@ -66,7 +66,6 @@ class DummyApplication(object):
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response
-        self.g = {}
 
 
 class UpdateConfig(object):
@@ -80,9 +79,12 @@ class UpdateConfig(object):
         self._logger.info("Updating Checkmk configuration")
         self._initialize_gui_environment()
 
-        for step_func, title in self._steps():
-            self._logger.info(" + %s..." % title)
-            step_func()
+        environ = dict(create_environ(), REQUEST_URI='')
+        with AppContext(DummyApplication(environ, None)), \
+             RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            for step_func, title in self._steps():
+                self._logger.info(" + %s..." % title)
+                step_func()
 
         self._logger.info("Done")
 
@@ -117,10 +119,6 @@ class UpdateConfig(object):
         all_rulesets.save()
 
     def _initialize_gui_environment(self):
-        environ = dict(create_environ(), REQUEST_URI='')
-        current_app.set_current(DummyApplication(environ, None))
-        html.set_current(htmllib.html(Request(environ), Response(is_secure=False)))
-
         cmk.gui.modules.load_all_plugins()
         cmk.gui.config.load_config()
         cmk.gui.config.set_super_user()

@@ -35,7 +35,7 @@ import cmk.utils.regex
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.utils.memoize import MemoizeCache
 
@@ -794,12 +794,12 @@ def get_palette_color_by_index(i, shading='a'):
 
 def get_next_random_palette_color():
     keys = _cmk_color_palette.keys()
-    if "random_color_index" in current_app.g:
-        last_index = current_app.g["random_color_index"]
+    if "random_color_index" in g:
+        last_index = g["random_color_index"]
     else:
         last_index = random.randint(0, len(keys))
     index = (last_index + 1) % len(keys)
-    current_app.g["random_color_index"] = index
+    g["random_color_index"] = index
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 
@@ -900,8 +900,8 @@ def lighten_color(rgb, v):
 
 
 def _rgb_to_gray(rgb):
-    r, g, b = rgb
-    return 0.21 * r + 0.72 * g + 0.07 * b
+    r, gr, b = rgb
+    return 0.21 * r + 0.72 * gr + 0.07 * b
 
 
 def _mix_colors(a, b):

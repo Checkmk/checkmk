@@ -50,7 +50,7 @@ import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
@@ -305,7 +305,7 @@ def aggregation_group_choices():
     for aggr_def in config.aggregations + config.host_aggregations:
         group_names.update(aggr_def[1])
 
-    return [(g, g) for g in sorted(group_names, key=lambda x: x.lower())]
+    return [(gn, gn) for gn in sorted(group_names, key=lambda x: x.lower())]
 
 
 def log(*args):
@@ -1429,9 +1429,9 @@ def compile_forest(only_hosts=None, only_groups=None):
     # Prevent multiple redundant calls of this function
     # Sometimes, the GUI likes to call this function a hundred times in the same request
     html_cache_id = "BI_CACHE_%r/%r" % (only_hosts, only_groups)
-    if html_cache_id in current_app.g:
+    if html_cache_id in g:
         return
-    current_app.g[html_cache_id] = "1"
+    g[html_cache_id] = "1"
 
     compilation_start_time = time.time()
     log("###########################################################")

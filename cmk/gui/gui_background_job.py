@@ -205,7 +205,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
-        if html.in_context():
+        if html:
             html.disable_request_timeout()
 
         # Close livestatus connections inherited from the parent process

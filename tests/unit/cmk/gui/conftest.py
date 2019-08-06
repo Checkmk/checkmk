@@ -8,7 +8,7 @@ import cmk.utils.paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import AppContext, RequestContext, html
 
 
 # TODO: Better make our application available?
@@ -16,19 +16,16 @@ class DummyApplication(object):
     def __init__(self, environ, start_response):
         self._environ = environ
         self._start_response = start_response
-        self.g = {}
 
 
 @pytest.fixture()
 def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = dict(create_environ(), REQUEST_URI='')
-    current_app.set_current(DummyApplication(environ, None))
-    html.set_current(htmllib.html(Request(environ), Response(is_secure=False)))
-    yield
-    html.finalize()
-    html.unset_current()
-    current_app.unset_current()
+    with AppContext(DummyApplication(environ, None)), \
+         RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+        yield
+        html.finalize()
 
 
 @pytest.fixture()

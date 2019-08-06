@@ -36,7 +36,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Checkbox, Hostname
 from cmk.gui.exceptions import MKUserError
@@ -988,7 +988,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
 
 
 def _get_struct_tree(is_history, hostname, site_id):
-    struct_tree_cache = current_app.g.setdefault("struct_tree_cache", {})
+    struct_tree_cache = g.setdefault("struct_tree_cache", {})
     cache_id = (is_history, hostname, site_id)
     if cache_id in struct_tree_cache:
         return struct_tree_cache[cache_id]

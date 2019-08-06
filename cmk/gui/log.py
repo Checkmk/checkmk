@@ -33,7 +33,7 @@ import cmk.utils.paths
 class CMKWebLogger(_logging.getLoggerClass()):
     def exception(self, msg, *args, **kwargs):
         from cmk.gui.globals import html
-        if html.in_context():
+        if html:
             msg = "%s %s" % (html.request.requested_url, msg)
 
         super(CMKWebLogger, self).exception(msg, *args, **kwargs)

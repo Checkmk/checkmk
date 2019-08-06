@@ -24,12 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.globals import current_app
+from cmk.gui.globals import g
 
 
 def need_sidebar_reload():
-    current_app.g["need_sidebar_reload"] = True
+    g["need_sidebar_reload"] = True
 
 
 def is_sidebar_reload_needed():
-    return current_app.g.get("need_sidebar_reload", False)
+    return g.get("need_sidebar_reload", False)

@@ -160,8 +160,7 @@ def gen_id():
         return str(uuid.uuid4())
 
 
-# This may not be moved to current_app.g, because this needs to be request
-# independent
+# This may not be moved to g, because this needs to be request independent
 _failed_plugins = {}
 
 

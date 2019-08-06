@@ -1,0 +1,10 @@
+Title: netapp_api_if: Addition of home port and is-home attribute in discovered netapp interface services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1565163567
+Class: feature
+
+The check plugin now additionally specifies the logical interface's home port if available. An associating is-home attribute is also added which details whether the interface is currently on this 'home-port' or not.

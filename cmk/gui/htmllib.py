@@ -56,30 +56,21 @@
 #   handling (vars, cookies, ...) up into separate classes to make
 #   the different tasks clearer. For HTMLGenerator() or similar.
 
-import abc
-import ast
-import functools
-import json
+import time
 import os
-import pprint
+import urllib
+import ast
 import random
 import re
 import signal
-import time
-import urllib
+import json
+import abc
+import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from html import escape as html_escape  # type: ignore
 
 import six
-
-import cmk.gui.config as config
-import cmk.gui.log as log
-import cmk.gui.utils as utils
-import cmk.utils.paths
-from cmk.gui.exceptions import MKUserError, RequestTimeout
-from cmk.gui.i18n import _
-from cmk.utils.exceptions import MKGeneralException
 
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
@@ -93,6 +84,15 @@ def _default(self, obj):
 _default.default = json.JSONEncoder().default  # type: ignore
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore
+
+import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKUserError, RequestTimeout
+
+import cmk.gui.utils as utils
+import cmk.gui.config as config
+import cmk.gui.log as log
+from cmk.gui.i18n import _
 
 #.
 #   .--Escaper-------------------------------------------------------------.
@@ -2606,7 +2606,7 @@ class html(HTMLGenerator):
         if bestof:
             counts = self.get_button_counts()
             weights = counts.items()
-            weights.sort(key=functools.cmp_to_key(lambda a, b: (a[1] > b[1]) - (a[1] < b[1])))
+            weights.sort(cmp=lambda a, b: cmp(a[1], b[1]))
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type
             if id_ not in best:
                 display = "none"

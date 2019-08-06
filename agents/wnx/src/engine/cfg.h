@@ -204,7 +204,7 @@ T GetVal(std::string Section, std::string Name, T Default,
 }
 
 // usage auto x = GetVal("global", "name");
-inline YAML::Node GetNode(std::string Section, std::string Name,
+inline YAML::Node GetNode(const std::string& Section, const std::string& Name,
                           int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -259,6 +259,20 @@ T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
     }
     return Default;
+}
+
+inline YAML::Node GetNode(const YAML::Node& Yaml, std::string Name,
+                          int* ErrorOut = nullptr) noexcept {
+    try {
+        YAML::Node val = Yaml[Name];
+        if (!val.IsDefined()) return {};
+        if (val.IsNull()) return {};
+        return val;
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml node in file {} with {} code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+    }
+    return {};
 }
 
 template <typename T>

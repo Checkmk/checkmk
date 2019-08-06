@@ -163,7 +163,7 @@ def test_grouped_rulespecs():
             'agent_config:custom_files',
         ],
         'agents/windows_agent': [
-            'agent_config:crash_debug',
+            'agent_config:logging',
             'agent_config:win_exe_suffixes',
             'agent_config:win_agent_sections',
             'agent_config:win_agent_disabled_sections',
@@ -2128,10 +2128,10 @@ expected_rulespecs = {
         'title': u'Agent updater (Linux, Windows)',
         'valuespec_class_name': 'Dictionary'
     },
-    'agent_config:crash_debug': {
+    'agent_config:logging': {
         'factory_default': [],
         'group_name': 'agents/windows_agent',
-        'help': u"Enable this option when you experience a sporadic crash of the Check_MK agent for Windows. This option will make the agent create a file called <tt>crash.log</tt> in case of a crash. That file is located in the agent's installation directory. It is a text file that will explain in detail what was the last action of the agent and probably caused the crash.",
+        'help': u"This setting determines how detailed the log file of the Windows Agent will be.",
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -2140,8 +2140,8 @@ expected_rulespecs = {
         'item_spec_class_name': 'NoneType',
         'item_type': None,
         'match_type': 'first',
-        'title': u'Crash-Debugging',
-        'valuespec_class_name': 'Checkbox'
+        'title': u'Logging Level',
+        'valuespec_class_name': 'DropdownChoice'
     },
     'agent_config:custom_files': {
         'factory_default': [],

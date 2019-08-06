@@ -592,6 +592,7 @@ public:
         , realtime_port(parser, "global", "realtime_port", 6559)
         , realtime_timeout(parser, "global", "realtime_timeout", 90)
         , crash_debug(parser, "global", "crash_debug", false)
+        , logging(parser, "global", "logging", "yes")
         , section_flush(parser, "global", "section_flush", true)
         , encrypted(parser, "global", "encrypted", false)
         , encrypted_rt(parser, "global", "encrypted_rt", true)
@@ -665,6 +666,7 @@ public:
     Configurable<int> realtime_port;
     Configurable<int> realtime_timeout;
     Configurable<bool> crash_debug;
+    Configurable<std::string> logging;
     Configurable<bool> section_flush;
     Configurable<bool> encrypted;
     Configurable<bool> encrypted_rt;
@@ -751,6 +753,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
     Configurable<int> realtime_timeout(parser, "global", "realtime_timeout",
                                        90);
     Configurable<bool> crash_debug(parser, "global", "crash_debug", false);
+    Configurable<std::string> logging(parser, "global", "logging", "yes");
     Configurable<bool> section_flush(parser, "global", "section_flush", true);
     Configurable<bool> encrypted(parser, "global", "encrypted", false);
     Configurable<bool> encrypted_rt(parser, "global", "encrypted_rt", true);
@@ -845,7 +848,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
 
     KeyedListConfigurable<std::string> _includes(parser, "mrpe", "include");
 
-    if (parser.size() != 42) {
+    if (parser.size() != 43) {
         XLOG::l("Failed to have required count of the config variables");
     } else {
         return parser.ReadSettings(Path, false);
@@ -911,6 +914,7 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.passphrase",       { "", "", MapMode::kIniString}},//not supported
     {"global.realtime_sections",{ "realtime", "run", MapMode::kIniString}},
     {"global.crash_debug",      { "logging", "debug", MapMode::kIniString}},
+    {"global.logging",          { "logging", "debug", MapMode::kIniString}},
     {"global.disabled_sections",{ "", "", MapMode::kIniString}},
     {"global.sections",         { "", "", MapMode::kIniString}},
 

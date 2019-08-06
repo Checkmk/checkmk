@@ -503,7 +503,7 @@ TEST(CvtTest, GlobalSection) {
         {
             auto logging = g[vars::kLogging];
             ASSERT_TRUE(logging.IsMap());
-            EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "yes");
+            EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "all");
         }
         {
             auto sections = GetInternalArray(g, vars::kSectionsEnabled);

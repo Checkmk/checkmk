@@ -240,7 +240,9 @@ std::string bakeryfile =
     "    port = 6556\n"
     "\n"
     "    # Create logfiles useful for tracing crashes of the agent\n"
-    "    crash_debug = yes\n"
+    "    # crash_debug = yes\n"
+    "    # Create logfiles useful for tracing crashes of the agent\n"
+    "    logging = all\n"
     "\n"
     "\n"
     "[local]\n"
@@ -455,6 +457,43 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
     auto user_yaml = pd_dir / files::kDefaultMainConfigName;
     user_yaml += files::kDefaultUserExt;
     return user_yaml;
+}
+
+TEST(UpgradeTest, LoggingSupport) {
+    using namespace cma::cfg;
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto [lwa_dir, pd_dir] = CreateInOut();
+    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
+
+    std::error_code ec;
+
+    auto expected_bakery_name = ConstructBakeryYmlPath(pd_dir);
+    auto expected_user_name = ConstructUserYmlPath(pd_dir);
+
+    // bakery file and no local
+    {
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto name = "check_mk";
+        auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
+        EXPECT_TRUE(IsBakeryIni(ini));
+        auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
+        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        EXPECT_TRUE(yaml.IsMap());
+        auto yml_global = yaml[groups::kGlobal];
+        ASSERT_TRUE(yml_global.IsMap());
+        auto logging = cma::cfg::GetNode(yml_global, vars::kLogging);
+        ASSERT_TRUE(logging.IsMap());
+
+        auto debug =
+            cma::cfg::GetVal(logging, vars::kLogDebug, std::string(""));
+
+        EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "all");
+    }
 }
 
 TEST(UpgradeTest, UserIniPackagedAgent) {

@@ -265,9 +265,7 @@ class ModeCheckPlugins(WatoMode):
                 title = self._titles.get(path_comp, path_comp)
                 entries.append((title, subnode, path_comp))
 
-            entries.sort(cmp=lambda a, b: cmp(a[0].lower(), b[0].lower()))
-
-            for title, subnode, path_comp in entries:
+            for title, subnode, path_comp in sorted(entries, key=lambda x: x[0].lower()):
                 self._render_manpage_list(subnode, path_comp, title)
 
     def _get_check_plugin_stats(self, subnode):
@@ -292,7 +290,7 @@ class ModeCheckPlugins(WatoMode):
 
         html.h2(heading)
         with table_element(searchable=False, sortable=False, css="check_catalog") as table:
-            for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
+            for entry in sorted(manpage_list, key=lambda x: x["title"]):
                 if not isinstance(entry, dict):
                     continue
                 table.row()

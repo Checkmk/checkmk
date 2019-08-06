@@ -27,6 +27,7 @@
 hosts. Examples are the IP address and the host tags."""
 
 import abc
+import functools
 import re
 from typing import Dict, Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
 import six
@@ -470,7 +471,7 @@ def get_sorted_host_attributes_by_topic(topic_id):
 
     sorted_attributes = []
     for attr in sorted(host_attribute_registry.get_sorted_host_attributes(),
-                       cmp=sort_host_attributes):
+                       key=functools.cmp_to_key(sort_host_attributes)):
         if attr.topic() == host_attribute_topic_registry[topic_id]:
             sorted_attributes.append(attr)
     return sorted_attributes

@@ -46,6 +46,9 @@ std::string type_name() {
 //  { "global", "encrypted_rt", bool},
 //  { "global", "ipv6", bool},
 //  { "global", "passphrase", std::string}
+//  { "global", "logging", std::string},
+//  { "global", "remove_legacy", bool},
+
 
 // SPLITTED LIST of ipspec
 //  { "global", "only_from", std::vector<ipspec>,                BlockMode::FileExclusive, AddMode::Append}
@@ -475,6 +478,93 @@ TEST(CvtTest, GlobalSection) {
     namespace fs = std::filesystem;
     fs::path test_file = cma::cfg::GetUserDir();
     test_file /= "check_mk.global.test.ini";
+    Parser p;
+    p.prepare();
+    p.readIni(test_file, false);
+
+    auto yaml = p.emitYaml();
+    EXPECT_TRUE(yaml.IsDefined() && yaml.IsMap());
+    // EXPECT_EQ(yaml[kGlobal][kEnabled])
+    fs::path temp_file = cma::cfg::GetTempDir();
+    temp_file /= "temp.check.yml";
+    std::ofstream ofs(temp_file.u8string());
+    ofs << yaml;
+    ofs.close();
+    OnStart(AppType::test, temp_file.wstring());
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
+    {
+        auto ya = cma::cfg::GetLoadedConfig();
+        ASSERT_TRUE(ya[groups::kGlobal].IsMap());
+        auto g = ya[groups::kGlobal];
+        ASSERT_TRUE(g.IsMap());
+        EXPECT_EQ(g["async_script_execution"].as<std::string>(), "parallel");
+        EXPECT_EQ(g[vars::kEnabled].as<bool>(), true);
+        {
+            auto logging = g[vars::kLogging];
+            ASSERT_TRUE(logging.IsMap());
+            EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "yes");
+        }
+        {
+            auto sections = GetInternalArray(g, vars::kSectionsEnabled);
+            ASSERT_TRUE(sections.size() == 2);
+            EXPECT_EQ(sections[0], "check_mk");
+            EXPECT_EQ(sections[1], groups::kWinPerf);
+        }
+        {
+            auto sessions = cma::cfg::GetInternalArray(groups::kGlobal,
+                                                       vars::kSectionsDisabled);
+            ASSERT_TRUE(sessions.size() == 2);
+
+            EXPECT_TRUE(sessions[0] == "badname" || sessions[1] == "badname");
+            EXPECT_TRUE(sessions[0] == groups::kLogFiles ||
+                        sessions[1] == groups::kLogFiles);
+        }
+        {
+            auto onlyfrom = GetInternalArray(g, vars::kOnlyFrom);
+
+            ASSERT_TRUE(onlyfrom.size() == 3);
+            EXPECT_EQ(onlyfrom[0], "127.0.0.1/32");
+            EXPECT_EQ(onlyfrom[1], "192.168.56.0/24");
+            EXPECT_EQ(onlyfrom[2], "0:0:0:0:0:0:0:1/128");
+        }
+        {
+            auto execute =
+                cma::cfg::GetInternalArray(groups::kGlobal, vars::kExecute);
+            ASSERT_TRUE(execute.size() == 3);
+            EXPECT_EQ(execute[0], "exe");
+            EXPECT_EQ(execute[1], "bat");
+            EXPECT_EQ(execute[2], "vbs");
+        }
+
+        {
+            EXPECT_EQ(g[vars::kGlobalEncrypt].as<bool>(), false);
+            EXPECT_EQ(g[vars::kGlobalPassword].as<std::string>(), "secret");
+            EXPECT_EQ(g[vars::kSectionFlush].as<bool>(), false);
+            EXPECT_EQ(g[vars::kPort].as<int>(), 6556);
+            EXPECT_EQ(g[vars::kIpv6].as<bool>(), false);
+            EXPECT_EQ(g[vars::kGlobalRemoveLegacy].as<bool>(), true);
+        }
+
+        {
+            auto rt = g[vars::kRealTime];
+            ASSERT_TRUE(rt.IsMap());
+            EXPECT_EQ(rt[vars::kEnabled].as<bool>(), true);
+            EXPECT_EQ(rt[vars::kTimeout].as<int>(), 90);
+            EXPECT_EQ(rt[vars::kRtEncrypt].as<bool>(), true);
+            auto rt_sessions = GetInternalArray(rt, vars::kRtRun);
+            ASSERT_TRUE(rt_sessions.size() == 3);
+            EXPECT_EQ(rt_sessions[0], "df");
+            EXPECT_EQ(rt_sessions[1], "mem");
+            EXPECT_EQ(rt_sessions[2], "winperf_processor");
+        }
+    }
+}
+
+TEST(CvtTest, GlobalSectionOld) {
+    namespace fs = std::filesystem;
+    fs::path test_file = cma::cfg::GetUserDir();
+    test_file /= "check_mk.global.old.test.ini";
     Parser p;
     p.prepare();
     p.readIni(test_file, false);

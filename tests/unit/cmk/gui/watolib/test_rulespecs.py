@@ -2158,6 +2158,21 @@ expected_rulespecs = {
         'title': u'Deploy custom files with agent',
         'valuespec_class_name': 'Transform'
     },
+    'agent_config:remove_legacy': {
+        'factory_default': [],
+        'group_name': 'agents/windows_agent',
+        'help': u"Enable this option if you want to uninstall the Legacy Agent after the new Windows Agent have been installed.",
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': None,
+        'item_spec_class_name': 'NoneType',
+        'item_type': None,
+        'match_type': 'first',
+        'title': u'Legacy Agent Management',
+        'valuespec_class_name': 'Checkbox'
+    },
     'agent_config:db2_mem': {
         'factory_default': [],
         'group_name': 'agents/agent_plugins',

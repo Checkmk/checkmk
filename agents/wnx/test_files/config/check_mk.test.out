@@ -17,6 +17,7 @@ port = 6556
 realtime_port = 6559
 realtime_sections = df mem winperf_processor
 realtime_timeout = 90
+remove_legacy = 0
 section_flush = 0
 sections = check_mk winperf
 [local]

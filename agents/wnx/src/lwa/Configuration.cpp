@@ -596,9 +596,9 @@ public:
         , encrypted(parser, "global", "encrypted", false)
         , encrypted_rt(parser, "global", "encrypted_rt", true)
         , support_ipv6(parser, "global", "ipv6", supportIPv6())
+        , remove_legacy(parser, "global", "remove_legacy", false)
         , passphrase(parser, "global", "passphrase", "")
         , only_from(parser, "global", "only_from")
-        , _ps_use_wmi(parser, "ps", "use_wmi", false)
         , _enabled_sections(parser, "global", "sections", mapSectionName)
         , _disabled_sections(parser, "global", "disabled_sections",
                              mapSectionName)
@@ -607,25 +607,19 @@ public:
         , _script_local_includes(parser, "local", "include")
         , _script_plugin_includes(parser, "plugin", "include")
         , _winperf_counters(parser, "winperf", "counters")
-        ,
 
         // Dynamic sections
 
-        // check_mk!
-        _crash_debug(parser, "global", "crash_debug", false)
-        ,
-
         // ps
-        _use_wmi(parser, "ps", "use_wmi", true)
+        , _use_wmi(parser, "ps", "use_wmi", true)
         , _full_commandline(parser, "ps", "full_path", false)
         ,
 
         // fileinfo
         _fileinfo_paths(parser, "fileinfo", "path")
-        ,
 
         // logwatch
-        _sendall(parser, "logwatch", "sendall", false)
+        , _sendall(parser, "logwatch", "sendall", false)
         , _vista_api(parser, "logwatch", "vista_api", false)
         , _config(parser, "logwatch", "logname")
 
@@ -675,9 +669,9 @@ public:
     Configurable<bool> encrypted;
     Configurable<bool> encrypted_rt;
     Configurable<bool> support_ipv6;
+    Configurable<bool> remove_legacy;
     Configurable<std::string> passphrase;
     OnlyFromConfigurable only_from;
-    Configurable<bool> _ps_use_wmi;
     SplittingListConfigurable<std::set<std::string>,
                               BlockMode::BlockExclusive<std::set<std::string>>,
                               AddMode::SetInserter<std::set<std::string>>>
@@ -696,9 +690,6 @@ public:
     ListConfigurable<std::vector<winperf_counter>> _winperf_counters;
 
     // Dynamic sections
-
-    // check_mk!
-    Configurable<bool> _crash_debug;
 
     // ps
     Configurable<bool> _use_wmi;
@@ -764,6 +755,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
     Configurable<bool> encrypted(parser, "global", "encrypted", false);
     Configurable<bool> encrypted_rt(parser, "global", "encrypted_rt", true);
     Configurable<bool> support_ipv6(parser, "global", "ipv6", supportIPv6());
+    Configurable<bool> remove_legacy(parser, "global", "remove_legacy", false);
     Configurable<std::string> passphrase(parser, "global", "passphrase", "");
     OnlyFromConfigurable only_from(parser, "global", "only_from");
     Configurable<bool> _ps_use_wmi(parser, "ps", "use_wmi", false);
@@ -789,9 +781,6 @@ bool CheckIniFile(const std::filesystem::path &Path) {
         parser, "winperf", "counters");
 
     // Dynamic sections
-
-    // check_mk!
-    Configurable<bool> _crash_debug(parser, "global", "crash_debug", false);
 
     // ps
     Configurable<bool> _use_wmi(parser, "ps", "use_wmi", true);
@@ -856,7 +845,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
 
     KeyedListConfigurable<std::string> _includes(parser, "mrpe", "include");
 
-    if (parser.size() != 41) {
+    if (parser.size() != 42) {
         XLOG::l("Failed to have required count of the config variables");
     } else {
         return parser.ReadSettings(Path, false);
@@ -912,6 +901,7 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
     {"global.encrypted",        { "", "", MapMode::kIniString}},// not supported
     {"global.encrypted_rt",     { "realtime", "encrypted", MapMode::kIniString}},
     {"global.ipv6",             { "", "", MapMode::kIniString}},
+    {"global.remove_legacy",    { "", "", MapMode::kIniString}},
     {"global.only_from",        { "", "", MapMode::kIniString}},
     {"global.port",             { "", "", MapMode::kValue}},
     {"global.realtime_port",    { "realtime", "port", MapMode::kValue}},

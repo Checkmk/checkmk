@@ -36,7 +36,7 @@ def test_rule_initialize(register_builtin_html, ruleset_name, default_value, is_
     assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
 
-def test_rule_from_config_unhandled_format():
+def test_rule_from_config_unhandled_format(register_builtin_html,):
     rule = _rule("inventory_processes_rules")
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rule.from_config([])
@@ -134,7 +134,8 @@ def test_rule_from_config_unhandled_format():
             },
         }),
     ])
-def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, rule_options):
+def test_rule_from_config_tuple(register_builtin_html, ruleset_name, rule_spec, expected_attributes,
+                                rule_options):
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
@@ -354,7 +355,8 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec, expected_attributes, ru
             },
         }),
     ])
-def test_rule_from_config_dict(ruleset_name, rule_spec, expected_attributes, rule_options):
+def test_rule_from_config_dict(register_builtin_html, ruleset_name, rule_spec, expected_attributes,
+                               rule_options):
     rule_spec = rule_spec.copy()
     if rule_options is not None:
         rule_spec["options"] = rule_options
@@ -405,7 +407,7 @@ checkgroup_parameters['local'] = [
         #
         #"""),
     ])
-def test_ruleset_to_config(monkeypatch, wato_use_git, expected_result):
+def test_ruleset_to_config(register_builtin_html, monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset("checkgroup_parameters:local",
@@ -454,7 +456,8 @@ checkgroup_parameters['local'] = [
 
 """),
 ])
-def test_ruleset_to_config_sub_folder(monkeypatch, load_config, wato_use_git, expected_result):
+def test_ruleset_to_config_sub_folder(register_builtin_html, monkeypatch, load_config, wato_use_git,
+                                      expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset("checkgroup_parameters:local",
@@ -491,7 +494,7 @@ def test_ruleset_to_config_sub_folder(monkeypatch, load_config, wato_use_git, ex
     assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone():
+def test_rule_clone(register_builtin_html):
     rule = _rule("clustered_services")
     rule.from_config({
         "value": True,

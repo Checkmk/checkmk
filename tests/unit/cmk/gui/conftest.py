@@ -29,6 +29,7 @@ def register_builtin_html():
     yield
     html.finalize()
     html.unset_current()
+    current_app.unset_current()
 
 
 @pytest.fixture()

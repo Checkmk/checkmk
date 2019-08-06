@@ -169,7 +169,7 @@ class Base(object):
             topic.sort()
 
         sorted_topics = topics.items()
-        sorted_topics.sort(cmp=lambda t1, t2: cmp(t1[1][0], t2[1][0]))
+        sorted_topics.sort(key=lambda x: x[1][0])
 
         # Now remove order numbers and produce the structures for the Dictionary VS
         parameters, keys_by_topic = [], []
@@ -273,7 +273,7 @@ class Base(object):
     @classmethod
     def instances_sorted(cls):
         instances = cls.__instances.values()
-        instances.sort(cmp=lambda a, b: cmp(a.title(), b.title()))
+        instances.sort(key=lambda x: x.title())
         return instances
 
     # Stub function for the list of all pages. In case of Overridable
@@ -707,7 +707,7 @@ class Overridable(Base):
             if page.is_mine_and_may_have_own():
                 pages[page.name()] = page
 
-        return sorted(pages.values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(pages.values(), key=lambda x: x.title())
 
     @classmethod
     def page_choices(cls):

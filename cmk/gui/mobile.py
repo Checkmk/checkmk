@@ -157,7 +157,7 @@ def jqm_page_navfooter(items, current, page_id):
 def jqm_page_index(title, items):
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
-    items.sort(cmp=lambda a, b: cmp((a[0], a[2]), (b[0], b[2])))
+    items.sort(key=lambda x: (x[0], x[2]))
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 

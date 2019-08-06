@@ -1001,10 +1001,7 @@ def host_service_graph_dashlet_pnp(graph_identification):
 
 def render_metrics_table(translated_metrics, host_name, service_description):
     output = "<table class=metricstable>"
-    for metric_name, metric in sorted(
-            translated_metrics.items(),
-            cmp=lambda a, b: cmp(a[1]["title"], b[1]["title"]),
-    ):
+    for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
         output += "<tr>"
         output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
         output += "<td>%s:</td>" % metric["title"]

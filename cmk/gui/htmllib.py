@@ -2606,7 +2606,7 @@ class html(HTMLGenerator):
         if bestof:
             counts = self.get_button_counts()
             weights = counts.items()
-            weights.sort(cmp=lambda a, b: cmp(a[1], b[1]))
+            weights.sort(key=lambda x: x[1])
             best = dict(weights[-bestof:])  # pylint: disable=invalid-unary-operand-type
             if id_ not in best:
                 display = "none"

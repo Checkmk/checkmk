@@ -204,7 +204,7 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(cmp=lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+    subfolders.sort(key=lambda x: x["title"].lower())
 
     is_leaf = len(subfolders) == 0
 

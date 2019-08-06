@@ -53,6 +53,8 @@ from pathlib2 import Path
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
+AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
+
 
 class MKQueryServerException(Exception):
     pass
@@ -907,15 +909,17 @@ class ESXConnection(object):
         self._user = user
         self._secret = secret
         self.tracefile = opt.tracefile
+
+        AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
+
+        self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address[0])
+        self._server_cookie = None
+        self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address[0])
+        self._perf_samples = None
+
         self._server_handle = self._connect_to_server(address, opt.no_cert_check, opt.debug)
 
-        self._host_cookie_path = Path("%s/agents/agent_vsphere/cookie.%s" %
-                                      (cmk.utils.paths.tmp_dir, address[0]))
-
-        self.last_cookie_access_time = None
         self.system_info = None
-        self._server_cookie = None
-
         self.system_info = self._fetch_systeminfo()
 
     def _fetch_systeminfo(self):
@@ -1011,17 +1015,30 @@ class ESXConnection(object):
             self._server_handle.putheader("Cookie", self._server_cookie)
         self._server_handle.endheaders()
 
-    def login(self):
-        if self._host_cookie_path.exists():
-            # The cookie access time is required to determine the agents check interval
-            # This is required later on by the performancecounters. Depending on the
-            # interval we need more or less real-time samples
-            # TODO: Decouple login secret and perfcounter timer
-            self.last_cookie_access_time = self._host_cookie_path.stat().st_mtime
-            os.utime(str(self._host_cookie_path),
-                     None)  # Touch the cookie file, whenever it is accessed
+    @property
+    def perf_samples(self):
+        '''Return and cache the needed number of real-time samples
 
-            self._server_cookie = self._host_cookie_path.open(encoding="utf-8").read()
+        One real-time sample is 20 seconds. We set the time delta hard cap to 1 hour,
+        an ESX system does not offer more than one hour of real time samples, anyway.
+        '''
+
+        if self._perf_samples is not None:
+            return self._perf_samples
+
+        try:
+            delta = min(3600., time.time() - self._perf_samples_path.stat().st_mtime)
+        except OSError:
+            delta = 60.
+        finally:
+            self._perf_samples_path.touch()
+
+        self._perf_samples = max(1, int(delta / 20.))
+        return self._perf_samples
+
+    def login(self):
+        if self._server_cookie_path.exists():
+            self._server_cookie = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
         payload = telegram_list["login"]
@@ -1035,8 +1052,7 @@ class ESXConnection(object):
         server_cookie = response.msg.get("Set-Cookie", "").decode("utf-8")
 
         if server_cookie:
-            self._host_cookie_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
-            with self._host_cookie_path.open("w", encoding="utf-8") as f_handle:
+            with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
                 f_handle.write(server_cookie)
 
         self._server_cookie = server_cookie
@@ -1044,7 +1060,7 @@ class ESXConnection(object):
 
     def delete_server_cookie(self):
         try:
-            self._host_cookie_path.unlink()
+            self._server_cookie_path.unlink()
         except OSError as exc:
             if exc.errno != errno.ENOENT:
                 raise
@@ -1123,7 +1139,7 @@ def fetch_extra_interface_counters(connection, opt):
     return net_extra_info
 
 
-def fetch_counters(connection, host, samples, counters_selected):
+def fetch_counters(connection, host, counters_selected):
     counter_data = []
     for entry, instances in counters_selected:
         counter_data.extend(
@@ -1134,7 +1150,7 @@ def fetch_counters(connection, host, samples, counters_selected):
                                                     payload_params={
                                                         "esxhost": host,
                                                         "counters": "".join(counter_data),
-                                                        "samples": samples
+                                                        "samples": connection.perf_samples,
                                                     })
 
     # Python regex only supports up to 100 match groups in a regex..
@@ -1144,7 +1160,7 @@ def fetch_counters(connection, host, samples, counters_selected):
     # one of these new and fancy xml parsers I've heard from
     elements = get_pattern(
         "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
-        ("<value>.*?</value>" * samples), counter_data_response)
+        ("<value>.*?</value>" * connection.perf_samples), counter_data_response)
     counters_value = []
     for entry in elements:
         id_, instance, valuestring = entry
@@ -1154,20 +1170,6 @@ def fetch_counters(connection, host, samples, counters_selected):
     return counters_value
 
 
-def get_max_samples(connection):
-    # Determine the needed number of real-time samples
-    # One real-time sample is 20 seconds
-    # -> With a check interval of 1 minute we need the last 3 samples
-    # Longer check intervals require even more samples... n-minutes * 3
-    # We set the max_samples hard cap to 180 (1 hour)
-    # An ESX system does not offer more than one hour of real time samples, anyway.
-    max_samples = 3
-    if connection.last_cookie_access_time:
-        timedelta = time.time() - connection.last_cookie_access_time
-        max_samples = min(180, max(1, int(timedelta) / 20))
-    return max_samples
-
-
 def get_section_counters(connection, hostsystems, datastores, opt):
     section_lines = []
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
@@ -1175,7 +1177,6 @@ def get_section_counters(connection, hostsystems, datastores, opt):
                                               counters_available_by_host.itervalues(), set())
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_description = fetch_counters_syntax(connection, counters_available_all)
-    max_samples = get_max_samples(connection)
 
     for host in hostsystems:
         counters_avail = counters_available_by_host[host]
@@ -1186,7 +1187,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
             if counters_description.get(id_, {}).get("key") in REQUESTED_COUNTERS_KEYS
         ]
 
-        counters_value = fetch_counters(connection, host, max_samples, counters_selected)
+        counters_value = fetch_counters(connection, host, counters_selected)
 
         counters_output = {}
         for id_, instance, values in counters_value:

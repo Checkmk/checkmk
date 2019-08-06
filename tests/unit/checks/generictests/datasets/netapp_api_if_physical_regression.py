@@ -58,7 +58,7 @@ info = [[u'interface e0a',
          u'recv_data 412332323639']]
 
 
-discovery = {'': [('5', repr({'state': ['1'], 'speed': 1000000000}))]}
+discovery = {'': [('5', "{'state': ['1'], 'speed': 1000000000}")]}
 
 
 checks = {'': [('5',

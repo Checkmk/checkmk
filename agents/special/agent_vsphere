@@ -35,7 +35,6 @@
 
 import datetime
 import errno
-import httplib
 import os
 import re
 import argparse
@@ -52,6 +51,7 @@ from pathlib2 import Path
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.special_agents.agent_vsphere import ESXSession
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
@@ -870,36 +870,6 @@ def parse_arguments(argv):
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
     @staticmethod
-    def _connect_to_server(address, port, no_cert_check, debug):
-        """Initialize server connection"""
-        try:
-            netloc = "%s:%s" % (address, port)
-
-            if no_cert_check:
-                try:
-                    import ssl
-                    server_handle = httplib.HTTPSConnection(
-                        netloc, context=ssl._create_unverified_context())
-                except Exception:
-                    server_handle = httplib.HTTPSConnection(netloc)
-            else:
-                server_handle = httplib.HTTPSConnection(netloc)
-
-            if debug:
-                sys.stderr.write("Connecting to %s..." % netloc)
-                sys.stderr.flush()
-
-            server_handle.connect()
-            return server_handle
-        except Exception as exc:
-            if debug:
-                raise
-            raise MKGeneralException("Cannot connect to vSphere Server. Please check the IP and"
-                                     " SSL certificate (if applicable) and try again. This error"
-                                     " is not related to the login credentials."
-                                     " Error message: %r" % exc)
-
-    @staticmethod
     def _check_not_authenticated(text):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
@@ -913,11 +883,10 @@ class ESXConnection(object):
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
 
         self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address)
-        self._server_cookie = None
         self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
         self._perf_samples = None
 
-        self._server_handle = self._connect_to_server(address, port, opt.no_cert_check, opt.debug)
+        self._session = ESXSession(address, port, opt.no_cert_check, opt.debug)
 
         self.system_info = None
         self.system_info = self._fetch_systeminfo()
@@ -969,10 +938,7 @@ class ESXConnection(object):
             self.tracefile.write("####   Sent  ####\n%s" % payload)
             time_sent = time.time()
 
-        soapdata = put_in_envelope(payload)
-        self._init_headers(soapdata)
-        self._server_handle.send(soapdata)
-        response = self._server_handle.getresponse()
+        response = self._session.post(payload)
 
         response_data.append(response.read())
 
@@ -985,10 +951,7 @@ class ESXConnection(object):
             token = re.findall("<token>(.*)</token>", response_data[-1][:512])
             if token:
                 payload_params.update({"token": token[0]})
-                soapdata = put_in_envelope(telegram_list["continuetoken"] % payload_params)
-                self._init_headers(soapdata)
-                self._server_handle.send(soapdata)
-                response = self._server_handle.getresponse()
+                response = self._session.post(telegram_list["continuetoken"] % payload_params)
                 response_data.append(response.read())
                 self._check_not_authenticated(response_data[-1][:512])
             else:
@@ -1006,17 +969,6 @@ class ESXConnection(object):
         _respose_object, response_text = self.send_soapdata(soapdata, payload_params)
         return response_text
 
-    def _init_headers(self, soapdata):
-        self._server_handle.putrequest("POST", "/sdk")
-        self._server_handle.putheader("Content-Length", "%d" % len(soapdata))
-        self._server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
-        self._server_handle.putheader("SOAPAction", "urn:vim25/5.0")
-        self._server_handle.putheader("User-Agent",
-                                      "VMware VI Client/5.0.0")  # TODO: set client version?
-        if self._server_cookie:
-            self._server_handle.putheader("Cookie", self._server_cookie)
-        self._server_handle.endheaders()
-
     @property
     def perf_samples(self):
         '''Return and cache the needed number of real-time samples
@@ -1024,7 +976,6 @@ class ESXConnection(object):
         One real-time sample is 20 seconds. We set the time delta hard cap to 1 hour,
         an ESX system does not offer more than one hour of real time samples, anyway.
         '''
-
         if self._perf_samples is not None:
             return self._perf_samples
 
@@ -1040,7 +991,7 @@ class ESXConnection(object):
 
     def login(self):
         if self._server_cookie_path.exists():
-            self._server_cookie = self._server_cookie_path.open(encoding="utf-8").read()
+            self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
         payload = telegram_list["login"]
@@ -1057,7 +1008,7 @@ class ESXConnection(object):
             with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
                 f_handle.write(server_cookie)
 
-        self._server_cookie = server_cookie
+        self._session.headers["Cookie"] = server_cookie
         return
 
     def delete_server_cookie(self):
@@ -1226,20 +1177,6 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 #   |            \__,_|_| |_|___/\___/|_|   \__\___|\__,_|                 |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
-
-def put_in_envelope(payload):
-    return ('<SOAP-ENV:Envelope'
-            ' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
-            ' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'
-            ' xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"'
-            ' xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"'
-            ' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
-            ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
-            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-            '<SOAP-ENV:Header></SOAP-ENV:Header>'
-            '<SOAP-ENV:Body xmlns:ns1="urn:vim25">%s</SOAP-ENV:Body>'
-            '</SOAP-ENV:Envelope>') % payload
 
 
 def convert_hostname(h, opt):

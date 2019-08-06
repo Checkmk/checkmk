@@ -23,16 +23,16 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import functools
-import json
-import re
-from contextlib import contextmanager
 
-import cmk.gui.config as config
+from contextlib import contextmanager
+import re
+import json
+
 import cmk.gui.utils as utils
+import cmk.gui.config as config
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _
 
 
 @contextmanager
@@ -502,8 +502,8 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # sorting. This gives the user the chance to change the sorting and
     # see the table in the first place.
     try:
-        rows.sort(key=functools.cmp_to_key(lambda a, b: utils.cmp_num_split(
-            html.strip_tags(a[0][sort_col][0]), html.strip_tags(b[0][sort_col][0]))),
+        rows.sort(cmp=lambda a, b: utils.cmp_num_split(html.strip_tags(a[0][sort_col][0]),
+                                                       html.strip_tags(b[0][sort_col][0])),
                   reverse=sort_reverse == 1)
     except IndexError:
         pass

@@ -28,18 +28,17 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import itertools
+import marshal
 import os
 import re
-import uuid
-import marshal
 import urlparse
-import itertools
+import uuid
 
 import cmk.utils.paths
-
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
 
 
 def drop_dotzero(v, digits=2):
@@ -73,7 +72,7 @@ def num_split(s):
 
 def cmp_num_split(a, b):
     """Compare two strings, separate numbers and non-numbers from before."""
-    return cmp(num_split(a), num_split(b))
+    return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
 
 
 def is_allowed_url(url):
@@ -109,10 +108,10 @@ def cmp_version(a, b):
     Allow numeric version numbers, but also characters.
     """
     if a is None or b is None:
-        return cmp(a, b)
+        return (a > b) - (a < b)
     aa = map(num_split, a.split("."))
     bb = map(num_split, b.split("."))
-    return cmp(aa, bb)
+    return (aa > bb) - (aa < bb)
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

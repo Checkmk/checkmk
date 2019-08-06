@@ -24,20 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import functools
+import json
 import os
 import time
-import json
 
 import livestatus
-import cmk.utils.paths
-import cmk.utils
-import cmk.utils.prediction as prediction
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.utils
+import cmk.utils.paths
+import cmk.utils.prediction as prediction
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 
 graph_size = 2000, 700
 
@@ -79,7 +80,8 @@ def page_graph():
             timegroup = tg_info
             tg_name = tg_info["name"]
 
-    timegroups.sort(cmp=lambda a, b: cmp(a["range"][0], b["range"][0]))
+    timegroups.sort(key=functools.cmp_to_key(lambda a, b: (a["range"][0] > b["range"][0]) -
+                                             (a["range"][0] < b["range"][0])))
 
     choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
 

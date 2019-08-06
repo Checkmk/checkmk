@@ -23,22 +23,22 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import functools
 
 import cmk.gui.config as config
-import cmk.gui.dashboard as dashboard
-import cmk.gui.sites as sites
-import cmk.gui.views as views
 import cmk.gui.wato as wato
+import cmk.gui.views as views
+import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
-from cmk.gui.globals import html
+import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
+
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
-    footnotelinks,
-    iconlink,
     snapin_registry,
+    iconlink,
+    footnotelinks,
     visuals_by_topic,
 )
 
@@ -204,8 +204,7 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(key=functools.cmp_to_key(lambda f1, f2: (f1["title"].lower() > f2[
-        "title"].lower()) - (f1["title"].lower() < f2["title"].lower())))
+    subfolders.sort(cmp=lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
 
     is_leaf = len(subfolders) == 0
 

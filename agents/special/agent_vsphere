@@ -959,19 +959,21 @@ class ESXConnection(object):
         # Finalize payload
         if self.system_info:
             payload_params.update(self.system_info)
-        soapdata = put_in_envelope(payload)
-        return soapdata % payload_params, payload_params
 
-    def send_soapdata(self, soapdata, payload_params):
-        self._init_headers(soapdata)
+        return payload % payload_params, payload_params
+
+    def send_soapdata(self, payload, payload_params):
         response_data = []
 
         if self.tracefile:
-            self.tracefile.write("####   Sent  ####\n%s" % soapdata)
+            self.tracefile.write("####   Sent  ####\n%s" % payload)
             time_sent = time.time()
-        self._server_handle.send(soapdata)
 
+        soapdata = put_in_envelope(payload)
+        self._init_headers(soapdata)
+        self._server_handle.send(soapdata)
         response = self._server_handle.getresponse()
+
         response_data.append(response.read())
 
         self._check_not_authenticated(response_data[0][:512])
@@ -983,7 +985,7 @@ class ESXConnection(object):
             token = re.findall("<token>(.*)</token>", response_data[-1][:512])
             if token:
                 payload_params.update({"token": token[0]})
-                soapdata = put_in_envelope(telegram_list["continuetoken"]) % payload_params
+                soapdata = put_in_envelope(telegram_list["continuetoken"] % payload_params)
                 self._init_headers(soapdata)
                 self._server_handle.send(soapdata)
                 response = self._server_handle.getresponse()
@@ -1227,11 +1229,17 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 
 
 def put_in_envelope(payload):
-    return '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" '\
-           'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" '\
-           'xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '\
-           'xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'\
-           '<SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25">' + payload + '</SOAP-ENV:Body></SOAP-ENV:Envelope>'
+    return ('<SOAP-ENV:Envelope'
+            ' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
+            ' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'
+            ' xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"'
+            ' xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"'
+            ' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'
+            ' xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+            '<SOAP-ENV:Header></SOAP-ENV:Header>'
+            '<SOAP-ENV:Body xmlns:ns1="urn:vim25">%s</SOAP-ENV:Body>'
+            '</SOAP-ENV:Envelope>') % payload
 
 
 def convert_hostname(h, opt):

@@ -63,27 +63,25 @@ class ESXSession(requests.Session):
 
 
 class SoapTemplates(object):
-    # TODO: These should become class attributes, and be instanciated
-    #       by formatting the system info fileds into them.
     # yapf: disable
     SYSTEMINFO = (
         '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'
         '  <ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this>'
         '</ns1:RetrieveServiceContent>'
     )
-    login = (
+    LOGIN = (
         '<ns1:Login xsi:type="ns1:LoginRequestType">'
         '  <ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this>'
-        '  <ns1:userName>%(username)s</ns1:userName>'
-        '  <ns1:password>%(password)s</ns1:password>'
+        '  <ns1:userName>%%(username)s</ns1:userName>'
+        '  <ns1:password>%%(password)s</ns1:password>'
         '</ns1:Login>'
     )
-    systemtime = (
+    SYSTEMTIME = (
         '<ns1:CurrentTime xsi:type="ns1:CurrentTimeRequestType">'
         '  <ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this>'
         '</ns1:CurrentTime>'
     )
-    hostsystems = (
+    HOSTSYSTEMS = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -152,7 +150,7 @@ class SoapTemplates(object):
         '  </ns1:specSet><ns1:options></ns1:options>'
         '</ns1:RetrievePropertiesEx>'
     )
-    datastores = (
+    DATASTORES = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -229,7 +227,7 @@ class SoapTemplates(object):
         '  </ns1:specSet><ns1:options></ns1:options>'
         '</ns1:RetrievePropertiesEx>'
     )
-    licensesused = (
+    LICENSESUSED = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -245,35 +243,35 @@ class SoapTemplates(object):
         '  <ns1:options/>'
         '</ns1:RetrievePropertiesEx>'
     )
-    perfcountersummary = (
+    PERFCOUNTERSUMMARY = (
         '<ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType">'
-        '  <ns1:_this type="PerformanceManager">%(perfManager)</ns1:_this>'
-        '  <ns1:entity type="HostSystem">%(esxhost)s</ns1:entity>'
+        '  <ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'
+        '  <ns1:entity type="HostSystem">%%(esxhost)s</ns1:entity>'
         '</ns1:QueryPerfProviderSummary>'
     )
-    perfcountersyntax = (
+    PERFCOUNTERSYNTAX = (
         '<ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType">'
-        '  <ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>%(counters)s'
+        '  <ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>%%(counters)s'
         '</ns1:QueryPerfCounter>'
     )
-    perfcounteravail = (
+    PERFCOUNTERAVAIL = (
         '<ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType">'
         '  <ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'
-        '  <ns1:entity type="HostSystem">%(esxhost)s</ns1:entity>'
+        '  <ns1:entity type="HostSystem">%%(esxhost)s</ns1:entity>'
         '  <ns1:intervalId>20</ns1:intervalId>'
         '</ns1:QueryAvailablePerfMetric>'
     )
-    perfcounterdata = (
+    PERFCOUNTERDATA = (
         '<ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType">'
         '  <ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'
         '  <ns1:querySpec>'
-        '    <ns1:entity type="HostSystem">%(esxhost)s</ns1:entity>'
-        '    <ns1:maxSample>%(samples)s</ns1:maxSample>%(counters)s'
+        '    <ns1:entity type="HostSystem">%%(esxhost)s</ns1:entity>'
+        '    <ns1:maxSample>%%(samples)s</ns1:maxSample>%%(counters)s'
         '    <ns1:intervalId>20</ns1:intervalId>'
         '  </ns1:querySpec>'
         '</ns1:QueryPerf>'
     )
-    networksystem = (
+    NETWORKSYSTEM = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -287,7 +285,7 @@ class SoapTemplates(object):
         '  </ns1:specSet><ns1:options></ns1:options>'
         '</ns1:RetrievePropertiesEx>'
     )
-    esxhostdetails = (
+    ESXHOSTDETAILS = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -384,7 +382,7 @@ class SoapTemplates(object):
         '  </ns1:specSet><ns1:options></ns1:options>'
         '</ns1:RetrievePropertiesEx>'
     )
-    vmdetails = (
+    VMDETAILS = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -486,13 +484,13 @@ class SoapTemplates(object):
         '  </ns1:specSet><ns1:options></ns1:options>'
         '</ns1:RetrievePropertiesEx>'
     )
-    continuetoken = (
+    CONTINUETOKEN = (
         '<ns1:ContinueRetrievePropertiesEx xsi:type="ns1:ContinueRetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
-        '  <ns1:token>%(token)s</ns1:token>'
+        '  <ns1:token>%%(token)s</ns1:token>'
         '</ns1:ContinueRetrievePropertiesEx>'
     )
-    datacenters = (
+    DATACENTERS = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
@@ -610,7 +608,7 @@ class SoapTemplates(object):
         '  <ns1:options/>'
         '</ns1:RetrievePropertiesEx>'
     )
-    clustersofdatacenter = (
+    CLUSTERSOFDATACENTER = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">propertyCollector</ns1:_this>'
         '  <ns1:specSet>'
@@ -619,7 +617,7 @@ class SoapTemplates(object):
         '      <ns1:pathSet>name</ns1:pathSet>'
         '    </ns1:propSet>'
         '    <ns1:objectSet>'
-        '      <ns1:obj type="Datacenter">%(datacenter)s</ns1:obj>'
+        '      <ns1:obj type="Datacenter">%%(datacenter)s</ns1:obj>'
         '      <ns1:skip>false</ns1:skip>'
         '      <ns1:selectSet xsi:type="ns1:TraversalSpec">'
         '        <ns1:name>visitFolders</ns1:name>'
@@ -728,7 +726,7 @@ class SoapTemplates(object):
         '  <ns1:options/>'
         '</ns1:RetrievePropertiesEx>'
     )
-    esxhostsofcluster = (
+    ESXHOSTSOFCLUSTER = (
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">propertyCollector</ns1:_this>'
         '  <ns1:specSet>'
@@ -737,7 +735,7 @@ class SoapTemplates(object):
         '      <ns1:pathSet>name</ns1:pathSet>'
         '    </ns1:propSet>'
         '    <ns1:objectSet>'
-        '      <ns1:obj type="ClusterComputeResource">%(clustername)s</ns1:obj>'
+        '      <ns1:obj type="ClusterComputeResource">%%(clustername)s</ns1:obj>'
         '      <ns1:skip>false</ns1:skip>'
         '      <ns1:selectSet xsi:type="ns1:TraversalSpec">'
         '        <ns1:name>visitFolders</ns1:name>'
@@ -847,3 +845,22 @@ class SoapTemplates(object):
         '</ns1:RetrievePropertiesEx>'
     )
     # yapf: enable
+
+    def __init__(self, system_fields):
+        super(SoapTemplates, self).__init__()
+        self.login = SoapTemplates.LOGIN % system_fields
+        self.systemtime = SoapTemplates.SYSTEMTIME % system_fields
+        self.hostsystems = SoapTemplates.HOSTSYSTEMS % system_fields
+        self.datastores = SoapTemplates.DATASTORES % system_fields
+        self.licensesused = SoapTemplates.LICENSESUSED % system_fields
+        self.perfcountersummary = SoapTemplates.PERFCOUNTERSUMMARY % system_fields
+        self.perfcountersyntax = SoapTemplates.PERFCOUNTERSYNTAX % system_fields
+        self.perfcounteravail = SoapTemplates.PERFCOUNTERAVAIL % system_fields
+        self.perfcounterdata = SoapTemplates.PERFCOUNTERDATA % system_fields
+        self.networksystem = SoapTemplates.NETWORKSYSTEM % system_fields
+        self.esxhostdetails = SoapTemplates.ESXHOSTDETAILS % system_fields
+        self.vmdetails = SoapTemplates.VMDETAILS % system_fields
+        self.continuetoken = SoapTemplates.CONTINUETOKEN % system_fields
+        self.datacenters = SoapTemplates.DATACENTERS % system_fields
+        self.clustersofdatacenter = SoapTemplates.CLUSTERSOFDATACENTER % system_fields
+        self.esxhostsofcluster = SoapTemplates.ESXHOSTSOFCLUSTER % system_fields

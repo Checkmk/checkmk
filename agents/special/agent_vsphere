@@ -242,9 +242,8 @@ class ESXConnection(object):
         self._perf_samples = None
 
         self._session = ESXSession(address, port, opt.no_cert_check)
-
-        self.system_info = None
         self.system_info = self._fetch_systeminfo()
+        self._soap_templates = SoapTemplates(self.system_info)
 
     def _fetch_systeminfo(self):
         """Retrieve basic data, which requires no login"""
@@ -265,9 +264,9 @@ class ESXConnection(object):
             "osType",
         ]
 
-        reply_data = self.query_server(SoapTemplates.SYSTEMINFO)
+        response = self._session.postsoap(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
-            element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
+            element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, response.text)
             if element:
                 system_info[entry] = element[0]
 
@@ -276,23 +275,14 @@ class ESXConnection(object):
 
         return system_info
 
-    def prepare_soapdata(self, payload, payload_params):
-        if payload_params is None:
-            payload_params = {}
-
-        # Finalize payload
-        if self.system_info:
-            payload_params.update(self.system_info)
-
-        return payload % payload_params, payload_params
-
-    def send_soapdata(self, payload, payload_params):
-        response_data = []
+    def query_server(self, method, **kwargs):
+        payload = getattr(self._soap_templates, method) % kwargs
 
         if self.tracefile:
             self.tracefile.write("####   Sent  ####\n%s" % payload)
             time_sent = time.time()
 
+        response_data = []
         while True:
             response = self._session.postsoap(payload)
             response_data.append(response.text)
@@ -303,8 +293,7 @@ class ESXConnection(object):
             token = re.findall("<token>(.*)</token>", response_data[-1][:512])
             if not token:
                 break
-            payload_params.update({"token": token[0]})
-            payload = SoapTemplates.continuetoken % payload_params
+            payload = self._soap_templates.continuetoken % {"token": token[0]}
 
         respose_text = "".join(response_data)
         if self.tracefile:
@@ -312,10 +301,6 @@ class ESXConnection(object):
             self.tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
 
         return respose_text
-
-    def query_server(self, payload, payload_params=None):
-        soapdata, payload_params = self.prepare_soapdata(payload, payload_params)
-        return self.send_soapdata(soapdata, payload_params)
 
     @property
     def perf_samples(self):
@@ -343,8 +328,7 @@ class ESXConnection(object):
             return
 
         payload_params = {"username": encode_url(user), "password": encode_url(password)}
-        payload, _payload_params = self.prepare_soapdata(SoapTemplates.login, payload_params)
-        response = self._session.postsoap(payload)
+        response = self._session.postsoap(self._soap_templates.login % payload_params)
 
         server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
 
@@ -379,8 +363,7 @@ class ESXConnection(object):
 def fetch_available_counters(connection, hostsystems):
     counters_available_by_host = {}
     for host in hostsystems:
-        counter_avail_response = connection.query_server(SoapTemplates.perfcounteravail,
-                                                         payload_params={"esxhost": host})
+        counter_avail_response = connection.query_server('perfcounteravail', esxhost=host)
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
                                counter_avail_response)
 
@@ -395,11 +378,10 @@ def fetch_counters_syntax(connection, counter_ids):
 
     counters_list = ["<ns1:counterId>%s</ns1:counterId>" % id_ for id_ in counter_ids]
 
-    counters_syntax_response = connection.query_server(
-        SoapTemplates.perfcountersyntax, payload_params={"counters": "".join(counters_list)})
+    response_text = connection.query_server('perfcountersyntax', counters="".join(counters_list))
 
     elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
-                           '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', counters_syntax_response)
+                           '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', response_text)
 
     return {
         id_: {
@@ -418,7 +400,7 @@ def fetch_extra_interface_counters(connection, opt):
         return []
 
     net_extra_info = []
-    networksystem_response = connection.query_server(SoapTemplates.networksystem)
+    networksystem_response = connection.query_server('networksystem')
     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
     for nic in nic_objects:
         nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
@@ -443,15 +425,13 @@ def fetch_counters(connection, host, counters_selected):
     counter_data = []
     for entry, instances in counters_selected:
         counter_data.extend(
-            "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>"
-            % (entry, instance) for instance in instances)
+            "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance>"
+            "</ns1:metricId>" % (entry, instance) for instance in instances)
 
-    counter_data_response = connection.query_server(SoapTemplates.perfcounterdata,
-                                                    payload_params={
-                                                        "esxhost": host,
-                                                        "counters": "".join(counter_data),
-                                                        "samples": connection.perf_samples,
-                                                    })
+    response_text = connection.query_server('perfcounterdata',
+                                            esxhost=host,
+                                            counters="".join(counter_data),
+                                            samples=connection.perf_samples)
 
     # Python regex only supports up to 100 match groups in a regex..
     # We are only extracting the whole value line and split it later on
@@ -460,7 +440,7 @@ def fetch_counters(connection, host, counters_selected):
     # one of these new and fancy xml parsers I've heard from
     elements = get_pattern(
         "<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id>(%s)" %
-        ("<value>.*?</value>" * connection.perf_samples), counter_data_response)
+        ("<value>.*?</value>" * connection.perf_samples), response_text)
     counters_value = []
     for entry in elements:
         id_, instance, valuestring = entry
@@ -615,7 +595,7 @@ def get_sections_aggregated_snapshots(vms, hostsystems):
 
 def get_section_systemtime(connection, opt):
     try:
-        response = connection.query_server(SoapTemplates.systemtime)
+        response = connection.query_server('systemtime')
         elements = get_pattern('<returnval>(.*)</returnval>', response)
         if elements:
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -694,7 +674,7 @@ def eval_datastores(info, datastores):
 
 
 def fetch_host_systems(connection):
-    hostsystems_response = connection.query_server(SoapTemplates.hostsystems)
+    hostsystems_response = connection.query_server('hostsystems')
     elements = get_pattern(
         '<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
         hostsystems_response)
@@ -711,7 +691,7 @@ def fetch_host_systems(connection):
 
 
 def fetch_datastores(connection):
-    datastores_response = connection.query_server(SoapTemplates.datastores)
+    datastores_response = connection.query_server('datastores')
     elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                            datastores_response)
     datastores = {}
@@ -820,7 +800,7 @@ def get_section_datastores(datastores):
 
 
 def fetch_hostsystem_data(connection):
-    esxhostdetails_response = connection.query_server(SoapTemplates.esxhostdetails)
+    esxhostdetails_response = connection.query_server('esxhostdetails')
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
     eval_functions = {
@@ -883,7 +863,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 def get_section_licenses(connection):
     section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
-    licenses_response = connection.query_server(SoapTemplates.licensesused)
+    licenses_response = connection.query_server('licensesused')
     root_node = minidom.parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
@@ -900,7 +880,7 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     vms, vm_esx_host = {}, {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-    vmdetails_response = connection.query_server(SoapTemplates.vmdetails)
+    vmdetails_response = connection.query_server('vmdetails')
 
     elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
     for entry in elements:
@@ -944,19 +924,17 @@ def get_section_vm(vms, opt):
 
 def get_sections_clusters(connection, vm_esx_host):
     section_lines = []
-    response = connection.query_server(SoapTemplates.datacenters)
+    response = connection.query_server('datacenters')
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
     for datacenter in datacenters:
-        response = connection.query_server(SoapTemplates.clustersofdatacenter,
-                                           payload_params={"datacenter": datacenter})
+        response = connection.query_server('clustersofdatacenter', datacenter=datacenter)
         clusters = get_pattern(
             '<objects><obj type="ClusterComputeResource">(.*?)</obj>.*?string">(.*?)</val>'
             '</propSet></objects>', response)
 
         section_lines.append("<<<esx_vsphere_clusters:sep(9)>>>")
         for cluster in clusters:
-            response = connection.query_server(SoapTemplates.esxhostsofcluster,
-                                               payload_params={"clustername": cluster[0]})
+            response = connection.query_server('esxhostsofcluster', clustername=cluster[0])
             cluster_vms = []
             hosts = get_pattern(
                 '<objects><obj type="HostSystem">.*?string">(.*?)</val></propSet></objects>',

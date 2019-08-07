@@ -870,10 +870,10 @@ def parse_arguments(argv):
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
     @staticmethod
-    def _connect_to_server(address, no_cert_check, debug):
+    def _connect_to_server(address, port, no_cert_check, debug):
         """Initialize server connection"""
         try:
-            netloc = ":".join(map(str, address))
+            netloc = "%s:%s" % (address, port)
 
             if no_cert_check:
                 try:
@@ -904,7 +904,7 @@ class ESXConnection(object):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
 
-    def __init__(self, address, user, secret, opt):
+    def __init__(self, address, port, user, secret, opt):
         super(ESXConnection, self).__init__()
         self._user = user
         self._secret = secret
@@ -912,12 +912,12 @@ class ESXConnection(object):
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
 
-        self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address[0])
+        self._server_cookie_path = AGENT_TMP_PATH / ("%s.cookie" % address)
         self._server_cookie = None
-        self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address[0])
+        self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
         self._perf_samples = None
 
-        self._server_handle = self._connect_to_server(address, opt.no_cert_check, opt.debug)
+        self._server_handle = self._connect_to_server(address, port, opt.no_cert_check, opt.debug)
 
         self.system_info = None
         self.system_info = self._fetch_systeminfo()
@@ -1839,7 +1839,7 @@ def main(argv=None):
                             (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), opt.host_address))
 
     try:
-        esx_connection = ESXConnection((opt.host_address, opt.port), opt.user, opt.secret, opt)
+        esx_connection = ESXConnection(opt.host_address, opt.port, opt.user, opt.secret, opt)
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:

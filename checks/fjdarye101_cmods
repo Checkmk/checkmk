@@ -28,7 +28,7 @@ check_info["fjdarye101_cmods"] = {
     'check_function': check_fjdarye_item,
     'inventory_function': inventory_fjdarye_item,
     'includes': ["fjdarye.include"],
-    'service_description': 'Channel Module %s',
+    'service_description': 'Controller Module %s',
     # 1: fjdaryCmIndex, 3: fjdaryCmStatus
     'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.101.2.1.2.1', [1, 3]),
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.101",

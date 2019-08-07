@@ -873,10 +873,8 @@ class ESXConnection(object):
         if "NotAuthenticatedFault" in text:
             raise MKQueryServerException("No longer authenticated")
 
-    def __init__(self, address, port, user, secret, opt):
+    def __init__(self, address, port, opt):
         super(ESXConnection, self).__init__()
-        self._user = user
-        self._secret = secret
         self.tracefile = opt.tracefile
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
@@ -955,12 +953,11 @@ class ESXConnection(object):
             timing_info = "Response took: %f" % (time.time() - time_sent)
             self.tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, respose_text))
 
-        return response, respose_text
+        return respose_text
 
     def query_server(self, payload, payload_params=None):
         soapdata, payload_params = self.prepare_soapdata(payload, payload_params)
-        _respose_object, response_text = self.send_soapdata(soapdata, payload_params)
-        return response_text
+        return self.send_soapdata(soapdata, payload_params)
 
     @property
     def perf_samples(self):
@@ -982,14 +979,15 @@ class ESXConnection(object):
         self._perf_samples = max(1, int(delta / 20.))
         return self._perf_samples
 
-    def login(self):
+    def login(self, user, password):
         if self._server_cookie_path.exists():
             self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
         payload = telegram_list["login"]
-        payload_params = {"username": encode_url(self._user), "password": encode_url(self._secret)}
-        response, _reply_data = self.send_soapdata(*self.prepare_soapdata(payload, payload_params))
+        payload_params = {"username": encode_url(user), "password": encode_url(password)}
+        payload, _payload_params = self.prepare_soapdata(payload, payload_params)
+        response = self._session.postsoap(payload)
 
         server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
 
@@ -1171,10 +1169,10 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 #   +----------------------------------------------------------------------+
 
 
-def convert_hostname(h, opt):
+def convert_hostname(hostname, opt):
     if opt.spaces == "cut":
-        return h.split()[0]
-    return h.replace(" ", "_")
+        return hostname.split()[0]
+    return hostname.replace(" ", "_")
 
 
 def write_output(lines, opt):
@@ -1776,13 +1774,13 @@ def main(argv=None):
                             (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), opt.host_address))
 
     try:
-        esx_connection = ESXConnection(opt.host_address, opt.port, opt.user, opt.secret, opt)
+        esx_connection = ESXConnection(opt.host_address, opt.port, opt)
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:
             # Note: If the cookie fails inbetween these calls, we also start a second run
             try:
-                esx_connection.login()
+                esx_connection.login(opt.user, opt.secret)
                 vsphere_output = fetch_data(esx_connection, opt)
             except MKQueryServerException:
                 # There was a problem during the query.

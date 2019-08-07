@@ -416,7 +416,7 @@ def check_mails():
             if duration is None:
                 duration = recv_ts - send_ts
             else:
-                duration = (duration + (recv_ts - send_ts)) / 2  # average
+                duration = (duration + (recv_ts - send_ts)) / 2.0  # average
 
             if critical is not None and duration >= critical:
                 state = 2

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 __version__ = "1.7.0i1"
 
 # TODO:
@@ -913,7 +914,8 @@ class Measurement(object):
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
-                    averaged = tuple([sum(y) / len(y) for y in zip(*values)])
+                    averaged = tuple([sum(y) / len(y) for y in zip(*values)
+                                     ])  # fixed: true-division
                 else:
                     # averages of dict items
                     averaged = {}
@@ -1027,11 +1029,11 @@ class Measurement(object):
             self.disk_io = DiskIO(0.0, 0.0)
             return
 
-        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) \
-                                / (self.time - last.time)
+        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) /
+                                 (self.time - last.time) # fixed: true-division
 
-        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) \
-                                / (self.time - last.time)
+        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) /
+            (self.time - last.time) # fixed: true-division
 
         self.disk_io = DiskIO(read_bytes_per_sec, write_bytes_per_sec)
 
@@ -3134,7 +3136,7 @@ class ConsoleRenderer(npyscreen.NPSApp):
 
         max_y, max_x = self._window.curses_pad.getmaxyx()
         form_border = 1 * 2
-        info_box_width = (max_x - form_border) / 2
+        info_box_width = int((max_x - form_border) / 2.0)
         info_box_height = 10
         help_height = 2
         log_height = max_y - info_box_height - form_border - help_height

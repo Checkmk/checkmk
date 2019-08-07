@@ -73,7 +73,7 @@ state_texts = [
 now = time.time()
 for service in services:
     last_change, last_state = history.get(service, (now - 600, 0))
-    p_state_change = ((now - last_change) / 60) + 1
+    p_state_change = ((now - last_change) / 60.0) + 1
     if last_state == 0:
         p_state_change += 10
     if int(random.random() * p_state_change) == 0:

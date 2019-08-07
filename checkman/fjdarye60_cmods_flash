@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX storage systems: Flash of channel modules
+title: Fujitsu ETERNUS DX storage systems: Flash of controller modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPL
@@ -9,7 +9,7 @@ description:
  FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
 
 item:
- The index of the channel module flash in the SNMP table. It is of type
+ The index of the controller module flash in the SNMP table. It is of type
  integer. The first module has an index of {0}.
 
 inventory:

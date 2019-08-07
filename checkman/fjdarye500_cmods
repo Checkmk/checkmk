@@ -10,7 +10,7 @@ description:
  This is an adaption of the corresponding fjdarye500 check.
 
 item:
- The index of the channel module in the SNMP table. It is of type
+ The index of the controller module in the SNMP table. It is of type
  integer. The first module has an index of {0}.
 
 inventory:

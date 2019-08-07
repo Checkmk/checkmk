@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Module to hold shared code for main module internals and the plugins"""
+from __future__ import division
 
 from collections import OrderedDict
 import colorsys
@@ -154,7 +155,7 @@ def indexed_color(idx, total):
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
-        tone = ((idx / 4) % 6) + 1
+        tone = ((idx // 4) % 6) + 1
         if idx % 8 < 4:
             shade = "a"
         else:
@@ -166,8 +167,8 @@ def indexed_color(idx, total):
         idx = idx - _COLOR_WHEEL_SIZE
         base_color = idx % 7  # red, green, blue, red+green, red+blue,
         # green+blue, red+green+blue
-        delta = 255 / ((total - _COLOR_WHEEL_SIZE) / 7)
-        offset = 255 - (delta * ((idx / 7) + 1))
+        delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
+        offset = int(255 - (delta * ((idx / 7.0) + 1)))
 
         red = int(base_color in [0, 3, 4, 6])
         green = int(base_color in [1, 3, 5, 6])
@@ -810,7 +811,7 @@ def get_n_different_colors(n):
 
     colors = []
     while len(colors) < n:
-        weight_index = len(colors) * total_weight / n
+        weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
         colors.append(hsv_to_hexrgb((hue, 1, 1)))
     return colors
@@ -821,7 +822,7 @@ def _get_hue_by_weight_index(weight_index):
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
             section_size = section_end - section_begin
-            hue = section_begin + ((weight_index / section_weight) * section_size)
+            hue = section_begin + int((weight_index / section_weight) * section_size)
             return hue
         weight_index -= section_weight
         section_begin = section_end

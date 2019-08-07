@@ -180,7 +180,8 @@ class DashletStats(Dashlet):
 
         html.close_div()
 
-        html.javascript("""
+        html.javascript(
+            """
 function chart_pie(pie_id, x_scale, radius, color, right_side) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if (!context)
@@ -208,11 +209,11 @@ if (cmk.dashboard.has_canvas_support()) {
     %(p)s
 }
 """ % {
-            "x": pie_diameter / 2,
-            "y": pie_diameter / 2,
-            "d": pie_diameter,
-            'p': '\n'.join(pie_parts)
-        })
+                "x": int(pie_diameter / 2.0),
+                "y": int(pie_diameter / 2.0),
+                "d": pie_diameter,
+                'p': '\n'.join(pie_parts)
+            })
 
 
 @dashlet_registry.register

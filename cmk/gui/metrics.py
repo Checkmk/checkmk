@@ -547,7 +547,7 @@ class MetricometerRendererDual(MetricometerRenderer):
                 raise MKInternalError(
                     _("Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"))
 
-            half_stack = [(value / 2, color) for (value, color) in sub_stack[0]]
+            half_stack = [(int(value / 2.0), color) for (value, color) in sub_stack[0]]
             if nr == 0:
                 half_stack.reverse()
             content += half_stack

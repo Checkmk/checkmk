@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import ast
 import re
 import socket
@@ -279,7 +280,8 @@ def get_total_stats(only_sites):
         ]:
             total_stats.setdefault(time_key, 0.0)
             if total_stats[in_relation_to]:  # avoid division by zero
-                my_weight = row[in_relation_to] / total_stats[in_relation_to]
+                my_weight = row[in_relation_to] / total_stats[
+                    in_relation_to]  # fixed: true-division
                 total_stats[time_key] += my_weight * row[time_key]
 
     total_sync_time = 0.0
@@ -290,7 +292,7 @@ def get_total_stats(only_sites):
             total_sync_time += row["status_average_sync_time"]
 
     if count > 0:
-        total_stats["status_average_sync_time"] = total_sync_time / count
+        total_stats["status_average_sync_time"] = total_sync_time / count  # fixed: true-division
 
     return total_stats
 

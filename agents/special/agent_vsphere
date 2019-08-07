@@ -938,24 +938,18 @@ class ESXConnection(object):
             self.tracefile.write("####   Sent  ####\n%s" % payload)
             time_sent = time.time()
 
-        response = self._session.post(payload)
-
-        response_data.append(response.read())
-
-        self._check_not_authenticated(response_data[0][:512])
-
         while True:
+            response = self._session.post(payload)
+            response_data.append(response.read())
+            self._check_not_authenticated(response_data[-1][:512])
             # Look for a <token>0</token> field.
             # If it exists not all data was transmitted and we need to start a
             # ContinueRetrievePropertiesExResponse query...
             token = re.findall("<token>(.*)</token>", response_data[-1][:512])
-            if token:
-                payload_params.update({"token": token[0]})
-                response = self._session.post(telegram_list["continuetoken"] % payload_params)
-                response_data.append(response.read())
-                self._check_not_authenticated(response_data[-1][:512])
-            else:
+            if not token:
                 break
+            payload_params.update({"token": token[0]})
+            payload = telegram_list["continuetoken"] % payload_params
 
         respose_text = "".join(response_data)
         if self.tracefile:

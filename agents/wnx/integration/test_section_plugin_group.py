@@ -101,7 +101,8 @@ def expected_output():
             r'\s+(\d+\.\d+\.\d+\.\d+|\[::\d*\]|'
             r'\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+'
             r'\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET'
-            r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK)'
+            r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK'
+            r'|SCHLIESSEND)'
             r'|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*'
             r'|\-?\d+( \d+)+ [\w\(\)]+')
         if Globals.plugintype == 'plugins':

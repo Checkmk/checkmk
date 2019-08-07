@@ -134,7 +134,6 @@ class Application(object):
         store.release_all_locks()
         userdb.finalize()
         sites.disconnect()
-        html.finalize()
 
     def _handle_request(self):
         html.init_modes()

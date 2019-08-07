@@ -89,6 +89,7 @@ class RequestContext(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         _request_ctx_stack.pop()
+        self.html.finalize()
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,

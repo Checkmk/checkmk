@@ -1,0 +1,14 @@
+Title: Fixed calculation of latency for netapp check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1565185297
+
+Average latency, average read latency, and average write latency
+are now calculated as a function of total_ops instead of the
+time.  This complies with the formula from NetApp's Performance
+Management Design Guide.

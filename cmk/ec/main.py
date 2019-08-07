@@ -31,6 +31,7 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+from __future__ import division
 import abc
 import ast
 import errno
@@ -410,7 +411,7 @@ class TimePeriods(object):
         self._last_update = 0
 
     def _update(self):
-        if self._periods is not None and int(time.time()) / 60 == self._last_update:
+        if self._periods is not None and int(time.time() / 60.0) == self._last_update:
             return  # only update once a minute
         try:
             table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
@@ -418,7 +419,7 @@ class TimePeriods(object):
             for tpname, alias, isin in table:
                 periods[tpname] = (alias, bool(isin))
             self._periods = periods
-            self._last_update = int(time.time()) / 60
+            self._last_update = int(time.time() / 60.0)
         except Exception as e:
             self._logger.exception("Cannot update timeperiod information: %s" % e)
             raise
@@ -615,7 +616,7 @@ class Perfcounters(object):
             for name, value in self._counters.iteritems():
                 if duration:
                     delta = value - self._old_counters[name]
-                    rate = delta / duration
+                    rate = delta / duration  # fixed: true-divsion
                     self._rates[name] = rate
                     if name in self._average_rates:
                         # We could make the weight configurable

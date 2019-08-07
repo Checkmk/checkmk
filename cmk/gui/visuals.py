@@ -467,7 +467,7 @@ def page_list(what,
         except MKUserError as e:
             html.user_error(e)
 
-    keys_sorted = sorted(visuals.keys(), cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
+    keys_sorted = sorted(visuals.keys(), key=lambda x: -x[0] or x[1])
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
@@ -1479,7 +1479,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
     # sort buttons somehow
     visuals = available_visuals.values()
-    visuals.sort(cmp=lambda b, a: cmp(a.get('icon'), b.get('icon')))
+    visuals.sort(key=lambda x: x.get('icon'))
 
     for visual in visuals:
         name = visual["name"]

@@ -50,6 +50,10 @@ def pnp_cleanup(s):
         .replace('\\', '_')
 
 
+def _cmp(a, b):
+    return (a > b) - (a < b)
+
+
 def cmp_config_paths(a, b):
     """Compare function for Check_MK configuration file paths
 
@@ -65,6 +69,6 @@ def cmp_config_paths(a, b):
     """
     pa = a.parts
     pb = b.parts
-    return cmp(pa[:-1], pb[:-1]) or \
-           cmp(len(pa), len(pb)) or \
-           cmp(pa, pb)
+    return _cmp(pa[:-1], pb[:-1]) or \
+           _cmp(len(pa), len(pb)) or \
+           _cmp(pa, pb)

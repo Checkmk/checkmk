@@ -73,7 +73,7 @@ def num_split(s):
 
 def cmp_num_split(a, b):
     """Compare two strings, separate numbers and non-numbers from before."""
-    return cmp(num_split(a), num_split(b))
+    return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
 
 
 def is_allowed_url(url):
@@ -109,10 +109,10 @@ def cmp_version(a, b):
     Allow numeric version numbers, but also characters.
     """
     if a is None or b is None:
-        return cmp(a, b)
+        return (a > b) - (a < b)
     aa = map(num_split, a.split("."))
     bb = map(num_split, b.split("."))
-    return cmp(aa, bb)
+    return (aa > bb) - (aa < bb)
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

@@ -79,7 +79,7 @@ def page_graph():
             timegroup = tg_info
             tg_name = tg_info["name"]
 
-    timegroups.sort(cmp=lambda a, b: cmp(a["range"][0], b["range"][0]))
+    timegroups.sort(key=lambda x: x["range"][0])
 
     choices = [(tg_info["name"], tg_info["name"].title()) for tg_info in timegroups]
 

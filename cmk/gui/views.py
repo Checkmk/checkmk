@@ -635,7 +635,9 @@ def _register_host_tag_sorters():
 
 
 def _cmp_host_tag(r1, r2, tgid):
-    return cmp(_get_tag_group_value(r1, "host", tgid), _get_tag_group_value(r2, "host", tgid))
+    host_tag_1 = _get_tag_group_value(r1, "host", tgid)
+    host_tag_2 = _get_tag_group_value(r2, "host", tgid)
+    return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
 def _get_tag_group_value(row, what, tag_group_id):

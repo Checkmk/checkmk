@@ -2164,7 +2164,7 @@ class RadioChoice(DropdownChoice):
 
         if self._sorted:
             choices = self._choices[:]
-            choices.sort(cmp=lambda a, b: cmp(a[1], b[1]))
+            choices.sort(key=lambda x: x[1])
         else:
             choices = self._choices
 
@@ -2476,7 +2476,7 @@ class OptionalDropdownChoice(DropdownChoice):
             if val == value:
                 defval = str(n)
         if self._sorted:
-            options.sort(cmp=lambda a, b: cmp(a[1], b[1]))
+            options.sort(key=lambda x: x[1])
         options.append(("other", self._otherlabel))
         html.dropdown(
             varprefix,

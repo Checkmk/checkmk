@@ -24,37 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import logging as _logging
+import logging
 
 import cmk.utils.log
 import cmk.utils.paths
 
-
-class CMKWebLogger(_logging.getLoggerClass()):
-    def exception(self, msg, *args, **kwargs):
-        from cmk.gui.globals import html
-        if html:
-            msg = "%s %s" % (html.request.requested_url, msg)
-
-        super(CMKWebLogger, self).exception(msg, *args, **kwargs)
-
-
-_logging.setLoggerClass(CMKWebLogger)
-
 logger = cmk.utils.log.get_logger("web")
 
 
+class PrependURLFilter(logging.Filter):
+    def filter(self, record):
+        if record.levelno >= logging.ERROR:
+            from cmk.gui.globals import html  # HACK: Local import to avoid import cycle!
+            if html:
+                record.msg = "%s %s" % (html.request.requested_url, record.msg)
+        return True
+
+
 def init_logging():
-    handler = _logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
+    handler = logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
     handler.setFormatter(cmk.utils.log.get_formatter())
-    root = _logging.getLogger()
+    handler.addFilter(PrependURLFilter())
+    root = logging.getLogger()
     del root.handlers[:]  # Remove all previously existing handlers
     root.addHandler(handler)
 
 
 def set_log_levels(log_levels):
     for name, level in _augmented_log_levels(log_levels).iteritems():
-        _logging.getLogger(name).setLevel(level)
+        logging.getLogger(name).setLevel(level)
 
 
 # To see log entries from libraries and non-GUI code, reuse cmk.web's level.

@@ -42,6 +42,7 @@ def inventory_netapp_api_fcp(parsed):
 
 
 # interfaces : {
+#    total_ops: 0,
 #    read_ops: 0,               # rate/number
 #    write_ops: 0               # rate/number
 #    read_bytes: 0,              # rate/bytes
@@ -122,9 +123,12 @@ def check_fibrechannel_common(item, params, parsed):
             yield state, infotext, perfdata
 
     # Latency
+    total_ops = fcp_if["total_ops"]
     for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
                        ("avg_write_latency", "Write Latency")]:
-        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        # According to NetApp's "Performance Management Design Guide",
+        # the latency is a function of `total_ops`.
+        value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what))
         if value is not None:
             yield check_levels(value,
                                "%s_latency" % what,
@@ -139,6 +143,7 @@ def parse_netapp_api_fcp(info):
     fcp_interfaces = {}
     for key, values in parsed.items():
         fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
+        fcp_data["total_ops"] = int(values.get("total_ops", 0))
         speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed

@@ -866,7 +866,6 @@ def parse_arguments(argv):
 #   +----------------------------------------------------------------------+
 
 
-# TODO: Refactor to requests
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
     @staticmethod
@@ -886,7 +885,7 @@ class ESXConnection(object):
         self._perf_samples_path = AGENT_TMP_PATH / ("%s.timer" % address)
         self._perf_samples = None
 
-        self._session = ESXSession(address, port, opt.no_cert_check, opt.debug)
+        self._session = ESXSession(address, port, opt.no_cert_check)
 
         self.system_info = None
         self.system_info = self._fetch_systeminfo()
@@ -939,8 +938,8 @@ class ESXConnection(object):
             time_sent = time.time()
 
         while True:
-            response = self._session.post(payload)
-            response_data.append(response.read())
+            response = self._session.postsoap(payload)
+            response_data.append(response.text)
             self._check_not_authenticated(response_data[-1][:512])
             # Look for a <token>0</token> field.
             # If it exists not all data was transmitted and we need to start a
@@ -990,17 +989,16 @@ class ESXConnection(object):
 
         payload = telegram_list["login"]
         payload_params = {"username": encode_url(self._user), "password": encode_url(self._secret)}
-        response, reply_data = self.send_soapdata(*self.prepare_soapdata(payload, payload_params))
+        response, _reply_data = self.send_soapdata(*self.prepare_soapdata(payload, payload_params))
 
-        if "InvalidLogin" in reply_data:
-            raise MKGeneralException("Cannot login to vSphere Server. Login response is not 'OK'."
-                                     " Please check the credentials.")
+        server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
 
-        server_cookie = response.msg.get("Set-Cookie", "").decode("utf-8")
+        if response.status_code != 200 or not server_cookie:
+            raise MKGeneralException("Cannot login to vSphere Server. Login response is '%s'."
+                                     " Please check the credentials." % response.status_code)
 
-        if server_cookie:
-            with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
-                f_handle.write(server_cookie)
+        with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
+            f_handle.write(server_cookie)
 
         self._session.headers["Cookie"] = server_cookie
         return

@@ -23,13 +23,11 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import sys
-import httplib
-
-from cmk.utils.exceptions import MKGeneralException
+import requests
+import urllib3  # type: ignore
 
 
-class ESXSession(object):
+class ESXSession(requests.Session):
     """Encapsulates the Sessions with the ESX system"""
     ENVELOPE = ('<SOAP-ENV:Envelope'
                 ' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
@@ -43,54 +41,19 @@ class ESXSession(object):
                 '<SOAP-ENV:Body xmlns:ns1="urn:vim25">%s</SOAP-ENV:Body>'
                 '</SOAP-ENV:Envelope>')
 
-    @staticmethod
-    def _connect_to_server(address, port, no_cert_check, debug):
-        """Initialize server connection"""
-        try:
-            netloc = "%s:%s" % (address, port)
-
-            if no_cert_check:
-                try:
-                    import ssl
-                    server_handle = httplib.HTTPSConnection(
-                        netloc, context=ssl._create_unverified_context())
-                except Exception:
-                    server_handle = httplib.HTTPSConnection(netloc)
-            else:
-                server_handle = httplib.HTTPSConnection(netloc)
-
-            if debug:
-                sys.stderr.write("Connecting to %s..." % netloc)
-                sys.stderr.flush()
-
-            server_handle.connect()
-            return server_handle
-        except Exception as exc:
-            if debug:
-                raise
-            raise MKGeneralException("Cannot connect to vSphere Server. Please check the IP and"
-                                     " SSL certificate (if applicable) and try again. This error"
-                                     " is not related to the login credentials."
-                                     " Error message: %r" % exc)
-
-    def __init__(self, address, port, no_cert_check=False, debug=False):
+    def __init__(self, address, port, no_cert_check=False):
         super(ESXSession, self).__init__()
-        self._server_handle = self._connect_to_server(address, port, no_cert_check, debug)
-        self.headers = {
+        if no_cert_check:
+            self.verify = False
+            urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
+
+        self._post_url = "https://%s:%s/sdk" % (address, port)
+        self.headers.update({
             "Content-Type": 'text/xml; charset="utf-8"',
             "SOAPAction": "urn:vim25/5.0",
-            "User-Agent": "VMware VI Client/5.0.0",  # TODO: set client version?
-        }
+            "User-Agent": "Checkmk special agent vsphere",
+        })
 
-    def post(self, request):
+    def postsoap(self, request):
         soapdata = ESXSession.ENVELOPE % request
-        self._init_headers(soapdata)
-        self._server_handle.send(soapdata)
-        return self._server_handle.getresponse()
-
-    def _init_headers(self, soapdata):
-        self._server_handle.putrequest("POST", "/sdk")
-        self._server_handle.putheader("Content-Length", "%d" % len(soapdata))
-        for key, value in self.headers.iteritems():
-            self._server_handle.putheader(key, value)
-        self._server_handle.endheaders()
+        return super(ESXSession, self).post(self._post_url, data=soapdata)

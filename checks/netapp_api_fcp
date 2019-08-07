@@ -96,12 +96,13 @@ def check_fibrechannel_common(item, params, parsed):
     general_levels = if_get_traffic_levels(params)
     traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None,
                                                  None)
+    now = fcp_if["now"]
     for what, levels_what, descr, format_func in [
         ("read_bytes", "in", "Read", lambda x: get_bytes_human_readable(x, unit="B/s")),
         ("write_bytes", "out", "Write", lambda x: get_bytes_human_readable(x, unit="B/s")),
         ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
     ]:
-        value = fcp_if.get(what)
+        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
         if value is not None:
             state = 0
             infotext = "%s: %s" % (descr, format_func(value))
@@ -121,12 +122,12 @@ def check_fibrechannel_common(item, params, parsed):
             yield state, infotext, perfdata
 
     # Latency
-    for what, text in [("latency", "Latency"), ("read_latency", "Read Latency"),
-                       ("write_latency", "Write Latency")]:
-        value = fcp_if.get("avg_%s" % what)
+    for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
+                       ("avg_write_latency", "Write Latency")]:
+        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
         if value is not None:
             yield check_levels(value,
-                               "avg_%s_latency" % what,
+                               "%s_latency" % what,
                                params.get(what),
                                unit="ms",
                                infoname=text)
@@ -137,23 +138,18 @@ def parse_netapp_api_fcp(info):
     parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
-        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn")}
+        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
         speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 
-        for what, renamed in [
-            ("read_ops", "read_ops"),
-            ("write_ops", "write_ops"),
-            ("read_data", "read_bytes"),
-            ("write_data", "write_bytes"),
-        ]:
+        for what in ["read_ops", "write_ops", "read_data", "write_data"]:
             if what in values:
-                fcp_data[renamed] = get_rate("%s.%s" % (key, what), now, int(values[what]))
+                fcp_data[what.replace("data", "bytes")] = int(values[what])
 
         for what in ["avg_latency", "avg_read_latency", "avg_write_latency"]:
             if what in values:
-                fcp_data[what] = get_rate("%s.%s" % (key, what), now, int(values[what]) / 1000.0)
+                fcp_data[what] = int(values[what]) / 1000.0
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces

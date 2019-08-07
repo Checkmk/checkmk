@@ -1092,9 +1092,10 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     return false;
 }
 
-bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
-                        const std::filesystem::path& ProgramData,
-                        bool LocalFileExists) {
+bool ConvertUserIniFile(
+    const std::filesystem::path& legacy_root,
+    const std::filesystem::path& pdata,  // programdata/checkmk/agent
+    bool local_ini_exists) {
     namespace fs = std::filesystem;
 
     // simple sanity check
@@ -1103,8 +1104,7 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
         return false;
     }
 
-    const std::string root_ini = "check_mk.ini";
-    auto user_ini_file = LegacyRoot / root_ini;
+    auto user_ini_file = legacy_root / files::kIniFile;
 
     std::error_code ec;
     if (!fs::exists(user_ini_file, ec)) {
@@ -1113,22 +1113,21 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
     }
 
     // check_mk.user.yml or check_mk.bakery.yml
-    const std::wstring name = files::kDefaultMainConfigName;
+    const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
     // generate
-    auto out_folder = ProgramData;
+    auto out_folder = pdata;
 
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
-    auto wato_ini = IsBakeryIni(user_ini_file);
+    auto ini_from_wato = IsBakeryIni(user_ini_file);
     fs::path yaml_file;
 
-    if (wato_ini || LocalFileExists)
-        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder,
-                                            wtools::ConvertToUTF8(name));
+    if (ini_from_wato || local_ini_exists)
+        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder, name);
     else
-        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder,
-                                          wtools::ConvertToUTF8(name));
+        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder, name);
+
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
@@ -1151,7 +1150,31 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
     bool local_file_exists = ConvertLocalIniFile(legacy_root, program_data);
 
     // if installation is baked, than only local ini conversion allowed
-    if (installation_type == InstallationType::wato) return local_file_exists;
+    if (installation_type == InstallationType::wato) {
+        auto ini_file = legacy_root / files::kIniFile;
+        if (!cma::tools::IsValidRegularFile(ini_file)) {
+            XLOG::d.i("File '{}' is absent, nothing to do",
+                      ini_file.u8string());
+            return local_file_exists;
+        }
+
+        XLOG::d(
+            "You have Baked Agent installed.\nYour legacy configuration file '{}' exists and is {}\n"
+            "The Upgrade of above mentioned file is SKIPPED to avoid overriding of your WATO managed configuration file '{}\\{}'\n\n"
+            "If you do want to upgrade legacy configuration file, you have to delete manually the file {}\\{}\n",
+            ini_file.u8string(),
+
+            IsBakeryIni(ini_file) ? "managed by Bakery/WATO" : "user defined",
+            wtools::ConvertToUTF8(cma::cfg::GetBakeryDir()),
+            wtools::ConvertToUTF8(files::kBakeryYmlFile),
+            wtools::ConvertToUTF8(files::kIniFile),
+            wtools::ConvertToUTF8(cma::cfg::GetFileInstallDir()),
+            wtools::ConvertToUTF8(files::kWatoIniFile)
+            //
+        );
+
+        return local_file_exists;
+    }
 
     auto user_or_bakery_exists =
         ConvertUserIniFile(legacy_root, program_data, local_file_exists);

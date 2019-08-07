@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include <chrono>
 #include <filesystem>
 
 #include "cfg_details.h"
@@ -328,4 +329,5 @@ TEST(Wtools, GetArgv2) {
     std::filesystem::path val1 = GetArgv(10);
     EXPECT_TRUE(val1.empty());
 }
+
 }  // namespace wtools

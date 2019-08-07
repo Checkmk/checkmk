@@ -278,29 +278,28 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     auto proc_id = minibox.getProcessId();
     auto success = minibox.waitForEnd(timeout, true);
     ON_OUT_OF_SCOPE(minibox.clean());
-
-    if (success) {
-        std::string accu;
-        minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                                   uint32_t Code,
-                                   const std::vector<char> &Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
-            cma::tools::AllTrim(data);
-            // replace and fix output
-            FixCrCnForMrpe(data);
-            data += "\n";
-
-            if (cma::cfg::LogMrpeOutput())
-                XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                        wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
-            hdr += std::to_string(Code) + " ";
-            accu = hdr + data;
-        });
-        return accu;
+    if (!success) {
+        //
+        XLOG::d("Wait on Timeout or Broken '{}'", entry.command_line_);
+        return {};
     }
-    //
-    XLOG::d("Wait on Timeout or Broken {}", entry.command_line_);
-    return {};
+
+    std::string accu;
+    minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                               uint32_t Code, const std::vector<char> &Data) {
+        auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        cma::tools::AllTrim(data);
+        // replace and fix output
+        FixCrCnForMrpe(data);
+        data += "\n";
+
+        if (cma::cfg::LogMrpeOutput())
+            XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
+                    wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+        hdr += std::to_string(Code) + " ";
+        accu = hdr + data;
+    });
+    return accu;
 }
 
 void MrpeProvider::updateSectionStatus() {}

@@ -369,7 +369,6 @@ void ServiceProcessor::sendDebugData() {
     auto tp = openAnswer("127.0.0.1");
     if (!tp) return;
     auto started = startProviders(tp.value(), "");
-    cma::tools::sleep(2000);  // a bit of time to finish async plugins
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
     auto count = printf("%s", block.data());

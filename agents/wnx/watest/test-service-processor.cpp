@@ -14,7 +14,9 @@ namespace cma::srv {
 TEST(AsyncAnswerTest, Base) {
     AsyncAnswer aa;
     EXPECT_EQ(aa.order_, AsyncAnswer::Order::plugins_last);
+    EXPECT_EQ(aa.sw_.isStarted(), false);
     aa.prepareAnswer("aaa");
+    EXPECT_EQ(aa.sw_.isStarted(), true);
 
     EXPECT_EQ(aa.external_ip_, "aaa");
     EXPECT_EQ(aa.awaiting_segments_, 0);

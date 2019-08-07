@@ -517,6 +517,7 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
     constexpr std::chrono::milliseconds kGrane = 250ms;
     auto waiting_processes = getProcessId();
     auto read_handle = getReadHandle();
+    auto proc_name = wtools::ConvertToUTF8(exec_);
     for (;;) {
         auto ready = checkProcessExit(waiting_processes);
 
@@ -524,8 +525,10 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
         if (buf.size()) appendResult(read_handle, buf);
 
         if (ready) {
-            XLOG::t("Minibox is ready after receiving [{}] bytes from '{}'",
-                    buf.size(), wtools::ConvertToUTF8(exec_));
+            auto us_time = sw_.stop();
+            XLOG::d.i(
+                "perf: In [{}] milliseconds process  '{}'  generated [{}] bytes of data",
+                us_time / 1000, proc_name, buf.size());
             return true;
         }
 
@@ -537,22 +540,22 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
 
             if (stopped || stop_set_) {
                 XLOG::d(
-                    "Plugin '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
-                    wtools::ConvertToUTF8(exec_), stopped, stop_set_,
-                    Timeout.count());
+                    "Process '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
+                    proc_name, stopped, stop_set_, Timeout.count());
             } else {
                 Timeout -= kGrane;
                 continue;
             }
         }
+        auto us_time = sw_.stop();
 
         if (Timeout < kGrane) failed_ = true;
 
         if (KillWhatLeft) {
             process_->kill(true);
-            // cma::tools::win::KillProcess(waiting_processes, -1);
-            XLOG::d("Process '{}' [{}] killed", wtools::ConvertToUTF8(exec_),
-                    waiting_processes);  // not normal situation
+            // not normal situation
+            XLOG::d("perf:  In [{}] milliseconds process '{}' pid:[{}] killed",
+                    us_time / 1000, proc_name, waiting_processes);
         }
 
         return false;
@@ -622,6 +625,8 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
 void PluginEntry::threadCore(const std::wstring& Id) {
     // pre entry
     // thread counters block
+    XLOG::d.i("Async Thread for {} is to be started",
+              wtools::ConvertToUTF8(Id));
     thread_count_++;
     ON_OUT_OF_SCOPE(thread_count_--);
     std::unique_lock lk(lock_);
@@ -937,7 +942,7 @@ void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists) {
 }
 
 namespace provider::config {
-bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
+const bool G_AsyncPluginWithoutCacheAge_RunAsync = true;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept {
     auto run_async = plugin.async();
@@ -975,7 +980,7 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
         auto run_async = cma::provider::config::IsRunAsync(entry);
         if (run_async) continue;
 
-        XLOG::d.t("Executing '{}'", entry.path().u8string());
+        XLOG::t("Executing '{}'", entry.path().u8string());
 
         // C++ async black magic
         results.emplace_back(std::async(

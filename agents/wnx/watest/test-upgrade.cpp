@@ -18,7 +18,7 @@
 namespace cma::cfg::upgrade {
 
 extern std::filesystem::path G_LegacyAgentPresetPath;
-void SetLegacyAgentPath(std::filesystem::path path);
+void SetLegacyAgentPath(const std::filesystem::path& path);
 
 const std::string ini_expected = "b53c5b77c595ba7e";
 const std::string ini_name = "check_mk.hash.ini";

@@ -28,6 +28,8 @@ bool AsyncAnswer::isAnswerOlder(std::chrono::milliseconds Milli) const {
 void AsyncAnswer::dropAnswer() {
     std::lock_guard lk(lock_);
     dropDataNoLock();
+    sw_.stop();
+    sw_.reset();
 }
 
 // returns true when answer is ready, false when timeout expires but not ready
@@ -35,6 +37,7 @@ bool AsyncAnswer::waitAnswer(std::chrono::milliseconds WaitInterval) {
     using namespace std::chrono;
 
     std::unique_lock lk(lock_);
+    ON_OUT_OF_SCOPE(sw_.stop());
     return cv_ready_.wait_until(
         lk, steady_clock::now() + WaitInterval,
         [this]() -> bool { return awaiting_segments_ <= received_segments_; });
@@ -98,6 +101,7 @@ bool AsyncAnswer::prepareAnswer(std::string_view Ip) noexcept {
     received_segments_ = 0;
     plugins_.clear();
     local_.clear();
+    sw_.start();
     return true;
 }
 

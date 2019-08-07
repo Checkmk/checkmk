@@ -495,8 +495,9 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
 }
 
 // testing block
-std::filesystem::path G_LegacyAgentPresetPath = "";
-void SetLegacyAgentPath(std::filesystem::path path) {
+// used only during unit testing
+std::filesystem::path G_LegacyAgentPresetPath;
+void SetLegacyAgentPath(const std::filesystem::path& path) {
     G_LegacyAgentPresetPath = path;
 }
 

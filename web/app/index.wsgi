@@ -67,9 +67,9 @@ class Application(object):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(environ)
         self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
-        with AppContext(self):
-            with RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
-                self._process_request()
+        with AppContext(self), \
+             RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
+            self._process_request()
 
     def _process_request(self):
         try:
@@ -134,7 +134,6 @@ class Application(object):
         store.release_all_locks()
         userdb.finalize()
         sites.disconnect()
-        html.finalize()
 
     def _handle_request(self):
         html.init_modes()

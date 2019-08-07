@@ -8,7 +8,7 @@ import cmk.utils.paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
-from cmk.gui.globals import AppContext, RequestContext, html
+from cmk.gui.globals import AppContext, RequestContext
 
 
 # TODO: Better make our application available?
@@ -25,7 +25,6 @@ def register_builtin_html():
     with AppContext(DummyApplication(environ, None)), \
          RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
         yield
-        html.finalize()
 
 
 @pytest.fixture()

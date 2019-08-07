@@ -50,7 +50,6 @@ from dateutil import tz
 from pathlib2 import Path
 
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.special_agents.agent_vsphere import ESXSession, SoapTemplates
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
@@ -271,7 +270,10 @@ class ESXConnection(object):
                 system_info[entry] = element[0]
 
         if not system_info:
-            raise MKGeneralException("Unable to get data from Web API" + "\n")
+            raise SystemExit("Cannot get system info from vSphere server. Please check the IP and"
+                             "SSL certificate (if applicable) and try again. This error is not"
+                             " related to the login credentials. Response: [%s] %s" %
+                             (response.status_code, response.reason))
 
         return system_info
 
@@ -333,8 +335,8 @@ class ESXConnection(object):
         server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
 
         if response.status_code != 200 or not server_cookie:
-            raise MKGeneralException("Cannot login to vSphere Server. Login response is '%s'."
-                                     " Please check the credentials." % response.status_code)
+            raise SystemExit("Cannot login to vSphere Server (reason: [%s] %s). Please check the "
+                             "credentials." % (response.status_code, response.reason))
 
         with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
             f_handle.write(server_cookie)
@@ -404,19 +406,18 @@ def fetch_extra_interface_counters(connection, opt):
     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
     for nic in nic_objects:
         nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
+        if not nic_if:
+            continue
+        _unused, device, bandwidth_block, mac = nic_if[0]
+        net_extra_info.append("net.macaddress|%s|%s|mac" % (device, mac))
+        bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
         try:
-            bandwidth_block = nic_if[0][2]
-            bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
-            net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
-            if bandwidth:
-                net_extra_info.append("net.bandwidth|%s|%s|bytes" %
-                                      (nic_if[0][1], int(bandwidth[0]) * 1000000))
-                net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
-            else:
-                net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
-        except Exception:
-            # TODO: This is way too generic. What should be catched here?
-            return []
+            net_extra_info.append("net.bandwidth|%s|%s|bytes" %
+                                  (device, int(bandwidth[0]) * 1000000))
+        except (ValueError, IndexError):
+            net_extra_info.append("net.state|%s|2|state" % device)
+        else:
+            net_extra_info.append("net.state|%s|1|state" % device)
 
     return net_extra_info
 
@@ -1113,26 +1114,26 @@ def main(argv=None):
 
         # If the data aquisition fails, e.g. invalid cookie we try another run
         for _run_count in [0, 1]:
+            esx_connection.login(opt.user, opt.secret)
             # Note: If the cookie fails inbetween these calls, we also start a second run
             try:
-                esx_connection.login(opt.user, opt.secret)
                 vsphere_output = fetch_data(esx_connection, opt)
             except MKQueryServerException:
                 # There was a problem during the query.
                 # It is possible that the server cookie got invalid.
                 # We delete the cookie and start a second run
                 esx_connection.delete_server_cookie()
-            except Exception:
-                if opt.debug:
-                    raise
-                raise MKGeneralException("Error while processing received data")
+            else:
+                break
 
-    except MKGeneralException as exc:
+    except Exception as exc:
         sys.stderr.write("%s\n" % exc)
-        sys.exit(0 if opt.agent else 1)
+        return 0 if opt.agent else 1
 
     write_output(vsphere_output, opt)
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

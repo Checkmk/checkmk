@@ -12,6 +12,7 @@
 #include <string_view>
 
 #include "carrier.h"
+#include "common/stop_watch.h"
 #include "section_header.h"
 
 namespace cma::srv {
@@ -89,7 +90,11 @@ public:
 
     char separator() const { return separator_; }
 
+    void stopWatchStart() { sw_.start(); }
+    uint64_t stopWatchStop() { return sw_.stop(); }
+
 protected:
+    wtools::StopWatch sw_;
     // conditionally(depending from the name of section) sets delay after error
     void setupDelayOnFail() noexcept;
 

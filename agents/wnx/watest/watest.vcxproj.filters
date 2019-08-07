@@ -134,6 +134,9 @@
     <ClCompile Include="test-section_df.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-stop_watch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">

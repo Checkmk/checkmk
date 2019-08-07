@@ -136,7 +136,6 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
 // critical and invisible global variables
 // YAML config and PAThs are here
 class ConfigInfo {
-    enum { kMaxFiles = 3 };
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
                  std::filesystem::file_time_type Timestamp)
@@ -213,7 +212,6 @@ public:
     void cleanConfig();
 
     // not so heavy operation, use free
-    // #TODO probably replace with shared_ptr
     YAML::Node getConfig() const noexcept {
         std::lock_guard lk(lock_);
         if (ok_) return yaml_;
@@ -414,6 +412,7 @@ private:
     FRIEND_TEST(CmaCfg, InitEnvironment);
 #endif
 };
+
 extern ConfigInfo G_ConfigInfo;
 
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);

@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "common/stop_watch.h"
+
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
 static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
@@ -92,7 +94,11 @@ public:
         return timeout_;
     }
 
+    const wtools::StopWatch& getStopWatch() const { return sw_; }
+
 private:
+    wtools::StopWatch sw_;
+
     bool isAnswerInUseNoLock() const {
         return !external_ip_.empty() || !segments_.empty() ||
                awaiting_segments_ != 0 || received_segments_ != 0;

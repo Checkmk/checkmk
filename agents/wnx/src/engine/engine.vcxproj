@@ -235,6 +235,7 @@
     <ClInclude Include="..\common\cfg_info.h" />
     <ClInclude Include="..\common\cfg_yaml.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
+    <ClInclude Include="..\common\stop_watch.h" />
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />

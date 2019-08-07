@@ -335,6 +335,7 @@ call check_watest.cmd watest
     <ClCompile Include="test-service.cpp" />
     <ClCompile Include="test-skype.cpp" />
     <ClCompile Include="test-spool.cpp" />
+    <ClCompile Include="test-stop_watch.cpp" />
     <ClCompile Include="test-upgrade.cpp" />
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />

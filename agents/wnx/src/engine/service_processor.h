@@ -120,9 +120,10 @@ public:
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
                 auto id = Tp.time_since_epoch().count();
+                XLOG::d.t(
+                    "Provider '{}' is about to be started, id '{}' port [{}]",
+                    provider_uniq_name_, id, port_name);
                 goGoGo(SectionName, CommandLine, port_name, id);
-                XLOG::l.t("Provider '{}' started, id '{}' port [{}]",
-                          provider_uniq_name_, id, port_name);
 
                 return true;
             },
@@ -148,10 +149,14 @@ protected:
                 const std::string& CommandLine,  //
                 const std::string& Port,         //
                 uint64_t Marker) {               // std marker
+        engine_.stopWatchStart();
         auto cmd_line =
             std::to_string(Marker) + " " + SectionName + " " + CommandLine;
 
         engine_.startSynchronous(Port, cmd_line);
+        auto us_count = engine_.stopWatchStop();
+        XLOG::d.i("perf: Section '{}' took [{}] milliseconds",
+                  provider_uniq_name_, us_count / 1000);
     }
 };
 
@@ -440,6 +445,8 @@ private:
                     answer_.receivedSegments());  // on the hand
         }
 
+        XLOG::d.i("perf: Answer is ready in [{}] milliseconds",
+                  answer_.getStopWatch().getUsCount() / 1000);
         auto result = std::move(answer_.getDataAndClear());
         return wrapResultWithStaticSections(result);
     }

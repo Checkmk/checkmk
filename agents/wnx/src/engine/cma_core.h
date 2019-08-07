@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "cfg.h"
+#include "common/stop_watch.h"
 #include "common/wtools.h"
 #include "fmt/format.h"
 #include "logger.h"
@@ -154,8 +155,10 @@ public:
     //
     bool startBlind(const std::string CommandLine, const std::string User) {
         int count = 0;
+
         std::lock_guard lk(lock_);
         if (process_) return false;
+        sw_.start();
         id_ = L"blind";
         std::string command_line;
         if (!User.empty()) command_line = "runas /User:" + User + " ";
@@ -177,6 +180,7 @@ public:
         } catch (const std::exception& e) {
             XLOG::l(XLOG_FLINE + " exception {}", e.what());
         }
+        sw_.stop();
         // cleaning up
         id_.clear();
         exec_.clear();
@@ -189,6 +193,7 @@ public:
         int count = 0;
         std::lock_guard lk(lock_);
         if (process_) return false;
+        sw_.start();
         id_ = Id;
         exec_ = ExeFile.wstring();
 
@@ -218,6 +223,7 @@ public:
         } catch (const std::exception& e) {
             XLOG::l(XLOG_FLINE + " exception {}", e.what());
         }
+        sw_.stop();
         // cleaning up
         id_.clear();
         exec_.clear();
@@ -336,6 +342,7 @@ public:
     }
 
 private:
+    wtools::StopWatch sw_;
     // called AFTER process finished!
     void readWhatLeft() {
         using namespace std;
@@ -689,7 +696,7 @@ constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
 namespace provider::config {
-extern bool G_AsyncPluginWithoutCacheAge_RunAsync;
+extern const bool G_AsyncPluginWithoutCacheAge_RunAsync;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept;
 }  // namespace provider::config

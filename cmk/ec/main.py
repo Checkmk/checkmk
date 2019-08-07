@@ -705,7 +705,7 @@ class HostConfig(object):
             # Lookup maps to improve performance of host searches
             self._hosts_by_lower_name[host["name"].lower()] = host
             self._hosts_by_lower_alias[host["alias"].lower()] = host
-            self._hosts_by_lower_address[host["alias"].lower()] = host
+            self._hosts_by_lower_address[host["address"].lower()] = host
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._got_config_from_core = self._get_core_start_time()

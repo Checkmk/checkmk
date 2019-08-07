@@ -11,9 +11,9 @@ freeze_time = '2001-09-09T01:46:40'
 
 mock_item_state = {
     '': {
-        'node0.avg_latency': (1000000000.0 - 100.0, 1000.0),
-        'node0.avg_write_latency': (1000000000.0 - 100.0, 2000.0),
-        'node0.avg_read_latency': (1000000000.0 - 100.0, 3000.0),
+        'node0.avg_latency': (20000 - 100, 1000.0),
+        'node0.avg_write_latency': (20000 - 100, 2000.0),
+        'node0.avg_read_latency': (20000 - 100, 3000.0),
         'node0.write_bytes': (1000000000.0 - 100.0, 4000.0),
         'node0.read_bytes': (1000000000.0 - 100.0, 5000.0),
         'node0.read_ops': (1000000000.0 - 100.0, 6000),

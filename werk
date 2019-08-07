@@ -316,7 +316,7 @@ def main_list(args, format):
     # in one class are orred. Multiple types are anded.
     filters = {}
 
-    sort = lambda a, b: cmp(a['date'], b['date'])
+    sort = lambda a, b: (a['date'] > b['date']) - (a['date'] < b['date'])
     reverse = False
     for a in args:
 

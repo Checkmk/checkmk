@@ -14,9 +14,9 @@
 #include <filesystem>
 
 #include "common/cfg_info.h"
-inline std::filesystem::path G_ProjectPath = PROJECT_DIR;
-inline std::filesystem::path G_SolutionPath = SOLUTION_DIR;
-inline std::filesystem::path G_TestPath =
+inline const std::filesystem::path G_ProjectPath = PROJECT_DIR;
+inline const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
+inline const std::filesystem::path G_TestPath =
     cma::cfg::MakePathToUnitTestFiles(G_SolutionPath);
 
 // definitions required for gtest

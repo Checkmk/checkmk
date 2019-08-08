@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import argparse
 import sys
 import requests
@@ -176,6 +177,5 @@ def handle_stats(response):
             if ind[:-11] == indice:
                 all_counts.append(response.json()["indices"][ind]["total"]["docs"]["count"])
                 all_sizes.append(response.json()["indices"][ind]["total"]["store"]["size_in_bytes"])
-        sys.stdout.write(
-            "%s %s %s\n" %
-            (indice, sum(all_counts) / len(all_counts), sum(all_sizes) / len(all_sizes)))
+        sys.stdout.write("%s %s %s\n" % (indice, sum(all_counts) / len(all_counts),
+                                         sum(all_sizes) / len(all_sizes)))  # fixed: true-division

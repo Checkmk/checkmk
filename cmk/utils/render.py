@@ -27,6 +27,7 @@
 text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
+from __future__ import division
 
 # THIS IS STILL EXPERIMENTAL
 
@@ -90,11 +91,11 @@ class Age(object):
         elif secs < 240:
             return "%d %s" % (secs, _("s"))
 
-        mins = secs / 60
+        mins = int(secs / 60.0)
         if mins < 360:
             return "%d %s" % (mins, _("m"))
 
-        hours = mins / 60
+        hours = int(mins / 60.0)
         if hours < 48:
             return "%d %s" % (hours, _("h"))
 
@@ -105,7 +106,7 @@ class Age(object):
         elif days < 999:
             return "%.0f %s" % (days, _("d"))
         else:
-            years = days / 365
+            years = days / 365.0
             if years < 10:
                 return "%.1f %s" % (years, _("y"))
 
@@ -142,7 +143,7 @@ def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
             prefix = unit_prefix
             break
         factor *= base
-    return factor / base, prefix
+    return factor / base, prefix  # fixed: true-division
 
 
 def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
@@ -154,7 +155,7 @@ def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
     changes the returned string, but does not interfere with any calculations."""
     factor, prefix = scale_factor_prefix(b, base)
 
-    return '%.*f %s' % (precision, b / factor, prefix + unit)
+    return '%.*f %s' % (precision, b / factor, prefix + unit)  # fixed: true-division
 
 
 # Precise size of a file - separated decimal separator
@@ -328,7 +329,7 @@ def _frexp10(x):
 
 def _frexpb(x, base):
     exp = int(math.log(x, base))
-    mantissa = x / base**exp
+    mantissa = int(x / base**exp)
     if mantissa < 1:
         mantissa *= base
         exp -= 1

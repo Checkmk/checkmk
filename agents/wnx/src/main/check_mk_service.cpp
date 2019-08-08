@@ -38,7 +38,7 @@ void PrintMain() {
     using namespace xlog::internal;
     PrintBlock("Normal Usage:\n", Colors::green, []() {
         return fmt::format(
-            "\t{1} <{2}|{3}|{4}>\n"
+            "\t{1} <{2}|{3}|{4}|{5}|{6}>\n"
             "\t{2:<{0}} - generates test output\n"
             "\t{3:<{0}} - version of the Agent\n"
             "\t{4:<{0}} - reload configuration files of the Agent\n"

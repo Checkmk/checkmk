@@ -225,6 +225,12 @@ def parse_arguments(argv):
 
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
+    ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
+
+    @staticmethod
+    def _escape_xml(text):
+        return ''.join(ESXConnection.ESCAPED_CHARS.get(c, c) for c in text)
+
     @staticmethod
     def _check_not_authenticated(text):
         if "NotAuthenticatedFault" in text:
@@ -329,8 +335,8 @@ class ESXConnection(object):
             self._session.headers["Cookie"] = self._server_cookie_path.open(encoding="utf-8").read()
             return
 
-        payload_params = {"username": encode_url(user), "password": encode_url(password)}
-        response = self._session.postsoap(self._soap_templates.login % payload_params)
+        auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
+        response = self._session.postsoap(self._soap_templates.login % auth)
 
         server_cookie = response.headers.get("set-cookie", "").decode("utf-8")
 
@@ -553,24 +559,8 @@ def get_agent_info_tcp(address, timeout, debug):
             raise
 
 
-# Create a search pattern for the get_pattern function
-# create_search_pattern(["label", "summary", "startConnected", "allowGuestControl", "connected", "status"])
-def create_search_pattern(tokens):
-    pattern_elements = []
-    for token in tokens:
-        pattern_elements.append("<%(token)s>(.*?)</%(token)s>" % {"token": token})
-    return ".*?".join(pattern_elements)
-
-
 def get_pattern(pattern, line):
     return re.findall(pattern, line, re.DOTALL) if line else []
-
-
-def encode_url(text):
-    for char, replacement in [("&", "&amp;"), (">", "&gt;"), ("<", "&lt;"), ("'", "&apos;"),
-                              ("\"", "&quot;")]:
-        text = text.replace(char, replacement)
-    return text
 
 
 def get_sections_aggregated_snapshots(vms, hostsystems):
@@ -626,15 +616,21 @@ def is_placeholder_vm(devices):
 def eval_virtual_device(info, _datastores):
     response = []
     virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
-    show_fields = ["label", "summary", "startConnected", "allowGuestControl", "connected", "status"]
-    search_pattern = create_search_pattern(show_fields)
+    search_pattern = ('<(label)>(.*?)</label>.*?'
+                      '<(summary)>(.*?)</summary>.*?'
+                      '<(startConnected)>(.*?)</startConnected>.*?'
+                      '<(allowGuestControl)>(.*?)</allowGuestControl>.*?'
+                      '<(connected)>(.*?)</connected>.*?'
+                      '<(status)>(.*?)</status>')
     for virtual_device in virtual_devices:
-        type_info = get_pattern("type=\"(.*?)\"", virtual_device)
-        device_info = get_pattern(search_pattern, virtual_device)
-        if device_info:
-            response.append(
-                "virtualDeviceType %s|%s" %
-                (type_info[0], "|".join("%s %s" % x for x in zip(show_fields, device_info[0]))))
+        try:
+            type_info = get_pattern("type=\"(.*?)\"", virtual_device)[0]
+            device_info = get_pattern(search_pattern, virtual_device)[0]
+        except IndexError:
+            continue
+        device_pairs = zip(device_info[0::2], device_info[1::2])
+        device_txt = "|".join("%s %s" % p for p in device_pairs)
+        response.append("virtualDeviceType %s|%s" % (type_info, device_txt))
 
     return "@@".join(response)
 

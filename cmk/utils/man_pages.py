@@ -29,6 +29,7 @@ used as base for the list of supported checks and catalogs of checks.
 
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
+from __future__ import division
 
 import os
 import re
@@ -783,7 +784,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         for word in words[1:]:
             newline += ' '
             x += 1.0
-            while s / x < need_spaces / spaces:
+            while s / x < need_spaces / spaces:  # fixed: true-division
                 newline += ' '
                 s += 1
             newline += word

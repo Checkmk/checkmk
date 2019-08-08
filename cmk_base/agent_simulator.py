@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import math
 
 import cmk.utils.debug
@@ -57,15 +58,16 @@ def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
     if period is None:
         return int(our_uptime() * rate)
 
-    a = (rate * period) / (2.0 * math.pi)
+    a = (rate * period) / (2.0 * math.pi)  # fixed: true-division
     u = our_uptime()
-    return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))
+    return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))  # fixed: true-division
 
 
 def agentsim_enum(values, period=1):  # period is in seconds
-    hit = int(our_uptime()) / period % len(values)
+    hit = int(our_uptime() / period % len(values))  # fixed: true-division
     return values[hit]
 
 
 def agentsim_sinus(base=50, amplitude=50, period=300):
-    return int(math.sin(our_uptime() * 2.0 * math.pi / period) * amplitude + base)
+    return int(math.sin(our_uptime() * math.pi * 2.0 / period) * amplitude +
+               base)  # fixed: true-division

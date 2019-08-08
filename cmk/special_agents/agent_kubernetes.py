@@ -607,7 +607,7 @@ class NodeList(K8sList[Node]):
         result = functools.reduce(merge, stats.itervalues())
         # During the merging process the sum of all timestamps is calculated.
         # To obtain the average time of all nodes devide by the number of nodes.
-        result['timestamp'] = round(result['timestamp'] / len(stats), 1)
+        result['timestamp'] = round(result['timestamp'] / len(stats), 1)  # fixed: true-division
         return result
 
 

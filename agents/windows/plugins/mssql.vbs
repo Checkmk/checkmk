@@ -12,10 +12,15 @@
 ' Another option is to create a mssql.ini file in MK_CONFDIR and write the
 ' credentials of a database user to it which shal be used for monitoring:
 '
+' The config file mssql.ini may contain a list of instances to exclude
+' from monitoring. By default, every running instance is monitored.
+'
 ' [auth]
 ' type = db
 ' username = monitoring
 ' password = secret-pw
+' [instance]
+' exclude = inst1,inst2,inst3
 '
 ' The following sources are asked:
 ' 1. Registry - To gather a list of local MSSQL-Server instances
@@ -31,7 +36,7 @@
 Option Explicit
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
-Dim sources, instances, instance, instance_id, instance_name
+Dim sources, instances, instance, instance_id, instance_name, instance_excluded
 Dim cfg_dir, cfg_file, hostname, tcpport
 
 Const HKLM = &H80000002
@@ -78,7 +83,7 @@ End Function
 Set registry = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 Set sources = CreateObject("Scripting.Dictionary")
 
-Dim service, i, version, edition, value_types, value_names, value_raw, cluster_name
+Dim service, i, elem, version, edition, value_types, value_names, value_raw, cluster_name
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 
 ' Make sure that always all sections are present, even in case of an error.
@@ -108,6 +113,26 @@ For Each section_id In sections.Keys
 Next
 
 addOutput(sections("instance"))
+
+' Search for exclude list in mssql.ini file.
+cfg_file = cfg_dir & "\mssql.ini"
+If Not FSO.FileExists(cfg_file) Then
+    cfg_file = ""
+End If
+Set CFG = readIniFile(cfg_file)
+
+Dim INST, exclude_list
+If CFG.Exists("instance") Then
+    Set INST = CFG("instance")
+Else
+    Set INST = CreateObject("Scripting.Dictionary")
+End If
+If INST.Exists("exclude") Then
+    exclude_list = Split(INST("exclude"), ",")
+Else
+    exclude_list = Array()
+End If
+Set INST = Nothing
 
 '
 ' Gather instances on this host, store instance in instances and output version section for it
@@ -185,12 +210,21 @@ For Each rk In regkeys
             ' Only collect results for instances which services are currently running
             Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
                                   "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running' OR Name = 'MSSQLSERVER' AND State = 'Running'")
-            If service.count > 0 Then
+            ' Check if instance is in the exclude list.
+            instance_excluded = False
+            For Each elem In exclude_list
+                If StrComp(Trim(elem), instance_id) = 0 Then
+                    instance_excluded = True
+                    Exit For
+                End If
+            Next
+            If Not instance_excluded And service.count > 0 Then
                 instances.add instance_id, cluster_name
             End If
         Next
     Loop While False
 Next
+Set instance_excluded = Nothing
 
 If instances.Count = 0 Then
     addOutput("ERROR: Failed to gather SQL server instances")
@@ -226,6 +260,7 @@ CONN.Provider = "sqloledb"
 ' It's a local connection. 2 seconds should be enough!
 CONN.ConnectionTimeout = 2
 
+
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
 For Each instance_id In instances.Keys: Do ' Continue trick
@@ -233,7 +268,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     cluster_name = instances(instance_id)
 
     ' Use either an instance specific config file named mssql_<instance-id>.ini
-    ' or the default mysql.ini file.
+    ' or the default mssql.ini file.
     cfg_file = cfg_dir & "\mssql_" & instance_id & ".ini"
     If Not FSO.FileExists(cfg_file) Then
         cfg_file = cfg_dir & "\mssql.ini"

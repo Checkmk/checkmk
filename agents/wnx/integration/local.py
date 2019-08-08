@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset: 4 -*-
+from __future__ import print_function
+from builtins import zip
+from builtins import range
+from builtins import object
 import configparser
 import yaml
 from contextlib import contextmanager
@@ -223,7 +227,7 @@ class NoSectionError(Exception):
         super(NoSectionError, self).__init__(self, 'No section: %r' % section)
 
 
-class YamlWriter:
+class YamlWriter(object):
     def __init__(self):
         self._doc = None
 
@@ -236,7 +240,7 @@ def local_test(expected_output_from_agent,
                current_test,
                test_name=None,
                test_class=None):
-    comparison_data = zip(expected_output_from_agent, actual_output_from_agent)
+    comparison_data = list(zip(expected_output_from_agent, actual_output_from_agent))
     for expected, actual in comparison_data:
         if actual == 'WMItimeout':
             pytest.skip('WMI timeout, better luck next time')

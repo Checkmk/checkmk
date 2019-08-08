@@ -34,16 +34,6 @@ module.exports = {
     },
     module: {
         rules: [
-            {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader",
-                    options: {
-                        presets: ["@babel/preset-env"],
-                    }
-                }
-            },
             // needed for theme CSS files
             {
                 test: /\.scss$/,
@@ -96,3 +86,20 @@ module.exports = {
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
     ]
 };
+
+
+if (process.env.NO_BABEL_LOADER == undefined) {
+    let babel_loader = {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ["@babel/preset-env"],
+                    }
+                }
+            }
+    module.exports.module.rules.unshift(babel_loader)
+}
+
+

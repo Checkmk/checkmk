@@ -5,6 +5,8 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+export NO_BABEL_LOADER=1
+
 echo "Updating compiled JS/CSS files..."
 make -C .. \
     web/htdocs/js/main_min.js \

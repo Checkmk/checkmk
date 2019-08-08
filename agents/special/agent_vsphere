@@ -33,6 +33,7 @@
 
 # pylint: disable=broad-except
 
+import collections
 import datetime
 import errno
 import os
@@ -522,27 +523,22 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 #.
 
 
+def _iter_dicts(keys, data):
+    pattern = ".*?".join("<%s>(.*?)</%s>" % (key, key) for key in keys)
+    matches = re.finditer(pattern, data, re.DOTALL)
+    for match in matches:
+        yield dict(zip(keys, match))
+
+
 def eval_sensor_info(_hostname, _current_propname, propset):
     elements = ("name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
                 "sensorType")
-
-    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
-
-    data = get_pattern(pattern, propset)
-    properties = {}
-    sensors = {row[0]: dict(zip(elements, row)) for row in data}
-
-    return properties, sensors
+    return {}, {d["name"]: d for d in _iter_dicts(elements, propset)}
 
 
 def eval_hardwarestatus_info(_hostname, _current_propname, propset):
     elements = ("name", "label", "summary", "key")
-    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
-
-    data = get_pattern(pattern, propset)
-    properties = {}
-    sensors = {row[0]: dict(zip(elements, row)) for row in data}
-    return properties, sensors
+    return {}, {d["name"]: d for d in _iter_dicts(elements, propset)}
 
 
 def eval_multipath_info(_hostname, current_propname, multipath_propset):
@@ -559,59 +555,52 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
 
 
 def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
-    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
-
-    data = get_pattern(pattern, propset)
-    properties, sensors = {}, {}
-    for match_groups in data:
-        entries = dict(zip(elements, match_groups))
+    properties = {}
+    for entries in _iter_dicts(elements, propset):
         for key, value in entries.items():
             properties.setdefault("%s.%s.%s" % (current_propname, key, entries[id_key]),
                                   []).append(value)
-    return properties, sensors
+    return properties, {}
 
 
 def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
     return eval_propset_block(hostname, current_propname,
-                              ["index", "vendor", "hz", "busHz", "description"], "index",
+                              ("index", "vendor", "hz", "busHz", "description"), "index",
                               cpu_pkg_propset)
 
 
 def eval_pci_device(hostname, current_propname, pci_propset):
-    return eval_propset_block(hostname, current_propname, ["id", "vendorName", "deviceName"], "id",
+    return eval_propset_block(hostname, current_propname, ("id", "vendorName", "deviceName"), "id",
                               pci_propset)
 
 
-def eval_systeminfo_other(_hostname, _current_propname, otherinfo_propset):
-    data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>",
-                       otherinfo_propset)
-    keys_index = {}
+def eval_systeminfo_other(_hostname, _current_propname, propset):
+    data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", propset)
 
-    properties, sensors = {}, {}
+    keys_counter = collections.Counter()
+    properties = {}
     for value, key in data:
-        idx = 0
-        if key in keys_index:
-            keys_index[key] = keys_index[key] + 1
-            idx = keys_index[key]
+        idx = keys_counter[key]
+        keys_counter[key] += 1
         properties["hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [value]
-        keys_index[key] = idx
-    return properties, sensors
+    return properties, {}
+
+
+EVAL_FUNCTIONS = {
+    "config.storageDevice.multipathInfo": eval_multipath_info,
+    "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
+    "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
+    "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,
+    "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo": eval_hardwarestatus_info,
+    "hardware.cpuPkg": eval_cpu_pkg,
+    "hardware.pciDevice": eval_pci_device,
+    "hardware.systemInfo.otherIdentifyingInfo": eval_systeminfo_other,
+}
 
 
 def fetch_hostsystem_data(connection):
     esxhostdetails_response = connection.query_server('esxhostdetails')
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
-
-    eval_functions = {
-        "config.storageDevice.multipathInfo": eval_multipath_info,
-        "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
-        "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
-        "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,
-        "runtime.healthSystemRuntime.hardwareStatusInfo.memoryStatusInfo": eval_hardwarestatus_info,
-        "hardware.cpuPkg": eval_cpu_pkg,
-        "hardware.pciDevice": eval_pci_device,
-        "hardware.systemInfo.otherIdentifyingInfo": eval_systeminfo_other,
-    }
 
     hostsystems_properties, hostsystems_sensors = {}, {}
     for entry in hostsystems_objects:
@@ -621,9 +610,9 @@ def fetch_hostsystem_data(connection):
 
         elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
         for current_propname, value in elements:
-            if eval_functions.get(current_propname):
-                properties, sensors = eval_functions[current_propname](hostname, current_propname,
-                                                                       value)
+            eval_func = EVAL_FUNCTIONS.get(current_propname)
+            if eval_func:
+                properties, sensors = eval_func(hostname, current_propname, value)
                 hostsystems_properties[hostname].update(properties)
                 hostsystems_sensors[hostname].update(sensors)
             else:
@@ -635,18 +624,17 @@ def fetch_hostsystem_data(connection):
 def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors, opt):
     # TODO: improve error handling: check if multiple results
     section_lines = []
-    for hostname, properties in hostsystems_properties.items():
+    for hostname, properties in hostsystems_properties.iteritems():
         if not opt.direct:
             section_lines.append("<<<<%s>>>>" % convert_hostname(properties["name"][0], opt))
 
         section_lines.append("<<<esx_vsphere_hostsystem>>>")
-        for key in sorted(properties.keys()):
-            section_lines.append("%s %s" % (key, " ".join(properties[key])))
+        for key, data in sorted(properties.iteritems()):
+            section_lines.append("%s %s" % (key, " ".join(data)))
 
         section_lines.append("<<<esx_vsphere_sensors:sep(59)>>>")
-        for key in sorted(hostsystems_sensors[hostname].keys()):
-            data = hostsystems_sensors[hostname][key]
-            if data["key"].lower() in ["green", "unknown"]:
+        for key, data in sorted(hostsystems_sensors[hostname].iteritems()):
+            if data["key"].lower() in ("green", "unknown"):
                 continue
             section_lines.append('%s;%s;%s;%s;%s;%s;%s;%s;%s' %
                                  (data["name"].replace(";", "_"), data.get("baseUnits", ""),

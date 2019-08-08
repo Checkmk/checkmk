@@ -46,7 +46,6 @@ import json
 import struct
 import argparse
 import functools
-import subprocess
 import logging
 
 try:
@@ -174,21 +173,13 @@ class MKDockerClient(docker.DockerClient):
             self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         else:
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
+        self._env = {"REMOTE": os.getenv("REMOTE", "")}
         self.node_info = self.info()
 
-
-class AgentDispatcher(object):
-    '''AgentDispatcher is responsible for running a check_mk_agent inside a container
-
-    If the check_mk agent is installed in the countainer, run it.
-    Otherwise execute the agent of the node in the context of the container.
-    Using this approach we should always get at least basic information from
-    the container.
-    Once it comes to plugins and custom configuration the user needs to use
-    a little more complex setup. Have a look at the documentation.
-    '''
     @staticmethod
     def iter_socket(sock, descriptor):
+        '''iterator to recv data from container socket
+        '''
         header = sock.recv(8)
         while header:
             actual_descriptor, length = struct.unpack('>BxxxL', header)
@@ -201,6 +192,8 @@ class AgentDispatcher(object):
             header = sock.recv(8)
 
     def get_stdout(self, exec_return_val):
+        '''read stdout from container process
+        '''
         if isinstance(exec_return_val, tuple):
             # it's a tuple since version 3.0.0
             exit_code, sock = exec_return_val
@@ -211,65 +204,10 @@ class AgentDispatcher(object):
 
         return ''.join(self.iter_socket(sock, 1))
 
-    def __init__(self):
-        remote = os.getenv("REMOTE", "")
-        self.env = {"REMOTE": remote}
-        self.env_from_node = {"REMOTE": remote, "MK_FROM_NODE": "1"}
-        self._agent_code = None
-        self.agent_code_exc = None
-
-    def _read_agent_code(self):
-        LOGGER.debug("reading agent code")
-        try:
-            agent_file = subprocess.check_output(['which', 'check_mk_agent']).strip()
-            LOGGER.debug("source file: %s", agent_file)
-            source = open(agent_file).read()
-            self._agent_code = source + "\nexit\n"
-        except () if DEBUG else (subprocess.CalledProcessError, IOError) as exc:
-            self.agent_code_exc = exc
-
-    @property
-    def agent_code(self):
-        if self._agent_code is None and self.agent_code_exc is None:
-            self._read_agent_code()
-        return self._agent_code
-
-    def check_container(self, container):
-        '''run check_mk agent in container or container context'''
-
-        LOGGER.debug("trying to run containers check_mk_agent")
-        result = container.exec_run(['sh', '-c', 'check_mk_agent'],
-                                    environment=self.env,
-                                    socket=True)
-        output = self.get_stdout(result)
-        if output:
-            LOGGER.info("successfully ran containers check_mk_agent")
-            return output
-        LOGGER.info("container has no agent or executing agent failed")
-
-        # check for agent code and bash:
-        if not self.agent_code:
-            LOGGER.info("failed to load agent code: %s", self.agent_code_exc)
-            return None
-        result = container.exec_run(['sh', '-c', 'bash -c echo'], socket=True)
-        if not self.get_stdout(result):
-            LOGGER.info("failed to run bash in container")
-            return None
-
-        result = container.exec_run('bash',
-                                    environment=self.env_from_node,
-                                    socket=True,
-                                    stdin=True,
-                                    stderr=False)
-        try:
-            nbytes = result.sendall(self.agent_code)
-        except AttributeError:
-            # it's a tuple since version 3.0.0
-            nbytes = result[1].sendall(self.agent_code)
-        LOGGER.debug("sent agent to container (%d bytes)", nbytes)
-        agent_ouput = self.get_stdout(result)
-        LOGGER.info("successfully ran check_mk_agent that was sent to container")
-        return agent_ouput
+    def run_agent(self, container):
+        '''run checkmk agent in container'''
+        result = container.exec_run(['check_mk_agent'], environment=self._env, socket=True)
+        return self.get_stdout(result)
 
 
 def time_it(func):
@@ -431,10 +369,13 @@ def section_container_network(client, container_id):
     section.write()
 
 
-def section_container_agent(client, container_id, dispatcher):
-    result = dispatcher.check_container(client.all_containers[container_id])
-    if not result:
+def section_container_agent(client, container_id):
+    container = client.all_containers[container_id]
+    if container.status != "running":
         return
+    result = client.run_agent(container)
+    status = 'ok' if '<<<check_mk>>>' in result else 'failed'
+    LOGGER.debug("running containers check_mk_agent: %s", status)
     section = Section(piggytarget=container_id)
     section.append(result)
     section.write()
@@ -466,8 +407,7 @@ def call_node_sections(client, config):
 
 
 def call_container_sections(client, config):
-    dispatcher = AgentDispatcher()
-    for container_id, container in client.all_containers.iteritems():
+    for container_id in client.all_containers:
         LOGGER.info("container id: %s", container_id)
         for name, section in CONTAINER_API_SECTIONS:
             if is_disabled_section(config, name):
@@ -476,10 +416,9 @@ def call_container_sections(client, config):
                 section(client, container_id)
             except () if DEBUG else Exception as exc:
                 report_exception_to_server(exc, section.func_name)
-        if (container.status == "running" and
-                not is_disabled_section(config, 'docker_container_agent')):
+        if not is_disabled_section(config, 'docker_container_agent'):
             try:
-                section_container_agent(client, container_id, dispatcher)
+                section_container_agent(client, container_id)
             except () if DEBUG else Exception as exc:
                 report_exception_to_server(exc, "section_container_agent")
 

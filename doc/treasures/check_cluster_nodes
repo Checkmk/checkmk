@@ -13,6 +13,7 @@
 ###############################################################################
 
 from __future__ import print_function
+from __future__ import division
 import os, sys, getopt
 import livestatus
 
@@ -118,7 +119,8 @@ def main(argv):
         down_nodes = float(len(down_list))
         unknown_nodes = float(len(unknown_list))
 
-        failedpercent = ((down_nodes + unreachable_nodes + unknown_nodes) / all_nodes) * 100.0
+        failedpercent = ((down_nodes + unreachable_nodes + unknown_nodes) /
+                         all_nodes) * 100.0  # fixed: true-division
 
         str_up = ""
         str_down = ""

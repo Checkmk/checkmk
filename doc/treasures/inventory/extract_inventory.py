@@ -52,7 +52,7 @@ relations = {
         "converter": {
             "software.os.install_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
             "@inventory_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
-            "hardware.cpu.max_speed": lambda val: val / 1000000,  # hz in mhz
+            "hardware.cpu.max_speed": lambda val: val / 1000000.0,  # hz in mhz
         },
     },
     "inv_raw_arp": {

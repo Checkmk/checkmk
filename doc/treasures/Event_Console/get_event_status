@@ -79,7 +79,7 @@ for line in response[1:]:
     processing_time = row["status_average_processing_time"]
     processing_time = processing_time * 1000
     processing_rate_av = row["status_average_message_rate"]
-    busy = processing_time * processing_rate_av / 10
+    busy = processing_time * processing_rate_av / 10.0
     count += 1
 
 exit_code = 0

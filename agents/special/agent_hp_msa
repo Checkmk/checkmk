@@ -28,17 +28,16 @@ from __future__ import print_function
 import re
 import sys
 import getopt
-import socket
 import hashlib
 import traceback
 import argparse
 import logging
+import xml.etree.ElementTree as ET
 from HTMLParser import HTMLParser
+from urlparse import urljoin
 
 import requests
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +55,6 @@ def parse_arguments(argv):
     parser.add_argument("-p", "--password", required=True, help="HP MSA user password")
 
     args = parser.parse_args(argv)
-
     if args.debug:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
@@ -132,42 +130,75 @@ class HTMLObjectParser(HTMLParser):
             self.current_property.append(data.replace("\n", "").replace("\r", ""))
 
 
-parser = HTMLObjectParser()
+class HPMSAConnection(object):
+    def __init__(self, host_address, opt_timeout, debug):
+        self._host = host_address
+        self._base_url = "https://%s/api/" % self._host
+        self._timeout = opt_timeout
+        self._session = requests.Session()
+        self._session.verify = False
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        self._debug = debug
+
+    def login(self, username, password):
+        login_hash = hashlib.sha256()
+        login_hash.update("%s_%s" % (username, password))
+        try:
+            response = self.get("login/%s" % login_hash.hexdigest())
+        except requests.exceptions.ConnectionError:
+            # Try to connect to old API if no connection to new API can be established
+            session_key = self._login_v3(username, password)
+        else:
+            xml_tree = ET.fromstring(response.text)
+            session_key = xml_tree.find("./OBJECT/PROPERTY[@name='response']").text
+
+        self._session.headers.update({
+            "sessionKey": session_key,
+            "User-agent": "Checkmk special agent_hp_msa"
+        })
+
+    def get(self, url_suffix):
+        return self._session.get(urljoin(self._base_url, url_suffix), timeout=self._timeout)
+
+    def _login_v3(self, username, password):
+        self._base_url = "https://%s/v3/api/" % self._host
+        login_hash = hashlib.md5()
+        login_hash.update("%s_%s" % (username, password))
+        try:
+            response = self.get("login/%s" % login_hash.hexdigest())
+        except requests.exceptions.ConnectionError:
+            raise SystemExit("Connection failed. Please verify host address & login details")
+        except Exception as exc:
+            if self._debug:
+                raise
+            raise SystemExit(exc)
+        else:
+            session_key = re.match('.*"response">(.*?)<.*', response.text).groups()[0]
+            return session_key
 
 
 def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
-    try:
-        session = requests.Session()
-        # Login
-        login_hash = hashlib.md5()
-        login_hash.update("%s_%s" % (args.username, args.password))
-        login_url = "https://%s/v3/api/login/%s" % (args.hostaddress, login_hash.hexdigest())
-        socket.setdefaulttimeout(opt_timeout)
-        r = session.get(login_url, verify=False)
+    connection = HPMSAConnection(args.host_address, opt_timeout, args.debug)
+    connection.login(args.username, args.password)
+    parser = HTMLObjectParser()
 
-        # Extract sessionKey
-        session_key = re.match('.*"response">(.*?)<.*', r.text).groups()[0]
-        session.headers.update({"sessionKey": session_key, "User-agent": "Check_MK agent_hp_msa"})
+    for element in api_get_objects:
+        response = connection.get("show/%s" % element)
+        try:
+            parser.feed(response.text)
+        except Exception:
+            continue
 
-        # Query objects
-        for element in api_get_objects:
-            show_url = "https://%s/v3/api/show/%s" % (args.hostaddress, element)
-            parser.feed(session.get(show_url, verify=False).text)
+    # Output sections
+    for section, lines in sections.iteritems():
+        print("<<<hp_msa_%s>>>" % section)
+        print("\n".join(x.encode("utf-8") for x in lines))
 
-        # Output sections
-        for section, lines in sections.items():
-            print("<<<hp_msa_%s>>>" % section)
-            print("\n".join(x.encode("utf-8") for x in lines))
-
-    except Exception as exc:
-        if args.debug:
-            raise
-        raise SystemExit(exc)
-    sys.exit(0)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

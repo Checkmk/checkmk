@@ -522,32 +522,26 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 #.
 
 
-def eval_sensor_info(_hostname, _current_propname, sensor_propset):
-    sensor_pattern = ""
-    for key in [
-            "name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
-            "sensorType"
-    ]:
-        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+def eval_sensor_info(_hostname, _current_propname, propset):
+    elements = ("name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
+                "sensorType")
 
-    sensor_data = get_pattern(sensor_pattern, sensor_propset)
-    properties, sensors = {}, {}
-    fields = ("name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
-              "sensorType")
-    sensors = {row[0]: dict(zip(fields, row)) for row in sensor_data}
+    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
+
+    data = get_pattern(pattern, propset)
+    properties = {}
+    sensors = {row[0]: dict(zip(elements, row)) for row in data}
 
     return properties, sensors
 
 
-def eval_hardwarestatus_info(_hostname, _current_propname, sensor_propset):
-    sensor_pattern = ""
-    for key in ["name", "label", "summary", "key"]:
-        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+def eval_hardwarestatus_info(_hostname, _current_propname, propset):
+    elements = ("name", "label", "summary", "key")
+    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
 
-    sensor_data = get_pattern(sensor_pattern, sensor_propset)
-    properties, sensors = {}, {}
-    for name, label, summary, key in sensor_data:
-        sensors[name] = {"name": name, "label": label, "summary": summary, "key": key}
+    data = get_pattern(pattern, propset)
+    properties = {}
+    sensors = {row[0]: dict(zip(elements, row)) for row in data}
     return properties, sensors
 
 
@@ -565,9 +559,7 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
 
 
 def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
-    pattern = ""
-    for key in elements:
-        pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+    pattern = "".join("<%(name)s>(.*?)</%(name)s>.*?" % {"name": key} for key in elements)
 
     data = get_pattern(pattern, propset)
     properties, sensors = {}, {}

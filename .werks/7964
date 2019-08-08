@@ -1,0 +1,15 @@
+Title: mk_docker.py: No longer pipe checkmk agent into containers
+Level: 1
+Component: checks
+Class: feature
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1565244369
+
+The plugin mk_docker.py tries to execute the linux agent inside the container.
+If the contianer had no agent installed, plugin used to pipe the linux agent
+into the docker container. The latter is no longer done.
+
+The agent is still executed if users have installed in on the container.

@@ -1205,6 +1205,9 @@ def get_plugin_paths(*dirs):
 # values user can override those variables in his configuration.
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
+# NOTE: The given file names should better be absolute, otherwise
+# we depend on the current working directory, which is a bad idea,
+# especially in tests.
 def load_checks(get_check_api_context, filelist):
     cmk_global_vars = set(get_variable_names())
 

@@ -1,7 +1,6 @@
 import pytest  # type: ignore
+from testlib import CheckManager
 from testlib.base import Scenario
-import cmk_base.config as config
-import cmk_base.check_api as check_api
 import cmk_base.check_table as check_table
 from cmk_base.check_utils import Service
 
@@ -131,5 +130,5 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
 
-    config.load_checks(check_api.get_check_api_context, ["checks/smart"])
+    CheckManager().load(["smart"])
     assert check_table.get_check_table(hostname) == expected_result

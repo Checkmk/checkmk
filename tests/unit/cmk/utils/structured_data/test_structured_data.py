@@ -769,7 +769,8 @@ def test_structured_data_StructuredDataTree_building_tree():
 
 
 @pytest.mark.parametrize("two_tree_filenames",
-                         zip(tree_names[:len(tree_names) / 2], tree_names[len(tree_names) / 2:]))
+                         zip(tree_names[:int(len(tree_names) / 2.0)],
+                             tree_names[int(len(tree_names) / 2.0):]))
 def test_delta_structured_data_tree_serialization(two_tree_filenames):
     old_tree = StructuredDataTree()
     new_tree = StructuredDataTree()

@@ -23,6 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
+from __future__ import division
 
 import os
 import re
@@ -305,7 +306,7 @@ def wrap_text(text, width):
         for word in words[1:]:
             newline += ' '
             x += 1.0
-            if s / x < need_spaces / spaces:
+            if s / x < need_spaces / spaces:  # fixed: true-division
                 newline += ' '
                 s += 1
             newline += word
@@ -1223,7 +1224,7 @@ def _try_merge(site, relpath, old_version, new_version):
     f.write(version_patch)
     status = f.close()
     if status:
-        return status / 256
+        return status // 256
     return 0
 
 

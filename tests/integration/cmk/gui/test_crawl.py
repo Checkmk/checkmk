@@ -2,12 +2,12 @@
 # encoding: utf-8
 
 from __future__ import print_function
+from __future__ import division
 import errno
 import os
 import sys
 import time
 import pprint
-import pytest
 import signal
 import threading
 import Queue
@@ -15,6 +15,7 @@ import traceback
 from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
 from urllib import urlencode
 from bs4 import BeautifulSoup
+import pytest
 from testlib import web
 
 from testlib import CMKWebSession
@@ -415,10 +416,11 @@ class TestCrawler(object):
                 duration = max(now - start, 1)
                 num_visited = len(self.visited)
                 num_idle = len([w for w in workers if w.idle])
-                rate_runtime = num_visited / duration
+                rate_runtime = num_visited / duration  # fixed: true-division
 
                 if now > last_tick and num_visited > last_num_visited:
-                    rate_tick = (num_visited - last_num_visited) / (now - last_tick)
+                    rate_tick = (num_visited - last_num_visited) / (now - last_tick
+                                                                   )  # fixed: true-division
                 else:
                     rate_tick = 0
 

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import division
 import math
 import time
 from pprint import pprint
@@ -68,43 +69,49 @@ def test_time_slices(utcdate, timezone, horizon, period_info, timegroup, result)
     assert slices == result
 
 
-@pytest.mark.parametrize("slices, result", [
-    ([list(range(6))], [[i] * 4 for i in range(6)]),
-    ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
-    ([
-        [1, 5, None, 6],
-        [2, None, 2, 4],
-    ], [
-        pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),
-        [5.0, 5, 5, 5.0],
-        [2.0, 2, 2, 2.0],
-        pytest.approx([5.0, 4, 6, math.sqrt(2)]),
-    ]),
-    ([
-        [1, 5, 3, 6, 8, None],
-        [2, 2, 2, 4, 3, 5],
-        [3, 3, None, None, 2, 2],
-    ], [
-        pytest.approx([2.0, 1, 3, 1.0]),
-        pytest.approx([10.0 / 3.0, 2, 5, 1.527525]),
-        pytest.approx([2.5, 2, 3, math.sqrt(2) / 2]),
-        pytest.approx([5.0, 4, 6, math.sqrt(2)]),
-        pytest.approx([4.333333, 2, 8, 3.214550]),
-        pytest.approx([3.5, 2, 5, 2.121320]),
-    ]),
-    ([
-        [1, 5, 3, 2, 6, 8, None],
-        [None] * 7,
-        [5, 5, 5, 5, 2, 2, 2],
-    ], [
-        pytest.approx([3.0, 1, 5, 2.828427]),
-        pytest.approx([5.0, 5, 5, 0.0]),
-        pytest.approx([4.0, 3, 5, 1.414213]),
-        pytest.approx([3.5, 2, 5, 2.121320]),
-        pytest.approx([4.0, 2, 6, 2.828427]),
-        pytest.approx([5.0, 2, 8, 4.242640]),
-        pytest.approx([2.0, 2, 2, 2.0]),
-    ]),
-])
+@pytest.mark.parametrize(
+    "slices, result",
+    [
+        ([list(range(6))], [[i] * 4 for i in range(6)]),
+        ([[1, 5, None, 6]], [[i] * 4 for i in [1, 5, None, 6]]),
+        (
+            [
+                [1, 5, None, 6],
+                [2, None, 2, 4],
+            ],
+            [
+                pytest.approx([1.5, 1, 2, math.sqrt(2) / 2]),  # fixed: true-division
+                [5.0, 5, 5, 5.0],
+                [2.0, 2, 2, 2.0],
+                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
+            ]),
+        (
+            [
+                [1, 5, 3, 6, 8, None],
+                [2, 2, 2, 4, 3, 5],
+                [3, 3, None, None, 2, 2],
+            ],
+            [
+                pytest.approx([2.0, 1, 3, 1.0]),
+                pytest.approx([10.0 / 3.0, 2, 5, 1.527525]),
+                pytest.approx([2.5, 2, 3, math.sqrt(2) / 2]),  # fixed: true-division
+                pytest.approx([5.0, 4, 6, math.sqrt(2)]),
+                pytest.approx([4.333333, 2, 8, 3.214550]),
+                pytest.approx([3.5, 2, 5, 2.121320]),
+            ]),
+        ([
+            [1, 5, 3, 2, 6, 8, None],
+            [None] * 7,
+            [5, 5, 5, 5, 2, 2, 2],
+        ], [
+            pytest.approx([3.0, 1, 5, 2.828427]),
+            pytest.approx([5.0, 5, 5, 0.0]),
+            pytest.approx([4.0, 3, 5, 1.414213]),
+            pytest.approx([3.5, 2, 5, 2.121320]),
+            pytest.approx([4.0, 2, 6, 2.828427]),
+            pytest.approx([5.0, 2, 8, 4.242640]),
+            pytest.approx([2.0, 2, 2, 2.0]),
+        ]),
+    ])
 def test_data_stats(slices, result):
     assert prediction.data_stats(slices) == result

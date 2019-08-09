@@ -1,0 +1,13 @@
+Title: check_mk_agent.exe can be used without changing working directory to the Agent install directory
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1565336384
+Class: fix
+
+Previously, to use check_mk_agent.exe command line correctly, the user have to change the working
+directory to the Windows Agent install directory, usually, 'C:\Program Files (x86)\checkmk\service'.
+
+Now this limitation have been removed and check_mk_agent.exe can be called using any working directory

@@ -1869,7 +1869,7 @@ class Cell(object):
         try:
             tdclass, content = self.render_content(row)
         except:
-            logger.exception("Failed to render painter '%s' (Row: %r)" % (self._painter_name, row))
+            logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
             raise
 
         if tdclass is None:

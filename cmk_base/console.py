@@ -29,12 +29,13 @@ of console input / output"""
 import logging
 import sys
 
+# HACK: We need this import just to ensure that we set our logger factory!
+import cmk.utils.log  # pylint: disable=unused-import
 import cmk.utils.tty as tty
-import cmk.utils.log
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
 # verbosity setting.
-logger = cmk.utils.log.get_logger("base")
+logger = logging.getLogger("cmk.base")
 
 #
 # Generic / low level functions

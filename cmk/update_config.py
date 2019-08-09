@@ -43,7 +43,7 @@ except ImportError:
 
 from typing import List  # pylint: disable=unused-import
 import argparse
-import logging  # pylint: disable=unused-import
+import logging
 from werkzeug.test import create_environ
 
 import cmk_base.autochecks
@@ -131,7 +131,7 @@ def main(args):
     try:
         log.setup_console_logging()
         log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
-        logger = log.get_logger("update_config")
+        logger = logging.getLogger("cmk.update_config")
 
         logger.debug("parsed arguments: %s", arguments)
 

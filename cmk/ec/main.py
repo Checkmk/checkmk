@@ -35,6 +35,7 @@ import abc
 import ast
 import errno
 import json
+import logging
 import os
 import pprint
 import re
@@ -4095,7 +4096,7 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 def main():
     os.unsetenv("LANG")
-    logger = log.get_logger("mkeventd")
+    logger = logging.getLogger("cmk.mkeventd")
     settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.utils.paths.omd_root),
                                         pathlib.Path(cmk.utils.paths.default_config_dir), sys.argv)
 
@@ -4109,7 +4110,7 @@ def main():
             log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting" % cmk.__version__)
+        logger.info("mkeventd version %s starting", cmk.__version__)
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
@@ -4125,8 +4126,8 @@ def main():
                     "Old PID file %s still existing and mkeventd still running with PID %d." %
                     (pid_path, old_pid))
             pid_path.unlink()
-            logger.info("Removed orphaned PID file %s (process %d not running anymore)." %
-                        (pid_path, old_pid))
+            logger.info("Removed orphaned PID file %s (process %d not running anymore).", pid_path,
+                        old_pid)
 
         # Make sure paths exist
         settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
@@ -4151,7 +4152,7 @@ def main():
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
             cmk.utils.daemon.daemonize()
-            logger.info("Daemonized with PID %d." % os.getpid())
+            logger.info("Daemonized with PID %d.", os.getpid())
 
         cmk.utils.daemon.lock_with_pid_file(pid_path)
 

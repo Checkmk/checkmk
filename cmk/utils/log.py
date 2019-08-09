@@ -88,16 +88,6 @@ logger.addHandler(_logging.NullHandler())
 logger.setLevel(_logging.INFO)
 
 
-def get_logger(name):
-    """This function provides the logging object for client code.
-
-    It returns a child logger of the "cmk" main logger, identified
-    by the given name. The name of the child logger will be prefixed
-    with "cmk.", for example "cmk.mkeventd" in case of "mkeventd".
-    """
-    return logger.getChild(name)
-
-
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format

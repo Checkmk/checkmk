@@ -149,9 +149,8 @@ def _convert_legacy_tuple_perfometers(perfometers):
             }
 
         else:
-            logger.warning(
-                _("Could not convert perfometer to dict format: %r. Ignoring this one.") %
-                perfometer)
+            logger.warning(_("Could not convert perfometer to dict format: %r. Ignoring this one."),
+                           perfometer)
             perfometers.pop(index)
 
 

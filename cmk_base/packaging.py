@@ -26,6 +26,7 @@
 
 import os
 import ast
+import logging
 import pprint
 import sys
 import tarfile
@@ -36,14 +37,13 @@ from cStringIO import StringIO
 from typing import NamedTuple
 
 import cmk.ec.export
-import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
 import cmk.utils.debug
 import cmk_base.utils
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.base.packaging")
 _pac_ext = ".mkp"
 
 
@@ -180,7 +180,7 @@ def do_packaging(args):
         try:
             f(args)
         except PackageException as e:
-            logger.error("%s" % e)
+            logger.error("%s", e)
             sys.exit(1)
     else:
         allc = sorted(commands.keys())

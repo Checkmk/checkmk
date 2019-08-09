@@ -26,17 +26,17 @@
 """Code for predictive monitoring / anomaly detection"""
 
 import json
+import logging
 import math
 import os
 import time
 
 import cmk.utils.debug
 import cmk.utils
-import cmk.utils.log
 import cmk.utils.defines as defines
 import cmk.utils.prediction
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.prediction")
 
 
 def window_start(timestamp, span):

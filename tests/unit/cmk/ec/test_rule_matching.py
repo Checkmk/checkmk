@@ -1,13 +1,13 @@
+import logging
 import pytest
 
 import cmk
-import cmk.utils.log
 from cmk.ec.main import RuleMatcher, SyslogPriority, EventServer
 
 
 @pytest.fixture()
 def m():
-    logger = cmk.utils.log.get_logger("mkeventd")
+    logger = logging.getLogger("cmk.mkeventd")
     return RuleMatcher(logger, {"debug_rules": True})
 
 

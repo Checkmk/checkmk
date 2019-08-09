@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import logging
 import os
 import subprocess
 import sys
@@ -31,8 +32,7 @@ import sys
 import cmk.utils.tty as tty
 import cmk.utils.paths
 
-import cmk.utils.log
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.base.localize")
 
 
 # TODO: Inherit from MKGeneralException?
@@ -120,7 +120,7 @@ def do_localize(args):
             f(lang)
             _write_alias(lang, alias)
         except LocalizeException as e:
-            logger.error("%s" % e)
+            logger.error("%s", e)
             sys.exit(1)
     else:
         allc = sorted(commands.keys())

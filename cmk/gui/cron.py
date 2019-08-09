@@ -89,12 +89,12 @@ def page_run_cron():
         try:
             job_name = cron_job.__name__
 
-            logger.debug("Starting [%s]" % job_name)
+            logger.debug("Starting [%s]", job_name)
             cron_job()
-            logger.debug("Finished [%s]" % job_name)
+            logger.debug("Finished [%s]", job_name)
         except Exception:
             html.write("An exception occured. Take a look at the web.log.\n")
-            logger.exception("Exception in cron job [%s]" % job_name)
+            logger.exception("Exception in cron job [%s]", job_name)
 
     logger.debug("Finished all cron jobs")
     html.write("OK\n")

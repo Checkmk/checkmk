@@ -1367,8 +1367,8 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                     _("[%s] Finished sync for connection") % connection_id)
             except Exception as e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
-                logger.error('Exception (%s, userdb_job): %s' %
-                             (connection_id, traceback.format_exc()))
+                logger.error('Exception (%s, userdb_job): %s', connection_id,
+                             traceback.format_exc())
 
         job_interface.send_progress_update(_("Finalizing synchronization"))
         general_userdb_job()

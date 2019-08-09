@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import logging
 import os
 import json
 import time
@@ -33,10 +34,9 @@ from livestatus import MKLivestatusNotFoundError
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
-import cmk.utils.log
 import cmk.utils.paths
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.prediction")
 
 
 # Check wether a certain time stamp lies with in daylight saving time (DST)

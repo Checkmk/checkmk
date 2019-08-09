@@ -29,7 +29,7 @@ import logging
 import cmk.utils.log
 import cmk.utils.paths
 
-logger = cmk.utils.log.get_logger("web")
+logger = logging.getLogger("cmk.web")
 
 
 class PrependURLFilter(logging.Filter):

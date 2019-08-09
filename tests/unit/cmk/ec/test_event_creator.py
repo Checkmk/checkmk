@@ -1,14 +1,13 @@
-import os
+import logging
 import time
 import pytest
-import cmk.utils.log
 import cmk.ec.defaults
 import cmk.ec.main as main
 
 
 @pytest.fixture
 def event_creator():
-    logger = cmk.utils.log.get_logger("mkeventd")
+    logger = logging.getLogger("cmk.mkeventd")
 
     config = cmk.ec.defaults.default_config()
     config["debug_rules"] = True

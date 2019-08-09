@@ -2,6 +2,7 @@ from __future__ import print_function
 import pytest
 import os
 import subprocess
+import platform
 
 
 # we are checking that input is OK(long enough for example)
@@ -42,3 +43,10 @@ def remove_files(target_dir, binaries):
 def make_dir(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
+
+
+def check_os():
+    if platform.system() != 'Windows':
+        return False
+
+    return True

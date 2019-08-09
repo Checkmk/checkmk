@@ -786,8 +786,8 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):
-    logger.exception("Problem while rendering dashlet %d of type %s" %
-                     (nr, dashlet_instance.type_name()))
+    logger.exception("Problem while rendering dashlet %d of type %s", nr,
+                     dashlet_instance.type_name())
 
     # Unify different string types from exception messages to a unicode string
     try:

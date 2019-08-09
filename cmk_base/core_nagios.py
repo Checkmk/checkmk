@@ -958,6 +958,7 @@ def _precompile_hostcheck(config_cache, hostname):
     # we are run for the first time
     if config.delay_precompile:
         output.write("""
+import logging
 import os
 if os.path.islink(%(dst)r):
     import py_compile
@@ -978,7 +979,7 @@ if os.path.islink(%(dst)r):
 # very simple commandline parsing: only -v (once or twice) and -d are supported
 
 cmk.utils.log.setup_console_logging()
-logger = cmk.utils.log.get_logger("base")
+logger = logging.getLogger("cmk.base")
 
 # TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
 #       The later regular argument parsing is handling this correctly. Try to clean this up.

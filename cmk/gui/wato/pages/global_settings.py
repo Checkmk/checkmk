@@ -167,7 +167,7 @@ class GlobalSettingsMode(WatoMode):
                 try:
                     to_text = valuespec.value_to_text(value)
                 except Exception:
-                    logger.exception("error converting %r to text" % (value,))
+                    logger.exception("error converting %r to text", value)
                     to_text = html.render_error(_("Failed to render value: %r") % value)
 
                 # Is this a simple (single) value or not? change styling in these cases...

@@ -4,12 +4,8 @@ import cmk.utils.log as log
 
 
 def test_get_logger():
-    l = log.get_logger("asd")
-    assert l.name == "cmk.asd"
+    l = logging.getLogger("cmk.asd")
     assert l.parent == log.logger
-
-    l = log.get_logger("asd.aaa")
-    assert l.name == "cmk.asd.aaa"
 
 
 def test_setup_console_logging(capsys):
@@ -17,14 +13,14 @@ def test_setup_console_logging(capsys):
     assert out == ""
     assert err == ""
 
-    log.get_logger("test").info("test123")
+    logging.getLogger("cmk.test").info("test123")
 
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
 
     log.setup_console_logging()
-    l = log.get_logger("test")
+    l = logging.getLogger("cmk.test")
     l.info("test123")
 
     # Cleanup handler registered with log.setup_console_logging()
@@ -36,7 +32,7 @@ def test_setup_console_logging(capsys):
 
 
 def test_set_verbosity():
-    l = log.get_logger("test_logger")
+    l = logging.getLogger("cmk.test_logger")
     assert l.getEffectiveLevel() == logging.INFO
     assert l.is_verbose() is False
     assert l.isEnabledFor(logging.DEBUG) is False

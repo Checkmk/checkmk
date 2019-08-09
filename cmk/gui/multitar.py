@@ -395,8 +395,7 @@ def create(tar_filename, components):
 
             tar.addfile(info, subtar_buffer)
 
-    logger.debug("Packaging %s took %.3fsec" %
-                 (os.path.basename(tar_filename), time.time() - start))
+    logger.debug("Packaging %s took %.3fsec", os.path.basename(tar_filename), time.time() - start)
 
 
 def filter_subtar_files(tarinfo, excludes):
@@ -556,8 +555,8 @@ def extract_domains(tar, domains):
         return []
 
     total_errors = []
-    logger.info("Restoring snapshot: %s" % tar.name)
-    logger.info("Domains: %s" % ", ".join(tar_domains.keys()))
+    logger.info("Restoring snapshot: %s", tar.name)
+    logger.info("Domains: %s", ", ".join(tar_domains.keys()))
     for what, abort_on_error, handler in [
         ("Permissions", True, check_domain),
         ("Pre-Restore", True,

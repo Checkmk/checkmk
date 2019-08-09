@@ -186,7 +186,7 @@ def sync_changes_before_remote_automation(site_id):
     if not manager.is_sync_needed(site_id):
         return
 
-    logger.info("Syncing %s" % site_id)
+    logger.info("Syncing %s", site_id)
 
     manager.start([site_id], activate_foreign=True, prevent_activate=True)
 
@@ -198,9 +198,8 @@ def sync_changes_before_remote_automation(site_id):
 
     state = manager.get_site_state(site_id)
     if state and state["_state"] != "success":
-        logger.error(
-            _("Remote automation tried to sync pending changes but failed: %s") %
-            state.get("_status_details"))
+        logger.error(_("Remote automation tried to sync pending changes but failed: %s"),
+                     state.get("_status_details"))
 
 
 # This hook is executed when one applies the pending configuration changes

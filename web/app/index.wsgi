@@ -100,7 +100,7 @@ class Application(object):
 
         except (MKConfigError, MKGeneralException) as e:
             self._render_exception(e)
-            logger.error("%s: %s" % (e.plain_title(), e))
+            logger.error("%s: %s", e.plain_title(), e)
 
         except Exception as e:
             logger.exception("error processing WSGI request")

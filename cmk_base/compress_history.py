@@ -28,12 +28,12 @@
 # Rewrites existing logfiles for CMC. You can concatenate several
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
+import logging
 
 from cmk.utils.exceptions import MKBailOut
-
-import cmk.utils.log
 import cmk.utils.debug
-logger = cmk.utils.log.get_logger(__name__)
+
+logger = logging.getLogger("cmk.base.compress_history")
 
 
 def do_compress_history(args):

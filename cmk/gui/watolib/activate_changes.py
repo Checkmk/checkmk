@@ -583,7 +583,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 self._generate_snapshots(work_dir)
 
-            logger.debug("Snapshot creation took %.4f" % (time.time() - start))
+            logger.debug("Snapshot creation took %.4f", time.time() - start)
 
     def _get_site_configurations(self):
         site_configurations = {}
@@ -727,7 +727,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.start()
             os._exit(0)
         except Exception:
-            logger.exception("error starting site activation for site %s" % site_id)
+            logger.exception("error starting site activation for site %s", site_id)
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)

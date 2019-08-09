@@ -342,12 +342,11 @@ def _create_sample_config():
     logger.debug("Start creating the sample config")
     for generator in sample_config_generator_registry.get_generators():
         try:
-            logger.debug("Starting [%s]" % generator.ident())
+            logger.debug("Starting [%s]", generator.ident())
             generator.generate()
-            logger.debug("Finished [%s]" % generator.ident())
+            logger.debug("Finished [%s]", generator.ident())
         except Exception:
-            logger.error("Exception in sample config generator [%s]" % generator.ident(),
-                         exc_info=True)
+            logger.exception("Exception in sample config generator [%s]", generator.ident())
 
     logger.debug("Finished creating the sample config")
 

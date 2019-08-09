@@ -31,6 +31,7 @@ import ast
 from contextlib import contextmanager
 import errno
 import fcntl
+import logging
 import os
 import pprint
 import tempfile
@@ -42,12 +43,11 @@ try:
 except ImportError:
     from pathlib2 import Path
 
-import cmk.utils.log
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
-logger = cmk.utils.log.get_logger("store")
+logger = logging.getLogger("cmk.store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.

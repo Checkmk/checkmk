@@ -273,7 +273,7 @@ class ModeEditLDAPConnection(LDAPMode):
                         except Exception as e:
                             state = False
                             msg = _('Exception: %s') % html.render_text(e)
-                            logger.exception("error testing LDAP %s for %s" % (title, address))
+                            logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
                             img = html.render_icon("success", _('Success'))

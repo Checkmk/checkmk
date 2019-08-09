@@ -190,7 +190,7 @@ class ACTest(object):
             total_result.from_test(self)
             yield total_result
         except Exception:
-            logger.exception("error executing configuration test %s" % self.__class__.__name__)
+            logger.exception("error executing configuration test %s", self.__class__.__name__)
             result = ACResultCRIT(
                 "<pre>%s</pre>" % _("Failed to execute the test %s: %s") %
                 (html.attrencode(self.__class__.__name__), traceback.format_exc()))

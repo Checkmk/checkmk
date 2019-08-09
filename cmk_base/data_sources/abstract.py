@@ -32,7 +32,8 @@ import abc
 import logging
 import sys
 
-import cmk.utils.log
+import cmk.utils.log  # TODO: Remove this!
+from cmk.utils.log import VERBOSE
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -153,7 +154,7 @@ class DataSource(object):
             raise
 
         except Exception as e:
-            self._logger.verbose("ERROR: %s" % e)
+            self._logger.log(VERBOSE, "ERROR: %s", e)
             if cmk.utils.debug.enabled():
                 raise
             self._exception = e
@@ -176,13 +177,13 @@ class DataSource(object):
         """
         raw_data = self._read_cache_file()
         if raw_data:
-            self._logger.verbose("Use cached data")
+            self._logger.log(VERBOSE, "Use cached data")
             return raw_data, True
 
         elif raw_data is None and config.simulation_mode:
             raise MKAgentError("Got no data (Simulation mode enabled and no cachefile present)")
 
-        self._logger.verbose("Execute data source")
+        self._logger.log(VERBOSE, "Execute data source")
         raw_data = self._execute()
         self._write_cache_file(raw_data)
         return raw_data, False
@@ -233,7 +234,7 @@ class DataSource(object):
             self._logger.debug("Not using cache (Empty)")
             return
 
-        self._logger.verbose("Using data from cache file %s" % (cachefile))
+        self._logger.log(VERBOSE, "Using data from cache file %s", cachefile)
         return self._from_cache_file(result)
 
     def _write_cache_file(self, raw_data):

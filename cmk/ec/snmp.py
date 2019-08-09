@@ -41,6 +41,7 @@ import pysnmp.smi.rfc1902
 import pysnmp.smi.error
 import pyasn1.error
 
+from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
 
@@ -138,8 +139,8 @@ class SNMPTrapEngine(object):
     def process_snmptrap(self, message, sender_address):
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
-        self._logger.verbose("Trap received from %s:%d. Checking for acceptance now." %
-                             sender_address)
+        self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",
+                         sender_address)
         self.snmp_engine.setUserContext(sender_address=sender_address)
         self.snmp_engine.msgAndPduDsp.receiveMessage(snmpEngine=self.snmp_engine,
                                                      transportDomain=(),
@@ -154,13 +155,13 @@ class SNMPTrapEngine(object):
         self._callback(trap, ipaddress)
 
     def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
-        if self._logger.is_verbose():
-            self._logger.verbose(
-                'Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
-                (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
+        if self._logger.isEnabledFor(VERBOSE):
+            self._logger.log(VERBOSE,
+                             'Trap accepted from %s (ContextEngineId "%s", ContextName "%s")',
+                             ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint())
 
             for name, val in var_binds:
-                self._logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
+                self._logger.log(VERBOSE, '%-40s = %s', name.prettyPrint(), val.prettyPrint())
 
     def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):
         if variables["securityLevel"] in [1, 2] and variables["statusInformation"][
@@ -173,8 +174,8 @@ class SNMPTrapEngine(object):
         else:
             msg = "%s" % variables["statusInformation"]
 
-        self._logger.verbose("Trap (v%d) dropped from %s: %s", variables["securityLevel"],
-                             variables["transportAddress"][0], msg)
+        self._logger.log(VERBOSE, "Trap (v%d) dropped from %s: %s", variables["securityLevel"],
+                         variables["transportAddress"][0], msg)
 
 
 class SNMPTrapTranslator(object):
@@ -214,7 +215,7 @@ class SNMPTrapTranslator(object):
 
             loaded_mib_module_names = builder.mibSymbols.keys()
             logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-            logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+            logger.log(VERBOSE, 'Found modules: %s', ', '.join(loaded_mib_module_names))
 
             # This object maintains various indices built from MIBs data
             return pysnmp.smi.view.MibViewController(builder)

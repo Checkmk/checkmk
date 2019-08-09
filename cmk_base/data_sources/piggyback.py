@@ -27,6 +27,7 @@
 import os
 import json
 
+from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 
 from cmk_base.config import piggyback_max_cachefile_age
@@ -75,7 +76,7 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Special for piggyback: No caching of raw data
         """
-        self._logger.verbose("Execute data source")
+        self._logger.log(VERBOSE, "Execute data source")
         return self._execute(), False
 
     def _summary_result(self, for_checking):

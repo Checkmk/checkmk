@@ -33,6 +33,7 @@ import six
 import cmk
 import cmk.utils.debug
 import cmk.utils.defines
+from cmk.utils.log import VERBOSE
 import livestatus
 
 #.
@@ -275,10 +276,10 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
 
     context = _create_notification_context(event_server, event, username, is_cancelling, logger)
 
-    if logger.is_verbose():
-        logger.verbose("Sending notification via Check_MK with the following context:")
+    if logger.isEnabledFor(VERBOSE):
+        logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
         for varname, value in sorted(context.iteritems()):
-            logger.verbose("  %-25s: %s" % (varname, value))
+            logger.log(VERBOSE, "  %-25s: %s", varname, value)
 
     if context["HOSTDOWNTIME"] != "0":
         logger.info("Host %s is currently in scheduled downtime. "
@@ -417,8 +418,8 @@ def _add_contact_information_to_context(context, contact_groups, logger):
     contact_names = _rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
-                   (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
+    logger.log(VERBOSE, "Setting %d contacts %s resulting from rule contact groups %s",
+               len(contact_names), ",".join(contact_names), ",".join(contact_groups))
 
 
 # NOTE: This function is an exact copy from modules/notify.py. We need

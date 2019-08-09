@@ -29,6 +29,7 @@ import os
 import subprocess
 import sys
 
+from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
 import cmk.utils.paths
 
@@ -153,7 +154,7 @@ def _get_languages():
 
 def _localize_update_po(lang):
     # Merge the current .pot file with a given .po file
-    logger.verbose("Merging translations...")
+    logger.log(VERBOSE, "Merging translations...")
     if subprocess.call(
         ['msgmerge', '-U', _po_file(lang), _pot_file()], stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!')

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import logging as _logging
+import logging
 from typing import Any  # pylint: disable=unused-import
 
 # Just for reference, the predefined logging levels:
@@ -61,38 +61,20 @@ from typing import Any  # pylint: disable=unused-import
 # We need an additional log level between INFO and DEBUG to reflect the
 # verbose() and vverbose() mechanisms of Check_MK.
 VERBOSE = 15
-
-_logger_class = _logging.getLoggerClass()  # type: Any
-
-
-class CMKLogger(_logger_class):
-    def __init__(self, name, level=_logging.NOTSET):
-        super(CMKLogger, self).__init__(name, level)
-
-        _logging.addLevelName(VERBOSE, "VERBOSE")
-
-    def verbose(self, msg, *args, **kwargs):
-        if self.is_verbose():
-            self._log(VERBOSE, msg, args, **kwargs)
-
-    def is_verbose(self):
-        return self.isEnabledFor(VERBOSE)
-
-
-_logging.setLoggerClass(CMKLogger)
+logging.addLevelName(VERBOSE, "VERBOSE")
 
 # Set default logging handler to avoid "No handler found" warnings.
 # Python 2.7+
-logger = _logging.getLogger("cmk")
-logger.addHandler(_logging.NullHandler())
-logger.setLevel(_logging.INFO)
+logger = logging.getLogger("cmk")
+logger.addHandler(logging.NullHandler())
+logger.setLevel(logging.INFO)
 
 
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
-    return _logging.Formatter(format_str)
+    return logging.Formatter(format_str)
 
 
 def setup_console_logging():
@@ -128,7 +110,7 @@ def setup_logging_handler(stream, formatter=None):
     if formatter is None:
         formatter = get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
 
-    handler = _logging.StreamHandler(stream=stream)
+    handler = logging.StreamHandler(stream=stream)
     handler.setFormatter(formatter)
 
     del logger.handlers[:]  # Remove all previously existing handlers
@@ -143,9 +125,9 @@ def verbosity_to_log_level(verbosity):
       2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
-        return _logging.INFO
+        return logging.INFO
     if verbosity == 1:
         return VERBOSE
     if verbosity == 2:
-        return _logging.DEBUG
+        return logging.DEBUG
     raise ValueError()

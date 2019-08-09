@@ -33,6 +33,7 @@ import time
 import six
 
 import cmk.ec.actions
+from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
@@ -396,8 +397,8 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
         try:
             days = config["history_lifetime"]
             min_mtime = time.time() - days * 86400
-            logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                           (days, cmk.utils.render.date_and_time(min_mtime)))
+            logger.log(VERBOSE, "Expiring logfiles (Horizon: %d days -> %s)", days,
+                       cmk.utils.render.date_and_time(min_mtime))
             for path in settings.paths.history_dir.value.glob('*.log'):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info("Deleting log file %s (age %s)" %

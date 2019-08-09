@@ -34,6 +34,7 @@ from livestatus import MKLivestatusNotFoundError
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 
 logger = logging.getLogger("cmk.prediction")
@@ -188,7 +189,7 @@ def clean_prediction_files(pred_file, force=False):
     # manual removal of the files. Clean this up.
     for file_path in [pred_file, pred_file + '.info']:
         if os.path.exists(file_path) and (os.stat(file_path).st_size == 0 or force):
-            logger.verbose("Removing obsolete prediction %s", os.path.basename(file_path))
+            logger.log(VERBOSE, "Removing obsolete prediction %s", os.path.basename(file_path))
             os.remove(file_path)
 
 
@@ -196,9 +197,9 @@ def retrieve_data_for_prediction(info_file, timegroup):
     try:
         return json.loads(file(info_file).read())
     except IOError:
-        logger.verbose("No previous prediction for group %s available.", timegroup)
+        logger.log(VERBOSE, "No previous prediction for group %s available.", timegroup)
     except ValueError:
-        logger.verbose("Invalid prediction file %s, old format", info_file)
+        logger.log(VERBOSE, "Invalid prediction file %s, old format", info_file)
         pred_file = info_file[:-5] if info_file.endswith(".info") else info_file
         clean_prediction_files(pred_file, force=True)
     return None

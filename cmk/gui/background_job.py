@@ -41,6 +41,7 @@ from pathlib2 import Path
 from cmk.gui.i18n import _
 import cmk
 import cmk.utils.log
+from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -160,8 +161,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
         try:
             self.initialize_environment()
-            self._logger.verbose("Initialized background job (Job ID: %s)" %
-                                 self._job_parameters["job_id"])
+            self._logger.log(VERBOSE, "Initialized background job (Job ID: %s)",
+                             self._job_parameters["job_id"])
             self._jobstatus.update_status({
                 "pid": self.pid,
                 "state": JobStatusStates.RUNNING,

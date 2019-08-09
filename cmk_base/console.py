@@ -29,8 +29,7 @@ of console input / output"""
 import logging
 import sys
 
-# HACK: We need this import just to ensure that we set our logger factory!
-import cmk.utils.log  # pylint: disable=unused-import
+from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
@@ -60,7 +59,7 @@ def output(text, *args, **kwargs):
 
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text, *args, **kwargs):
-    if logger.is_verbose():
+    if logger.isEnabledFor(VERBOSE):
         output(text, *args, **kwargs)
 
 

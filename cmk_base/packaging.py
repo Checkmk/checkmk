@@ -37,6 +37,7 @@ from cStringIO import StringIO
 from typing import NamedTuple
 
 import cmk.ec.export
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
@@ -195,7 +196,7 @@ def package_list(args):
         for name in args:
             show_package_contents(name)
     else:
-        if logger.is_verbose():
+        if logger.isEnabledFor(VERBOSE):
             table = []
             for pacname in all_package_names():
                 package = read_package_info(pacname)
@@ -250,7 +251,7 @@ def show_package(name, show_info=False):
                 " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
-        if logger.is_verbose():
+        if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
                 files = package["files"].get(part.ident, [])
@@ -272,7 +273,7 @@ def package_create(args):
     if read_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
-    logger.verbose("Creating new package %s...", pacname)
+    logger.log(VERBOSE, "Creating new package %s...", pacname)
     filelists = {}
     package = {
         "title": "Title of %s" % pacname,
@@ -291,14 +292,14 @@ def package_create(args):
         filelists[part.ident] = files
         num_files += len(files)
         if len(files) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
 
     write_package_info(package)
-    logger.verbose("New package %s created with %d files.", pacname, num_files)
-    logger.verbose("Please edit package details in %s%s%s", tty.bold,
-                   _pac_dir() + pacname, tty.normal)
+    logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
+    logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
+               _pac_dir() + pacname, tty.normal)
 
 
 def package_find(_no_args):
@@ -307,18 +308,18 @@ def package_find(_no_args):
         files = unpackaged_files_in_dir(part.ident, part.path)
         if len(files) > 0:
             if first:
-                logger.verbose("Unpackaged files:")
+                logger.log(VERBOSE, "Unpackaged files:")
                 first = False
 
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
-                if logger.is_verbose():
-                    logger.verbose("    %s", f)
+                if logger.isEnabledFor(VERBOSE):
+                    logger.log(VERBOSE, "    %s", f)
                 else:
                     logger.info("%s/%s", part.path, f)
 
     if first:
-        logger.verbose("No unpackaged files found.")
+        logger.log(VERBOSE, "No unpackaged files found.")
 
 
 def release_package(pacname):
@@ -326,13 +327,13 @@ def release_package(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
     package = read_package_info(pacname)
-    logger.verbose("Releasing files of package %s into freedom...", pacname)
+    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
             if part.ident == 'ec_rule_packs':
                 cmk.ec.export.release_packaged_rule_packs(filenames)
     remove_package_info(pacname)
@@ -369,9 +370,9 @@ def package_pack(args):
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = "%s-%s%s" % (pacname, package["version"], _pac_ext)
-    logger.verbose("Packing %s into %s...", pacname, tarfilename)
+    logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     create_mkp_file(package, file_name=tarfilename)
-    logger.verbose("Successfully created %s", tarfilename)
+    logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
@@ -404,9 +405,9 @@ def create_mkp_file(package, file_name=None, file_object=None):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
             subtarname = part.ident + ".tar"
             subdata = subprocess.check_output(
                 ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames)
@@ -423,18 +424,18 @@ def package_remove(args):
     if not package:
         raise PackageException("No such package %s." % pacname)
 
-    logger.verbose("Removing package %s...", pacname)
+    logger.log(VERBOSE, "Removing package %s...", pacname)
     remove_package(package)
-    logger.verbose("Successfully removed package %s.", pacname)
+    logger.log(VERBOSE, "Successfully removed package %s.", pacname)
 
 
 def remove_package(package):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
             for fn in filenames:
-                logger.verbose("    %s", fn)
+                logger.log(VERBOSE, "    %s", fn)
                 try:
                     path = part.path + "/" + fn
                     if part.ident == 'ec_rule_packs':
@@ -518,11 +519,11 @@ def install_package(file_name=None, file_object=None):
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
-        logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"],
-                       package["version"])
+        logger.log(VERBOSE, "Updating %s from version %s to %s.", pacname, old_package["version"],
+                   package["version"])
         update = True
     else:
-        logger.verbose("Installing %s version %s.", pacname, package["version"])
+        logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
 
     # Before installing check for conflicts
@@ -548,13 +549,13 @@ def install_package(file_name=None, file_object=None):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for fn in filenames:
-                logger.verbose("    %s", fn)
+                logger.log(VERBOSE, "    %s", fn)
 
             # make sure target directory exists
             if not os.path.exists(part.path):
-                logger.verbose("    Creating directory %s", part.path)
+                logger.log(VERBOSE, "    Creating directory %s", part.path)
                 os.makedirs(part.path)
 
             tarsource = tar.extractfile(part.ident + ".tar")
@@ -576,8 +577,8 @@ def install_package(file_name=None, file_object=None):
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 0o7777
                 if has_perm != desired_perm:
-                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm,
-                                   desired_perm)
+                    logger.log(VERBOSE, "    Fixing permissions of %s: %04o -> %04o", path,
+                               has_perm, desired_perm)
                     os.chmod(path, desired_perm)
 
             if part.ident == 'ec_rule_packs':
@@ -591,7 +592,7 @@ def install_package(file_name=None, file_object=None):
             for fn in filenames:
                 if fn not in keep:
                     path = os.path.join(part.path, fn)
-                    logger.verbose("Removing outdated file %s.", path)
+                    logger.log(VERBOSE, "Removing outdated file %s.", path)
                     try:
                         os.remove(path)
                     except Exception as e:
@@ -720,8 +721,8 @@ def read_package_info(pacname):
     except IOError:
         return None
     except Exception:
-        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!",
-                       _pac_dir(), pacname, _pac_dir())
+        logger.log(VERBOSE, "Ignoring invalid package file '%s%s'. Please remove it from %s!",
+                   _pac_dir(), pacname, _pac_dir())
         return None
 
 

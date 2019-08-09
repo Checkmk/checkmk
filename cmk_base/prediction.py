@@ -34,6 +34,7 @@ import time
 import cmk.utils.debug
 import cmk.utils
 import cmk.utils.defines as defines
+from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 
 logger = logging.getLogger("cmk.prediction")
@@ -206,12 +207,12 @@ def is_prediction_up2date(pred_file, timegroup, params):
     period_info = prediction_periods[params["period"]]
     now = time.time()
     if last_info["time"] + period_info["valid"] * period_info["slice"] < now:
-        logger.verbose("Prediction of %s outdated", timegroup)
+        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return False
 
     jsonized_params = json.loads(json.dumps(params))
     if last_info.get('params') != jsonized_params:
-        logger.verbose("Prediction parameters have changed.")
+        logger.log(VERBOSE, "Prediction parameters have changed.")
         return False
 
     return True
@@ -239,7 +240,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     if is_prediction_up2date(pred_file, timegroup, params):
         data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
     else:
-        logger.verbose("Calculating prediction data for time group %s", timegroup)
+        logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
         cmk.utils.prediction.clean_prediction_files(pred_file, force=True)
 
         time_windows = time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)

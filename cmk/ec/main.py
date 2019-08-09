@@ -60,6 +60,7 @@ import cmk.ec.history
 import cmk.ec.settings
 import cmk.ec.snmp
 import cmk.utils.log as log
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.render
@@ -1082,8 +1083,8 @@ class EventServer(ECServerThread):
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
 
-            self._logger.verbose("Remove event %d (created in downtime, host left downtime)" %
-                                 event["id"])
+            self._logger.log(VERBOSE, "Remove event %d (created in downtime, host left downtime)",
+                             event["id"])
             self._event_status.remove_event(event)
 
     def hk_handle_event_timeouts(self):
@@ -1822,8 +1823,8 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def new_event_respecting_limits(self, event):
-        self._logger.verbose("Checking limit for message from %s (rule '%s')" %
-                             (event["host"], event["rule_id"]))
+        self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
+                         (event["host"], event["rule_id"]))
 
         with self._event_status.lock:
             if self._handle_event_limit("overall", event):
@@ -1852,8 +1853,8 @@ class EventServer(ECServerThread):
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
         limit, action = self._get_event_limit(ty, event)
-        self._logger.verbose("  Type: %s, already open events: %d, Limit: %d" %
-                             (ty, num_already_open, limit))
+        self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
+                         num_already_open, limit)
 
         # Limit not reached: add new event
         if num_already_open < limit:
@@ -1874,7 +1875,7 @@ class EventServer(ECServerThread):
         # Limit reached already in the past: Simply drop silently
         if num_already_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
-            self._logger.verbose("  Skip processing because limit is already in effect")
+            self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
             self._perfcounters.count("overflows")
             return True  # Prevent creation and prevent one time actions (below)
 
@@ -3048,7 +3049,7 @@ class StatusServer(ECServerThread):
                                        "")
 
                     duration = time.time() - before
-                    self._logger.verbose("Answered request in %0.2f ms" % (duration * 1000))
+                    self._logger.log(VERBOSE, "Answered request in %0.2f ms", duration * 1000)
                     self._perfcounters.count_time("request", duration)
 
             except Exception as e:
@@ -3066,7 +3067,7 @@ class StatusServer(ECServerThread):
 
     def handle_client(self, client_socket, allow_commands, client_ip):
         for query in Queries(self, client_socket, self._logger):
-            self._logger.verbose("Client livestatus query: %r" % query)
+            self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
                 if query.method == "GET":
@@ -3467,7 +3468,7 @@ class EventStatus(object):
             os.fsync(f.fileno())
         path_new.rename(path)
         elapsed = time.time() - now
-        self._logger.verbose("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
+        self._logger.log(VERBOSE, "Saved event state to %s in %.3fms.", path, elapsed * 1000)
 
     def reset_counters(self, rule_id):
         if rule_id:
@@ -3558,13 +3559,13 @@ class EventStatus(object):
     # protected by self.lock
     def remove_oldest_event(self, ty, event):
         if ty == "overall":
-            self._logger.verbose("  Removing oldest event")
+            self._logger.log(VERBOSE, "  Removing oldest event")
             self._remove_event_by_nr(0)
         elif ty == "by_rule":
-            self._logger.verbose("  Removing oldest event of rule \"%s\"" % event["rule_id"])
+            self._logger.log(VERBOSE, "  Removing oldest event of rule \"%s\"", event["rule_id"])
             self._remove_oldest_event_of_rule(event["rule_id"])
         elif ty == "by_host":
-            self._logger.verbose("  Removing oldest event of host \"%s\"" % event["host"])
+            self._logger.log(VERBOSE, "  Removing oldest event of host \"%s\"", event["host"])
             self._remove_oldest_event_of_host(event["host"])
 
     # protected by self.lock
@@ -4158,7 +4159,7 @@ def main():
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
-            logger.verbose("Got signal %d." % signum)
+            logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 
         signal.signal(signal.SIGHUP, signal_handler)
@@ -4178,23 +4179,23 @@ def main():
         # Remove event pipe and drain it, so that we make sure
         # that processes (syslog, etc) will not hang when trying
         # to write into the pipe.
-        logger.verbose("Cleaning up event pipe")
+        logger.log(VERBOSE, "Cleaning up event pipe")
         pipe = event_server.open_pipe()  # Open it
         settings.paths.event_pipe.value.unlink()  # Remove pipe
         drain_pipe(pipe)  # Drain any data
         os.close(pipe)  # Close pipe
 
-        logger.verbose("Saving final event state")
+        logger.log(VERBOSE, "Saving final event state")
         event_status.save_status()
 
-        logger.verbose("Cleaning up sockets")
+        logger.log(VERBOSE, "Cleaning up sockets")
         settings.paths.unix_socket.value.unlink()
         settings.paths.event_socket.value.unlink()
 
-        logger.verbose("Output hash stats")
+        logger.log(VERBOSE, "Output hash stats")
         event_server.output_hash_stats()
 
-        logger.verbose("Closing fds which might be still open")
+        logger.log(VERBOSE, "Closing fds which might be still open")
         for fd in [
                 settings.options.syslog_udp, settings.options.syslog_tcp,
                 settings.options.snmptrap_udp

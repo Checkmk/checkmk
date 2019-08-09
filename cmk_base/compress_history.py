@@ -31,6 +31,7 @@
 import logging
 
 from cmk.utils.exceptions import MKBailOut
+from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 
 logger = logging.getLogger("cmk.base.compress_history")
@@ -42,7 +43,7 @@ def do_compress_history(args):
 
     for filename in args:
         try:
-            logger.verbose("%s...", filename)
+            logger.log(VERBOSE, "%s...", filename)
             compress_history_file(filename, filename + ".compressed")
         except Exception as e:
             if cmk.utils.debug.enabled():

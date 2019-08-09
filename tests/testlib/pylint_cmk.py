@@ -88,8 +88,8 @@ def num_jobs_to_use():
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
     if getpass.getuser() == "jenkins":
-        return multiprocessing.cpu_count() / 8
-    return multiprocessing.cpu_count() / 8 + 5
+        return int(multiprocessing.cpu_count() / 8.0)
+    return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
 def get_pylint_files(base_path, file_pattern):

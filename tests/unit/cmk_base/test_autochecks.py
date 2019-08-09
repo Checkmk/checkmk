@@ -3,13 +3,12 @@ import ast
 import pytest  # type: ignore
 
 from pathlib2 import Path
+from testlib import CheckManager
 from testlib.base import Scenario
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk_base.config as config
-import cmk_base.check_api as check_api
 import cmk_base.autochecks as autochecks
 import cmk_base.discovery as discovery
 from cmk_base.check_utils import Service
@@ -26,9 +25,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch):
-    config.load_checks(check_api.get_check_api_context,
-                       ["checks/df", "checks/cpu", "checks/chrony", "checks/lnx_if"])
-
+    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
     ts = Scenario().add_host("host")
     return ts.apply(monkeypatch)
 

@@ -1,11 +1,11 @@
 # encoding: utf-8
 import pytest  # type: ignore
+from testlib import CheckManager
 from testlib.base import Scenario
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.core_config as core_config
-import cmk_base.check_api as check_api
 from cmk_base.check_utils import Service
 
 
@@ -62,7 +62,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     }),
 ])
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
+    CheckManager().load(["cpu"])
 
     ts = Scenario().add_host("localhost")
     ts.add_host("blub")

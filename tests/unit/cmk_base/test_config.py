@@ -4,6 +4,7 @@
 from __future__ import print_function
 from pathlib2 import Path
 import pytest  # type: ignore
+from testlib import CheckManager
 from testlib.base import Scenario
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -11,7 +12,6 @@ import cmk
 import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
-import cmk_base.check_api as check_api
 from cmk_base.check_utils import Service
 from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
@@ -1030,7 +1030,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     ("testhost2", "snmp_uptime", 4),
 ])
 def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, result):
-    config.load_checks(check_api.get_check_api_context, ["checks/uptime", "checks/snmp_uptime"])
+    CheckManager().load(["uptime", "snmp_uptime"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("snmp_check_interval", [
         (("snmp_uptime", 4), [], ["testhost2"], {}),
@@ -1312,8 +1312,7 @@ def test_labels_of_service(monkeypatch):
 
 
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
-    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
-
+    CheckManager().load(["cpu"])
     ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
@@ -1378,7 +1377,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     ("testhost2", ["icon1", "icon2"]),
 ])
 def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
-    config.load_checks(check_api.get_check_api_context, ["checks/ps"])
+    CheckManager().load(["ps"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("service_icons_and_actions", [
         ("icon1", [], ["testhost2"], "CPU load$", {}),

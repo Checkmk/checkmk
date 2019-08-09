@@ -1,0 +1,14 @@
+Title: Windows Agent: Openhardwaremonitor is launched only once
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1565338864
+Class: fix
+
+Previously, Windows Agent had launched the Openhhardwaremonitor each time 
+restart, thus  creating a lot of instances of the Openhardwaremonitor.
+
+Now this error have been fixed: only one instance of the Openhardwaremonitor 
+is allowed

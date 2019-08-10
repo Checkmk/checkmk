@@ -217,7 +217,7 @@ div.node_vis .state-1 {
 }
 
 
-line.dashed, path.dashed{
+div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
   stroke-dasharray: 20 4;
   stroke-dashoffset: 0;
   animation-name: dash;
@@ -279,9 +279,16 @@ div.node_vis li div:hover {
 }
 
 /* Style indicators */
-text.style_indicator {
-    font-size: 20px;
-    font-weight: bold;
+div.node_vis .style_indicator {
+    stroke: "black";
+    stroke-width: 1;
+    opacity: 0.3;
+}
+
+div.node_vis circle.style_indicator.focus{
+    stroke: #fffe44;
+    stroke-width: 3;
+    opacity: 0.5;
 }
 
 .style_overlay {

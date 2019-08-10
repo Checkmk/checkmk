@@ -87,6 +87,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.allow_layout_updates = false
         this._mouse_events_overlay.update_data()
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", true)
+        this.update_style_indicators()
     }
 
     hide_layout_options() {
@@ -115,7 +116,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
             this.register_toolbar_plugin()
         }
 
-        // TODO: use only update_current_style
+        // TODO: use only show_style_configuration
         this.toolbar_plugin.update_content()
 
         let sorted_styles = []
@@ -145,13 +146,13 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         for (var idx in this._active_styles) {
             this._active_styles[idx].update_gui()
         }
-        this.update_style_indicators()
     }
 
     update_style_indicators(force) {
         if (!force && !this.edit_layout)
             return
 
+        console.log("update style indicator")
         this.viewport.get_hierarchy_list().forEach(hierarchy=>
             hierarchy.nodes.forEach(node=>{
                 if (node.data.use_style)
@@ -162,6 +163,8 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     translate_layout() {
         for (var idx in this._active_styles) {
+//                        if (this._active_styles[idx].type() != "force")
+//                            console.log("translate ", this._active_styles[idx].type(), this._active_styles[idx].style_root_node.data.name)
             this._active_styles[idx].translate_coords()
         }
     }
@@ -340,13 +343,23 @@ export class LayoutStyleConfiguration {
                        .style("display", d=>d.default_open ? null : "none")
         matchers_enter.append("br")
 
-        this.update_current_style(this.current_style)
+        this.show_style_configuration(this.current_style)
     }
 
-    update_current_style(style) {
+    show_style_configuration(style) {
+        // Cleanup GUI config
         if (style != this.current_style)
             this._cleanup_old_style_config()
 
+        // Remove style focus on old style
+        if (this.current_style)
+            this.current_style.style_root_node.selection.select("circle.style_indicator").classed("focus", false)
+
+        if (!style)
+            return
+
+        // Set style focus on new style
+        style.style_root_node.selection.select("circle.style_indicator").classed("focus", true)
         this.current_style = style
 
         let hide_style_config = false
@@ -367,8 +380,8 @@ export class LayoutStyleConfiguration {
         this.selection.style("height", null)
         this.selection.style("display", null)
 
-        this._update_current_style_options()
-        this._update_current_style_matcher()
+        this._show_style_configuration_options()
+        this._show_style_configuration_matcher()
     }
 
     _cleanup_old_style_config() {
@@ -376,12 +389,12 @@ export class LayoutStyleConfiguration {
         this.selection.selectAll(".matcher_topic_content").selectAll("*").remove()
     }
 
-    _update_current_style_options() {
+    _show_style_configuration_options() {
         let options_selection = this.selection.select("#style_options")
         this.current_style.render_options(options_selection)
     }
 
-    _update_current_style_matcher() {
+    _show_style_configuration_matcher() {
         let matcher = this.current_style.get_matcher()
         if (!matcher) {
             this.selection.select("#style_matcher").style("display", "none")
@@ -761,7 +774,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     layout_changed_callback() {
         let selected_id = d3.event.target.value
         this.layout_manager.layout_applier.apply_layout_id(selected_id)
-        this.layout_style_configuration.update_current_style()
+        this.layout_style_configuration.show_style_configuration()
         this.content_selection.select("#layout_name").property("value", selected_id)
         this.update_content()
         this.update_save_layout_button()
@@ -962,7 +975,7 @@ class LayoutingMouseEventsOverlay {
         this.drag_start_y = d3.event.y
 
         if (this._dragged_node.data.use_style)
-            this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this._dragged_node.data.use_style)
+            this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(this._dragged_node.data.use_style)
 
         this.layout_manager.dragging = true
     }
@@ -1068,7 +1081,7 @@ class LayoutApplier{
         // TODO: cleanup
         let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
         elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
-                       on: ()=>modification_element.update_current_style(this.layout_manager.force_style),
+                       on: ()=>modification_element.show_style_configuration(this.layout_manager.force_style),
                        href: "",
                        img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
         return elements
@@ -1090,10 +1103,9 @@ class LayoutApplier{
         let new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
         chunk_layout.save_style(new_style.style_config)
         this.layout_manager.layout_applier.apply_all_layouts()
-
-        // TODO: fix workaround
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(new_style)
+    
+        new_style.update_style_indicator()
+        this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(new_style)
         this.layout_manager.create_undo_step()
     }
 
@@ -1113,9 +1125,7 @@ class LayoutApplier{
         })
 
         this.apply_all_layouts()
-        // TODO: fix workaround
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(current_style)
+        this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(current_style)
         this.layout_manager.create_undo_step()
     }
 
@@ -1192,11 +1202,20 @@ class LayoutApplier{
                     nodes_with_style.push({node: node, style: new_style.style_config})
                 }
             })
-
-
-            // TODO: rework. global force style
-//            this._apply_force_style_options(node_chunk.layout_instance)
         })
+
+        // Sort styles
+        nodes_with_style.sort(function(a,b) {
+            if (a.node.depth > b.node.depth)
+                return 1
+            if (a.node.depth < b.node.depth)
+                return -1
+            return 0
+        })
+
+        // Add boxed style indicators
+        this._get_box_styles(nodes_with_style)
+
         this._update_node_specific_styles(nodes_with_style)
 
         this.current_layout_group = this.get_current_layout_group()
@@ -1208,6 +1227,42 @@ class LayoutApplier{
 
         if (this.layout_manager.edit_layout)
             this.layout_manager.allow_layout_updates = false
+
+    }
+
+    _get_box_styles(nodes_with_style) {
+        // Cycle through the sorted styles and add the box_leaf_nodes hint 
+        nodes_with_style.forEach(entry=>{
+            let box_leafs = entry.style.options.box_leaf_nodes == true
+            entry.node.each(node=>{
+                node.data.box_leaf_nodes = box_leafs
+            })
+            entry.node.data.box_leaf_nodes = box_leafs
+        })
+        // Apply styles
+        let box_candidates = []
+        this.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            node_chunk.nodes.forEach(node=>{
+                if (!node._children)
+                    return
+                if (!node.data.box_leaf_nodes)
+                    return
+                node.count()
+                if (node.value == node._children.length)
+                    box_candidates.push(node)
+            })
+        })
+
+        // Cleanup box_leaf_nodes hint
+        nodes_with_style.forEach(entry=>entry.node.descendants().forEach(d=>delete d.data.box_leaf_nodes))
+
+
+        // Add styles for box candidates
+        box_candidates.forEach(node=>{
+            let new_style = this.layout_style_factory.instantiate_style_name("block", node)
+            new_style.style_config.options = {}
+            nodes_with_style.push({node: node, style: new_style.style_config})
+        })
     }
 
     align_layouts(nodes_with_style) {

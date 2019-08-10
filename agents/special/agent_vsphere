@@ -1009,31 +1009,30 @@ def fetch_data(connection, opt):
     if "hostsystem" in opt.modules:
         if opt.host_pwr_display != "vm":  # handled later on..
             if opt.direct and opt.hostname:
-                for hostname, data in hostsystems_properties.items():
-                    output.append(
-                        "hostsystem\t%s\t\t%s" %
-                        (opt.hostname, hostsystems_properties[hostname]["runtime.powerState"][0]))
-            else:
-                for hostname, data in hostsystems_properties.items():
-                    converted_hostname = convert_hostname(
-                        hostsystems_properties[hostname]["name"][0], opt)
-                    host_info = "hostsystem\t%s\t\t%s" % (
-                        converted_hostname,
-                        hostsystems_properties[hostname]["runtime.powerState"][0])
-                    if opt.host_pwr_display == "esxhost" and not opt.direct:
-                        host_piggy_data.setdefault(converted_hostname, []).append(host_info)
+                for data in hostsystems_properties.itervalues():
+                    used_hostname = opt.hostname
+                    power_state = data["runtime.powerState"][0]
+                    host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
                     output.append(host_info)
+            else:
+                for data in hostsystems_properties.itervalues():
+                    used_hostname = convert_hostname(data["name"][0], opt)
+                    power_state = data["runtime.powerState"][0]
+                    host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
+                    output.append(host_info)
+                    if opt.host_pwr_display == "esxhost" and not opt.direct:
+                        host_piggy_data.setdefault(used_hostname, []).append(host_info)
 
     if "virtualmachine" in opt.modules:
-        for key in vms:
-            data = vms[key]
-            running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-            vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(
-                key, opt), running_on, data.get("runtime.powerState"))
+        for key, vm_data in vms.iteritems():
+            runtime_host = vm_data.get("runtime.host")
+            running_on = hostsystems.get(runtime_host, runtime_host)
+            used_hostname = convert_hostname(key, opt)
+            power_state = vm_data.get("runtime.powerState")
+            vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
 
             if opt.vm_pwr_display == "vm":
-                vm_name = convert_hostname(key, opt)
-                vm_piggy_data.setdefault(vm_name, []).append(vm_info)
+                vm_piggy_data.setdefault(used_hostname, []).append(vm_info)
             elif opt.vm_pwr_display == "esxhost" and not opt.direct:
                 host_piggy_data.setdefault(running_on, []).append(vm_info)
             output.append(vm_info)
@@ -1041,15 +1040,17 @@ def fetch_data(connection, opt):
     if ("virtualmachine" in opt.modules and "hostsystem" in opt.modules and
             opt.host_pwr_display == "vm"):
 
-        for key in vms:
-            data = vms[key]
-            running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
+        for key, vm_data in vms.iteritems():
+            runtime_host = vm_data.get("runtime.host")
+            running_on = hostsystems.get(runtime_host, runtime_host)
             vm_host = find_host(running_on, hostsystems_properties)
             if not vm_host:
                 continue
 
-            vm_info = "hostsystem\t%s\t\t%s" % (
-                running_on, hostsystems_properties[vm_host]["runtime.powerState"][0])
+            data = hostsystems_properties[vm_host]
+            used_hostname = running_on
+            power_state = data["runtime.powerState"][0]
+            vm_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
             vm_name = convert_hostname(key, opt)
             vm_piggy_data.setdefault(vm_name, []).append(vm_info)
 

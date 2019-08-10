@@ -55,11 +55,6 @@ from cmk.special_agents.agent_vsphere import ESXSession, SoapTemplates
 
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
-
-class MKQueryServerException(Exception):
-    pass
-
-
 # Great article how to get additional information
 # http://www.veeam.com/kb1007
 
@@ -227,6 +222,10 @@ def parse_arguments(argv):
 #.
 
 
+class ESXCookieInvalid(RuntimeError):
+    pass
+
+
 class ESXConnection(object):
     """Encapsulates the API calls to the ESX system"""
     ESCAPED_CHARS = {"&": "&amp;", ">": "&gt;", "<": "&lt;", "'": "&apos;", '"': "&quot;"}
@@ -238,7 +237,7 @@ class ESXConnection(object):
     @staticmethod
     def _check_not_authenticated(text):
         if "NotAuthenticatedFault" in text:
-            raise MKQueryServerException("No longer authenticated")
+            raise ESXCookieInvalid("No longer authenticated")
 
     def __init__(self, address, port, opt):
         super(ESXConnection, self).__init__()
@@ -830,7 +829,7 @@ def fetch_host_systems(connection):
     # We try to detect this here (there is always a hostsystem) and raise a MKQueryServerException
     # which forces a new login
     if not elements:
-        raise MKQueryServerException("Login cookie is no longer valid")
+        raise ESXCookieInvalid("Login cookie is no longer valid")
 
     return dict(elements)
 
@@ -1110,21 +1109,17 @@ def main(argv=None):
     try:
         esx_connection = ESXConnection(opt.host_address, opt.port, opt)
 
-        # If the data aquisition fails, e.g. invalid cookie we try another run
-        for _run_count in [0, 1]:
+        esx_connection.login(opt.user, opt.secret)
+        try:
+            vsphere_output = fetch_data(esx_connection, opt)
+        except ESXCookieInvalid:
+            esx_connection.delete_server_cookie()
             esx_connection.login(opt.user, opt.secret)
-            # Note: If the cookie fails inbetween these calls, we also start a second run
-            try:
-                vsphere_output = fetch_data(esx_connection, opt)
-            except MKQueryServerException:
-                # There was a problem during the query.
-                # It is possible that the server cookie got invalid.
-                # We delete the cookie and start a second run
-                esx_connection.delete_server_cookie()
-            else:
-                break
+            vsphere_output = fetch_data(esx_connection, opt)
 
     except Exception as exc:
+        if opt.debug:
+            raise
         sys.stderr.write("%s\n" % exc)
         return 0 if opt.agent else 1
 

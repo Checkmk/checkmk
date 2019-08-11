@@ -163,14 +163,15 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
 
     _load_layers() {
-        this._add_layer(new node_visualization_viewport_layers.LayeredRuleIconOverlay(this))
-        this._add_layer(new node_visualization_viewport_layers.LayeredCustomOverlay(this))
+        node_visualization_utils.layer_registry.register(node_visualization_layouting.LayoutManagerLayer, 40)
 
-        this._add_layer(new node_visualization_viewport_layers.LayeredDebugLayer(this))
-
-        this.layout_manager = new node_visualization_layouting.LayoutManagerLayer(this)
-        this._add_layer(this.layout_manager)
-        this._add_layer(new node_visualization_viewport_layers.LayeredNodesLayer(this))
+        node_visualization_utils.layer_registry.get_layers().forEach(layer=>{
+            let layer_class = layer[0]
+            let layer_instance = new layer_class(this)
+            this._add_layer(layer_instance)
+            if (layer_class == node_visualization_layouting.LayoutManagerLayer)
+                this.layout_manager = layer_instance
+        })
     }
 
     _add_layer(layer) {
@@ -389,10 +390,12 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         node.data.aggr_path_name.forEach(token=>{
             node_id += "#" + token[0] + "#" + token[1]
         })
+
+
         if (node.data.hostname)
-            node_id += node.data.hostname
-        if (node.data.service)
-            node_id += node.data.service
+            node_id += node.data.hostname + "(" + this._get_siblings_index("hostname", node.data.hostname, siblings_id_counter) + ")"
+         if (node.data.service)
+            node_id += node.data.service + "(" + this._get_siblings_index("service", node.data.service, siblings_id_counter) + ")"
         node.data.id = node_id
 
         if (node.children) {

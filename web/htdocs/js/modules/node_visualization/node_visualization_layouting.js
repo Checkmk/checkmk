@@ -163,8 +163,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     translate_layout() {
         for (var idx in this._active_styles) {
-//                        if (this._active_styles[idx].type() != "force")
-//                            console.log("translate ", this._active_styles[idx].type(), this._active_styles[idx].style_root_node.data.name)
             this._active_styles[idx].translate_coords()
         }
     }
@@ -216,6 +214,8 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     compute_node_position(node) {
+//        if (node.data.name == "Host testhost")
+//            node_visualization_utils.log(3, "computing node position")
         var current_positioning = {
                 weight: 0,
                 free: true,
@@ -538,10 +538,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
                 .style("height", "0px")
-
-//        this.content_selection.selectAll("div.box")
-//                .transition().duration(node_visualization_utils.DefaultTransition.duration())
-//                .style("height", "0px")
     }
 
     remove() {
@@ -1013,10 +1009,11 @@ class LayoutingMouseEventsOverlay {
 
 
         // TODO: EXPERIMENTAL, will be removed in later commit
-        for (var idx in this.layout_manager._active_styles) {
-            this.layout_manager._active_styles[idx].update_data()
-        }
+//        for (var idx in this.layout_manager._active_styles) {
+//            this.layout_manager._active_styles[idx].update_data()
+//        }
 
+        // TODO: translate and compute node is overkill for a simple drag procedure
         this.layout_manager.translate_layout()
         this.layout_manager.compute_node_positions()
         this.layout_manager.viewport.update_gui_of_layers()
@@ -1266,6 +1263,7 @@ class LayoutApplier{
     }
 
     align_layouts(nodes_with_style) {
+        node_visualization_utils.log(7, "LayoutManager:align_layouts")
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
             let bounding_rect = node_visualization_utils.get_bounding_rect(node_chunk.nodes)
             let translate_perc = {
@@ -1284,14 +1282,15 @@ class LayoutApplier{
     }
 
     _update_node_specific_styles(nodes_with_style) {
-//        console.log("update node styles")
+        node_visualization_utils.log(6, "LayoutManager:update_node_specific styles")
         let filtered_nodes_with_style = []
         let used_nodes = []
         for (let idx in nodes_with_style) {
             let config = nodes_with_style[idx]
             if (used_nodes.indexOf(config.node) >= 0) {
-//                console.log("filtered duplicate style assignment",
-//                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
+                node_visualization_utils.log(7,
+                    "  filtered duplicate style assignment",
+                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
                 continue
             }
             used_nodes.push(config.node)
@@ -1305,7 +1304,7 @@ class LayoutApplier{
                     })
 
         node_styles.exit().each(d=>{
-//                console.log("removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+            node_visualization_utils.log(7, "  removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
             this.layout_manager.remove_active_style(d.node.data.use_style)
             this.layout_manager.compute_node_position(d.node)
         }).remove()
@@ -1313,7 +1312,7 @@ class LayoutApplier{
         node_styles.enter().append("g")
             .classed("layout_style", true)
             .each((d, idx, nodes)=> {
-//                console.log("create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+                node_visualization_utils.log(7, "  create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 if (d.node.data.use_style) {
                     this.layout_manager.remove_active_style(d.node.data.use_style)
                 }
@@ -1324,7 +1323,7 @@ class LayoutApplier{
                 )
                 this.layout_manager.add_active_style(new_style)
             }).merge(node_styles).each(d=>{
-          //      console.log("updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+                node_visualization_utils.log(7, "  updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 let style_id = this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node)
 
                 let style = this.layout_manager.get_active_style(style_id)
@@ -1352,9 +1351,6 @@ class LayoutApplier{
         node_visualization_layout_styles.force_simulation.register_viewport(this.layout_manager.viewport)
         node_visualization_layout_styles.force_simulation.update_nodes_and_links(all_nodes, all_links)
         node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
-//        console.log("############ active styles")
-//        for (let idx in this.layout_manager._active_styles)
-//            console.log(idx, this.layout_manager._active_styles[idx].style_config)
         this.layout_manager.update_data()
 
         // Experimental
@@ -1365,6 +1361,7 @@ class LayoutApplier{
     }
 
     _compute_force_options(node) {
+        node_visualization_utils.log(6, "LayoutManager: _compute_force_options")
         let new_force_options = null
         if (node.data.use_style && node.data.use_style.type() == node_visualization_layout_styles.LayoutStyleForce.prototype.type())
             new_force_options = node.data.use_style.style_config.options

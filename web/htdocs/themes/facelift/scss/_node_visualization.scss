@@ -280,13 +280,22 @@ div.node_vis circle.style_indicator.focus{
     opacity: 0.5;
 }
 
-.style_overlay {
+div.node_vis .style_overlay {
   opacity: 0.2;
   fill: none;
   stroke: darkgrey;
   stroke-width: 6px;
   stroke-linejoin: round;
   pointer-events: none;
+}
+
+div.node_vis .block_style_overlay {
+  vector-effect: non-scaling-stroke;
+  opacity: 0.3;
+  fill: darkgrey;
+  stroke: darkgrey;
+  stroke-width: 2px;
+  stroke-linejoin: round
 }
 
 div.node_vis .style_infotext {

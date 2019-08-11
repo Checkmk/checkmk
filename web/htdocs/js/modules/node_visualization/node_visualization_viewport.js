@@ -543,6 +543,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         for (var layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled())
                 continue
+            node_visualization_utils.log(7, "update data of layer", layer_id)
             this._layers[layer_id].update_data()
         }
     }
@@ -551,6 +552,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         for (var layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled())
                 continue
+            node_visualization_utils.log(7, "update gui of layer", layer_id)
             this._layers[layer_id].update_gui()
         }
     }

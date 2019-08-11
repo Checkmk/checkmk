@@ -1006,22 +1006,15 @@ def fetch_data(connection, opt):
     vm_piggy_data = {}
     host_piggy_data = {}
 
-    if "hostsystem" in opt.modules:
-        if opt.host_pwr_display != "vm":  # handled later on..
-            if opt.direct and opt.hostname:
-                for data in hostsystems_properties.itervalues():
-                    used_hostname = opt.hostname
-                    power_state = data["runtime.powerState"][0]
-                    host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
-                    output.append(host_info)
-            else:
-                for data in hostsystems_properties.itervalues():
-                    used_hostname = convert_hostname(data["name"][0], opt)
-                    power_state = data["runtime.powerState"][0]
-                    host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
-                    output.append(host_info)
-                    if opt.host_pwr_display == "esxhost" and not opt.direct:
-                        host_piggy_data.setdefault(used_hostname, []).append(host_info)
+    if "hostsystem" in opt.modules and opt.host_pwr_display != "vm":  # handled later on..
+        override_hostname = opt.hostname if (opt.direct and opt.hostname) else None
+        for data in hostsystems_properties.itervalues():
+            used_hostname = override_hostname or convert_hostname(data["name"][0], opt)
+            power_state = data["runtime.powerState"][0]
+            host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
+            output.append(host_info)
+            if opt.host_pwr_display == "esxhost" and not opt.direct:
+                host_piggy_data.setdefault(used_hostname, []).append(host_info)
 
     if "virtualmachine" in opt.modules:
         for key, vm_data in vms.iteritems():

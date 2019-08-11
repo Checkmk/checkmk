@@ -17,10 +17,8 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
     }
 
     update_gui() {
-//        this.translation_info.selectAll("td#Simulation").text("Alpha: " + this.viewport.layout_manager.force_style.simulation.alpha().toFixed(3) +
-//                                        " Tick("+node_visualization_layout_styles.tick_count+"): " + node_visualization_layout_styles.tick_duration)
-
-        this._update_chunk_boundaries()
+        this.div_selection.selectAll("td#Simulation").text("Alpha: " + node_visualization_layout_styles.force_simulation._simulation.alpha().toFixed(3))
+//        this._update_chunk_boundaries()
         if (this.overlay_active == this.viewport.layout_manager.edit_layout)
             return
 
@@ -116,7 +114,7 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
         this.viewport.selection.on("mousemove.translation_info", ()=>this.mousemove())
         let rows = this.div_selection.append("table")
                     .attr("id", "translation_infobox")
-                    .selectAll("tr").data(["Zoom", "Panning", "Mouse"])
+                    .selectAll("tr").data(["Zoom", "Panning", "Mouse", "Simulation"])
         let rows_enter = rows.enter().append("tr")
         rows_enter.append("td").text(d=>d).classed("noselect", true)
         rows_enter.append("td").attr("id", d=>d).classed("noselect", true)
@@ -808,12 +806,19 @@ class AbstractGUINode {
 
 
     update_position() {
+//        if (this.node.data.name == "Host testhost")
+//            node_visualization_utils.log(7, "Update node positing", this.node.data.name, "use transition", this.node.use_transition)
 //        // TODO: transition event: end
         if (this.selection.attr("transit") > 0) {
+//            if (this.node.data.name == "Host testhost")
+//                console.log("in transit...")
             return
         }
+//        if (this.node.data.name == "Host testhost")
+//            console.log("update node..")
 
         this.node.data.target_coords = this.viewport.scale_to_zoom({x: this.node.x, y: this.node.y})
+
         this.add_optional_transition(this.selection)
             .attr("transform", "translate("+this.node.data.target_coords.x+","+this.node.data.target_coords.y+")")
 
@@ -1009,7 +1014,8 @@ class NodeLink {
 //            spawn_point_y = spawn_point[1]
 //        }
 
-        let coords = this.nodes_layer.viewport.scale_to_zoom({x: spawn_point_x, y: spawn_point_y})
+//        let coords = this.nodes_layer.viewport.scale_to_zoom({x: spawn_point_x, y: spawn_point_y})
+        let coords = this.link_data.target.current_coords
 
         if (this.nodes_layer._use_line_style == "line")
             this.selection = selection.append("line")
@@ -1017,6 +1023,10 @@ class NodeLink {
                 .attr("marker-end", "url(#triangle)")
                 .attr("stroke-width", function (d) { return Math.max(1, 2-d.depth);})
                 .style("stroke", "darkgrey")
+                .attr("x1", coords.x)
+                .attr("y1", coords.y)
+                .attr("x2", coords.x)
+                .attr("y2", coords.y)
         else
             this.selection = selection
                 .append("path")
@@ -1241,7 +1251,10 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
     update_gui(force=false) {
         this._update_position_of_context_menu()
+        // TODO: check this
         if (!force && node_visualization_layout_styles.force_simulation._simulation.alpha() < 0.10) {
+            for (let idx in this.node_instances)
+                this.node_instances[idx].node.use_transition = false
             return
         }
 

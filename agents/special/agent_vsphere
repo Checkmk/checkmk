@@ -989,13 +989,14 @@ def fetch_data(connection, opt):
     ###########################
     # Virtual machines
     ###########################
-    vm_esx_host = {}
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
         output += get_section_vm(vms, opt)
 
         used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
         output += get_sections_aggregated_snapshots(vms, used_hostsystems)
+    else:
+        vms, vm_esx_host = {}, {}
 
     if not opt.direct:
         output += get_sections_clusters(connection, vm_esx_host)
@@ -1016,23 +1017,20 @@ def fetch_data(connection, opt):
             if opt.host_pwr_display == "esxhost" and not opt.direct:
                 host_piggy_data.setdefault(used_hostname, []).append(host_info)
 
-    if "virtualmachine" in opt.modules:
-        for key, vm_data in vms.iteritems():
-            runtime_host = vm_data.get("runtime.host")
-            running_on = hostsystems.get(runtime_host, runtime_host)
-            used_hostname = convert_hostname(key, opt)
-            power_state = vm_data.get("runtime.powerState")
-            vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
+    for key, vm_data in vms.iteritems():
+        runtime_host = vm_data.get("runtime.host")
+        running_on = hostsystems.get(runtime_host, runtime_host)
+        used_hostname = convert_hostname(key, opt)
+        power_state = vm_data.get("runtime.powerState")
+        vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
 
-            if opt.vm_pwr_display == "vm":
-                vm_piggy_data.setdefault(used_hostname, []).append(vm_info)
-            elif opt.vm_pwr_display == "esxhost" and not opt.direct:
-                host_piggy_data.setdefault(running_on, []).append(vm_info)
-            output.append(vm_info)
+        if opt.vm_pwr_display == "vm":
+            vm_piggy_data.setdefault(used_hostname, []).append(vm_info)
+        elif opt.vm_pwr_display == "esxhost" and not opt.direct:
+            host_piggy_data.setdefault(running_on, []).append(vm_info)
+        output.append(vm_info)
 
-    if ("virtualmachine" in opt.modules and "hostsystem" in opt.modules and
-            opt.host_pwr_display == "vm"):
-
+    if ("hostsystem" in opt.modules and opt.host_pwr_display == "vm"):
         for key, vm_data in vms.iteritems():
             runtime_host = vm_data.get("runtime.host")
             running_on = hostsystems.get(runtime_host, runtime_host)

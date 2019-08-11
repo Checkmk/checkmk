@@ -1367,3 +1367,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         this.div_selection.select("#popup_menu").remove()
     }
 }
+
+node_visualization_utils.layer_registry.register(LayeredRuleIconOverlay, 10)
+node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20)
+node_visualization_utils.layer_registry.register(LayeredCustomOverlay, 30)
+node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50)

@@ -9,6 +9,29 @@ export class DefaultTransition {
     }
 }
 
+class LayerRegistry {
+    constructor() {
+        this._layers = []
+    }
+
+    register(layer_class, sort_index) {
+        this._layers.push([layer_class, sort_index])
+        this._layers.sort(function (a, b) {
+            if (a[1] > b[1])
+                return 1
+            if (a[1] < b[1])
+                return -1
+            return 0
+        })
+    }
+
+    get_layers() {
+        return this._layers
+    }
+
+}
+export let layer_registry = new LayerRegistry()
+
 
 export class NodeMatcher {
     constructor(hierarchy_list) {

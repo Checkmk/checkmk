@@ -1,3 +1,7 @@
+export function log(level, info) {
+    if (level < 4)
+        console.log(...Array.from(arguments))
+}
 
 export class DefaultTransition {
     static duration() {
@@ -163,4 +167,5 @@ export function get_bounding_rect_of_rotated_vertices(vertices, rotation_in_rad)
     })
     return get_bounding_rect(rotated_vertices)
 }
+
 

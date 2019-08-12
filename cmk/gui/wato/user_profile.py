@@ -360,7 +360,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
-        status = cmk.gui.sites.state(site_id, {}).get("state", "unknown")
+        status = cmk.gui.sites.states().get(site_id, {}).get("state", "unknown")
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 

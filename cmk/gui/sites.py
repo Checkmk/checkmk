@@ -54,16 +54,6 @@ def live():
     return _live
 
 
-# Accessor for the status of a single site
-def state(site_id, deflt=None):
-    """Get the status of a certain site. Returns a dictionary with various
-       entries. deflt is being returned in case the specified site doe not
-       exist or has no state."""
-    if _live is None:
-        _connect()
-    return _site_status.get(site_id, deflt)
-
-
 def states():
     """Returns dictionary of all known site states."""
     if _live is None:
@@ -78,33 +68,7 @@ def disconnect():
     _site_status = None
 
 
-def sites_using_foreign_cores():
-    site_ids = []
-    for site_id, core in cores_by_site().items():
-        if core not in ["cmc", None]:
-            site_ids.append(site_id)
-
-    return sorted(site_ids)
-
-
-def all_sites_use_foreign_cores():
-    return "cmc" not in cores_by_site().itervalues()
-
-
-def cores_by_site():
-    cores = {}
-    for site_id, site_state in states().items():
-        # Offline sites don't provide core info. Assume CMC is this case
-        if site_state["state"] == "dead":
-            core = "cmc"
-        else:
-            core = site_state.get("core")
-
-        cores[site_id] = core
-
-    return cores
-
-
+# TODO: This should live somewhere else, it's just a random helper...
 def all_groups(what):
     # type: (str) -> List[Tuple[str, str]]
     """Returns a list of host/service/contact groups (pairs of name/alias)

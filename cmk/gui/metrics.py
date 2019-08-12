@@ -866,7 +866,7 @@ def cmk_graphs_possible(site_id=None):
 # one site is running CMC
 def site_is_running_cmc(site_id):
     if site_id:
-        return sites.state(site_id, {}).get("program_version", "").startswith("Check_MK")
+        return sites.states().get(site_id, {}).get("program_version", "").startswith("Check_MK")
 
     for status in sites.states().values():
         if status.get("program_version", "").startswith("Check_MK"):

@@ -65,7 +65,7 @@ class SiteStatus(SidebarSnapin):
         for sitename, _sitealias in config.sorted_sites():
             site = config.site(sitename)
 
-            state = sites.state(sitename, {}).get("state")
+            state = sites.states().get(sitename, {}).get("state")
 
             if state is None:
                 state = "missing"

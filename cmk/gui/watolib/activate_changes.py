@@ -312,7 +312,7 @@ class ActivateChanges(object):
             site_status = {}
             status = "disabled"
         else:
-            site_status = cmk.gui.sites.state(site_id, {})
+            site_status = cmk.gui.sites.states().get(site_id, {})
             status = site_status.get("state", "unknown")
 
         return site_status, status

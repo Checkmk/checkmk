@@ -28,11 +28,11 @@ import abc
 import subprocess
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 
+from livestatus import LocalConnection
 import cmk.gui.utils
 import cmk.gui.userdb as userdb
-import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.htpasswd
@@ -169,7 +169,7 @@ class ACTestLivestatusUsage(ACTest):
         return True
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
             "Columns: livestatus_usage livestatus_threads livestatus_active_connections livestatus_overflows_rate"
@@ -631,7 +631,7 @@ class ACTestCheckMKHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_cmk average_latency_cmk\n")
 
@@ -710,7 +710,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n")
 

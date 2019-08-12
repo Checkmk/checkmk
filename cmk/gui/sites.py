@@ -26,13 +26,11 @@
 
 from typing import List, Tuple  # pylint: disable=unused-import
 
-# suppress "Cannot find module" error from mypy
-import livestatus  # type: ignore
-
-import cmk
-
-import cmk.gui.config as config
-from cmk.gui.globals import html
+from livestatus import MultiSiteConnection, MKLivestatusQueryError
+from cmk import is_managed_edition
+from cmk.utils.paths import livestatus_unix_socket
+from cmk.gui.config import user as config_user
+from cmk.gui.globals import g, html
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -49,22 +47,22 @@ from cmk.gui.globals import html
 def live():
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
-    if _get_live() is None:
+    if 'live' not in g:
         _connect()
-    return _get_live()
+    return g.live
 
 
 def states():
     """Returns dictionary of all known site states."""
-    if _get_live() is None:
+    if 'live' not in g:
         _connect()
-    return _get_site_status()
+    return g.site_status
 
 
 def disconnect():
     """Actively closes all Livestatus connections."""
-    _set_live(None)
-    _set_site_status(None)
+    g.pop('live', None)
+    g.pop('site_status', None)
 
 
 # TODO: This should live somewhere else, it's just a random helper...
@@ -90,41 +88,20 @@ def all_groups(what):
 #   |  Internal functiions and variables                                   |
 #   '----------------------------------------------------------------------'
 
-# The global livestatus object. This is initialized automatically upon first access
-# to the accessor function live()
-_live = None
+# The global livestatus object lives in g.live. This is initialized
+# automatically upon first access to the accessor function live()
 
-
-def _get_live():
-    return _live
-
-
-def _set_live(value):
-    global _live
-    _live = value
-
-
-# _site_status keeps a dictionary for each site with the following keys:
+# g.site_status keeps a dictionary for each site with the following keys:
 # "state"              --> "online", "disabled", "down", "unreach", "dead" or "waiting"
 # "exception"          --> An error exception in case of down, unreach, dead or waiting
 # "status_host_state"  --> host state of status host (0, 1, 2 or None)
 # "livestatus_version" --> Version of sites livestatus if "online"
 # "program_version"    --> Version of Nagios if "online"
-_site_status = None
-
-
-def _get_site_status():
-    return _site_status
-
-
-def _set_site_status(value):
-    global _site_status
-    _site_status = value
 
 
 # Build up a connection to livestatus to either a single site or multiple sites.
 def _connect():
-    _set_site_status({})
+    g.site_status = {}
     _connect_multiple_sites()
     _set_livestatus_auth()
 
@@ -133,16 +110,16 @@ def _connect_multiple_sites():
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites()
     _set_initial_site_states(enabled_sites, disabled_sites)
 
-    if cmk.is_managed_edition():
+    if is_managed_edition():
         import cmk.gui.cme.managed as managed
-        _set_live(managed.CMEMultiSiteConnection(enabled_sites, disabled_sites))
+        g.live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
     else:
-        _set_live(livestatus.MultiSiteConnection(enabled_sites, disabled_sites))
+        g.live = MultiSiteConnection(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
-    _get_live().set_prepend_site(True)
-    for response in _get_live().query(
+    g.live.set_prepend_site(True)
+    for response in g.live.query(
             "GET status\n"
             "Cache: reload\n"
             "Columns: livestatus_version program_version program_start num_hosts num_services"):
@@ -150,27 +127,26 @@ def _connect_multiple_sites():
         try:
             site_id, v1, v2, ps, num_hosts, num_services = response
         except ValueError:
-            e = livestatus.MKLivestatusQueryError("Invalid response to status query: %s" % response)
+            e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
             site_id = response[0]
-            _update_site_status_of(site_id, {
+            g.site_status[site_id].update({
                 "exception": e,
                 "status_host_state": None,
                 "state": _status_host_state_name(None),
             })
             continue
 
-        _update_site_status_of(
-            site_id, {
-                "state": "online",
-                "livestatus_version": v1,
-                "program_version": v2,
-                "program_start": ps,
-                "num_hosts": num_hosts,
-                "num_services": num_services,
-                "core": v2.startswith("Check_MK") and "cmc" or "nagios",
-            })
-    _get_live().set_prepend_site(False)
+        g.site_status[site_id].update({
+            "state": "online",
+            "livestatus_version": v1,
+            "program_version": v2,
+            "program_start": ps,
+            "num_hosts": num_hosts,
+            "num_services": num_services,
+            "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+        })
+    g.live.set_prepend_site(False)
 
     # TODO(lm): Find a better way to make the Livestatus object trigger the update
     # once self.deadsites is updated.
@@ -180,10 +156,10 @@ def _connect_multiple_sites():
 def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
-    for site_id, site in config.user.authorized_sites():
+    for site_id, site in config_user.authorized_sites():
         site = _site_config_for_livestatus(site_id, site)
 
-        if config.user.is_site_disabled(site_id):
+        if config_user.is_site_disabled(site_id):
             disabled_sites[site_id] = site
         else:
             enabled_sites[site_id] = site
@@ -218,10 +194,10 @@ def encode_socket_for_livestatus(site_id, site):
     family_spec, address_spec = socket_spec
 
     if site["proxy"] is not None:
-        return "unix:%sproxy/%s" % (cmk.utils.paths.livestatus_unix_socket, site_id)
+        return "unix:%sproxy/%s" % (livestatus_unix_socket, site_id)
 
     if family_spec == "local":
-        return "unix:%s" % cmk.utils.paths.livestatus_unix_socket
+        return "unix:%s" % livestatus_unix_socket
 
     if family_spec == "unix":
         return "%s:%s" % (family_spec, address_spec["path"])
@@ -236,12 +212,11 @@ def update_site_states_from_dead_sites():
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
         status_host_state = deadinfo.get("status_host_state")
-        _update_site_status_of(
-            site_id, {
-                "exception": deadinfo["exception"],
-                "status_host_state": status_host_state,
-                "state": _status_host_state_name(status_host_state),
-            })
+        g.site_status[site_id].update({
+            "exception": deadinfo["exception"],
+            "status_host_state": status_host_state,
+            "state": _status_host_state_name(status_host_state),
+        })
 
 
 def _status_host_state_name(shs):
@@ -256,18 +231,10 @@ def _status_host_state_name(shs):
 
 def _set_initial_site_states(enabled_sites, disabled_sites):
     for site_id, site in enabled_sites.items():
-        _set_site_status_of(site_id, {"state": "dead", "site": site})
+        g.site_status[site_id] = {"state": "dead", "site": site}
 
     for site_id, site in disabled_sites.items():
-        _set_site_status_of(site_id, {"state": "disabled", "site": site})
-
-
-def _set_site_status_of(site_id, status):
-    _get_site_status()[site_id] = status
-
-
-def _update_site_status_of(site_id, status):
-    _get_site_status()[site_id].update(status)
+        g.site_status[site_id] = {"state": "disabled", "site": site}
 
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
@@ -275,30 +242,30 @@ def _update_site_status_of(site_id, status):
 def _set_livestatus_auth():
     user_id = _livestatus_auth_user()
     if user_id is not None:
-        _get_live().set_auth_user('read', user_id)
-        _get_live().set_auth_user('action', user_id)
+        g.live.set_auth_user('read', user_id)
+        g.live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
-    if not config.user.may("bi.see_all"):
-        _get_live().set_auth_user('bi', user_id)
+    if not config_user.may("bi.see_all"):
+        g.live.set_auth_user('bi', user_id)
 
     # May the user see all Event Console events or only some?
-    if not config.user.may("mkeventd.seeall"):
-        _get_live().set_auth_user('ec', user_id)
+    if not config_user.may("mkeventd.seeall"):
+        g.live.set_auth_user('ec', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
-    _get_live().set_auth_domain('read')
+    g.live.set_auth_domain('read')
 
 
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user():
-    if not config.user.may("general.see_all"):
-        return config.user.id
+    if not config_user.may("general.see_all"):
+        return config_user.id
 
     force_authuser = html.request.var("force_authuser")
     if force_authuser == "1":
-        return config.user.id
+        return config_user.id
     elif force_authuser == "0":
         return None
     elif force_authuser:
@@ -306,10 +273,10 @@ def _livestatus_auth_user():
 
     # TODO: Remove this with 1.5.0/1.6.0
     if html.output_format != 'html' \
-       and config.user.get_attribute("force_authuser_webservice"):
-        return config.user.id
+       and config_user.get_attribute("force_authuser_webservice"):
+        return config_user.id
 
-    if config.user.get_attribute("force_authuser"):
-        return config.user.id
+    if config_user.get_attribute("force_authuser"):
+        return config_user.id
 
     return None

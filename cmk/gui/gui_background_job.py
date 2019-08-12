@@ -35,7 +35,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -209,7 +209,8 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
             html.disable_request_timeout()
 
         # Close livestatus connections inherited from the parent process
-        sites.disconnect()
+        if g:
+            sites.disconnect()
 
         super(GUIBackgroundProcess, self).initialize_environment()
 

@@ -1,0 +1,10 @@
+Title: Forecasting Graphs
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1565619102
+Class: feature
+
+Out of single metrics it is now possible to calculation a forecast for the future behavior of this metric.

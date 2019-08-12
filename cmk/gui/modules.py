@@ -166,8 +166,8 @@ _last_web_plugins_update = 0
 def _local_web_plugins_have_changed():
     global _last_web_plugins_update
 
-    if "local_web_plugins_have_changed" in g:
-        return g["local_web_plugins_have_changed"]
+    if 'local_web_plugins_have_changed' in g:
+        return g.local_web_plugins_have_changed
 
     this_time = 0.0
     for path in _find_local_web_plugins():
@@ -176,5 +176,5 @@ def _local_web_plugins_have_changed():
     _last_web_plugins_update = this_time
 
     have_changed = this_time > last_time
-    g["local_web_plugins_have_changed"] = have_changed
+    g.local_web_plugins_have_changed = have_changed
     return have_changed

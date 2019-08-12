@@ -28,8 +28,8 @@ from cmk.gui.globals import g
 
 
 def need_sidebar_reload():
-    g["need_sidebar_reload"] = True
+    g.need_sidebar_reload = True
 
 
 def is_sidebar_reload_needed():
-    return g.get("need_sidebar_reload", False)
+    return 'need_sidebar_reload' in g and g.need_sidebar_reload

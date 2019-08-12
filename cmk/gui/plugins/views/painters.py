@@ -5255,14 +5255,13 @@ def _get_host_labels():
     It is important to cache this query per request and also try to use the
     liveproxyd query cached.
     """
-    cache_id = "host_labels"
-    if cache_id in g:
-        return g[cache_id]
+    if 'host_labels' in g:
+        return g.host_labels
 
     query = "GET hosts\nColumns: name labels\nCache: reload\n"
     host_labels = {name: labels for name, labels in sites.live().query(query)}
 
-    g[cache_id] = host_labels
+    g.host_labels = host_labels
     return host_labels
 
 
@@ -5294,15 +5293,14 @@ class AbstractPainterSpecificMetric(Painter):
 
     @property
     def parameters(self):
-        cache_id = "painter_specific_metric_choices"
-        if cache_id in g:
-            choices = g[cache_id]
+        if 'painter_specific_metric_choices' in g:
+            choices = g.painter_specific_metric_choices
         else:
             choices = []
             for key, value in metrics.metric_info.iteritems():
                 choices.append((key, value.get("title")))
             choices.sort(key=lambda x: x[1])
-            g[cache_id] = choices
+            g.painter_specific_metric_choices = choices
 
         return Dictionary(elements=[
             ("metric",

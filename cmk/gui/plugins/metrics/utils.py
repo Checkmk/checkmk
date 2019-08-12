@@ -794,12 +794,12 @@ def get_palette_color_by_index(i, shading='a'):
 
 def get_next_random_palette_color():
     keys = _cmk_color_palette.keys()
-    if "random_color_index" in g:
-        last_index = g["random_color_index"]
+    if 'random_color_index' in g:
+        last_index = g.random_color_index
     else:
         last_index = random.randint(0, len(keys))
     index = (last_index + 1) % len(keys)
-    g["random_color_index"] = index
+    g.random_color_index = index
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 

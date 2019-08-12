@@ -609,8 +609,8 @@ def load_users(lock=False):
         #       end of page request automatically.
         store.aquire_lock(filename)
 
-    if "users" in g:
-        return g["users"]
+    if 'users' in g:
+        return g.users
 
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -737,7 +737,7 @@ def load_users(lock=False):
                     }
 
     # populate the users cache
-    g['users'] = result
+    g.users = result
 
     return result
 
@@ -798,7 +798,7 @@ def save_users(profiles):
     release_users_lock()
 
     # populate the users cache
-    g['users'] = updated_profiles
+    g.users = updated_profiles
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)

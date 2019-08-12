@@ -7,4 +7,4 @@ Version: 1.7.0i1
 Date: 1565158736
 Class: feature
 
-The agent's encryption functionality is updated with this change. Previously restricted to the usage of md5 as sole digest function, this implementation automatically selects and uses sha-2 if the user's openssl version is deemed suitable. 
+The agent's encryption functionality is extended with this change. The agent automatically identifies the used openssl version. It uses the sha-256 algorithm to encrypt the information if the openssl version is higher than version 1.0.0. In the other case where the identified  version is below version 1.0.0, the agent will continue to use the md5 algorithm. This ensures that that the information from the agent is secured with the most secure, available option.

@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: Modification of agent's encryption functionality in order to accomodate for newer digest functions
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b6
+Date: 1565158736
+
+The agent's encryption functionality is extended with this change. The agent automatically identifies the used openssl version. It uses the sha-256 algorithm to encrypt the information if the openssl version is higher than version 1.0.0. In the other case where the identified  version is below version 1.0.0, the agent will continue to use the md5 algorithm. This ensures that that the information from the agent is secured with the most secure, available option.

@@ -113,8 +113,14 @@ if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
 fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
-    echo -n "00" # protocol version
-    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+    if [ $OPENSSL_VERSION -ge 10000 ]; then
+        echo -n "02"
+        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
+    else
+        echo -n "00"
+        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+    fi
 fi
 
 RTC_PLUGINS=""

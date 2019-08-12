@@ -782,7 +782,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
-        site_status = cmk.gui.sites.state(site_id, {})
+        site_status = cmk.gui.sites.states().get(site_id, {})
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
         else:

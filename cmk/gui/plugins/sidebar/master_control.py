@@ -73,7 +73,7 @@ class MasterControlSnapin(SidebarSnapin):
             sites.live().set_prepend_site(False)
 
         def _render_master_control_site(site_id):
-            site_state = sites.state(site_id)
+            site_state = sites.states().get(site_id)
             if site_state["state"] == "dead":
                 html.show_error(site_state["exception"])
 

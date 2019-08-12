@@ -63,7 +63,7 @@ else
 fi
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0b5"
+echo "Version: 1.6.0b6"
 echo "AgentOS: openbsd"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

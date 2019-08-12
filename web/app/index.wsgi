@@ -35,7 +35,6 @@ import cmk.utils.store as store
 import cmk.utils.profile
 
 import cmk.gui.i18n
-import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.modules as modules
 import cmk.gui.pages as pages
@@ -133,7 +132,6 @@ class Application(object):
         """Final steps that are performed after each handled HTTP request"""
         store.release_all_locks()
         userdb.finalize()
-        sites.disconnect()
 
     def _handle_request(self):
         html.init_modes()
@@ -142,12 +140,6 @@ class Application(object):
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
         self._load_all_plugins()
-
-        # Clean up left over livestatus + connection objects (which are
-        # globally stored in sites module).  This is a quick fix for the 1.5
-        # and will be cleaned up in 1.6 by storing these objects in the user
-        # request context instead of a global context.
-        sites.disconnect()
 
         handler = pages.get_page_handler(html.myfile, self._page_not_found)
 

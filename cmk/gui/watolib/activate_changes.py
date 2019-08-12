@@ -44,7 +44,7 @@ import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import g, html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -854,7 +854,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         os.setsid()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
-        cmk.gui.sites.disconnect()
+        if g:
+            cmk.gui.sites.disconnect()
 
         # Cleanup resources of the apache
         for x in range(3, 256):

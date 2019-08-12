@@ -28,6 +28,7 @@ checks and tells the user what could be improved."""
 
 import traceback
 
+from livestatus import LocalConnection
 import cmk.utils.defines
 
 import cmk.gui.sites
@@ -211,7 +212,7 @@ class ACTest(object):
 
     def _uses_microcore(self):
         """Whether or not the local site is using the CMC"""
-        local_connection = cmk.gui.sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 

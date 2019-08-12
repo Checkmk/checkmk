@@ -114,10 +114,7 @@ fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ $OPENSSL_VERSION -ge 10101 ]; then
-        echo -n "03"
-        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
-    elif [ $OPENSSL_VERSION -ge 10000 ]; then
+    if [ $OPENSSL_VERSION -ge 10000 ]; then
         echo -n "02"
         exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
     else

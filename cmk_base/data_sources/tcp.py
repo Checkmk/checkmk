@@ -154,9 +154,6 @@ class TCPDataSource(CheckMKAgentDataSource):
         from Cryptodome.Cipher import AES
         if protocol == 2:
             from hashlib import sha256 as encrypt_digest
-        elif protocol == 3:
-            # Python 2 only allows sha-2, Python 3 allows sha-3 adjusts in the future
-            from hashlib import sha256 as encrypt_digest
         else:
             from hashlib import md5 as encrypt_digest
 

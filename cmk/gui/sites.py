@@ -49,23 +49,22 @@ from cmk.gui.globals import html
 def live():
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
-    if _live is None:
+    if _get_live() is None:
         _connect()
-    return _live
+    return _get_live()
 
 
 def states():
     """Returns dictionary of all known site states."""
-    if _live is None:
+    if _get_live() is None:
         _connect()
-    return _site_status
+    return _get_site_status()
 
 
 def disconnect():
     """Actively closes all Livestatus connections."""
-    global _live, _site_status
-    _live = None
-    _site_status = None
+    _set_live(None)
+    _set_site_status(None)
 
 
 # TODO: This should live somewhere else, it's just a random helper...
@@ -95,6 +94,16 @@ def all_groups(what):
 # to the accessor function live()
 _live = None
 
+
+def _get_live():
+    return _live
+
+
+def _set_live(value):
+    global _live
+    _live = value
+
+
 # _site_status keeps a dictionary for each site with the following keys:
 # "state"              --> "online", "disabled", "down", "unreach", "dead" or "waiting"
 # "exception"          --> An error exception in case of down, unreach, dead or waiting
@@ -104,28 +113,36 @@ _live = None
 _site_status = None
 
 
+def _get_site_status():
+    return _site_status
+
+
+def _set_site_status(value):
+    global _site_status
+    _site_status = value
+
+
 # Build up a connection to livestatus to either a single site or multiple sites.
 def _connect():
-    _init_site_status()
+    _set_site_status({})
     _connect_multiple_sites()
     _set_livestatus_auth()
 
 
 def _connect_multiple_sites():
-    global _live
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites()
     _set_initial_site_states(enabled_sites, disabled_sites)
 
     if cmk.is_managed_edition():
         import cmk.gui.cme.managed as managed
-        _live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
+        _set_live(managed.CMEMultiSiteConnection(enabled_sites, disabled_sites))
     else:
-        _live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
+        _set_live(livestatus.MultiSiteConnection(enabled_sites, disabled_sites))
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
-    _live.set_prepend_site(True)
-    for response in _live.query(
+    _get_live().set_prepend_site(True)
+    for response in _get_live().query(
             "GET status\n"
             "Cache: reload\n"
             "Columns: livestatus_version program_version program_start num_hosts num_services"):
@@ -136,14 +153,14 @@ def _connect_multiple_sites():
             e = livestatus.MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
             site_id = response[0]
-            _update_site_status(site_id, {
+            _update_site_status_of(site_id, {
                 "exception": e,
                 "status_host_state": None,
                 "state": _status_host_state_name(None),
             })
             continue
 
-        _update_site_status(
+        _update_site_status_of(
             site_id, {
                 "state": "online",
                 "livestatus_version": v1,
@@ -153,7 +170,7 @@ def _connect_multiple_sites():
                 "num_services": num_services,
                 "core": v2.startswith("Check_MK") and "cmc" or "nagios",
             })
-    _live.set_prepend_site(False)
+    _get_live().set_prepend_site(False)
 
     # TODO(lm): Find a better way to make the Livestatus object trigger the update
     # once self.deadsites is updated.
@@ -219,7 +236,7 @@ def update_site_states_from_dead_sites():
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
         status_host_state = deadinfo.get("status_host_state")
-        _update_site_status(
+        _update_site_status_of(
             site_id, {
                 "exception": deadinfo["exception"],
                 "status_host_state": status_host_state,
@@ -237,25 +254,20 @@ def _status_host_state_name(shs):
     }.get(shs, "unknown")
 
 
-def _init_site_status():
-    global _site_status
-    _site_status = {}
-
-
 def _set_initial_site_states(enabled_sites, disabled_sites):
     for site_id, site in enabled_sites.items():
-        _set_site_status(site_id, {"state": "dead", "site": site})
+        _set_site_status_of(site_id, {"state": "dead", "site": site})
 
     for site_id, site in disabled_sites.items():
-        _set_site_status(site_id, {"state": "disabled", "site": site})
+        _set_site_status_of(site_id, {"state": "disabled", "site": site})
 
 
-def _set_site_status(site_id, status):
-    _site_status[site_id] = status
+def _set_site_status_of(site_id, status):
+    _get_site_status()[site_id] = status
 
 
-def _update_site_status(site_id, status):
-    _site_status[site_id].update(status)
+def _update_site_status_of(site_id, status):
+    _get_site_status()[site_id].update(status)
 
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
@@ -263,19 +275,19 @@ def _update_site_status(site_id, status):
 def _set_livestatus_auth():
     user_id = _livestatus_auth_user()
     if user_id is not None:
-        _live.set_auth_user('read', user_id)
-        _live.set_auth_user('action', user_id)
+        _get_live().set_auth_user('read', user_id)
+        _get_live().set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
     if not config.user.may("bi.see_all"):
-        _live.set_auth_user('bi', user_id)
+        _get_live().set_auth_user('bi', user_id)
 
     # May the user see all Event Console events or only some?
     if not config.user.may("mkeventd.seeall"):
-        _live.set_auth_user('ec', user_id)
+        _get_live().set_auth_user('ec', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
-    _live.set_auth_domain('read')
+    _get_live().set_auth_domain('read')
 
 
 # Returns either None when no auth user shal be set or the name of the user

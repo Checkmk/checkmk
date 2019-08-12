@@ -1,0 +1,17 @@
+Title: Custom Graphs timeseries transformation percentile
+Level: 1
+Component: metrics
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0b6
+Date: 1565618826
+
+Custom Graphs now support timeseries transformations. Now one can calculate
+the percentile of a given timeseries. Just go to the custom graph designer
+and pick a metric. The transformations field will activate imediately and
+let you choose the option: Percentile within the timerange.
+
+Configure which percentile you want. Integer from 0 to 100 and click the
+button: Apply transform.

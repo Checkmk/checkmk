@@ -281,17 +281,6 @@ class Service(Metadata):
             self._load_balancer_ip = ""
             self._ports = []
 
-        status = service.status
-        if status and status.load_balancer and status.load_balancer.ingress:
-            self._ingress = {
-                {
-                    # for ingress points that are DNS based (typically AWS load-balancers)
-                    'hostname': ingress.hostname,
-                    # for ingress points that are IP based (typically GCE or OpenStack load-balancers)
-                    'ip': ingress.ip
-                } for ingress in status.load_balancer.ingress
-            }
-
     @property
     def info(self):
         return {

@@ -472,20 +472,18 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _get_criticality_choices(self):
         """Returns the current configuration of the tag_group criticality"""
-        cache_id = "criticality_choices"
-
-        if cache_id in g:
-            return g[cache_id]
+        if 'criticality_choices' in g:
+            return g.criticality_choices
 
         tags = cmk.utils.tags.TagConfig()
         tags.parse_config(watolib.TagConfigFile().load_for_reading())
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:
-            g[cache_id] = []
+            g.criticality_choices = []
             return []
 
-        g[cache_id] = criticality_group.get_tag_choices()
-        return g[cache_id]
+        g.criticality_choices = criticality_group.get_tag_choices()
+        return g.criticality_choices
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""

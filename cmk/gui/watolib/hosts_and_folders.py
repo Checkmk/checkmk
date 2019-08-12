@@ -329,10 +329,10 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def all_folders():
-        if "wato_folders" not in g:
-            wato_folders = g["wato_folders"] = {}
+        if 'wato_folders' not in g:
+            wato_folders = g.wato_folders = {}
             Folder("", "").add_to_dictionary(wato_folders)
-        return g["wato_folders"]
+        return g.wato_folders
 
     @staticmethod
     def folder_choices():
@@ -374,10 +374,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def invalidate_caches():
-        try:
-            del g["wato_folders"]
-        except KeyError:
-            pass
+        g.pop('wato_folders', {})
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -389,8 +386,8 @@ class CREFolder(BaseFolder):
     @staticmethod
     def current():
         # type: () -> CREFolder
-        if "wato_current_folder" in g:
-            return g["wato_current_folder"]
+        if 'wato_current_folder' in g:
+            return g.wato_current_folder
 
         folder = SearchFolder.current_search_folder()
         if folder:
@@ -421,7 +418,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def set_current(folder):
-        g["wato_current_folder"] = folder
+        g.wato_current_folder = folder
 
     # .-----------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                        |

@@ -2247,8 +2247,8 @@ def rule_option_elements(disabling=True):
 
 
 def get_check_information():
-    cache_id = "automation_get_check_information"
-    if cache_id not in g:
-        g[cache_id] = watolib.check_mk_local_automation("get-check-information")
+    if 'automation_get_check_information' not in g:
+        g.automation_get_check_information = watolib.check_mk_local_automation(
+            "get-check-information")
 
-    return g[cache_id]
+    return g.automation_get_check_information

@@ -951,10 +951,9 @@ class StarsIcon(Icon):
         return "stars"
 
     def render(self, what, row, tags, custom_vars):
-        stars = g.get("stars")
-        if stars is None:
-            stars = set(config.user.load_file("favorites", []))
-            g["stars"] = stars
+        if 'stars' not in g:
+            g.stars = set(config.user.load_file("favorites", []))
+        stars = g.stars
 
         if what == "host":
             starred = row["host_name"] in stars

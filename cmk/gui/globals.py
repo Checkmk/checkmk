@@ -36,7 +36,32 @@ from werkzeug.local import LocalStack
 
 import cmk.gui.htmllib  # pylint: disable=unused-import
 
-######################################################################
+#####################################################################
+# a namespace for storing data during an application context
+
+_sentinel = object()
+
+
+class _AppCtxGlobals(object):
+    def get(self, name, default=None):
+        return self.__dict__.get(name, default)
+
+    def pop(self, name, default=_sentinel):
+        if default is _sentinel:
+            return self.__dict__.pop(name)
+        return self.__dict__.pop(name, default)
+
+    def setdefault(self, name, default=None):
+        return self.__dict__.setdefault(name, default)
+
+    def __contains__(self, item):
+        return item in self.__dict__
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+
+#####################################################################
 # application context
 
 _app_ctx_stack = LocalStack()
@@ -52,7 +77,7 @@ def _lookup_app_object(name):
 class AppContext(object):
     def __init__(self, app):
         self.app = app
-        self.g = {}
+        self.g = _AppCtxGlobals()
 
     def __enter__(self):
         _app_ctx_stack.push(self)

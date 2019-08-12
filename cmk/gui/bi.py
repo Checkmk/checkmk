@@ -1428,10 +1428,12 @@ def compile_forest(only_hosts=None, only_groups=None):
 
     # Prevent multiple redundant calls of this function
     # Sometimes, the GUI likes to call this function a hundred times in the same request
-    html_cache_id = "BI_CACHE_%r/%r" % (only_hosts, only_groups)
-    if html_cache_id in g:
+    if 'bi_cache' not in g:
+        g.bi_cache = {}
+    html_cache_id = "%r/%r" % (only_hosts, only_groups)
+    if html_cache_id in g.bi_cache:
         return
-    g[html_cache_id] = "1"
+    g.bi_cache[html_cache_id] = "1"
 
     compilation_start_time = time.time()
     log("###########################################################")

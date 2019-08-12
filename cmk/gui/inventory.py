@@ -310,14 +310,13 @@ def _get_permitted_inventory_paths():
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    cache_varname = "permitted_inventory_paths"
-    if cache_varname in g:
-        return g[cache_varname]
+    if 'permitted_inventory_paths' in g:
+        return g.permitted_inventory_paths
 
     user_groups = userdb.contactgroups_of_user(config.user.id)
 
     if not user_groups:
-        g[cache_varname] = None
+        g.permitted_inventory_paths = None
         return None
 
     forbid_whole_tree = False
@@ -326,11 +325,11 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            g[cache_varname] = None
+            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "allow_all":
-            g[cache_varname] = None
+            g.permitted_inventory_paths = None
             return None
 
         elif inventory_paths == "forbid_all":
@@ -347,10 +346,10 @@ def _get_permitted_inventory_paths():
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
-        g[cache_varname] = []
+        g.permitted_inventory_paths = []
         return []
 
-    g[cache_varname] = permitted_paths
+    g.permitted_inventory_paths = permitted_paths
     return permitted_paths
 
 

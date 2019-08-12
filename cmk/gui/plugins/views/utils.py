@@ -75,9 +75,9 @@ class PainterOptions(object):
     @classmethod
     def get_instance(cls):
         """Use the request globals to prevent multiple instances during a request"""
-        if "painter_options" not in g:
-            g["painter_options"] = cls()
-        return g["painter_options"]
+        if 'painter_options' not in g:
+            g.painter_options = cls()
+        return g.painter_options
 
     def __init__(self):
         super(PainterOptions, self).__init__()
@@ -1423,9 +1423,9 @@ class ViewStore(object):
     @classmethod
     def get_instance(cls):
         """Use the request globals to prevent multiple instances during a request"""
-        if "view_store" not in g:
-            g["view_store"] = cls()
-        return g["view_store"]
+        if 'view_store' not in g:
+            g.view_store = cls()
+        return g.view_store
 
     def __init__(self):
         self.all = self._load_all_views()

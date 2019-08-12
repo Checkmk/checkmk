@@ -27,9 +27,8 @@
 # This is our home-grown version of flask.globals and flask.ctx. It
 # can be removed when fully do things the flasky way.
 
-# Imports are needed for type hints. These type hints are useful for
-# editors completion of "html" object methods and for mypy.
 from functools import partial
+import logging
 from typing import Union  # pylint: disable=unused-import
 
 from werkzeug.local import LocalProxy
@@ -67,6 +66,17 @@ current_app = LocalProxy(partial(_lookup_app_object, "app"))
 g = LocalProxy(partial(_lookup_app_object, "g"))
 
 ######################################################################
+# TODO: This should live somewhere else...
+
+
+class _PrependURLFilter(logging.Filter):
+    def filter(self, record):
+        if record.levelno >= logging.ERROR:
+            record.msg = "%s %s" % (html.request.requested_url, record.msg)
+        return True
+
+
+######################################################################
 # request context
 
 _request_ctx_stack = LocalStack()
@@ -85,9 +95,15 @@ class RequestContext(object):
 
     def __enter__(self):
         _request_ctx_stack.push(self)
+        # TODO: Move this plus the corresponding cleanup code to hooks.
+        self._web_log_handler = logging.getLogger().handlers[0]
+        self._prepend_url_filter = _PrependURLFilter()
+        self._web_log_handler.addFilter(self._prepend_url_filter)
+
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        self._web_log_handler.removeFilter(self._prepend_url_filter)
         _request_ctx_stack.pop()
         self.html.finalize()
 

@@ -32,19 +32,9 @@ import cmk.utils.paths
 logger = logging.getLogger("cmk.web")
 
 
-class PrependURLFilter(logging.Filter):
-    def filter(self, record):
-        if record.levelno >= logging.ERROR:
-            from cmk.gui.globals import html  # HACK: Local import to avoid import cycle!
-            if html:
-                record.msg = "%s %s" % (html.request.requested_url, record.msg)
-        return True
-
-
 def init_logging():
     handler = logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
     handler.setFormatter(cmk.utils.log.get_formatter())
-    handler.addFilter(PrependURLFilter())
     root = logging.getLogger()
     del root.handlers[:]  # Remove all previously existing handlers
     root.addHandler(handler)

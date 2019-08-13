@@ -3687,8 +3687,12 @@ def main_restore(site, args, options=None):
 
         # Handle hard links from var/check_mk/core/autochecks/*.mk
         # to -> var/check_mk/autochecks/*.mk files.
+        #
+        # Same for discovered labels hard links.
         if tarinfo.islnk() and (tarinfo.name.startswith("var/check_mk/core/autochecks/") or
-                                tarinfo.name.startswith("var/check_mk/autochecks/")):
+                                tarinfo.name.startswith("var/check_mk/autochecks/") or
+                                tarinfo.name.startswith("var/check_mk/core/discovered_host_labels/")
+                                or tarinfo.name.startswith("var/check_mk/discovered_host_labels/")):
             parts = tarinfo.linkname.split('/')
 
             if parts[0] == sitename:

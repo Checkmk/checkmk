@@ -1,0 +1,12 @@
+Title: Fix omd backup/restore with site rename
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b6
+Date: 1565712364
+
+The restore procedure as other site name failed when trying to restore the new
+"discovered_host_labels" related files.

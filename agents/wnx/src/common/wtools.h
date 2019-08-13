@@ -997,6 +997,13 @@ std::wstring GetRegistryValue(const std::wstring& Key,
                               const std::wstring& Default) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
 
+size_t GetOwnVirtualSize() noexcept;
+
+namespace monitor {
+constexpr size_t kMaxMemoryAllowed = 200'000'000;
+bool IsAgentHealthy() noexcept;
+}  // namespace monitor
+
 }  // namespace wtools
 
 #endif  // wtools_h__

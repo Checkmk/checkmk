@@ -62,6 +62,7 @@ public:
     auto getAllClear() {}
 
     bool prepareAnswer(std::string_view Ip) noexcept;
+    uint64_t num() const noexcept { return sw_.getCount(); }
 
     // Reporting Function, which called by the sections
     // #TODO gtest

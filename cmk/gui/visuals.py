@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import functools
 import os
 import copy
 import sys
@@ -467,7 +468,9 @@ def page_list(what,
         except MKUserError as e:
             html.user_error(e)
 
-    keys_sorted = sorted(visuals.keys(), key=lambda x: -x[0] or x[1])
+    keys_sorted = sorted(visuals.keys(),
+                         key=functools.cmp_to_key(lambda a, b: -((a[0] > b[0]) - (a[0] < b[0])) or
+                                                  (a[1] > b[1]) - (a[1] < b[1])))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:

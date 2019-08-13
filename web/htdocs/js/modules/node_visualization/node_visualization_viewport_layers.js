@@ -284,8 +284,8 @@ export class LayeredCustomOverlay extends node_visualization_viewport_utils.Laye
                 let path = d3.select(paths[idx])
                 this.add_optional_transition(path, element)
                     .attr("d", d=>{return "M" + d.polygonHull.join("L") + "Z";})
-                    .on("interrupt", ()=>{console.log("interrupted")})
-                    .on("end", ()=>{console.log("end")})
+                    .on("interrupt", ()=>{})
+                    .on("end", ()=>{})
             }
         })
 
@@ -565,9 +565,9 @@ class AbstractGUINode {
 
         let text_positioning = this.node.data.current_positioning.text_positioning
         if (text_positioning) {
-            this.text_selection.call(text_positioning, this.radius)
+            this.add_optional_transition(this.text_selection).call(text_positioning, this.radius)
         } else {
-            this.text_selection.call((selection)=>this._default_text_positioning(selection,this.radius))
+            this.add_optional_transition(this.text_selection).call((selection)=>this._default_text_positioning(selection,this.radius))
         }
     }
 
@@ -594,8 +594,6 @@ class AbstractGUINode {
              .classed("node_element", true)
              .attr("transform", "translate("+spawn_point_x+","+spawn_point_y+")")
              .style("pointer-events", "all")
-             .attr("x", coords.x)
-             .attr("y", coords.y)
              .on("mouseover", () => this._show_quickinfo())
              .on("mouseout", () => this._hide_quickinfo())
              .on("contextmenu", () => this.nodes_layer.render_context_menu(this))
@@ -681,7 +679,7 @@ class AbstractGUINode {
 //        this.viewport.point_spawn_location = [node.x, node.y]
         let nodes = this.viewport.get_all_nodes()
         for (let idx in nodes) {
-            nodes[idx].use_transition = true
+            nodes[idx].data.transition_info.use_transition = true
         }
     }
 
@@ -791,39 +789,27 @@ class AbstractGUINode {
               .append("circle")
               .attr("r", this.radius)
               .classed("state_circle", true)
-//              .style("fill-opacity", 0.8)
-//              .style("stroke", "black")
-//              .style("stroke-width", 1)
-//              .classed("state" + this.node.data.state, true)
 
-//        this.selection.append("circle")
-//              .attr("r", this.radius - 4)
-//              .style("fill-opacity", 1)
-//              .attr("fill", "ghostwhite");
-// 
         this.update_node_state()
     }
 
 
-    update_position() {
-//        if (this.node.data.name == "Host testhost")
-//            node_visualization_utils.log(7, "Update node positing", this.node.data.name, "use transition", this.node.use_transition)
-//        // TODO: transition event: end
-        if (this.selection.attr("transit") > 0) {
-//            if (this.node.data.name == "Host testhost")
-//                console.log("in transit...")
-            return
-        }
-//        if (this.node.data.name == "Host testhost")
-//            console.log("update node..")
-
+    update_position(enforce_transition=false) {
         this.node.data.target_coords = this.viewport.scale_to_zoom({x: this.node.x, y: this.node.y})
 
-        this.add_optional_transition(this.selection)
+        if (this.node.data.transition_info.use_transition ||
+            this.node.data.current_positioning.style_type == node_visualization_layout_styles.LayoutStyleForce.prototype.type())
+            this.selection.interrupt()
+
+        if (this.selection.attr("in_transit") > 0) {
+            return
+        }
+        this.add_optional_transition(this.selection, enforce_transition)
             .attr("transform", "translate("+this.node.data.target_coords.x+","+this.node.data.target_coords.y+")")
 
         this.update_quickinfo_position()
         this.render_text()
+        this.node.data.transition_info.last_style_type = this.node.data.current_positioning.style_type
     }
 
     update_quickinfo_position() {
@@ -835,11 +821,22 @@ class AbstractGUINode {
             .style("top", coords.y + "px")
     }
 
-    add_optional_transition(selection) {
-        if (!this.node.use_transition || this.viewport.layout_manager.dragging)
+    add_optional_transition(selection, enforce_transition) {
+        if ((!this.node.data.transition_info.use_transition && !enforce_transition) || this.viewport.layout_manager.dragging)
             return selection
-
-        return node_visualization_utils.DefaultTransition.add_transition(selection.attr("transit", 100)).attr("transit", 0)
+        return node_visualization_utils.DefaultTransition.add_transition(selection.attr("in_transit", 100))
+            .on("end", d=>{
+                let matrix = this.selection.node().transform.baseVal[0].matrix
+                if (matrix.e.toFixed(2) != this.node.data.target_coords.x.toFixed(2) ||
+                    matrix.f.toFixed(2) != this.node.data.target_coords.y.toFixed(2)) {
+                    this.update_position(true)
+                    node_visualization_utils.log(7, "update position after transition")
+                }
+            }).attr("in_transit", 0)
+            .on("interrupt", ()=>{
+               node_visualization_utils.log(7, "node update position interrupt") 
+                this.selection.attr("in_transit", 0)
+            }).attr("in_transit", 0)
     }
 }
 
@@ -996,7 +993,8 @@ class NodeLink {
         this.viewport = nodes_layer.viewport
         this.link_data = link_data
         this.selection = null
-        this.use_diagonal = true
+
+        this.line_style = this.link_data.source.data.chunk.layout_settings.config.line_config.style
     }
 
     id() {
@@ -1004,49 +1002,44 @@ class NodeLink {
     }
 
     render_into(selection) {
-        let spawn_point_x = this.link_data.target.x
-        let spawn_point_y = this.link_data.target.y
-
-// TODO: remove
-//        let spawn_point = this.nodes_layer.viewport.point_spawn_location
-//        if (spawn_point) {
-//            spawn_point_x = spawn_point[0]
-//            spawn_point_y = spawn_point[1]
-//        }
-
-//        let coords = this.nodes_layer.viewport.scale_to_zoom({x: spawn_point_x, y: spawn_point_y})
-        let coords = this.link_data.target.current_coords
-
-        if (this.nodes_layer._use_line_style == "line")
-            this.selection = selection.append("line")
-                .classed("link_element", true)
-                .attr("marker-end", "url(#triangle)")
-                .attr("stroke-width", function (d) { return Math.max(1, 2-d.depth);})
-                .style("stroke", "darkgrey")
-                .attr("x1", coords.x)
-                .attr("y1", coords.y)
-                .attr("x2", coords.x)
-                .attr("y2", coords.y)
-        else
-            this.selection = selection
-                .append("path")
-                   .classed("link_element", true)
-//                   .classed("dashed", true)
-                   .attr("fill", "none")
-                   .attr("stroke-width", 1)
-                   .style("stroke", "darkgrey")
+        switch (this.line_style) {
+            case "straight": {
+                this.selection = selection.append("line")
+                    .classed("link_element", true)
+                    .attr("marker-end", "url(#triangle)")
+                    .attr("stroke-width", function (d) { return Math.max(1, 2-d.depth);})
+                    .style("stroke", "darkgrey");
+                break;
+            }
+            default: {
+                this.selection = selection
+                    .append("path")
+                    .classed("link_element", true)
+                    .attr("fill", "none")
+                    .attr("stroke-width", 1)
+                    .style("stroke", "darkgrey");
+                break;
+            }
+        }
     }
 
 
-    update_position() {
-        if (this.selection.attr("transit") > 0) {
+    update_position(enforce_transition=false) {
+        let source = this.link_data.source
+        let target = this.link_data.target
+        let force_type = node_visualization_layout_styles.LayoutStyleForce.prototype.type()
+
+        if (source.data.transition_info.use_transition ||
+            target.data.transition_info.use_transition ||
+            source.data.current_positioning.style_type == force_type ||
+            target.data.current_positioning.style_type == force_type)
+            this.selection.interrupt()
+
+        if (this.selection.attr("in_transit") > 0) {
             return
         }
 
-        let source = this.link_data.source
-        let target = this.link_data.target
-
-        if (this.link_data.source.data.current_positioning.hide_node_link) {
+        if (source.data.current_positioning.hide_node_link) {
             this.selection.attr("opacity", 0)
             return
         }
@@ -1057,17 +1050,24 @@ class NodeLink {
         let x2 = target.data.target_coords.x
         let y2 = target.data.target_coords.y
 
-        if (this.nodes_layer._use_line_style == "line")
-            this.add_optional_transition(this.selection)
-                    .attr("x1", x1)
-                    .attr("y1", y1)
-                    .attr("x2", x2)
-                    .attr("y2", y2)
-        else {
-            if (this.nodes_layer._use_line_style == "diagonal")
-                this.add_optional_transition(this.selection).attr("d", (d) => this.diagonal_line(x1,y1,x2,y2))
-            else
-                this.add_optional_transition(this.selection).attr("d", (d) => this.elbow(x1,y1,x2,y2))
+
+        let tmp_selection = this.add_optional_transition(this.selection)
+        switch (this.link_data.source.data.chunk.layout_settings.config.line_config.style) {
+            case "straight": {
+                tmp_selection.attr("x1", x1)
+                             .attr("y1", y1)
+                             .attr("x2", x2)
+                             .attr("y2", y2);
+                break;
+            }
+            case "round": {
+                tmp_selection.attr("d", (d) => this.diagonal_line(x1,y1,x2,y2))
+                break;
+            }
+            case "elbow": {
+                tmp_selection.attr("d", (d) => this.elbow(x1,y1,x2,y2))
+                break;
+            }
         }
     }
 
@@ -1098,10 +1098,15 @@ class NodeLink {
     add_optional_transition(selection) {
         let source = this.link_data.source
         let target = this.link_data.target
-        if ((!source.use_transition && !target.use_transition) || this.viewport.layout_manager.dragging)
+        if ((!source.data.transition_info.use_transition && !target.data.transition_info.use_transition) || this.viewport.layout_manager.dragging)
             return selection
 
-        return node_visualization_utils.DefaultTransition.add_transition(selection.attr("transit", 100)).attr("transit", 0)
+        return node_visualization_utils.DefaultTransition.add_transition(selection.attr("in_transit", 100))
+            .on("end", d=>{}).attr("in_transit", 0)
+            .on("interrupt", ()=>{
+               node_visualization_utils.log(7, "link update position interrupt") 
+               this.selection.attr("in_transit", 0)
+            }).attr("in_transit", 0);
     }
 }
 
@@ -1136,9 +1141,6 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         this.nodes_selection = this.selection.append("g")
                                 .attr("name", "viewport_layered_nodes")
                                 .attr("id", "nodes")
-
-
-        this._use_line_style = "diagonal"
     }
 
     render_line_style(into_selection) {
@@ -1152,9 +1154,9 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
                         .style("pointer-events", "all")
                         .style("width", "200px")
 
-        let options = select.on("change", ()=>this._line_style())
+        let options = select.on("change", ()=>this._change_line_style())
                .selectAll("option")
-               .data(["line", "diagonal", "elbow"])
+               .data(["straight", "round", "elbow"])
         options.exit().remove()
         options = options.enter().append("option").merge(options)
 
@@ -1163,23 +1165,33 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
                .text(d=>d)
     }
 
-    _line_style() {
-        this._use_line_style = d3.select(d3.event.target).property("value")
+    _change_line_style() {
+        let new_line_style = d3.select(d3.event.target).property("value")
+        this.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            node_chunk.layout_instance.line_config.style = new_line_style
+            node_chunk.layout_settings.config.line_config.style = new_line_style
+        })
+
         this.links_selection.selectAll(".link_element").each(link_data=>this._remove_link(link_data)).remove()
         this.update_data()
         this.update_gui(true)
     }
 
-
     zoomed() {
         let transform_text = "translate(" + this.viewport.last_zoom.x + "," + this.viewport.last_zoom.y + ")"
         this.selection.attr("transform", transform_text)
 
+        // Interrupt any gui transitions whenever the zoom factor is changed
+        if (this.last_scale != this.viewport.last_zoom.k)
+            this.selection.selectAll(".node_element, .link_element").interrupt()
+
         for (let idx in this.node_instances)
             this.node_instances[idx].update_quickinfo_position()
 
+
         if (this.last_scale != this.viewport.last_zoom.k)
             this.update_gui(true)
+
         this.last_scale = this.viewport.last_zoom.k
     }
 
@@ -1251,10 +1263,9 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
     update_gui(force=false) {
         this._update_position_of_context_menu()
-        // TODO: check this
         if (!force && node_visualization_layout_styles.force_simulation._simulation.alpha() < 0.10) {
             for (let idx in this.node_instances)
-                this.node_instances[idx].node.use_transition = false
+                this.node_instances[idx].node.data.transition_info.use_transition = false
             return
         }
 
@@ -1265,9 +1276,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             this.link_instances[idx].update_position()
 
         // Disable node transitions after each update step
-        // TODO: check this
         for (let idx in this.node_instances)
-            this.node_instances[idx].node.use_transition = false
+            this.node_instances[idx].node.data.transition_info.use_transition = false
     }
 
     render_context_menu(node_instance) {

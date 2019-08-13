@@ -81,7 +81,8 @@ class AjaxFetchAggregationData(AjaxPage):
             data["groups"] = row["groups"]
             data["data_timestamp"] = int(time.time())
 
-            layout = {}
+            aggr_settings = row["tree"]["aggr_tree"]["node_visualization"]
+            layout = {"config": {}}
             if forced_layout_id:
                 layout["enforced_id"] = aggr_name
                 layout["origin_type"] = "globally_enforced"
@@ -93,26 +94,64 @@ class AjaxFetchAggregationData(AjaxPage):
                     layout["origin_info"] = _("Explicit set")
                     layout["explicit_id"] = aggr_name
                     layout["config"] = aggregation_layouts[aggr_name]
+                    layout["config"]["ignore_rule_styles"] = True
                 else:
-                    template_layout_id = row["tree"]["aggr_tree"]["use_layout_id"]
-                    if template_layout_id and template_layout_id in BILayoutManagement.get_all_bi_template_layouts(
-                    ):
-                        layout["origin_type"] = "template"
-                        layout["origin_info"] = _("Template: %s" % template_layout_id)
-                        layout["template_id"] = template_layout_id
-                        layout["config"] = BILayoutManagement.load_bi_template_layout(
-                            template_layout_id)
-                    else:
-                        layout["origin_type"] = "default_template"
-                        layout["origin_info"] = _("Default layout: %s" %
-                                                  config.default_bi_layout.title())
-                        layout["default_id"] = config.default_bi_layout
-            data["layout"] = layout
+                    layout.update(self._get_template_based_layout_settings(aggr_settings))
 
+            if "ignore_rule_styles" not in layout["config"]:
+                layout["config"]["ignore_rule_styles"] = aggr_settings.get(
+                    "ignore_rule_styles", False)
+            if "line_config" not in layout["config"]:
+                layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
+
+            data["layout"] = layout
             aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
 
         html.set_output_format("json")
         return aggregation_info
+
+    def _get_line_style_config(self, aggr_settings):
+        line_style = aggr_settings.get("line_style", config.default_bi_layout["line_style"])
+        if line_style == "default":
+            line_style = config.default_bi_layout["line_style"]
+        return {"style": line_style}
+
+    def _get_template_based_layout_settings(self, aggr_settings):
+        template_layout_id = aggr_settings["layout_id"]
+
+        layout_settings = {}
+        if template_layout_id in BILayoutManagement.get_all_bi_template_layouts():
+            # FIXME: This feature is currently inactive
+            layout_settings["origin_type"] = "template"
+            layout_settings["origin_info"] = _("Template: %s" % template_layout_id)
+            layout_settings["template_id"] = template_layout_id
+            layout_settings["config"] = BILayoutManagement.load_bi_template_layout(
+                template_layout_id)
+        elif template_layout_id.startswith("builtin_"):
+            # FIXME: this mapping is currently copied from the bi configuration valuespec
+            #        BI refactoring required...
+            builtin_mapping = {
+                "builtin_default": _("global"),
+                "builtin_force": _("force"),
+                "builtin_radial": _("radial"),
+                "builtin_hierarchy": _("hierarchy")
+            }
+            layout_settings["origin_type"] = "default_template"
+            layout_settings["origin_info"] = _("Default %s template") % builtin_mapping.get(
+                template_layout_id, _("Unknown"))
+
+            if template_layout_id == "builtin_default":
+                template_layout_id = config.default_bi_layout["node_style"]
+            layout_settings["default_id"] = template_layout_id[8:]
+        else:
+            # Any Unknown/Removed layout id gets the default template
+            layout_settings["origin_type"] = "default_template"
+            layout_settings["origin_info"] = _(
+                "Fallback template (%s): Unknown ID %s" %
+                (config.default_bi_layout["node_style"][8:].title(), template_layout_id))
+            layout_settings["default_id"] = config.default_bi_layout["node_style"][8:]
+
+        return layout_settings
 
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework

@@ -54,6 +54,7 @@ from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
 import cmk_base.autochecks as autochecks
 import cmk_base.nagios_utils
+import cmk_base.checking
 from cmk_base.core_factory import create_core
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.check_api as check_api

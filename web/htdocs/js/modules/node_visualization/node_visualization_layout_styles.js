@@ -155,7 +155,7 @@ export class AbstractLayoutStyle {
         let rows = table.selectAll("tr.checkbox_option").data(style_options.filter(d=>d.option_type=="checkbox"))
 
         // TODO: fixme: style options handle is lost...
-        rows.exit().each(d=>console.log("removing options")).remove()
+        rows.exit().remove()
 
         let rows_enter = rows.enter().append("tr").classed("checkbox_option", true)
         rows_enter.append("td").text(d=>d.text)
@@ -197,15 +197,15 @@ export class AbstractLayoutStyle {
         }
         
         if (reapply_layouts) {
+            node_visualization_utils.log(7, "Changed style option forced reapply layout")
             this._layout_manager.layout_applier.apply_all_layouts()
-            console.log("reapply layouts")
+            this._layout_manager.update_style_indicators()
         }
     }
 
     changed_options(option_id) {
         this._update_options_in_input_field()
-//        this.force_style_translation()
-//        this.translate_coords()
+        this.force_style_translation()
 
         this._layout_manager.compute_node_positions_from_list_of_nodes(this.style_root_node.descendants())
         this._layout_manager.viewport.update_data_of_layers()
@@ -295,6 +295,7 @@ export class AbstractLayoutStyle {
     update_style_indicator(indicator_shown) {
         let style_indicator = this.style_root_node.selection.selectAll("circle.style_indicator").data([this])
 
+        node_visualization_utils.log("Update style indicator for " + this.type() + " " + this.style_root_node.data.name)
         if (!indicator_shown) {
             style_indicator.remove()
         }
@@ -346,7 +347,8 @@ export class AbstractLayoutStyle {
     }
 
     get_default_node_force(node) {
-        return this._layout_manager.get_node_positioning(node)[this.id()] = {weight: this.positioning_weight()}
+        return this._layout_manager.get_node_positioning(node)[this.id()] = {weight: this.positioning_weight(),
+                                                                             style_type: this.type()}
     }
 
     // Computes offsets use for node translate
@@ -383,10 +385,13 @@ export class AbstractLayoutStyle {
                                     if (d.onclick)
                                         d3.select(nodes[idx]).on("click", d.onclick)
                                 })
+                                .style("top", coords.y - 62 + "px")
+                                .style("left", coords.x + (idx * (30 + 12)) + "px")
                             .merge(img)
+
             let offset = parseInt(img.style("width"), 10)
             img.style("top", d=>coords.y - 62 + "px")
-            img.style("left", d=>coords.x + (idx * (offset + 12)) + "px")
+               .style("left", d=>coords.x + (idx * (offset + 12)) + "px");
         }
     }
 
@@ -412,9 +417,10 @@ export class AbstractLayoutStyle {
         let hull = into_selection.selectAll("path.style_overlay").data([d3.polygonHull(hull_vertices)])
         hull = hull.enter().append("path")
                     .classed("style_overlay", true)
+                    .style("opacity", 0)
                 .merge(hull)
         hull.interrupt()
-        this.add_optional_transition(hull.attr("d", function(d) {return "M" + d.join("L") + "Z";}));
+        this.add_optional_transition(hull.attr("d", function(d) {return "M" + d.join("L") + "Z";})).style("opacity", null);
     }
 }
 
@@ -432,7 +438,7 @@ export class AbstractLayoutStyle {
 class ForceSimulation {
     constructor() {
         this._simulation = d3.forceSimulation();
-        this._simulation.alphaMin(0.10)
+        this._simulation.alphaMin(0.1)
         this._simulation.on("tick", () => this.tick_called())
         this._setup_forces()
         this._all_nodes = {}
@@ -451,23 +457,34 @@ class ForceSimulation {
 
         let update_start = window.performance.now()
         this._enforce_free_float_styles_retranslation()
+
+        this._viewport.layout_manager.compute_node_positions_from_list_of_nodes(this._get_force_nodes())
         this._viewport.update_gui_of_layers()
-
-        this._viewport.layout_manager.compute_node_positions()
-
-        //this._viewport.layout_manager.translate_layout()
         tick_duration = window.performance.now() - update_start
     }
 
+    _get_force_nodes () {
+        let force_nodes = []
+        this._viewport.get_hierarchy_list().forEach(chunk=>{
+            chunk.nodes.forEach(node=>{
+                if (node.data.current_positioning.free)
+                    force_nodes.push(node)
+            })
+        })
+        return force_nodes
+    }
     _enforce_free_float_styles_retranslation() {
         for (let idx in this._viewport.layout_manager._active_styles) {
             let style = this._viewport.layout_manager._active_styles[idx]
             if (!style.has_fixed_position() && style.type() != LayoutStyleForce.prototype.type()) {
-                console.log("tick: enforce style translation", style.type())
+                node_visualization_utils.log(6, "tick: enforce style translation ", style.type())
                 style.force_style_translation()
+                style.translate_coords()
+                this._viewport.layout_manager.compute_node_positions_from_list_of_nodes(style.filtered_descendants)
+                style.filtered_descendants.forEach(node=>node.use_transition=false)
             }
         }
-        this._viewport.layout_manager.translate_layout()
+//        this._viewport.layout_manager.translate_layout()
     }
 
     _setup_forces() {
@@ -479,9 +496,6 @@ class ForceSimulation {
 
     _update_charge_force() {
         let charge_force = d3.forceManyBody().strength((d) => {
-            if (d.force != null) {
-                return d.force;
-            }
             if (d._children)
                 return d.data.force_options.force_aggregator
             else
@@ -846,8 +860,6 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         if (this._style_translated && this.has_fixed_position())
             return
 
-        node_visualization_utils.log(7, "translating hierarchy style, fixed", this.has_fixed_position())
-
         let rad = this.get_rotation() / 180 * Math.PI
         let text_positioning = this.get_text_positioning(rad)
 
@@ -874,13 +886,15 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
             if (node != this.style_root_node && node.data.use_style) {
                 sub_nodes_with_explicit_style.push(node)
             }
-            node.force = -500
         }
 
         // Retranslate styles which's position got shifted
         sub_nodes_with_explicit_style.forEach(node=>{
+            node_visualization_utils.log(7, "retranslate style " + node.data.use_style.type() + " of subnode " + node.data.name)
             this._layout_manager.compute_node_position(node)
+            node.data.use_style.force_style_translation()
             node.data.use_style.translate_coords()
+            this._layout_manager.compute_node_positions_from_list_of_nodes(node.data.use_style.filtered_descendants)
         })
 
         this.generate_overlay()
@@ -1135,9 +1149,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
 
         // Arc
         let path = rotation_overlay.selectAll("path").data([null])
-        path = path.enter().append("path").classed("style_overlay", true)
+        path = path.enter().append("path")
+                           .classed("style_overlay", true)
+                           .style("opacity", 0)
             .merge(path)
-        this.add_optional_transition(path).attr("d", arc)
+        this.add_optional_transition(path).attr("d", arc).style("opacity", null)
 
 
         // Icons
@@ -1264,17 +1280,18 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         if (this._style_root_node_offsets == [])
             return
 
+        node_visualization_utils.log(7, "translating block style, fixed positing:" + this.has_fixed_position())
+
         let abs_offsets = {}
         abs_offsets.x = this.style_root_node.x
         abs_offsets.y = this.style_root_node.y
         this._style_root_node_offsets.forEach(offset=>{
-            if (offset.node == this.style_root_node && !this.has_fixed_position())
+            if (offset.node == this.style_root_node)
                 return
             let force = this.get_default_node_force(offset.node)
             force.fx = abs_offsets.x + offset.x
             force.fy = abs_offsets.y + offset.y
-            //force.use_transition = this.use_transition
-            force.use_transition = true
+            force.use_transition = this.use_transition
             if (offset.node != this.style_root_node)
                 force.hide_node_link = true
             force.text_positioning = (selection, radius)=>selection.attr("transform", "translate("+(radius)+","+(radius+4)+") rotate(45)")
@@ -1313,9 +1330,9 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
                     .classed("children_boundary", true)
                     .classed("block_style_overlay", true)
                     .attr("pointer-events", "none")
+                    .style("opacity", 0)
                 .merge(hull)
-        // hull.interrupt()
-        this.add_optional_transition(hull.attr("d", function(d) {return "M" + d.join("L") + "Z";}));
+        this.add_optional_transition(hull.attr("d", function(d) {return "M" + d.join("L") + "Z";})).style("opacity", null);
 
         let connection_line = this.selection.selectAll("line.root_children_connection").data([null])
         connection_line.enter().append("line")
@@ -1329,7 +1346,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
     }
 }
 
-// TODO: move this from global scope into setup components in LayoutManager?
+
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleForce)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleHierarchy)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleRadial)
@@ -1493,6 +1510,8 @@ export class LayoutStyleExampleGenerator {
     }
 
     _update_nodes() {
+        this._style_instance.style_root_node.x = 0
+        this._style_instance.style_root_node.y = 0
         this._style_instance.update_data()
         this._style_instance.translate_coords()
         this._style_hierarchy.descendants().forEach(node=>{this._layout_manager.compute_node_position(node)})
@@ -1543,6 +1562,8 @@ export class LayoutStyleExampleGenerator {
         let fake_layout_manager = new node_visualization_layouting.LayoutManagerLayer(this._create_fake_viewport())
         // Disable undo feature
         fake_layout_manager.create_undo_step = ()=>{}
+        fake_layout_manager.layout_applier = {}
+        fake_layout_manager.layout_applier.apply_all_layouts = ()=>{}
         return fake_layout_manager
     }
 
@@ -1558,6 +1579,7 @@ export class LayoutStyleExampleGenerator {
 
     _create_example_hierarchy(example_settings) {
         let chunk = {coords: {x: 0, y: 0, width: 400, height: 400}}
+        let id_counter = 0
 
         let maximum_nodes = example_settings.total_nodes.value
         let generated_nodes = 0
@@ -1587,12 +1609,15 @@ export class LayoutStyleExampleGenerator {
 
         let hierarchy = d3.hierarchy(hierarchy_raw)
         hierarchy.descendants().forEach(node=>{
-            node.x = 50
-            node.y = 50
-            node.data.chunk = chunk
-            node.data.hostname = "Demohost"
-        })
-        this._style_hierarchy = hierarchy
+            node.x = 50;
+            node.y = 50;
+            id_counter += 1;
+            node.data.id = id_counter;
+            node.data.chunk = chunk;
+            node.data.hostname = "Demohost";
+            node.data.transition_info = {};
+        });
+        this._style_hierarchy = hierarchy;
     }
 
     _paint_nodes(hierarchy, no_transition) {

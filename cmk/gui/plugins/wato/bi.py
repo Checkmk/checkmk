@@ -68,7 +68,6 @@ from cmk.gui.valuespec import (
     Optional,
     ID,
     DropdownChoice,
-    OptionalDropdownChoice,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -821,109 +820,113 @@ class ModeBI(WatoMode, BIManagement):
             title=_("Aggregation Properties"),
             optional_keys=False,
             render="form",
-            elements=cme_elements +
-            [("ID",
-              TextAscii(
-                  title=_("Aggregation ID"),
-                  help=_(
-                      "The ID of the aggregation must be a unique text. It will be as unique ID."),
-                  allow_empty=False,
-                  size=80,
-              )),
-             ("groups",
-              Transform(
-                  ListOf(Alternative(
-                      style="dropdown",
-                      orientation="horizontal",
-                      elements=[
-                          TextUnicode(title=_("Group name")),
-                          ListOfStrings(
-                              title=_("Group path"), orientation="horizontal", separator="/"),
-                      ],
-                  ),
-                         title=_("Aggregation Groups")),
-                  back=transform_aggregation_groups_to_disk,
-                  forth=transform_aggregation_groups_to_gui,
-              )),
-             ("node",
-              CascadingDropdown(title=_("Rule to call"),
-                                choices=self._node_call_choices() +
-                                self._foreach_choices(self._node_call_choices()))),
-             ("disabled",
-              Checkbox(
-                  title=_("Disabled"),
-                  label=_("Currently disable this aggregation"),
-              )),
-             ("hard_states",
-              Checkbox(
-                  title=_("Use Hard States"),
-                  label=_("Base state computation on hard states"),
-                  help=
-                  _("Hard states can only differ from soft states if at least one host or service "
-                    "of the BI aggregate has more than 1 maximum check attempt. For example if you "
-                    "set the maximum check attempts of a service to 3 and the service is CRIT "
-                    "just since one check then it's soft state is CRIT, but its hard state is still OK. "
-                    "<b>Note:</b> When computing the availbility of a BI aggregate this option "
-                    "has no impact. For that purpose always the soft (i.e. real) states will be used."
-                   ),
-              )),
-             ("downtime_aggr_warn",
-              Checkbox(
-                  title=_("Aggregation of Downtimes"),
-                  label=_("Escalate downtimes based on aggregated WARN state"),
-                  help=
-                  _("When computing the state 'in scheduled downtime' for an aggregate "
-                    "first all leaf nodes that are within downtime are assumed CRIT and all others "
-                    "OK. Then each aggregated node is assumed to be in downtime if the state "
-                    "is CRIT under this assumption. You can change this to WARN. The influence of "
-                    "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
-                    "and want the downtime information also escalated in case such a node would go into "
-                    "WARN state."),
-              )),
-             (
-                 "single_host",
-                 Checkbox(
-                     title=_("Optimization"),
-                     label=_("The aggregation covers data from only one host and its parents."),
+            elements=cme_elements + [
+                ("ID",
+                 TextAscii(
+                     title=_("Aggregation ID"),
                      help=_(
-                         "If you have a large number of aggregations that cover only one host and "
-                         "maybe its parents (such as Check_MK cluster hosts), "
-                         "then please enable this optimization. It reduces the time for the "
-                         "computation. Do <b>not</b> enable this for aggregations that contain "
-                         "data of more than one host!"),
-                 ),
-             ),
-             ("node_visualization",
-              Dictionary(title=_("BI Visualization"),
+                         "The ID of the aggregation must be a unique text. It will be as unique ID."
+                     ),
+                     allow_empty=False,
+                     size=80,
+                 )),
+                ("groups",
+                 Transform(
+                     ListOf(Alternative(
+                         style="dropdown",
+                         orientation="horizontal",
                          elements=[
-                             ("layout",
-                              OptionalDropdownChoice(
-                                  title=_("Base layout"),
-                                  choices=[
-                                      ("default", _("Default (%s)") % config.default_bi_layout),
-                                      ("force", _("Free-floating")),
-                                      ("hierarchy", _("Hierarchy")),
-                                      ("radial", _("Radial")),
-                                  ],
-                                  otherlabel=_("Use custom layout template"),
-                                  explicit=DropdownChoice(choices=[
-                                      ("a", "a"),
-                                      ("b", "b"),
-                                  ]),
-                                  default_value="default")),
-                             ("line_style",
-                              DropdownChoice(title=_("Style of connection lines"),
-                                             choices=[
-                                                 ("straight", "Straight"),
-                                                 ("round", _("Round")),
-                                                 ("elbow", _("Elbow")),
-                                             ],
-                                             default_value="round")),
-                             ("ignore_rule_styles",
-                              Checkbox(title=_("Ignore styles specified in rules"),
-                                       default_value=False)),
+                             TextUnicode(title=_("Group name")),
+                             ListOfStrings(
+                                 title=_("Group path"), orientation="horizontal", separator="/"),
                          ],
-                         optional_keys=[]))])
+                     ),
+                            title=_("Aggregation Groups")),
+                     back=transform_aggregation_groups_to_disk,
+                     forth=transform_aggregation_groups_to_gui,
+                 )),
+                ("node",
+                 CascadingDropdown(title=_("Rule to call"),
+                                   choices=self._node_call_choices() +
+                                   self._foreach_choices(self._node_call_choices()))),
+                ("disabled",
+                 Checkbox(
+                     title=_("Disabled"),
+                     label=_("Currently disable this aggregation"),
+                 )),
+                ("hard_states",
+                 Checkbox(
+                     title=_("Use Hard States"),
+                     label=_("Base state computation on hard states"),
+                     help=
+                     _("Hard states can only differ from soft states if at least one host or service "
+                       "of the BI aggregate has more than 1 maximum check attempt. For example if you "
+                       "set the maximum check attempts of a service to 3 and the service is CRIT "
+                       "just since one check then it's soft state is CRIT, but its hard state is still OK. "
+                       "<b>Note:</b> When computing the availbility of a BI aggregate this option "
+                       "has no impact. For that purpose always the soft (i.e. real) states will be used."
+                      ),
+                 )),
+                ("downtime_aggr_warn",
+                 Checkbox(
+                     title=_("Aggregation of Downtimes"),
+                     label=_("Escalate downtimes based on aggregated WARN state"),
+                     help=
+                     _("When computing the state 'in scheduled downtime' for an aggregate "
+                       "first all leaf nodes that are within downtime are assumed CRIT and all others "
+                       "OK. Then each aggregated node is assumed to be in downtime if the state "
+                       "is CRIT under this assumption. You can change this to WARN. The influence of "
+                       "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
+                       "and want the downtime information also escalated in case such a node would go into "
+                       "WARN state."),
+                 )),
+                (
+                    "single_host",
+                    Checkbox(
+                        title=_("Optimization"),
+                        label=_("The aggregation covers data from only one host and its parents."),
+                        help=_(
+                            "If you have a large number of aggregations that cover only one host and "
+                            "maybe its parents (such as Check_MK cluster hosts), "
+                            "then please enable this optimization. It reduces the time for the "
+                            "computation. Do <b>not</b> enable this for aggregations that contain "
+                            "data of more than one host!"),
+                    ),
+                ),
+                (
+                    "node_visualization",
+                    Dictionary(
+                        title=_("BI Visualization"),
+                        elements=[
+                            (
+                                "layout_id",
+                                DropdownChoice(
+                                    title=_("Base layout"),
+                                    choices=[
+                                        ("builtin_default", _("Default (%s)") %
+                                         config.default_bi_layout["node_style"][8:].title()),
+                                        ("builtin_force", _("Builtin: Force")),
+                                        ("builtin_hierarchy", _("Builtin: Hierarchy")),
+                                        ("builtin_radial", _("Builtin: Radial")),
+                                        # TODO: continue this list with user configurable layouts
+                                    ],
+                                    default_value="default")),
+                            ("line_style",
+                             DropdownChoice(title=_("Style of connection lines"),
+                                            choices=[
+                                                ("default", _("Default (%s)") %
+                                                 config.default_bi_layout["line_style"].title()),
+                                                ("straight", "Straight"),
+                                                ("round", _("Round")),
+                                                ("elbow", _("Elbow")),
+                                            ],
+                                            default_value="round")),
+                            ("ignore_rule_styles",
+                             Checkbox(title=_("Ignore styles specified in rules"),
+                                      default_value=False)),
+                        ],
+                        optional_keys=[]))
+            ])
 
     # .--------------------------------------------------------------------.
     # | Methods for analysing the rules and aggregations                   |

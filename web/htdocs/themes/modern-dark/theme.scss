@@ -32,3 +32,391 @@
 @if $MANAGED = "yes" {
   @include managed;
 }
+
+
+
+
+/* SIDEBAR BACKGROUND */
+
+//#side_footer {
+//  border-top: 1px solid #212121;
+//}
+//
+//#side_footer, #side_header, body.side div.snapin, div.contextlink body.main .popup_menu span, body.main .popup_menu div.contextlink span, div.togglebutton body.main .popup_menu span, body.main .popup_menu div.togglebutton span, div.add_snapin div.snapin, div.snapin div.content {
+//  background-color: #212121 ;
+//}
+
+div.togglebutton a, div.contextlink a {
+  background-color: #282828 ;
+}
+
+#side_header {
+  border-bottom: 1px solid #212121;
+}
+
+.even0 .state0, .even0 .hstate0, .even0 .state0 a, .even0 .state0 body.main .popup_menu span, body.main .popup_menu .even0 .state0 span, .even0 .hstate0 a, .even0 .hstate0 body.main .popup_menu span, body.main .popup_menu .even0 .hstate0 span {
+  background-color: #13d389 ;
+  border-color: #13d389 ;
+  color: #212121;
+}
+
+.filterform > tbody > tr > td div.floatfilter, table.data.tiled td.tiles div.tile, .wato div.mainmenu a, .wato div.mainmenu body.main .popup_menu span, body.main .popup_menu .wato div.mainmenu span, div.dashlet > div.title, body.main.dashlet, .dashlet .dashlet_inner.background, div.dashlet_inner div.stats {
+  background-color: #282828;
+}
+
+table.tacticaloverview td {
+  background-color: #444;
+}
+
+.odd0 .state0, .odd0 .hstate0, .odd0 .state0 a, .odd0 .state0 body.main .popup_menu span, body.main .popup_menu .odd0 .state0 span, .odd0 .hstate0 a, .odd0 .hstate0 body.main .popup_menu span, body.main .popup_menu .odd0 .hstate0 span {
+  background-color: #13d389 ;
+  border-color: #13d389 ;
+  color: #212121;
+}
+
+.state2.state2.state2, .even0 .state2, .even2 .state2, .hstate1, .state2 a, .state2 body.main .popup_menu span, body.main .popup_menu .state2 span, .hstate2 a, .hstate2 body.main .popup_menu span, body.main .popup_menu .hstate2 span {
+  background-color: #ff5722 ;
+  border-color: #ff5722 ;
+  color: #fff;
+}
+
+.wato div.mainmenu div.title, table.data, div.dashlet_inner div.stats table.hoststats a, div.dashlet_inner div.stats table.hoststats body.main .popup_menu span, body.main .popup_menu div.dashlet_inner div.stats table.hoststats span, table.data tr.data > td a, table.data td:not(.state) {
+  color: #fafafa ;
+}
+
+side_footer img.iconbutton {
+  position: relative;
+  top: 4px;
+  left: 0;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  margin-right: 5px;
+  font-size: 9px;
+  background-color: #282828;
+  border: 0px solid #313638;
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+/* MAIN BACKGROUND */
+
+body.main {
+  background: #323232;
+}
+
+body.main table.header {
+  background: #282828;
+  border-bottom: 0px solid transparent ;
+}
+
+body.main.dashlet tr.data:nth-child(2)>td.state {
+  border-top-color: #282828;
+}
+
+body.main.dashlet tr.data>td.state {
+  border-top-color: #282828;
+}
+
+body.side {
+  background-color: #323232;
+}
+
+/* CARD BACKGROUND */
+
+#mk_side_search_field.button, div.snapin select.button, div.snapin textarea.button, input.button, select.button, textarea.button {
+  display: inline-block;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 0;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: $grey-1;
+  background-color: $grey-3;
+  box-shadow: none;
+  border-color: $grey-3;
+  &:hover{
+    background-color: lighten($grey-3, 10%);
+    border-color: lighten($grey-3, 10%)!important;
+  }
+}
+
+/* TABLE BACKGROUND */
+table.data tr td.gap {
+  background: #323232;
+  border: 1px solid #323232;
+}
+
+table.data tr.data > td:not(.gap) {
+  //border-bottom: 1px solid #333;
+  border-left: 0px solid #333;
+  border-right: 0px solid #333;
+  //border-top: 1px solid #333;
+}
+table.data tr.data > td.state {
+  border-top: none;
+}
+
+table.data tr.data > td.state3, .hstate2, .state3 a, .state3 body.main .popup_menu span, body.main .popup_menu .state3 span, .hstate2 a, .hstate2 body.main .popup_menu span, body.main .popup_menu .hstate2 span {
+  background-color: #ffb300 ;
+  color: #fff;
+}
+
+table.data tr.data > td:not(.state) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table.tacticaloverview td.prob a.link {
+  color: #212121;
+}
+
+table.tacticaloverview td.prob {
+  background: #ffeb83;
+}
+
+table.nform {
+  width: 100%;
+  padding: 0;
+  margin: 5px 0;
+  background: #282828;
+  border: 1px solid #212121;
+  border-spacing: 7px 5px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 rgba(0,0,0,.1);
+  empty-cells: show;
+}
+
+table.nform tr.heading {
+  height: auto;
+  background: #282828;
+}
+
+table.nform tr.heading>td {
+  vertical-align: middle;
+  cursor: pointer;
+  background-color: rgba(255,255,255,.0);
+  border-radius: 5px 5px 0 0;
+}
+
+table.nform tr.heading td {
+  height: auto;
+  padding: 3px 4px 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #fafafa;
+  text-transform: uppercase;
+}
+
+table.nform .title {
+  color: #fafafa;
+}
+
+table.nform .dots {
+  margin-left: 5px;
+  color: #fafafa;
+}
+
+table.data tr.data>td:not(.state0) {
+  height: 26px;
+  padding: 2px 8px;
+  //background-color: transparent;
+  vertical-align: middle;
+}
+//
+//td.odd0, tr.odd0, tr.oddp{
+//  //background-color: #323232;
+//  background-color: $grey-6;
+//}
+//
+//tr.odd0, tr.oddp,td.even0, tr.even0, tr.evenp {
+//  border-bottom: 2px solid $grey-3;
+//  //border-collapse: collapse;
+//  //background-color: transparent!important;
+//  //>td{
+//  //  border-bottom: none!important;
+//  //}
+//}
+//
+//td.even0, tr.even0, tr.evenp {
+//  //background-color: #282828;
+//  background-color: $grey-5;
+//}
+
+
+
+tr.odd3 {
+  background-color: #323232;
+}
+
+tr.even3 {
+  background-color: #282828;
+}
+
+/* INPUT FIELDS */
+
+.wato form.search {
+  color: #fafafa;
+}
+
+.select2-container--default .select2-selection--single {
+  background-color: #212121;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #fafafa;
+}
+
+#mk_side_search_field, input[type=text], div.snapin select {
+  background: #444 ;
+  color: #fafafa ;
+}
+
+/* FONT COLORS */
+
+body.main table.footer, body.main table.footer .popup_menu a, body.main table.footer .popup_menu span {
+  color: #fafafa;
+}
+
+.wato h3 {
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  color: #fafafa;
+}
+
+.wato div.info {
+  padding-left: 1px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #fafafa;
+}
+
+/* GET RID OF BORDERS */
+
+body.side div.snapin, div.add_snapin div.snapin {
+  //width: 100%;
+  //padding: 0;
+  //margin: 6px 0;
+  //overflow: hidden;
+}
+
+/* GRAPH */
+
+.graph:not(.boxlayout) {
+  font-size: 8pt;
+  padding: 0.73ex 1.45ex 0.36ex 0.73ex;
+  background-color: #282828;
+  color: rgb(0, 0, 0);
+}
+
+div.graph_with_timeranges div.graph {
+  border: 1px solid #212121;
+  box-shadow: none;
+}
+
+.link, .title {
+  padding: 0 2px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #fafafa;
+  transition: color .15s ease-in-out;
+}
+
+div.graph table.legend th {
+  border-bottom: 1px solid #fafafa;
+}
+
+div.graph div.time {
+  color: #fafafa;
+}
+
+/* OTHER */
+
+div.dashlet > div.title {
+  border: 1px solid #212121;
+}
+
+div[id^=dashlet] div.dashlet_inner > div {
+  border-left: 1px solid #212121;
+  border-right: 1px solid #212121;
+  border-bottom: 1px solid #212121;
+}
+
+div.dashlet_inner div.stats table td {
+  border-top: 1px solid #282828;
+}
+
+div.dashlet_inner div.stats table th {
+  border-top: 1px solid #282828;
+}
+
+div.optiondial, div.optiondial.num_columns, div.optiondial.refresh, .filterform > tbody > tr > td div.floatfilter, div.togglebutton.off, table.data.tiled td.tiles div.tile, body.side div.snapin, div.add_snapin div.snapin, input[type=text], input[type=password], select, textarea, div.snapin select, div.snapin textarea, #mk_side_search_field, #snapin_tag_tree select, div.contextlink a, div.togglebutton a, div.contextlink body.main .popup_menu span, body.main .popup_menu div.contextlink span, div.togglebutton body.main .popup_menu span, body.main .popup_menu div.togglebutton span, #form_search input, #form_search select, #form_search textarea, #form_search #mk_side_search_field, .wato div.mainmenu body.main .popup_menu span, body.main .popup_menu .wato div.mainmenu span, table.tacticaloverview td {
+  border: 1px solid $grey-7;
+}
+
+.wato div.mainmenu a {
+  border: 1px solid #212121;
+}
+
+div.optiondial, div.optiondial.num_columns, div.optiondial.refresh, input[type=password], select, textarea, div.snapin textarea, #snapin_tag_tree select {
+  background: #282828 ;
+  color: #fafafa ;
+}
+
+table.data th, body.main a, body.main .popup_menu span, div.dashlet > div.title span a, div.dashlet > div.title span body.main .popup_menu span, body.main .popup_menu div.dashlet > div.title span span, div.dashlet > div.title, .wato div.mainmenu .title, div.contextlink a, div.togglebutton a, div.contextlink body.main .popup_menu span, body.main .popup_menu div.contextlink span, div.togglebutton body.main .popup_menu span, body.main .popup_menu div.togglebutton span, table.tacticaloverview td a, table.tacticaloverview td body.main .popup_menu span, body.main .popup_menu table.tacticaloverview td span, body.main table.header td.right, body.main table.header td.right *, body.side .title, .wato div.mainmenu .subtitle, div.contextlink a, div.togglebutton a, div.contextlink body.main .popup_menu span, body.main .popup_menu div.contextlink span, div.togglebutton body.main .popup_menu span, body.main .popup_menu div.togglebutton span {
+  color: #bdbdbd;
+}
+
+div.dashlet_inner div.stats table td:not(.color), div.dashlet_inner div.stats table th:not(.color) {
+  background-color: transparent;
+}
+
+#side_content {
+  position: absolute;
+  top: 66px;
+  z-index: 5;
+  width: 100%;
+  padding-left: 0;
+  overflow: hidden;
+  color: #000;
+}
+
+.hstate2, .hstate2 a, .hstate2 body.main .popup_menu span, .state3, .state3 a, .state3 body.main .popup_menu span, body.main .popup_menu .hstate2 span, body.main .popup_menu .state3 span {
+  background-color: #ffb300;
+  border-color: #ffb300;
+  color: #fff;
+}
+
+.odd0 .state3, .odd3 .state3 {
+  background-color: #ffb300;
+  border-color: #ffb300;
+  color: #fff;
+}
+
+div#snapin_container_tactical_overview {
+  height: 170px;
+}
+
+body.main .popup_menu div.snapin div.footnotelink span.link, div.snapin div.footnotelink a.link, div.snapin div.footnotelink body.main .popup_menu span.link {
+  color: #fafafa;
+}
+
+#side_footer img.iconbutton {
+  position: relative;
+  top: 4px;
+  left: 0;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  margin-right: 5px;
+  font-size: 9px;
+  background-color: #323232;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: none;
+}
+

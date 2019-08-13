@@ -121,6 +121,7 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
+      background-color: $primary-bg-color;
     }
 
     &.left {
@@ -693,5 +694,10 @@ body.main {
   body.side {
     overflow-x: hidden;
     overflow-y: auto;
+
+    // TODO: Rm this if redundant
+    div.snapin {
+      background-color: $theme-color-table-border-dark;
+    }
   }
 }

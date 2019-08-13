@@ -57,7 +57,7 @@ Boston, MA 02110-1301 USA.
   }
 
   tr {
-    background-color: transparent;
+    background-color: $wato-tr-bg-color;
   }
 
   /* TODO: Reproduce this html element */
@@ -736,7 +736,7 @@ form.search, div.filter_buttons {
     box-shadow: none;
 
     &:hover {
-      background: $theme-color-table-background;
+      background: $wato-a-hover-bg-color;
     }
   }
 
@@ -818,7 +818,7 @@ form.search, div.filter_buttons {
 
   a {
     margin-right: 3px;
-    color: #000;
+    color: $primary-font-color;
     text-decoration: none;
     white-space: nowrap;
 
@@ -855,7 +855,7 @@ div.varname {
 /* page "global settings*/
 .wato div.globalvars {
   a {
-    color: #000;
+    color: $primary-font-color;
     text-decoration: none;
 
     &:hover {
@@ -1406,11 +1406,11 @@ table.setting td.reason {
 
 td.settingvalue.unused, td.settingvalue.unused td {
   font-style: italic;
-  color: #256;
+  color: $td-unused-color;
 }
 
 .wato table.nform div.title a {
-  color: #000;
+  color: $primary-font-color;
   text-decoration: none;
 
   &:hover {

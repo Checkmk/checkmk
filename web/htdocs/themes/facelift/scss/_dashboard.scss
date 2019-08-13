@@ -35,6 +35,12 @@ div#dashboard {
   margin: 0;
 }
 
+body.dashlet{
+  #data_container{
+    padding: 0;
+    border: none;
+  }
+}
 
 div.dashlet {
   position: absolute;
@@ -75,9 +81,9 @@ div.dashlet {
     position: absolute;
     left: 0;
     width: 150px; /* will be changed by javascript later */
-    height: 17px;
+    height: 22px;
     padding: 0;
-    padding-top: 4px;
+    padding-top: 0px;
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
@@ -219,14 +225,14 @@ div.dashlet_inner div.stats {
   background-color: $theme-color-white;
 
   table th, table td {
-    background: $theme-color-white;
+    background: $dashboard-stats-bg-color;
     border-top: 1px solid $theme-color-table-border;
     border-bottom: none;
   }
 }
 
 body.main.dashlet {
-  padding: 8px 0;
+  padding: 8px;
   background: transparent;
   border-top: none;
   box-sizing: border-box;
@@ -235,11 +241,17 @@ body.main.dashlet {
     padding: 0 8px;
 
     tr.data {
-      background: $theme-color-nuance-13;
+      background-color: $dashboard-tr-bg-color;
+      border-bottom: $dashboard-tr-border-bottom;
       transition: .15s ease-in-out;
-
+      &:nth-child(even) {
+        background:  $dashboard-tr-even-bg-color;
+      }
       &:hover {
-        background-color: $theme-color-background;
+        background-color: $dashboard-tr-hover-bg-color;
+        &:nth-child(even) {
+          background-color: $dashboard-tr-even-hover-bg-color;
+        }
       }
     }
   }
@@ -701,16 +713,16 @@ body.main.dashlet {
       border-bottom: none;
 
       &.state {
-	border-top-color: white !important;
+        border-top: none;
       }
     }
 
-    &:last-of-type > td {
-      border-bottom: 1px solid #cccfdb;
+    &:last-of-type > td:not(.state) {
+      border-bottom: 1px solid $theme-color-table-border;
     }
 
     &:nth-child(2) > td.state {
-      border-top-color: #cccfdb !important;
+      border-top-color: $theme-color-table-border !important;
     }
   }
 

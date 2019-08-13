@@ -126,17 +126,17 @@ input[type="checkbox"] {
     margin: 0 .6em 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: #fff;
-    border: 1px #73767a solid;
+    background-color: $primary-bg-color;
+    border: 1px $checkbox-border-color solid;
     content: "\00a0";
-    box-shadow: 0.1px 1px 1.2px 0 #888 inset;
+    box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
   }
 
   &:checked {
     + label:before {
-      color: #000;
+      color: $checkbox-checked-color;
       text-align: center;
-      background-color: #ddd;
+      background-color: $checkbox-checked-bg-color;
       content: "\2716";
     }
 
@@ -155,6 +155,8 @@ select.icon option {
   background-size: 18px;
 }
 
+
+// TODO : Figure out where these can be found in the front end
 input.button,
 table.vs_duallist a.control,
 .wato div.mainmenu a {
@@ -223,12 +225,12 @@ input.button.hot {
 }
 
 /* on/off toggle button */
-
+// TODO: Figure out this weird nesting. Why is there a body tag inside a .toggle_switch?
 .toggle_switch {
   width: 56px;
   height: 22px;
   padding: 2px;
-  background: $theme-color-white;
+  background: $primary_bg_color;
   border: 1px solid $theme-color-table-border;
   border-radius: 11px;
   box-shadow: none;
@@ -246,7 +248,7 @@ input.button.hot {
     height: 16px;
     font-size: 8px;
     font-weight: $theme-font-weight-bold;
-    line-height: 16px;
+    line-height: 18px;
     letter-spacing: $theme-letter-spacing-table;
     text-transform: uppercase;
     border: none;
@@ -265,12 +267,12 @@ input.button.hot {
 
   &.on a {
     float: right;
-    background-color: #54a626;
+    background-color: $toggle-switch-on-bg-color;
     border-width: 0 0 0 1px;
   }
 
   &.off a {
-    background-color: #f60000;
+    background-color: $toggle-switch-off-bg-color;
     border-width: 0 1px 0 0;
   }
 
@@ -444,8 +446,9 @@ div.really {
 }
 
 div.success {
-  background-color: #9dbecd;
-  border-color: #080;
+  color: $success-alert-font-color;
+  background-color: $success-alert-bg-color;
+  border: 1px solid $success-alert-border-color;
 }
 
 div.message {
@@ -455,18 +458,22 @@ div.message {
 }
 
 div.error {
-  color: #fff;
-  background-color: #e70000;
+  color: $theme-color-lightgrey;
+  background-color: $theme-color-state-2-background;
   border-color: #e40;
 
   a {
     color: #fff;
   }
+
+  tt {
+    color: inherit;
+  }
 }
 
 div.warning {
   color: #000;
-  background-color: #ff4;
+  background-color: $theme-color-main;
   border-color: #fc0;
 
   a {
@@ -1133,6 +1140,10 @@ div.graph {
   &.preview {
     padding: 4px !important;
   }
+
+  table.legend td {
+    color: $graph-legend-color !important;
+  }
 }
 
 div.content {
@@ -1143,7 +1154,7 @@ div.content {
 }
 
 body.main img.treeangle {
-  filter: invert(100%);
+  filter: invert($filter-inversion-percentage);
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1299,8 +1310,9 @@ body.main.visible div.foldable .title {
 }
 
 div.color {
-  border-radius: $theme-border-radius;
-  box-shadow: none;
+  border-color: $color-div-border-color !important;
+  border-radius: 0;
+  box-shadow: $color-div-box-shadow;
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1311,24 +1323,6 @@ th.header_state {
   &:hover {
     background: transparent !important;
   }
-}
-
-div.error {
-  color: $theme-color-lightgrey;
-  background-color: $theme-color-state-2-background;
-
-  tt {
-    color: inherit;
-  }
-}
-
-div.warning {
-  background-color: $theme-color-main;
-}
-
-div.success {
-  background-color: $theme-color-state-success-background;
-  border-color: $theme-color-state-success-border;
 }
 
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {

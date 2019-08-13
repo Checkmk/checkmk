@@ -149,7 +149,7 @@ div.node_vis .delete_icon {
 }
 
 div.node_vis img.treeangle {
-    filter: invert(100%);
+    filter: invert($filter-inversion-percentage);
 }
 
 div.node_vis .path_details table th {

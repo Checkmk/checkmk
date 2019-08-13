@@ -82,7 +82,7 @@ body {
   }
 
   &.main {
-    padding: 68px 32px;
+    padding: 68px 16px 60px 16px;
     margin: 0;
     font-family: arial, helvetica, sans-serif;
     font-size: $theme-font-size-main;
@@ -352,7 +352,7 @@ div.togglebutton {
     text-decoration: none;
     text-overflow: ellipsis;
     cursor: pointer;
-    background: $theme-color-white;
+    background: $toggle-button-bg-color;
     border: 1px solid $theme-color-table-border;
     border-radius: 5px;
     box-shadow: none;
@@ -376,7 +376,7 @@ div.togglebutton {
       letter-spacing: $theme-letter-spacing;
       color: $theme-color-text;
       text-decoration: none;
-      background: $theme-button-background;
+      background: $theme-button-background-hover;
       border: 1px solid $theme-color-table-border;
       outline: none;
       box-shadow: none;
@@ -441,7 +441,7 @@ div.togglebutton {
         text-decoration: none;
         text-overflow: ellipsis;
         cursor: default;
-        background: $theme-color-white;
+        background: $toggle-button-bg-color;
         border-radius: 5px;
         box-shadow: none;
       }
@@ -479,6 +479,13 @@ div.togglebutton {
 | Styles for table that shows rows of data. Such tables are used in the    |
 | Status-GUI, in WATO and in custom modules that use similar tables.       |
 '-------------------------------------------------------------------------*/
+
+#data_container {
+  padding: 0 10px 20px;
+  background: $data-container-bg-color;
+  border: $data-container-border;
+  border-radius: $theme-border-radius;
+}
 
 table.data {
   width: 100%;
@@ -570,7 +577,7 @@ table.data {
   &.oddeven > tbody > tr:nth-child(odd),
   &.oddeven > tbody > tr:nth-child(even),
   &.oddeven > tbody > tr.groupheader {
-    background-color: transparent;
+    background-color: $oddeven-table-bg-color;
   }
 
   /* Two-lined header, for example in WATO: ChangeLog->Site Status */
@@ -588,14 +595,19 @@ table.data {
       height: 26px;
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-      background-color: $theme-color-white;
-      border-top: 1px solid $theme-color-table-border;
+      background-color: $data-td-bg-color;
+      &:not(.state) {
+	border-top: 1px solid $theme-color-table-border;
+	border-bottom: $data-td-border-bottom;
+      }
       border-right: none;
-      border-bottom: 1px solid $theme-color-table-border;
 
       &:first-child {
-        border-left: 1px solid $theme-color-table-border;
         border-radius: $theme-border-radius 0 0 4px;
+
+	&:not(.state) {
+	  border-left: 1px solid $theme-color-table-border;
+	}
       }
 
       &:last-child,
@@ -713,7 +725,7 @@ table.data {
   tr th a.toggle_actions img,
   tr th body.main .popup_menu span.toggle_actions img,
   body.main .popup_menu & tr th span.toggle_actions img {
-    filter: invert(100%);
+    filter: invert($filter-inversion-percentage);
   }
 
   tr.groupheader,
@@ -922,11 +934,15 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
   color: $theme-color-text;
-  background: $theme-color-white;
+  background: $primary-bg-color;
   background-image: none;
-  border: 1px solid $theme-color-table-border;
+  border: $input-field-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
+}
+
+span.select2 .select2-selection {
+  background-color: $primary-bg-color;
 }
 
 input[type=text], textarea {
@@ -966,7 +982,7 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table;
     color: #fff;
-    background-color: #13d389;
+    background-color: $success;
     box-shadow: none;
   }
 
@@ -979,17 +995,17 @@ input, select, textarea, div.snapin select, div.snapin textarea,
 input.button {
   &:not([type=text]), &:not([type=password]) {
     padding: 4px 8px;
-    border: 1px solid #13d389;
+    border: 1px solid $input-button-border;
 
     &:hover, &:active {
-      border: 1px solid #11bd7b;
+      border: 1px solid $input-button-hover-border;
     }
   }
 }
 
 input, select, textarea, #mk_side_search_field {
   &.button:hover, &.button:active {
-    background-color: #11bd7b;
+    background-color: $input-button-hover-border;
   }
 }
 
@@ -1093,12 +1109,12 @@ table.nform {
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
-      filter: invert(100%);
+      filter: invert($filter-inversion-percentage);
     }
   }
 
   > tbody > tr td, a {
-    color: #000;
+    color: $primary-font-color;
   }
 
   a:hover {
@@ -1256,12 +1272,13 @@ div.really, div.success, div.error, div.message, div.warning {
   }
 }
 
+// TODO: Check whether this must be $primary-font-color as is for .really and .success
 div.message {
   color: #000;
 }
 
 div.really, div.success {
-  color: #000;
+  color: $primary-font-color;
 }
 
 /* TODO: Reproduce this html element */
@@ -1359,8 +1376,6 @@ table.data div.help {
 
 body.main .popup_menu {
   position: absolute;
-  top: 15px;
-  left: 15px;
   z-index: 50;
   min-width: 300px;
   color: #fff;
@@ -1651,11 +1666,6 @@ table.debug_vars {
 }
 
 /* Popup for adding to visuals (Dashboard, Reports */
-/* TODO: Reproduce div.pnp_graph */
-div.pnp_graph, div.popup_trigger {
-  position: relative;
-}
-
 div.popup_trigger {
   display: inline-block;
 

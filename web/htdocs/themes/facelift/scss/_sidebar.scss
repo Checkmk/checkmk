@@ -241,7 +241,7 @@ span#msg_label {
 body.side div.snapin, div.add_snapin div.snapin  {
   width: 100%;
   padding: 0;
-  margin: 4px 0;
+  margin: 8px 0;
   overflow: hidden;
   background: $theme-color-sidebar-background;
   border: none;
@@ -250,6 +250,9 @@ body.side div.snapin, div.add_snapin div.snapin  {
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
+  &:first-child {
+    margin-top: 6px;
+  }
 }
 
 div.snapin {

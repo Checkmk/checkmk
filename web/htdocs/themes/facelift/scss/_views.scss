@@ -50,9 +50,9 @@ div.floatfilter {
   float: left;
   width: 310px;
   height: 53px;
+  padding: 4px;
   margin: 0 4px 3px 0;
-  padding: 4px 4px;
-  color: #000;
+  color: $primary-font-color;
   background-color: rgba(160, 181, 190, 0.6);
   border-color: #acc #22404d #22414d #8ab;
   border-style: solid;
@@ -84,7 +84,7 @@ div.floatfilter {
     margin-bottom: 1px;
     font-size: 10px;
     color: #fff;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: $floatfilter-bg-color;
     border-radius: 5px 5px 0 0;
   }
 
@@ -178,7 +178,7 @@ div.floatfilter {
     width: 100%;
     height: auto;
     padding: 5px 8px;
-    color: $theme-color-table-text;
+    color: $floatfilter-color;
     text-transform: uppercase;
     box-sizing: border-box;
   }
@@ -232,12 +232,11 @@ div.floatfilter {
   }
 
   &.host_tags .content table {
-    margin-top: -6px;
     border-spacing: 4px 0;
   }
 
   span.select2-selection {
-    border-color: $theme-button-border;
+    border-color: $select2-border-color;
   }
 
   &.svchardstate .content, &.svcstate .content {
@@ -252,7 +251,7 @@ div.floatfilter {
 
   &.single span.select2 {
     position: relative;
-    top: -7px;
+    top: -2px;
   }
 
   /* TODO: Get rid of this important style */
@@ -262,7 +261,7 @@ div.floatfilter {
 
   &.single input.neg[type=text] {
     position: relative;
-    top: -6px;
+    top: -3px;
     width: 222px;
   }
 }
@@ -557,7 +556,13 @@ table.data.single {
   border-spacing: 1px;
   empty-cells: show;
 
+  tr[class*="odd"] {
+    background-color: $odd-tr-bg-color;
+  }
+
   tr.data {
+    border-color: transparent !important;
+
     > td {
       height: 16px;
       padding: 4px 5px 2px;
@@ -565,11 +570,14 @@ table.data.single {
       line-height: 14px;
       text-align: left;
       vertical-align: top;
+      border-top-color: transparent !important;
+      border-bottom-color: transparent !important;
     }
 
     td.left {
       width: 10%;
       padding-right: 20px;
+      text-align: right;
       white-space: nowrap;
       vertical-align: top;
     }
@@ -578,14 +586,16 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: 8px 16px;
-    background-color: $theme-color-white;
+    // TODO: Check, whether this is supposed to be this narrow (0px top and bottom)
+    padding: 0 16px;
+    background-color: $td-single-bg-color;
     border-radius: 0;
 
     &.left {
       font-weight: $theme-font-weight-bold;
-      background-color: $theme-color-white;
-      border-right: 1px solid $theme-color-table-border;
+      color: $td-single-left-color;
+      text-transform: uppercase;
+      background-color: $td-single-left-bg-color;
       transition: .15s ease-in-out;
     }
   }

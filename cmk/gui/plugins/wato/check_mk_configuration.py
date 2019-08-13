@@ -557,16 +557,31 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
         return "default_bi_layout"
 
     def valuespec(self):
-        return DropdownChoice(
-            title=_("BI Visualization Default Layout"),
-            help=_("Specifies the default layout to be used when an aggregation "
-                   "has no explict layout assinged"),
-            choices=[
-                ("force", _("Free floating layout")),
-                ("hierarchy", _("Hierarchical layout")),
-                ('radial', _("Radial layout")),
+        return Dictionary(
+            title=_("Default BI Visualization Settings"),
+            elements=[
+                ("node_style",
+                 DropdownChoice(title=_("Default layout"),
+                                help=_(
+                                    "Specifies the default layout to be used when an aggregation "
+                                    "has no explict layout assinged"),
+                                choices=self.get_layout_style_choices())),
+                ("line_style",
+                 DropdownChoice(title=_("Default line style"),
+                                help=_("Specifies the default line style"),
+                                choices=self.get_line_style_choices())),
             ],
-        )
+            optional_keys=[])
+
+    @classmethod
+    def get_layout_style_choices(cls):
+        return [("builtin_force", _("Force layout")),
+                ("builtin_hierarchy", _("Hierarchical layout")),
+                ('builtin_radial', _("Radial layout"))]
+
+    @classmethod
+    def get_line_style_choices(cls):
+        return [("round", _("Round")), ("straight", _("Straight")), ('elbow', _("Elbow"))]
 
 
 @config_variable_registry.register

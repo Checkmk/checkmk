@@ -442,7 +442,7 @@ class JobWorker(multiprocessing.Process):
 
         aggr_options, aggr = aggr[0], aggr[1:]
         aggregation_id = aggr_options.get("id", "")
-        use_layout_id = aggr_options.get("use_layout_id", "")
+        node_visualization = aggr_options.get("node_visualization", {})
         use_hard_states = aggr_options.get("hard_states")
         downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
 
@@ -456,7 +456,7 @@ class JobWorker(multiprocessing.Process):
         for this_entry in new_entries:
             remove_empty_nodes(this_entry)
             this_entry["aggregation_id"] = aggregation_id
-            this_entry["use_layout_id"] = use_layout_id
+            this_entry["node_visualization"] = node_visualization
             this_entry["use_hard_states"] = use_hard_states
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
@@ -2152,7 +2152,7 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 def execute_tree(tree, status_info=None):
     aggregation_options = {
         #        "use_aggregation_id": tree["aggregation_id"],
-        "use_layout_id": tree["use_layout_id"],
+        "node_visualization": tree["node_visualization"],
         "use_hard_states": tree["use_hard_states"],
         "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }

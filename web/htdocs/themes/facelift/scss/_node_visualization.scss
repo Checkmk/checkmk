@@ -284,7 +284,7 @@ div.node_vis .style_overlay {
   opacity: 0.2;
   fill: none;
   stroke: darkgrey;
-  stroke-width: 6px;
+  stroke-width: 2px;
   stroke-linejoin: round;
   pointer-events: none;
 }
@@ -295,6 +295,11 @@ div.node_vis .block_style_overlay {
   fill: darkgrey;
   stroke: darkgrey;
   stroke-width: 2px;
+  stroke-linejoin: round
+}
+
+div.node_vis .block_style_overlay.root_children_connection {
+  stroke-width: 6px;
   stroke-linejoin: round
 }
 

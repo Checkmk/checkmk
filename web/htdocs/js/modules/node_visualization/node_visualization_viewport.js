@@ -295,10 +295,13 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this._arrange_multiple_node_chunks()
 
         this.update_feed_info()
+
         this.update_layers()
 
         if (this._chunks_changed)
             this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list())
+        this.layout_manager.compute_node_positions()
+
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {
@@ -321,6 +324,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         hierarchy.descendants().forEach(node=>{
                 node._children = node.children
                 node.data.node_positioning = {}
+                node.data.transition_info = {}
                 node.data.chunk = chunk
         })
 

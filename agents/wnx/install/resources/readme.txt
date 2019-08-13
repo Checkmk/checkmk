@@ -65,14 +65,19 @@ An old rule may be incompatible with new Agent.
 
 ## What happened with plugins and configurations files of the Legacy Agent?
 After installation New Agent should migrate to Legacy Agent's configuration and plugins. 
-1. Ini file converted to the corresponding yml files
-2. Plugins, other configurations files, state files and so on are copied to the corresponding New Agent folders
-3. *Upgrade procedure is performed only once*. If you want to repeat migration/upgrade you have two possibilities:
+You have to use packaged version of the Agent Installer to Upgrade Legacy configurations
+
+Upgrade procedure consists of next steps:
+1. The Ini files are converted to the corresponding yml files
+2. The Plugins, other configurations files, state files and so on are copied to the corresponding New Agent folders
+3. The relative paths to the plugins are corrected in the output yml files.
+
+*Upgrade procedure is performed only once*. If you want to repeat migration/upgrade you have two possibilities:
   1. Call from command line *check_mk_agent upgrade -force*
   2. Uninstall New Agent, delete %ProgramData%\checkmk\agent folder, install New Windows Agent 
 
 Known Problems with Migration:
-1. "logfiles" section is not supported anymore by New Agent.
+1. The section 'logfiles' is not supported anymore by New Agent. Please, use corresponding check_mk plugin
 2. Custom user plugins with hard coded paths may not work
 3. The installation of the Baked Agent(Including Vanilla) prevents the Migration. 
 You have to use Packaged agent if you want to upgrade your current configuration.

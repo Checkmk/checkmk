@@ -330,4 +330,9 @@ TEST(Wtools, GetArgv2) {
     EXPECT_TRUE(val1.empty());
 }
 
+TEST(Wtools, MemSize) {
+    auto sz = GetOwnVirtualSize();
+    EXPECT_TRUE(sz > static_cast<size_t>(400'000));
+}
+
 }  // namespace wtools

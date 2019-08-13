@@ -21,8 +21,11 @@
 #include "upgrade.h"
 #include "wtools.h"
 
+#if defined(_WIN32)
+#include "psapi.h"
 #pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
-
+#pragma comment(lib, "psapi.lib")     /// Microsoft Specific
+#endif
 namespace wtools {
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -1942,6 +1945,27 @@ std::wstring GetArgv(uint32_t index) noexcept {
 
     return {};
 }
+
+size_t GetOwnVirtualSize() noexcept {
+#if defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS_EX pmcx = {};
+    pmcx.cb = sizeof(pmcx);
+    ::GetProcessMemoryInfo(GetCurrentProcess(),
+                           reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmcx),
+                           pmcx.cb);
+
+    return pmcx.WorkingSetSize;
+#else
+#error "Not implemented"
+    return 0;
+#endif
+}
+
+namespace monitor {
+bool IsAgentHealthy() noexcept {
+    return GetOwnVirtualSize() < kMaxMemoryAllowed;
+}
+}  // namespace monitor
 
 }  // namespace wtools
 

@@ -13,7 +13,7 @@ include ../defines.make
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
         test-format-shell test-gui-crawl test-integration test-packaging \
         test-pylint test-python-futurize test-shellcheck test-unit \
-        test-unit-coverage-html
+        list-unit-tests test-unit-one-by-one test-unit-coverage-html
 
 help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
@@ -29,6 +29,7 @@ help:
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
 	@echo "test-unit                 - Run unit tests"
+	@echo "test-unit-one-by-one      - Run unit tests one by one"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 
 # These target need to be phony so it is run every time because only the other
@@ -97,6 +98,23 @@ test-shellcheck:
 
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit
+
+# Probably a noteworthy entry for any "obfuscated bash/make/sed contest"...
+list-unit-tests: $(VENV)
+	@$(PYTEST) -T unit git unit --collect-only  `# list tests in tree form` | \
+	  grep '^\(<Module\|  <Function\) '         `# remove docstring lines` | \
+	  sed 's/\[.*\]>/>/'                        `# remove test parameters` | \
+	  uniq                                      `# keep only one line from parameterized tests` | \
+	  sed 's,^<Module tests/\(.*\)>$$,#\1,'     `# keep file name plus a leading marker` | \
+	  sed 's,^  <Function \(.*\)>$$,\1,'        `# keep function name` | \
+	  sed -e '/^#/{h;d};G'                      `# precede every function name line with a file name line` \
+	      -e 's/^\(.*\)\n#\(.*\)/\2::\1/'       `# glue the line pairs together`
+
+test-unit-one-by-one: $(VENV)
+	@set -e ; \
+	for i in $$($(MAKE) --silent --no-print-directory list-unit-tests); do \
+	  $(PYTEST) -T unit $$i ; \
+	done
 
 # TODO: We should perhaps use the pytest --cov/--cov-report options, which the
 # pytest-cov plugin package adds to pyttest.

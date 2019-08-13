@@ -5,7 +5,7 @@
 # Copyright Mathias Kettner GmbH
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
-# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check/service/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
 # $CUSTOM_AGENT_PATH$    -> is ProgramData/checkmk/agent/
 # $CUSTOM_LOCAL_PATH$    -> is ProgramData/checkmk/agent/local
 

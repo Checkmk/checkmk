@@ -207,6 +207,25 @@ void ExternalPort::timedWaitForSession() {
                             [this]() { return !session_queue_.empty(); });
 }
 
+// internal testing code
+#if defined(TEST_OVERLOAD_MEMORY)
+// a bit complicated method to eat memory in release target
+static std::vector<std::unique_ptr<char>> bad_vector;
+#endif
+
+static void OverLoadMemory() {
+#if defined(TEST_OVERLOAD_MEMORY)
+#pragma message("**************************************")
+#pragma message("ATTENTION: Your code tries to eat RAM!")
+#pragma message("**************************************")
+    // this code is intentionally left here as example
+    // how to allocate a lot of memory and to verify protection
+    bad_vector.emplace_back(new char[20'000'000]);
+    auto data = bad_vector.back().get();
+    memset(data, 1, 20'000'000);  // must for the release
+#endif
+}
+
 // singleton thread
 void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
     for (;;) {
@@ -220,9 +239,18 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
                     const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
                     XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
+                    OverLoadMemory();  // do nothing
                     // only_from checking
                     if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
                         as->start(reply);
+
+                        // check memory block, terminate service if memory is
+                        // overused
+                        if (!wtools::monitor::IsAgentHealthy()) {
+                            XLOG::l.crit("Memory usage is too high [{}]",
+                                         wtools::GetOwnVirtualSize());
+                            if (IsService()) std::terminate();
+                        }
                     } else {
                         XLOG::d(
                             "Address '{}' is not allowed, this call should happen",

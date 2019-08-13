@@ -471,6 +471,7 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
                     // called upon kicking in port, i.e. LATER. NOT NOW.
 
                     prepareAnswer(Ip, rt_device);
+                    XLOG::d.i("Generating answer number [{}]", answer_.num());
                     return generateAnswer(Ip);
                 });
             ON_OUT_OF_SCOPE({

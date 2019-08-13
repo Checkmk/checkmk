@@ -1,3 +1,73 @@
+// -----------------------------------------------------------------------------
+// Colors
+// -----------------------------------------------------------------------------
+$white:    rgb(255, 255, 255);
+$black:    rgb(0, 0, 0);
+$warning:  rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
+$danger:   rgb(255, 50, 50);
+$success:  rgb(19, 211, 137);
+$info:     rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
+$grey-1:   rgb(250, 250, 250);
+$grey-2:   rgb(189, 189, 189);
+$grey-3:   rgb(68, 68, 68);
+$grey-4:   rgb(51, 51, 51);
+$grey-5:   rgb(50, 50, 50);
+$grey-6:   rgb(40, 40, 40);
+$grey-7:   rgb(33, 33, 33);
+$shadow:   rgba(33, 33, 33, .35);
+
+// -----------------------------------------------------------------------------
+// Global toggles
+// -----------------------------------------------------------------------------
+$enable-rounded:  true;
+
+// -----------------------------------------------------------------------------
+// Spacing
+// -----------------------------------------------------------------------------
+$spacer:        1rem;
+$line-height:   1.5;
+
+$border-width:  1px;
+$border-color:  $grey-3;
+
+// -----------------------------------------------------------------------------
+// Fonts
+// -----------------------------------------------------------------------------
+$font-family-sans-serif:  "Lato", "Roboto", Helvetica, Arial, sans-serif;
+$font-family-monospace:   SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$font-family-base:        $font-family-sans-serif;
+
+$font-size__base:          1rem; // Assumes the browser default, typically `16px`
+
+$font-weight__light:       300;
+$font-weight__normal:      400;
+$font-weight__bold:        700;
+
+$font-weight-base:        $font-weight__normal;
+
+$headings__margin-bottom:  ($spacer * .5);
+
+// -----------------------------------------------------------------------------
+// Body
+// -----------------------------------------------------------------------------
+$body__background-color: $grey-5;
+$body__color: $grey-1;
+
+// -----------------------------------------------------------------------------
+// Buttons
+// -----------------------------------------------------------------------------
+$button__color:                    $white;
+$button__background-color:         $grey-6;
+$button__hover__background-color:  mix($white, $grey-6, 30%);
+$button__border-color:             $grey-7;
+
+// -----------------------------------------------------------------------------
+// Forms
+// -----------------------------------------------------------------------------
+$input__color:             $white;
+$input__background-color:  $grey-3;
+$input__border-color:      $grey-3;
+
 // General
 
 $theme-color-black:                         #000; // black
@@ -18,6 +88,7 @@ $theme-border-radius:                       4px;
 // Buttons
 
 $theme-button-background:                   #f7f7f7;
+$theme-button-background-hover:             $theme-button-background;
 $theme-button-border:                       #d9d9d9;
 $theme-button-hover:                        #ffe350;
 $theme-button-height:                       28px;
@@ -50,6 +121,8 @@ $theme-color-state-error-border:            #e22828; // red
 
 $theme-color-state-success-background:      #aae199; // green
 $theme-color-state-success-border:          #9adb85; // green
+
+$theme-color-perfometer-title:              $theme-color-text;
 
 
 // Tables
@@ -116,3 +189,74 @@ $theme-letter-spacing-table:                1px;
 
 $tag-margin:                                0 5px 2px 0;
 $tag-padding:                               .1em .3em;
+
+
+// -----------------------------------------------------------------------------
+// Temporary variables for implementing the dark theme
+// These should be put into a more intuitive naming structure afterwards.
+// -----------------------------------------------------------------------------
+
+// for check boxes, toggle_switch buttons, input fields, select2 fields, ...
+$primary-bg-color:			    $theme-color-white;
+$primary-font-color:			    $theme-color-black;
+
+$dashboard-stats-bg-color:		    $theme-color-white;
+$dashboard-tr-bg-color:			    $theme-color-nuance-13;
+$dashboard-tr-border-bottom:		    null;
+$dashboard-tr-even-bg-color:		    null;
+$dashboard-tr-hover-bg-color:		    $theme-color-background;
+$dashboard-tr-even-hover-bg-color:	    null;
+
+$checkbox-border-color:			    #73767a;
+$checkbox-shadow:			    #888;
+$checkbox-checked-color:		    $primary-font-color;
+$checkbox-checked-bg-color:		    #ddd;
+
+$toggle-switch-on-bg-color:		    #54a626;
+$toggle-switch-off-bg-color:		    #f60000;
+
+$success-bg-color:			    #9dbecd;
+
+$filter-inversion-percentage:		    100%;
+
+$color-div-border-color:		    $theme-color-black;
+
+$success-alert-font-color:		    $primary-font-color;
+$success-alert-bg-color:		    $theme-color-state-success-background;
+$success-alert-border-color:		    $theme-color-state-success-border;
+
+$toggle-button-bg-color:		    $theme-color-white;
+
+$data-container-bg-color:		    null;
+$data-container-border:			    null;
+
+$oddeven-table-bg-color:		    transparent;
+$data-td-bg-color:			    $theme-color-white;
+$data-td-border-bottom:			    1px solid $theme-color-table-border;
+
+$input-field-border:			    1px solid $theme-color-table-border;
+$input-button-border:			    $success;
+$input-button-hover-border:		    #11bd7b;
+
+$odd-tr-bg-color:			    #eee;
+$even-tr-bg-color:			    #ddd;
+
+$tr-data-border-bottom:			    null;
+
+$floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
+$floatfilter-color:			    $theme-color-table-text;
+
+$select2-border-color:			    $theme-button-border;
+
+$td-single-bg-color:			    $theme-color-white;
+$td-single-left-bg-color:		    $theme-color-white;
+$td-single-left-color:			    null;
+
+$wato-tr-bg-color:			    transparent;
+$wato-a-hover-bg-color:			    $theme-color-table-background;
+
+$td-unused-color:			    #256;
+
+$color-div-box-shadow:			    0.5px 0.5px 1px #888;
+
+$graph-legend-color:			    null;

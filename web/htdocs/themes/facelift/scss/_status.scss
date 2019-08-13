@@ -63,7 +63,6 @@ td.svcstate.stale {
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
   color: #888;
-  text-shadow: 0.8px 0.8px 0.8px #fff;
 }
 
 table.data tr.data td.stale.state2,
@@ -112,14 +111,14 @@ body.main .popup_menu .hstate0 span {
 body.main .popup_menu .state1 span,
 tr.groupheader td.state1 {
   color: $theme-color-black !important;
-  background-color: $theme-color-main !important;
-  border-color: $theme-color-state-warning-border !important;
+  background-color: $warning !important;
+  border-color: $warning !important;
 }
 
 .odd0 .state1,
 .odd1 .state1 {
-  background-color: $theme-color-main !important;
-  border-color: $theme-color-state-warning-border !important;
+  background-color: $warning !important;
+  border-color: $warning !important;
 }
 
 /* CRIT/DOWN */
@@ -326,7 +325,7 @@ table.data tr.data > td.perfometer {
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: 0;
-    color: $theme-color-text;
+    color: $theme-color-perfometer-title;
   }
 
   .glass {
@@ -420,15 +419,22 @@ td.statex {  /* zero count */
 }
 
 /* Row coloring in case of the different states */
-tr.odd0, tr.oddp, td.odd0  { background-color: #eee; }
-tr.even0, tr.evenp, td.even0 { background-color: #ddd; }
-td.odd0.sla  { background-color: #aaa; }
-tr.odd1        { background-color: #ffc; }
-tr.even1       { background-color: #ffa; }
-tr.odd2        { background-color: #fcc; }
-tr.even2       { background-color: #faa; }
-tr.odd3        { background-color: #ffe0a0; }
-tr.even3       { background-color: #ffefaf; }
+tr[class*="odd"] {
+  background-color: $odd-tr-bg-color;
+}
+
+tr[class*="even"] {
+  background-color: $even-tr-bg-color;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* TODO: Move all table styles irrelevant for status away from this file */
+tr.data {
+  border-bottom: $tr-data-border-bottom;
+}
 
 .data div.hostdown {
   padding-right: 3px;
@@ -439,6 +445,9 @@ tr.even3       { background-color: #ffefaf; }
 }
 
 table.data {
+  border-collapse: collapse;
+
+  // TODO: Is this supposed to be aligned to the right?
   td.age {
     color: #666;
     text-align: right;
@@ -451,7 +460,7 @@ table.data {
 
     &.recent {
       font-weight: bold;
-      color: #000;
+      color: $primary-font-color;
     }
   }
 
@@ -463,12 +472,16 @@ table.data {
     width: 75px;
   }
 
-  .state2 *, table.data .state3 * {
+  .state2 *, .state3 * {
     color: #fff;
   }
 
   .state0 * {
     color: $theme-color-text;
+  }
+
+  td.state{
+    border-top: none;
   }
 }
 

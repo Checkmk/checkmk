@@ -1,0 +1,13 @@
+Title: omd rm: Do not fail in case user not exists anymore
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b6
+Date: 1565712253
+
+In case a user is about to be removed, e.g. during "omd rm" and
+the user is not existant in the user database, simply continue
+with the next step.

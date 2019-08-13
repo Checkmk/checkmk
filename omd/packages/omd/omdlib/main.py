@@ -469,18 +469,19 @@ def add_user_to_group(user, group):
 
 
 def userdel(name):
-    try:
-        p = subprocess.Popen(["userdel", "-r", name],
-                             stdin=open(os.devnull, "r"),
-                             stdout=open(os.devnull, "w"),
-                             stderr=subprocess.PIPE,
-                             close_fds=True)
-    except OSError as e:
-        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
+    if user_exists(name):
+        try:
+            p = subprocess.Popen(["userdel", "-r", name],
+                                 stdin=open(os.devnull, "r"),
+                                 stdout=open(os.devnull, "w"),
+                                 stderr=subprocess.PIPE,
+                                 close_fds=True)
+        except OSError as e:
+            bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
 
-    stderr = p.communicate()[1]
-    if p.returncode != 0:
-        bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, stderr))
+        stderr = p.communicate()[1]
+        if p.returncode != 0:
+            bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, stderr))
 
     # On some OSes (e.g. debian) the group is automatically removed if
     # it bears the same name as the user. So first check for the group.

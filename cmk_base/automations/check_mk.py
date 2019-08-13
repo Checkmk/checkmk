@@ -573,6 +573,7 @@ class AutomationAnalyseServices(Automation):
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(self, config_cache, host_config, servicedesc):
+        # type: (config.ConfigCache, config.HostConfig, Text) -> Dict
         hostname = host_config.hostname
         check_api_utils.set_hostname(hostname)
 
@@ -601,12 +602,12 @@ class AutomationAnalyseServices(Automation):
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         if host_config.is_cluster:
-            services = []
-            for node in host_config.nodes:
+            services = []  # type: List[cmk_base.check_utils.Service]
+            for node in host_config.nodes or []:
                 for service in config_cache.get_autochecks_of(node):
                     if hostname == config_cache.host_of_clustered_service(
                             node, service.description):
-                        services.append(services)
+                        services += services
         else:
             services = config_cache.get_autochecks_of(hostname)
 

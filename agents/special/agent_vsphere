@@ -660,6 +660,23 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 #.
 
 
+def get_vm_power_states(vms, hostsystems, opt):
+    piggy_data = {}
+    for used_hostname, vm_data in vms.iteritems():
+        runtime_host = vm_data.get("runtime.host")
+        running_on = hostsystems.get(runtime_host, runtime_host)
+        power_state = vm_data.get("runtime.powerState")
+        vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
+
+        if opt.vm_pwr_display == "vm":
+            piggy_data.setdefault(used_hostname, []).append(vm_info)
+        elif opt.vm_pwr_display == "esxhost" and not opt.direct:
+            piggy_data.setdefault(running_on, []).append(vm_info)
+        piggy_data.setdefault('', []).append(vm_info)
+
+    return _format_piggybacked_objects_sections(piggy_data)
+
+
 def _format_piggybacked_objects_sections(piggy_data):
     output = []
     for piggy_target, info in piggy_data.iteritems():
@@ -1023,6 +1040,8 @@ def fetch_data(connection, opt):
     ###########################
     # Objects
     ###########################
+    output += get_vm_power_states(vms, hostsystems, opt)
+
     piggy_data = {}
 
     if "hostsystem" in opt.modules and opt.host_pwr_display != "vm":  # handled later on..
@@ -1034,18 +1053,6 @@ def fetch_data(connection, opt):
             piggy_data.setdefault('', []).append(host_info)
             if opt.host_pwr_display == "esxhost" and not opt.direct:
                 piggy_data.setdefault(used_hostname, []).append(host_info)
-
-    for used_hostname, vm_data in vms.iteritems():
-        runtime_host = vm_data.get("runtime.host")
-        running_on = hostsystems.get(runtime_host, runtime_host)
-        power_state = vm_data.get("runtime.powerState")
-        vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
-
-        if opt.vm_pwr_display == "vm":
-            piggy_data.setdefault(used_hostname, []).append(vm_info)
-        elif opt.vm_pwr_display == "esxhost" and not opt.direct:
-            piggy_data.setdefault(running_on, []).append(vm_info)
-        piggy_data.setdefault('', []).append(vm_info)
 
     if ("hostsystem" in opt.modules and opt.host_pwr_display == "vm"):
         for vm_name, vm_data in vms.iteritems():

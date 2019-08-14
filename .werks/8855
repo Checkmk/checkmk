@@ -1,0 +1,13 @@
+Title: cmk-update-config: Improve error handling
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b6
+Date: 1565791274
+Class: fix
+
+When a syntax error occurs while loading autochecks a hint about the
+broken line is displayed.
+
+Also raise original Checkmk internal exceptions when --debug argument is set.

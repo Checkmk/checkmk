@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "on_start.h"
 #include "onlyfrom.h"
+#include "tools/_misc.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma {

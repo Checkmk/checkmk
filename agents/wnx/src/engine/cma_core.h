@@ -310,6 +310,7 @@ public:
         id_.clear();
         exec_.clear();
         stop_set_ = false;
+        proc_id_ = 0;
         lk.unlock();
 
         delete process;
@@ -437,19 +438,29 @@ private:
 
 namespace cma {
 
+enum class HackDataMode { header, line };
+
+// build correct string for patching
+std::string ConstructPatchString(time_t time_now, int cache_age,
+                                 HackDataMode mode) noexcept;
+
 // 1. replaces '\r' with '\r\n'
-// 2. <<<PLUGIN>>>\nsomething -> <<<PLUGIN:cached(123456789,3600)>>>\nsomething
+// 2a. HackDataMode::header :
+// <<<PLUGIN>>>\nsomething -> <<<PLUGIN:cached(123456789,3600)>>>\nsomething
 //    if header bad or not found - nothing had been done
 // true on success
-// if Legacy time and CacheAge set to 0, no hacking
-bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
-                                 const std::vector<char>& OriginalData,
-                                 time_t LegacyTime, long long CacheAge);
+// 2b. HackDataMode::line :
+// hack every string with patch
+// "string"
+// "patch" + "string"
+bool HackDataWithCacheInfo(std::vector<char>& Out,
+                           const std::vector<char>& OriginalData,
+                           const std::string& patch, HackDataMode mode);
 
 // cleans \r from string
 inline bool HackPluginDataRemoveCR(std::vector<char>& Out,
                                    const std::vector<char>& OriginalData) {
-    return HackPluginDataWithCacheInfo(Out, OriginalData, 0, 0);
+    return HackDataWithCacheInfo(Out, OriginalData, "", HackDataMode::header);
 }
 
 class PluginEntry : public cma::cfg::PluginInfo {
@@ -657,6 +668,8 @@ protected:
     FRIEND_TEST(PluginTest, TimeoutCalc);
     FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
     FRIEND_TEST(PluginTest, Async0DataPickup);
+    FRIEND_TEST(PluginTest, AsyncLocal);
+    FRIEND_TEST(PluginTest, SyncLocal);
 #endif
 };
 

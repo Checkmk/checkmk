@@ -23,6 +23,8 @@ extern bool G_LocalNoSendIfEmptyBody;
 extern bool G_LocalSendEmptyAtEnd;
 };  // namespace config
 
+enum class PluginType { normal, local };
+
 class PluginsProvider : public Asynchronous {
 public:
     PluginsProvider() : Asynchronous(cma::section::kPlugins) {
@@ -76,8 +78,8 @@ public:
     virtual void updateSectionStatus();
 };
 
-enum class PluginType { all, sync, async };
-int FindMaxTimeout(const cma::PluginMap& pm, PluginType type);
+enum class PluginMode { all, sync, async };
+int FindMaxTimeout(const cma::PluginMap& pm, PluginMode type);
 
 }  // namespace provider
 

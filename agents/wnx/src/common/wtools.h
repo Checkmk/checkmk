@@ -654,37 +654,54 @@ inline int DataCountOnHandle(HANDLE Handle) {
     return read_count;
 }
 
-// templated to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
+bool IsVectorMarkedAsUTF16(const std::vector<T>& data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
-    if (utf16_data.empty()) return {};
-
     constexpr T char_0 = static_cast<T>('\xFF');
     constexpr T char_1 = static_cast<T>('\xFE');
 
-    bool convert_required = utf16_data.size() > 1 && utf16_data[0] == char_0 &&
-                            utf16_data[1] == char_1;
+    return data.size() > 1 && data[0] == char_0 && data[1] == char_1;
+}
 
-    std::string data;
+template <typename T>
+std::string SmartConvertUtf16toUtf8(const std::vector<T>& original_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    bool convert_required = IsVectorMarkedAsUTF16(original_data);
+
     if (convert_required) {
-        auto raw_data = reinterpret_cast<const wchar_t*>(utf16_data.data() + 2);
+        auto raw_data =
+            reinterpret_cast<const wchar_t*>(original_data.data() + 2);
 
-        std::wstring wdata(raw_data, raw_data + (utf16_data.size() - 2) / 2);
+        std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
         if (wdata.empty()) return {};
 
-        data = wtools::ConvertToUTF8(wdata);
-    } else {
-        data.assign(utf16_data.begin(), utf16_data.end());
+        return wtools::ConvertToUTF8(wdata);
     }
 
-    // trick to place in string 0 at the end without changing length
+    std::string data;
+    data.assign(original_data.begin(), original_data.end());
+    return data;
+}
+
+inline void AddSafetyEndingNull(std::string& data) {
+    // trick to place in string 0 at the
+    // end without changing length
     // this is required for some stupid engines like iostream+YAML
     auto length = data.size();
     if (data.capacity() <= length) data.reserve(length + 1);
     data[length] = 0;
+}
 
-    return data;
+// templated to support uint8_t and int8_t and char and unsigned char
+template <typename T>
+std::string ConditionallyConvertFromUTF16(const std::vector<T>& original_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    if (original_data.empty()) return {};
+
+    auto d = SmartConvertUtf16toUtf8(original_data);
+    AddSafetyEndingNull(d);
+
+    return d;
 }
 
 // local implementation of shitty registry access functions

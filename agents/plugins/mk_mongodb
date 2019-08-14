@@ -16,8 +16,9 @@ import pprint
 import sys
 import time
 import inspect
+import json
+from collections import defaultdict
 from contextlib import contextmanager
-
 import pymongo  # pylint: disable=import-error
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
@@ -85,7 +86,8 @@ def section_flushing(server_status):
     sys.stdout.write("<<<mongodb_flushing>>>\n")
     sys.stdout.write("average_ms %s\n" % flushing_info.get("average_ms", "n/a"))
     sys.stdout.write("last_ms %s\n" % flushing_info.get("last_ms", "n/a"))
-    sys.stdout.write("flushed %s\n" % flushing_info.get("flushes", "n/a"))
+    sys.stdout.write("flushed %s\n" %
+                     flushing_info.get("ffrom bson.json_util import dumpslushes", "n/a"))
 
 
 def sections_replica(client, server_status):
@@ -105,18 +107,291 @@ def sections_replica(client, server_status):
     sys.stdout.write("\n")
 
 
-def section_chunks(client, databases):
-    sys.stdout.write("<<<mongodb_chunks>>>\n")
-    col = client.config.chunks
-    for db_name, db_data in databases.items():
-        shards = col.distinct("shard")
-        sys.stdout.write("shardcount %d\n" % len(shards))
-        for collection in db_data.get("collections"):
-            nsfilter = "%s.%s" % (db_name, collection)
-            sys.stdout.write("nscount %s %s\n" % (nsfilter, col.find({"ns": nsfilter}).count()))
-            for shard in shards:
-                matches = col.find({"ns": nsfilter, "shard": shard}).count()
-                sys.stdout.write("shardmatches" " %s#%s %s\n" % (nsfilter, shard, matches))
+def section_cluster(client, databases):
+    """
+    on router (mongos) node
+    1. get all databases
+    2. for each database, get all collections
+    3. get stats for each collection
+    5. get shards
+    6. get chunks and count chunks and jumbo chunks per shard
+    7. aggregate all into one conclusive dictionary
+    :param client: mongodb client
+    :param databases: database and collections statistic data as dictionary
+    """
+    # check if we run on mongos (router) node
+    master_dict = client.admin.command("isMaster")
+    if not master_dict.get(
+            "ismaster") or "msg" not in master_dict or master_dict.get("msg") != "isdbgrid":
+        return
+
+    sys.stdout.write("<<<mongodb_cluster:sep(0)>>>\n")
+
+    # get balancer information
+    balancer_dict = _get_balancer_info(client)
+
+    # get cluster information for databases
+    databases_cluster_info = client.config.databases.find({}, {"primary": 1, "partitioned": 1})
+    _add_cluster_info(databases, databases_cluster_info)
+
+    # get chunksize
+    chunk_size_info = _get_chunk_size_information(client)
+
+    # get additional collection information
+    collections_dict = _get_collections_information(client)
+
+    # get all shards
+    shards_dict = _get_shards_information(client)
+
+    # get number of chunks per shard
+    chunks_dict = _count_chunks_per_shard(client, databases)
+
+    # aggregate all information in one dict
+    all_informations_dict = _aggregate_chunks_and_shards_info(databases, chunks_dict, shards_dict,
+                                                              collections_dict, balancer_dict,
+                                                              chunk_size_info)
+
+    sys.stdout.write("%s\n" % json.dumps(all_informations_dict, separators=(',', ':')))
+
+
+def _get_balancer_info(client):
+    """
+    get information if balancer is enabled for cluster
+    get balancer statistics
+    :param client: mongdb client
+    :return: balancer status dictionary
+    """
+    balancer_dict = dict()
+
+    # check if balancer is enabled for cluster
+    settings = client["config"]["settings"]
+    settings_dict = settings.find_one({"_id": "balancer"})
+    if settings_dict:
+        balancer_dict["balancer_enabled"] = not settings_dict.get("stopped")
+    else:
+        balancer_dict["balancer_enabled"] = True
+
+    # get balancer status
+    status = client.admin.command("balancerStatus")
+    _remove_keys(status, ["$clusterTime", "operationTime", "ok"])
+    balancer_dict.update(status)
+
+    return balancer_dict
+
+
+def _add_cluster_info(databases, databases_cluster_info):
+    """
+    add additional information for databases to main databases dictionary
+    :param databases: main database information dictionary
+    :param databases_cluster_info: additional information per database
+    """
+    for database in databases_cluster_info:
+        database_name = database.get("_id")
+        database.pop("_id", None)
+        if database_name in databases:
+            databases.get(database_name).update(database)
+        else:
+            # add missing databases
+            databases[database_name] = database
+            databases.get(database_name).setdefault("collstats", {})
+            databases.get(database_name).setdefault("collections", [])
+
+
+def _aggregate_chunks_and_shards_info(databases_dict, chunks_dict, shards_dict, collections_dict,
+                                      balancer_dict, settings_dict):
+    """
+    generate one dictionary containing shards and chunks information per collection per database
+    :param databases_dict: dictionary with database and collections statistic details
+    :param chunks_dict: dictionary with number of chunks and jumps per shard
+    :param shards_dict: dictionary with information which shard is on which host
+    :return: dictionary with database, collections, shards and chunks information
+    """
+    # remove system databases
+    _remove_keys(databases_dict, ["admin", "config"])
+
+    # chunks_dict: add info 'number_of_chunks' from chunks dict to collections statistic dictionary
+    for database_name in databases_dict:
+        for collection_name in databases_dict.get(database_name).get("collections", []):
+            collection_info = collections_dict.get(database_name, {}).get(collection_name, {})
+            if collection_info:
+                databases_dict.get(database_name).get("collstats").get(collection_name).update(
+                    collection_info)
+            for shard_name in shards_dict:
+                chunks_info = chunks_dict.get(database_name, {}).get(collection_name,
+                                                                     {}).get(shard_name, {})
+                if chunks_info and shard_name in databases_dict.get(database_name).get(
+                        "collstats").get(collection_name).get("shards"):
+                    databases_dict.get(database_name).get("collstats").get(collection_name).get(
+                        "shards").get(shard_name).update(chunks_info)
+
+    # remove irrelevant data
+    _lensing_data(databases_dict)
+
+    # shards_dict: add shard information to collections statistic dictionary
+    all_information_dict = dict()
+    all_information_dict["databases"] = databases_dict
+    all_information_dict["shards"] = shards_dict
+    all_information_dict["balancer"] = balancer_dict
+    all_information_dict["settings"] = settings_dict
+
+    return all_information_dict
+
+
+def _lensing_data(databases):
+    """
+    removing data not needed for further processing
+    removing data that is not json conform (mongoDB extended json format)
+    :param databases: dictionary with databases, collections, shards information
+    :return: json convertible dictionary
+    """
+    # clean up database data
+    for database_name in databases:
+        database = databases.get(database_name)
+        _remove_keys(database, ["stats"])
+
+        # clean up collections data
+        for collection_name in database.get("collstats", {}):
+            collection = database.get("collstats").get(collection_name)
+            # remove irrelevant data
+            _remove_keys(collection, [
+                "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime", "$gleStats",
+                "$configServerState", "$clusterTime", "indexSizes"
+            ])
+
+            # clean up shards data
+            for shard_name in collection.get("shards", {}):
+                shard = collection.get("shards").get(shard_name)
+                # remove irrelevant data
+                _remove_keys(shard, [
+                    "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime",
+                    "$gleStats", "$configServerState", "$clusterTime", "indexSizes"
+                ])
+
+
+def _get_chunk_size_information(client):
+    """
+    chunk size default is 64MB. If the chunk size is changed, the changed value is in config.settings with id "chunksize".
+    example:
+    { "_id" : "chunksize", "value" : 64 }
+    value is in MB
+    :param client:
+    :return:
+    """
+    chunk_size = 64 * 1024 * 1024
+    for setting in client.config.settings.find({"_id": "chunksize"}):
+        if "value" in setting:
+            chunk_size = int(setting.get("value")) * 1024 * 1024
+    return {"chunkSize": chunk_size}
+
+
+def _get_collections_information(client):
+    """
+    get all documents from config collections
+    :param client: mongodb client
+    :return: dictionary with collections information
+    """
+    collections_def_dict = lambda: defaultdict(collections_def_dict)
+    collections_dict = collections_def_dict()
+    for collection in client.config.collections.find({}, {"_id", "unique", "dropped", "noBalance"}):
+        database_name, collection_name = _split_namespace(collection.get("_id"))
+        collection.pop("_id", None)
+        collections_dict[database_name][collection_name] = collection
+    return collections_dict
+
+
+def _get_shards_information(client):
+    """
+    get all documents from shards collection
+    :param client: mongodb client
+    :return: dictionary with shards information
+    """
+    shard_dict = dict()
+    for shard in client.config.shards.find():
+        shard_name = shard.get("_id")
+        shard.pop("_id", None)
+        shard_dict[shard_name] = shard
+    return shard_dict
+
+
+def _count_chunks_per_shard(client, databases):
+    """
+    count all chunks and jumbo chunks per shards
+    :param client: mongodb client
+    :return: dictionary with shards and sum of chunks and jumbo chunks
+    """
+    chunks_def_dict = lambda: defaultdict(chunks_def_dict)
+    chunks_dict = chunks_def_dict()
+
+    # initialize dictionary
+    # set default defaults for numberOfChunks and numberOfJumbos
+    for database_name in databases:
+        for collection_name in databases.get(database_name).get("collections", {}):
+            for shard_name in databases.get(database_name).get("collstats").get(
+                    collection_name, {}).get("shards", {}):
+                is_sharded = databases.get(database_name).get("collstats").get(collection_name,
+                                                                               {}).get(
+                                                                                   "sharded", False)
+                if is_sharded:  # we count chunks below
+                    chunks_dict[database_name][collection_name][shard_name]["numberOfChunks"] = 0
+                else:  # unsharded => only 1 shard => nchunks = numberOfChunks (total number of chunks)
+                    chunks_dict[database_name][collection_name][shard_name][
+                        "numberOfChunks"] = databases.get(database_name).get("collstats").get(
+                            collection_name).get("nchunks", 0)
+                chunks_dict[database_name][collection_name][shard_name]["numberOfJumbos"] = 0
+
+    chunks = client.config.chunks
+    chunks_list = chunks.find({}, {"ns", "shard", "jumbo"})
+    database_set = set()
+    for chunk in chunks_list:
+
+        # get database, collection and shard names
+        shard_name = chunk.get("shard", None)
+        database_name, collection_name = _split_namespace(chunk.get("ns"))
+
+        # if there are no chunk information for this database, continue
+        if database_name not in chunks_dict:
+            continue
+
+        # for later user
+        database_set.add(database_name)
+
+        # count number of chunks per shard
+        chunks_dict.get(database_name).get(collection_name).get(shard_name)["numberOfChunks"] += 1
+
+        # count number of jumbo chunks per shard
+        if "jumbo" in chunk:
+            chunks_dict.get(database_name).get(collection_name).get(
+                shard_name)["numberOfJumbos"] += 1
+
+    return chunks_dict
+
+
+def _remove_keys(dictionary, list_of_keys):
+    """
+    remove keys from dictionary
+    :param stats_dict:
+    :param list_of_keys:
+    :return:
+    """
+    for key_to_delete in list_of_keys:
+        dictionary.pop(key_to_delete, None)
+
+
+def _split_namespace(namespace):
+    """
+    split namespace into database name and collection name
+    :param namespace:
+    :return:
+    """
+    try:
+        names = namespace.split(".", 1)
+        if len(names) > 1:
+            return names[0], names[1]
+    except ValueError:
+        pass
+    except AttributeError:
+        pass
+    raise ValueError("error parsing namespace %s" % namespace)
 
 
 def section_locks(server_status):
@@ -142,8 +417,15 @@ def section_collections(databases):
     for dbname, dbdata in databases.items():
         for collname, colldata in dbdata.get("collstats", {}).items():
             for key, value in colldata.items():
-                if 'size' in key.lower():
-                    sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
+                # sort irrelevant data
+                if key.startswith("$") or key in [
+                        "indexDetails", "wiredTiger", "indexSizes", "operationTime"
+                ]:
+                    continue
+                if isinstance(value, dict):
+                    key += "Count"
+                    value = len(value)
+                sys.stdout.write("%s\t%s\t%s\t%s\n" % (dbname, collname, key, value))
 
 
 def get_timestamp(text):
@@ -238,12 +520,12 @@ def potentially_piggybacked_sections(client, server_status):
     section_by_keys("asserts", ("asserts",), server_status)
     section_by_keys("connections", ("connections",), server_status)
     databases = get_database_info(client)
-    section_chunks(client, databases)
     section_locks(server_status)
     section_flushing(server_status)
     section_by_keys("mem", ("mem", "extra_info"), server_status)
     section_by_keys("counters", ("opcounters", "opcountersRepl"), server_status, output_key=True)
     section_collections(databases)
+    section_cluster(client, databases)
     section_logwatch(client)
 
 

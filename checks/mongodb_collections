@@ -53,6 +53,8 @@ def parse_mongodb_collections(info):
                 data[key] = int(float(value))
             except ValueError:
                 pass
+        else:
+            data[key] = value
     return parsed
 
 
@@ -67,18 +69,57 @@ def check_mongodb_collections(_no_item, params, data):
         levels = params.get("levels_%s" % key.lower())
         if levels is not None:
             levels = (levels[0] * 1024**2, levels[1] * 1024**2)
+
+        perfdata = _get_perfdata_key(key)
         yield check_levels(data[key],
-                           None,
+                           perfdata,
                            levels,
                            human_readable_func=get_bytes_human_readable,
                            infoname=label)
+    yield 0, _long_output(data)
+
+
+def _get_perfdata_key(key):
+    if key == "size":
+        return "mongodb_collection_size"
+    elif key == "storageSize":
+        return "mongodb_collection_storage_size"
+    return None
+
+
+def _long_output(data):
+    number_of_chunks = data.get("nchunks", None)
+    is_sharded = data.get("sharded", None)
+    number_of_shards = data.get("shardsCount", None)
+    average_object_size = float(data.get("avgObjSize", 0))
+    number_of_documents = int(data.get("count", 0))
+    collection_size = int(data.get("size", 0))
+    storage_size = int(data.get("storageSize", 0))
+
+    # output per collection
+    long_output = ["Collection"]
+    if is_sharded:
+        long_output.append("- Sharded: %s (Data distributed in cluster)" % is_sharded)
+    if number_of_shards:
+        long_output.append("- Shards: %s (Number of shards)" % number_of_shards)
+    if number_of_chunks:
+        long_output.append("- Chunks: %s (Total number of chunks)" % number_of_chunks)
+    long_output.append("- Document Count: %s (Number of documents in collection)" %
+                       number_of_documents)
+    long_output.append("- Object Size %s (Average object size)" %
+                       get_bytes_human_readable(average_object_size))
+    long_output.append("- Collection Size: %s (Uncompressed size in memory)" %
+                       get_bytes_human_readable(collection_size))
+    long_output.append("- Storage Size: %s (Allocated for document storage)" %
+                       get_bytes_human_readable(storage_size))
+    return "\n" + "\n".join(long_output)
 
 
 check_info["mongodb_collections"] = {
     "parse_function": parse_mongodb_collections,
     "inventory_function": discover(),
     "check_function": check_mongodb_collections,
-    "service_description": "MongoDB Collection %s",
+    "service_description": "MongoDB Collection: %s",
     "group": "mongodb_collections",
-    "has_perfdata": False,
+    "has_perfdata": True,
 }

@@ -1,0 +1,18 @@
+title: MongoDB Cluster Information
+agents: linux
+catalog: app/mongodb
+license: GPL
+distribution: check_mk
+description:
+ This check displays and monitors database parameters relevant for a MongoDB cluster:
+
+  Partitioned: true if database has sharding enabled
+
+  Collections: Number of collections of the database
+
+  Primary: Shows the name of the primary shard holding all un-sharded collections
+
+Note: This check will only be discovered, if the agent runs on the primary mongos router node.
+
+inventory:
+ One service is created for each database named 'MongoDB Database: <database name>'

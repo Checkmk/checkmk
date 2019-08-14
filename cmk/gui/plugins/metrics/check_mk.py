@@ -1301,6 +1301,41 @@ metric_info["24ghz_clients"] = {
     "color": "14/a",
 }
 
+metric_info["mongodb_chunk_count"] = {
+    "title": _("Number of Chunks"),
+    "help": _("Number of jumbo chunks per collection"),
+    "color": "#924d85",
+    "unit": "count",
+}
+
+metric_info["mongodb_jumbo_chunk_count"] = {
+    "title": _("Jumbo Chunks"),
+    "help": _("Number of jumbo chunks per collection"),
+    "color": "#91457d",
+    "unit": "count",
+}
+
+metric_info["mongodb_collection_size"] = {
+    "title": _("Collection Size"),
+    "help": _("Uncompressed size in memory"),
+    "color": "#3b4080",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_collection_storage_size"] = {
+    "title": _("Storage Size"),
+    "help": _("Allocated for document storage"),
+    "color": "#4d5092",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_document_count"] = {
+    "title": _("Number of Documents"),
+    "help": _("Number of documents per collection"),
+    "color": "#60ad54",
+    "unit": "count",
+}
+
 
 def register_assert_metrics():
     for what, color in [
@@ -6738,7 +6773,6 @@ check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation
-check_metrics["check_mk-mongodb_collections"] = df_translation
 check_metrics["check_mk-3par_cpgs.usage"] = df_translation
 check_metrics["check_mk-3par_capacity"] = df_translation
 check_metrics["check_mk-3par_volumes"] = df_translation

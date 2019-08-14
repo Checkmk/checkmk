@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 
+import importlib
 import os
 import glob
 import pwd
@@ -79,6 +80,25 @@ def get_cmk_download_credentials():
         return tuple(open(cred).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+
+
+def import_module(pathname):
+    """Return the module loaded from `pathname`.
+
+    `pathname` is a path relative to the top-level directory
+    of the repository.
+
+    This function loads the module at `pathname` even if it does not have
+    the ".py" extension.
+
+    See Also:
+        - `https://mail.python.org/pipermail/python-ideas/2014-December/030265.html`.
+
+    """
+    modname = os.path.splitext(os.path.basename(pathname))[0]
+    return importlib.machinery.SourceFileLoader(
+        modname, os.path.join(cmk_path(), pathname)
+    ).load_module()
 
 
 def wait_until(condition, timeout=1, interval=0.1):

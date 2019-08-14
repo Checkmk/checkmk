@@ -1,0 +1,15 @@
+Title: apache_status: Optional path to X.509 cert
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1565958716
+Class: feature
+
+
+The GUI now lets the user specify the path to an X.509
+certificate for apache_status over HTTPS.
+
+If no path is provided, the behavior of the agent/check
+is unchanged.

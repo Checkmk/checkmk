@@ -479,7 +479,7 @@ class AzureResource(object):
         return lines
 
 
-def process_vm(vmach, args):
+def process_vm(rest_client_management, vmach, args):
     use_keys = ('statuses',)
 
     inst_view = rest_client_management.vmview(vmach.info["group"], vmach.info["name"])
@@ -493,7 +493,8 @@ def process_vm(vmach, args):
 
 
 class MetricCache(DataCache):
-    def __init__(self, resource, metric_definition, ref_time, debug=False):
+    def __init__(self, rest_client_management, resource, metric_definition, ref_time, debug=False):
+        self.rest_client_management = rest_client_management
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
         super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
@@ -524,12 +525,12 @@ class MetricCache(DataCache):
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
         try:
-            raw_metrics = rest_client_management.metrics(resource_id,
-                                                         timespan=self._timespan,
-                                                         interval=interval,
-                                                         metricnames=metricnames,
-                                                         aggregation=aggregation,
-                                                         filter=filter_)
+            raw_metrics = self.rest_client_management.metrics(resource_id,
+                                                              timespan=self._timespan,
+                                                              interval=interval,
+                                                              metricnames=metricnames,
+                                                              aggregation=aggregation,
+                                                              filter=filter_)
         except () if self.debug else ApiError as exc:
             err.add("exception", resource_id, str(exc))
             LOG.exception(exc)
@@ -547,7 +548,8 @@ class MetricCache(DataCache):
 
 
 class UsageClient(DataCache):
-    def __init__(self, subscription, debug=False):
+    def __init__(self, rest_client_management, subscription, debug=False):
+        self.rest_client_management = rest_client_management
         super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
                                           "%s-usage" % subscription,
                                           debug=debug)
@@ -564,7 +566,7 @@ class UsageClient(DataCache):
         LOG.debug("UsageClient: get live data")
 
         # (mo) I am unable to get the filter for usage_end working :-(
-        unfiltered_usages = rest_client_management.usagedetails()
+        unfiltered_usages = self.rest_client_management.usagedetails()
         LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
@@ -589,7 +591,7 @@ class UsageClient(DataCache):
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def gather_metrics(resource, debug=False):
+def gather_metrics(rest_client_management, resource, debug=False):
     '''
     Gather all metrics for a resource. These metrics have different time
     resolutions, so every metric needs its own cache.
@@ -598,21 +600,21 @@ def gather_metrics(resource, debug=False):
     err = IssueCollecter()
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     for metric_def in metric_definitions:
-        cache = MetricCache(resource, metric_def, NOW, debug=debug)
+        cache = MetricCache(rest_client_management, resource, metric_def, NOW, debug=debug)
         resource.metrics += cache.get_data(resource.info['id'],
                                            err,
                                            use_cache=cache.cache_interval > 60)
     return err
 
 
-def process_resource(function_args):
+def process_resource(rest_client_management, function_args):
     resource, args = function_args
 
     resource_type = resource.info.get("type")
     if resource_type == 'Microsoft.Compute/virtualMachines':
-        process_vm(resource, args)
+        process_vm(rest_client_management, resource, args)
 
-    err = gather_metrics(resource, debug=args.debug)
+    err = gather_metrics(rest_client_management, resource, debug=args.debug)
 
     agent_info_section = AzureSection('agent_info')
     agent_info_section.add(('remaining-reads', rest_client_management.ratelimit))
@@ -624,7 +626,7 @@ def process_resource(function_args):
     return [agent_info_section, section]
 
 
-def write_group_info(monitored_groups):
+def write_group_info(rest_client_management, monitored_groups):
 
     for group in rest_client_management.resourcegroups():
         name = group['name']
@@ -664,9 +666,7 @@ def main(argv=None):
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
     LOG.debug("%s", selector)
-
     try:
-        global rest_client_management
         resource_management = 'https://management.azure.com/'
         uri_end_management = 'subscriptions/%s/' % args.subscription
         api_client_management = RestApiClient(resource_management, uri_end_management, args.tenant,
@@ -679,9 +679,9 @@ def main(argv=None):
         ]
         monitored_groups = sorted(set(r.info['group'] for r in resources))
 
-        write_group_info(monitored_groups)
+        write_group_info(rest_client_management, monitored_groups)
 
-        usage_client = UsageClient(args.subscription, args.debug)
+        usage_client = UsageClient(rest_client_management, args.subscription, args.debug)
         usage_client.write_sections(monitored_groups)
 
         func_args = ((resource, args) for resource in resources)

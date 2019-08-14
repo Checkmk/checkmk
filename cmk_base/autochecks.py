@@ -305,16 +305,35 @@ def _parse_dict_autocheck_entry(entry):
 
 
 def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
+    # type: (Any) -> str
     if isinstance(ast_parameters_unresolved, ast.Name):
         # Keep check variable names as they are: No evaluation of check parameters
-        parameters_unresolved = ast_parameters_unresolved.id
-    else:
-        # Other structures, like dicts, lists and so on should also be loaded as repr() str
-        # instead of an interpreted structure
-        parameters_unresolved = repr(
-            eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
+        return ast_parameters_unresolved.id
 
-    return parameters_unresolved
+    # The if64 was writing structures like this:
+    # {
+    #   "errors" : if_default_error_levels,
+    #   "traffic" : if_default_traffic_levels,
+    #   "average" : if_default_average ,
+    #   "state" : "1",
+    #   "speed" : 1000000000
+    # }
+    # where the variables are values in a dictionary. Also convert this kind of structure
+    # without evaluating the variables.
+    if isinstance(ast_parameters_unresolved, ast.Dict):
+        values = []
+        for index, key in enumerate(ast_parameters_unresolved.keys):
+            if not isinstance(key, ast.Str):
+                continue
+
+            value = _parse_unresolved_parameters_from_ast(ast_parameters_unresolved.values[index])
+            values.append((key.s, value))
+        return "{%s}" % ", ".join(["'%s': %s" % p for p in sorted(values, key=lambda x: x[0])])
+
+    # Other structures, like dicts, lists and so on should also be loaded as repr() str
+    # instead of an interpreted structure
+    return repr(
+        eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
 
 
 def _parse_discovered_service_label_from_ast(ast_service_labels):

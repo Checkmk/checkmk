@@ -212,7 +212,7 @@ def _prepare_tag_config():
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
     # the wato_host_tags and wato_aux_tags to the new structure
     tag_config = wato_tags
-    if any(tag_config) and (wato_host_tags or wato_aux_tags):
+    if not any(tag_config.values()) and (wato_host_tags or wato_aux_tags):
         migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
         tag_config = cmk.utils.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
 

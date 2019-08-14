@@ -1,0 +1,14 @@
+Title: omd: Improved output of hook scripts (e.g. during update)
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1565804128
+
+The hook scripts, that can be executed by OMD and are executed during
+update by default as of 1.6 are now always printing their stdout/stderr
+instead of only in verbose mode. This makes it easier to debug problems
+during regular processing.

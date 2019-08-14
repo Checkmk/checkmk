@@ -1,0 +1,14 @@
+Title: Fix error on tag management page when tags are defined outside of WATO
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1565780233
+
+When tags were added to the configuration using the wato_host_tags variable
+outside of WATO while the WATO configuration was already based on the 1.6
+format, this resulted in an exception on the tag management page which has
+now been fixed.

@@ -6,7 +6,7 @@
 #define ENGINE_STDAFX_H__
 
 #if defined(_MSC_VER)
-// more agressive warning
+// more aggressive warning
 #pragma warning(3 : 4062)
 #endif
 
@@ -17,11 +17,8 @@
 #define SI_SUPPORT_IOSTREAMS
 #define USE_EXPERIMENTAL_FILESYSTEM  // #TODO recheck with 2019
 
-#include "asio.h"
-#include "common/cfg_info.h"  // internal tracing and dumping
-#include "common/version.h"
-#include "logger.h"
-#include "tools/_raii.h"  // ON_OUT_OF_SCOPE
-#include "tools/_xlog.h"  // internal tracing and dumping
+#include "asio.h"  // we are hacking asio to prevent keeping handle
+#include "common/cfg_info.h"
+#include "tools/_raii.h"  // ON_OUT_OF_SCOPE and other extremely useful staff
 
 #endif  // ENGINE_STDAFX_H__

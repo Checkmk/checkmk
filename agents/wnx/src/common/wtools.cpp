@@ -1,15 +1,22 @@
 // Windows Tools
 #include "stdafx.h"
 
+#include "wtools.h"
+
+// WINDOWS STUFF
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <WinSock2.h>
 
-#include <WinError.h>
-#include <stdio.h>
-#include <windows.h>
+#include <comdef.h>
+#include <shellapi.h>
+
+#include "psapi.h"
+#pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
+#pragma comment(lib, "psapi.lib")     /// Microsoft Specific
+#endif
 
 #include <cstdint>
-#include <iostream>
 #include <numeric>
 #include <string>
 
@@ -17,15 +24,8 @@
 #include "cfg.h"
 #include "logger.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 #include "upgrade.h"
-#include "wtools.h"
 
-#if defined(_WIN32)
-#include "psapi.h"
-#pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
-#pragma comment(lib, "psapi.lib")     /// Microsoft Specific
-#endif
 namespace wtools {
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -1170,6 +1170,21 @@ bool IsWindowsComInitialized() {
     return g_windows_com_initialized;
 }
 
+// # TODO gtest[-]
+bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name) {
+    if (!object) {
+        XLOG::l.crit(XLOG_FUNC + "Bad Parameter");
+        return false;
+    }
+
+    VARIANT value;
+    HRESULT res = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (FAILED(res)) return false;
+
+    ON_OUT_OF_SCOPE(VariantClear(&value));
+    return value.vt != VT_NULL;
+}
+
 std::wstring WmiGetWstring(const VARIANT& Var) {
     if (Var.vt & VT_ARRAY) {
         return L"<array>";
@@ -1933,6 +1948,26 @@ int FindProcess(std::wstring_view process_name) noexcept {
     return count;
 }
 
+void KillProcessTree(uint32_t ProcessId) {
+    // snapshot
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ON_OUT_OF_SCOPE(CloseHandle(snapshot));
+
+    // scan and kill
+    // error management is ignored while this is secondary method for now
+    PROCESSENTRY32 process;
+    ZeroMemory(&process, sizeof(process));
+    process.dwSize = sizeof(process);
+    Process32First(snapshot, &process);
+    do {
+        // process.th32ProcessId is the PID.
+        if (process.th32ParentProcessID == ProcessId) {
+            KillProcess(process.th32ProcessID);
+        }
+
+    } while (Process32Next(snapshot, &process));
+}
+
 std::wstring GetArgv(uint32_t index) noexcept {
     int n_args = 0;
     auto argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
@@ -1942,6 +1977,24 @@ std::wstring GetArgv(uint32_t index) noexcept {
     ON_OUT_OF_SCOPE(::LocalFree(argv));
 
     if (index < static_cast<uint32_t>(n_args)) return argv[index];
+
+    return {};
+}
+
+std::wstring GetCurrentExePath() noexcept {
+    namespace fs = std::filesystem;
+
+    std::wstring exe_path;
+    int args_count = 0;
+    auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
+    if (nullptr == arg_list) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
+    fs::path exe = arg_list[0];
+
+    std::error_code ec;
+    if (fs::exists(exe, ec)) return exe.parent_path();
+    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
 
     return {};
 }

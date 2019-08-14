@@ -14,9 +14,8 @@
 #include "asio/ip/network_v6.hpp"
 #include "cfg.h"
 #include "check_mk.h"
+#include "common/version.h"
 #include "onlyfrom.h"
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
 
 namespace cma {
 

@@ -13,6 +13,7 @@
 #include "cap.h"
 #include "cfg.h"
 #include "commander.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted

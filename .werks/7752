@@ -2,7 +2,7 @@ Title: Servicenow: Fixed missing handling of ending downtimes
 Level: 1
 Component: notifications
 Compatible: compat
-Edition: cre
+Edition: cee
 Version: 1.6.0b3
 Date: 1561645791
 Class: fix

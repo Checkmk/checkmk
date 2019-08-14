@@ -267,15 +267,6 @@ def _parse_autocheck_entry(hostname, entry):
     if isinstance(item, str):
         item = config.decode_incoming_string(item)
 
-    if isinstance(ast_parameters_unresolved, ast.Name):
-        # Keep check variable names as they are: No evaluation of check parameters
-        parameters_unresolved = ast_parameters_unresolved.id
-    else:
-        # Other structures, like dicts, lists and so on should also be loaded as repr() str
-        # instead of an interpreted structure
-        parameters_unresolved = repr(
-            eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
-
     try:
         description = config.service_description(hostname, check_plugin_name, item)
     except Exception:
@@ -285,7 +276,7 @@ def _parse_autocheck_entry(hostname, entry):
         check_plugin_name,
         item,
         description,
-        parameters_unresolved,
+        _parse_unresolved_parameters_from_ast(ast_parameters_unresolved),
         service_labels=_parse_discovered_service_label_from_ast(ast_service_labels))
 
 
@@ -311,6 +302,19 @@ def _parse_dict_autocheck_entry(entry):
 
     return values["check_plugin_name"], values["item"], values["parameters"], values[
         "service_labels"]
+
+
+def _parse_unresolved_parameters_from_ast(ast_parameters_unresolved):
+    if isinstance(ast_parameters_unresolved, ast.Name):
+        # Keep check variable names as they are: No evaluation of check parameters
+        parameters_unresolved = ast_parameters_unresolved.id
+    else:
+        # Other structures, like dicts, lists and so on should also be loaded as repr() str
+        # instead of an interpreted structure
+        parameters_unresolved = repr(
+            eval(compile(ast.Expression(ast_parameters_unresolved), filename="<ast>", mode="eval")))
+
+    return parameters_unresolved
 
 
 def _parse_discovered_service_label_from_ast(ast_service_labels):

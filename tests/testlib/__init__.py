@@ -1781,22 +1781,26 @@ class CMKWebSession(WebSession):
         self.site.wait_for_core_reloaded(old_t)
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
-        result = self._api_request("webapi.py?action=get_graph", {
-            "request": json.dumps({
-                "specification": [
-                    "template", {
-                        "service_description": service_description,
-                        "site": self.site.id,
-                        "graph_index": graph_index,
-                        "host_name": hostname,
+        result = self._api_request(
+            "webapi.py?action=get_graph&output_format=json",
+            {
+                "request": json.dumps({
+                    "specification": [
+                        "template", {
+                            "service_description": service_description,
+                            "site": self.site.id,
+                            "graph_index": graph_index,
+                            "host_name": hostname,
+                        }
+                    ],
+                    "data_range": {
+                        "time_range": [time.time() - 3600, time.time()]
                     }
-                ],
-                "data_range": {
-                    "time_range": [time.time() - 3600, time.time()]
-                }
-            }),
-        },
-                                   expect_error=expect_error)
+                }),
+            },
+            expect_error=expect_error,
+            output_format="json",
+        )
 
         assert isinstance(result, dict)
         assert "start_time" in result

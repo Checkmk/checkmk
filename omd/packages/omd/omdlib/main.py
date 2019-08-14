@@ -3346,7 +3346,7 @@ def initialize_livestatus_tcp_tls_after_update(site):
 def _create_livestatus_tcp_socket_link(site):
     """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
     link_path = site.tmp_dir + "/run/live-tcp"
-    target = "live-tls" if site.conf["LIVESTATUS_TCP"] == "on" else "live"
+    target = "live-tls" if site.conf["LIVESTATUS_TCP_TLS"] == "on" else "live"
 
     if os.path.lexists(link_path):
         os.unlink(link_path)

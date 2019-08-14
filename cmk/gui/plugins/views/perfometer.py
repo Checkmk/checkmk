@@ -27,8 +27,10 @@
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _
+
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+
 from cmk.gui.log import logger
 
 from cmk.gui.plugins.views.perfometers import (
@@ -296,7 +298,7 @@ class SorterPerfometer(Sorter):
         try:
             p1 = Perfometer(r1)
             p2 = Perfometer(r2)
-            return cmp(p1.sort_value(), p2.sort_value())
+            return (p1.sort_value() > p2.sort_value()) - (p1.sort_value() < p2.sort_value())
         except Exception:
             logger.exception("error sorting perfometer values")
             if config.debug:

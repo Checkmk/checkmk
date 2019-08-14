@@ -23,18 +23,22 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
+import functools
 import time
 import itertools
 
 import cmk
 import cmk.gui.config as config
+
 import cmk.gui.availability as availability
 from cmk.gui.table import table_element
+
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+
 from cmk.gui.exceptions import MKUserError
+
 from cmk.gui.valuespec import (
     Checkbox,
     TextAreaUnicode,
@@ -790,7 +794,8 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
 
-    annos_to_render.sort(cmp=lambda a, b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
+    annos_to_render.sort(key=functools.cmp_to_key(lambda a, b: ((a[1]["from"] > b[1]["from"]) - (a[
+        1]["from"] < b[1]["from"])) or ((a[0] > b[0]) - (a[0] < b[0]))))
     return annos_to_render
 
 

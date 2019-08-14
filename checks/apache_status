@@ -73,21 +73,23 @@ _apache_status_fields = {
     'IdleServers': (21, int),
 }
 
-_apache_status_stats = {
-    'Waiting': '_',
-    'StartingUp': 'S',
-    'ReadingRequest': 'R',
-    'SendingReply': 'W',
-    'Keepalive': 'K',
-    'DNS': 'D',
-    'Closing': 'C',
-    'Logging': 'L',
-    'Finishing': 'G',
-    'IdleCleanup': 'O',
-}
+_apache_status_stats = collections.OrderedDict((
+    # scoreboard stats
+    ('Waiting', '_'),
+    ('StartingUp', 'S'),
+    ('ReadingRequest', 'R'),
+    ('SendingReply', 'W'),
+    ('Keepalive', 'K'),
+    ('DNS', 'D'),
+    ('Closing', 'C'),
+    ('Logging', 'L'),
+    ('Finishing', 'G'),
+    ('IdleCleanup', 'O'),
+))
 
 
-def apache_status_parse(info):
+def apache_status_parse_legacy(info):
+    # This parse function is required for compatibility with agents older than the 1.6 release.
     data = {}
     for line in info:
         if len(line) != 4 and not (len(line) == 5 and line[2] == 'Total'):
@@ -105,6 +107,51 @@ def apache_status_parse(info):
 
         if item not in data:
             data[item] = {}
+
+        # Get statistics from scoreboard
+        if label == 'Scoreboard':
+            for stat_label, key in _apache_status_stats.items():
+                data[item]['State_' + stat_label] = value.count(key)
+            data[item]['OpenSlots'] = value.count('.')
+
+        data[item][label] = value
+
+        # Count number of total slots after all needed infos are present
+        if 'OpenSlots' in data[item] and 'IdleWorkers' in data[item] \
+           and 'BusyWorkers' in data[item]:
+            data[item]['TotalSlots'] = data[item]['OpenSlots'] \
+                                       + data[item]['IdleWorkers'] \
+                                       + data[item]['BusyWorkers']
+
+    return data
+
+
+def apache_status_parse(info):
+    if len(frozenset(len(_) for _ in info)) != 1:
+        # The separator was changed in 1.6 so that the elements of `info`
+        # have a constant length.
+        return apache_status_parse_legacy(info)
+
+    data = collections.defaultdict(dict)
+    for address, port, instance, apache_info in info:
+        try:
+            label, status = apache_info.split(":", 1)
+        except ValueError:
+            # There is nothing to split.
+            continue
+        try:
+            value = _apache_status_fields[label][1](status)
+        except KeyError:
+            # Not a label we handle.
+            continue
+        if instance and port != "None":
+            item = '%s:%s' % (instance, port)
+        elif instance:
+            item = instance
+        elif port != "None":
+            item = '%s:%s' % (address, port)
+        else:
+            item = address
 
         # Get statistics from scoreboard
         if label == 'Scoreboard':

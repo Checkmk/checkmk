@@ -1,0 +1,12 @@
+Title: apache_status: Set optional instance name
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b5
+Date: 1565957495
+
+If set, the instance name is used in the service description. If unset,
+the behavior is unchanged and hostname/fqdn/port is used instead.

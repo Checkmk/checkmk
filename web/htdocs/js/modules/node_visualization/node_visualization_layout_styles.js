@@ -1286,8 +1286,6 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         abs_offsets.x = this.style_root_node.x
         abs_offsets.y = this.style_root_node.y
         this._style_root_node_offsets.forEach(offset=>{
-            if (offset.node == this.style_root_node)
-                return
             let force = this.get_default_node_force(offset.node)
             force.fx = abs_offsets.x + offset.x
             force.fy = abs_offsets.y + offset.y
@@ -1350,7 +1348,7 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleForce)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleHierarchy)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleRadial)
-node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleFixed)
+//node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleFixed)
 node_visualization_layouting_utils.LayoutStyleFactory.style_classes.push(LayoutStyleBlock)
 
 

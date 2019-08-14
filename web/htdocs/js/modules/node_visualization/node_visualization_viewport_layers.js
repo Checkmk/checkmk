@@ -200,7 +200,7 @@ export class LayeredCustomOverlay extends node_visualization_viewport_utils.Laye
     }
 
     name() {
-        return "Demo: Custom-Overlay"
+        return "Default Aggr Overlay (demo)"
     }
 
     constructor(viewport) {

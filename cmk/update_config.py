@@ -49,6 +49,7 @@ from werkzeug.test import create_environ
 import cmk_base.autochecks
 
 import cmk.utils.log as log
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils
 import cmk.gui.watolib.tags
@@ -132,6 +133,8 @@ def main(args):
         log.setup_console_logging()
         log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
         logger = logging.getLogger("cmk.update_config")
+        if arguments.debug:
+            cmk.utils.debug.enable()
 
         logger.debug("parsed arguments: %s", arguments)
 

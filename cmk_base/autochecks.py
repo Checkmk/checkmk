@@ -213,10 +213,10 @@ def parse_autochecks_file(hostname):
 
     try:
         tree = ast.parse(open(path).read())
-    except SyntaxError:
+    except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
-        raise MKGeneralException("Unable to parse autochecks file %s" % (path))
+        raise MKGeneralException("Unable to parse autochecks file %s: %s" % (path, e))
 
     for child in ast.iter_child_nodes(tree):
         # Mypy is wrong about this: [mypy:] "AST" has no attribute "value"

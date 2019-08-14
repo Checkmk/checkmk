@@ -2502,19 +2502,15 @@ def call_scripts(site, phase):
                 '%s/%s' % (path, f),
                 shell=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
+                stderr=subprocess.STDOUT)
             stdout = p.stdout.read()
-            stderr = p.stderr.read()
             exitcode = p.wait()
             if exitcode == 0:
                 sys.stdout.write(tty_ok + '\n')
             else:
-                sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
-            if opt_verbose:
-                if stdout:
-                    sys.stdout.write('Output: %s\n' % stdout)
-                if stderr:
-                    sys.stdout.write('Errors: %s\n' % stderr)
+                sys.stdout.write(tty_error + ' (exit code: %d)\n' % exitcode)
+            if stdout:
+                sys.stdout.write('Output: %s\n' % stdout)
 
 
 def check_site_user(site, site_must_exist):

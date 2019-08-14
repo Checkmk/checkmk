@@ -26,6 +26,11 @@
 
 import abc
 
+try:
+    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
+
 import cmk.utils.store
 
 
@@ -55,9 +60,8 @@ class WatoSimpleConfigFile(object):
                                                  lock=lock)
 
     def save(self, cfg):
-        # Should be fixed when using pylint 2.0 (https://github.com/PyCQA/pylint/issues/1660)
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True)  # pylint: disable=no-member
-        cmk.utils.store.save_to_mk_file("%s" % self._config_file_path, self._config_variable, cfg)
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        cmk.utils.store.save_to_mk_file(str(self._config_file_path), self._config_variable, cfg)
 
     def filter_usable_entries(self, entries):
         return entries

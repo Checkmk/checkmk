@@ -235,16 +235,17 @@ def check_fileinfo_groups(item, params, info):
         return 3, "Missing reference timestamp"
 
     # Start counting values on all files
-    for line in info[1:]:
+    for line in info:
         # Old format does not support '%s' in group name
         group_patterns = set(params.get('precompiled_patterns', []))
         for entry in params.get('group_patterns', []):
             group_patterns.add(entry)
 
         for pattern in group_patterns:
+            # the line length check skips lines with a timestamp
             # endswith("No such file...") is needed to
             # support the solaris perl based version of fileinfo
-            if line[0].endswith("No such file or directory"):
+            if len(line) <= 1 or line[0].endswith("No such file or directory"):
                 continue
 
             if type(pattern) == str:  # support old format
@@ -275,8 +276,7 @@ def check_fileinfo_groups(item, params, info):
             else:
                 excl_match = fnmatch.fnmatch(line[0], exclusion)
 
-            if str(line[1]) not in ['missing', ''] and \
-               incl_match and not excl_match:
+            if str(line[1]) not in ['missing', ''] and incl_match and not excl_match:
                 size = int(line[1])
                 size_all += size
                 if size_smallest is None:

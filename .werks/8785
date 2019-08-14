@@ -1,0 +1,12 @@
+Title: fileinfo.groups: don't crash if the service is clustered
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p22
+Date: 1565794590
+Class: fix
+
+If fileinfo.groups was used together with a Checkmk cluster the
+check crashed, because the timestamp lines of nodes were treated
+as lines with a file. This is fixed.

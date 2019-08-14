@@ -66,7 +66,6 @@ loaded_with_language = False
 
 # Custom user attributes
 user_attributes = {}
-builtin_user_attribute_names = []
 
 # Connection configuration
 connection_dict = {}

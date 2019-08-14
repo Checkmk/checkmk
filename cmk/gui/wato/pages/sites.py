@@ -284,7 +284,7 @@ class ModeEditSite(WatoMode):
     def _livestatus_elements(self):
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
-        site_choices = [("", _("(no status host)"))] + [
+        site_choices = [
             (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
         ]
 

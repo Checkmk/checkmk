@@ -280,7 +280,7 @@ div.node_vis circle.style_indicator.focus{
     opacity: 0.5;
 }
 
-div.node_vis .style_overlay {
+.style_overlay {
   opacity: 0.2;
   fill: none;
   stroke: darkgrey;
@@ -289,7 +289,7 @@ div.node_vis .style_overlay {
   pointer-events: none;
 }
 
-div.node_vis .block_style_overlay {
+.block_style_overlay {
   vector-effect: non-scaling-stroke;
   opacity: 0.3;
   fill: darkgrey;

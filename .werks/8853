@@ -1,0 +1,10 @@
+Title: Cleanup ancient "(no status host)" choice from site config
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b6
+Date: 1565780773
+Class: fix
+
+

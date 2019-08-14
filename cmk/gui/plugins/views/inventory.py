@@ -25,27 +25,32 @@
 # Boston, MA 02110-1301 USA.
 
 import time
-
 from cmk.utils.regex import regex
+
 import cmk.utils.defines as defines
+
 import cmk.utils.render
 
 import cmk.gui.pages
+
 import cmk.gui.config as config
+
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Checkbox, Hostname
-from cmk.gui.exceptions import MKUserError
 
+from cmk.gui.valuespec import Checkbox, Hostname
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
     visual_info_registry,
 )
+
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -236,7 +241,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
 def cmp_inventory_node(a, b, invpath):
     val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
     val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
-    return cmp(val_a, val_b)
+    return (val_a > val_b) - (val_a < val_b)
 
 
 @painter_option_registry.register
@@ -764,7 +769,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(cmp=lambda a, b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a, b))
+    columns.sort(key=lambda x: order.get(x, 999) or x)
     return columns
 
 

@@ -82,7 +82,8 @@ class SorterSvcstate(Sorter):
         return ['service_state', 'service_has_been_checked']
 
     def cmp(self, r1, r2):
-        return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
+        return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) <
+                                                              cmp_state_equiv(r2))
 
 
 @sorter_registry.register
@@ -100,7 +101,8 @@ class SorterHoststate(Sorter):
         return ['host_state', 'host_has_been_checked']
 
     def cmp(self, r1, r2):
-        return cmp(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
+        return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (cmp_host_state_equiv(r1) <
+                                                                        cmp_host_state_equiv(r2))
 
 
 @sorter_registry.register
@@ -118,7 +120,8 @@ class SorterSiteHost(Sorter):
         return ['site', 'host_name']
 
     def cmp(self, r1, r2):
-        return cmp(r1["site"], r2["site"]) or cmp_num_split("host_name", r1, r2)
+        return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
+            "host_name", r1, r2)
 
 
 @sorter_registry.register
@@ -154,7 +157,8 @@ class SorterSitealias(Sorter):
         return ['site']
 
     def cmp(self, r1, r2):
-        return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
+        return (config.site(r1["site"])["alias"] > config.site(r2["site"])["alias"]) - (config.site(
+            r1["site"])["alias"] < config.site(r2["site"])["alias"])
 
 
 class ABCTagSorter(Sorter):
@@ -167,7 +171,7 @@ class ABCTagSorter(Sorter):
     def cmp(self, r1, r2):
         tag_groups_1 = sorted(get_tag_groups(r1, self.object_type).items())
         tag_groups_2 = sorted(get_tag_groups(r2, self.object_type).items())
-        return cmp(tag_groups_1, tag_groups_2)
+        return (tag_groups_1 > tag_groups_2) - (tag_groups_1 < tag_groups_2)
 
 
 @sorter_registry.register
@@ -218,7 +222,7 @@ class ABCLabelSorter(Sorter):
     def cmp(self, r1, r2):
         labels_1 = sorted(get_labels(r1, self.object_type).items())
         labels_2 = sorted(get_labels(r2, self.object_type).items())
-        return cmp(labels_1, labels_2)
+        return (labels_1 > labels_2) - (labels_1 < labels_2)
 
 
 @sorter_registry.register
@@ -278,7 +282,7 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column])) or \
+    return  (cmp_service_name_equiv(r1[column])> cmp_service_name_equiv(r2[column]))-(cmp_service_name_equiv(r1[column])< cmp_service_name_equiv(r2[column])) or \
            cmp_num_split(column, r1, r2)
 
 
@@ -336,8 +340,10 @@ class PerfValSorter(Sorter):
         return ['service_perf_data']
 
     def cmp(self, r1, r2):
-        return cmp(utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)),
-                   utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True)))
+        return ((utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)) > utils.savefloat(
+            get_perfdata_nth_value(r2, self._num - 1, True))) -
+                (utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)) < utils.savefloat(
+                    get_perfdata_nth_value(r2, self._num - 1, True))))
 
 
 @sorter_registry.register
@@ -453,7 +459,7 @@ class SorterHostIpv4Address(Sorter):
                 return ip
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
-        return cmp(v1, v2)
+        return (v1 > v2) - (v1 < v2)
 
 
 @sorter_registry.register
@@ -471,9 +477,12 @@ class SorterNumProblems(Sorter):
         return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
 
     def cmp(self, r1, r2):
-        return cmp(
-            r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],
-            r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"])
+        return ((r1["host_num_services"] - r1["host_num_services_ok"] -
+                 r1["host_num_services_pending"] > r2["host_num_services"] -
+                 r2["host_num_services_ok"] - r2["host_num_services_pending"]) -
+                (r1["host_num_services"] - r1["host_num_services_ok"] -
+                 r1["host_num_services_pending"] < r2["host_num_services"] -
+                 r2["host_num_services_ok"] - r2["host_num_services_pending"]))
 
 
 # Hostgroup
@@ -535,7 +544,7 @@ declare_1to1_sorter("log_lineno", cmp_simple_number)
 
 
 def cmp_log_what(col, a, b):
-    return cmp(log_what(a[col]), log_what(b[col]))
+    return (log_what(a[col]) > log_what(b[col])) - (log_what(a[col]) < log_what(b[col]))
 
 
 def log_what(t):
@@ -561,7 +570,7 @@ def cmp_date(column, r1, r2):
     # simply calculating with 86400 does not work because of timezone problems
     r1_date = get_day_start_timestamp(r1[column])
     r2_date = get_day_start_timestamp(r2[column])
-    return cmp(r2_date, r1_date)
+    return (r2_date > r1_date) - (r2_date < r1_date)
 
 
 declare_1to1_sorter("log_date", cmp_date)

@@ -169,6 +169,7 @@ def test_parse_autochecks_file_not_existing():
           ('cpu.loads', None, cpuload_default_levels),
           ('chrony', None, {}),
           ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
+          ('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
         ]""",
             [
                 ('df', u'/', '{}'),
@@ -176,7 +177,10 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/zzz', "['abc', 'xyz']"),
                 ('cpu.loads', None, 'cpuload_default_levels'),
                 ('chrony', None, '{}'),
-                ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
+                ('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
+                ('if64', u'00001001',
+                 "{'average': if_default_average, 'errors': if_default_error_levels, 'speed': 1000000000, 'state': '1', 'traffic': if_default_traffic_levels}"
+                ),
             ],
         ),
         # Dict: Allow non string items
@@ -204,7 +208,7 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/zzz', "['abc', 'xyz']"),
                 ('cpu.loads', None, 'cpuload_default_levels'),
                 ('chrony', None, '{}'),
-                ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
+                ('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
             ],
         ),
     ])
@@ -225,13 +229,7 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
         expected = expected_result[index]
         assert service.check_plugin_name == expected[0]
         assert service.item == expected[1]
-
-        if isinstance(service.parameters_unresolved,
-                      str) and service.parameters_unresolved.startswith("{"):
-            # Work around random dict key sorting
-            assert ast.literal_eval(service.parameters_unresolved) == ast.literal_eval(expected[2])
-        else:
-            assert service.parameters_unresolved == expected[2]
+        assert service.parameters_unresolved == expected[2]
 
 
 def test_has_autochecks():

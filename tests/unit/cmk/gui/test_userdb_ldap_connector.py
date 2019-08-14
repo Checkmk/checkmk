@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore
-from mockldap import MockLdap, LDAPObject
+from mockldap import MockLdap, LDAPObject  # type: ignore
 
 # userdb is needed to make the module register the post-config-load-hooks
 import cmk.gui.userdb  # pylint: disable=unused-import
@@ -217,9 +218,15 @@ def encode_to_byte_strings(inp):
     return inp
 
 
-@pytest.fixture(scope="module")
-def mocked_ldap():
+@pytest.fixture()
+def mocked_ldap(monkeypatch):
     ldap_mock = MockLdap(_ldap_tree())
+
+    def connect(self, enforce_new=False, enforce_server=None):
+        self._default_bind(self._ldap_obj)
+
+    monkeypatch.setattr(ldap.LDAPUserConnector, "connect", connect)
+    monkeypatch.setattr(ldap.LDAPUserConnector, "disconnect", lambda self: None)
 
     ldap_connection = ldap.LDAPUserConnector({
         "id": "default",
@@ -246,8 +253,6 @@ def mocked_ldap():
         "group_scope": "sub",
     })
 
-    ldap_connection.disconnect = lambda: None
-    ldap_connection.connect = lambda: None
     ldap_mock.start()
     ldap_connection._ldap_obj = ldap_mock["ldap://127.0.0.1"]
 
@@ -299,11 +304,10 @@ def test_check_credentials_success(mocked_ldap):
 
 
 def test_check_credentials_invalid(mocked_ldap):
-    assert mocked_ldap.check_credentials("admin", "WRONG") == False
+    assert mocked_ldap.check_credentials("admin", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
 
-@pytest.mark.skip("fails when run alone")
 def test_check_credentials_not_existing(mocked_ldap):
     assert mocked_ldap.check_credentials("john", "secret") is None
     _check_restored_bind_user(mocked_ldap)
@@ -317,22 +321,21 @@ def test_check_credentials_enforce_conn_success(mocked_ldap):
 
 
 def test_check_credentials_enforce_invalid(mocked_ldap):
-    assert mocked_ldap.check_credentials("admin@testldap", "WRONG") == False
+    assert mocked_ldap.check_credentials("admin@testldap", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
 
-@pytest.mark.skip("fails when run alone")
 def test_check_credentials_enforce_not_existing(mocked_ldap):
-    assert mocked_ldap.check_credentials("john@testldap", "secret") == False
+    assert mocked_ldap.check_credentials("john@testldap", "secret") is False
     _check_restored_bind_user(mocked_ldap)
 
 
 def test_object_exists(mocked_ldap):
-    assert mocked_ldap.object_exists("dc=org") == True
-    assert mocked_ldap.object_exists("dc=XYZ") == False
-    assert mocked_ldap.object_exists("ou=users,dc=check-mk,dc=org") == True
-    assert mocked_ldap.object_exists("cn=admin,ou=users,dc=check-mk,dc=org") == True
-    assert mocked_ldap.object_exists("cn=admins,ou=groups,dc=check-mk,dc=org") == True
+    assert mocked_ldap.object_exists("dc=org") is True
+    assert mocked_ldap.object_exists("dc=XYZ") is False
+    assert mocked_ldap.object_exists("ou=users,dc=check-mk,dc=org") is True
+    assert mocked_ldap.object_exists("cn=admin,ou=users,dc=check-mk,dc=org") is True
+    assert mocked_ldap.object_exists("cn=admins,ou=groups,dc=check-mk,dc=org") is True
 
 
 def test_user_base_dn_exists(mocked_ldap):

@@ -27,15 +27,15 @@ bool PluginsProvider::isAllowedByCurrentConfig() const {
 }
 
 static bool IsPluginRequiredType(const PluginEntry& plugin,
-                                 PluginType need_type) {
+                                 PluginMode need_type) {
     switch (need_type) {
-        case PluginType::async:
+        case PluginMode::async:
             return plugin.isRealAsync();
 
-        case PluginType::sync:
+        case PluginMode::sync:
             return !plugin.isRealAsync();
 
-        case PluginType::all:
+        case PluginMode::all:
             return true;
     }
 
@@ -47,7 +47,7 @@ static bool IsPluginRequiredType(const PluginEntry& plugin,
 
 // scans plugin map by criteria to  find MAX timeout
 // returns 0 on lack plugin entries
-int FindMaxTimeout(const cma::PluginMap& pm, PluginType need_type) {
+int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
     int timeout = 0;
     for (const auto& [path, plugin] : pm) {
         if (IsPluginRequiredType(plugin, need_type))
@@ -61,7 +61,7 @@ int FindMaxTimeout(const cma::PluginMap& pm, PluginType need_type) {
 // if timeout is too big, than set default from the max_wait
 void PluginsProvider::updateTimeout() noexcept {
     using namespace cma::cfg;
-    timeout_ = FindMaxTimeout(pm_, PluginType::sync);
+    timeout_ = FindMaxTimeout(pm_, PluginMode::sync);
 
     auto config_max_wait =
         GetVal(cfg_name_, vars::kPluginMaxWait, kDefaultPluginTimeout);

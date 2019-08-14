@@ -35,11 +35,11 @@ TEST(UpgradeTest, GetHash) {
     fs::path dir = cma::cfg::GetUserDir();
     auto ini = dir / ini_name;
     auto state = dir / state_name;
-    EXPECT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
-    EXPECT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
+    ASSERT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
+    ASSERT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
 
-    EXPECT_EQ(GetOldHashFromIni(ini), ini_expected);
-    EXPECT_EQ(GetOldHashFromState(state), state_expected);
+    ASSERT_EQ(GetOldHashFromIni(ini), ini_expected);
+    ASSERT_EQ(GetOldHashFromState(state), state_expected);
 }
 
 TEST(UpgradeTest, GetDefaHash) {
@@ -139,24 +139,26 @@ TEST(UpgradeTest, PatchIniHash) {
         ASSERT_EQ(new_hash, new_expected);
     }
 
-    {
-        fs::path dir = cma::cfg::GetUserDir();
-        auto ini = dir / ini_name;
-        tst::SafeCleanTempDir();
-        auto [source, target] = tst::CreateInOut();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
+    fs::path dir = cma::cfg::GetUserDir();
+    auto dat = dir / dat_name;
+    auto new_hash = GetNewHash(dat);
+    {
+        auto ini = dir / ini_name;
 
         fs::copy_file(ini, target / ini_name,
                       fs::copy_options::overwrite_existing, ec);
         fs::copy_file(dat, target / dat_name,
                       fs::copy_options::overwrite_existing, ec);
-        auto ret = PatchIniHash(ini, new_hash);
+    }
+    {
+        auto ret = PatchIniHash(target / ini_name, new_hash);
         EXPECT_TRUE(ret);
 
-        auto old_hash = GetOldHashFromIni(ini);
+        auto old_hash = GetOldHashFromIni(target / ini_name);
         ASSERT_TRUE(!old_hash.empty());
         ASSERT_EQ(old_hash, new_expected);
     }
@@ -175,8 +177,8 @@ TEST(UpgradeTest, PatchIniHash) {
 TEST(UpgradeTest, PatchStateHash) {
     namespace fs = std::filesystem;
     std::error_code ec;
+    fs::path dir = cma::cfg::GetUserDir();
     {
-        fs::path dir = cma::cfg::GetUserDir();
         auto state = dir / state_name;
         auto old_hash = GetOldHashFromState(state);
         ASSERT_TRUE(!old_hash.empty());
@@ -188,24 +190,26 @@ TEST(UpgradeTest, PatchStateHash) {
         ASSERT_EQ(new_hash, new_expected);
     }
 
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    auto dat = dir / dat_name;
+    auto new_hash = GetNewHash(dat);
     {
         fs::path dir = cma::cfg::GetUserDir();
         auto state = dir / state_name;
-        tst::SafeCleanTempDir();
-        auto [source, target] = tst::CreateInOut();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
 
         fs::copy_file(state, target / state_name,
                       fs::copy_options::overwrite_existing, ec);
         fs::copy_file(dat, target / dat_name,
                       fs::copy_options::overwrite_existing, ec);
-        auto ret = PatchStateHash(state, new_hash);
+    }
+    {
+        auto ret = PatchStateHash(target / state_name, new_hash);
         EXPECT_TRUE(ret);
 
-        auto old_hash = GetOldHashFromState(state);
+        auto old_hash = GetOldHashFromState(target / state_name);
         ASSERT_TRUE(!old_hash.empty());
         ASSERT_EQ(old_hash, new_expected);
     }

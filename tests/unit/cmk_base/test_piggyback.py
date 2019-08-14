@@ -144,8 +144,9 @@ def test_get_source_and_piggyback_hosts():
         ]
     })
 
-    assert sorted(list(piggyback.get_source_and_piggyback_hosts())) == sorted([
-        ('source1', 'test-host2'),
-        ('source2', 'test-host'),
-        ('source2', 'test-host2'),
-    ])
+    assert sorted(list(
+        piggyback.get_source_and_piggyback_hosts(piggyback_max_cachefile_age))) == sorted([
+            ('source1', 'test-host2'),
+            ('source2', 'test-host'),
+            ('source2', 'test-host2'),
+        ])

@@ -6,6 +6,7 @@
 
 #ifndef wtools_h__
 #define wtools_h__
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "winperf.h"
@@ -13,12 +14,10 @@
 #define _WIN32_DCOM
 
 #include <Wbemidl.h>
-#include <comdef.h>
-#include <shellapi.h>
 #include <tlhelp32.h>
+#endif
 
 #include <atomic>
-#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -28,10 +27,8 @@
 #include <tuple>
 
 #include "datablock.h"
-#include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "tools/_xlog.h"
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
@@ -231,25 +228,7 @@ bool KillProcessFully(const std::wstring& process_name,
 int FindProcess(std::wstring_view process_name) noexcept;
 
 // WIN32 described method of killing process tree
-inline void KillProcessTree(uint32_t ProcessId) {
-    // snapshot
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    ON_OUT_OF_SCOPE(CloseHandle(snapshot));
-
-    // scan and kill
-    // error management is ignored while this is secondary method for now
-    PROCESSENTRY32 process;
-    ZeroMemory(&process, sizeof(process));
-    process.dwSize = sizeof(process);
-    Process32First(snapshot, &process);
-    do {
-        // process.th32ProcessId is the PID.
-        if (process.th32ParentProcessID == ProcessId) {
-            KillProcess(process.th32ProcessID);
-        }
-
-    } while (Process32Next(snapshot, &process));
-}
+void KillProcessTree(uint32_t ProcessId);
 
 class AppRunner {
 public:
@@ -658,23 +637,7 @@ inline int64_t QueryPerformanceCo() {
 
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
-inline std::wstring GetCurrentExePath() noexcept {
-    namespace fs = std::filesystem;
-
-    std::wstring exe_path;
-    int args_count = 0;
-    auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (nullptr == arg_list) return {};
-
-    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
-    fs::path exe = arg_list[0];
-
-    std::error_code ec;
-    if (fs::exists(exe, ec)) return exe.parent_path();
-    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
-
-    return {};
-}
+std::wstring GetCurrentExePath() noexcept;
 
 // wrapper for win32 specific function
 // return 0 when no data or error
@@ -879,18 +842,7 @@ inline uint64_t WmiGetUint64(const VARIANT& Var) noexcept {
     }
 }
 
-// gtest[-]
-inline bool WmiObjectContains(IWbemClassObject* Object,
-                              const std::wstring& Name) {
-    assert(Object);
-    VARIANT value;
-    HRESULT res = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(res)) {
-        return false;
-    }
-    ON_OUT_OF_SCOPE(VariantClear(&value));
-    return value.vt != VT_NULL;
-}
+bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name);
 
 std::wstring WmiGetWstring(const VARIANT& Var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,

@@ -15,6 +15,7 @@
 #include "cfg.h"
 #include "cfg_details.h"
 #include "common/cfg_info.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "logger.h"
 #include "read_file.h"

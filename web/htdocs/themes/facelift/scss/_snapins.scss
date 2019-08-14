@@ -322,13 +322,17 @@ table.tacticaloverview {
     height: 14px;
     padding: 2px;
     text-align: right;
-    background: $theme-color-background;
+    background: $tactical-overview-td-bg-color;
     border: 1px solid $theme-color-table-border-dark;
     border-radius: $theme-border-radius;
 
     &.prob {
       background: $theme-color-nuance-6;
       box-shadow: none;
+
+      a.link {
+	color: $tactical-overview-prob-link-color;
+      }
     }
 
     &.col3 {

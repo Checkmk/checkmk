@@ -56,6 +56,7 @@ div.dashlet {
     margin: 0;
     overflow: hidden;
 
+    /* TODO: Reproduce this element within a body.dashlet */
     /* Dashlets with "background" set to True */
     .dashlet_inner.background {
       background-color: #cbd6da;
@@ -83,7 +84,7 @@ div.dashlet {
     width: 150px; /* will be changed by javascript later */
     height: 22px;
     padding: 0;
-    padding-top: 0px;
+    padding-top: 0;
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
@@ -93,7 +94,7 @@ div.dashlet {
     color: $theme-color-table-text;
     text-transform: uppercase;
     white-space: nowrap;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     border-bottom: none solid;
     border-radius: 5px 5px 0 0;
@@ -192,6 +193,10 @@ div.dashlet {
   }
 }
 
+.dashlet .dashlet_inner.background {
+  background-color: $dashlet-bg-color;
+}
+
 div.dashlet > div.title span a,
 div.dashlet > div.title span body.main .popup_menu span,
 body.main .popup_menu div.dashlet > div.title span span {
@@ -222,7 +227,7 @@ div.dashlet_inner div.stats {
   height: 100%;
   padding: 0;
   margin: 0;
-  background-color: $theme-color-white;
+  background-color: $secondary-bg-color;
 
   table th, table td {
     background: $dashboard-stats-bg-color;
@@ -233,7 +238,7 @@ div.dashlet_inner div.stats {
 
 body.main.dashlet {
   padding: 8px;
-  background: transparent;
+  background: $body-dashlet-bg-color;
   border-top: none;
   box-sizing: border-box;
 
@@ -714,10 +719,11 @@ body.main.dashlet {
 
       &.state {
         border-top: none;
+	border-top-color: $state-border-top-color;
       }
     }
 
-    &:last-of-type > td:not(.state) {
+    &:last-of-type > td:not(.state):not(.gap) {
       border-bottom: 1px solid $theme-color-table-border;
     }
 
@@ -728,9 +734,10 @@ body.main.dashlet {
 
   table.data {
     border-spacing: 0;
-th:nth-child(1) {
-     padding-bottom: 2px;
-     padding-left: 1px;
-   }
+
+    th:nth-child(1) {
+      padding-bottom: 2px;
+      padding-left: 1px;
+    }
   }
 }

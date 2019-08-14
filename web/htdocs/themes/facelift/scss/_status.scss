@@ -94,6 +94,7 @@ body.main .popup_menu .hstate0 span {
   .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
   body.main .popup_menu & .state0 span, .hstate0 a,
   .hstate0 body.main .popup_menu span, body.main .popup_menu & .hstate0 span {
+    color: $state0-font-color;
     background-color: $theme-color-state-success-background !important;
     border-color: $theme-color-state-success-border !important;
   }
@@ -144,6 +145,7 @@ body.main .popup_menu .hstate2 span {
   border-color: $theme-color-state-2-border !important;
 }
 
+/* TODO: Check whether these are supposed to be .hstate3 selectors not ...2 */
 /* UNKNOWN / UNREACH */
 .state3,
 .hstate2,

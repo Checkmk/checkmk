@@ -122,8 +122,8 @@ body {
       padding: 8px 32px;
       margin: 0 0 5px;
       color: #fff;
-      background: $theme-color-white;
-      border-bottom: 1px solid $theme-color-table-border;
+      background: $secondary-bg-color;
+      border-bottom: $table-header-border-bottom;
       border-spacing: 0;
     }
 
@@ -352,7 +352,7 @@ div.togglebutton {
     text-decoration: none;
     text-overflow: ellipsis;
     cursor: pointer;
-    background: $toggle-button-bg-color;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     border-radius: 5px;
     box-shadow: none;
@@ -441,7 +441,7 @@ div.togglebutton {
         text-decoration: none;
         text-overflow: ellipsis;
         cursor: default;
-        background: $toggle-button-bg-color;
+        background: $secondary-bg-color;
         border-radius: 5px;
         box-shadow: none;
       }
@@ -572,6 +572,10 @@ table.data {
       color: #888;
       text-shadow: 1px 1px 0.5px #fff;
     }
+
+    &:not(.state) {
+      color: $secondary-font-color;
+    }
   }
 
   &.oddeven > tbody > tr:nth-child(odd),
@@ -596,16 +600,17 @@ table.data {
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
       background-color: $data-td-bg-color;
-      &:not(.state) {
+      border-right: none;
+
+      &:not(.state):not(.gap) {
 	border-top: 1px solid $theme-color-table-border;
 	border-bottom: $data-td-border-bottom;
       }
-      border-right: none;
 
       &:first-child {
         border-radius: $theme-border-radius 0 0 4px;
 
-	&:not(.state) {
+	&:not(.state):not(.gap) {
 	  border-left: 1px solid $theme-color-table-border;
 	}
       }
@@ -620,6 +625,24 @@ table.data {
         border: 1px solid $theme-color-table-border;
         border-radius: $theme-border-radius;
       }
+
+      a {
+	color: $secondary-font-color;
+      }
+
+      &:not(.gap):not(.last_col) {
+	border-left: $td-border-left-right;
+	border-right: $td-border-left-right;
+      }
+
+      &.state {
+	border-top: none;
+      }
+
+      &:not(.state) {
+	overflow: $td-overflow;
+	text-overflow: $td-text-overflow;
+      }
     }
 
     td.checkbox {
@@ -633,8 +656,8 @@ table.data {
   }
 
   tr td.gap, tr td.fillup {
-    background: $theme-color-background;
-    border: 1px solid $theme-color-background;
+    background: $td-gap-bg-color;
+    border: 1px solid $td-gap-bg-color;
   }
 
   a {
@@ -981,9 +1004,15 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     margin-left: 0;
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table;
-    color: #fff;
-    background-color: $success;
+    color: $input-button-color;
+    background-color: $input-button-bg-color;
+    border-color: $input-button-bg-color;
     box-shadow: none;
+
+    &:hover, &:active {
+      background-color: $input-button-hover-bg-color;
+      border-color: $input-button-hover-bg-color;
+    }
   }
 
   &[type=radio] {
@@ -995,17 +1024,11 @@ input, select, textarea, div.snapin select, div.snapin textarea,
 input.button {
   &:not([type=text]), &:not([type=password]) {
     padding: 4px 8px;
-    border: 1px solid $input-button-border;
+    border: 1px solid $input-button-bg-color;
 
     &:hover, &:active {
-      border: 1px solid $input-button-hover-border;
+      border: 1px solid $input-button-hover-bg-color;
     }
-  }
-}
-
-input, select, textarea, #mk_side_search_field {
-  &.button:hover, &.button:active {
-    background-color: $input-button-hover-border;
   }
 }
 

@@ -214,8 +214,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     compute_node_position(node) {
-//        if (node.data.name == "Host testhost")
-//            node_visualization_utils.log(3, "computing node position")
         var current_positioning = {
                 weight: 0,
                 free: true,
@@ -1100,11 +1098,11 @@ class LayoutApplier{
             }
         }
         // TODO: cleanup
-        let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
-        elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
-                       on: ()=>modification_element.show_style_configuration(this.layout_manager.force_style),
-                       href: "",
-                       img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+//        let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
+//        elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
+//                       on: ()=>modification_element.show_style_configuration(this.layout_manager.force_style),
+//                       href: "",
+//                       img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
         return elements
     }
 
@@ -1198,32 +1196,32 @@ class LayoutApplier{
             // TODO: When removing an explicit layout, the new layout should replace the explicit one
             if (!node_chunk.layout_instance) {
                 node_chunk.layout_instance = new node_visualization_layout.NodeVisualizationLayout(this)
-            }
 
-            // Add styles from aggregation rules
-            if (!layout_settings.config.ignore_rule_styles)
-                node_chunk.nodes.forEach(node=>{
-                    if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
-                        let style_name = node.data.rule_layout_style.style_type;
-                        let style_options = node.data.rule_layout_style.style_config;
-                        let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
-                        new_style.style_config.options = style_options;
+                // Add styles from aggregation rules only during instance creation
+                if (!layout_settings.config.ignore_rule_styles)
+                    node_chunk.nodes.forEach(node=>{
+                        if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
+                            let style_name = node.data.rule_layout_style.style_type;
+                            let style_options = node.data.rule_layout_style.style_config;
+                            let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
+                            new_style.style_config.options = style_options;
+    
+                            node_chunk.layout_instance.save_style(new_style.style_config)
+                            nodes_with_style.push({node: node, style: new_style.style_config});
+                        }
+                    });
 
-                        node_chunk.layout_instance.save_style(new_style.style_config)
-                        nodes_with_style.push({node: node, style: new_style.style_config});
-                    }
-                });
-
-            // Add generic and explicit styles
-            if (layout_settings.origin_type == "default_template") {
-                let default_style = this.layout_style_factory.instantiate_style_name(layout_settings.default_id, node_chunk.tree)
-                default_style.style_config.position = {x: 50, y: 50}
-                node_chunk.layout_instance.save_style(default_style.style_config)
-            }
-            else {
-                node_chunk.layout_instance.deserialize(layout_settings.config)
-                if (node_chunk.template_layout_id)
-                    used_layout_id = node_chunk.template_layout_id
+                // Add generic and explicit styles
+                if (layout_settings.origin_type == "default_template") {
+                    let default_style = this.layout_style_factory.instantiate_style_name(layout_settings.default_id, node_chunk.tree)
+                    default_style.style_config.position = {x: 50, y: 50}
+                    node_chunk.layout_instance.save_style(default_style.style_config)
+                }
+                else {
+                    node_chunk.layout_instance.deserialize(layout_settings.config)
+                    if (node_chunk.template_layout_id)
+                        used_layout_id = node_chunk.template_layout_id
+                }
             }
             nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout_instance, node_matcher));
         });

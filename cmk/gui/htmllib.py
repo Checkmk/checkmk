@@ -73,6 +73,10 @@ from html import escape as html_escape  # type: ignore
 import six
 
 
+# TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
+# the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
+# custom subclass of the JSONEncoder.
+#
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)

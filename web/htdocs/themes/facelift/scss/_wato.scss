@@ -731,7 +731,7 @@ form.search, div.filter_buttons {
     width: 330px;
     height: 80px;
     margin: 0 8px 8px 0;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     box-shadow: none;
 
@@ -756,7 +756,7 @@ form.search, div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $theme-color-table-text;
+      color: $secondary-font-color;
     }
 
     &.subtitle {

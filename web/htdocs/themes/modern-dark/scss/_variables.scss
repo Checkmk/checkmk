@@ -6,7 +6,7 @@ $black:    rgb(0, 0, 0);
 $warning:  rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger:   rgb(255, 50, 50);
 $success:  rgb(19, 211, 137);
-$info:     rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
+$info:     rgb(255, 235, 131); // == $theme-color-nuance-6; maybe an alternative rgb(255, 254, 68)
 $grey-1:   rgb(250, 250, 250);
 $grey-2:   rgb(189, 189, 189);
 $grey-3:   rgb(68, 68, 68);
@@ -78,7 +78,7 @@ $theme-color-darkgrey:                      #838383; // dark grey
 $theme-color-main:                          #ffd703; // yellow
 
 $theme-color-text:                          $grey-1; // dark
-$theme-color-background:                    #f0f2f4; // light grey
+$theme-color-background:                    $grey-5; // light grey
 
 $theme-color-text-light:                    #e6e6e6; // light grey
 
@@ -156,7 +156,7 @@ $theme-color-nuance-2:                      #afb; // light green
 $theme-color-nuance-3:                      #8288a6; // dark grey
 $theme-color-nuance-4:                      #f6f7f8; // light grey
 $theme-color-nuance-5:                      #c5c5c5; // grey
-$theme-color-nuance-6:                      #ffeb83; // yellow
+$theme-color-nuance-6:                      #ffeb83; // == $info; yellow
 $theme-color-nuance-7:                      #333; // dark grey
 $theme-color-nuance-8:                      #d7d7d7; // grey
 $theme-color-nuance-9:                      #cfcfcf; // grey
@@ -196,9 +196,10 @@ $tag-padding:                               .1em .3em;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-// for check boxes, toggle_switch buttons, input fields, select2 fields, ...
 $primary-bg-color:			    $grey-3;
+$secondary-bg-color:			    $grey-6;
 $primary-font-color:			    $grey-1;
+$secondary-font-color:			    $grey-1;
 
 $dashboard-stats-bg-color:		    $grey-5;
 $dashboard-tr-bg-color:			    $grey-5;
@@ -225,8 +226,6 @@ $success-alert-font-color:		    $primary-font-color;
 $success-alert-bg-color:		    $grey-3;
 $success-alert-border-color:		    $grey-3;
 
-$toggle-button-bg-color:		    $theme-button-background;
-
 $data-container-bg-color:		    $grey-6;
 $data-container-border:			    1px solid $grey-7;
 
@@ -235,8 +234,8 @@ $data-td-bg-color:			    null;
 $data-td-border-bottom:			    null;
 
 $input-field-border:			    none;
-$input-button-border:			    $grey-3;
-$input-button-hover-border:		    $success;
+$input-button-bg-color:			    $grey-3;
+$input-button-hover-bg-color:		    lighten($grey-3, 10%);
 
 $odd-tr-bg-color:			    $grey-5;
 $even-tr-bg-color:			    $grey-7;
@@ -244,12 +243,10 @@ $even-tr-bg-color:			    $grey-7;
 $tr-data-border-bottom:			    1.8px solid $grey-7;
 
 $floatfilter-bg-color:			    null;
-$floatfilter-color:			    $primary-font-color;
 
 $select2-border-color:			    $grey-4;
-    
+
 $td-single-bg-color:			    null;
-$td-single-left-bg-color:		    $grey-6; //$grey-5
 $td-single-left-color:			    #a8a8a8;
 
 $wato-tr-bg-color:			    null;
@@ -260,3 +257,28 @@ $td-unused-color:			    $grey-2;
 $color-div-box-shadow:			    null;
 
 $graph-legend-color:			    $grey-1;
+
+$state0-font-color:			    $grey-7;
+
+$body-dashlet-bg-color:			    $grey-6;
+$dashlet-bg-color:			    $grey-6;
+
+$tactical-overview-td-bg-color:		    $grey-3;
+$tactical-overview-prob-link-color:	    $grey-7;
+
+$sidebar-iconbutton-bg-color:		    $grey-5;
+$sidebar-iconbutton-border-color:	    transparent;
+
+$table-header-border-bottom:		    none;
+
+$state-border-top-color:		    $grey-6;
+
+$body-side-bg-color:			    $grey-5;
+
+$input-button-color:			    $grey-1;
+
+$td-gap-bg-color:			    $grey-6;
+$td-border-left-right:			    none;
+
+$td-overflow:				    hidden;
+$td-text-overflow:			    ellipsis;

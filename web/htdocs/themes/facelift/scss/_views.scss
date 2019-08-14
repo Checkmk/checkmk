@@ -162,7 +162,7 @@ div.floatfilter {
   height: auto;
   margin-right: 5px;
   margin-bottom: 5px;
-  background: $theme-color-white;
+  background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
 
@@ -192,7 +192,7 @@ div.floatfilter {
     width: 100%;
     height: auto;
     padding: 5px 8px;
-    color: $floatfilter-color;
+    color: $secondary-font-color;
     text-transform: uppercase;
     box-sizing: border-box;
   }
@@ -449,7 +449,7 @@ div.view_form {
 table.data tr.data > td.gap,
 table.data tr > td.last_col,
 table.data tr > th.last_col {
-  border-right: 0;
+  border-right: none;
 }
 
 td.gap, table.data .checkbox_hover.gap {
@@ -534,7 +534,7 @@ table.data.tiled td.tiles {
   div.tile {
     width: 240px;
     padding: 4px;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
@@ -609,7 +609,7 @@ table.data.single {
       font-weight: $theme-font-weight-bold;
       color: $td-single-left-color;
       text-transform: uppercase;
-      background-color: $td-single-left-bg-color;
+      background-color: $secondary-bg-color;
       transition: .15s ease-in-out;
     }
   }

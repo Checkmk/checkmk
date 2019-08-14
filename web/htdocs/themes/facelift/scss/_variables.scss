@@ -196,9 +196,10 @@ $tag-padding:                               .1em .3em;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-// for check boxes, toggle_switch buttons, input fields, select2 fields, ...
 $primary-bg-color:			    $theme-color-white;
+$secondary-bg-color:			    $theme-color-white;
 $primary-font-color:			    $theme-color-black;
+$secondary-font-color:			    $theme-color-table-text;
 
 $dashboard-stats-bg-color:		    $theme-color-white;
 $dashboard-tr-bg-color:			    $theme-color-nuance-13;
@@ -225,8 +226,6 @@ $success-alert-font-color:		    $primary-font-color;
 $success-alert-bg-color:		    $theme-color-state-success-background;
 $success-alert-border-color:		    $theme-color-state-success-border;
 
-$toggle-button-bg-color:		    $theme-color-white;
-
 $data-container-bg-color:		    null;
 $data-container-border:			    null;
 
@@ -235,8 +234,8 @@ $data-td-bg-color:			    $theme-color-white;
 $data-td-border-bottom:			    1px solid $theme-color-table-border;
 
 $input-field-border:			    1px solid $theme-color-table-border;
-$input-button-border:			    $success;
-$input-button-hover-border:		    #11bd7b;
+$input-button-bg-color:			    $success;
+$input-button-hover-bg-color:		    #11bd7b;
 
 $odd-tr-bg-color:			    #eee;
 $even-tr-bg-color:			    #ddd;
@@ -244,12 +243,10 @@ $even-tr-bg-color:			    #ddd;
 $tr-data-border-bottom:			    null;
 
 $floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
-$floatfilter-color:			    $theme-color-table-text;
 
 $select2-border-color:			    $theme-button-border;
 
 $td-single-bg-color:			    $theme-color-white;
-$td-single-left-bg-color:		    $theme-color-white;
 $td-single-left-color:			    null;
 
 $wato-tr-bg-color:			    transparent;
@@ -260,3 +257,28 @@ $td-unused-color:			    #256;
 $color-div-box-shadow:			    0.5px 0.5px 1px #888;
 
 $graph-legend-color:			    null;
+
+$state0-font-color:			    null;
+
+$body-dashlet-bg-color:			    transparent;
+$dashlet-bg-color:			    null;
+
+$tactical-overview-td-bg-color:		    $theme-color-background;
+$tactical-overview-prob-link-color:	    null;
+
+$sidebar-iconbutton-bg-color:		    $theme-color-sidebar-background;
+$sidebar-iconbutton-border-color:	    $theme-color-table-border-dark-2;
+
+$table-header-border-bottom:		    1px solid $theme-color-table-border;
+
+$state-border-top-color:		    null;
+
+$body-side-bg-color:			    $theme-color-table-border-dark;
+
+$input-button-color:			    $theme-color-white;
+
+$td-gap-bg-color:			    $theme-color-background;
+$td-border-left-right:			    null;
+
+$td-overflow:				    null;
+$td-text-overflow:			    null;

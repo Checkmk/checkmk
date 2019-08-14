@@ -922,21 +922,20 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
                 vm_data[key] = transform(vm_data[key], datastores)
 
         if opt.vm_piggyname == "hostname" and vm_data.get("summary.guest.hostName"):
-            vms[vm_data.get("summary.guest.hostName")] = vm_data
+            vm_name = convert_hostname(vm_data.get("summary.guest.hostName"), opt)
         else:
-            vms[vm_data.get("name")] = vm_data
+            vm_name = convert_hostname(vm_data.get("name"), opt)
+        vms[vm_name] = vm_data
 
     return vms, vm_esx_host
 
 
-def get_section_vm(vms, opt):
+def get_section_vm(vms):
     section_lines = []
-    for key in sorted(vms.keys()):
-        data = vms[key]
-        if data.get("name"):
-            section_lines += ["<<<<%s>>>>" % convert_hostname(key, opt), "<<<esx_vsphere_vm>>>"]
-            for entry in sorted(data.items()):
-                section_lines.append("%s %s" % entry)
+    for vm_name, vm_data in sorted(vms.iteritems()):
+        if vm_data.get("name"):
+            section_lines += ["<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>"]
+            section_lines.extend("%s %s" % entry for entry in sorted(vm_data.iteritems()))
     return section_lines
 
 
@@ -1011,7 +1010,7 @@ def fetch_data(connection, opt):
     ###########################
     if "virtualmachine" in opt.modules:
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms, opt)
+        output += get_section_vm(vms)
 
         used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
         output += get_sections_aggregated_snapshots(vms, used_hostsystems)
@@ -1036,10 +1035,9 @@ def fetch_data(connection, opt):
             if opt.host_pwr_display == "esxhost" and not opt.direct:
                 piggy_data.setdefault(used_hostname, []).append(host_info)
 
-    for key, vm_data in vms.iteritems():
+    for used_hostname, vm_data in vms.iteritems():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
-        used_hostname = convert_hostname(key, opt)
         power_state = vm_data.get("runtime.powerState")
         vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
 
@@ -1050,7 +1048,7 @@ def fetch_data(connection, opt):
         piggy_data.setdefault('', []).append(vm_info)
 
     if ("hostsystem" in opt.modules and opt.host_pwr_display == "vm"):
-        for key, vm_data in vms.iteritems():
+        for vm_name, vm_data in vms.iteritems():
             runtime_host = vm_data.get("runtime.host")
             running_on = hostsystems.get(runtime_host, runtime_host)
             vm_host = find_host(running_on, hostsystems_properties)
@@ -1061,7 +1059,6 @@ def fetch_data(connection, opt):
             used_hostname = running_on
             power_state = data["runtime.powerState"][0]
             vm_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
-            vm_name = convert_hostname(key, opt)
             piggy_data.setdefault(vm_name, []).append(vm_info)
 
     output += _format_piggybacked_objects_sections(piggy_data)

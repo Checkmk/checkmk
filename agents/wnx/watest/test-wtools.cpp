@@ -93,6 +93,30 @@ TEST(Wtools, ScanProcess) {
     }
 }
 
+TEST(Wtools, ConditionallyConvertLowLevel) {
+    {
+        std::vector<uint8_t> v = {0xFE, 0xFE};
+        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+    {
+        std::vector<uint8_t> v = {0xFE, 0xFE, 0, 0};
+        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+    {
+        std::vector<uint8_t> v = {0xFF, 0xFE, 0, 0};
+        EXPECT_TRUE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+
+    {
+        std::string v = "aa";
+        auto data = v.data();
+        data[2] = 1;  // simulate random data instead of the ending null
+        AddSafetyEndingNull(v);
+        data = v.data();
+        EXPECT_TRUE(data[2] == 0);
+    }
+}
+
 TEST(Wtools, ConditionallyConvert) {
     {
         std::vector<uint8_t> a;

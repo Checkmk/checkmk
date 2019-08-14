@@ -41,7 +41,8 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
 }
 
 static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
-                               std::string Name, std::string_view code) {
+                               std::string Name, std::string_view code,
+                               cma::provider::PluginType type) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -50,10 +51,11 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     }
 
     ofs << "@echo off\n"
-        //<< "timeout /T " << Timeout << " /NOBREAK > nul\n"
-        << "powershell Start-Sleep " << Timeout << " \n"
-        << "@echo ^<^<^<" << Name << "^>^>^>\n"
-        << code << "\n";
+        << "powershell Start-Sleep " << Timeout << " \n";
+    if (type == cma::provider::PluginType::normal) {
+        ofs << "@echo ^<^<^<" << Name << "^>^>^>\n";
+    }
+    ofs << code << "\n";
 }
 
 static void RemoveFolder(const std::filesystem::path& Path) {
@@ -102,7 +104,7 @@ TEST(PluginTest, TimeoutCalc) {
     {
         PluginMap pm;
 
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::all))
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::all))
             << "empty should has 0 timeout";
     }
 
@@ -134,22 +136,22 @@ TEST(PluginTest, TimeoutCalc) {
             EXPECT_TRUE(e.defined());
             EXPECT_TRUE(e.async());
         }
-        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
         InsertEntry(pm, "a2", 15, true, 0);
-        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
         InsertEntry(pm, "a3", 25, false, 100);
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
 
         InsertEntry(pm, "a4", 7, true, 100);
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::sync));
         {
             auto& e = pm.at("a4");
             EXPECT_TRUE(e.defined());
@@ -162,22 +164,22 @@ TEST(PluginTest, TimeoutCalc) {
             EXPECT_TRUE(e.defined());
             EXPECT_FALSE(e.async());
         }
-        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(100, FindMaxTimeout(pm, provider::PluginMode::sync));
     }
 
     // test sync
     {
         PluginMap pm;
         InsertEntry(pm, "a1", 5, false, 0);
-        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(5, FindMaxTimeout(pm, provider::PluginMode::sync));
         InsertEntry(pm, "a2", 15, false, 0);
-        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(0, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::sync));
 
         InsertEntry(pm, "a3", 25, false, 100);
         {
@@ -185,9 +187,9 @@ TEST(PluginTest, TimeoutCalc) {
             EXPECT_TRUE(e.defined());
             EXPECT_TRUE(e.async());
         }
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::all));
-        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginType::async));
-        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginType::sync));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::all));
+        EXPECT_EQ(25, FindMaxTimeout(pm, provider::PluginMode::async));
+        EXPECT_EQ(15, FindMaxTimeout(pm, provider::PluginMode::sync));
     }
 }
 
@@ -459,8 +461,31 @@ TEST(PluginTest, HackPlugin) {
     cma::tools::AddVector(in, std::string("<<<a>>>\r\n***\r\r\n<<<b>>>"));
 
     {
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::line);
+        EXPECT_EQ(patch, "cached(123,456) ");
+    }
+    {
+        auto patch = cma::ConstructPatchString(0, 456, HackDataMode::line);
+        EXPECT_TRUE(patch.empty());
+    }
+    {
+        auto patch = cma::ConstructPatchString(123, 0, HackDataMode::line);
+        EXPECT_TRUE(patch.empty());
+    }
+    {
+        auto patch = cma::ConstructPatchString(0, 456, HackDataMode::header);
+        EXPECT_TRUE(patch.empty());
+    }
+    {
+        auto patch = cma::ConstructPatchString(123, 0, HackDataMode::header);
+        EXPECT_TRUE(patch.empty());
+    }
+    {
         std::vector<char> out;
-        auto ret = cma::HackPluginDataWithCacheInfo(out, in, 123, 456);
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        EXPECT_EQ(patch, ":cached(123,456)");
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
         ASSERT_TRUE(ret);
         std::string str(out.data(), out.size());
         EXPECT_EQ(
@@ -469,7 +494,10 @@ TEST(PluginTest, HackPlugin) {
 
     {
         std::vector<char> out;
-        auto ret = cma::HackPluginDataWithCacheInfo(out, in, 123, 0);
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        EXPECT_FALSE(patch.empty());
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, "", HackDataMode::header);
         ASSERT_TRUE(ret);
         std::string str(out.data(), out.size());
         EXPECT_EQ(str, "<<<a>>>\r\n***\r\r\n<<<b>>>");
@@ -479,7 +507,9 @@ TEST(PluginTest, HackPlugin) {
         std::vector<char> out;
         in.clear();
         cma::tools::AddVector(in, std::string("<<<a\r\n***"));
-        auto ret = cma::HackPluginDataWithCacheInfo(out, in, 123, 456);
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
         ASSERT_TRUE(ret);
         std::string str(out.data(), out.size());
         EXPECT_EQ(str, "<<<a\r\n***");
@@ -488,7 +518,9 @@ TEST(PluginTest, HackPlugin) {
     {
         std::vector<char> out;
         in.clear();
-        auto ret = cma::HackPluginDataWithCacheInfo(out, in, 123, 456);
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
         EXPECT_FALSE(ret);
     }
 
@@ -496,10 +528,24 @@ TEST(PluginTest, HackPlugin) {
         std::vector<char> out;
         in.clear();
         cma::tools::AddVector(in, std::string(" <<<a>>>\n***\n"));
-        auto ret = cma::HackPluginDataWithCacheInfo(out, in, 123, 456);
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
         ASSERT_TRUE(ret);
         std::string str(out.data(), out.size());
         EXPECT_EQ(str, " <<<a>>>\n***\n");
+    }
+
+    {
+        std::vector<char> out;
+        in.clear();
+        cma::tools::AddVector(in, std::string("xxx xxx\nzzz zzz\n"));
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::line);
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::line);
+        ASSERT_TRUE(ret);
+        std::string str(out.data(), out.size());
+        EXPECT_EQ(str, "cached(123,456) xxx xxx\ncached(123,456) zzz zzz\n");
     }
 }
 
@@ -1059,8 +1105,9 @@ static auto GenerateCachedHeader(const std::string& UsualHeader,
     std::vector<char> out;
     std::vector<char> in;
     cma::tools::AddVector(in, UsualHeader);
-    auto ret = cma::HackPluginDataWithCacheInfo(out, in, Ready->legacyTime(),
-                                                Ready->cacheAge());
+    auto patch = cma::ConstructPatchString(
+        Ready->legacyTime(), Ready->cacheAge(), HackDataMode::header);
+    auto ret = cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
     if (ret) {
         std::string str(out.data(), out.size());
         return str;
@@ -1165,12 +1212,13 @@ void PrepareFastStructures() {
 PluginDescVector async0_files = {{2, "async2.cmd", "async0"}};
 
 [[nodiscard]] PathVector PrepareFilesAndStructures(
-    const PluginDescVector& plugin_desc_arr, std::string_view code) {
+    const PluginDescVector& plugin_desc_arr, std::string_view code,
+    cma::provider::PluginType type) {
     std::filesystem::path temp_folder = cma::cfg::GetTempDir();
     PathVector pv;
     for (auto& pd : plugin_desc_arr) {
         pv.emplace_back(temp_folder / pd.file_name_);
-        CreatePluginInTemp(pv.back(), pd.timeout_, pd.section_name, code);
+        CreatePluginInTemp(pv.back(), pd.timeout_, pd.section_name, code, type);
     }
     return pv;
 }
@@ -1292,8 +1340,8 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
             EXPECT_EQ(ln1, expected_header);
             EXPECT_EQ(ln2, SecondLine);
         }
-        EXPECT_FALSE(ready->running());  // NOT restarted by getResultAsync 121
-                                         // sec cache age
+        EXPECT_FALSE(ready->running());  // NOT restarted by getResultAsync
+                                         // 121 sec cache age
     }
 
     {
@@ -1455,7 +1503,8 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         std::string out(data.begin(), data.end());
         auto table = cma::tools::SplitString(out, G_EndOfString);
         ASSERT_EQ(table.size(), 2);
-        EXPECT_TRUE(table[0].find("<<<async2:cached(") != std::string::npos);
+        EXPECT_TRUE(table[0].find("<<<async2>>>") != std::string::npos)
+            << "headers of local plugins shouldn't be patched";
     }
 }
 
@@ -1530,7 +1579,8 @@ TEST(PluginTest, Async0DataPickup) {
     namespace fs = std::filesystem;
     using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
-    auto files = PrepareFilesAndStructures(async0_files, R"(echo %time%)");
+    auto files = PrepareFilesAndStructures(async0_files, R"(echo %time%)",
+                                           provider::PluginType::normal);
 
     std::error_code ec;
     ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
@@ -1595,7 +1645,231 @@ TEST(PluginTest, Async0DataPickup) {
                     tdt_2.sec != tdt_1.sec ||    //
                     tdt_2.msec != tdt_1.msec);
     }
+}
+
+static const int LocalUnitCacheAge = cma::cfg::kMinimumCacheAge;
+std::vector<cma::cfg::Plugins::ExeUnit> local_units_async = {
+    //       Async  Timeout CacheAge              Retry  Run
+    // clang-format off
+    {"*.cmd", true, 10,     LocalUnitCacheAge, 3,     true},
+    {"*",     true, 10,     LocalUnitCacheAge, 3,     false},
+    // clang-format on
+};
+
+std::vector<cma::cfg::Plugins::ExeUnit> local_units_sync = {
+    //       Async  Timeout CacheAge              Retry  Run
+    // clang-format off
+    {"*.cmd", false, 10,     0, 3,     true},
+    {"*",     false, 10,     0, 3,     false},
+    // clang-format on
+};
+
+static std::pair<uint64_t, uint64_t> ParseCached(const std::string& data) {
+    // parse this string:
+    //                  "cached(123456,1200) text anything here"
+    // to get those two fields:
+    //                          <-1--> <2->
+    const std::regex pattern(R"(cached\((\d+),(\d+)\))");
+    try {
+        auto time_now = std::regex_replace(
+            data, pattern, "$1", std::regex_constants::format_no_copy);
+        auto cache_age = std::regex_replace(
+            data, pattern, "$2", std::regex_constants::format_no_copy);
+        return {std::stoull(time_now), std::stoull(cache_age)};
+    } catch (const std::exception& e) {
+        XLOG::SendStringToStdio(
+            std::string("Exception during tests: ") + e.what(),
+            XLOG::Colors::red);
+        return {};
+    }
+}
+
+PluginDescVector local_files_async = {{1, "local0.cmd", "local0"},
+                                      {1, "local1.cmd", "local1"}};
+
+PluginDescVector local_files_sync = {{1, "local0_s.cmd", "local0_s"},
+                                     {1, "local1_s.cmd", "local1_s"}};
+
+TEST(PluginTest, AsyncLocal) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+    using namespace std::chrono;
+    cma::OnStart(cma::AppType::test);
+    auto files = PrepareFilesAndStructures(local_files_async,
+                                           R"(echo 1 name %time%)"
+                                           "\n"
+                                           R"(echo 2 name %time%)",
+                                           provider::PluginType::local);
+
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+
+    PluginMap pm;  // load from the groups::plugin
+    UpdatePluginMap(pm, true, files, local_units_async, false);
+
+    // async part should provide nothing
+    for (auto& entry_pair : pm) {
+        auto& name = entry_pair.first;
+        auto& entry = entry_pair.second;
+        EXPECT_EQ(entry.failures(), 0);
+        EXPECT_EQ(entry.failed(), 0);
+
+        auto accu = entry.getResultsAsync(true);
+        EXPECT_EQ(true, accu.empty());
+        EXPECT_TRUE(entry.running());
+    }
+
+    cma::TestDateTime tdt[2];
+    for (const auto& f : files) {
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        std::vector<char> accu;
+        auto success = WaitForSuccess(5000ms, [&]() -> bool {
+            accu = ready->getResultsAsync(true);
+            return !accu.empty();
+        });
+
+        ASSERT_TRUE(success);
+        // something in result and running
+        std::string a = TestConvertToString(accu);
+        ASSERT_TRUE(!a.empty());
+
+        auto base_table = cma::tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 2);
+        int i = 0;
+        for (auto& bt : base_table) {
+            auto table = cma::tools::SplitString(bt, " ", 1);
+
+            ASSERT_TRUE(table.size() == 2);
+            auto [time_now, cache_age] = ParseCached(table[0]);
+
+            ASSERT_TRUE(time_now != 0);
+            EXPECT_EQ(cache_age, LocalUnitCacheAge);
+
+            tdt[i] = StringToTime(table[1]);
+            ASSERT_TRUE(!tdt[i].invalid());
+            i++;
+        }
+    }
+    for (const auto& f : files) {
+        // this is a bit artificial
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ASSERT_NE(nullptr, ready);
+        ready->resetData();
+    }
+
+    for (const auto& f : files) {
+        // this is a bit artificial
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        std::vector<char> accu;
+        auto success = WaitForSuccess(5000ms, [&]() -> bool {
+            accu = ready->getResultsAsync(true);
+            return !accu.empty();
+        });
+
+        ASSERT_TRUE(success);
+        // something in result and running
+        auto a = TestConvertToString(accu);
+
+        auto base_table = cma::tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 2);
+        int i = 0;
+        for (auto& bt : base_table) {
+            auto table = cma::tools::SplitString(bt, " ", 1);
+
+            ASSERT_TRUE(table.size() == 2);
+            auto [time, cache_age] = ParseCached(table[0]);
+
+            auto tdt_2 = StringToTime(table[1]);
+            ASSERT_TRUE(!tdt_2.invalid());
+            EXPECT_TRUE(tdt_2.hour != tdt[i].hour ||  //
+                        tdt_2.min != tdt[i].min ||    //
+                        tdt_2.sec != tdt[i].sec ||    //
+                        tdt_2.msec != tdt[i].msec);
+            i++;
+        }
+    }
 }  // namespace cma
+
+TEST(PluginTest, SyncLocal) {
+    using namespace cma::cfg;
+    using namespace wtools;
+    namespace fs = std::filesystem;
+    using namespace std::chrono;
+    cma::OnStart(cma::AppType::test);
+    auto files = PrepareFilesAndStructures(local_files_sync,
+                                           R"(echo 1 name %time%)"
+                                           "\n"
+                                           R"(echo 2 name %time%)",
+                                           provider::PluginType::local);
+
+    std::error_code ec;
+    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
+
+    PluginMap pm;  // load from the groups::plugin
+    UpdatePluginMap(pm, true, files, local_units_sync, false);
+
+    // async part should provide nothing
+    cma::TestDateTime tdt[2];
+    for (const auto& f : files) {
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ASSERT_NE(nullptr, ready);
+
+        auto accu = ready->getResultsSync(L"");
+
+        ASSERT_TRUE(!accu.empty());
+        // something in result and running
+        std::string a = TestConvertToString(accu);
+        ASSERT_TRUE(!a.empty());
+
+        auto base_table = cma::tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 2);
+        int i = 0;
+        for (auto& bt : base_table) {
+            auto table = cma::tools::SplitString(bt, " ", 2);
+
+            ASSERT_TRUE(table.size() == 3);
+
+            tdt[i] = StringToTime(table[2]);
+            ASSERT_TRUE(!tdt[i].invalid());
+            i++;
+        }
+    }
+
+    // this is a bit artificial
+    for (const auto& f : files) {
+        auto ready = GetEntrySafe(pm, f.u8string());
+        ready->resetData();
+    }
+
+    for (const auto& f : files) {
+        auto ready = GetEntrySafe(pm, f.u8string());
+        auto accu = ready->getResultsSync(L"");
+
+        ASSERT_TRUE(!accu.empty());
+        // something in result and running
+        auto a = TestConvertToString(accu);
+
+        auto base_table = cma::tools::SplitString(a, G_EndOfString);
+        ASSERT_TRUE(base_table.size() == 2);
+        int i = 0;
+        for (auto& bt : base_table) {
+            auto table = cma::tools::SplitString(bt, " ", 2);
+
+            auto tdt_2 = StringToTime(table[2]);
+            ASSERT_TRUE(!tdt_2.invalid());
+            EXPECT_TRUE(tdt_2.hour != tdt[i].hour ||  //
+                        tdt_2.min != tdt[i].min ||    //
+                        tdt_2.sec != tdt[i].sec ||    //
+                        tdt_2.msec != tdt[i].msec);
+            i++;
+        }
+    }
+}
 
 TEST(PluginTest, EmptyPlugins) {
     using namespace cma::cfg;
@@ -1720,14 +1994,14 @@ TEST(PluginTest, SyncStartSimulation_Long) {
 
         if (entry_name == vp[0]) {
             auto accu = entry.getResultsSync(L"id", 0);
-            EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing should be
-                                        // presented
+            EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing
+                                        // should be presented
         }
 
         if (entry_name == vp[3]) {
             auto accu = entry.getResultsSync(L"id", 1);
-            EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing should be
-                                        // presented
+            EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing
+                                        // should be presented
         }
 
         auto accu = entry.getResultsSync(L"id");

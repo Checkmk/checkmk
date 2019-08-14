@@ -394,19 +394,32 @@ void TryToHackStringWithCachedInfo(std::string& in_string,
 
 static bool ConfigRemoveSlashR = false;
 
-// see header about description
-bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
-                                 const std::vector<char>& OriginalData,
-                                 time_t LegacyTime, long long CacheAge) {
-    if (OriginalData.empty()) return false;
+std::string ConstructPatchString(time_t time_now, int cache_age,
+                                 HackDataMode mode) noexcept {
+    if (time_now == 0 || cache_age == 0) return {};
+
+    return mode == HackDataMode::line
+               ? fmt::format("cached({},{}) ", time_now, cache_age)
+               : fmt::format(":cached({},{})", time_now, cache_age);
+}
+
+bool HackDataWithCacheInfo(std::vector<char>& out,
+                           const std::vector<char>& original_data,
+                           const std::string& patch, HackDataMode mode) {
+    if (original_data.empty()) return false;
+
     // check we have valid Data;
-    std::string stringized(OriginalData.data(), OriginalData.size());
+    std::string stringized(original_data.data(), original_data.size());
     if (!stringized.size()) return false;
+
+    if (patch.empty() && !ConfigRemoveSlashR) {
+        out = original_data;
+        return true;
+    }
 
     auto table = cma::tools::SplitString(stringized, "\n");
 
     size_t data_count = 0;
-    auto to_insert = fmt::format(":cached({},{})", LegacyTime, CacheAge);
     for (auto& t : table) {
         if (ConfigRemoveSlashR) {
             while (t.back() == '\r') t.pop_back();
@@ -415,18 +428,24 @@ bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
         t.push_back('\n');
 
         // 2. try hack header if required
-        if (LegacyTime && CacheAge) TryToHackStringWithCachedInfo(t, to_insert);
+        if (!patch.empty()) {
+            // ugly...
+            if (mode == HackDataMode::line)
+                t = patch + t;
+            else
+                TryToHackStringWithCachedInfo(t, patch);
+        }
 
         data_count += t.size();
     }
 
     // gathering of everything
-    Out.reserve(data_count + 1);
+    out.reserve(data_count + 1);
     for (auto& t : table) {
-        cma::tools::AddVector(Out, t);
+        cma::tools::AddVector(out, t);
     }
     // remove potentially added '\n'
-    if (OriginalData.back() != '\n') Out.pop_back();
+    if (original_data.back() != '\n') out.pop_back();
 
     return true;
 }
@@ -443,7 +462,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
 
     auto started = minibox_.start(L"id", path(), TheMiniBox::StartMode::job);
     if (!started) {
-        XLOG::l("Failed to start minibox sync {}", wtools::ConvertToUTF8(Id));
+        XLOG::l("Failed to start minibox sync '{}'", wtools::ConvertToUTF8(Id));
         return {};
     }
 
@@ -846,8 +865,10 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
 
     if (cacheAge() > 0) {
         data_.clear();
-        HackPluginDataWithCacheInfo(data_, Data, legacy_time, cacheAge());
-    } else  // "sync plugin"
+        auto mode = local_ ? HackDataMode::line : HackDataMode::header;
+        auto patch_string = ConstructPatchString(legacy_time, cacheAge(), mode);
+        HackDataWithCacheInfo(data_, Data, patch_string, mode);
+    } else  // "sync plugin" or async with 0 as cache age
     {
         // or "failed to hack"
         data_ = Data;
@@ -858,7 +879,7 @@ void PluginEntry::storeData(uint32_t Id, const std::vector<char>& Data) {
     // can be created in some cases by plugin and processing(ConvertTo)
     // But must be removed in output
     while (data_.size() && data_.back() == 0) data_.pop_back();
-}
+}  // namespace cma
 
 // remove what not present in the file vector
 void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles) {

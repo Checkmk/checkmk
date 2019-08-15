@@ -281,6 +281,7 @@ def test_registered_permissions():
         'view.comments_of_host',
         'view.comments_of_service',
         'view.contactnotifications',
+        'view.crash_reports',
         'view.downtime_history',
         'view.downtimes',
         'view.downtimes_of_host',

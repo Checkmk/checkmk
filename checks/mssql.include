@@ -137,9 +137,15 @@ def parse_mssql_datafiles(info):
 
 
 def inventory_mssql_datafiles(mode, parsed):
+    # parsed is a list which also contains the mssql_databases section
     settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
     summarize = settings and settings[0].get("summarize_%s" % mode, False)
-    for inst, database, file_name in parsed.iterkeys():
+    for inst, database, file_name in parsed[0].iterkeys():
+        if mode == 'transactionlogs':
+            dbinst = "%s %s" % (inst, database)
+            if dbinst in parsed[1] and 'Recovery' in parsed[1][dbinst] and parsed[1][dbinst]['Recovery'] == u'SIMPLE':
+                # ignore DBs with SIMPLE Recovery, these do not use transaction logs
+                continue
         if summarize:
             yield _format_item_mssql_datafiles(inst, database, None), {}
         else:
@@ -147,13 +153,14 @@ def inventory_mssql_datafiles(mode, parsed):
 
 
 def check_mssql_datafiles(item, params, parsed):
+    # parsed is a list which also contains the mssql_databases section
     max_size_sum = 0
     allocated_size_sum = 0
     used_size_sum = 0
     unlimited_sum = False
 
     found = False
-    for (inst, database, file_name), values in parsed.iteritems():
+    for (inst, database, file_name), values in parsed[0].iteritems():
         if _format_item_mssql_datafiles(inst, database, file_name) == item or \
                 _format_item_mssql_datafiles(inst, database, None) == item:
             found = True

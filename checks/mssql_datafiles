@@ -39,5 +39,6 @@ check_info['mssql_datafiles'] = {
     'group': "mssql_datafiles",
     'has_perfdata': True,
     'default_levels_variable': 'mssql_datafiles_default_levels',
+    'extra_sections': ['mssql_databases'],
     'includes': ["mssql.include"]
 }

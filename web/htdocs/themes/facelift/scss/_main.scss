@@ -1085,23 +1085,29 @@ table.modifydowntimes > tbody > tr {
   }
 }
 
-.select2-container--default .select2-results {
-  color: #000;
-}
-
-.select2-container--default .select2-selection--single
-.select2-selection__rendered {
-  line-height: 23px;
-}
-
 .select2-container .select2-selection--single {
   height: 23px;
 }
 
-.select2-container--default .select2-selection--single
-.select2-selection__arrow b {
-  margin-top: -4px;
+.select2-container--default {
+  .select2-results {
+    color: #000;
+  }
+
+  .select2-selection--single {
+    border-radius: 4px;
+
+    .select2-selection__rendered {
+      color: $select2-rendered-color;
+      line-height: 23px;
+    }
+
+    .select2-selection__arrow b {
+      margin-top: -4px;
+    }
+  }
 }
+
 
 
 /* TODO: Go through these following styles and move them to specific scss
@@ -1119,7 +1125,7 @@ html {
 
 .link, .title {
   display: inline-block;
-  padding: 0px 2px; /* affects spacing in sidebar plugins */
+  padding: 0 2px; /* affects spacing in sidebar plugins */
   font-size: $theme-font-size-main;
   font-weight: $theme-font-weight-global;
   letter-spacing: $theme-letter-spacing-table;
@@ -1141,9 +1147,23 @@ div.graph {
     padding: 4px !important;
   }
 
-  table.legend td {
-    color: $graph-legend-color !important;
+  table.legend {
+    td {
+      color: $graph-legend-color !important;
+    }
+
+    th {
+      border-bottom: $graph-legend-th-border-bottom;
+    }
   }
+
+  div.time {
+    color: $graph-time-color;
+  }
+}
+
+.graph {
+  background-color: $graph-bg-color;
 }
 
 div.content {
@@ -1294,6 +1314,7 @@ table.cmc_stats {
 #form_search input, #form_search select, #form_search textarea,
 #form_search #mk_side_search_field {
   width: auto;
+  border: $primary-border;
 }
 
 select.vlof_filter {

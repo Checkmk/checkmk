@@ -50,8 +50,13 @@ body.side {
   p {
     color: $theme-color-darkgrey; }
 
-  .link, .title {
-    color: $theme-color-lightgrey; }
+  .link {
+    color: $theme-color-lightgrey;
+  }
+  
+  .title {
+    color: $side-title-color;
+  }
 
   &.screenshotmode {
     background-image: url("");
@@ -158,7 +163,7 @@ body.main .popup_menu #side_header > span {
 /* Scrolling part with snapins */
 #side_content {
   position: absolute;
-  top: 64px;
+  top: 66px;
   z-index: 5;
   width: 100%;
   padding-left: 0;
@@ -245,9 +250,9 @@ body.side div.snapin, div.add_snapin div.snapin  {
   margin: 8px 0;
   overflow: hidden;
   background: $theme-color-sidebar-background;
-  border: none;
-  border-top: 1px solid $theme-color-table-border-dark-2;
-  border-bottom: 1px solid $theme-color-table-border-dark-2;
+  border: $snapin-border;
+  border-top: $snapin-border-top;
+  border-bottom: $snapin-border-bottom;
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
@@ -324,8 +329,9 @@ div.snapin {
     padding: 8px;
     font-size: 11px;
     color: $theme-color-text;
-    background-color: $theme-color-white;
+    background-color: $primary-bg-color;
     background-image: none;
+    border: $primary-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
   }
@@ -486,7 +492,7 @@ body.main .popup_menu div.snapin div.footnotelink span.link {
   font-size: $theme-font-size-small;
   font-weight: $theme-font-weight-bold;
   letter-spacing: $theme-letter-spacing-table;
-  color: #13d389;
+  color: $footnote-link-color;
   text-transform: uppercase;
   background: transparent;
   border: none;

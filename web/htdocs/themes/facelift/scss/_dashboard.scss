@@ -91,7 +91,7 @@ div.dashlet {
     font-size: $theme-font-size-small;
     font-weight: 500;
     letter-spacing: 2px;
-    color: $theme-color-table-text;
+    color: $secondary-link-color;
     text-transform: uppercase;
     white-space: nowrap;
     background: $secondary-bg-color;
@@ -200,7 +200,7 @@ div.dashlet {
 div.dashlet > div.title span a,
 div.dashlet > div.title span body.main .popup_menu span,
 body.main .popup_menu div.dashlet > div.title span span {
-  color: $theme-color-table-text;
+  color: $secondary-link-color;
 }
 
 div.dashlet > div.title span {
@@ -231,7 +231,7 @@ div.dashlet_inner div.stats {
 
   table th, table td {
     background: $dashboard-stats-bg-color;
-    border-top: 1px solid $theme-color-table-border;
+    border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
   }
 }

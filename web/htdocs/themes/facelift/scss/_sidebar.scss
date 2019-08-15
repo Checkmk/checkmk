@@ -163,7 +163,6 @@ body.main .popup_menu #side_header > span {
 /* Scrolling part with snapins */
 #side_content {
   position: absolute;
-  top: 66px;
   z-index: 5;
   width: 100%;
   padding-left: 0;
@@ -173,6 +172,11 @@ body.main .popup_menu #side_header > span {
   &.scroll {
     overflow-y: scroll;
   }
+}
+
+/* Only put in a top offset when on the sidebar - not for dashlets */
+#side_header + #side_content {
+  top: 66px;
 }
 
 /* The footer of the sidebar */

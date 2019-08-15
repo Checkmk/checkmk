@@ -82,7 +82,7 @@ body {
   }
 
   &.main {
-    padding: 68px 16px 60px 16px;
+    padding: 68px 16px 60px;
     margin: 0;
     font-family: arial, helvetica, sans-serif;
     font-size: $theme-font-size-main;
@@ -125,68 +125,65 @@ body {
       background: $secondary-bg-color;
       border-bottom: $table-header-border-bottom;
       border-spacing: 0;
-    }
 
-    table.header td {
-      overflow: hidden;
-      color: #fff;
-      text-overflow: ellipsis;
-      -o-text-overflow: ellipsis;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
+      td {
+	overflow: hidden;
+	color: #fff;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	vertical-align: middle;
+	white-space: nowrap;
 
-    table.header td.heading {
-      height: 31px;
-      max-width: 100px;
-      padding-left: 0;
-      font-size: 21px;
-    }
+	&.heading {
+	  height: 31px;
+	  max-width: 100px;
+	  padding-left: 0;
+	  font-size: 21px;
 
-    table.header td.heading img {
-      width: 24px;
-      height: 24px;
-      margin-right: 3px;
-      vertical-align: middle;
-    }
+	  img {
+	    width: 24px;
+	    height: 24px;
+	    margin-right: 3px;
+	    vertical-align: middle;
+	  }
 
-    table.header td.heading a,
-    table.header td.heading a:hover {
-      text-decoration: none;
-    }
+	  a, a:hover {
+	    text-decoration: none;
+	  }
 
-    table.header td.heading a,
-    table.header td.heading .popup_menu span,
-    .popup_menu table.header td.heading span {
-      color: $theme-color-text;
-    }
+	  a, .popup_menu span, .popup_menu & span {
+	    color: $theme-color-text;
+	  }
+	}
 
-    table.header td.right {
-      width: 1%;
-      font-size: 13px;
-      color: $theme-color-text;
-      text-align: right;
-    }
+	&.right {
+	  width: 1%;
+	  font-size: 13px;
+	  color: $theme-color-text;
+	  text-align: right;
 
-    table.header td.right img {
-      width: 19px;
-      height: 19px;
-      vertical-align: middle;
-    }
+	  img {
+	    width: 19px;
+	    height: 19px;
+	    vertical-align: middle;
+	  }
 
-    table.header td.right a.head_logo img {
-      width: 20px;
-      height: 23px;
-      margin: 0 0 1px 5px;
-    }
+	  a.head_logo img {
+	    width: 20px;
+	    height: 23px;
+	    margin: 0 0 1px 5px;
 
-    table.header td.right a.head_logo img:hover {
-      opacity: 0.5;
-      filter: alpha(opacity=50);
-    }
+	    &:hover {
+	      opacity: 0.5;
+	      filter: alpha(opacity=50);
+	    }
+	  }
 
-    table.header td.right * {
-      color: $theme-color-text;
+	  * {
+	    color: $primary-link-color;
+	  }
+	}
+      }
     }
 
     hr.header {
@@ -348,7 +345,7 @@ div.togglebutton {
     font-weight: $theme-font-weight-global;
     line-height: 18px;
     letter-spacing: $theme-letter-spacing;
-    color: $theme-color-text;
+    color: $primary-link-color;
     text-decoration: none;
     text-overflow: ellipsis;
     cursor: pointer;
@@ -426,7 +423,7 @@ div.togglebutton {
   height: $theme-button-height;
 
   &.off {
-    border: none;
+    border: $toggle-button-off-border;
     opacity: 0.5;
     filter: alpha(opacity=50);
 
@@ -505,7 +502,7 @@ table.data {
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-text;
+    color: $primary-link-color;
     text-align: left;
     text-transform: uppercase;
     background: transparent;
@@ -640,7 +637,6 @@ table.data {
       }
 
       &:not(.state) {
-	overflow: $td-overflow;
 	text-overflow: $td-text-overflow;
       }
     }
@@ -959,7 +955,7 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   color: $theme-color-text;
   background: $primary-bg-color;
   background-image: none;
-  border: $input-field-border;
+  border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
 }
@@ -1094,7 +1090,7 @@ table.nform {
   width: 100%;
   padding: 0;
   margin: 5px 0;
-  background: $theme-color-white;
+  background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   border-spacing: 7px 5px;
   border-radius: $theme-border-radius;
@@ -1112,12 +1108,12 @@ table.nform {
 
   tr.heading {
     height: auto;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
 
     > td {
       vertical-align: middle;
       cursor: pointer;
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: transparent;
       border-radius: 5px 5px 0 0;
     }
 
@@ -1126,7 +1122,7 @@ table.nform {
       padding: 3px 4px 0 ;
       font-size: $theme-font-size-global;
       letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-table-text;
+      color: $secondary-font-color;
       text-transform: uppercase;
     }
 
@@ -1198,7 +1194,7 @@ table.nform {
 
   .dots {
     margin-left: 5px;
-    color: #444;
+    color: $span-dots-color;
   }
 
   td.content {

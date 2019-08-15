@@ -300,6 +300,10 @@ img#speedometerbg, canvas#speedometer {
 /*
  * Tactical overview snapin
  */
+div#snapin_container_tactical_overview {
+  height: 170px;
+}
+
 table.tacticaloverview {
   width: 100%;
   margin: 0;
@@ -363,6 +367,10 @@ body.main .popup_menu table.tacticaloverview td span {
   color: $theme-color-text;
 }
 
+table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
+  color: $theme-color-text;
+}
+
 div.tacticalalert {
   height: 25px;
   margin-top: 8px;
@@ -398,6 +406,7 @@ div.spacertop {
     margin-top: -2px;
     margin-bottom: 2px;
     font-size: 11px;
+    border: $primary-border;
   }
 
   /* TODO: Reproduce this html element */

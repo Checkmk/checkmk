@@ -228,6 +228,10 @@ $checkbox-checked-bg-color:		    $grey-3;
 $toggle-switch-on-bg-color:		    $grey-4;
 $toggle-switch-off-bg-color:		    $grey-6;
 $toggle-button-off-border:		    1px solid $grey-7;
+$toggle-button-down-bg-color:		    $grey-3;
+$toggle-button-down-border-color:	    null;
+$toggle-button-down-hover-bg-color:	    lighten($grey-3, 10%);
+$toggle-button-down-hover-border-color:	    null;
 
 $success-bg-color:			    $primary-bg-color;
 
@@ -248,6 +252,7 @@ $data-td-border-bottom:			    null;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
+$input-button-color:			    $grey-1;
 
 $odd-tr-bg-color:			    $grey-5;
 $even-tr-bg-color:			    $grey-7;
@@ -287,8 +292,6 @@ $table-header-border-bottom:		    none;
 $state-border-top-color:		    $grey-6;
 
 $body-side-bg-color:			    $grey-5;
-
-$input-button-color:			    $grey-1;
 
 $td-gap-bg-color:			    $grey-6;
 $td-border-left-right:			    none;

@@ -386,13 +386,14 @@ div.down.togglebutton {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    background-color: $theme-color-text-light;
-    border-color: $theme-button-border;
+    background-color: $toggle-button-down-bg-color;
+    border-color: $toggle-button-down-border-color;
     box-shadow: none;
 
     &:hover {
-      background-color: $theme-button-border;
-      border-color: #ccc;
+      background-color: $toggle-button-down-hover-bg-color;
+      border-color: $toggle-button-down-hover-border-color;
+
     }
   }
 }
@@ -520,7 +521,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: #000;
+      color: $primary-font-color;
       cursor: pointer;
       background-color: inherit;
     }
@@ -965,6 +966,7 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
 
 span.select2 .select2-selection {
   background-color: $primary-bg-color;
+  border-color: $select2-border-color;
 }
 
 input[type=text], textarea {

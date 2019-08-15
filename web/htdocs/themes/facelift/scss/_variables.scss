@@ -222,6 +222,10 @@ $checkbox-checked-bg-color:		    #ddd;
 $toggle-switch-on-bg-color:		    #54a626;
 $toggle-switch-off-bg-color:		    #f60000;
 $toggle-button-off-border:		    none;
+$toggle-button-down-bg-color:		    $theme-color-text-light;
+$toggle-button-down-border-color:	    $theme-button-border;
+$toggle-button-down-hover-bg-color:	    $theme-button-border;
+$toggle-button-down-hover-border-color:	    #ccc;
 
 $success-bg-color:			    #9dbecd;
 
@@ -242,6 +246,7 @@ $data-td-border-bottom:			    1px solid $theme-color-table-border;
 
 $input-button-bg-color:			    $success;
 $input-button-hover-bg-color:		    #11bd7b;
+$input-button-color:			    $theme-color-white;
 
 $odd-tr-bg-color:			    #eee;
 $even-tr-bg-color:			    #ddd;
@@ -281,8 +286,6 @@ $table-header-border-bottom:		    1px solid $theme-color-table-border;
 $state-border-top-color:		    null;
 
 $body-side-bg-color:			    $theme-color-table-border-dark;
-
-$input-button-color:			    $theme-color-white;
 
 $td-gap-bg-color:			    $theme-color-background;
 $td-border-left-right:			    null;

@@ -198,8 +198,14 @@ $tag-padding:                               .1em .3em;
 
 $primary-bg-color:			    $theme-color-white;
 $secondary-bg-color:			    $theme-color-white;
+
 $primary-font-color:			    $theme-color-black;
 $secondary-font-color:			    $theme-color-table-text;
+
+$primary-link-color:			    $theme-color-text;
+$secondary-link-color:			    $theme-color-table-text;
+
+$primary-border:			    null;
 
 $dashboard-stats-bg-color:		    $theme-color-white;
 $dashboard-tr-bg-color:			    $theme-color-nuance-13;
@@ -215,6 +221,7 @@ $checkbox-checked-bg-color:		    #ddd;
 
 $toggle-switch-on-bg-color:		    #54a626;
 $toggle-switch-off-bg-color:		    #f60000;
+$toggle-button-off-border:		    none;
 
 $success-bg-color:			    #9dbecd;
 
@@ -233,7 +240,6 @@ $oddeven-table-bg-color:		    transparent;
 $data-td-bg-color:			    $theme-color-white;
 $data-td-border-bottom:			    1px solid $theme-color-table-border;
 
-$input-field-border:			    1px solid $theme-color-table-border;
 $input-button-bg-color:			    $success;
 $input-button-hover-bg-color:		    #11bd7b;
 
@@ -245,6 +251,7 @@ $tr-data-border-bottom:			    null;
 $floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
 
 $select2-border-color:			    $theme-button-border;
+$select2-rendered-color:		    null;
 
 $td-single-bg-color:			    $theme-color-white;
 $td-single-left-color:			    null;
@@ -280,5 +287,26 @@ $input-button-color:			    $theme-color-white;
 $td-gap-bg-color:			    $theme-color-background;
 $td-border-left-right:			    null;
 
-$td-overflow:				    null;
 $td-text-overflow:			    null;
+
+$span-dots-color:			    $grey-3;
+
+$tr-odd3-bg-color:			    null;
+$tr-even3-bg-color:			    null;
+
+$graph-bg-color:			    null;
+$graph-legend-th-border-bottom:		    null;
+$graph-time-color:			    null;
+
+$dashlet-stats-border-top-color:	    $theme-color-table-border;
+
+$snapin-border:				    none;
+$snapin-border-top:			    1px solid $theme-color-table-border-dark-2;
+$snapin-border-bottom:			    1px solid $theme-color-table-border-dark-2;
+
+$wato-a-border:				    null;
+
+$side-title-color:			    $theme-color-lightgrey;
+$wato-subtitle-color:			    $theme-color-darkgrey;
+
+$footnote-link-color:			    #13d389;

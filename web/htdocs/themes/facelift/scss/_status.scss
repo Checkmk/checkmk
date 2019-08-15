@@ -155,17 +155,26 @@ body.main .popup_menu .state3 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
 body.main .popup_menu .hstate2 span {
-  color: $theme-color-white !important;
+  color: $white !important;
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-state-3-border !important;
 }
 
 .odd0 .state3,
 .odd3 .state3 {
-  color: $theme-color-white !important;
+  color: $white !important;
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-state-3-border !important;
 }
+
+tr.odd3 {
+  background-color: $tr-odd3-bg-color;
+}
+
+tr.even3 {
+  background-color: $tr-even3-bg-color;
+}
+
 
 /* PENDING */
 .statep,

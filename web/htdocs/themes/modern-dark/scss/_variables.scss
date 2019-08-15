@@ -99,8 +99,14 @@ $theme-button-height:                       28px;
 $theme-color-state-2-background:            $danger;
 $theme-color-state-2-border:                mix($black, $danger, 30%);
 
-$theme-color-state-3-background:            rgb(255, 160, 66);
-$theme-color-state-3-border:                rgb(255, 160, 66);
+$theme-color-state-3-background:            rgb(255, 179, 0);
+$theme-color-state-3-border:                rgb(255, 179, 0);
+.odd0 .state3, .odd3 .state3 {
+  background-color: #ffb300;
+  border-color: #ffb300;
+  color: #fff;
+}
+
 
 $theme-color-state-4-background:            #888;
 $theme-color-state-4-border:                #7b7b7b;
@@ -198,10 +204,16 @@ $tag-padding:                               .1em .3em;
 
 $primary-bg-color:			    $grey-3;
 $secondary-bg-color:			    $grey-6;
+
 $primary-font-color:			    $grey-1;
 $secondary-font-color:			    $grey-1;
 
-$dashboard-stats-bg-color:		    $grey-5;
+$primary-link-color:	  		    $grey-2;
+$secondary-link-color:			    $grey-2;
+
+$primary-border:			    1px solid $grey-7;
+
+$dashboard-stats-bg-color:		    transparent;
 $dashboard-tr-bg-color:			    $grey-5;
 $dashboard-tr-border-bottom:		    2px solid $grey-7;
 $dashboard-tr-even-bg-color:		    $grey-7;
@@ -215,6 +227,7 @@ $checkbox-checked-bg-color:		    $grey-3;
 
 $toggle-switch-on-bg-color:		    $grey-4;
 $toggle-switch-off-bg-color:		    $grey-6;
+$toggle-button-off-border:		    1px solid $grey-7;
 
 $success-bg-color:			    $primary-bg-color;
 
@@ -233,7 +246,6 @@ $oddeven-table-bg-color:		    null;
 $data-td-bg-color:			    null;
 $data-td-border-bottom:			    null;
 
-$input-field-border:			    none;
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
 
@@ -245,6 +257,7 @@ $tr-data-border-bottom:			    1.8px solid $grey-7;
 $floatfilter-bg-color:			    null;
 
 $select2-border-color:			    $grey-4;
+$select2-rendered-color:		    $grey-1;
 
 $td-single-bg-color:			    null;
 $td-single-left-color:			    #a8a8a8;
@@ -280,5 +293,26 @@ $input-button-color:			    $grey-1;
 $td-gap-bg-color:			    $grey-6;
 $td-border-left-right:			    none;
 
-$td-overflow:				    hidden;
 $td-text-overflow:			    ellipsis;
+
+$span-dots-color:			    $grey-1;
+
+$tr-odd3-bg-color:			    $grey-5;
+$tr-even3-bg-color:			    $grey-6;
+
+$graph-bg-color:			    $grey-6 !important;
+$graph-legend-th-border-bottom:		    1px solid $grey-1;
+$graph-time-color:			    $grey-1;
+
+$dashlet-stats-border-top-color:	    $grey-6;
+
+$snapin-border:				    1px solid $grey-7;
+$snapin-border-top:			    null;
+$snapin-border-bottom:			    null;
+
+$wato-a-border:				    1px solid #212121;
+
+$side-title-color:			    $grey-2;
+$wato-subtitle-color:			    $grey-2;
+
+$footnote-link-color:			    $grey-1;

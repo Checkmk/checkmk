@@ -745,6 +745,11 @@ form.search, div.filter_buttons {
     float: left;
     width: 317px;
     padding: 0;
+    border: $wato-a-border;
+
+    &:hover div.title {
+      color: $secondary-font-color;
+    }
   }
 
   div {
@@ -756,7 +761,7 @@ form.search, div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $secondary-font-color;
+      color: $secondary-link-color;
     }
 
     &.subtitle {
@@ -770,7 +775,7 @@ form.search, div.filter_buttons {
       font-weight: 500;
       line-height: 1.5;
       letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-darkgrey;
+      color: $wato-subtitle-color;
       text-rendering: optimizeLegibility;
     }
   }

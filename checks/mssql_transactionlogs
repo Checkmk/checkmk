@@ -39,5 +39,6 @@ check_info['mssql_transactionlogs'] = {
     'group': "mssql_transactionlogs",
     'has_perfdata': True,
     'default_levels_variable': 'mssql_transactionlogs_default_levels',
+    'extra_sections': ['mssql_databases'],
     'includes': ["mssql.include"]
 }

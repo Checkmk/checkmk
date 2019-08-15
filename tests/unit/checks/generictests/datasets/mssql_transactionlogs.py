@@ -48,8 +48,7 @@ discovery = {
         ('MSSQL46.DASH_CONFIG_T.DASH_CONFIG_T_log', {}),
         ('MSSQL46.NOC_ALARM_T.NOC_ALARM_T_log', {}),
         ('MSSQL46.NOC_CONFIG_T.NOC_CONFIG_T_log', {}),
-        ('MSSQL46.master.mastlog', {}), ('MSSQL46.model.modellog', {}),
-        ('MSSQL46.msdb.MSDBLog', {}), ('MSSQL46.tempdb.templog', {}),
+        ('MSSQL46.model.modellog', {}),
         ('MSSQL46.test_autoclose.test_autoclose_log', {})
     ]
 }
@@ -231,5 +230,21 @@ checks = {
                 )
             ]
         )
+    ]
+}
+
+extra_sections = {
+    '': [
+        [
+            ['MSSQL46', 'master', 'ONLINE', 'SIMPLE', '0', '0'],
+            ['MSSQL46', 'tempdb', 'ONLINE', 'SIMPLE', '0', '0'],
+            ['MSSQL46', 'model', 'ONLINE', 'FULL', '0', '0'],
+            ['MSSQL46', 'msdb', 'ONLINE', 'SIMPLE', '0', '0'],
+            ['MSSQL46', 'NOC_CONFIG_T', 'ONLINE', 'FULL', '0', '0'],
+            ['MSSQL46', 'DASH_CONFIG_T', 'ONLINE', 'FULL', '0', '0'],
+            ['MSSQL46', 'NOC_ALARM_T', 'ONLINE', 'FULL', '0', '1'],
+            ['MSSQL46', 'CorreLog_Report_T', 'ONLINE', 'FULL', '0', '0'],
+            ['MSSQL46', 'test_autoclose', 'ONLINE', 'FULL', '1', '0']
+        ]
     ]
 }

@@ -910,7 +910,7 @@ class ModeBI(WatoMode, BIManagement):
                                         ("builtin_radial", _("Builtin: Radial")),
                                         # TODO: continue this list with user configurable layouts
                                     ],
-                                    default_value="default")),
+                                    default_value="builtin_default")),
                             ("line_style",
                              DropdownChoice(title=_("Style of connection lines"),
                                             choices=[
@@ -2209,7 +2209,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
         return value
 
     def default_value(self):
-        return {"style_type": "hierarchy", "style_config": {}}
+        return {"style_type": "none", "style_config": {}}
 
 
 #.

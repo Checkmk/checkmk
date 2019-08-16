@@ -96,6 +96,9 @@ $theme-button-height:                       28px;
 
 // States
 
+$theme-color-state-1-background:	    $theme-color-main;
+$theme-color-state-1-border:		    #e9c400; // yellow
+
 $theme-color-state-2-background:            #e85555;
 $theme-color-state-2-border:                #e53f3f;
 
@@ -114,8 +117,6 @@ $theme-color-state-7-background:            #e9806e;
 $theme-color-state-8-background:            #f1aea2;
 
 $theme-color-state-9-background:            #bf5abf;
-
-$theme-color-state-warning-border:          #e9c400; // yellow
 
 $theme-color-state-error-border:            #e22828; // red
 
@@ -206,6 +207,8 @@ $primary-link-color:			    $theme-color-text;
 $secondary-link-color:			    $theme-color-table-text;
 
 $primary-border:			    null;
+$primary-table-border:			    1px solid $theme-color-table-border;
+$secondary-table-border:		    null;
 
 $dashboard-stats-bg-color:		    $theme-color-white;
 $dashboard-tr-bg-color:			    $theme-color-nuance-13;
@@ -242,14 +245,19 @@ $data-container-border:			    null;
 
 $oddeven-table-bg-color:		    transparent;
 $data-td-bg-color:			    $theme-color-white;
-$data-td-border-bottom:			    1px solid $theme-color-table-border;
+$data-table-border-collapse:		    null;
+$data-table-border-topmost:		    $primary-table-border;
+$data-table-border-top:			    null;
+$data-table-border-bottom:		    $primary-table-border;
+$data-table-state-border-top:		    null;
+$data-table-state-border-bottom:	    null;
 
 $input-button-bg-color:			    $success;
 $input-button-hover-bg-color:		    #11bd7b;
 $input-button-color:			    $theme-color-white;
 
-$odd-tr-bg-color:			    #eee;
-$even-tr-bg-color:			    #ddd;
+$odd-tr-bg-color:			    null;
+$even-tr-bg-color:			    null;
 
 $tr-data-border-bottom:			    null;
 
@@ -313,3 +321,9 @@ $side-title-color:			    $theme-color-lightgrey;
 $wato-subtitle-color:			    $theme-color-darkgrey;
 
 $footnote-link-color:			    #13d389;
+
+$table-data-single-border-color:	    null;
+$table-data-single-padding:		    8px 16px;
+$td-single-left-text-align:		    null;
+$td-single-left-text-transform:		    null;
+$td-single-left-border-right:		    1px solid $theme-color-table-border;

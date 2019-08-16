@@ -47702,7 +47702,7 @@ msgid "Use the default start URL"
 msgstr "Standard-URL benutzen"
 
 msgid "Use the default theme"
-msgstr "Standard Aussehen benutzen"
+msgstr "Standard-Aussehen benutzen"
 
 msgid "Use the following ID"
 msgstr "Die folgende ID verwenden"

@@ -50,7 +50,7 @@ import urllib2
 # We have to deal with socket timeouts. Python > 2.6
 # supports timeout parameter for the urllib2.urlopen method
 # but we are on a python 2.5 system here which seem to use the
-# default socket timeout.
+# default socket timeout. We are local here so  set it to 1 second.
 socket.setdefaulttimeout(5.0)
 
 
@@ -61,10 +61,8 @@ def get_config():
     if not os.path.exists(config_file):
         config_file = config_dir + "/apache_status.cfg"
 
-    # None or tuple of (proto, ipaddress, port, instance_name).
-    #  - proto is 'http' or 'https';
-    #  - port may be None
-    #  - instance_name may be the empty string
+    # None or list of (proto, ipaddress, port) tuples.
+    # proto is 'http' or 'https'
     config = {
         "servers": None,
         "ssl_ports": [443],
@@ -130,8 +128,8 @@ def try_detect_servers(ssl_ports):
 
 def _unpack_server(server):
     if isinstance(server, tuple):
-        return server + (("",) if len(server) == 3 else ()) + ('server-status',)
-    return (server['protocol'], server['address'], server['port'], server.get("instance", ""),
+        return server + ('server-status',)
+    return (server['protocol'], server['address'], server['port'],
             server.get('page', 'server-status'))
 
 
@@ -172,9 +170,9 @@ def main():
     if not servers:
         return 0
 
-    sys.stdout.write('<<<apache_status:sep(124)>>>\n')
+    sys.stdout.write('<<<apache_status>>>\n')
     for server in servers:
-        proto, address, port, name, page = _unpack_server(server)
+        proto, address, port, page = _unpack_server(server)
         portspec = ':%d' % port if port else ''
 
         try:
@@ -186,7 +184,7 @@ def main():
                     # Seems to be html output. Skip this server.
                     break
 
-                sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
+                sys.stdout.write("%s %s %s\n" % (address, port, line))
         except urllib2.HTTPError as exc:
             sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
 

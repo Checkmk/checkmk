@@ -562,7 +562,7 @@ table.data.single {
   }
 
   tr.data {
-    border-color: transparent !important;
+    border-color: $table-data-single-border-color;
 
     > td {
       height: 16px;
@@ -571,14 +571,14 @@ table.data.single {
       line-height: 14px;
       text-align: left;
       vertical-align: top;
-      border-top-color: transparent !important;
-      border-bottom-color: transparent !important;
+      border-top-color: $table-data-single-border-color;
+      border-bottom-color: $table-data-single-border-color;
     }
 
     td.left {
       width: 10%;
       padding-right: 20px;
-      text-align: right;
+      text-align: $td-single-left-text-align;
       white-space: nowrap;
       vertical-align: top;
     }
@@ -587,16 +587,16 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    // TODO: Check, whether this is supposed to be this narrow (0px top and bottom)
-    padding: 0 16px;
+    padding: $table-data-single-padding;
     background-color: $td-single-bg-color;
     border-radius: 0;
 
     &.left {
       font-weight: $theme-font-weight-bold;
       color: $td-single-left-color;
-      text-transform: uppercase;
+      text-transform: $td-single-left-text-transform;
       background-color: $secondary-bg-color;
+      border-right: $td-single-left-border-right;
       transition: .15s ease-in-out;
     }
   }

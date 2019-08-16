@@ -490,7 +490,7 @@ table.data {
   padding: 0;
   margin: 0;
   color: $theme-color-text;
-  border-spacing: 0 2px;
+  border-spacing: 0;
   empty-cells: show;
 
   .checkbox_hover {
@@ -593,6 +593,7 @@ table.data {
     box-sizing: border-box;
     transition: all .15s ease-in;
 
+    /* TODO: Refactor these messy and complicated styles */
     > td {
       height: 26px;
       padding: 2px 8px; /* spacing in every row */
@@ -600,21 +601,20 @@ table.data {
       background-color: $data-td-bg-color;
       border-right: none;
 
-      &:not(.state):not(.gap) {
-	border-top: 1px solid $theme-color-table-border;
-	border-bottom: $data-td-border-bottom;
+      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+	border-top: $data-table-border-top;
+	border-bottom: $data-table-border-bottom;
       }
 
       &:first-child {
         border-radius: $theme-border-radius 0 0 4px;
 
-	&:not(.state):not(.gap) {
+	&:not(.state):not(.gap):not(.bulksearch) {
 	  border-left: 1px solid $theme-color-table-border;
 	}
       }
 
-      &:last-child,
-      &.last_col {
+      &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
         border-radius: 0 4px 4px 0;
       }
@@ -634,7 +634,8 @@ table.data {
       }
 
       &.state {
-	border-top: none;
+	border-top: $data-table-state-border-top !important;
+	border-bottom: $data-table-state-border-bottom !important;
       }
 
       &:not(.state) {
@@ -756,6 +757,12 @@ table.data {
 
 table.data .popup_menu, body.main table.data .popup_menu {
   color: $theme-color-text;
+}
+
+/* Give each table's topmost row a top border */
+table.data tr:not(.data) + tr.data
+> td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+  border-top: $data-table-border-topmost;
 }
 
 
@@ -1688,6 +1695,7 @@ table.debug_vars {
 
 /* Popup for adding to visuals (Dashboard, Reports */
 div.popup_trigger {
+  position: relative;
   display: inline-block;
 
   img.iconbutton {

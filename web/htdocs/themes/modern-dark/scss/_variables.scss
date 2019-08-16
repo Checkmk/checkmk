@@ -108,6 +108,9 @@ $theme-color-state-3-border:                rgb(255, 179, 0);
 }
 
 
+$theme-color-state-1-background:	    $warning;
+$theme-color-state-1-border:		    $warning;
+
 $theme-color-state-4-background:            #888;
 $theme-color-state-4-border:                #7b7b7b;
 
@@ -120,8 +123,6 @@ $theme-color-state-7-background:            #e9806e;
 $theme-color-state-8-background:            #f1aea2;
 
 $theme-color-state-9-background:            #bf5abf;
-
-$theme-color-state-warning-border:          rgb(255, 254, 68); // yellow
 
 $theme-color-state-error-border:            #e22828; // red
 
@@ -212,6 +213,8 @@ $primary-link-color:	  		    $grey-2;
 $secondary-link-color:			    $grey-2;
 
 $primary-border:			    1px solid $grey-7;
+$primary-table-border:			    $primary-border;
+$secondary-table-border:		    1.8px solid $grey-7;
 
 $dashboard-stats-bg-color:		    transparent;
 $dashboard-tr-bg-color:			    $grey-5;
@@ -248,7 +251,12 @@ $data-container-border:			    1px solid $grey-7;
 
 $oddeven-table-bg-color:		    null;
 $data-td-bg-color:			    null;
-$data-td-border-bottom:			    null;
+$data-table-border-collapse:		    collapse;
+$data-table-border-topmost:		    null;
+$data-table-border-top:			    $primary-table-border;
+$data-table-border-bottom:		    $secondary-table-border;
+$data-table-state-border-top:		    none;
+$data-table-state-border-bottom:	    $secondary-table-border;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
@@ -319,3 +327,9 @@ $side-title-color:			    $grey-2;
 $wato-subtitle-color:			    $grey-2;
 
 $footnote-link-color:			    $grey-1;
+
+$table-data-single-border-color:	    transparent !important;
+$table-data-single-padding:		    0 16px;
+$td-single-left-text-align:		    right;
+$td-single-left-text-transform:		    uppercase;
+$td-single-left-border-right:		    null;

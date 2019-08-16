@@ -810,7 +810,7 @@ def _add_custom_macro_attributes(profiles):
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
-    core_custom_macros = set(k for k, o in get_user_attributes() if o.get('add_custom_macro'))
+    core_custom_macros = set(k for k, o in get_user_attributes() if o.add_custom_macro())
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
@@ -967,7 +967,7 @@ def _multisite_keys():
 
 
 def _get_multisite_custom_variable_names():
-    return [k for k, v in get_user_attributes() if v["domain"] == "multisite"]
+    return [k for k, v in get_user_attributes() if v.domain() == "multisite"]
 
 
 def _save_auth_serials(updated_profiles):

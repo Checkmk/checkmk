@@ -1368,7 +1368,9 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result is None
+        assert isinstance(result, dict)
+        assert result["succeeded_hosts"] == [h["hostname"] for h in hosts]
+        assert result["failed_hosts"] == {}
         hosts = self.get_all_hosts()
         for hostname, _folder, _attributes in create_hosts:
             assert hostname in hosts
@@ -1414,7 +1416,9 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result is None
+        assert isinstance(result, dict)
+        assert result["succeeded_hosts"] == [h["hostname"] for h in hosts]
+        assert result["failed_hosts"] == {}
 
         hosts = self.get_all_hosts()
         for hostname, attributes, unset_attributes in edit_hosts:

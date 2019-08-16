@@ -268,7 +268,7 @@ class BIManagement(object):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
             ("ID", None),
-            ("node_visualization", ""),
+            ("node_visualization", {}),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),

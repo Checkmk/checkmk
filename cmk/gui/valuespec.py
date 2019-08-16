@@ -4702,6 +4702,22 @@ class Color(ValueSpec):
             raise MKUserError(varprefix, _("You need to select a color."))
 
 
+def GraphColor(title, default_value):
+    return Alternative(
+        title=title,
+        style="dropdown",
+        elements=[
+            FixedValue(
+                "default",
+                title=_("Use default color"),
+                totext=_("Use default color of the theme or medium"),
+            ),
+            Color(title=_("Use the following color")),
+        ],
+        default_value=default_value,
+    )
+
+
 class SSHKeyPair(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)

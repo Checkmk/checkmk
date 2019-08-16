@@ -16,6 +16,7 @@ components = [
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus Proxy" ),
    ( "inv",           "HW/SW Inventory" ),
+   ( "dcd",           "DCD" ),
 
    ( "omd",           "Site Management" ),
    ( "rpm",           "RPM Packaging" ),

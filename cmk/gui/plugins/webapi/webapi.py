@@ -283,8 +283,27 @@ class APICallHosts(APICallCollection):
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
 
     def _add_hosts(self, request):
+        return self._bulk_action(request, "add")
+
+    def _bulk_action(self, request, action_name):
+        result = {
+            "succeeded_hosts": [],
+            "failed_hosts": {},
+        }
         for host_request in request["hosts"]:
-            self._add(host_request)
+            try:
+                if action_name == "add":
+                    self._add(host_request)
+                elif action_name == "edit":
+                    self._edit(host_request)
+                else:
+                    raise NotImplementedError()
+
+                result["succeeded_hosts"].append(host_request["hostname"])
+            except Exception as e:
+                result["failed_hosts"][host_request["hostname"]] = "%s" % e
+
+        return result
 
     def _edit(self, request):
         hostname = request.get("hostname")
@@ -319,8 +338,7 @@ class APICallHosts(APICallCollection):
         host.edit(current_attributes, cluster_nodes)
 
     def _edit_hosts(self, request):
-        for host_request in request["hosts"]:
-            self._edit(host_request)
+        return self._bulk_action(request, "edit")
 
     def _get(self, request):
         hostname = request.get("hostname")

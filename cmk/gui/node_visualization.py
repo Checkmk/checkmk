@@ -117,7 +117,7 @@ class AjaxFetchAggregationData(AjaxPage):
         return {"style": line_style}
 
     def _get_template_based_layout_settings(self, aggr_settings):
-        template_layout_id = aggr_settings["layout_id"]
+        template_layout_id = aggr_settings.get("layout_id", "builtin_default")
 
         layout_settings = {}
         if template_layout_id in BILayoutManagement.get_all_bi_template_layouts():

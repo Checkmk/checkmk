@@ -112,14 +112,14 @@ body.main .popup_menu .hstate0 span {
 body.main .popup_menu .state1 span,
 tr.groupheader td.state1 {
   color: $theme-color-black !important;
-  background-color: $warning !important;
-  border-color: $warning !important;
+  background-color: $theme-color-state-1-background !important;
+  border-color: $theme-color-state-1-border !important;
 }
 
 .odd0 .state1,
 .odd1 .state1 {
-  background-color: $warning !important;
-  border-color: $warning !important;
+  background-color: $theme-color-state-1-background !important;
+  border-color: $theme-color-state-1-border !important;
 }
 
 /* CRIT/DOWN */
@@ -442,11 +442,6 @@ tr[class*="even"] {
   }
 }
 
-/* TODO: Move all table styles irrelevant for status away from this file */
-tr.data {
-  border-bottom: $tr-data-border-bottom;
-}
-
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
@@ -456,7 +451,7 @@ tr.data {
 }
 
 table.data {
-  border-collapse: collapse;
+  border-collapse: $data-table-border-collapse;
 
   // TODO: Is this supposed to be aligned to the right?
   td.age {

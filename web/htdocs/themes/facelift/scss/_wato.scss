@@ -254,7 +254,7 @@ table.data tr.data > td.bulksearch {
     display: inline-block;
     width: 32px;
     height: 32px;
-    margin-top: 8px;
+    margin-top: 7px;
     margin-right: 8px;
   }
 }
@@ -280,8 +280,8 @@ table.data tr.data > td.bulksearch {
 table.data tr.data > td.bulksearch div.togglebutton.checkbox a,
 table.data tr.data > td.bulksearch div.togglebutton.checkbox body.main .popup_menu span,
 body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkbox span {
-  height: 32px;
-  padding: 6px;
+  height: 24px;
+  padding: 1.5px;
   box-sizing: border-box;
 }
 
@@ -1006,7 +1006,7 @@ div.varname {
     &.state_warning {
       /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
       background: $theme-color-main;
-      border-color: $theme-color-state-warning-border;
+      border-color: $theme-color-state-1-border;
     }
   }
 }

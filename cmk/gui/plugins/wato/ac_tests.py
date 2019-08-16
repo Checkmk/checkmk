@@ -347,12 +347,15 @@ class ACTestHTTPSecured(ACTest):
         return _("Secure GUI (HTTP)")
 
     def help(self):
-        return _(
-            "When using the regular HTTP protocol all data transfered between the Check_MK "
-            "and the clients using the GUI is sent over the network in plain text (unencrypted). "
-            "This includes the passwords users enter to authenticate with Check_MK and other "
-            "sensitive information. It is highly recommended to enable SSL for securing the "
-            "transported data.")
+        return \
+            _("When using the regular HTTP protocol all data transfered between the Check_MK "
+              "and the clients using the GUI is sent over the network in plain text (unencrypted). "
+              "This includes the passwords users enter to authenticate with Check_MK and other "
+              "sensitive information. It is highly recommended to enable SSL for securing the "
+              "transported data.") \
+            + " " \
+            + _("Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in "
+                "your system apache configuration to tell the Checkmk GUI about the SSL setup.")
 
     def is_relevant(self):
         return True

@@ -1,0 +1,10 @@
+Title: DCD: Fix retrying to activate changes when there are no changes pending
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.6.0b7
+Date: 1565962300
+Class: fix
+
+

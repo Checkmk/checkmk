@@ -64,8 +64,6 @@ from cmk.gui.plugins.userdb.utils import (
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
-# Connection configuration
-connection_dict = {}
 # Connection object dictionary
 g_connections = {}
 auth_logger = logger.getChild("auth")
@@ -73,10 +71,6 @@ auth_logger = logger.getChild("auth")
 
 # Load all userdb plugins
 def load_plugins(force):
-    connection_dict.clear()
-    for connection in config.user_connections:
-        connection_dict[connection['id']] = connection
-
     # Cleanup eventual still open connections
     if g_connections:
         g_connections.clear()

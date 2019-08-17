@@ -135,6 +135,7 @@ class DiscoveryAction(object):
     REFRESH = "refresh"
     SINGLE_UPDATE = "single_update"
     BULK_UPDATE = "bulk_update"
+    UPDATE_HOST_LABELS = "update_host_labels"
 
 
 DiscoveryOptions = NamedTuple("DiscoveryOptions", [
@@ -557,6 +558,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_result = self._handle_action(discovery_result, request)
 
         # Clean the requested action after performing it
+        performed_action = self._options.action
         self._options = self._options._replace(action=DiscoveryAction.NONE)
 
         self._update_persisted_discovery_options()
@@ -570,15 +572,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         return {
             "is_finished": not self._is_active(discovery_result),
             "job_state": discovery_result.job_status["state"],
-            "message": self._get_status_message(discovery_result),
+            "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
             "changes_button": self._render_changelog_button(),
             "discovery_options": self._options._asdict(),
             "discovery_result": repr(tuple(discovery_result)),
         }
 
-    def _get_status_message(self, discovery_result):
-        # type: (DiscoveryResult) -> Optional[Text]
+    def _get_status_message(self, discovery_result, performed_action):
+        # type: (DiscoveryResult, DiscoveryAction) -> Optional[Text]
+        if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
+            return _("The discovered host labels have been updated.")
+
         if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
             if self._is_active(discovery_result):
                 return _("Initializing discovery...")
@@ -705,6 +710,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             # did discovery! update the check table
             discovery_result = self._get_check_table()
 
+        if self._options.action == DiscoveryAction.UPDATE_HOST_LABELS:
+            self._do_update_host_labels(discovery_result)
+
         if not self._host.locked():
             self._host.clear_discovery_failed()
 
@@ -804,6 +812,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                                                              add_disabled_rule)
                 need_sync = True
             self._save_services(autochecks_to_save, need_sync)
+
+    def _do_update_host_labels(self, discovery_result):
+        message = _("Updated discovered host labels of '%s' with %d labels") % \
+                    (self._host.name(), len(discovery_result.host_labels))
+        watolib.add_service_change(self._host, "update-host-labels", message)
+        check_mk_automation(self._host.site_id(), "update-host-labels", [self._host.name()],
+                            discovery_result.host_labels)
 
     def _save_services(self, checks, need_sync):
         message = _("Saved check configuration of host '%s' with %d services") % \
@@ -1078,6 +1093,16 @@ class DiscoveryPageRenderer(object):
                 already_has_services = True
             if check[0] in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
                 fixall += 1
+
+        if discovery_result.host_labels:
+            update_host_labels_options = self._options._replace(
+                action=DiscoveryAction.UPDATE_HOST_LABELS)
+            html.jsbutton(
+                "update_host_labels",
+                _("Update host labels"),
+                self._start_js_call(update_host_labels_options),
+                disabled=self._is_active(discovery_result),
+            )
 
         # TODO: Add correct permission checking
         if fixall >= 1:

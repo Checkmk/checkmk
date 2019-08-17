@@ -31,6 +31,7 @@ def test_registered_automations(site):
         'set-autochecks',
         'try-inventory',
         'update-dns-cache',
+        'update-host-labels',
     ]
 
     if cmk.is_enterprise_edition():

@@ -40,6 +40,7 @@ import cmk.utils.paths
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -246,6 +247,26 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
 
 automations.register(AutomationSetAutochecks())
+
+
+class AutomationUpdateHostLabels(DiscoveryAutomation):
+    """Set the new collection of discovered host labels"""
+    cmd = "update-host-labels"
+    needs_config = True
+    needs_checks = True  # TODO: Can we change this?
+
+    def execute(self, args):
+        hostname = args[0]
+        new_host_labels = ast.literal_eval(sys.stdin.read())
+        DiscoveredHostLabelsStore(hostname).save(new_host_labels)
+
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+        self._trigger_discovery_check(host_config)
+        return None
+
+
+automations.register(AutomationUpdateHostLabels())
 
 
 class AutomationRenameHosts(Automation):

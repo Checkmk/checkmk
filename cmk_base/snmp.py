@@ -373,7 +373,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
         end = len(lines)
         hit = None
         while end - begin > 0:
-            current = (begin + end) / 2
+            current = (begin + end) // 2
             parts = lines[current].split(None, 1)
             comp = parts[0]
             hit = self._compare_oids(oid_prefix, comp)

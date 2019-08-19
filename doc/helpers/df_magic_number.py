@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 normsize = 20.0
 
 import sys
@@ -34,9 +35,9 @@ if len(sys.argv) > 1:
 def print_levels(level, exp):
     sys.stdout.write("f=%3.1f: " % exp)
     for size in [5, 10, 20, 50, 100, 300, 800]:
-        hgb_size = size / normsize
+        hgb_size = size / normsize  # fixed: true-division
         felt_size = hgb_size**exp
-        scale = felt_size / hgb_size
+        scale = felt_size / hgb_size  # fixed: true-division
         new_level = 1 - ((1 - level) * scale)
         freegb = size * (1.0 - new_level)
         sys.stdout.write("%4.0fGB:%4.0f%%(%3.0fG) " % (size, new_level * 100, freegb))

@@ -818,9 +818,12 @@ def _quote_nagios_string(s):
 def _extra_service_conf_of(cfg, config_cache, hostname, description):
     service_spec = {}
 
-    # Contact groups
+    # Add contact groups to the config only if the user has defined them.
+    # Otherwise inherit the contact groups from the host.
+    # "check-mk-notify" is always returned for rulebased notifications and
+    # the Nagios core and not defined by the user.
     sercgr = config_cache.contactgroups_of_service(hostname, description)
-    if sercgr:
+    if sercgr != ['check-mk-notify']:
         service_spec["contact_groups"] = ",".join(sercgr)
         cfg.contactgroups_to_define.update(sercgr)
 

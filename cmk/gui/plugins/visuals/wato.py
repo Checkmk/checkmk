@@ -129,7 +129,7 @@ class FilterWatoFolder(Filter):
 
     def sublist(self, elements, my_path, depth):
         vs = elements.values()
-        vs.sort(lambda a, b: cmp(a.title().lower(), b.title().lower()))
+        vs.sort(key=lambda x: x.title().lower())
         sel = []
         for e in vs:
             sel += self.folder_selection(e, my_path, depth + 1)

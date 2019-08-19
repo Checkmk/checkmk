@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
+import functools
 import os
 import json
 import pprint
@@ -69,10 +70,10 @@ from cmk.gui.valuespec import (
     ID,
     DropdownChoice,
 )
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -1610,7 +1611,8 @@ class ModeBIRules(ModeBI):
         rules_refs = [
             (rule_id, rule, self.count_rule_references(rule_id)) for (rule_id, rule) in rules
         ]
-        rules_refs.sort(cmp=lambda a, b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
+        rules_refs.sort(key=functools.cmp_to_key(lambda a, b: (a[2][2] > b[2][2]) - (a[2][2] < b[2][
+            2]) or (a[1]["title"] > b[1]["title"]) - (a[1]["title"] < b[1]["title"])))
 
         with table_element("bi_rules", title) as table:
             for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:

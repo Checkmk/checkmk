@@ -1227,7 +1227,7 @@ def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
 
 
 def cmp_simple_number(column, r1, r2):
-    return cmp(r1.get(column), r2.get(column))
+    return (r1.get(column) > r2.get(column)) - (r1.get(column) < r2.get(column))
 
 
 def cmp_num_split(column, r1, r2):
@@ -1240,11 +1240,11 @@ def cmp_simple_string(column, r1, r2):
 
 
 def cmp_insensitive_string(v1, v2):
-    c = cmp(v1.lower(), v2.lower())
+    c = (v1.lower() > v2.lower()) - (v1.lower() < v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
     if c == 0:
-        return cmp(v1, v2)
+        return (v1 > v2) - (v1 < v2)
     return c
 
 
@@ -1269,7 +1269,8 @@ def cmp_service_name_equiv(r):
 
 
 def cmp_custom_variable(r1, r2, key, cmp_func):
-    return cmp(get_custom_var(r1, key), get_custom_var(r2, key))
+    return (get_custom_var(r1, key) > get_custom_var(r2, key)) - (get_custom_var(r1, key) <
+                                                                  get_custom_var(r2, key))
 
 
 def cmp_ip_address(column, r1, r2):
@@ -1280,7 +1281,7 @@ def cmp_ip_address(column, r1, r2):
             return ip
 
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
-    return cmp(v1, v2)
+    return (v1 > v2) - (v1 < v2)
 
 
 def get_custom_var(row, key):

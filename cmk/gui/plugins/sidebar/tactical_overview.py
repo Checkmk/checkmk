@@ -180,7 +180,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.open_tr()
             url = html.makeuri_contextless(row.views.total + context_vars, filename="view.py")
             html.open_td(class_=["total", td_class])
-            html.a(amount, href=url, target="main")
+            html.a("%s" % amount, href=url, target="main")
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:

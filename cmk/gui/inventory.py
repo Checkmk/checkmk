@@ -441,10 +441,11 @@ def _may_see(host_name, site):
     query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
     if site:
         sites.live().set_only_sites([site])
-
-    result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
-    if site:
-        sites.live().set_only_sites()
+    try:
+        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    finally:
+        if site:
+            sites.live().set_only_sites()
 
     if not result:
         return False

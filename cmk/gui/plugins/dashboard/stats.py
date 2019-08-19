@@ -26,6 +26,7 @@
 
 import abc
 
+from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
@@ -99,7 +100,10 @@ class DashletStats(Dashlet):
             result = sites.live().query_row(query)
             sites.live().set_only_sites()
         else:
-            result = sites.live().query_summed_stats(query)
+            try:
+                result = sites.live().query_summed_stats(query)
+            except MKLivestatusNotFoundError:
+                result = []
 
         pies = zip(table, result)
         total = sum([x[1] for x in pies])

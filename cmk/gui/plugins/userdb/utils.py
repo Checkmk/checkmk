@@ -79,6 +79,10 @@ class UserConnector(object):
     def migrate_config(cls):
         pass
 
+    @abc.abstractmethod
+    def is_enabled(self):
+        raise NotImplementedError()
+
     # Optional: Hook function can be registered here to be executed
     # to validate a login issued by a user.
     # Gets parameters: username, password

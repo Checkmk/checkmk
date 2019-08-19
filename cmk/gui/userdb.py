@@ -26,6 +26,7 @@
 
 # TODO: Rework connection management and multiplexing
 
+from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 import time
 import os
 import traceback
@@ -56,16 +57,16 @@ from cmk.gui.globals import g, html
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 
-from cmk.gui.plugins.userdb.utils import (
-    user_attribute_registry,
-    user_connector_registry,
+from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
+    user_attribute_registry, user_connector_registry, UserConnector,
 )
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
 # Connection object dictionary
-g_connections = {}
+g_connections = {}  # type: Dict[str, UserConnector]
+
 auth_logger = logger.getChild("auth")
 
 
@@ -93,54 +94,84 @@ def finalize():
         g_connections.clear()
 
 
-# Returns a list of two part tuples where the first element is the unique
-# connection id and the second element the connector specification dict
-def get_connections(only_enabled=False):
-    connections = []
-    for connector_id, connector_class in user_connector_registry.items():
-        if connector_id == 'htpasswd':
-            # htpasswd connector is enabled by default and always executed first
-            connections.insert(0, ('htpasswd', connector_class({})))
-        else:
-            for connection_config in config.user_connections:
-                if only_enabled and connection_config.get('disabled'):
-                    continue
-
-                connection = connector_class(connection_config)
-
-                if only_enabled and not connection.is_enabled():
-                    continue
-
-                connections.append((connection_config['id'], connection))
-    return connections
+def _all_connections():
+    # type: () -> List[Tuple[str, UserConnector]]
+    return _get_connections_for(_get_connection_configs())
 
 
 def active_connections():
-    return get_connections(only_enabled=True)
+    # type: () -> List[Tuple[str, UserConnector]]
+    enabled_configs = [
+        cfg  #
+        for cfg in _get_connection_configs()
+        if not cfg['disabled']
+    ]
+    return [
+        (connection_id, connection)  #
+        for connection_id, connection in _get_connections_for(enabled_configs)
+        if connection.is_enabled()
+    ]
+
+
+def _get_connections_for(configs):
+    # type: (List[Dict[str, Any]]) -> List[Tuple[str, UserConnector]]
+    return [(cfg['id'], user_connector_registry[cfg['type']](cfg)) for cfg in configs]
+
+
+def _get_connection_configs():
+    # type: () -> List[Dict[str, Any]]
+    # The htpasswd connector is enabled by default and always executed first.
+    return [_HTPASSWD_CONNECTION] + config.user_connections
+
+
+_HTPASSWD_CONNECTION = {
+    'type': 'htpasswd',
+    'id': 'htpasswd',
+    'disabled': False,
+}
+
+
+# The saved configuration for user connections is a bit inconsistent, let's fix
+# this here once and for all.
+def _fix_user_connections():
+    # type: () -> None
+    for cfg in config.user_connections:
+        # Although our current configuration always seems to have a 'disabled'
+        # entry, this might not have always been the case.
+        cfg.setdefault('disabled', False)
+        # Only migrated configurations have a 'type' entry, all others are
+        # implictly LDAP connections.
+        cfg.setdefault('type', 'ldap')
+
+
+config.register_post_config_load_hook(_fix_user_connections)
 
 
 def connection_choices():
-    return sorted([(cid, "%s (%s)" % (cid, c.type()))
-                   for cid, c in get_connections(only_enabled=False)
-                   if c.type() == "ldap"],
-                  key=lambda x_y: x_y[1])
+    # type: () -> List[Tuple[str, str]]
+    return sorted([(connection_id, "%s (%s)" % (connection_id, connection.type()))
+                   for connection_id, connection in _all_connections()
+                   if connection.type() == "ldap"],
+                  key=lambda id_and_description: id_and_description[1])
 
 
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible():
+    # type: () -> bool
     return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
 
 
 def cleanup_connection_id(connection_id):
+    # type: (Optional[str]) -> str
     if connection_id is None:
-        connection_id = 'htpasswd'
+        return 'htpasswd'
 
     # Old Check_MK used a static "ldap" connector id for all LDAP users.
     # Since Check_MK now supports multiple LDAP connections, the ID has
     # been changed to "default". But only transform this when there is
     # no connection existing with the id LDAP.
     if connection_id == 'ldap' and not get_connection('ldap'):
-        connection_id = 'default'
+        return 'default'
 
     return connection_id
 
@@ -149,10 +180,11 @@ def cleanup_connection_id(connection_id):
 # maintains a cache that for a single connection_id only one object per request
 # is created.
 def get_connection(connection_id):
+    # type: (str) -> Optional[UserConnector]
     if connection_id in g_connections:
         return g_connections[connection_id]
 
-    connection = dict(get_connections()).get(connection_id)
+    connection = dict(_all_connections()).get(connection_id)
 
     if connection:
         g_connections[connection_id] = connection

@@ -1,0 +1,14 @@
+Title: Host contact groups were not inherited to services
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566227897
+
+The contact groups of hosts in the raw edition were not inherited
+to services. Instead the contact groups of services were always
+added to the nagios configuration. As a result no notifications
+were sent if only contact groups for hosts were defined.

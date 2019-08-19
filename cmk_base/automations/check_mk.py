@@ -1352,7 +1352,7 @@ class AutomationActiveCheck(Automation):
                 status = 0
             else:
                 if ret & 0xff == 0:
-                    status = ret / 256
+                    status = ret >> 8
                 else:
                     status = 3
             if status < 0 or status > 3:

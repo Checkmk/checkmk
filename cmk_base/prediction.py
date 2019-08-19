@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
+from __future__ import division
 
 import json
 import logging
@@ -261,6 +262,6 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred["step"])
+    index = int(rel_time / data_for_pred["step"])  # fixed: true-division
     reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
     return cmk.utils.prediction.estimate_levels(reference, params, levels_factor)

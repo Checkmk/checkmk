@@ -402,10 +402,10 @@ def get_readable_rel_date(timestamp):
         change = 0
     rel_time = time.time() - change
     seconds = rel_time % 60
-    rem = rel_time / 60
+    rem = rel_time / 60.0
     minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
+    hours = (rem % 1440) / 60.0
+    days = rem / 1440.0
     return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
 

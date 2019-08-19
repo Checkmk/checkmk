@@ -1,0 +1,13 @@
+Title: mk_oracle: Fixed saving agent plugin rule "ORACLE Databases"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1566208335
+Class: fix
+
+If {{Sections - data to collect}} was selected in the agent plugin rule
+{{ORACLE Databases (Linux, Solaris, AIX)}} the error message
+{{The selected element is not longer available. Please select something else.}}
+was shown. This has been fixed.

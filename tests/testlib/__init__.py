@@ -1053,6 +1053,48 @@ class Site(object):
     #        raise Exception("Failed to add test user \"%s\" to site group")
 
 
+class SiteFactory(object):
+    def __init__(self, version, edition, branch, base_ident=None):
+        self._base_ident = base_ident or "site_%s_" % branch
+        self._version = version
+        self._edition = edition
+        self._branch = branch
+        self._sites = {}
+        self._index = 1
+
+    @property
+    def sites(self):
+        return self._sites
+
+    def remove_site(self, site_id):
+        print("Removing site %s" % site_id)
+        self._sites[site_id].rm()
+        del self._sites[site_id]
+
+    def _get_ident(self):
+        new_ident = self._base_ident + str(self._index)
+        self._index += 1
+        return new_ident
+
+    def new_site(self):
+        site_id = self._get_ident()
+        site = Site(site_id=site_id,
+                    reuse=False,
+                    version=self._version,
+                    edition=self._edition,
+                    branch=self._branch)
+        site.create()
+        site.start()
+        site.prepare_for_tests()
+        print("Created site %s" % site_id)
+        self._sites[site_id] = site
+        return site
+
+    def cleanup(self):
+        for site_id in list(self._sites.keys()):
+            self.remove_site(site_id)
+
+
 class WebSession(requests.Session):
     def __init__(self):
         self.transids = []
@@ -1794,7 +1836,7 @@ class CMKWebSession(WebSession):
         assert isinstance(result, list)
         return result
 
-    def activate_changes(self, mode=None, allow_foreign_changes=None):
+    def activate_changes(self, mode=None, allow_foreign_changes=None, wait_for_core=True):
         request = {}
 
         if mode is not None:
@@ -1803,7 +1845,8 @@ class CMKWebSession(WebSession):
         if allow_foreign_changes is not None:
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
-        old_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+        if wait_for_core:
+            old_t = self.site.live.query_value("GET status\nColumns: program_start\n")
 
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
@@ -1818,7 +1861,8 @@ class CMKWebSession(WebSession):
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        self.site.wait_for_core_reloaded(old_t)
+        if wait_for_core:
+            self.site.wait_for_core_reloaded(old_t)
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(

@@ -1,0 +1,10 @@
+Title: check_sftp: support for custom ports for SFTP
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566201381
+Class: fix
+
+Custom port parameter is now used to connect to SFTP server.

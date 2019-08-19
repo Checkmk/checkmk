@@ -15,7 +15,8 @@ def site_factory():
     try:
         sf = testlib.SiteFactory(version=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
                                  edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
-                                 branch=os.environ.get("BRANCH", testlib.current_branch_name()))
+                                 branch=os.environ.get("BRANCH", testlib.current_branch_name()),
+                                 prefix="comp_")
         yield sf
     finally:
         sf.cleanup()

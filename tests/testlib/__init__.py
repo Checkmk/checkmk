@@ -381,7 +381,11 @@ class Site(object):
     @property
     def live(self):
         import livestatus
-        live = livestatus.LocalConnection()
+        # Note: If the site comes from a SiteFactory instance, the TCP connection
+        # is insecure, i.e. no TLS.
+        live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
+                livestatus.SingleSiteConnection("tcp:%s:%d" %
+                                                (self.http_address, self.livestatus_port)))
         live.set_timeout(2)
         return live
 
@@ -397,7 +401,6 @@ class Site(object):
                 # Seems like the socket may vanish for a short time. Keep waiting in case
                 # of livestatus (connection) issues...
                 return False
-
             return new_t > after
 
         reload_time, timeout = time.time(), 10
@@ -1054,8 +1057,8 @@ class Site(object):
 
 
 class SiteFactory(object):
-    def __init__(self, version, edition, branch, base_ident=None):
-        self._base_ident = base_ident or "site_%s_" % branch
+    def __init__(self, version, edition, branch, prefix=None):
+        self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
         self._branch = branch
@@ -1066,7 +1069,22 @@ class SiteFactory(object):
     def sites(self):
         return self._sites
 
-    def remove_site(self, site_id):
+    def get_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            return self._sites["%s%s" % (self._base_ident, name)]
+        # For convenience, allow to retreive site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+        return self._new_site(name)
+
+    def remove_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            site_id = "%s%s" % (self._base_ident, name)
+        elif name in self._sites:
+            site_id = name
+        else:
+            print("Found no site for name %s." % name)
+            return
         print("Removing site %s" % site_id)
         self._sites[site_id].rm()
         del self._sites[site_id]
@@ -1076,16 +1094,21 @@ class SiteFactory(object):
         self._index += 1
         return new_ident
 
-    def new_site(self):
-        site_id = self._get_ident()
+    def _new_site(self, name):
+        site_id = "%s%s" % (self._base_ident, name)
         site = Site(site_id=site_id,
                     reuse=False,
                     version=self._version,
                     edition=self._edition,
                     branch=self._branch)
         site.create()
+        site.open_livestatus_tcp()
+        # No TLS for testing
+        site.set_config("LIVESTATUS_TCP_TLS", "off")
         site.start()
         site.prepare_for_tests()
+        # There seem to be still some changes that want to be activated
+        CMKWebSession(site).activate_changes()
         print("Created site %s" % site_id)
         self._sites[site_id] = site
         return site
@@ -1727,6 +1750,23 @@ class CMKWebSession(WebSession):
 
         assert result is None
 
+    def login_site(self, site_id, user="cmkadmin", password="cmk"):
+        result = self._api_request(
+            "webapi.py?action=login_site",
+            {"request": json.dumps({
+                "site_id": site_id,
+                "username": user,
+                "password": password
+            })})
+        assert result is None
+
+    def logout_site(self, site_id):
+        result = self._api_request("webapi.py?action=logout_site",
+                                   {"request": json.dumps({
+                                       "site_id": site_id,
+                                   })})
+        assert result is None
+
     def add_group(self, group_type, group_name, attributes, expect_error=False):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
@@ -1836,8 +1876,10 @@ class CMKWebSession(WebSession):
         assert isinstance(result, list)
         return result
 
-    def activate_changes(self, mode=None, allow_foreign_changes=None, wait_for_core=True):
+    def activate_changes(self, mode=None, allow_foreign_changes=None, relevant_sites=None):
         request = {}
+        if not relevant_sites:
+            relevant_sites = [self.site]
 
         if mode is not None:
             request["mode"] = mode
@@ -1845,8 +1887,9 @@ class CMKWebSession(WebSession):
         if allow_foreign_changes is not None:
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
-        if wait_for_core:
-            old_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+        old_t = {}
+        for site in relevant_sites:
+            old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
@@ -1855,14 +1898,16 @@ class CMKWebSession(WebSession):
 
         assert isinstance(result, dict)
         assert len(result["sites"]) > 0
+        involved_sites = result["sites"].keys()
 
         for site_id, status in result["sites"].items():
             assert status["_state"] == "success", \
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        if wait_for_core:
-            self.site.wait_for_core_reloaded(old_t)
+        for site in relevant_sites:
+            if site.id in involved_sites:
+                site.wait_for_core_reloaded(old_t[site.id])
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(

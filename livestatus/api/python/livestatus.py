@@ -244,18 +244,12 @@ class Helpers(object):
         return result
 
     def query_summed_stats(self, query, add_headers=""):
-        """Conveniance function for adding up numbers from Stats queries
+        """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
         data = self.query(query, add_headers)
-        if len(data) == 1:
-            return data[0]
-        elif len(data) == 0:
+        if not data:
             raise MKLivestatusNotFoundError("Empty result to Stats-Query")
-
-        result = []
-        for x in range(0, len(data[0])):
-            result.append(sum([row[x] for row in data]))
-        return result
+        return [sum(column) for column in zip(*data)]
 
 
 # TODO: Add more functionality to the Query class:

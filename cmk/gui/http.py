@@ -36,7 +36,7 @@ from cmk.gui.i18n import _
 
 # TODO: For some aracane reason, we are a bit restrictive about the allowed
 # variable names. Try to figure out why...
-_VARNAME_REGEX = re.compile(r'^[\w.%*+=-]+$')
+_VARNAME_REGEX = re.compile(r'^[:\w.%*+=-]+$')
 
 
 def _valid_varname(v):

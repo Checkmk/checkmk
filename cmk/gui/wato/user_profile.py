@@ -114,11 +114,16 @@ def _add_profile_replication_change(site_id, result):
 
 @cmk.gui.pages.register("user_change_pw")
 def page_change_own_password():
-    page_user_profile(change_pw=True)
+    _show_page_user_profile(change_pw=True)
 
 
 @cmk.gui.pages.register("user_profile")
-def page_user_profile(change_pw=False):
+def page_user_profile():
+    _show_page_user_profile(change_pw=False)
+
+
+# TODO: Refactor this to page classes
+def _show_page_user_profile(change_pw):
     start_async_replication = False
 
     if not config.user.id:

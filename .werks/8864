@@ -1,0 +1,12 @@
+Title: "Change password on next login" page is working again
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1566198831
+Class: fix
+
+When a user is configured to change his password on the next login, the user
+saw an error page after the next login. The password reset form is now
+working as expected again.

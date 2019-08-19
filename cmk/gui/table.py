@@ -219,7 +219,6 @@ class Table(object):
         return
 
     def _evaluate_user_opts(self):
-
         table_id = self.id
         rows = self.rows
 
@@ -228,46 +227,46 @@ class Table(object):
 
         if not actions_enabled:
             return rows, False, False, None, None
-        else:
-            user_opts = config.user.load_file("tableoptions", {})
-            user_opts.setdefault(table_id, {})
-            table_opts = user_opts[table_id]
 
-            # Handle the initial visibility of the actions
-            actions_visible = user_opts[table_id].get('actions_visible', False)
-            if html.request.var('_%s_actions' % table_id):
-                actions_visible = html.request.var('_%s_actions' % table_id) == '1'
-                user_opts[table_id]['actions_visible'] = actions_visible
+        user_opts = config.user.load_file("tableoptions", {})
+        user_opts.setdefault(table_id, {})
+        table_opts = user_opts[table_id]
 
-            if html.request.var('_%s_reset' % table_id):
-                html.request.del_var('_%s_search' % table_id)
-                if 'search' in table_opts:
-                    del table_opts['search']  # persist
+        # Handle the initial visibility of the actions
+        actions_visible = user_opts[table_id].get('actions_visible', False)
+        if html.request.var('_%s_actions' % table_id):
+            actions_visible = html.request.var('_%s_actions' % table_id) == '1'
+            user_opts[table_id]['actions_visible'] = actions_visible
 
-            if self.options["searchable"]:
-                # Search is always lower case -> case insensitive
-                search_term = html.get_unicode_input('_%s_search' % table_id,
-                                                     table_opts.get('search', '')).lower()
-                if search_term:
-                    html.request.set_var('_%s_search' % table_id, search_term)
-                    table_opts['search'] = search_term  # persist
-                    rows = _filter_rows(rows, search_term)
+        if html.request.var('_%s_reset' % table_id):
+            html.request.del_var('_%s_search' % table_id)
+            if 'search' in table_opts:
+                del table_opts['search']  # persist
 
-            if html.request.var('_%s_reset_sorting' % table_id):
-                html.request.del_var('_%s_sort' % table_id)
-                if 'sort' in table_opts:
-                    del table_opts['sort']  # persist
+        if self.options["searchable"]:
+            # Search is always lower case -> case insensitive
+            search_term = html.get_unicode_input('_%s_search' % table_id,
+                                                 table_opts.get('search', '')).lower()
+            if search_term:
+                html.request.set_var('_%s_search' % table_id, search_term)
+                table_opts['search'] = search_term  # persist
+                rows = _filter_rows(rows, search_term)
 
-            if self.options["sortable"]:
-                # Now apply eventual sorting settings
-                sort = html.request.var('_%s_sort' % table_id, table_opts.get('sort'))
-                if sort is not None:
-                    html.request.set_var('_%s_sort' % table_id, sort)
-                    table_opts['sort'] = sort  # persist
-                    sort_col, sort_reverse = map(int, sort.split(',', 1))
-                    rows = _sort_rows(rows, sort_col, sort_reverse)
+        if html.request.var('_%s_reset_sorting' % table_id):
+            html.request.del_var('_%s_sort' % table_id)
+            if 'sort' in table_opts:
+                del table_opts['sort']  # persist
 
-            return rows, actions_enabled, actions_visible, search_term, user_opts
+        if self.options["sortable"]:
+            # Now apply eventual sorting settings
+            sort = html.request.var('_%s_sort' % table_id, table_opts.get('sort'))
+            if sort is not None:
+                html.request.set_var('_%s_sort' % table_id, sort)
+                table_opts['sort'] = sort  # persist
+                sort_col, sort_reverse = map(int, sort.split(',', 1))
+                rows = _sort_rows(rows, sort_col, sort_reverse)
+
+        return rows, actions_enabled, actions_visible, search_term, user_opts
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
         headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
@@ -380,7 +379,6 @@ class Table(object):
         return empty_columns
 
     def _write_csv(self, csv_separator):
-
         rows = self.rows
         headers = self.headers
         limit = self.limit
@@ -488,7 +486,6 @@ def _filter_rows(rows, search_term):
 
 
 def _sort_rows(rows, sort_col, sort_reverse):
-
     # remove and remind fixed rows, add to separate list
     fixed_rows = []
     for index, row_spec in enumerate(rows[:]):

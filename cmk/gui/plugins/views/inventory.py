@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import time
 from cmk.utils.regex import regex
 
@@ -321,10 +322,10 @@ def inv_paint_hz(hz):
     elif hz < 1500:
         return "number", "%.0f" % hz
     elif hz < 1000000:
-        return "number", "%.1f kHz" % (hz / 1000)
+        return "number", "%.1f kHz" % (hz / 1000.0)
     elif hz < 1000000000:
-        return "number", "%.1f MHz" % (hz / 1000000)
-    return "number", "%.2f GHz" % (hz / 1000000000)
+        return "number", "%.1f MHz" % (hz / 1000000.0)
+    return "number", "%.2f GHz" % (hz / 1000000000.0)
 
 
 @decorate_inv_paint
@@ -335,7 +336,7 @@ def inv_paint_bytes(b):
     units = ['B', 'kB', 'MB', 'GB', 'TB']
     i = 0
     while b % 1024 == 0 and i + 1 < len(units):
-        b = b / 1024
+        b = int(b / 1024.0)
         i += 1
     return "number", "%d %s" % (b, units[i])
 
@@ -371,7 +372,7 @@ def inv_paint_bytes_rounded(b):
         fac = fac / 1024.0
 
     if i:
-        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
+        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])  # fixed: true-division
     return "number", "%d&nbsp;%s" % (b, units[0])
 
 
@@ -513,7 +514,7 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
     now_day = round_to_day(time.time())
     change_day = round_to_day(timestamp)
-    age_days = (now_day - change_day) / 86400
+    age_days = int((now_day - change_day) / 86400.0)
 
     css_class = "number"
     if age_days == 0:

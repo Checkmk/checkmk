@@ -155,7 +155,7 @@ body.main .popup_menu .state3 span,
 .hstate2 a,
 .hstate2 body.main .popup_menu span,
 body.main .popup_menu .hstate2 span {
-  color: $white !important;
+  color: $theme-color-white !important;
   background-color: $theme-color-state-3-background !important;
   border-color: $theme-color-state-3-border !important;
 }
@@ -237,7 +237,7 @@ img.pluginurl {
 }
 
 .states {
-  background-color: $theme-color-state-3-background;
+  background-color: $hot-bg-color;
   background-image: none;
   transition: background-color .15s ease-in-out;
 }

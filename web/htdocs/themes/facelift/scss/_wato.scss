@@ -174,15 +174,15 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato div.inherited {
-  color: #444;
+  color: $wato-inherited-color;
 
   a {
-    color: #444;
+    color: $wato-inherited-color;
   }
 
   b {
     font-weight: normal;
-    color: black;
+    color: $primary-font-color;
   }
 }
 
@@ -1305,7 +1305,7 @@ table.data td.bi_rule_tree {
   overflow-y: scroll;
   font-family: monospace, sans-serif;
   vertical-align: top;
-  background-color: #fff;
+  background-color: $primary-bg-color;
   box-shadow: 1px 1px 3px #888 inset;
   /* below resize option is css3 */
   resize: both;
@@ -1340,10 +1340,10 @@ table.data td.bi_rule_tree {
     box-shadow: none;
 
     &.diag_success {
-      background-color: #efe;
+      background-color: $host-diag-success-bg-color;
     }
     &.diag_failed {
-      background-color: #fee;
+      background-color: $host-diag-failed-bg-color;
     }
   }
 

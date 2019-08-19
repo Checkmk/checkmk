@@ -1114,7 +1114,6 @@ table.modifydowntimes > tbody > tr {
  *       where needed
  */
 * {
-  font-family: $theme-font;
   letter-spacing: $theme-letter-spacing;
   text-shadow: none;
 }
@@ -1347,7 +1346,8 @@ th.header_state {
 }
 
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
-  background-color: $theme-color-state-3-background;
+  color: $hot-color;
+  background-color: $hot-bg-color;
   border-color: $theme-color-nuance-16;
 }
 

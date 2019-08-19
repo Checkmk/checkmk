@@ -29,7 +29,7 @@ from typing import List, Tuple  # pylint: disable=unused-import
 from livestatus import MultiSiteConnection, MKLivestatusQueryError
 from cmk import is_managed_edition
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.gui.config import user as config_user
+import cmk.gui.config as config
 from cmk.gui.globals import g, html
 
 #   .--API-----------------------------------------------------------------.
@@ -156,10 +156,10 @@ def _connect_multiple_sites():
 def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
-    for site_id, site in config_user.authorized_sites():
+    for site_id, site in config.user.authorized_sites():
         site = _site_config_for_livestatus(site_id, site)
 
-        if config_user.is_site_disabled(site_id):
+        if config.user.is_site_disabled(site_id):
             disabled_sites[site_id] = site
         else:
             enabled_sites[site_id] = site
@@ -246,11 +246,11 @@ def _set_livestatus_auth():
         g.live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
-    if not config_user.may("bi.see_all"):
+    if not config.user.may("bi.see_all"):
         g.live.set_auth_user('bi', user_id)
 
     # May the user see all Event Console events or only some?
-    if not config_user.may("mkeventd.seeall"):
+    if not config.user.may("mkeventd.seeall"):
         g.live.set_auth_user('ec', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
@@ -260,12 +260,12 @@ def _set_livestatus_auth():
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
 def _livestatus_auth_user():
-    if not config_user.may("general.see_all"):
-        return config_user.id
+    if not config.user.may("general.see_all"):
+        return config.user.id
 
     force_authuser = html.request.var("force_authuser")
     if force_authuser == "1":
-        return config_user.id
+        return config.user.id
     elif force_authuser == "0":
         return None
     elif force_authuser:
@@ -273,10 +273,10 @@ def _livestatus_auth_user():
 
     # TODO: Remove this with 1.5.0/1.6.0
     if html.output_format != 'html' \
-       and config_user.get_attribute("force_authuser_webservice"):
-        return config_user.id
+       and config.user.get_attribute("force_authuser_webservice"):
+        return config.user.id
 
-    if config_user.get_attribute("force_authuser"):
-        return config_user.id
+    if config.user.get_attribute("force_authuser"):
+        return config.user.id
 
     return None

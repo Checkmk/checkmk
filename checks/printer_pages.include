@@ -36,8 +36,8 @@ def scan_ricoh_printer(oid):
 
 def scan_canon_printer(oid):
     return "canon" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-           and oid(".1.3.6.1.4.1.1602.1.1.1.1.0") != None \
-           and oid(".1.3.6.1.4.1.1602.1.11.1.3.1.4") != None
+           and oid(".1.3.6.1.4.1.1602.1.1.1.1.0") is not None \
+           and oid(".1.3.6.1.4.1.1602.1.11.1.3.1.4.301") is not None
 
 def scan_generic_printer(oid):
     return oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None \

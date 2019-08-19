@@ -187,7 +187,12 @@ PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
 PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
-
+# Added VCR + Dependencies for testing special agents (CMK-2414)
+PYTHON_MODULES_LIST += contextlib2-0.5.5.tar.gz
+PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
+PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
+PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
+PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
 # because the SSSE3 detection in pycryptodomex is slightly broken. :-/

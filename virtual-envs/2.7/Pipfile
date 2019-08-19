@@ -104,6 +104,11 @@ wmctrl = "==0.3"
 pdbpp = "==0.10.0"
 PySnooper = "==0.0.31"
 future = "==0.17.1"
+contextlib2 = "==0.5.5"
+funcsigs = "==1.0.2"
+mock = "==3.0.5"
+wrapt = "==1.11.2"
+vcrpy = "==2.1.0"
 
 [requires]
 python_version = "2.7"

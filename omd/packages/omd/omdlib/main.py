@@ -1607,6 +1607,7 @@ def prepare_and_populate_tmpfs(site):
     if not os.listdir(site.tmp_dir):
         create_skeleton_files(site, "tmp")
         chown_tree(site.tmp_dir, site.name)
+        _mark_tmpfs_initialized(site)
     _create_livestatus_tcp_socket_link(site)
 
 
@@ -1653,6 +1654,15 @@ def prepare_tmpfs(site):
 
     sys.stdout.write(tty_warn + ": You may continue without tmpfs, but the "
                      "performance of Check_MK may be degraded.\n")
+
+
+def _mark_tmpfs_initialized(site):
+    """Write a simple file marking the time of the tmpfs structure initialization
+
+    The st_ctime of the file will be used by Checkmk to know when the tmpfs file
+    structure was initialized."""
+    with Path(site.tmp_dir, "initialized").open("w", encoding="utf-8") as f:
+        f.write(u"")
 
 
 def is_dockerized():

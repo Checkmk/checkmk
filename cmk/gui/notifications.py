@@ -26,6 +26,7 @@
 
 import time
 
+from livestatus import MKLivestatusNotFoundError
 import cmk.utils.render
 
 import cmk.gui.config as config
@@ -146,8 +147,9 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         query += extra_headers
 
     if stat_only:
-        result = sites.live().query_summed_stats(query)
-        if result is None:
+        try:
+            result = sites.live().query_summed_stats(query)
+        except MKLivestatusNotFoundError:
             result = [0]  # Normalize the result when no site answered
 
         if result[0] == 0 and not sites.live().dead_sites():

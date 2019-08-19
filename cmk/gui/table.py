@@ -203,7 +203,9 @@ class Table(object):
             num_rows_unlimited -= len([r for r in rows if r[3]])
 
         # Render header
-        self._write_table(rows, actions_enabled, actions_visible, search_term)
+        show_action_row = self.options["searchable"] or (self.options["sortable"] and
+                                                         self._get_sort_column(user_opts[self.id]))
+        self._write_table(rows, show_action_row, actions_visible, search_term)
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
@@ -259,7 +261,7 @@ class Table(object):
 
         if self.options["sortable"]:
             # Now apply eventual sorting settings
-            sort = html.request.var('_%s_sort' % table_id, table_opts.get('sort'))
+            sort = self._get_sort_column(table_opts)
             if sort is not None:
                 html.request.set_var('_%s_sort' % table_id, sort)
                 table_opts['sort'] = sort  # persist
@@ -267,6 +269,9 @@ class Table(object):
                 rows = _sort_rows(rows, sort_col, sort_reverse)
 
         return rows, actions_enabled, actions_visible, search_term, user_opts
+
+    def _get_sort_column(self, table_opts):
+        return html.request.var('_%s_sort' % self.id, table_opts.get('sort'))
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
         headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)

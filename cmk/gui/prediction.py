@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import os
 import time
 import json
@@ -179,7 +180,7 @@ def compute_vertical_scala(low, high):
 
     v = 0
     vert_scala = []
-    steps = (max(0, high) - min(0, low)) / factor
+    steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
     elif steps < 6:
@@ -192,12 +193,12 @@ def compute_vertical_scala(low, high):
         step = factor
 
     while v <= max(0, high):
-        vert_scala.append([v, "%.1f%s" % (v / factor, letter)])
+        vert_scala.append([v, "%.1f%s" % (v / factor, letter)])  # fixed: true-division
         v += step
 
     v = -factor
     while v >= min(0, low):
-        vert_scala = [[v, "%.1f%s" % (v / factor, letter)]] + vert_scala
+        vert_scala = [[v, "%.1f%s" % (v / factor, letter)]] + vert_scala  # fixed: true-division
         v -= step
 
     # Remove trailing ".0", if that is present for *all* entries
@@ -260,7 +261,7 @@ def create_graph(name, size, bounds, v_range, legend):
     html.write('<table class=prediction><tr><td>')
     html.write(
         '<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>'
-        % (name, size[0] / 2, size[1] / 2, size[0], size[1]))
+        % (name, int(size[0] / 2.0), int(size[1] / 2.0), size[0], size[1]))
     html.write('</td></tr><tr><td class=legend>')
     for color, title in legend:
         html.write('<div class=color style="background-color: %s"></div><div class=entry>%s</div>' %

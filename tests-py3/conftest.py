@@ -45,6 +45,7 @@ test_types = collections.OrderedDict([
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl", EXECUTE_IN_SITE),
     ("packaging", EXECUTE_IN_VENV),
+    ("composition", EXECUTE_IN_SITE),
 ])
 
 
@@ -90,6 +91,8 @@ def pytest_collection_modifyitems(items):
             ty = "docker"
         elif "tests-py3/integration" in file_path:
             ty = "integration"
+        elif "tests-py3/composition" in file_path:
+            ty = "composition"
         else:
             raise Exception("Test not TYPE marked: %r" % item)
 

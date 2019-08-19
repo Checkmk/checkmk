@@ -96,20 +96,14 @@ $theme-button-height:                       28px;
 
 // States
 
+$theme-color-state-1-background:	    $warning;
+$theme-color-state-1-border:		    $warning;
+
 $theme-color-state-2-background:            $danger;
 $theme-color-state-2-border:                mix($black, $danger, 30%);
 
 $theme-color-state-3-background:            rgb(255, 179, 0);
 $theme-color-state-3-border:                rgb(255, 179, 0);
-.odd0 .state3, .odd3 .state3 {
-  background-color: #ffb300;
-  border-color: #ffb300;
-  color: #fff;
-}
-
-
-$theme-color-state-1-background:	    $warning;
-$theme-color-state-1-border:		    $warning;
 
 $theme-color-state-4-background:            #888;
 $theme-color-state-4-border:                #7b7b7b;
@@ -333,3 +327,11 @@ $table-data-single-padding:		    0 16px;
 $td-single-left-text-align:		    right;
 $td-single-left-text-transform:		    uppercase;
 $td-single-left-border-right:		    null;
+
+$host-diag-success-bg-color:		    rgb(50, 54, 50);
+$host-diag-failed-bg-color:		    rgb(58, 50, 50);
+
+$wato-inherited-color:			    $grey-2;
+
+$hot-bg-color:				    rgb(255, 160, 66);
+$hot-color:				    $black;

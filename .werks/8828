@@ -1,0 +1,11 @@
+Title: mk_db2: Agent plugin for DB2 database is now bakeable
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0b7
+Date: 1566213541
+
+

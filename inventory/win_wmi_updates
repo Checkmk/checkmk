@@ -63,10 +63,10 @@ def _parse_install_date(install_date_str):
 def inv_win_wmi_updates(info):
     parsed_packages = []
     for line in info:
-        if len(line) <> 4:
+        if len(line) != 4 or line == ["Node", "Description", "HotFixID", "InstalledOn"]:
             continue
 
-        _, description, knowledge_base, install_date_str = line
+        _id, description, knowledge_base, install_date_str = line
         parsed_packages.append({
             "name": "Windows Update " + knowledge_base,
             "version": knowledge_base,

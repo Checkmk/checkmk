@@ -35,6 +35,7 @@
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
 
+from __future__ import division
 import abc
 import base64
 from enum import Enum
@@ -392,7 +393,7 @@ class Filesize(Integer):
             if value == 0:
                 return 0, 0
             if value % count == 0:
-                return exp, value / count
+                return exp, int(value / count)  # fixed: true-division
 
     def render_input(self, varprefix, value):
         self.classtype_info()
@@ -2539,7 +2540,7 @@ class OptionalDropdownChoice(DropdownChoice):
 # date is represented by a UNIX timestamp where the
 # seconds are silently ignored.
 def round_date(t):
-    return int(t) / seconds_per_day * seconds_per_day
+    return int(int(t) / seconds_per_day) * seconds_per_day
 
 
 def today():
@@ -2586,11 +2587,11 @@ class RelativeDate(OptionalDropdownChoice):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        reldays = (round_date(value) - today()) / seconds_per_day
+        reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         OptionalDropdownChoice.render_input(self, varprefix, reldays)
 
     def value_to_text(self, value):
-        reldays = (round_date(value) - today()) / seconds_per_day
+        reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
         elif reldays == -2:

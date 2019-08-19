@@ -94,7 +94,7 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         ("user", recipient_key),
         ("title", subject.encode("utf-8")),
         ("message", text.encode("utf-8")),
-        ("timestamp", int(context["MICROTIME"]) / 1000000),
+        ("timestamp", int(context["MICROTIME"] / 1000000.0)),
         ("html", 1),
     ]
 

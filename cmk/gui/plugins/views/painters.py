@@ -4409,7 +4409,7 @@ class PainterDowntimeDuration(Painter):
 
     def render(self, row, cell):
         if row["downtime_fixed"] == 0:
-            return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
+            return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
         return "", ""
 
 

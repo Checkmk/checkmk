@@ -55,21 +55,21 @@ def collect_context():
 def extend_context_with_link_urls(context, link_template):
     # type: (Dict, AnyStr) -> None
 
-    host_url, service_url = cmk_links(context)
-
+    host_url = host_url_from_context(context)
     if host_url:
         context['LINKEDHOSTNAME'] = link_template.format(host_url, context['HOSTNAME'])
     else:
         context['LINKEDHOSTNAME'] = context['HOSTNAME']
 
+    service_url = service_url_from_context(context)
     if service_url:
         context['LINKEDSERVICEDESC'] = link_template.format(service_url, context['SERVICEDESC'])
     else:
         context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
 
 
-def cmk_links(context):
-    # type: (Dict) -> Tuple[Optional[str], Optional[str]]
+def _base_url(context):
+    # type: (Dict) -> str
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -79,19 +79,21 @@ def cmk_links(context):
     elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
         url_prefix = "https://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
     else:
-        url_prefix = None
+        url_prefix = ''
 
-    if url_prefix:
-        base_url = re.sub('/check_mk/?', '', url_prefix)
-        host_url = base_url + context['HOSTURL']
+    return re.sub('/check_mk/?', '', url_prefix, count=1)
 
-        if context['WHAT'] == 'SERVICE':
-            service_url = base_url + context['SERVICEURL']
-            return host_url, service_url
 
-        return host_url, None
+def host_url_from_context(context):
+    # type: (Dict) -> str
+    base = _base_url(context)
+    return base + context['HOSTURL'] if base else ''
 
-    return None, None
+
+def service_url_from_context(context):
+    # type: (Dict) -> str
+    base = _base_url(context)
+    return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
 
 # There is common code with cmk/gui/view_utils:format_plugin_output(). Please check

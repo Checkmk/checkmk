@@ -43,6 +43,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
+ARTIFACT_STORAGE   := http://nexus:8081
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -327,15 +328,12 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json package-lock.json
-	@if curl --silent --output /dev/null --head 'http://nexus:8081/#browse/browse:npm-proxy'; then \
-	    REGISTRY=--registry=http://nexus:8081/repository/npm-proxy/ ; \
-	    echo "Installing from local registry" ; \
-	else \
-	    REGISTRY= ; \
-	    echo "Installing from public registry" ; \
-        fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY
+node_modules: package.json
+	if curl --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy' | grep '200\ OK'; then \
+            npm config set registry '${ARTIFACT_STORAGE}/repository/npm-proxy/'; \
+            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
+        fi; \
+	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)

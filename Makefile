@@ -43,6 +43,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
+ARTIFACT_STORAGE   := http://nexus:8081
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -309,9 +310,10 @@ optimize-images:
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json
-	if curl --head 'http://nexus:8081/#browse/browse:npm-proxy' | grep '200\ OK'; then \
-            npm config set registry http://nexus:8081/repository/npm-proxy/; \
-        fi
+	if curl --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy' | grep '200\ OK'; then \
+            npm config set registry '${ARTIFACT_STORAGE}/repository/npm-proxy/'; \
+            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
+        fi; \
 	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)

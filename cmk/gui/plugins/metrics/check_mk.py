@@ -88,20 +88,10 @@ unit_info[""] = {
     "render": lambda v: cmk.utils.render.scientific(v, 2),
 }
 
-
-def metric_number_with_precision(v, *args, **kwargs):
-
-    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
-
-    factor, prefix = cmk.utils.render.scale_factor_prefix(v, base=1000.0)
-
-    return '%.*f %s' % (precision, float(v) / factor, prefix)
-
-
 unit_info["count"] = {
     "title": _("Count"),
     "symbol": "",
-    "render": lambda v: metric_number_with_precision(v, drop_zeroes=True),
+    "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, drop_zeroes=True),
     "stepping": "integer",  # for vertical graph labels
 }
 

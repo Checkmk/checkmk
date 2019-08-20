@@ -273,6 +273,7 @@ is_cmc = _config.is_cmc
 get_age_human_readable = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
 get_percent_human_readable = render.percent
+get_number_with_precision = render.fmt_number_with_precision
 quote_shell_string = _utils.quote_shell_string
 
 

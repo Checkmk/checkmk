@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import List, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 
 from livestatus import MultiSiteConnection, MKLivestatusQueryError
 from cmk import is_managed_edition
@@ -45,21 +45,24 @@ from cmk.gui.globals import g, html
 
 
 def live():
+    # type: () -> MultiSiteConnection
     """Get Livestatus connection object matching the current site configuration
        and user settings. On the first call the actual connection is being made."""
     if 'live' not in g:
-        _connect()
+        _connect(config.user)
     return g.live
 
 
 def states():
+    # type: () -> Dict[str, Dict[str, Any]]
     """Returns dictionary of all known site states."""
     if 'live' not in g:
-        _connect()
+        _connect(config.user)
     return g.site_status
 
 
 def disconnect():
+    # type: () -> None
     """Actively closes all Livestatus connections."""
     g.pop('live', None)
     g.pop('site_status', None)
@@ -100,14 +103,16 @@ def all_groups(what):
 
 
 # Build up a connection to livestatus to either a single site or multiple sites.
-def _connect():
+def _connect(user):
+    # type: (config.LoggedInUser) -> None
     g.site_status = {}
-    _connect_multiple_sites()
-    _set_livestatus_auth()
+    _connect_multiple_sites(user)
+    _set_livestatus_auth(user)
 
 
-def _connect_multiple_sites():
-    enabled_sites, disabled_sites = _get_enabled_and_disabled_sites()
+def _connect_multiple_sites(user):
+    # type: (config.LoggedInUser) -> None
+    enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
 
     if is_managed_edition():
@@ -153,13 +158,14 @@ def _connect_multiple_sites():
     update_site_states_from_dead_sites()
 
 
-def _get_enabled_and_disabled_sites():
+def _get_enabled_and_disabled_sites(user):
+    # type: (config.LoggedInUser) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]
     enabled_sites, disabled_sites = {}, {}
 
-    for site_id, site in config.user.authorized_sites():
+    for site_id, site in user.authorized_sites():
         site = _site_config_for_livestatus(site_id, site)
 
-        if config.user.is_site_disabled(site_id):
+        if user.is_site_disabled(site_id):
             disabled_sites[site_id] = site
         else:
             enabled_sites[site_id] = site
@@ -168,6 +174,7 @@ def _get_enabled_and_disabled_sites():
 
 
 def _site_config_for_livestatus(site_id, site):
+    # type: (str, Dict[str, Any]) -> Dict[str, Any]
     """Prepares a site config specification for the livestatus module
 
     In case the GUI connects to the local livestatus proxy there are several
@@ -190,6 +197,7 @@ def _site_config_for_livestatus(site_id, site):
 
 
 def encode_socket_for_livestatus(site_id, site):
+    # type: (str, Dict[str, Any]) -> str
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
@@ -209,6 +217,7 @@ def encode_socket_for_livestatus(site_id, site):
 
 
 def update_site_states_from_dead_sites():
+    # type: () -> None
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
         status_host_state = deadinfo.get("status_host_state")
@@ -220,16 +229,20 @@ def update_site_states_from_dead_sites():
 
 
 def _status_host_state_name(shs):
-    if shs is None:
-        return "dead"
-    return {
-        1: "down",
-        2: "unreach",
-        3: "waiting",
-    }.get(shs, "unknown")
+    # type: (Optional[int]) -> str
+    return _STATUS_NAMES.get(shs, "unknown")
+
+
+_STATUS_NAMES = {
+    None: "dead",
+    1: "down",
+    2: "unreach",
+    3: "waiting",
+}
 
 
 def _set_initial_site_states(enabled_sites, disabled_sites):
+    # (Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
     for site_id, site in enabled_sites.items():
         g.site_status[site_id] = {"state": "dead", "site": site}
 
@@ -239,18 +252,19 @@ def _set_initial_site_states(enabled_sites, disabled_sites):
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
-def _set_livestatus_auth():
-    user_id = _livestatus_auth_user()
+def _set_livestatus_auth(user):
+    # type: (config.LoggedInUser) -> None
+    user_id = _livestatus_auth_user(user)
     if user_id is not None:
         g.live.set_auth_user('read', user_id)
         g.live.set_auth_user('action', user_id)
 
     # May the user see all objects in BI aggregations or only some?
-    if not config.user.may("bi.see_all"):
+    if not user.may("bi.see_all"):
         g.live.set_auth_user('bi', user_id)
 
     # May the user see all Event Console events or only some?
-    if not config.user.may("mkeventd.seeall"):
+    if not user.may("mkeventd.seeall"):
         g.live.set_auth_user('ec', user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
@@ -259,24 +273,25 @@ def _set_livestatus_auth():
 
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
-def _livestatus_auth_user():
-    if not config.user.may("general.see_all"):
-        return config.user.id
+def _livestatus_auth_user(user):
+    # type: (config.LoggedInUser) -> Optional[str]
+    if not user.may("general.see_all"):
+        return user.id
 
     force_authuser = html.request.var("force_authuser")
     if force_authuser == "1":
-        return config.user.id
-    elif force_authuser == "0":
+        return user.id
+    if force_authuser == "0":
         return None
-    elif force_authuser:
+    if force_authuser:
         return force_authuser  # set a different user
 
     # TODO: Remove this with 1.5.0/1.6.0
     if html.output_format != 'html' \
-       and config.user.get_attribute("force_authuser_webservice"):
-        return config.user.id
+       and user.get_attribute("force_authuser_webservice"):
+        return user.id
 
-    if config.user.get_attribute("force_authuser"):
-        return config.user.id
+    if user.get_attribute("force_authuser"):
+        return user.id
 
     return None

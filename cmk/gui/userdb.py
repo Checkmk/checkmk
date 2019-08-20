@@ -169,7 +169,7 @@ def cleanup_connection_id(connection_id):
 def get_connection(connection_id):
     # type: (str) -> Optional[UserConnector]
     if 'user_connections' not in g:
-        g.user_connections = {}  # type: ignore
+        g.user_connections = {}
 
     if connection_id not in g.user_connections:
         connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]

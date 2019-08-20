@@ -29,7 +29,7 @@
 
 from functools import partial
 import logging
-from typing import Union  # pylint: disable=unused-import
+from typing import Any, Union  # pylint: disable=unused-import
 
 from werkzeug.local import LocalProxy
 from werkzeug.local import LocalStack
@@ -88,7 +88,7 @@ class AppContext(object):
 
 
 current_app = LocalProxy(partial(_lookup_app_object, "app"))
-g = LocalProxy(partial(_lookup_app_object, "g"))
+g = LocalProxy(partial(_lookup_app_object, "g"))  # type: Any
 
 ######################################################################
 # TODO: This should live somewhere else...

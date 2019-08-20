@@ -1,0 +1,10 @@
+Title: supermicro: Fix oid for more sophisticated detection of Linux systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566312277
+Class: fix
+
+Fix missing character in oid. This yields a more stable detection of Linux systems.

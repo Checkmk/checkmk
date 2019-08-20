@@ -28,8 +28,6 @@ import cmk.utils.render
 
 from cmk.gui.i18n import _
 
-from cmk.utils.render import scale_factor_prefix
-
 from cmk.gui.plugins.metrics import (
     unit_info,
     metric_info,
@@ -95,7 +93,7 @@ def metric_number_with_precision(v, *args, **kwargs):
 
     precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
 
-    factor, prefix = scale_factor_prefix(v, base=1000.0)
+    factor, prefix = cmk.utils.render.scale_factor_prefix(v, base=1000.0)
 
     return '%.*f %s' % (precision, float(v) / factor, prefix)
 
@@ -183,7 +181,7 @@ def bytes_human_readable_list(values, *args, **kwargs):
     else:
         reference = min([abs(v) for v in values])
 
-    scale_factor, scale_prefix = scale_factor_prefix(reference, 1024.0)
+    scale_factor, scale_prefix = cmk.utils.render.scale_factor_prefix(reference, 1024.0)
     precision = kwargs.get("precision", 2)
 
     scaled_values = ["%.*f" % (precision, float(value) / scale_factor) for value in values]

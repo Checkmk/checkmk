@@ -64,18 +64,11 @@ from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
-# Connection object dictionary
-g_connections = {}  # type: Dict[str, UserConnector]
-
 auth_logger = logger.getChild("auth")
 
 
 # Load all userdb plugins
 def load_plugins(force):
-    # Cleanup eventual still open connections
-    if g_connections:
-        g_connections.clear()
-
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -86,12 +79,6 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
-
-
-# Cleans up at the end of a request: Cleanup eventual open connections
-def finalize():
-    if g_connections:
-        g_connections.clear()
 
 
 def _all_connections():
@@ -181,15 +168,15 @@ def cleanup_connection_id(connection_id):
 # is created.
 def get_connection(connection_id):
     # type: (str) -> Optional[UserConnector]
-    if connection_id in g_connections:
-        return g_connections[connection_id]
+    if 'user_connections' not in g:
+        g.user_connections = {}  # type: ignore
 
-    connection = dict(_all_connections()).get(connection_id)
+    if connection_id not in g.user_connections:
+        connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+        # NOTE: We cache even failed lookups.
+        g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
 
-    if connection:
-        g_connections[connection_id] = connection
-
-    return connection
+    return g.user_connections[connection_id]
 
 
 # Returns a list of connection specific locked attributes

@@ -270,7 +270,7 @@ def is_ipv6_primary(hostname):
 nagios_illegal_chars = _config.nagios_illegal_chars
 is_cmc = _config.is_cmc
 
-get_age_human_readable = lambda secs: str(render.Age(secs))
+get_age_human_readable = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
 get_percent_human_readable = render.percent
 quote_shell_string = _utils.quote_shell_string

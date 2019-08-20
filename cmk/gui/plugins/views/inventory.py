@@ -36,7 +36,6 @@ import cmk.gui.pages
 import cmk.gui.config as config
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
@@ -386,10 +385,10 @@ def _nic_speed_human_readable(bits_per_second):
     elif bits_per_second < 1500:
         return "%d bit/s" % bits_per_second
     elif bits_per_second < 1000000:
-        return "%s Kbit/s" % utils.drop_dotzero(bits_per_second / 1000.0, digits=1)
+        return "%s Kbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000.0, digits=1)
     elif bits_per_second < 1000000000:
-        return "%s Mbit/s" % utils.drop_dotzero(bits_per_second / 1000000.0, digits=2)
-    return "%s Gbit/s" % utils.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
+        return "%s Mbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000.0, digits=2)
+    return "%s Gbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
 
 
 @decorate_inv_paint

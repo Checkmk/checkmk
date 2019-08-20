@@ -42,19 +42,6 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 
 
-def drop_dotzero(v, digits=2):
-    """Renders a number as a floating point number and drops useless
-    zeroes at the end of the fraction
-
-    45.1 -> "45.1"
-    45.0 -> "45"
-    """
-    t = "%%.%df" % digits % v
-    if "." in t:
-        return t.rstrip("0").rstrip(".")
-    return t
-
-
 def num_split(s):
     """Splits a word into sequences of numbers and non-numbers.
 

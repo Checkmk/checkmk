@@ -38,7 +38,7 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
         args += ["-p", "%d" % params["tcp_port"]]
 
     args += ["-u", params["user"]]
-    args += ["-s", params["secret"]]
+    args += ["-s", passwordstore_get_cmdline("%s", params["secret"])]
     args += ["-i " + ",".join(params["infos"])]
 
     # Available options. Don't ask...

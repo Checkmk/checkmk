@@ -238,7 +238,7 @@ class RulespecSpecialAgentsVsphere(HostRulespec):
                     title=_("vSphere User name"),
                     allow_empty=False,
                 )),
-                ("secret", Password(
+                ("secret", IndividualOrStoredPassword(
                     title=_("vSphere secret"),
                     allow_empty=False,
                 )),

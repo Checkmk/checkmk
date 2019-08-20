@@ -1,0 +1,11 @@
+Title: agent_vsphere: Secret may now come from the password store
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566309583
+Class: feature
+
+Check state of VMWare ESX via vSphere can now get the secret from the
+password store.

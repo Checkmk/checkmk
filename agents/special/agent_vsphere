@@ -50,6 +50,7 @@ import functools
 from dateutil import tz
 from pathlib2 import Path
 
+import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.special_agents.agent_vsphere import ESXSession, SoapTemplates
 
@@ -1096,6 +1097,7 @@ def call_legacy_pysphere():
 
 def main(argv=None):
     if argv is None:
+        cmk.utils.password_store.replace_passwords()
         argv = sys.argv
 
     opt = parse_arguments(argv)

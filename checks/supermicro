@@ -83,7 +83,7 @@ check_info['supermicro'] = {
     'inventory_function': inventory_supermicro_health,
     'service_description': "Overall Hardware Health",
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2" or\
-                          ("linux" in oid("1.3.6.1.2.1.1.1.0").lower and
+                          ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower and
                            oid(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1") != None ),
     'snmp_info': [
         (

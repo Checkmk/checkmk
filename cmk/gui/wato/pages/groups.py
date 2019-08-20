@@ -136,7 +136,7 @@ class ModeGroups(WatoMode):
             return
 
         sorted_groups = self._groups.items()
-        sorted_groups.sort(cmp=lambda a, b: cmp(a[1]['alias'], b[1]['alias']))
+        sorted_groups.sort(key=lambda x: x[1]['alias'])
 
         self._collect_additional_data()
 

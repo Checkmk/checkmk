@@ -1,0 +1,15 @@
+Title: Docker: Fix GUI redirects (1.6 regression)
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1566312371
+Class: fix
+
+When directly using the GUI of the official Checkmk docker container without a reverse proxy
+in front of it, the redirects of URLs like <tt>http://[address]/cmk</tt> were not working in
+the previous 1.6 releases.
+
+The redirects have now been fixed. In addition we have now added a new redirect from the top
+level URL <tt>http://[address]/</tt> which redirects the user to the GUI.

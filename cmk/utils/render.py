@@ -323,6 +323,30 @@ def calculate_physical_precision(v, precision):
     return scale_symbols[scale], places_after_comma, 1000**scale
 
 
+def drop_dotzero(v, digits=2):
+    """Renders a number as a floating point number and drops useless
+    zeroes at the end of the fraction
+
+    45.1 -> "45.1"
+    45.0 -> "45"
+    """
+    t = "%%.%df" % digits % v
+    if "." in t:
+        return t.rstrip("0").rstrip(".")
+    return t
+
+
+#.
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
 def _frexp10(x):
     return _frexpb(x, 10)
 

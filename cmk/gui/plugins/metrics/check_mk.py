@@ -26,7 +26,6 @@
 
 import cmk.utils.render
 
-import cmk.gui.utils as utils
 from cmk.gui.i18n import _
 
 from cmk.utils.render import scale_factor_prefix
@@ -128,7 +127,7 @@ unit_info["1/s"] = {
     "title": _("per second"),
     "description": _("Frequency (displayed in events/s)"),
     "symbol": _("/s"),
-    "render": lambda v: "%s%s" % (utils.drop_dotzero(v), _("/s")),
+    "render": lambda v: "%s%s" % (cmk.utils.render.drop_dotzero(v), _("/s")),
 }
 
 unit_info["hz"] = {
@@ -207,7 +206,7 @@ unit_info["bytes/d"] = {
 unit_info["c"] = {
     "title": _("Degree Celsius"),
     "symbol": u"°C",
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), u"°C"),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), u"°C"),
 }
 
 unit_info["a"] = {
@@ -243,13 +242,13 @@ unit_info["wh"] = {
 unit_info["dbm"] = {
     "title": _("Decibel-milliwatts"),
     "symbol": _("dBm"),
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBm")),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBm")),
 }
 
 unit_info["dbmv"] = {
     "title": _("Decibel-millivolt"),
     "symbol": _("dBmV"),
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBmV")),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBmV")),
 }
 
 unit_info["db"] = {

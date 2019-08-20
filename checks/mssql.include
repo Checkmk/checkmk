@@ -117,10 +117,12 @@ def parse_mssql_datafiles(info):
         if len(line) == 8:
             inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = line
             unlimited = unlimited == '1'
-        else:
+        elif len(line) == 6:
             database, file_name, _physical_name, max_size, allocated_size, used_size = line
             inst = None
             unlimited = False
+        else:
+            continue
 
         mssql_instance = parsed.setdefault((inst, database, file_name), {"unlimited": unlimited})
         for key, value_str in [

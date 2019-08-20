@@ -462,7 +462,7 @@ class TextAscii(ValueSpec):
             try_max_width=self._try_max_width,
             read_only=self._read_only,
             cssclass=self._cssclass,
-            type=type_,
+            type_=type_,
             attrs=attrs,
             autocomplete="off" if not self._autocomplete else None,
         )

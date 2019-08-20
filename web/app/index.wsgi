@@ -38,7 +38,6 @@ import cmk.gui.i18n
 import cmk.gui.config as config
 import cmk.gui.modules as modules
 import cmk.gui.pages as pages
-import cmk.gui.userdb as userdb
 import cmk.gui.login as login
 import cmk.gui.log as log
 import cmk.gui.htmllib
@@ -114,9 +113,10 @@ class Application(object):
 
         finally:
             try:
-                self._teardown()
+                # TODO: Nuke this and use context managers only for locking!
+                store.release_all_locks()
             except:
-                logger.exception("error cleaning up after WSGI request")
+                logger.exception("error releasing locks after WSGI request")
                 raise
 
     def _render_exception(self, e):
@@ -127,11 +127,6 @@ class Application(object):
             html.header(e.title())
             html.show_error(e)
             html.footer()
-
-    def _teardown(self):
-        """Final steps that are performed after each handled HTTP request"""
-        store.release_all_locks()
-        userdb.finalize()
 
     def _handle_request(self):
         html.init_modes()

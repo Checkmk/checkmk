@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.plugins.metrics.check_mk import metric_number_with_precision
 # If the size_trend function is not provided via size_trend.include raise
 # an exception to provide an error message to the user. If dependencies
 # between include files are possible this will not be necessary anymore.
@@ -409,7 +408,7 @@ def check_inodes(levels, inodes_total, inodes_avail):
         return 0, "", []
 
     inodes_warn, inodes_crit = levels["inodes_levels"]
-    human_readable_func = metric_number_with_precision
+    human_readable_func = get_number_with_precision
 
     # Levels in absolute numbers
     if isinstance(inodes_warn, int):
@@ -436,7 +435,7 @@ def check_inodes(levels, inodes_total, inodes_avail):
         (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
         (show_inodes == "onproblem" and inode_status):
         infotext = ", %s, inodes available: %s/%s" % (infotext,
-                                                      metric_number_with_precision(inodes_avail),
+                                                      get_number_with_precision(inodes_avail),
                                                       get_percent_human_readable(inodes_avail_perc))
     else:
         infotext = ""

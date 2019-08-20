@@ -336,6 +336,12 @@ def drop_dotzero(v, digits=2):
     return t
 
 
+def fmt_number_with_precision(v, *args, **kwargs):
+    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
+    factor, prefix = scale_factor_prefix(v, base=1000.0)
+    return '%.*f %s' % (precision, float(v) / factor, prefix)
+
+
 #.
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |

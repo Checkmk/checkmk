@@ -252,5 +252,6 @@ def activation_sites():
     These sites are shown on activation page and get change entries
     added during WATO changes."""
     return [(site_id, site)
-            for site_id, site in config.user.authorized_sites()
+            for site_id, site in config.user.authorized_sites(
+                unfiltered_sites=config.configured_sites())
             if config.site_is_local(site_id) or site.get("replication")]

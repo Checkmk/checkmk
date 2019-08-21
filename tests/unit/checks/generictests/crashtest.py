@@ -78,9 +78,6 @@ class CrashDataset(WritableDataset):
             full_checkname = self._find_checkname_from_traceback(traceback)
             if not full_checkname:
                 raise SkipReport("found no check plugin from traceback")
-            self.is_discovery = True
-        else:
-            self.is_discovery = False
 
         self.full_checkname = full_checkname
         checkname = self.full_checkname.split('.', 1)[0]
@@ -162,15 +159,6 @@ def test_crashreport(check_manager, crashdata):
     try:
         generictests.run(check_manager, crashdata)
         check = check_manager.get_check(crashdata.full_checkname)
-        #FIXME
-        #if crashdata.is_discovery:
-        #    if crashdata.parsed:
-        #        raw_result = check.run_discovery(crashdata.parsed)
-        #    else:
-        #        raw_result = check.run_discovery(crashdata.info)
-        #    print(DiscoveryResult(raw_result))
-        #    return
-
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']
             params = crashdata.vars.get('params', {})

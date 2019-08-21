@@ -29,7 +29,7 @@ import errno
 import os
 import copy
 import json
-from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 
@@ -68,7 +68,10 @@ if cmk.is_managed_edition():
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
-sites = {}
+SiteId = NewType('SiteId', str)
+SiteConfiguration = NewType('SiteConfiguration', Dict[str, Any])
+SiteConfigurations = NewType('SiteConfigurations', Dict[SiteId, SiteConfiguration])
+
 multisite_users = {}
 admin_users = []
 tags = cmk.utils.tags.TagConfig()
@@ -80,7 +83,7 @@ builtin_role_ids = ["user", "admin", "guest"]
 config_dir = cmk.utils.paths.var_dir + "/web"
 
 # Stores the initial configuration values
-default_config = {}
+default_config = {}  # type: Dict[str, Any]
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -131,7 +134,7 @@ class DT_AGGR_WARN(object):
 # bi.py and also in multisite.mk. "Double" declarations are no problem
 # here since this is a dict (List objects have problems with duplicate
 # definitions).
-aggregation_functions = {}
+aggregation_functions = {}  # type: Dict[str, Callable]
 
 #.
 #   .--Functions-----------------------------------------------------------.
@@ -172,6 +175,7 @@ def _load_config_file(path):
 # plugins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config():
+    # type: () -> None
     global sites
 
     # Set default values for all user-changable configuration settings
@@ -207,6 +211,7 @@ def load_config():
 
 
 def _prepare_tag_config():
+    # type: () -> None
     global tags
 
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
@@ -220,19 +225,21 @@ def _prepare_tag_config():
 
 
 def execute_post_config_load_hooks():
+    # type: () -> None
     for func in _post_config_load_hooks:
         func()
 
 
-_post_config_load_hooks = []
+_post_config_load_hooks = []  # type: List[Callable[[], None]]
 
 
 def register_post_config_load_hook(func):
-    # type: (Callable) -> None
+    # type: (Callable[[], None]) -> None
     _post_config_load_hooks.append(func)
 
 
 def _initialize_with_default_config():
+    # type: () -> None
     vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
@@ -242,6 +249,7 @@ def _initialize_with_default_config():
 
 
 def _apply_default_config():
+    # type: () -> None
     for k, v in default_config.items():
         if isinstance(v, (dict, list)):
             v = copy.deepcopy(v)
@@ -524,10 +532,12 @@ class LoggedInUser(object):
         self.save_file("favorites", list(stars))
 
     def is_site_disabled(self, site_id):
+        # type: (SiteId) -> bool
         siteconf = self.siteconf.get(site_id, {})
         return siteconf.get("disabled", False)
 
     def authorized_sites(self, unfiltered_sites=None):
+        # type: (Optional[List[Tuple[SiteId, SiteConfiguration]]]) -> List[Tuple[SiteId, SiteConfiguration]]
         if unfiltered_sites is None:
             unfiltered_sites = allsites().items()
 
@@ -538,6 +548,7 @@ class LoggedInUser(object):
         return [(site_id, s) for site_id, s in unfiltered_sites if site_id in authorized_sites]
 
     def authorized_login_sites(self):
+        # type: () -> List[Tuple[SiteId, SiteConfiguration]]
         login_site_ids = get_login_slave_sites()
         login_sites = [
             (site_id, s) for site_id, s in allsites().items() if site_id in login_site_ids
@@ -545,6 +556,7 @@ class LoggedInUser(object):
         return self.authorized_sites(login_sites)
 
     def may(self, pname):
+        # type: (str) -> bool
         if pname in self.permissions:
             return self.permissions[pname]
         he_may = _may_with_roles(user.role_ids, pname)
@@ -920,10 +932,12 @@ def extend_user_modified_tag_groups(host_tags):
 
 
 def omd_site():
+    # type: () -> SiteId
     return cmk.omd_site()
 
 
 def url_prefix():
+    # type: () -> str
     return "/%s/" % cmk.omd_site()
 
 
@@ -931,8 +945,9 @@ use_siteicons = False
 
 
 def default_single_site_configuration():
+    # type: () -> Dict[SiteId, SiteConfiguration]
     return {
-        omd_site(): {
+        omd_site(): SiteConfiguration({
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
             'disable_wato': True,
@@ -946,14 +961,15 @@ def default_single_site_configuration():
             'timeout': 5,
             'user_login': True,
             'proxy': None,
-        }
+        })
     }
 
 
-sites = {}
+sites = {}  # type: Dict[SiteId, SiteConfiguration]
 
 
 def sitenames():
+    # () -> List[SiteId]
     return sites.keys()
 
 
@@ -964,12 +980,14 @@ def sitenames():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def allsites():
+    # type: () -> Dict[SiteId, SiteConfiguration]
     return dict([
         (name, site(name)) for name in sitenames() if not site(name).get("disabled", False)
     ])
 
 
 def configured_sites():
+    # type: () -> List[Tuple[SiteId, SiteConfiguration]]
     return [(site_id, site(site_id)) for site_id in sitenames()]
 
 
@@ -987,6 +1005,7 @@ def _has_distributed_wato_file():
 
 
 def get_login_sites():
+    # type: () -> List[SiteId]
     """Returns the WATO slave sites a user may login and the local site"""
     return get_login_slave_sites() + [omd_site()]
 
@@ -994,6 +1013,7 @@ def get_login_sites():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def get_login_slave_sites():
+    # type: () -> List[SiteId]
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites():
@@ -1003,10 +1023,12 @@ def get_login_slave_sites():
 
 
 def wato_slave_sites():
+    # type: () -> List[Tuple[SiteId, SiteConfiguration]]
     return [(site_id, s) for site_id, s in sites.items() if s.get("replication")]
 
 
 def sorted_sites():
+    # type: () -> List[Tuple[SiteId, str]]
     sorted_choices = []
     for site_id, s in user.authorized_sites():
         sorted_choices.append((site_id, s['alias']))
@@ -1014,7 +1036,8 @@ def sorted_sites():
 
 
 def site(site_id):
-    s = dict(sites.get(site_id, {}))
+    # type: (SiteId) -> SiteConfiguration
+    s = SiteConfiguration(dict(sites.get(site_id, {})))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
@@ -1025,11 +1048,13 @@ def site(site_id):
 
 
 def site_is_local(site_id):
+    # type: (SiteId) -> bool
     family_spec, address_spec = site(site_id)["socket"]
     return _is_local_socket_spec(family_spec, address_spec)
 
 
 def _is_local_socket_spec(family_spec, address_spec):
+    # type: (str, Dict[str, Any]) -> bool
     if family_spec == "local":
         return True
 
@@ -1040,6 +1065,7 @@ def _is_local_socket_spec(family_spec, address_spec):
 
 
 def default_site():
+    # type: () -> Optional[SiteId]
     for site_name, _site in sites.items():
         if site_is_local(site_name):
             return site_name
@@ -1047,6 +1073,7 @@ def default_site():
 
 
 def is_single_local_site():
+    # type: () -> bool
     if len(sites) > 1:
         return False
     elif len(sites) == 0:
@@ -1058,18 +1085,22 @@ def is_single_local_site():
 
 
 def site_attribute_default_value():
+    # type: () -> Optional[SiteId]
     def_site = default_site()
     authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
     if def_site and def_site in authorized_site_ids:
         return def_site
+    return None
 
 
 def site_attribute_choices():
+    # () -> List[Tuple[SiteId, str]]
     authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
+    # (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1085,6 +1116,7 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
+    # () -> List[Tuple[SiteId, str]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
 

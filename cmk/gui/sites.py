@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, NewType, Optional, Tuple  # pylint: disable=unused-import
 
 from livestatus import MultiSiteConnection, MKLivestatusQueryError
 from cmk import is_managed_edition
 from cmk.utils.paths import livestatus_unix_socket
 import cmk.gui.config as config
-from cmk.gui.config import LoggedInUser  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration, LoggedInUser  # pylint: disable=unused-import
 from cmk.gui.globals import g, html
 
 #   .--API-----------------------------------------------------------------.
@@ -53,8 +53,12 @@ def live(user=None, force_authuser=None):
     return g.live
 
 
+SiteStatus = NewType('SiteStatus', Dict[str, Any])
+SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
+
+
 def states(user=None, force_authuser=None):
-    # type: (Optional[LoggedInUser], Optional[str]) -> Dict[str, Dict[str, Any]]
+    # type: (Optional[LoggedInUser], Optional[str]) -> SiteStates
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
     return g.site_status
@@ -164,7 +168,7 @@ def _connect_multiple_sites(user):
 
 
 def _get_enabled_and_disabled_sites(user):
-    # type: (LoggedInUser) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]]
+    # type: (LoggedInUser) -> Tuple[Dict[SiteId, SiteConfiguration], Dict[SiteId, SiteConfiguration]]
     enabled_sites, disabled_sites = {}, {}
 
     for site_id, site in user.authorized_sites():
@@ -179,7 +183,7 @@ def _get_enabled_and_disabled_sites(user):
 
 
 def _site_config_for_livestatus(site_id, site):
-    # type: (str, Dict[str, Any]) -> Dict[str, Any]
+    # type: (SiteId, SiteConfiguration) -> SiteConfiguration
     """Prepares a site config specification for the livestatus module
 
     In case the GUI connects to the local livestatus proxy there are several
@@ -187,7 +191,7 @@ def _site_config_for_livestatus(site_id, site):
     a) Tell livestatus not to strip away the cache header
     b) Connect in plain text to the sites local proxy unix socket
     """
-    site = site.copy()
+    site = SiteConfiguration(site.copy())
 
     if site["proxy"] is not None:
         site["cache"] = site["proxy"].get("cache", True)
@@ -202,7 +206,7 @@ def _site_config_for_livestatus(site_id, site):
 
 
 def encode_socket_for_livestatus(site_id, site):
-    # type: (str, Dict[str, Any]) -> str
+    # type: (SiteId, SiteConfiguration) -> str
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
@@ -247,7 +251,7 @@ _STATUS_NAMES = {
 
 
 def _set_initial_site_states(enabled_sites, disabled_sites):
-    # (Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
+    # (Dict[SiteId, SiteConfiguration], Dict[SiteId, SiteConfiguration]) -> None
     for site_id, site in enabled_sites.items():
         g.site_status[site_id] = {"state": "dead", "site": site}
 

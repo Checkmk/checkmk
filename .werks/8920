@@ -1,0 +1,11 @@
+Title: megaraid_ldisks: Show generic message 'Item not found' if state information is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566372875
+
+

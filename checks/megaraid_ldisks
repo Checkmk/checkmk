@@ -79,22 +79,26 @@ def check_megaraid_ldisks(item, _no_params, parsed):
     if item not in parsed:
         return
 
-    raidstate = parsed[item]["state"]
+    data = parsed[item]
+    raidstate = data.get("state")
+    if raidstate is None:
+        return
+
     if raidstate == "Optimal":
         yield 0, "State is %s" % raidstate
     else:
         yield 2, "State is %s" % raidstate
 
-    current_cache = parsed[item].get("current_cache")
-    default_cache = parsed[item].get("default_cache")
+    current_cache = data.get("current_cache")
+    default_cache = data.get("default_cache")
     if default_cache:
         if current_cache == default_cache:
             yield 0, "Cache is %s" % current_cache
         else:
             yield 1, "Cache is %s, expected %s" % (current_cache, default_cache)
 
-    current_write = parsed[item].get("current_write")
-    default_write = parsed[item].get("default_write")
+    current_write = data.get("current_write")
+    default_write = data.get("default_write")
     if default_write:
         if current_write == default_write:
             yield 0, "Write is %s" % current_write

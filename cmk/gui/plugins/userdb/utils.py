@@ -221,3 +221,7 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 user_attribute_registry = UserAttributeRegistry()
+
+
+def get_user_attributes():
+    return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]

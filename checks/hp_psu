@@ -49,10 +49,8 @@ def inventory_hp_psu_temp(parsed):
         yield index, {}
 
 
-def check_hp_psu_temp(item, params, parsed):
-    data = parsed.get(item)
-    if data is None:
-        return
+@get_parsed_item_data
+def check_hp_psu_temp(item, params, data):
     # For some status, the device simply reports 0 as a temperature value.
     temp_unknown_status = ["8"]
     if data["status"] in temp_unknown_status and data["temp"] == 0:

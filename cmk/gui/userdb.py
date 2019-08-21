@@ -26,7 +26,7 @@
 
 # TODO: Rework connection management and multiplexing
 
-from typing import Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 import time
 import os
 import traceback
@@ -184,24 +184,26 @@ def get_connection(connection_id):
 
 # Returns a list of connection specific locked attributes
 def locked_attributes(connection_id):
-    return get_attributes(connection_id, "locked_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.locked_attributes())
 
 
 # Returns a list of connection specific multisite attributes
 def multisite_attributes(connection_id):
-    return get_attributes(connection_id, "multisite_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
 # Returns a list of connection specific non contact attributes
 def non_contact_attributes(connection_id):
-    return get_attributes(connection_id, "non_contact_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
-def get_attributes(connection_id, what):
+def _get_attributes(connection_id, selector):
+    # type: (str, Callable[[UserConnector], List[str]]) -> List[str]
     connection = get_connection(connection_id)
-    if connection:
-        return getattr(connection, what)()
-    return []
+    return selector(connection) if connection else []
 
 
 def new_user_template(connection_id):

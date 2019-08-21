@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-from typing import Optional  # pylint: disable=unused-import
+from typing import List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 
@@ -117,12 +117,15 @@ class UserConnector(object):
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in WATO.
     def locked_attributes(self):
+        # type: () -> List[str]
         return []
 
     def multisite_attributes(self):
+        # type: () -> List[str]
         return []
 
     def non_contact_attributes(self):
+        # type: () -> List[str]
         return []
 
 

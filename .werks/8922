@@ -1,0 +1,10 @@
+Title: veeam_tapejobs: Fixed crash because of missing columns
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566377115
+Class: fix
+
+Please update the related agent plugin {{veeam_backup_status.ps1}}.

@@ -89,7 +89,8 @@ class WritableDataset(object):
             return
 
         dataset_filepath = os.path.expanduser(
-            '~/git/check_mk/tests/unit/checks/generictests/datasets/%s' % self.filename.split("/")[-1])
+            '~/git/check_mk/tests/unit/checks/generictests/datasets/%s' %
+            self.filename.split("/")[-1])
         with open(dataset_filepath, 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)

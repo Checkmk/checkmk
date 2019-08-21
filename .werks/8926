@@ -1,0 +1,11 @@
+Title: dell_idrac_info: Fixed crash if BIOS date cannot be converted or is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566381975
+
+

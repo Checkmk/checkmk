@@ -111,10 +111,18 @@ for opt, arg in opts:
 def connection():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    if opt_key == None:
-        client.connect(opt_host, username=opt_user, password=opt_pass, timeout=opt_timeout)
+    if opt_key is None:
+        client.connect(opt_host,
+                       username=opt_user,
+                       password=opt_pass,
+                       port=opt_port,
+                       timeout=opt_timeout)
     else:
-        client.connect(opt_host, username=opt_user, pkey=opt_key, timeout=opt_timeout)
+        client.connect(opt_host,
+                       username=opt_user,
+                       pkey=opt_key,
+                       port=opt_port,
+                       timeout=opt_timeout)
     return client
 
 

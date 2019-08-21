@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+#TODO
+# Use 'status-numeric' instead of 'status' field regardless of language.
+# See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
+
 hp_msa_state_map = {
     "Up"          : (0, "up"),
     "OK"          : (0, "OK"),

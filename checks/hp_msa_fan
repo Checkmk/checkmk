@@ -56,6 +56,22 @@
 # fan 2 health-reason
 # fan 2 health-recommendation
 
+hp_msa_state_numeric_map = {
+    "0": (0, "up"),
+    "1": (2, "error"),
+    "2": (1, "off"),
+    "3": (3, "missing"),
+}
+
+hp_msa_health_state_numeric_map = {
+    "0": (0, "OK"),
+    "1": (1, "degraded"),
+    "2": (2, "fault"),
+    "3": (2, "N/A"),
+    "4": (3, "unknown"),
+}
+
+
 def inventory_hp_msa_fan(parsed):
     for item in parsed.keys():
         yield item, None
@@ -65,14 +81,14 @@ def check_hp_msa_fan(item, params, parsed):
     if item in parsed:
         fan_speed = int(parsed[item]["speed"])
         fan_state, fan_state_readable = \
-            hp_msa_state_map[parsed[item]["status"]]
+            hp_msa_state_numeric_map[parsed[item]["status-numeric"]]
         fan_health_state, fan_health_state_readable = \
-            hp_msa_state_map[parsed[item]["health"]]
+            hp_msa_health_state_numeric_map[parsed[item]["health-numeric"]]
         fan_health_reason = parsed[item].get("health-reason", "")
 
         yield fan_state, "Status: %s, speed: %s RPM" % (fan_state_readable, fan_speed)
 
-        if fan_health_state > 0 and fan_health_reason:
+        if fan_health_state and fan_health_reason:
             yield fan_health_state, "health: %s (%s)" % \
                   (fan_health_state_readable, fan_health_reason)
 

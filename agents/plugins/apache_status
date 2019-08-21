@@ -61,8 +61,9 @@ def get_config():
     if not os.path.exists(config_file):
         config_file = config_dir + "/apache_status.cfg"
 
-    # None or tuple of (proto, ipaddress, port, instance_name).
-    #  - proto is 'http' or 'https';
+    # None or tuple of ((proto, cacert), ipaddress, port, instance_name).
+    #  - proto is 'http' or 'https'
+    #  - cacert is a path to a CA certificate, or None
     #  - port may be None
     #  - instance_name may be the empty string
     config = {
@@ -128,11 +129,17 @@ def try_detect_servers(ssl_ports):
     return results
 
 
-def _unpack_server(server):
-    if isinstance(server, tuple):
-        return server + (("",) if len(server) == 3 else ()) + ('server-status',)
-    return (server['protocol'], server['address'], server['port'], server.get("instance", ""),
-            server.get('page', 'server-status'))
+def _unpack(config):
+    if isinstance(config, tuple):
+        if len(config) == 3:
+            # Append empty instance name.
+            config += ("",)
+        if not isinstance(config[0], tuple):
+            # Set cacert option.
+            config = ((config[0], None),) + config[1:]
+        return config + ("server-status",)
+    return ((config['protocol'], config.get('cafile', None)), config['address'], config['port'],
+            config.get("instance", ""), config.get('page', 'server-status'))
 
 
 def get_ssl_no_verify_context():
@@ -143,13 +150,15 @@ def get_ssl_no_verify_context():
     return context
 
 
-def get_response(proto, address, portspec, page):
+def get_response(proto, cafile, address, portspec, page):
     url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
     request = urllib2.Request(url, headers={"Accept": "text/plain"})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
     try:
-        if proto == "https" and is_local:
+        if proto == "https" and cafile:
+            return urllib2.urlopen(request, cafile=cafile)
+        elif proto == "https" and is_local:
             return urllib2.urlopen(request, context=get_ssl_no_verify_context())
         return urllib2.urlopen(request)
     except urllib2.URLError as exc:
@@ -174,11 +183,11 @@ def main():
 
     sys.stdout.write('<<<apache_status:sep(124)>>>\n')
     for server in servers:
-        proto, address, port, name, page = _unpack_server(server)
+        (proto, cafile), address, port, name, page = _unpack(server)
         portspec = ':%d' % port if port else ''
 
         try:
-            response = get_response(proto, address, portspec, page)
+            response = get_response(proto, cafile, address, portspec, page)
             for line in response.read().split('\n'):
                 if not line.strip():
                     continue

@@ -1,0 +1,14 @@
+Title: Fix discovery and activation on temporarily disabled sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566389204
+
+When sites are disabled using the site option "Temporarily disable this connection", this
+should only affect the status GUI and not the configuration. In previous versions the
+setting also affected the "activate changes" and broke the service discovery for remote
+hosts.

@@ -524,7 +524,7 @@ table.data {
     &.sort:hover {
       color: $primary-font-color;
       cursor: pointer;
-      background-color: inherit;
+      background-color: $data-th-sort-hover-bg-color;
     }
 
     /* TODO: Reproduce this html element */
@@ -1733,6 +1733,7 @@ td.job_state {
 
 table.data > tbody > tr > td.job_state {
   &.job_finished {
+    color: $theme-color-table-text;
     background-color: $theme-color-state-success-background;
     box-shadow: none;
   }
@@ -1762,23 +1763,29 @@ table.data.job_details div.log_output > pre {
 }
 
 /* Fixed job columns */
-table.data.job_table > tbody > tr > td {
-  &.job_actions {
-    width: 50px;
+table.data.job_table {
+  td {
+    padding: 0;
   }
 
-  &.job_state {
-    width: 50px;
-  }
+  > tbody > tr > td {
+    &.job_actions {
+      width: 50px;
+    }
+
+    &.job_state {
+      width: 50px;
+    }
 
 
-  &.job_started {
-    width: 160px;
-  }
+    &.job_started {
+      width: 160px;
+    }
 
-  &.job_pid{
-    width: 40px;
-    text-align: right;
+    &.job_pid {
+      width: 40px;
+      text-align: right;
+    }
   }
 }
 

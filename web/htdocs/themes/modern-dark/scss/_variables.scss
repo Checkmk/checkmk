@@ -236,7 +236,6 @@ $filter-inversion-percentage:		    0%;
 
 $color-div-border-color:		    $grey-7;
 
-$success-alert-font-color:		    $primary-font-color;
 $success-alert-bg-color:		    $grey-3;
 $success-alert-border-color:		    $grey-3;
 
@@ -268,7 +267,6 @@ $select2-rendered-color:		    $grey-1;
 
 $td-single-bg-color:			    null;
 $td-single-left-color:			    #a8a8a8;
-
 $wato-tr-bg-color:			    null;
 $wato-a-hover-bg-color:			    mix($white, $grey-6, 10%);
 
@@ -335,3 +333,23 @@ $wato-inherited-color:			    $grey-2;
 
 $hot-bg-color:				    rgb(255, 160, 66);
 $hot-color:				    $black;
+
+$input-hover-bg-color:			    null;
+
+$data-th-sort-hover-bg-color:		    null;
+
+$wato-h3-padding:			    19px 0 0 10px;
+$wato-h2-margin:			    0;
+$wato-h3-margin:			    0;
+$wato-data-th-bg-color:			    $grey-6;
+$wato-data-table-border:		    10px solid $grey-6;
+$wato-data-table-border-bottom:		    none;
+$wato-data-table-last-border-bottom:	    20px solid $grey-6;
+
+$wato-post-contextlinks-border-top:	    19px solid $grey-6;
+
+$wato-info-padding:			    10px 0 20px 10px;
+$wato-td-info-padding:			    10px 0 20px;
+$wato-info-margin:			    0;
+$wato-paragraph-padding:		    10px 0 10px 10px;
+$wato-paragraph-padding-top:		    19px;

@@ -236,7 +236,6 @@ $filter-inversion-percentage:		    100%;
 
 $color-div-border-color:		    $theme-color-black;
 
-$success-alert-font-color:		    $primary-font-color;
 $success-alert-bg-color:		    $theme-color-state-success-background;
 $success-alert-border-color:		    $theme-color-state-success-border;
 
@@ -335,3 +334,23 @@ $wato-inherited-color:			    #444;
 
 $hot-bg-color:				    rgb(255, 160, 66);
 $hot-color:				    null;
+
+$input-hover-bg-color:			    #edeceb;
+
+$data-th-sort-hover-bg-color:		    inherit;
+
+$wato-h3-padding:			    null;
+$wato-h2-margin:			    18px 0 0;
+$wato-h3-margin:			    null;
+$wato-data-th-bg-color:			    transparent;
+$wato-data-table-border:		    null;
+$wato-data-table-border-bottom:		    null;
+$wato-data-table-last-border-bottom:	    null;
+
+$wato-post-contextlinks-border-top:	    null;
+
+$wato-info-padding:			    null;
+$wato-td-info-padding:			    null;
+$wato-info-margin:			    null;
+$wato-paragraph-padding:		    11px 0;
+$wato-paragraph-padding-top:		    null;

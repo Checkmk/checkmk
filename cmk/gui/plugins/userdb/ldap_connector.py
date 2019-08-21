@@ -1977,7 +1977,7 @@ def ldap_attribute_plugins_elements(connection):
     return elements
 
 
-def register_user_attribute_sync_plugins(user_attribute_registry):
+def register_user_attribute_sync_plugins():
     """Register sync plugins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
@@ -1985,12 +1985,11 @@ def register_user_attribute_sync_plugins(user_attribute_registry):
         if not plugin.is_builtin:
             del ldap_attribute_plugin_registry[ident]
 
-    for attr, attribute_class in user_attribute_registry.items():
-        attribute = attribute_class()
-        plugin_class = type("LDAPUserAttributePlugin%s" % attr.title(), (LDAPUserAttributePlugin,), {
-            "ident": attr,
-            "title": attribute.valuespec().title(),
-            "help": attribute.valuespec().help(),
+    for name, attr in get_user_attributes():
+        plugin_class = type("LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
+            "ident": name,
+            "title": attr.valuespec().title(),
+            "help": attr.valuespec().help(),
             'needed_attributes': lambda self, connection, params: [params.get("attr", connection.ldap_attr(self.ident)).lower()],
             'lock_attributes': lambda self, params: [ self.ident ],
             'parameters': lambda self, connection: Dictionary(

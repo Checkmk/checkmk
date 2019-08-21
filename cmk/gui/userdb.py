@@ -822,7 +822,9 @@ def _add_custom_macro_attributes(profiles):
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
-    core_custom_macros = set(k for k, o in get_user_attributes() if o.add_custom_macro())
+    core_custom_macros = set(name  #
+                             for name, attr in get_user_attributes()
+                             if attr.add_custom_macro())
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
@@ -950,6 +952,7 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
 
 # User attributes not to put into contact definitions for Check_MK
 def _non_contact_keys():
+    # type: () -> List[str]
     return [
         "roles",
         "password",
@@ -968,6 +971,7 @@ def _non_contact_keys():
 
 # User attributes to put into multisite configuration
 def _multisite_keys():
+    # type: () -> List[str]
     return [
         "roles",
         "locked",
@@ -979,7 +983,12 @@ def _multisite_keys():
 
 
 def _get_multisite_custom_variable_names():
-    return [k for k, v in get_user_attributes() if v.domain() == "multisite"]
+    # type: () -> List[str]
+    return [
+        name  #
+        for name, attr in get_user_attributes()
+        if attr.domain() == "multisite"
+    ]
 
 
 def _save_auth_serials(updated_profiles):
@@ -1136,13 +1145,11 @@ def update_config_based_user_attributes():
             from_config=True,
         )
 
-    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins(
-        user_attribute_registry)
+    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
 
 
 def _clear_config_based_user_attributes():
-    for attr_class in user_attribute_registry.values():
-        attr = attr_class()
+    for _name, attr in get_user_attributes():
         if attr.from_config():
             del user_attribute_registry[attr.name()]
 

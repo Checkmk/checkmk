@@ -182,7 +182,7 @@ def veritas_vcs_boil_down_states_in_cluster(states):
 
 
 def inventory_veritas_vcs(parsed, item_type):
-    for item_name in parsed[item_type]:
+    for item_name in parsed.get(item_type, {}):
         yield item_name, None
 
 

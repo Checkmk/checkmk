@@ -38,7 +38,7 @@ def check_cmctc_state(_no_item, _no_params, info):
     }
 
     status_code, units = info[0]
-    status = status_map[status_code]
+    status = status_map.get(status_code, 'unknown[%s]' % status_code)
 
     state = 0 if status == 'ok' else 2
     infotext = 'Status: %s, Units connected: %s' % (status, units)

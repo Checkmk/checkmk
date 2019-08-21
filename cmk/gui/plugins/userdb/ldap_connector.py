@@ -58,7 +58,7 @@ import re
 import shutil
 import sys
 import time
-from typing import Union, Dict, List, Text  # pylint: disable=unused-import
+from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore
@@ -1329,6 +1329,7 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
     def locked_attributes(self):
+        # type: () -> List[str]
         locked = {'password'}  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
@@ -1338,7 +1339,8 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes added in this connector which shal be written to
     # the multisites users.mk
     def multisite_attributes(self):
-        attrs = set([])
+        # type: () -> List[str]
+        attrs = set()  # type: Set[str]
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.multisite_attributes)
@@ -1347,7 +1349,8 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
     def non_contact_attributes(self):
-        attrs = set([])
+        # type: () -> List[str]
+        attrs = set()  # type: Set[str]
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.non_contact_attributes)
@@ -2248,10 +2251,12 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 
     @property
     def multisite_attributes(self):
+        # type: () -> List[str]
         return ["ldap_pw_last_changed"]
 
     @property
     def non_contact_attributes(self):
+        # type: () -> List[str]
         return ["ldap_pw_last_changed"]
 
     def needed_attributes(self, connection, params):

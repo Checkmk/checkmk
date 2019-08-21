@@ -127,12 +127,6 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
-    def ident(self):
-        # type: () -> Tuple[Text, Text]
-        """The identitfy of the crash report
-        This makes Check_MK keep one report for each host/service"""
-        return (self.crash_info["details"]["host"], self.crash_info["details"]["description"])
-
     def _serialize_attributes(self):
         # type: () -> dict
         """Serialize object type specific attributes for transport"""

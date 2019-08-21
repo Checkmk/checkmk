@@ -37,6 +37,7 @@ import time
 import traceback
 import subprocess
 import json
+import uuid
 import urllib
 from typing import (Type, Any, Tuple, Dict, Text, Optional)  # pylint: disable=unused-import
 
@@ -159,13 +160,8 @@ class ABCCrashReport(six.with_metaclass(abc.ABCMeta, object)):
 
     def ident(self):
         # type: () -> Tuple[Text, ...]
-        """Return the identity in form of a tuple of a single crash report.
-
-        With this default ident method a single crash per type will be kept by
-        Checkmk at a time. In case sub classes want a different behavior, this
-        needs to be overridden. For example checks use the host name + service
-        description to keep one crash per service."""
-        return (self.type(),)
+        """Return the identity in form of a tuple of a single crash report"""
+        return (self.crash_info["id"],)
 
     def ident_to_text(self):
         # type: () -> Text
@@ -218,6 +214,7 @@ def _get_generic_crash_info(type_name, details):
         exc_txt = str(exc_value).decode("utf-8")
 
     return {
+        "id": str(uuid.uuid1()),
         "crash_type": type_name,
         "time": time.time(),
         "os": _get_os_info(),

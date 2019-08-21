@@ -29,9 +29,9 @@ Hosts/Services (Webservice)}} and replace it with a URL variable which
 can be used to filter each page individually. The new URL variable
 <tt>force_authuser</tt> can be used on any view and set to:
 
-LI:L<tt>1<tt> to show only the hosts/services the user is a contact for
-LI:L<tt>0<tt> to show all hosts/services
-LI:L<tt>[username]<tt> to show all hosts/services the given user is a contact for
+LI:<tt>1</tt> to show only the hosts/services the user is a contact for
+LI:<tt>0</tt> to show all hosts/services
+LI:<tt>[username]</tt> to show all hosts/services the given user is a contact for
 
 The now deprecated option will still be working as before but you are
 recommended to uncheck the option and use the new mechanism. If you are

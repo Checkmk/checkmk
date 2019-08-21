@@ -225,7 +225,6 @@ input.button.hot {
 }
 
 /* on/off toggle button */
-// TODO: Figure out this weird nesting. Why is there a body tag inside a .toggle_switch?
 .toggle_switch {
   width: 56px;
   height: 22px;
@@ -1138,6 +1137,7 @@ div.graph {
   border-radius: $theme-border-radius;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 
+
   &.preview {
     padding: 4px !important;
   }
@@ -1154,6 +1154,14 @@ div.graph {
 
   div.time {
     color: $graph-time-color;
+  }
+
+  &.brokengraph {
+    box-shadow: none;
+
+    div.title {
+      padding: 8px;
+    }
   }
 }
 

@@ -326,7 +326,7 @@ div.togglebutton {
   white-space: nowrap;
   vertical-align: middle;
   border: none;
-  border-radius: $theme-border-radius;
+  border-radius: $primary-border-radius;
   box-sizing: border-box;
 
   a,
@@ -351,7 +351,7 @@ div.togglebutton {
     cursor: pointer;
     background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
-    border-radius: 5px;
+    border-radius: $primary-border-radius;
     box-shadow: none;
     box-sizing: border-box;
   }
@@ -483,7 +483,7 @@ div.togglebutton {
   padding: 0 10px 20px;
   background: $data-container-bg-color;
   border: $data-container-border;
-  border-radius: $theme-border-radius;
+  border-radius: $primary-border-radius;
 }
 
 table.data {
@@ -500,7 +500,7 @@ table.data {
   }
 
   th {
-    padding: 0 8px;
+    padding: 0 8px 2px;
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: $theme-letter-spacing-table;
@@ -1106,7 +1106,7 @@ table.nform {
   background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   border-spacing: 7px 5px;
-  border-radius: $theme-border-radius;
+  border-radius: $primary-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
 
@@ -1817,7 +1817,7 @@ table.data.job_table {
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
       margin: $tag-margin;
-      color: #fff;
+      color: $tag-font-color;
     }
 
     x {
@@ -1854,7 +1854,7 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      background: #00a8b5;
+      background: $tag-bg-color;
       box-shadow: none;
       animation: none;
     }

@@ -355,7 +355,7 @@ table.nform table.valuespec_listof {
         padding: 16px 0 0 16px;
         font-size: $theme-font-size-global;
         letter-spacing: $theme-letter-spacing-table;
-        color: $theme-color-table-text;
+        color: $secondary-font-color;
         text-transform: uppercase;
       }
 
@@ -1342,10 +1342,10 @@ td.sla_spec table table,
 td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
 table.data tr.notification_context table {
-   border-collapse: collapse;
-   border: 0.5px solid $theme-color-table-border;
-   box-shadow: 0.5px 0.5px 1px #ccc;
-   margin-top: 3px;
+  margin-top: 3px;
+  border: 0.5px solid $theme-color-table-border;
+  border-collapse: collapse;
+  box-shadow: $primary-box-shadow;
 }
 
 table.data tr.ac_test_details td {
@@ -1371,15 +1371,19 @@ table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 table.data tr.notification_context table th,
 td.rule_conditions table td {
-    border: 1px solid $theme-color-table-border;
-    padding: 1px 5px;
-    height: 14px;
+  height: 14px;
+  padding: 1px 5px;
+  border: 1px solid $theme-color-table-border;
+}
+
+table.data tr.ac_test_details table td {
+  padding: $ac-test-details-td-padding;
 }
 
 td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th {
-    text-align: left;
+  text-align: left;
 }
 
 td.sla_spec table td,
@@ -1387,22 +1391,22 @@ td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-    background-color: #fff;
+  background-color: $primary-bg-color;
 }
 
 td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
-    background-color: $theme-color-table-background;
+  background-color: $theme-color-table-background;
 }
 
 table.agents tbody > tr.data > td {
-    vertical-align: top;
-    line-height: 20px;
+  line-height: 20px;
+  vertical-align: top;
 
   &.agent_config {
-      vertical-align: middle;
-      line-height: normal;
+    line-height: normal;
+    vertical-align: middle;
   }
 }

@@ -31,7 +31,6 @@ def test_sync_plugins(load_config):
         'groups_to_roles',
         'disable_notifications',
         'force_authuser',
-        'force_authuser_webservice',
         'pager',
         'start_url',
         'ui_theme',

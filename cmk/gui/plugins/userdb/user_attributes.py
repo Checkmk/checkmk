@@ -66,30 +66,6 @@ class ForceAuthUserUserAttribute(UserAttribute):
         return "general.see_all"
 
 
-# TODO: Remove this with 1.5.0/1.6.0
-@user_attribute_registry.register
-class ForceAuthUserWebserviceUserAttribute(UserAttribute):
-    @classmethod
-    def name(cls):
-        return "force_authuser_webservice"
-
-    def topic(self):
-        return "personal"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Hosts/Service visibility (Webservice, Deprecated)"),
-            label=_("Export only hosts and services the user is a contact for. "
-                    "<b>Please don't use this option anymore, it is deprecated.</b>"),
-            help=_("When this option is checked, then the Multisite webservice "
-                   "will only export hosts and services that the user is a contact for - "
-                   "even if he has the permission for seeing all objects."),
-        )
-
-    def permission(self):
-        return "general.see_all"
-
-
 @user_attribute_registry.register
 class DisableNotificationsUserAttribute(UserAttribute):
     @classmethod

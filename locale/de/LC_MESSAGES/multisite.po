@@ -15087,14 +15087,6 @@ msgstr ""
 "Zu erzeugende Export-Datei, <tt>&lt;HOST&gt;</tt> steht dabei für den "
 "Hostnamen"
 
-msgid ""
-"Export only hosts and services the user is a contact for. <b>Please don't use "
-"this option anymore, it is deprecated.</b>"
-msgstr ""
-"Nur Hosts/Services zeigen, für die Benutzer Kontakt ist. <b>Bitte nutzen Sie "
-"diese Option nicht mehr, da diese veraltet ist und in kommenden Versionen "
-"entfernt wird.</b>"
-
 msgid "Express Servicecode"
 msgstr "Express-Servicecode"
 
@@ -18869,9 +18861,6 @@ msgid ""
 msgstr ""
 "Hosts, Services, Gruppen, Zeitperioden, Business Intelligence und Monitoring-"
 "Einstellungen"
-
-msgid "Hosts/Service visibility (Webservice, Deprecated)"
-msgstr "Sichtbarkeit von Hosts/Services (Webservice, Veraltet)"
 
 #, python-format
 msgid "Hosts: %d created, %d modified, %d deleted"
@@ -49881,15 +49870,6 @@ msgstr ""
 "Alarmierungseinstellungen und -regeln außer Kraft! Außerdem können Sie ein "
 "Zeitfenster konfigurieren, in dem garantiert keine Benachrichtigungen erzeugt "
 "werden sollen."
-
-msgid ""
-"When this option is checked, then the Multisite webservice will only export "
-"hosts and services that the user is a contact for - even if he has the "
-"permission for seeing all objects."
-msgstr ""
-"Mit dieser Option legen Sie fest, dass Multisite nur Hosts und Services "
-"exportiert, für die der Benutzer als Kontakt eingetragen ist - auch wenn der "
-"Benutzer berechtigt ist alle Objekte zu sehen."
 
 msgid ""
 "When this option is checked, then the status GUI will only display hosts and "

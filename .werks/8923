@@ -1,0 +1,11 @@
+Title: lxc_container_cpu: Do not crash if USER and SYSTEM values are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566377510
+
+

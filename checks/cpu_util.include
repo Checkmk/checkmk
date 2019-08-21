@@ -261,7 +261,11 @@ def check_cpu_util_linux_container(_no_item, params, info):
 
     this_time = time.time()
     node_delta = get_rate("node_total", this_time, ticks["total"])
-    container_delta = get_rate("container", this_time, ticks["user"] + ticks["system"])
+    user = ticks.get("user")
+    system = ticks.get("system")
+    container_delta = None
+    if user is not None and system is not None:
+        container_delta = get_rate("container", this_time, user + system)
 
     if not node_delta or not container_delta:
         raise MKCounterWrapped("Too short time difference since last check")

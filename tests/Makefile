@@ -79,6 +79,9 @@ test-gui-crawl: $(VENV) $(NODE_MODULES)
 test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
 
+test-composition: $(VENV) $(NODE_MODULES)
+	$(PYTEST) -T composition $(realpath composition)
+
 test-packaging: $(VENV)
 	$(PYTEST) -T packaging packaging
 

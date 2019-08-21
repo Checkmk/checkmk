@@ -33,11 +33,10 @@ def inventory_cmctc_state(info):
 
 
 def check_cmctc_state(_no_item, _no_params, info):
-    # RITTAL-CMC-TC-MIB, cmcTcStatusDeviceCMCy: all possible values mapped
     status_map = {'1': 'failed', '2': 'ok'}
 
     status_code, units = info[0]
-    status = status_map[status_code]
+    status = status_map.get(status_code, 'unknown[%s]' % status_code)
 
     state = 0 if status == 'ok' else 2
     infotext = 'Status: %s, Units connected: %s' % (status, units)
@@ -52,7 +51,7 @@ check_info['cmctc_state'] = {
     "snmp_info": (
         ".1.3.6.1.4.1.2606.4.2",
         [  # RITTAL-CMC-TC-MIB
-            "1",  # cmcTcStatusDeviceCMCy
+            "1",  # cmcTcStatusDeviceCMC
             "2",  # cmcTcUnitsConnected
         ]),
     "includes": ["cmctc.include"],

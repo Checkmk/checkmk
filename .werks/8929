@@ -1,0 +1,11 @@
+Title: cisco_fan: Fixed crash if device status is unknown
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566383779
+
+

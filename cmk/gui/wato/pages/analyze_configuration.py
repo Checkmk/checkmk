@@ -51,7 +51,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 
-from cmk.gui.watolib.changes import activation_site_ids
+from cmk.gui.watolib.changes import activation_sites
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
     ACTestCategories,
@@ -99,7 +99,7 @@ class ModeAnalyzeConfig(WatoMode):
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
-            if site_id not in activation_site_ids():
+            if site_id not in activation_sites():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
         if html.request.var("_do") == "ack":
@@ -118,7 +118,7 @@ class ModeAnalyzeConfig(WatoMode):
             raise NotImplementedError()
 
     def page(self):
-        if not self._analyze_site_ids():
+        if not self._analyze_sites():
             html.show_info(
                 _("Analyze configuration can only be used with the local site and "
                   "distributed WATO slave sites. You currently have no such site configured."))
@@ -126,7 +126,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         results_by_category = self._perform_tests()
 
-        site_ids = sorted(self._analyze_site_ids())
+        site_ids = sorted(self._analyze_sites())
 
         for category_name, results_by_test in sorted(results_by_category.items(),
                                                      key=lambda x: ACTestCategories.title(x[0])):
@@ -252,16 +252,16 @@ class ModeAnalyzeConfig(WatoMode):
         table.row(class_="hidden")
 
     def _perform_tests(self):
-        test_site_ids = self._analyze_site_ids()
+        test_sites = self._analyze_sites()
 
-        self._logger.debug("Executing tests for %d sites" % len(test_site_ids))
+        self._logger.debug("Executing tests for %d sites" % len(test_sites))
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
         result_queue = multiprocessing.JoinableQueue()
 
         processes = []
-        for site_id in test_site_ids:
+        for site_id in test_sites:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
             process.start()
@@ -314,8 +314,8 @@ class ModeAnalyzeConfig(WatoMode):
 
         return results_by_category
 
-    def _analyze_site_ids(self):
-        return activation_site_ids()
+    def _analyze_sites(self):
+        return activation_sites()
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)

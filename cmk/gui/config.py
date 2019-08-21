@@ -537,23 +537,29 @@ class LoggedInUser(object):
         return siteconf.get("disabled", False)
 
     def authorized_sites(self, unfiltered_sites=None):
-        # type: (Optional[List[Tuple[SiteId, SiteConfiguration]]]) -> List[Tuple[SiteId, SiteConfiguration]]
+        # type: (Optional[SiteConfigurations]) -> SiteConfigurations
         if unfiltered_sites is None:
-            unfiltered_sites = allsites().items()
+            unfiltered_sites = allsites()
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return unfiltered_sites
+            return SiteConfigurations(dict(unfiltered_sites))
 
-        return [(site_id, s) for site_id, s in unfiltered_sites if site_id in authorized_sites]
+        return SiteConfigurations({
+            site_id: s  #
+            for site_id, s in unfiltered_sites.iteritems()
+            if site_id in authorized_sites
+        })
 
     def authorized_login_sites(self):
-        # type: () -> List[Tuple[SiteId, SiteConfiguration]]
+        # type: () -> SiteConfigurations
         login_site_ids = get_login_slave_sites()
-        login_sites = [
-            (site_id, s) for site_id, s in allsites().items() if site_id in login_site_ids
-        ]
-        return self.authorized_sites(login_sites)
+        return self.authorized_sites(
+            SiteConfigurations({
+                site_id: s  #
+                for site_id, s in allsites().items()
+                if site_id in login_site_ids
+            }))
 
     def may(self, pname):
         # type: (str) -> bool
@@ -714,6 +720,7 @@ def save_user_file(name, data, user_id, unlock=False):
 
 
 def migrate_old_site_config(site_config):
+    # type: (SiteConfigurations) -> SiteConfigurations
     if not site_config:
         # Prevent problem when user has deleted all sites from his
         # configuration and sites is {}. We assume a default single site
@@ -945,8 +952,8 @@ use_siteicons = False
 
 
 def default_single_site_configuration():
-    # type: () -> Dict[SiteId, SiteConfiguration]
-    return {
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
         omd_site(): SiteConfiguration({
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
@@ -962,10 +969,10 @@ def default_single_site_configuration():
             'user_login': True,
             'proxy': None,
         })
-    }
+    })
 
 
-sites = {}  # type: Dict[SiteId, SiteConfiguration]
+sites = SiteConfigurations({})
 
 
 def sitenames():
@@ -977,18 +984,18 @@ def sitenames():
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
 # TODO: Rename this!
-# TODO: All site listing functions should return the same data structure, e.g. a list of
-#       pairs (site_id, site)
 def allsites():
-    # type: () -> Dict[SiteId, SiteConfiguration]
-    return dict([
-        (name, site(name)) for name in sitenames() if not site(name).get("disabled", False)
-    ])
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
+        name: site(name)  #
+        for name in sitenames()
+        if not site(name).get("disabled", False)
+    })
 
 
 def configured_sites():
-    # type: () -> List[Tuple[SiteId, SiteConfiguration]]
-    return [(site_id, site(site_id)) for site_id in sitenames()]
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({site_id: site(site_id) for site_id in sitenames()})
 
 
 def has_wato_slave_sites():
@@ -1016,23 +1023,25 @@ def get_login_slave_sites():
     # type: () -> List[SiteId]
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
-    for site_id, site_spec in wato_slave_sites():
+    for site_id, site_spec in wato_slave_sites().iteritems():
         if site_spec.get('user_login', True) and not site_is_local(site_id):
             login_sites.append(site_id)
     return login_sites
 
 
 def wato_slave_sites():
-    # type: () -> List[Tuple[SiteId, SiteConfiguration]]
-    return [(site_id, s) for site_id, s in sites.items() if s.get("replication")]
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
+        site_id: s  #
+        for site_id, s in sites.items()
+        if s.get("replication")
+    })
 
 
 def sorted_sites():
     # type: () -> List[Tuple[SiteId, str]]
-    sorted_choices = []
-    for site_id, s in user.authorized_sites():
-        sorted_choices.append((site_id, s['alias']))
-    return sorted(sorted_choices, key=lambda k: k[1].lower())
+    return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().iteritems()],
+                  key=lambda k: k[1].lower())
 
 
 def site(site_id):
@@ -1087,7 +1096,7 @@ def is_single_local_site():
 def site_attribute_default_value():
     # type: () -> Optional[SiteId]
     def_site = default_site()
-    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
+    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     if def_site and def_site in authorized_site_ids:
         return def_site
     return None
@@ -1095,7 +1104,7 @@ def site_attribute_default_value():
 
 def site_attribute_choices():
     # () -> List[Tuple[SiteId, str]]
-    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
+    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 

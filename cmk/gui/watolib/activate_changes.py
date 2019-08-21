@@ -61,7 +61,6 @@ import cmk.gui.watolib.snapshots
 from cmk.gui.watolib.changes import (
     SiteChanges,
     log_audit,
-    activation_site_ids,
     activation_sites,
 )
 from cmk.gui.plugins.watolib import ConfigDomain
@@ -217,7 +216,7 @@ class ActivateChanges(object):
 
         self._migrate_old_changes()
 
-        for site_id in activation_site_ids():
+        for site_id in activation_sites():
             self._changes_by_site[site_id] = SiteChanges(site_id).load()
 
     # Between 1.4.0i* and 1.4.0b4 the changes were stored in
@@ -273,7 +272,7 @@ class ActivateChanges(object):
 
     def get_changes_estimate(self):
         changes_counter = 0
-        for site_id in activation_site_ids():
+        for site_id in activation_sites():
             changes_counter += len(SiteChanges(site_id).load())
             if changes_counter > 10:
                 return _("10+ changes")
@@ -292,7 +291,7 @@ class ActivateChanges(object):
     # affected sites.
     def dirty_and_active_activation_sites(self):
         dirty = []
-        for site_id, site in activation_sites():
+        for site_id, site in activation_sites().iteritems():
             status = self._get_site_status(site_id, site)[1]
             is_online = self._site_is_online(status)
             is_logged_in = self._site_is_logged_in(site_id, site)
@@ -354,7 +353,7 @@ class ActivateChanges(object):
         return change["user_id"] and change["user_id"] != config.user.id
 
     def _affects_all_sites(self, change):
-        return not set(change["affected_sites"]).symmetric_difference(set(activation_site_ids()))
+        return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
     def update_activation_time(self, site_id, ty, duration):
         repl_status = _load_site_replication_status(site_id, lock=True)
@@ -505,7 +504,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites):
         for site_id in sites:
-            if site_id not in dict(activation_sites()):
+            if site_id not in activation_sites():
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
 
         return sites

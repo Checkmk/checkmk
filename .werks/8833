@@ -1,0 +1,11 @@
+Title: hp_msa_fan: Translate status and health status regardless of language
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566371185
+
+

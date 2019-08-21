@@ -32,12 +32,15 @@
 
 
 def inventory_netapp_api_aggr(parsed):
-    for name in parsed.keys():
-        yield name, {}
+    for name, aggr in parsed.iteritems():
+        if "size-total" in aggr and "size-available" in aggr:
+            yield name, {}
 
 
 @get_parsed_item_data
 def check_netapp_api_aggr(item, params, aggr):
+    if not ("size-total" in aggr and "size-available" in aggr):
+        return
     mega = 1024.0 * 1024.0
     size_total = int(aggr.get("size-total")) / mega
     size_avail = int(aggr.get("size-available")) / mega

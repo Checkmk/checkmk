@@ -112,9 +112,15 @@ def parse_rstcli_disks(rows):
 
 
 def parse_rstcli(info):
-    volumes = {}
+    if info == [['rstcli not found']]:
+        return {}
 
-    for section in parse_rstcli_sections(info):
+    rstcli_sections = parse_rstcli_sections(info)
+    if rstcli_sections is None:
+        return {}
+
+    volumes = {}
+    for section in rstcli_sections:
         if section[0] == "VOLUME INFORMATION":
             volumes = parse_rstcli_volumes(section[1])
         elif section[0].startswith("DISKS IN VOLUME"):

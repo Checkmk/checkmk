@@ -759,7 +759,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _replicates_mkps(self):
         replicates_mkps = False
-        for _site_id, site in config.wato_slave_sites():
+        for site in config.wato_slave_sites().itervalues():
             if site.get("replicate_mkps"):
                 replicates_mkps = True
                 break

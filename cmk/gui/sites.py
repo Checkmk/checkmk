@@ -30,7 +30,7 @@ from livestatus import MultiSiteConnection, MKLivestatusQueryError
 from cmk import is_managed_edition
 from cmk.utils.paths import livestatus_unix_socket
 import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, LoggedInUser  # pylint: disable=unused-import
+from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations, LoggedInUser  # pylint: disable=unused-import
 from cmk.gui.globals import g, html
 
 #   .--API-----------------------------------------------------------------.
@@ -168,10 +168,11 @@ def _connect_multiple_sites(user):
 
 
 def _get_enabled_and_disabled_sites(user):
-    # type: (LoggedInUser) -> Tuple[Dict[SiteId, SiteConfiguration], Dict[SiteId, SiteConfiguration]]
-    enabled_sites, disabled_sites = {}, {}
+    # type: (LoggedInUser) -> Tuple[SiteConfigurations, SiteConfigurations]
+    enabled_sites = SiteConfigurations({})
+    disabled_sites = SiteConfigurations({})
 
-    for site_id, site in user.authorized_sites():
+    for site_id, site in user.authorized_sites().iteritems():
         site = _site_config_for_livestatus(site_id, site)
 
         if user.is_site_disabled(site_id):
@@ -251,7 +252,7 @@ _STATUS_NAMES = {
 
 
 def _set_initial_site_states(enabled_sites, disabled_sites):
-    # (Dict[SiteId, SiteConfiguration], Dict[SiteId, SiteConfiguration]) -> None
+    # (SiteConfigurations, SiteConfigurations) -> None
     for site_id, site in enabled_sites.items():
         g.site_status[site_id] = {"state": "dead", "site": site}
 

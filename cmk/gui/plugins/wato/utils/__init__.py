@@ -32,9 +32,9 @@ import abc
 import json
 import re
 import subprocess
-import time
+import time  # pylint: disable=unused-import
+# NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
-from typing import Callable, Optional, List, Dict  # pylint: disable=unused-import
 
 import six
 
@@ -44,6 +44,7 @@ import cmk.utils.store
 from cmk.gui.globals import g
 import cmk.gui.mkeventd
 import cmk.gui.config as config
+from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
@@ -1119,13 +1120,10 @@ class EventsMode(WatoMode):
                    choices = [
                        ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
                        ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
-
                        ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
                        ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
-
                        ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
                        ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-
                        ( '?r', _("any")         + u" ➤ " + _("UP")),
                        ( '?d', _("any")         + u" ➤ " + _("DOWN")),
                        ( '?u', _("any")         + u" ➤ " + _("UNREACHABLE")),
@@ -1144,27 +1142,21 @@ class EventsMode(WatoMode):
                    choices = [
                        ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
                        ( 'rr', _("OK")      + u" ➤ " + _("OK")),
-
                        ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
                        ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
-
                        ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
                        ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
                        ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
-
                        ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
                        ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
                        ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
-
                        ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
                        ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
                        ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-
                        ( '?r', _("any") + u" ➤ " + _("OK")),
                        ( '?w', _("any") + u" ➤ " + _("WARN")),
                        ( '?c', _("any") + u" ➤ " + _("CRIT")),
                        ( '?u', _("any") + u" ➤ " + _("UNKNOWN")),
-
                    ] + add_choices,
                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,
               )
@@ -1350,10 +1342,10 @@ class EventsMode(WatoMode):
                                  _("Changed position of %s %d") % (what_title, from_pos))
 
 
-def sort_sites(sitelist):
-    # type: (List[typing.Tuple[str, Dict]]) -> List[typing.Tuple[str, Dict]]
+def sort_sites(sites):
+    # type: (SiteConfigurations) -> typing.List[typing.Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sitelist,
+    return sorted(sites.iteritems(),
                   key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
 
 
@@ -2184,7 +2176,7 @@ def get_search_expression():
 
 
 def get_hostnames_from_checkboxes(filterfunc=None):
-    # type: (Optional[Callable]) -> List[str]
+    # type: (typing.Optional[typing.Callable]) -> typing.List[str]
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"

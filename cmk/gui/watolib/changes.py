@@ -29,6 +29,7 @@ import ast
 import errno
 import os
 import time
+from typing import Dict, List  # pylint: disable=unused-import
 
 import pathlib2 as pathlib
 
@@ -37,6 +38,7 @@ import cmk.utils.store as store
 
 import cmk.gui.utils
 import cmk.gui.config as config
+from cmk.gui.config import SiteId, SiteConfiguration  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
@@ -122,7 +124,7 @@ class ActivateChangesWriter(object):
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = activation_site_ids()
+            sites = activation_sites().keys()
 
         change_id = self._new_change_id()
 
@@ -243,15 +245,14 @@ def add_service_change(host, action_name, text, need_sync=False):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
 
-def activation_site_ids():
-    return [s[0] for s in activation_sites()]
-
-
 def activation_sites():
+    # type: () -> Dict[SiteId, SiteConfiguration]
     """Returns the list of sites that are affected by WATO changes
     These sites are shown on activation page and get change entries
     added during WATO changes."""
-    return [(site_id, site)
-            for site_id, site in config.user.authorized_sites(
-                unfiltered_sites=config.configured_sites())
-            if config.site_is_local(site_id) or site.get("replication")]
+    return {
+        site_id: site
+        for site_id, site in config.user.authorized_sites(
+            unfiltered_sites=config.configured_sites()).iteritems()
+        if config.site_is_local(site_id) or site.get("replication")
+    }

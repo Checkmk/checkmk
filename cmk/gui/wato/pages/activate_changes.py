@@ -134,7 +134,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         cmk.gui.watolib.activate_changes.execute_activate_changes(
             [d.ident for d in watolib.ConfigDomain.enabled_domains()])
 
-        for site_id in cmk.gui.watolib.changes.activation_site_ids():
+        for site_id in cmk.gui.watolib.changes.activation_sites():
             self.confirm_site_changes(site_id)
 
         html.header(self.title(),

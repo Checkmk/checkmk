@@ -639,7 +639,7 @@ class ModeDistributedMonitoring(WatoMode):
         return False
 
     def page(self):
-        sites = sort_sites(self._site_mgmt.load_sites().items())
+        sites = sort_sites(self._site_mgmt.load_sites())
 
         html.div("", id_="message_container")
         with table_element(

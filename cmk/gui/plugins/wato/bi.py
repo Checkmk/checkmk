@@ -540,7 +540,7 @@ class ModeBI(WatoMode, BIManagement):
                                 "back")
 
     def _add_change(self, action_name, text):
-        site_ids = [site[0] for site in config.wato_slave_sites()] + [config.omd_site()]
+        site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     # .--------------------------------------------------------------------.

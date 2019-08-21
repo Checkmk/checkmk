@@ -220,7 +220,7 @@ def check_oracle_instance(item, params, info):
                         state, infotext = state_marker(state, infotext, 'noforcelogging',
                                                        force_logging, 'NO')
 
-            perfdata = [['uptime', up_seconds]]
+            perfdata = [('uptime', up_seconds)]
 
             if pdb is True:
                 infotext += ', PDB Size %s' % get_bytes_human_readable(int(ptotal_size))

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 import pytest
 from cmk.notification_plugins.slack import slack_msg
@@ -32,6 +31,34 @@ from cmk.notification_plugins.slack import slack_msg
                 "color": "#EE0000",
                 "title": "Additional Info",
                 "text": "Service Down\nPlease take a look: @John, @Doe",
+                "footer": "Check_MK notification: Wed Sep 19 15:29:14 CEST 2018",
+            },
+        ]
+    }),
+    ({
+        "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+        "MONITORING_HOST": "localhost",
+        "OMD_SITE": "testsite",
+        "HOSTURL": "/view?key=val",
+        "HOSTNAME": "site1",
+        "HOSTSTATE": "DOWN",
+        "HOSTOUTPUT": "Manually set to Down by cmkadmin",
+        "NOTIFICATIONTYPE": "PROBLEM",
+        "HOSTADDRESS": "127.0.0.1",
+        "WHAT": 'HOST',
+        "CONTACTNAME": "John",
+        "LONGDATETIME": "Wed Sep 19 15:29:14 CEST 2018",
+    }, {
+        "attachments": [
+            {
+                "color": "#EE0000",
+                "title": "Host PROBLEM notification",
+                "text": "Host: <https://localhost/testsite/view?key=val|site1> (IP: 127.0.0.1)\nState: DOWN",
+            },
+            {
+                "color": "#EE0000",
+                "title": "Additional Info",
+                "text": "Manually set to Down by cmkadmin\nPlease take a look: @John",
                 "footer": "Check_MK notification: Wed Sep 19 15:29:14 CEST 2018",
             },
         ]

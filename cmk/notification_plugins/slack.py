@@ -32,7 +32,7 @@ from __future__ import unicode_literals
 
 from typing import Dict  # pylint: disable=unused-import
 
-from cmk.notification_plugins.utils import extend_context_with_link_urls
+import cmk.notification_plugins.utils as utils
 
 COLORS = {
     "CRITICAL": "#EE0000",
@@ -49,18 +49,23 @@ def slack_msg(context):
     # type: (Dict) -> Dict
     """Build the message for slack"""
 
-    extend_context_with_link_urls(context, '<{}|{}>')
-
     if context.get('WHAT', None) == "SERVICE":
         color = COLORS.get(context["SERVICESTATE"])
         title = "Service {NOTIFICATIONTYPE} notification".format(**context)
-        text = "Host: {LINKEDHOSTNAME} (IP: {HOSTADDRESS})\nService: {LINKEDSERVICEDESC}\nState: {SERVICESTATE}".format(
+        text = "Host: {host_link} (IP: {HOSTADDRESS})\nService: {service_link}\nState: {SERVICESTATE}".format(
+            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
+                                        context['HOSTNAME']),
+            service_link=utils.format_link('<%s|%s>', utils.service_url_from_context(context),
+                                           context['SERVICEDESC']),
             **context)
         output = context["SERVICEOUTPUT"]
     else:
         color = COLORS.get(context["HOSTSTATE"])
         title = "Host {NOTIFICATIONTYPE} notification".format(**context)
-        text = "Host: {LINKEDHOSTNAME} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(**context)
+        text = "Host: {host_link} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(
+            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
+                                        context['HOSTNAME']),
+            **context)
         output = context["HOSTOUTPUT"]
 
     return {

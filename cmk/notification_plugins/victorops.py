@@ -32,7 +32,7 @@ from __future__ import unicode_literals
 
 from typing import Dict  # pylint: disable=unused-import
 
-from cmk.notification_plugins.utils import extend_context_with_link_urls
+from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context
 
 
 def translate_states(state):
@@ -49,18 +49,18 @@ def victorops_msg(context):
     # type: (Dict) -> Dict
     """Build the message for slack"""
 
-    extend_context_with_link_urls(context, '{0}')
-
     if context.get('WHAT', None) == "SERVICE":
         state = translate_states(context["SERVICESTATE"])
         entity_id = '{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         title = "{SERVICEDESC} on {HOSTNAME}".format(**context)
-        text = "{SERVICEOUTPUT}\n\n{LINKEDSERVICEDESC}".format(**context)
+        text = "{SERVICEOUTPUT}\n\n{service_url}".format(
+            service_url=service_url_from_context(context), **context)
     else:
         state = translate_states(context["HOSTSTATE"])
         entity_id = '{HOSTNAME}:{HOSTADDRESS}'.format(**context).replace(" ", "")
         title = '{HOSTNAME} is {HOSTSTATE}'.format(**context)
-        text = "{HOSTOUTPUT}\n\n{LINKEDHOSTNAME}".format(**context)
+        text = "{HOSTOUTPUT}\n\n{host_url}".format(host_url=host_url_from_context(context),
+                                                   **context)
     hostname = context.get('HOSTNAME')
 
     return {

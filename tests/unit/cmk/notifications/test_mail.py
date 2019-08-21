@@ -109,7 +109,8 @@ def mock_context():
         'SVC_SL': u'',
         'WHAT': u'SERVICE',
         'PARAMETER_FROM': u'check_mk@myinstance.com',
-        'PARAMETER_REPLY_TO': u'reply@myinstance.com'
+        'PARAMETER_REPLY_TO': u'reply@myinstance.com',
+        'PARAMETER_URL_PREFIX_AUTOMATIC': u'http',
     }
 
 
@@ -159,6 +160,11 @@ def test_mail_content_from_context(mocker):
         "LONGSERVICEOUTPUT"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;(!)\nanother line\\nlast line'
     assert content.context[
         "LONGSERVICEOUTPUT_HTML"] == '&lt;script&gt;console.log("evil");&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
+
+    assert content.context[
+        'LINKEDHOSTNAME'] == '<a href="http://Klappschloss/heute/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dheute%26site%3Dheute">heute</a>'
+    assert content.context[
+        'LINKEDSERVICEDESC'] == '<a href="http://Klappschloss/heute/check_mk/index.py?start_url=view.py%3Fview_name%3Dservice%26host%3Dheute%26service%3DCPU%20utilization%26site%3Dheute">CPU utilization</a>'
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute/CPU utilization OK -> WARN'

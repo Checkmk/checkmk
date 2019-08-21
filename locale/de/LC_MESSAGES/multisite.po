@@ -26881,9 +26881,6 @@ msgstr ""
 "Keine Information zur Erkennung verfügbar. Bitte führen Sie einen "
 "vollständigen Scan durch."
 
-msgid "No entries"
-msgstr "Kein Einträge"
-
 msgid "No entries."
 msgstr "Keine Einträge."
 

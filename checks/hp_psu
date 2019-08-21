@@ -45,16 +45,19 @@ factory_settings["hp_psu_temp_default_levels"] = {
 
 
 def inventory_hp_psu_temp(parsed):
-    for item in parsed:
-        yield item, {}
+    for index in parsed:
+        yield index, {}
 
 
 def check_hp_psu_temp(item, params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        return
     # For some status, the device simply reports 0 as a temperature value.
     temp_unknown_status = ["8"]
-    if parsed[item]["status"] in temp_unknown_status and parsed[item]["temp"] == 0:
+    if data["status"] in temp_unknown_status and data["temp"] == 0:
         return 3, "No temperature data available"
-    return check_temperature(parsed[item]["temp"], params, item)
+    return check_temperature(data["temp"], params, item)
 
 
 check_info['hp_psu.temp'] = {

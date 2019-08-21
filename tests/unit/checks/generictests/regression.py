@@ -84,9 +84,13 @@ class WritableDataset(object):
             k_str = '%s = ' % k
             v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
             content += ['', '', k_str + v_str]
+
         if not content:
             return
-        with open(self.filename, 'w') as f:
+
+        dataset_filepath = os.path.expanduser(
+            '~/git/check_mk/tests/unit/checks/generictests/datasets/%s' % self.filename.split("/")[-1])
+        with open(dataset_filepath, 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
             f.write('\n'.join(content))

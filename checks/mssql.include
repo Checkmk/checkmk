@@ -127,10 +127,12 @@ def check_mssql_datafiles(item, params, info):
         if len(row) == 8:
             inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = row
             unlimited = unlimited == '1'
-        else:
+        elif len(row) == 6:
             database, file_name, _physical_name, max_size, allocated_size, used_size = row
             inst = None
             unlimited = False
+        else:
+            continue
 
         if format_item_mssql_datafiles(inst, database, file_name) == item or \
                 format_item_mssql_datafiles(inst, database, None) == item:

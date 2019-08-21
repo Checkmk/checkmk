@@ -286,11 +286,6 @@ def _livestatus_auth_user(user):
     if force_authuser:
         return force_authuser  # set a different user
 
-    # TODO: Remove this with 1.5.0/1.6.0
-    if html.output_format != 'html' \
-       and user.get_attribute("force_authuser_webservice"):
-        return user.id
-
     if user.get_attribute("force_authuser"):
         return user.id
 

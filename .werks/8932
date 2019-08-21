@@ -1,0 +1,10 @@
+Title: Do not crash if at least one data set of resources, groups, system or cluster is missing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566395412
+Class: fix
+
+

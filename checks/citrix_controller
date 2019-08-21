@@ -207,6 +207,7 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
             "InSupplementalGracePeriod": (1, "in-supplemental grace period"),
             "InEmergencyGracePeriod": (2, "in-emergency grace period"),
             "GracePeriodExpired": (2, "grace period expired"),
+            "Expired": (2, "expired"),
         }),
     }
     # piggy back data might deliver double data
@@ -219,7 +220,7 @@ def check_citrix_controller_licensing(_no_item, _no_params, info):
                 raw_state = line[1]
             except IndexError:
                 continue
-            state, state_readable = states[raw_state]
+            state, state_readable = states.get(raw_state, (3, 'unknown[%s]' % raw_state))
             yield state, "%s: %s" % (title, state_readable)
 
 

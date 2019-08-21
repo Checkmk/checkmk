@@ -190,6 +190,8 @@ $theme-letter-spacing-table:                1px;
 
 $tag-margin:                                0 5px 2px 0;
 $tag-padding:                               .1em .3em;
+$tag-font-color:			    rgb(220, 220, 220);
+$tag-bg-color:				    rgb(85, 85, 85);
 
 
 // -----------------------------------------------------------------------------
@@ -209,6 +211,9 @@ $secondary-link-color:			    $grey-2;
 $primary-border:			    1px solid $grey-7;
 $primary-table-border:			    $primary-border;
 $secondary-table-border:		    1.8px solid $grey-7;
+
+$primary-box-shadow:			    none;
+$primary-border-radius:			    0;
 
 $dashboard-stats-bg-color:		    transparent;
 $dashboard-tr-bg-color:			    $grey-5;
@@ -308,6 +313,7 @@ $graph-legend-th-border-bottom:		    1px solid $grey-1;
 $graph-time-color:			    $grey-1;
 
 $dashlet-stats-border-top-color:	    $grey-6;
+$dashlet-title-border-radius:		    0;
 
 $snapin-border:				    1px solid $grey-7;
 $snapin-border-top:			    null;
@@ -338,18 +344,18 @@ $input-hover-bg-color:			    null;
 
 $data-th-sort-hover-bg-color:		    null;
 
-$wato-h3-padding:			    19px 0 0 10px;
-$wato-h2-margin:			    0;
-$wato-h3-margin:			    0;
+$wato-h3-margin-bottom:			    4px;
 $wato-data-th-bg-color:			    $grey-6;
 $wato-data-table-border:		    10px solid $grey-6;
 $wato-data-table-border-bottom:		    none;
-$wato-data-table-last-border-bottom:	    20px solid $grey-6;
+$wato-data-table-box-shadow:		    0 0 0 1px #212121;
 
 $wato-post-contextlinks-border-top:	    19px solid $grey-6;
 
-$wato-info-padding:			    10px 0 20px 10px;
-$wato-td-info-padding:			    10px 0 20px;
 $wato-info-margin:			    0;
-$wato-paragraph-padding:		    10px 0 10px 10px;
-$wato-paragraph-padding-top:		    19px;
+$wato-info-padding:			    10px 0 10px 10px;
+
+$ac-test-details-td-padding:		    4px 5px;
+
+$notifications-th-bg-color:		    $grey-7;
+$notifications-td-bg-color:		    $grey-6;

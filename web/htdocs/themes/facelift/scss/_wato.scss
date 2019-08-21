@@ -52,17 +52,14 @@ Boston, MA 02110-1301 USA.
 
 .wato table.data {
   border: $wato-data-table-border;
-  border-bottom: $wato-data-table-border-bottom;
-
-  &:last-of-type {
-    border-bottom: $wato-data-table-last-border-bottom;
-  }
+  box-shadow: $wato-data-table-box-shadow;
 
   &.job_table {
-    border-top: none;
+    border: none;
+    box-shadow: none;
   }
 
-  th {
+  &:not(.job_table) th {
     background: $wato-data-th-bg-color;
     border-radius: 0;
 
@@ -102,7 +99,7 @@ Boston, MA 02110-1301 USA.
   /* TODO: Reproduce this html element */
   &.left {
     border-left-style: none;
-    border-radius: 4px 0 0 0;
+    border-radius: 4px 0 0;
   }
 
   /* TODO: Reproduce these .right elements */
@@ -223,6 +220,11 @@ table.validationerror  {
 }
 
 /* bulk actions in host table */
+.wato table.data tr.data td.bulksearch,
+.wato table.data tr.data td.bulkactions {
+  padding-top: 25px;
+}
+
 .wato td.bulkactions {
   text-align: right;
 
@@ -1055,13 +1057,13 @@ table.data tr.notification_context table {
   th {
     padding: 2px 4px;
     color: $theme-color-text;
-    background-color: #f5f5f5;
+    background-color: $notifications-th-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 
   td {
     padding: 2px 4px;
-    background-color: $theme-color-table-background;
+    background-color: $notifications-td-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 }
@@ -1573,23 +1575,18 @@ table.data.analyze_config td.buttons {
 }
 
 .wato h2, .wato h3 {
-  padding: $wato-h3-padding;
-  background-color: $data-container-bg-color;
+  margin-bottom: $wato-h3-margin-bottom;
 
   + div.info {
     padding: $wato-info-padding;
     padding-top: 10px;
     margin-top: 0;
     background-color: $data-container-bg-color;
+    border: $primary-border;
   }
 }
 
-.wato h2 {
-  margin: $wato-h2-margin;
-}
-
 .wato h3 {
-  margin: $wato-h3-margin;
   font-size: $theme-font-table-header;
   font-weight: $theme-font-weight-global;
   letter-spacing: $theme-letter-spacing-table;
@@ -1597,31 +1594,10 @@ table.data.analyze_config td.buttons {
 }
 
 .wato table.data.job_table {
-  td h3 {
-    padding-left: 0;
-  }
-
   td div.info {
-    padding: $wato-td-info-padding;
+    padding: $wato-info-padding;
     margin: $wato-info-margin;
     background-color: $data-container-bg-color;
-  }
-}
-
-.wato .contextlinks {
-  + .bulk_delete_form table.data,
-  + table.data:not(.job_table),
-  + script + table.data {
-    border-top: $wato-post-contextlinks-border-top;
-  }
-
-  + p, + p + p, + h3 + p {
-    padding: $wato-paragraph-padding;
-    margin: 0;
-    background-color: $data-container-bg-color;
-  }
-
-  + p:first-of-type {
-    padding-top: $wato-paragraph-padding-top;
+    border: $primary-border;
   }
 }

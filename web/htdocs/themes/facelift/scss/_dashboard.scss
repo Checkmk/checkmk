@@ -58,7 +58,7 @@ div.dashlet {
 
     /* TODO: Reproduce this element within a body.dashlet */
     /* Dashlets with "background" set to True */
-    .dashlet_inner.background {
+    &.background {
       background-color: #cbd6da;
     }
   }
@@ -96,8 +96,8 @@ div.dashlet {
     white-space: nowrap;
     background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
-    border-bottom: none solid;
-    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+    border-radius: $dashlet-title-border-radius;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
 

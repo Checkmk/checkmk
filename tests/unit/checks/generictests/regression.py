@@ -75,7 +75,7 @@ class WritableDataset(object):
         self.mock_host_conf_merged = init_dict.get('mock_host_conf_merged', {})
         self.mock_item_state = init_dict.get('mock_item_state', {})
 
-    def write(self):
+    def write(self, directory):
         content = []
         for k in self.writelist:
             v = getattr(self, k)
@@ -88,10 +88,7 @@ class WritableDataset(object):
         if not content:
             return
 
-        dataset_filepath = os.path.expanduser(
-            '~/git/check_mk/tests/unit/checks/generictests/datasets/%s' %
-            self.filename.split("/")[-1])
-        with open(dataset_filepath, 'w') as f:
+        with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
             f.write('\n'.join(content))
@@ -116,5 +113,6 @@ def test_main(check_manager, datasetfile):
 
     generictests.run(check_manager, regression, write=True)
 
-    regression.write()
+    directory = os.path.expanduser('~/git/check_mk/tests/unit/checks/generictests/datasets')
+    regression.write(directory)
     return

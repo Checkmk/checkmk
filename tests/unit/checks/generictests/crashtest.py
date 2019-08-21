@@ -109,8 +109,7 @@ class CrashDataset(WritableDataset):
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
         self.crash_id = crash_report_fn.split("/")[-1].rstrip(".gz").rstrip(".tar")
-        filepath = '/tmp/%s_%s.py' % (checkname, self.crash_id)
-        super(CrashDataset, self).__init__(filepath, init_dict)
+        super(CrashDataset, self).__init__('%s_%s.py' % (checkname, self.crash_id), init_dict)
 
     def _find_checkname_from_traceback(self, traceback):
         for line in traceback[::-1]:
@@ -182,5 +181,5 @@ def test_crashreport(check_manager, crashdata):
             print(CheckResult(raw_result))
     except:
         pprint.pprint(crashdata.__dict__)
-        crashdata.write()
+        crashdata.write('/tmp')
         raise

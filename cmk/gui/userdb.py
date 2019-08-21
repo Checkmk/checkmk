@@ -58,7 +58,10 @@ import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 
 from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
-    user_attribute_registry, user_connector_registry, UserConnector,
+    user_attribute_registry,  #
+    get_user_attributes,  #
+    UserConnector,  #
+    user_connector_registry,
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -604,10 +607,6 @@ def declare_user_attribute(name,
                 permission=permission,
                 from_config=from_config,
             )
-
-
-def get_user_attributes():
-    return [(k, v()) for k, v in user_attribute_registry.items()]
 
 
 def load_users(lock=False):

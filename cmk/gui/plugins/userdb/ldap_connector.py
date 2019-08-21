@@ -92,7 +92,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.plugins.userdb.utils import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb.utils import (
+    UserConnector,
+    user_connector_registry,
+    get_user_attributes,
+)
 
 import cmk.gui.sites as sites
 
@@ -163,7 +167,7 @@ class MKLDAPException(MKGeneralException):
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
-    connection_suffixes = {}
+    connection_suffixes = {}  # type: Dict[str, str]
 
     @classmethod
     def transform_config(cls, cfg):
@@ -357,7 +361,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # pylint: disable=import-error
+        import ad  # type: ignore  # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:
@@ -2474,8 +2478,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
         # First clean all previously set values from attributes to be synced where
         # user is not a member of
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        user_attrs = dict(userdb.get_user_attributes())
+        user_attrs = dict(get_user_attributes())
         for group_spec in params["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] not in groups \
@@ -2531,11 +2534,8 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         )
 
     def _get_user_attribute_choices(self):
-        choices = []
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        for attr, val in userdb.get_user_attributes():
-            choices.append((attr, val.valuespec().title(), val.valuespec()))
-        return choices
+        return [(name, attr.valuespec().title(), attr.valuespec())
+                for name, attr in get_user_attributes()]
 
 
 #.

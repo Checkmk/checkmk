@@ -45,6 +45,13 @@ def float_ignore_uom(value):
     return 0.0
 
 
+def _try_convert_to_float(value):
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
 def _parse_cache(line, now):
     if not line or not line[0].startswith("cached("):
         return 0, line
@@ -87,14 +94,14 @@ def _parse_perfentry(entry):
     levels = [None] * 4
     if len(raw) >= 2:
         warn = raw[1].split(':', 1)
-        levels[0] = float(warn[-1])
+        levels[0] = _try_convert_to_float(warn[-1])
         if len(warn) > 1:
-            levels[2] = float(warn[0])
+            levels[2] = _try_convert_to_float(warn[0])
     if len(raw) >= 3:
         crit = raw[2].split(':', 1)
-        levels[1] = float(crit[-1])
+        levels[1] = _try_convert_to_float(crit[-1])
         if len(crit) > 1:
-            levels[3] = float(crit[0])
+            levels[3] = _try_convert_to_float(crit[0])
 
     # only the critical level can be set, in this case warning will be equal to critical
     if levels[0] is None and levels[1] is not None:

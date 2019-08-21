@@ -1,0 +1,11 @@
+Title: akcp_sensor_humidity: Do not crash if percentual value about humidity is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566367408
+
+

@@ -88,6 +88,9 @@ def check_ups_test(_no_item, params, info):
     warn, crit = params
 
     uptime_info, bat_info = info
+    if not uptime_info or not bat_info:
+        return
+
     ResultsSummary, StartTime, upsTestResultsDetail = bat_info[0]
     uptime = parse_snmp_uptime(uptime_info[0][0])
     start_time = parse_snmp_uptime(StartTime)

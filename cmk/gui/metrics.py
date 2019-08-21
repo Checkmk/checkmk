@@ -47,6 +47,7 @@ import cmk.utils.render
 import cmk.utils.plugin_registry
 from cmk.utils.regex import regex
 
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -434,7 +435,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             if pos > 98:
                 pos = 98
 
-        return [(pos, color), (100 - pos, "#ffffff")]
+        return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
 
 
 @renderer_registry.register
@@ -454,7 +455,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
             total = summed
 
         if total == 0:
-            entry.append((100.0, "#ffffff"))
+            entry.append((100.0, get_themed_perfometer_bg_color()))
 
         else:
             for ex in self._perfometer["segments"]:
@@ -463,7 +464,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
-                entry.append((100.0 * (total - summed) / total, "#ffffff"))
+                entry.append((100.0 * (total - summed) / total, get_themed_perfometer_bg_color()))
 
         return [entry]
 

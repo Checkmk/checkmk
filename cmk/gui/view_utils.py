@@ -179,3 +179,11 @@ def _render_tag_group(tg_id, tag, object_type, with_link, label_type, label_sour
     ] + type_filter_vars,
                                    filename="view.py")
     return html.render_a(span, href=url)
+
+
+# Return the theme specific background color for perfometer rendering
+def get_themed_perfometer_bg_color():
+    if html.get_theme() == "modern-dark":
+        return "#bdbdbd"
+    # else (classic and modern theme)
+    return "#fff"

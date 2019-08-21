@@ -103,7 +103,7 @@ form {
 
 input:hover, select:hover, textarea:hover,
 input[type="checkbox"]:hover + label:before {
-  background-color: #edeceb;
+  background-color: $input-hover-bg-color;
 }
 
 td.checkbox input[type="checkbox"] + label:before {
@@ -312,10 +312,6 @@ input[type="submit"]:focus {
   outline: none;
 }
 
-input:hover, select:hover, textarea:hover {
-  background-color: #edeceb;
-}
-
 /* Images have a native size of 48x48 and are scaled down by the
    browser. That way if you select a zoom level in the browser,
    the quality of the images are better */
@@ -446,7 +442,6 @@ div.really {
 }
 
 div.success {
-  color: $success-alert-font-color;
   background-color: $success-alert-bg-color;
   border: 1px solid $success-alert-border-color;
 }
@@ -471,13 +466,14 @@ div.error {
   }
 }
 
-div.warning {
+.warning,
+body.main div.warning {
   color: #000;
   background-color: $theme-color-main;
   border-color: #fc0;
 
-  a {
-    color: #000;
+  a, a:link {
+    color: $black;
   }
 }
 

@@ -31,14 +31,16 @@
 # aggregation aggr1_n2    size-available 2936561664       size-total 9437184000
 
 def inventory_netapp_api_aggr(parsed):
-    for name in parsed.keys():
-        yield name, {}
+    for name, aggr in parsed.iteritems():
+        if "size-total" in aggr and "size-available" in aggr:
+            yield name, {}
 
 def check_netapp_api_aggr(item, params, parsed):
     aggr = parsed.get(item)
     if not aggr:
         return (3, "Aggregation not found in agent output")
-
+    if not ("size-total" in aggr and "size-available" in aggr):
+        return
     mega = 1024.0 * 1024.0
     size_total = int(aggr.get("size-total")) / mega
     size_avail = int(aggr.get("size-available")) / mega

@@ -1,0 +1,11 @@
+Title: netapp_api_aggr: Do not discover if needed values about available and total size are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566381321
+
+

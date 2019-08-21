@@ -105,7 +105,7 @@ class CrashDataset(WritableDataset):
         init_dict['parsed'] = local_vars.get('parsed')
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
-        self.crash_id = crash_report_fn.split("/")[-1].rstrip(".gz").rstrip(".tar")
+        self.crash_id = crash_report_fn.split("/")[-1].replace(".gz", "").replace(".tar", "")
         super(CrashDataset, self).__init__('%s_%s.py' % (checkname, self.crash_id), init_dict)
 
     def _find_checkname_from_traceback(self, traceback):

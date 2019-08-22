@@ -15,6 +15,6 @@ discovery = {'': [('SUMMARY', 'diskstat_default_levels')]}
 checks = {'': [('SUMMARY',
                 {},
                 [(0,
-                  'read: 0.00 B/s, write: 0.00 B/s',
+                  '0.00 B/s read, 0.00 B/s write',
                   [('read', 0.0, None, None, None, None),
                    ('write', 0.0, None, None, None, None)])])]}

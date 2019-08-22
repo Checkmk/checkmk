@@ -47,25 +47,28 @@ def inventory_enterasys_powersupply(info):
 
 def check_enterasys_powersupply(item, params, info):
     supply_types = {
-        1   : 'ac-dc',
-        2   : 'dc-dc',
-        3   : 'notSupported',
-        4   : 'highOutput',
+        '1': 'ac-dc',
+        '2': 'dc-dc',
+        '3': 'notSupported',
+        '4': 'highOutput',
     }
     redundancy_types = {
-        1   : 'redundant',
-        2   : 'notRedundant',
-        3   : 'notSupported',
+        '1': 'redundant',
+        '2': 'notRedundant',
+        '3': 'notSupported',
     }
 
     for num, state, typ, redun in info:
         if num == item:
-            state, redun, typ = map(int, (state, redun, typ))
-            if state == 4:
-                return 2, 'PSU installed and not operating'
-            if redun not in params['redundancy_ok_states']:
-                return 1, 'PSU %s' % redundancy_types[redun]
-            return 0, 'PSU working and %s (%s)' % (redundancy_types[redun], supply_types[typ])
+            if state == '4':
+                return 2, 'Status: installed and not operating'
+
+            redun_mapped = redundancy_types.get(redun, 'unknown[%s]' % redun)
+            if redun and int(redun) in params['redundancy_ok_states']:
+                return 0, 'Status: working and %s (%s)' % (
+                    redun_mapped, supply_types.get(typ, 'unknown[%s]' % typ))
+            return 1, 'Status: %s' % redun_mapped
+
 
 
 check_info["enterasys_powersupply"] = {

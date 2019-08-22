@@ -1,0 +1,28 @@
+Title: CMC: Fix escaping of "!" in check_command and check_command_expanded arguments
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0b8
+Date: 1566483732
+
+The values of the check_command and check_command_expanded livestatus columns were
+not exactly the same in Microcore as in Nagios:
+
+Microcore:
+
+C+:
+OMD[stable]:~$ lq "GET services\nFilter: description = Events ServiceSystem\nColumns: check_command"
+check_mk_active-mkevents!$HOSTNAME$/$HOSTADDRESS$ '^(?!Service|System).*$'
+C-:
+
+Nagios:
+
+C+:
+OMD[stable]:~$ lq "GET services\nFilter: description = Events ServiceSystem\nColumns: check_command"
+check_mk_active-mkevents!$HOSTNAME$/$HOSTADDRESS$ '^(?\!Service|System).*$'
+C-:
+
+The Microcore has now been changed to work exactly like the Nagios core.

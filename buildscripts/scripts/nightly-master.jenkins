@@ -30,6 +30,12 @@ node: {
                 [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
             ]
         }
+    }, stage('Composition Test for Packages') {
+            build job: "cmk_${FOLDER_ID}/test-composition",
+            parameters: [
+                [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
+                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
+            ]
     }, 'Integration Test for Docker Container': {
         stage('Integration Test for Docker Container') {
             build job: "cmk_${FOLDER_ID}/docker_integration"

@@ -343,6 +343,8 @@ multisite_builtin_views.update({
             'output',
             'service_is_flapping',
             'siteopt',
+            'service_labels',
+            'host_labels',
         ],
         'sorters': [
             ('site', False),
@@ -1938,6 +1940,8 @@ multisite_builtin_views.update({
             'in_downtime',
             'output',
             'service_is_flapping',
+            'service_labels',
+            'host_labels',
         ],
         'sorters': [
             ('site', False),
@@ -2683,6 +2687,7 @@ multisite_builtin_views.update({
             'has_performance_data': {
                 'is_has_performance_data': '1'
             },
+            'service_labels': {},
         },
         'datasource': 'services',
         'description': _('A Matrix of performance data values, grouped by hosts and services'),

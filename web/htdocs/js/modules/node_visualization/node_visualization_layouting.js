@@ -138,7 +138,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.translate_layout()
         this.compute_node_positions()
 
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(1)
         this._mouse_events_overlay.update_data()
     }
 
@@ -210,6 +210,8 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     compute_node_positions_from_list_of_nodes(list_of_nodes) {
+        if (list_of_nodes == undefined)
+            return
         list_of_nodes.forEach(node=>this.compute_node_position(node))
     }
 
@@ -521,9 +523,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
 
     enable_actions() {
         this.layout_manager.show_layout_options()
-
-        // TODO: update_gui instead of update_data
-        this.layout_manager.update_data()
 
         this.content_selection.selectAll(".edit_mode_only").style("display", null)
         this.content_selection
@@ -1239,7 +1238,9 @@ class LayoutApplier{
         })
 
         // Add boxed style indicators
-        this._get_box_styles(nodes_with_style)
+        let grouped_styles = this._get_grouped_styles(nodes_with_style)
+
+        nodes_with_style = grouped_styles.concat(nodes_with_style)
 
         this._update_node_specific_styles(nodes_with_style)
 
@@ -1255,7 +1256,7 @@ class LayoutApplier{
 
     }
 
-    _get_box_styles(nodes_with_style) {
+    _get_grouped_styles(nodes_with_style) {
         // Cycle through the sorted styles and add the box_leaf_nodes hint 
         nodes_with_style.forEach(entry=>{
             let box_leafs = entry.style.options.box_leaf_nodes == true
@@ -1282,12 +1283,15 @@ class LayoutApplier{
         nodes_with_style.forEach(entry=>entry.node.descendants().forEach(d=>delete d.data.box_leaf_nodes))
 
 
+        let grouped_styles = []
+
         // Add styles for box candidates
         box_candidates.forEach(node=>{
             let new_style = this.layout_style_factory.instantiate_style_name("block", node)
             new_style.style_config.options = {}
-            nodes_with_style.push({node: node, style: new_style.style_config})
+            grouped_styles.push({node: node, style: new_style.style_config})
         })
+        return grouped_styles
     }
 
     align_layouts(nodes_with_style) {

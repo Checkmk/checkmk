@@ -186,4 +186,4 @@ def get_themed_perfometer_bg_color():
     if html.get_theme() == "modern-dark":
         return "#bdbdbd"
     # else (classic and modern theme)
-    return "#fff"
+    return "#ffffff"

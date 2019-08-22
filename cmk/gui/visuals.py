@@ -46,6 +46,7 @@ from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     FixedValue,
     IconSelector,
+    Checkbox,
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
@@ -227,6 +228,15 @@ def load(what, builtin_visuals, skip_func=None, lock=False):
 
     # Now scan users subdirs for files "user_*.mk"
     visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
+
+    return _transform_old_visuals(visuals)
+
+
+def _transform_old_visuals(visuals):
+    """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
+    for visual in visuals.values():
+        # 1.6 introduced this setting: Ensure all visuals have it set
+        visual.setdefault("add_context_to_title", True)
 
     return visuals
 
@@ -863,6 +873,12 @@ def page_edit_visual(what,
                  size=50,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('add_context_to_title',
+             Checkbox(
+                 title=_('Add context information to title'),
+                 help=_("Whether or not additional information from the page context "
+                        "(filters) should be added to the title given above."),
+             )),
             ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
@@ -1377,6 +1393,24 @@ def verify_single_contexts(what, visual, link_filters):
 
 
 def visual_title(what, visual):
+    title = _u(visual["title"])
+
+    if visual["add_context_to_title"]:
+        title = _add_context_title(visual, title)
+
+    # Execute title plugin functions which might be added by the user to
+    # the visuals plugins. When such a plugin function returns None, the regular
+    # title of the page is used, otherwise the title returned by the plugin
+    # function is used.
+    for func in title_functions:
+        result = func(what, visual, title)
+        if result is not None:
+            return result
+
+    return title
+
+
+def _add_context_title(visual, title):
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
@@ -1396,7 +1430,6 @@ def visual_title(what, visual):
             if heading:
                 extra_titles.append(heading)
 
-    title = _u(visual["title"])
     if extra_titles:
         title += " " + ", ".join(extra_titles)
 
@@ -1408,15 +1441,6 @@ def visual_title(what, visual):
         heading = get_filter(fn).heading_info()
         if heading:
             title = heading + " - " + title
-
-    # Execute title plugin functions which might be added by the user to
-    # the visuals plugins. When such a plugin function returns None, the regular
-    # title of the page is used, otherwise the title returned by the plugin
-    # function is used.
-    for func in title_functions:
-        result = func(what, visual, title)
-        if result is not None:
-            return result
 
     return title
 

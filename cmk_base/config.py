@@ -206,10 +206,53 @@ def _perform_post_config_loading_actions():
         set_check_variables_for_checks()
 
 
+class SetFolderPathAbstract(object):
+    def __init__(self, the_object):
+        super(SetFolderPathAbstract, self).__init__(the_object)
+        self._current_path = None
+
+    def set_current_path(self, current_path):
+        self._current_path = current_path
+
+    def _set_folder_paths(self, new_hosts):
+        if self._current_path is None:
+            return
+        for hostname in strip_tags(new_hosts):
+            host_paths[hostname] = self._current_path
+
+
+class SetFolderPathList(SetFolderPathAbstract, list):
+    def append(self, item):
+        return super(SetFolderPathList, self).append(item)
+
+    def __iadd__(self, new_hosts):
+        self._set_folder_paths(new_hosts)
+        return super(SetFolderPathList, self).__iadd__(new_hosts)
+
+    # Probably unused
+    def __add__(self, new_hosts):
+        self._set_folder_paths(new_hosts)
+        return SetFolderPathList(super(SetFolderPathList, self).__add__(new_hosts))
+
+
+class SetFolderPathDict(SetFolderPathAbstract, dict):
+    def update(self, new_hosts):
+        self._set_folder_paths(new_hosts.keys())
+        return super(SetFolderPathDict, self).update(new_hosts)
+
+    # Probably unused
+    def __setitem__(self, cluster_name, value):
+        self._set_folder_paths([cluster_name])
+        return super(SetFolderPathDict, self).__setitem__(cluster_name, value)
+
+
 def _load_config(with_conf_d, exclude_parents_mk):
     helper_vars = {
         "FOLDER_PATH": None,
     }
+
+    global all_hosts
+    global clusters
 
     global_dict = globals()
     global_dict.update(helper_vars)
@@ -220,27 +263,37 @@ def _load_config(with_conf_d, exclude_parents_mk):
             continue
 
         try:
-            _hosts_before = set(all_hosts)
-            _clusters_before = set(clusters.keys())
-
             # Make the config path available as a global variable to
             # be used within the configuration file
             if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
-                _file_path = _f[len(cmk.utils.paths.check_mk_config_dir) + 1:]
-                global_dict.update({
-                    "FOLDER_PATH": os.path.dirname(_file_path),
-                })
+                current_path = _f[len(cmk.paths.check_mk_config_dir):]
+                file_path = current_path[1:]
+                folder_path = os.path.dirname(file_path)
             else:
-                global_dict.update({
-                    "FOLDER_PATH": None,
-                })
+                current_path = None
+                file_path = None
+                folder_path = None
+
+            global_dict.update({
+                "FILE_PATH"   : file_path,
+                "FOLDER_PATH" : folder_path,
+            })
+
+            all_hosts.set_current_path(current_path)  # pylint: disable=no-member
+            clusters.set_current_path(current_path)  # pylint: disable=no-member
 
             execfile(_f, global_dict, global_dict)
 
-            _new_hosts = set(all_hosts).difference(_hosts_before)
-            _new_clusters = set(clusters.keys()).difference(_clusters_before)
+            if not isinstance(all_hosts, SetFolderPathList):
+                raise MKGeneralException(
+                    "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
+                )
 
-            set_folder_paths(_new_hosts.union(_new_clusters), _f)
+            if not isinstance(clusters, SetFolderPathDict):
+                raise MKGeneralException(
+                    "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
+                )
+
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
@@ -251,6 +304,11 @@ def _load_config(with_conf_d, exclude_parents_mk):
     # Cleanup global helper vars
     for helper_var in helper_vars:
         del global_dict[helper_var]
+
+    # Revert specialised SetFolderPath classes back to normal, because it improves
+    # the lookup performance and the helper_vars are no longer available anyway..
+    all_hosts = list(all_hosts)
+    clusters = dict(clusters)
 
 
 def _transform_mgmt_config_vars_from_140_to_150():
@@ -309,16 +367,6 @@ def _verify_non_duplicate_hosts():
         # TODO: Raise an exception
         console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
         sys.exit(3)
-
-
-def set_folder_paths(new_hosts, filename):
-    if not filename.startswith(cmk.utils.paths.check_mk_config_dir):
-        return
-
-    path = filename[len(cmk.utils.paths.check_mk_config_dir):]
-
-    for hostname in strip_tags(new_hosts):
-        host_paths[hostname] = path
 
 
 def verify_non_invalid_variables(vars_before_config):

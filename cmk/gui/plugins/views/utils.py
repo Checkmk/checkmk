@@ -1607,6 +1607,8 @@ def _transform_old_views(all_views):
             except KeyError:
                 pass
 
+        visuals.transform_old_visual(view)
+
     return all_views
 
 

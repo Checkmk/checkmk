@@ -229,16 +229,18 @@ def load(what, builtin_visuals, skip_func=None, lock=False):
     # Now scan users subdirs for files "user_*.mk"
     visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
 
-    return _transform_old_visuals(visuals)
-
-
-def _transform_old_visuals(visuals):
-    """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
-    for visual in visuals.values():
-        # 1.6 introduced this setting: Ensure all visuals have it set
-        visual.setdefault("add_context_to_title", True)
-
     return visuals
+
+
+# This is currently not called by load() because some visual type (e.g. view) specific transform
+# needs to be executed in advance. This should be cleaned up.
+def transform_old_visual(visual):
+    """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
+    visual.setdefault('single_infos', [])
+    visual.setdefault('context', {})
+
+    # 1.6 introduced this setting: Ensure all visuals have it set
+    visual.setdefault("add_context_to_title", True)
 
 
 def load_user_visuals(what, builtin_visuals, skip_func, lock):
@@ -1593,13 +1595,6 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
         return False
 
     return True
-
-
-def transform_old_visual(visual):
-    if 'single_infos' not in visual:
-        visual['single_infos'] = []
-
-    visual.setdefault('context', {})
 
 
 #.

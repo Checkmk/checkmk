@@ -131,7 +131,7 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
     ap_sessions = 0
     noise_floor_radios = []
 
-    for radio_number, radio_data in data.get('radios', {}).items():
+    for radio_number, radio_data in sorted(data.get('radios', {}).items()):
         try:
             radio_data_noise_floor = int(radio_data['noise_floor'])
             noise_floor_radios.append(radio_data_noise_floor)

@@ -86,7 +86,8 @@ def check_kemp_loadmaster_services(item, _no_params, parsed):
 
     if item in parsed:
         data = parsed[item]
-        state, state_readable = map_states[data["device_state"]]
+        dev_state = data["device_state"]
+        state, state_readable = map_states.get(dev_state, (3, 'unknown[%s]' % dev_state))
         yield state, "Status: %s" % state_readable
         conns = data.get("conns")
         if conns is not None:

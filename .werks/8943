@@ -1,0 +1,13 @@
+Title: kemp_loadmaster_services: Treat unknown service state as UNKNOWN
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566484238
+
+Some devices may send the status '8' for a service which is
+not described in the B100-MIB. The discovered service will
+be UNKNOWN instead of crashing.

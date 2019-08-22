@@ -24,23 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-cisco_fan_states = ('', 'normal', 'warning', 'critical',
-                        'shutdown', 'notPresent', 'notFunctioning')
+cisco_fan_state_mapping = {
+    '1': (0, 'normal'),
+    '2': (1, 'warning'),
+    '3': (2, 'critical'),
+    '4': (2, 'shutdown'),
+    '5': (3, 'not present'),
+    '6': (2, 'not functioning'),
+}
+
 
 def inventory_cisco_fan(info):
-    return [ (cisco_sensor_item(line[0],line[-1]), None) for line in info if line[1] != '5' ]
+    return [(cisco_sensor_item(line[0], line[-1]), None)
+            for line in info
+            if line[1] in ['1', '2', '3', '4', '6']]
+
 
 def check_cisco_fan(item, params, info):
-    for statustext, state, oid_end in info:
+    for statustext, dev_state, oid_end in info:
         if cisco_sensor_item(statustext, oid_end) == item:
-            state = int(state)
-            if state == 1:
-                return (0, "State is: %s (%d)" % (cisco_fan_states[state], state))
-            elif state == 2:
-                return (1, "State is %s (%d)" % (cisco_fan_states[state], state))
-            else:
-                return (2, "State is %s (%d)" % (cisco_fan_states[state], state))
-    return (3, "item not found in snmp data")
+            state, state_readable = cisco_fan_state_mapping.get(dev_state,
+                                                                (3, 'unknown[%s]' % dev_state))
+            yield state, 'Status: %s' % state_readable
 
 
 check_info["cisco_fan"] = {

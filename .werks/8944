@@ -1,0 +1,11 @@
+Title: cisco_wlc_clients: Fixed crash if lower levels but no upper levels are set
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566484516
+
+

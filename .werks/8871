@@ -1,0 +1,13 @@
+Title: Views/Dashboards: Add option to show filter parts in title or not
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1566458596
+Class: feature
+
+When a view is being filtered, a filter can add some text to the view title,
+which is then displayed on top of the page. It is now configurable per view
+to disable this. You can now define the full title without filter text being
+added.

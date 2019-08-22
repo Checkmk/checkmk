@@ -324,6 +324,14 @@ def do_site_login(site_id, name, password):
         raise MKAutomationException(_("Empty response from web service"))
     else:
         try:
-            return ast.literal_eval(response)
+            eval_response = ast.literal_eval(response)
         except SyntaxError:
             raise MKAutomationException(response)
+        if isinstance(eval_response, dict):
+            if cmk.is_managed_edition() and eval_response["edition_short"] != "cme":
+                raise MKUserError(
+                    None,
+                    _("The Check_MK Managed Services Edition can only "
+                      "be connected with other sites using the CME."))
+            return eval_response["login_secret"]
+        return eval_response

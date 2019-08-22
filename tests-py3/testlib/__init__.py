@@ -96,9 +96,8 @@ def import_module(pathname):
 
     """
     modname = os.path.splitext(os.path.basename(pathname))[0]
-    return importlib.machinery.SourceFileLoader(
-        modname, os.path.join(cmk_path(), pathname)
-    ).load_module()
+    return importlib.machinery.SourceFileLoader(modname, os.path.join(cmk_path(),
+                                                                      pathname)).load_module()
 
 
 def wait_until(condition, timeout=1, interval=0.1):
@@ -147,6 +146,10 @@ def InterProcessLock(filename):
             else:
                 os.close(fd)
                 fd = fd_new
+
+        # Prevent inheritance of the FD+lock to subprocesses
+        prev_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        fcntl.fcntl(fd, fcntl.F_SETFD, prev_flags | fcntl.FD_CLOEXEC)
 
         print("[%0.2f] Have lock: %s" % (time.time(), filename))
         yield
@@ -1881,7 +1884,7 @@ class CMKEventConsole(CMKWebSession):
     def _config(self):
         cfg = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
-        exec(content, {}, cfg)
+        exec (content, {}, cfg)
         return cfg
 
     def _gather_status_port(self):

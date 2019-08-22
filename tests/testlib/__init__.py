@@ -150,6 +150,10 @@ def InterProcessLock(filename):
                 os.close(fd)
                 fd = fd_new
 
+        # Prevent inheritance of the FD+lock to subprocesses
+        prev_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        fcntl.fcntl(fd, fcntl.F_SETFD, prev_flags | fcntl.FD_CLOEXEC)
+
         print("[%0.2f] Have lock: %s" % (time.time(), filename))
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)

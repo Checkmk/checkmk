@@ -94,9 +94,8 @@ def import_module(pathname):
     """
     modpath = os.path.join(cmk_path(), pathname)
     modname = os.path.splitext(os.path.basename(pathname))[0]
-    dirpath = os.path.dirname(modpath)
     with open(modpath) as mod:
-        return imp.load_source(modname, dirpath, mod)
+        return imp.load_source(modname, modpath)
 
 
 def wait_until(condition, timeout=1, interval=0.1):

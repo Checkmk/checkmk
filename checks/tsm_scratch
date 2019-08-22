@@ -31,45 +31,48 @@
 tsm_scratch_default_levels = (5, 7)
 
 
-def inventory_tsm_scratch(info):
-    inventory = []
-
+def parse_tsm_scratch(info):
+    parsed = {}
     for line in info:
         if len(line) != 3:
             continue
-        inst, _tapes, library = line
+
+        inst, tapes, library = line
+        try:
+            num_tapes = int(tapes)
+        except ValueError:
+            continue
+
         if inst != 'default':
             item = "%s / %s" % (inst, library)
         else:
             item = library
-        inventory.append((item, "tsm_scratch_default_levels"))
 
-    return inventory
+        parsed[item] = num_tapes
+    return parsed
 
 
-def check_tsm_scratch(item, params, info):
+def inventory_tsm_scratch(parsed):
+    return [(lib, "tsm_scratch_default_levels") for lib in parsed]
+
+
+def check_tsm_scratch(item, params, parsed):
+    # Conventionally upper or lower levels are of the form
+    #   warn, crit = levels
+    # Be aware of the following levels construction:
     crit, warn = params
-    for inst, tapes, library in info:
-        if inst != 'default':
-            found_item = "%s / %s" % (inst, library)
-        else:
-            found_item = library
 
-        if found_item == item:
-            tapes = saveint(tapes)
-            state = 0
-            if tapes <= crit:
-                state = 2
-            elif tapes <= warn:
-                state = 1
-
-            return state, "Found %d tapes" % tapes, \
-                        [ ("tapes_free", tapes, warn, crit) ]
-
-    return 3, "UNKNOWN - Check no implemented"
+    num_tapes = parsed.get(item)
+    if num_tapes is None:
+        return
+    return check_levels(num_tapes,
+                        "tapes_free", (None, None, warn, crit),
+                        human_readable_func=lambda x: "%d" % x,
+                        infoname="Found tapes")
 
 
 check_info["tsm_scratch"] = {
+    "parse_function": parse_tsm_scratch,
     "inventory_function": inventory_tsm_scratch,
     "check_function": check_tsm_scratch,
     "service_description": "Scratch Pool %s",

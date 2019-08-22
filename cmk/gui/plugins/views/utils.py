@@ -1463,9 +1463,9 @@ def _transform_old_views(all_views):
             view.setdefault("user_sortable", True)
 
         if 'context_type' in view:
-            # This code transforms views from user_views.mk which have been migrated with
-            # daily snapshots from 2014-08 till beginning 2014-10.
-            visuals.transform_old_visual(view)
+            raise MKGeneralException(
+                "Could not transform legacy view definition containing \"context_type\". "
+                "You have to remove it or migrate it by hand")
 
         elif 'single_infos' not in view:
             # This tries to map the datasource and additional settings of the

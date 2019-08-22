@@ -523,6 +523,9 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.pod_container:*.ready": {"title": _("Ready"), "paint": "container_ready"},
     ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _("Restart count")},
     ".software.applications.kubernetes.pod_container:*.container_id": {"title": _("Container ID")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy": {"title": _("Image pull policy")},
     ".software.applications.kubernetes.pod_info.": {
         "title": _("Pod"),
     },

@@ -478,6 +478,11 @@ class DaemonSet(Metadata):
             self.observed_generation = None
             self.updated_number_scheduled = None
 
+        try:
+            self._containers = daemon_set.spec.template.spec.containers
+        except AttributeError:
+            self._containers = []
+
     @property
     def info(self):
         return {
@@ -491,6 +496,15 @@ class DaemonSet(Metadata):
             'number_unavailable': self.number_unavailable,
             'observed_generation': self.observed_generation,
             'updated_number_scheduled': self.updated_number_scheduled,
+        }
+
+    @property
+    def containers(self):
+        return {
+            container.name: {
+                'image': container.image,
+                'image_pull_policy': container.image_pull_policy,
+            } for container in self._containers
         }
 
 
@@ -678,6 +692,9 @@ class DeploymentList(K8sList[Deployment]):
 class DaemonSetList(K8sList[DaemonSet]):
     def info(self):
         return {daemon_set.name: daemon_set.info for daemon_set in self}
+
+    def containers(self):
+        return {daemon_set.name: daemon_set.containers for daemon_set in self}
 
 
 class PodList(K8sList[Pod]):
@@ -1086,6 +1103,7 @@ class ApiData(object):
         g = PiggybackGroup()
         g.join('labels', self.daemon_sets.labels())
         g.join('k8s_daemon_pods', self.daemon_sets.info())
+        g.join('k8s_daemon_pod_containers', self.daemon_sets.containers())
         return '\n'.join(g.output(piggyback_prefix="daemon_set_"))
 
 

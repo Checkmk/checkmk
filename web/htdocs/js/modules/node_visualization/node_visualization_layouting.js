@@ -512,9 +512,11 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     render_togglebutton(selection) {
+        this.togglebutton_selection.style("cursor", "pointer")
         this.togglebutton_selection.append("img")
                         .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
                         .attr("title", "Layout Designer")
+                        .style("opacity", 1)
     }
 
     enable_actions() {
@@ -1144,6 +1146,7 @@ class LayoutApplier{
         })
 
         this.apply_all_layouts()
+        current_style.update_style_indicator()
         this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(current_style)
         this.layout_manager.create_undo_step()
     }

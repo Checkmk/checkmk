@@ -56,11 +56,13 @@ export class Toolbar {
             let togglebutton_selection = null
             if (plugin.has_toggle_button()) {
                 togglebutton_selection = this.plugins_togglebutton_selection.append("div")
-                                                    .classed("togglebutton on up", true)
-                                                        .classed("noselect", true)
-                                                        .classed("box", true)
-                                                        .classed("off", true)
-                                                        .classed("down", true)
+                                                    .classed("togglebutton", true)
+                                                    .classed("noselect", true)
+                                                    .classed("box", true)
+                                                    .classed("on", true)
+                                                    .classed("down", false)
+                                                    .classed("up", true)
+//                                                    .classed("off", true)
                                                     .on("click", ()=>plugin.toggle_active())
             }
 

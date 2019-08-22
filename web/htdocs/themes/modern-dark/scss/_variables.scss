@@ -166,7 +166,7 @@ $theme-color-nuance-11:                     #222f33; // dark grey
 $theme-color-nuance-12:                     #9ee273; // green
 $theme-color-nuance-13:                     #f3f4f6; // light grey
 $theme-color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
-$theme-color-nuance-15:                     #f7c5c5; // light red
+$theme-color-nuance-15:                     rgb(70, 50, 50); // dark red
 $theme-color-nuance-16:                     #fb9f49; // orange
 $theme-color-nuance-17:                     #a1e6f8; // light blue
 
@@ -212,13 +212,14 @@ $primary-border:			    1px solid $grey-7;
 $primary-table-border:			    $primary-border;
 $secondary-table-border:		    1.8px solid $grey-7;
 
+$primary-th-bg-color:			    $grey-7;
+$primary-td-bg-color:			    $grey-6;
+
 $primary-box-shadow:			    none;
 $primary-border-radius:			    0;
 
 $dashboard-stats-bg-color:		    transparent;
-$dashboard-tr-bg-color:			    $grey-5;
 $dashboard-tr-border-bottom:		    2px solid $grey-7;
-$dashboard-tr-even-bg-color:		    $grey-7;
 $dashboard-tr-hover-bg-color:		    lighten($grey-7, 10%);
 $dashboard-tr-even-hover-bg-color:	    lighten($grey-7, 10%);
 
@@ -260,8 +261,8 @@ $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
 $input-button-color:			    $grey-1;
 
-$odd-tr-bg-color:			    $grey-5;
-$even-tr-bg-color:			    $grey-7;
+$odd-tr-bg-color:			    $grey-7;
+$even-tr-bg-color:			    $grey-5;
 
 $tr-data-border-bottom:			    1.8px solid $grey-7;
 
@@ -333,7 +334,8 @@ $td-single-left-text-transform:		    uppercase;
 $td-single-left-border-right:		    null;
 
 $host-diag-success-bg-color:		    rgb(50, 54, 50);
-$host-diag-failed-bg-color:		    rgb(58, 50, 50);
+$host-diag-failed-bg-color:		    $theme-color-nuance-15;
+
 
 $wato-inherited-color:			    $grey-2;
 
@@ -357,5 +359,6 @@ $wato-info-padding:			    10px 0 10px 10px;
 
 $ac-test-details-td-padding:		    4px 5px;
 
-$notifications-th-bg-color:		    $grey-7;
-$notifications-td-bg-color:		    $grey-6;
+$groupheader-first-padding-top:		    0;
+
+$boxlayout-tr-bg-color:			    null;

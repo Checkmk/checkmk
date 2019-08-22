@@ -1,21 +1,21 @@
 # -*- encoding: utf-8
-# pylint: disable=protected-access
-import os
-import sys
+# pylint: disable=protected-access,redefined-outer-name
 import hashlib
-#import pytest
-from testlib import cmk_path  # pylint: disable=import-error
+import pytest  # type: ignore
+from testlib import import_module  # pylint: disable=import-error
 
-sys.path.insert(0, os.path.join(cmk_path(), 'agents', 'plugins'))
 
-import mk_docker  # pylint: disable=import-error,wrong-import-position
+@pytest.fixture(scope="module")
+def mk_docker():
+    return import_module("agents/plugins/mk_docker.py")
+
 
 PLUGIN_CHECKSUMS = {
     '0.1': 'c162e333908cc6f13de56b837aa95c28',
 }
 
 
-def test_docker_plugin_version():
+def test_docker_plugin_version(mk_docker):
     with open(mk_docker.__file__.rstrip('c')) as source:
         md5 = hashlib.md5(source.read()).hexdigest()
     assert md5 == PLUGIN_CHECKSUMS.get(mk_docker.VERSION), """

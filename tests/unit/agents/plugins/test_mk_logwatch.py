@@ -1,34 +1,16 @@
 # -*- encoding: utf-8
-# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access,redefined-outer-name
 from __future__ import print_function
-import imp
 import os
 import re
 import sys
-
-import pytest
-
-from testlib import cmk_path  # pylint: disable=import-error
+import pytest  # type: ignore
+from testlib import import_module
 
 
 @pytest.fixture(scope="module")
-def mk_logwatch(request):
-    """
-    Fixture to inject mk_logwatch as module
-
-    imp.load_source() has the side effect of creating mk_logwatchc, so remove it
-    before and after importing it (just to be safe).
-    """
-    agent_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch'))
-
-    for action in ('setup', 'teardown'):
-        try:
-            os.remove(agent_path + "c")
-        except OSError:
-            pass
-
-        if action == 'setup':
-            yield imp.load_source("mk_logwatch", agent_path)
+def mk_logwatch():
+    return import_module("agents/plugins/mk_logwatch")
 
 
 def test_options_defaults(mk_logwatch):

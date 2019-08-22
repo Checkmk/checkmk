@@ -270,15 +270,12 @@ def _load_config(with_conf_d, exclude_parents_mk):
             # be used within the configuration file
             if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
                 current_path = _f[len(cmk.paths.check_mk_config_dir):]
-                file_path = current_path[1:]
-                folder_path = os.path.dirname(file_path)
+                folder_path = os.path.dirname(current_path[1:])
             else:
                 current_path = None
-                file_path = None
                 folder_path = None
 
             global_dict.update({
-                "FILE_PATH": file_path,
                 "FOLDER_PATH": folder_path,
             })
 

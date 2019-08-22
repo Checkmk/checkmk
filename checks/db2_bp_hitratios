@@ -49,6 +49,8 @@ def parse_db2_bp_hitratios(info):
                 break
 
         if node_names:
+            if header_idx is None:
+                continue
             # DPF mode
             current_node_offset = -1
             current_instance    = None

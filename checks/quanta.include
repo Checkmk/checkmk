@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+Item = collections.namedtuple(
+    'Item',
+    ['index', 'status', 'name', 'value', 'lower_levels', 'upper_levels'],
+)
+
+
+def _fix_missing_level_values(v):
+    # duplicate value if the other value is not existing
+    if v[0] and not v[1]:
+        return (v[0], v[0])
+    if not v[0] and v[1]:
+        return (v[1], v[1])
+
+
+def _validate_levels(warn, crit):
+    # If this value cannot be determined by software, then a value of -99 will be returned
+    if warn == '-99':
+        warn = None
+    else:
+        warn = float(warn)
+    if crit == '-99':
+        crit = None
+    else:
+        crit = float(crit)
+
+    if not warn and not crit:
+        return
+
+    if not warn or not crit:
+        return _fix_missing_level_values((warn, crit))
+
+    return (warn, crit)
+
+
+def _translate_dev_status(status):
+    status_dict = {
+        '1': (1, 'other'),
+        '2': (3, 'unknown'),
+        '3': (0, 'ok'),
+        '4': (1, 'non critical upper'),
+        '5': (2, 'critical upper'),
+        '6': (2, 'non recoverable upper'),
+        '7': (1, 'non critical lower'),
+        '8': (2, 'critical lower'),
+        '9': (2, 'non recoverable lower'),
+        '10': (2, 'faile'),
+    }
+
+    return status_dict.get(status, 'unknown[%s]' % status)
+
+
+def join_levels(upper, lower):
+    # the SNMP device can deliver crit but no warn levels or the other way round
+    if not all(upper):
+        upper = _fix_missing_level_values(upper)
+    if not all(lower):
+        lower = _fix_missing_level_values(lower)
+
+    if any(upper) and any(lower):
+        return upper + lower
+
+
+def parse_quanta_line(line):
+    index, status, name, value, upper_crit, upper_warn, lower_warn, lower_crit = line
+    # device name can be hex value in the snmp walk
+    # auto conversion to string seems to miss 'x01'
+    name = name.replace('\x01', '')
+    item = Item(
+        int(index),
+        _translate_dev_status(status),
+        name,
+        float(value),
+        _validate_levels(lower_warn, lower_crit),
+        _validate_levels(upper_warn, upper_crit),
+    )
+    return item

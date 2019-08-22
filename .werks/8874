@@ -1,0 +1,13 @@
+Title: EC: Fix invalid link to EC views in "Events" services
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566484774
+
+When using "!" in the application pattern of the "Check event state in Event Console", the
+"!" was not handed over correctly to the Event Console view when clicking on the link in
+the action menu of the service.

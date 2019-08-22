@@ -47,7 +47,10 @@
 def parse_aix_diskiod(info):
     converted = []
     for node_info, device, tm_act, kbps, tps, kb_read, kb_written in info:
-        converted.append((node_info, device, int(kb_read) * 1024, int(kb_written) * 1024))
+        try:
+            converted.append((node_info, device, int(kb_read) * 1024, int(kb_written) * 1024))
+        except ValueError:
+            continue
     return converted
 
 

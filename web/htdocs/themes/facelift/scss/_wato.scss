@@ -1057,13 +1057,13 @@ table.data tr.notification_context table {
   th {
     padding: 2px 4px;
     color: $theme-color-text;
-    background-color: $notifications-th-bg-color;
+    background-color: $primary-th-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 
   td {
     padding: 2px 4px;
-    background-color: $notifications-td-bg-color;
+    background-color: $primary-td-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 }

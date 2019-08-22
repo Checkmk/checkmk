@@ -480,7 +480,7 @@ div.togglebutton {
 '-------------------------------------------------------------------------*/
 
 #data_container {
-  padding: 0 10px 20px;
+  padding: 10px;
   background: $data-container-bg-color;
   border: $data-container-border;
   border-radius: $primary-border-radius;
@@ -832,6 +832,7 @@ tr.groupheader {
       &.state {
         width: auto;
         padding: 0 8px;
+	margin-top: 12px;
         font-size: 14px;
         text-transform: uppercase;
         box-shadow: none;
@@ -867,6 +868,16 @@ tr.groupheader {
   body.main .popup_menu & span {
     color: $theme-color-text;
     text-decoration: none;
+  }
+
+  &:first-of-type td.groupheader table.groupheader {
+    &, tbody tr td {
+      padding-top: 0;
+
+      .state {
+	margin-top: 0;
+      }
+    }
   }
 }
 

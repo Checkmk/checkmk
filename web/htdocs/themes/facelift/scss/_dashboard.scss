@@ -246,12 +246,9 @@ body.main.dashlet {
     padding: 0 8px;
 
     tr.data {
-      background-color: $dashboard-tr-bg-color;
       border-bottom: $dashboard-tr-border-bottom;
       transition: .15s ease-in-out;
-      &:nth-child(even) {
-        background:  $dashboard-tr-even-bg-color;
-      }
+
       &:hover {
         background-color: $dashboard-tr-hover-bg-color;
         &:nth-child(even) {

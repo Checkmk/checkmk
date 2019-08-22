@@ -162,16 +162,31 @@ div.floatfilter {
   height: auto;
   margin-right: 5px;
   margin-bottom: 5px;
+  overflow: auto;
   background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
 
   &.single {
-    height: 53px;
+    height: 50px;
   }
 
   &.double {
-    height: 110px;
+    height: 115px;
+
+    &.log_class .content, &.log_state .content {
+      table {
+	border-spacing: 6px 0;
+      }
+
+      .checkbox {
+	margin-bottom: 4px;
+      }
+    }
+
+    &.log_state .content table td {
+      line-height: 20px;
+    }
   }
 
   .legend {
@@ -235,10 +250,6 @@ div.floatfilter {
     border-spacing: 4px 0;
   }
 
-  span.select2-selection {
-    border-color: $select2-border-color;
-  }
-
   &.svchardstate .content, &.svcstate .content {
     .checkbox {
       margin-right: 5px;
@@ -247,6 +258,19 @@ div.floatfilter {
     input[type="checkbox"] + label::before {
       margin: 0 4px 0 0;
     }
+  }
+
+  .select2-container .select2-selection--single {
+    height: 22px;
+  }
+
+  .select2-container--default .select2-selection--single
+  .select2-selection__rendered {
+    line-height: 20px;
+  }
+
+  span.select2-selection {
+    border-color: $select2-border-color;
   }
 
   &.single span.select2 {

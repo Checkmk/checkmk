@@ -251,6 +251,7 @@ $data-container-border:			    null;
 $oddeven-table-bg-color:		    transparent;
 $data-td-bg-color:			    $theme-color-white;
 $data-table-border-collapse:		    null;
+$data-table-border-spacing:		    0 2px;
 $data-table-border-topmost:		    $primary-table-border;
 $data-table-border-top:			    null;
 $data-table-border-bottom:		    $primary-table-border;
@@ -270,6 +271,8 @@ $floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
 
 $select2-border-color:			    $theme-button-border;
 $select2-rendered-color:		    null;
+$select2-selected-bg-color:		    null;
+$select2-highlighted-bg-color:		    null;
 
 $td-single-bg-color:			    $theme-color-white;
 $td-single-left-color:			    null;
@@ -362,3 +365,5 @@ $ac-test-details-td-padding:		    1px 5px;
 $groupheader-first-padding-top:		    null;
 
 $boxlayout-tr-bg-color:			    transparent;
+
+$age-font-color:			    #666;

@@ -1085,6 +1085,7 @@ table.modifydowntimes > tbody > tr {
 }
 
 .select2-container--default {
+
   .select2-results {
     color: #000;
   }
@@ -1093,17 +1094,33 @@ table.modifydowntimes > tbody > tr {
     border-radius: 4px;
 
     .select2-selection__rendered {
-      color: $select2-rendered-color;
       line-height: 23px;
+      color: $select2-rendered-color;
     }
 
     .select2-selection__arrow b {
       margin-top: -4px;
     }
   }
+
+  .select2-dropdown {
+    background-color: $primary-bg-color;
+    border: $primary-border;
+  }
+
+  .select2-results__option {
+    color: $select2-rendered-color;
+    background-color: $primary-bg-color;
+  }
+
+  .select2-results__option[aria-selected=true] {
+    background-color: $select2-selected-bg-color;
+  }
+
+  .select2-results__option--highlighted[aria-selected] {
+    background-color: $select2-highlighted-bg-color;
+  }
 }
-
-
 
 /* TODO: Go through these following styles and move them to specific scss
  *       where needed

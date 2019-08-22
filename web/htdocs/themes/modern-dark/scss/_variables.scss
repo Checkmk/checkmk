@@ -251,6 +251,7 @@ $data-container-border:			    1px solid $grey-7;
 $oddeven-table-bg-color:		    null;
 $data-td-bg-color:			    null;
 $data-table-border-collapse:		    collapse;
+$data-table-border-spacing:		    0;
 $data-table-border-topmost:		    null;
 $data-table-border-top:			    $primary-table-border;
 $data-table-border-bottom:		    $secondary-table-border;
@@ -268,8 +269,10 @@ $tr-data-border-bottom:			    1.8px solid $grey-7;
 
 $floatfilter-bg-color:			    null;
 
-$select2-border-color:			    $grey-4;
+$select2-border-color:			    $grey-7;
 $select2-rendered-color:		    $grey-1;
+$select2-selected-bg-color:		    $grey-5;
+$select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
 $td-single-bg-color:			    null;
 $td-single-left-color:			    #a8a8a8;
@@ -362,3 +365,5 @@ $ac-test-details-td-padding:		    4px 5px;
 $groupheader-first-padding-top:		    0;
 
 $boxlayout-tr-bg-color:			    null;
+
+$age-font-color:			    rgb(150, 150, 150);

@@ -24,20 +24,20 @@ export class ToolbarPluginBase extends Object {
     update_active_state() {
         if (!this.active) {
             if (this.togglebutton_selection) {
-                this.togglebutton_selection.classed("on", false)
-                this.togglebutton_selection.classed("off", true)
-                this.togglebutton_selection.classed("up", false)
-                this.togglebutton_selection.classed("down", true)
+    //            this.togglebutton_selection.classed("on", false)
+    //            this.togglebutton_selection.classed("off", true)
+                this.togglebutton_selection.classed("up", true)
+                this.togglebutton_selection.classed("down", false)
             }
             this.disable_actions()
             this.remove()
         }
         else {
             if (this.togglebutton_selection) {
-                this.togglebutton_selection.classed("on", true)
-                this.togglebutton_selection.classed("off", false)
-                this.togglebutton_selection.classed("up", true)
-                this.togglebutton_selection.classed("down", false)
+     //           this.togglebutton_selection.classed("on", true)
+     //           this.togglebutton_selection.classed("off", false)
+                this.togglebutton_selection.classed("up", false)
+                this.togglebutton_selection.classed("down", true)
             }
             this.enable_actions()
             this.render_content()

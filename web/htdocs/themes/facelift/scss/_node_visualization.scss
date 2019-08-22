@@ -27,7 +27,7 @@ div.node_vis #toolbar div.content {
 
 div.node_vis #togglebuttons {
     position: absolute;
-    top: 12px;
+    top: 9px;
     left: 280px;
 }
 
@@ -194,6 +194,10 @@ div.node_vis .node_element.focus circle{
   stroke-width: 6;
 }
 
+div.node_vis div.togglebutton.down {
+    background-color: #d9d9d9;
+    border-color: #ccc;
+}
 
 div.node_vis .state0 {
     fill: #13d389;

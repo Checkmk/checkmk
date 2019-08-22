@@ -1160,8 +1160,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         options.exit().remove()
         options = options.enter().append("option").merge(options)
 
+        let current_style = "round"
+        this.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            current_style = node_chunk.layout_settings.config.line_config.style
+        })
+
         options.property("value", d=>d)
-               .property("selected", d=>d=="diagonal")
+               .property("selected", d=>d==current_style)
                .text(d=>d)
     }
 

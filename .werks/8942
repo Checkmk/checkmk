@@ -1,0 +1,11 @@
+Title: dell_poweredge_temp: Do not discover if temperature sensor does not contain valid temperature values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566483733
+
+

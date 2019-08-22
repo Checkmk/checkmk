@@ -337,6 +337,8 @@ def inventory_dell_poweredge_temp(info):
 def check_dell_poweredge_temp(item, params, info):
     for chassisIndex, Index, _StateSettings, Status, Reading, LocationName, \
         UpperCritical, UpperNonCritical, LowerNonCritical, LowerCritical in info:
+        if not Reading:
+            continue
         if item == dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
             temp = int(Reading) / 10.0
 

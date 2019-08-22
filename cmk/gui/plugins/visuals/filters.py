@@ -2634,6 +2634,9 @@ class ABCLabelFilter(Filter):
     def _current_value(self):
         return self._valuespec().from_html_vars(self._var_prefix)
 
+    def heading_info(self):
+        return " ".join(":".join(e) for e in sorted(self._current_value().items()))
+
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self._column])]
 

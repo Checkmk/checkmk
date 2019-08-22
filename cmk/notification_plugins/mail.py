@@ -784,7 +784,7 @@ def construct_content(context):
                                                   context["HOSTNAME"])
     context["LINKEDSERVICEDESC"] = utils.format_link('<a href="%s">%s</a>',
                                                      utils.service_url_from_context(context),
-                                                     context["SERVICEDESC"])
+                                                     context.get("SERVICEDESC", ''))
 
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to

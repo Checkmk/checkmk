@@ -248,10 +248,10 @@ def check_lantime_ng_refclock(item, _no_params, info):
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
 
-            field_strength = round(float(status_b) / float(max_status_b) * 100.0)
-            perfdata = [("field_strength", field_strength)]
-
-            yield 0, "Field strength: %d%%" % field_strength, perfdata
+            if max_status_b != "0":
+                field_strength = round(float(status_b) / float(max_status_b) * 100.0)
+                perfdata = [("field_strength", field_strength)]
+                yield 0, "Field strength: %d%%" % field_strength, perfdata
 
             # only used for longwave - pzf refclocks
             if max_status_a != "0":

@@ -1,0 +1,12 @@
+Title: mbg_lantime_ng_refclock: Fixed crash if field strength cannot be calculated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566468963
+Class: fix
+
+If mbgLtNgRefclockMaxStatusB (MBG-SNMP-LTNG-MIB) is zero
+the service crashed with a ZeroDivisionError while calculating
+field strength.

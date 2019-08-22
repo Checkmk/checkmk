@@ -572,17 +572,7 @@ class ModeDistributedMonitoring(WatoMode):
                         _("You need to confirm that you want to "
                           "overwrite the remote site configuration."))
 
-                response = watolib.do_site_login(login_id, name, passwd)
-
-                if isinstance(response, dict):
-                    if cmk.is_managed_edition() and response["edition_short"] != "cme":
-                        raise MKUserError(
-                            None,
-                            _("The Check_MK Managed Services Edition can only "
-                              "be connected with other sites using the CME."))
-                    secret = response["login_secret"]
-                else:
-                    secret = response
+                secret = watolib.do_site_login(login_id, name, passwd)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)

@@ -1,0 +1,13 @@
+Title: Links in the mail plugin were not displayed
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566369881
+
+Instead of links to hosts and services the text '%s'
+was displayed in email notifications if the option
+'URL prefix for links to Check_MK' was used.

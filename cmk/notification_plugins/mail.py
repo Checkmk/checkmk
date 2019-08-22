@@ -779,7 +779,12 @@ def construct_content(context):
     if context.get('PARAMETER_2'):
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
-    utils.extend_context_with_link_urls(context, '<a href="%s">%s</a>')
+    context["LINKEDHOSTNAME"] = utils.format_link('<a href="%s">%s</a>',
+                                                  utils.host_url_from_context(context),
+                                                  context["HOSTNAME"])
+    context["LINKEDSERVICEDESC"] = utils.format_link('<a href="%s">%s</a>',
+                                                     utils.service_url_from_context(context),
+                                                     context["SERVICEDESC"])
 
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to

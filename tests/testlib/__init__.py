@@ -83,7 +83,7 @@ def get_cmk_download_credentials():
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
 
-def import_module(pathname):
+def import_module(request, pathname):
     """Return the module loaded from `pathname`.
 
     `pathname` is a path relative to the top-level directory
@@ -95,9 +95,13 @@ def import_module(pathname):
     """
     modpath = os.path.join(cmk_path(), pathname)
     modname = os.path.splitext(os.path.basename(pathname))[0]
-    dirpath = os.path.dirname(modpath)
-    with open(modpath) as mod:
-        return imp.load_source(modname, dirpath, mod)
+    try:
+        return imp.load_source(modname, modpath)
+    finally:
+        try:
+            os.remove(modpath + "c")
+        except OSError:
+            pass
 
 
 def wait_until(condition, timeout=1, interval=0.1):

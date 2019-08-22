@@ -1,0 +1,12 @@
+Title: ESX: Add type labels for ESX vCenter, servers, VMs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1566453410
+Class: feature
+
+The following labels are discovered automatically for ESX based hosts
+in Checkmk: {{cmk/vsphere_object:vcenter}}, {{cmk/vsphere_object:server}},
+{{cmk/vsphere_object:vm}}.

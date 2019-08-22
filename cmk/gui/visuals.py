@@ -1596,13 +1596,7 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
 
 
 def transform_old_visual(visual):
-    if 'context_type' in visual:
-        if visual['context_type'] in ['host', 'service', 'hostgroup', 'servicegroup']:
-            visual['single_infos'] = [visual['context_type']]
-        else:
-            visual['single_infos'] = []  # drop the context type and assume a "multiple visual"
-        del visual['context_type']
-    elif 'single_infos' not in visual:
+    if 'single_infos' not in visual:
         visual['single_infos'] = []
 
     visual.setdefault('context', {})

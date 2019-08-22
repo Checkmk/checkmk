@@ -3922,6 +3922,7 @@ multisite_builtin_views['docker_nodes'] = {
     'description':
         _('Overall state of all docker nodes, with counts of services in the various states.'),
     'title': _('Docker nodes'),
+    'add_context_to_title': False,
     'topic': _('Docker'),
     'browser_reload': 30,
     'column_headers': 'pergroup',
@@ -4021,6 +4022,7 @@ multisite_builtin_views['docker_containers'] = {
     'description':
         _('Overall state of all docker containers, with counts of services in the various states.'),
     'title': _('Docker containers'),
+    'add_context_to_title': False,
     'topic': _('Docker'),
     'browser_reload': 30,
     'column_headers': 'pergroup',

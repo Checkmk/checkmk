@@ -242,6 +242,7 @@ catalog_titles = {
     "cloud"    : "Cloud Based Environments",
         "azure"       : "Microsoft Azure",
         "aws"         : "Amazon Web Services",
+        "quanta"      : "Quanta Cloud Technology",
     "containerization" : "Containerization",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",

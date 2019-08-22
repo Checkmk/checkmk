@@ -599,8 +599,8 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
     get_style_options() {
         return [{id: "center_force", values: {default: 5, min: -20, max: 100}, option_type:"range",
                  text: "Center force strength", value: this.style_config.options.center_force},
-                {id: "maxdistance", values: {default: 800, min: 10, max: 2000}, option_type:"range",
-                 text: "Max force distance", value: this.style_config.options.maxdistance},
+//                {id: "maxdistance", values: {default: 800, min: 10, max: 2000}, option_type:"range",
+//                 text: "Max force distance", value: this.style_config.options.maxdistance},
                 {id: "force_node", values: {default: -300, min: -1000, max: 50}, option_type:"range",
                  text: "Repulsion force leaf", value: this.style_config.options.force_node},
                 {id: "force_aggregator", values: {default: -300, min: -1000, max: 50}, option_type:"range",

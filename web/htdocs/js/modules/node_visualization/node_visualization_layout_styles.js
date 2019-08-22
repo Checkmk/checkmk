@@ -292,12 +292,13 @@ export class AbstractLayoutStyle {
         return path
     }
 
-    update_style_indicator(indicator_shown) {
+    update_style_indicator(indicator_shown=true) {
         let style_indicator = this.style_root_node.selection.selectAll("circle.style_indicator").data([this])
 
         node_visualization_utils.log("Update style indicator for " + this.type() + " " + this.style_root_node.data.name)
         if (!indicator_shown) {
             style_indicator.remove()
+            return
         }
 
         style_indicator.enter().insert("circle", "#outer_circle").classed("style_indicator", true)

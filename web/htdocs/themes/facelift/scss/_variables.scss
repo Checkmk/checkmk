@@ -212,13 +212,14 @@ $primary-border:			    null;
 $primary-table-border:			    1px solid $theme-color-table-border;
 $secondary-table-border:		    null;
 
+$primary-th-bg-color:			    #f5f5f5;
+$primary-td-bg-color:			    $theme-color-table-background;
+
 $primary-box-shadow:			    0.5px 0.5px 1px #ccc;
 $primary-border-radius:			    $theme-border-radius;
 
 $dashboard-stats-bg-color:		    $theme-color-white;
-$dashboard-tr-bg-color:			    $theme-color-nuance-13;
 $dashboard-tr-border-bottom:		    null;
-$dashboard-tr-even-bg-color:		    null;
 $dashboard-tr-hover-bg-color:		    $theme-color-background;
 $dashboard-tr-even-hover-bg-color:	    null;
 
@@ -358,5 +359,6 @@ $wato-info-padding:			    null;
 
 $ac-test-details-td-padding:		    1px 5px;
 
-$notifications-th-bg-color:		    #f5f5f5;
-$notifications-td-bg-color:		    $theme-color-table-background;
+$groupheader-first-padding-top:		    null;
+
+$boxlayout-tr-bg-color:			    transparent;

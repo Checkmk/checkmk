@@ -472,6 +472,10 @@ table.boxlayout {
   tr > td {
     vertical-align: top;
   }
+
+  &.graph table.data tr.data {
+    background: $boxlayout-tr-bg-color;
+  }
 }
 
 /* tiled layout */
@@ -1086,13 +1090,13 @@ table.data.single {
     th, td {
       height: 14px;
       padding: 2px 4px;
-      background-color: $theme-color-table-background;
+      background-color: $primary-td-bg-color;
       border: 1px solid $theme-color-table-border;
     }
 
     th {
       color: $theme-color-text;
-      background-color: #f5f5f5;
+      background-color: $primary-th-bg-color;
     }
   }
 

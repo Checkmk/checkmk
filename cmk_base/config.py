@@ -278,8 +278,8 @@ def _load_config(with_conf_d, exclude_parents_mk):
                 folder_path = None
 
             global_dict.update({
-                "FILE_PATH"   : file_path,
-                "FOLDER_PATH" : folder_path,
+                "FILE_PATH": file_path,
+                "FOLDER_PATH": folder_path,
             })
 
             all_hosts.set_current_path(current_path)  # pylint: disable=no-member

@@ -258,6 +258,9 @@ def _load_config(with_conf_d, exclude_parents_mk):
     global all_hosts
     global clusters
 
+    all_hosts = SetFolderPathList(all_hosts)
+    clusters = SetFolderPathDict(clusters)
+
     global_dict = globals()
     global_dict.update(helper_vars)
 

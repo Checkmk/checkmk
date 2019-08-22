@@ -224,9 +224,6 @@ class SetFolderPathAbstract(object):
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
-    def append(self, item):
-        return super(SetFolderPathList, self).append(item)
-
     def __iadd__(self, new_hosts):
         self._set_folder_paths(new_hosts)
         return super(SetFolderPathList, self).__iadd__(new_hosts)
@@ -235,6 +232,11 @@ class SetFolderPathList(SetFolderPathAbstract, list):
     def __add__(self, new_hosts):
         self._set_folder_paths(new_hosts)
         return SetFolderPathList(super(SetFolderPathList, self).__add__(new_hosts))
+
+    # Probably unused
+    def append(self, new_host):
+        self._set_folder_paths([new_host])
+        return super(SetFolderPathList, self).append(new_host)
 
 
 class SetFolderPathDict(SetFolderPathAbstract, dict):
@@ -269,7 +271,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
             # Make the config path available as a global variable to
             # be used within the configuration file
             if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
-                current_path = _f[len(cmk.paths.check_mk_config_dir):]
+                current_path = _f[len(cmk.utils.paths.check_mk_config_dir):]
                 folder_path = os.path.dirname(current_path[1:])
             else:
                 current_path = None

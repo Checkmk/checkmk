@@ -455,7 +455,7 @@ table.data {
 
   // TODO: Is this supposed to be aligned to the right?
   td.age {
-    color: #666;
+    color: $age-font-color;
     text-align: right;
     white-space: nowrap;
 

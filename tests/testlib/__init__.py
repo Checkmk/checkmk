@@ -83,7 +83,7 @@ def get_cmk_download_credentials():
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
 
-def import_module(request, pathname):
+def import_module(pathname):
     """Return the module loaded from `pathname`.
 
     `pathname` is a path relative to the top-level directory

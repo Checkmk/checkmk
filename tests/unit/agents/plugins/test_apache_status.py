@@ -10,8 +10,8 @@ RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
 
 @pytest.fixture(scope="module")
-def apache_status(request):
-    yield import_module(request, "agents/plugins/apache_status")
+def apache_status():
+    return import_module("agents/plugins/apache_status")
 
 
 @pytest.fixture

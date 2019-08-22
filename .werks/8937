@@ -1,0 +1,11 @@
+Title: aix_diskiod: Skip lines which do not contain data about DISK IO
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566459517
+
+

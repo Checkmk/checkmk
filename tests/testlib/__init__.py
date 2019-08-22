@@ -94,8 +94,13 @@ def import_module(pathname):
     """
     modpath = os.path.join(cmk_path(), pathname)
     modname = os.path.splitext(os.path.basename(pathname))[0]
-    with open(modpath) as mod:
+    try:
         return imp.load_source(modname, modpath)
+    finally:
+        try:
+            os.remove(modpath + "c")
+        except OSError:
+            pass
 
 
 def wait_until(condition, timeout=1, interval=0.1):

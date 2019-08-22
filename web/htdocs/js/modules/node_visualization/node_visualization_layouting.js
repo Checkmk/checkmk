@@ -357,8 +357,11 @@ export class LayoutStyleConfiguration {
         if (this.current_style)
             this.current_style.style_root_node.selection.select("circle.style_indicator").classed("focus", false)
 
-        if (!style)
+        if (!style) {
+            this.selection.style("display", "none")
             return
+        }
+        this.selection.style("display", null)
 
         // Set style focus on new style
         style.style_root_node.selection.select("circle.style_indicator").classed("focus", true)

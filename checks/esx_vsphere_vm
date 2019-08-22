@@ -145,7 +145,8 @@ check_info['esx_vsphere_vm.name'] = {
 def inventory_esx_vsphere_vm_running_on(info):
     data = esx_vsphere_vm_convert(info)
     if 'runtime.host' in data:
-        return [(None, None)]
+        yield HostLabel(u"cmk/vsphere_object", u"vm")
+        yield None, None
 
 
 def check_esx_vsphere_vm_running_on(no_item, no_params, info):

@@ -1165,7 +1165,8 @@ sql_jobs () {
                               on  jd.con_id = jm.con_id
                               AND jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
-                              AND jd.LOG_ID = jm.LOG_ID;
+                              AND jd.LOG_ID = jm.LOG_ID
+              WHERE not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);
              "
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
@@ -1192,7 +1193,7 @@ sql_jobs () {
                               on  jd.owner = jm.OWNER
                               AND jd.JOB_NAME = jm.JOB_NAME
                               AND jd.LOG_ID = jm.LOG_ID
-              WHERE j.auto_drop = 'FALSE';"
+              WHERE not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);"
     fi
 }
 

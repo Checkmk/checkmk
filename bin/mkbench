@@ -1029,11 +1029,11 @@ class Measurement(object):
             self.disk_io = DiskIO(0.0, 0.0)
             return
 
-        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) /
-                                 (self.time - last.time) # fixed: true-division
+        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) / (
+            self.time - last.time)  # fixed: true-division
 
-        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) /
-            (self.time - last.time) # fixed: true-division
+        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) / (
+            self.time - last.time)  # fixed: true-division
 
         self.disk_io = DiskIO(read_bytes_per_sec, write_bytes_per_sec)
 

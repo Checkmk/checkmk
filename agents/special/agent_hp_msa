@@ -26,10 +26,10 @@
 
 import re
 import sys
-import getopt
 import socket
 import hashlib
-import traceback
+import argparse
+import logging
 from HTMLParser import HTMLParser
 
 import requests
@@ -37,62 +37,33 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
-def usage():
-    sys.stderr.write("""Check_MK HP MSA Agent
-
-USAGE: agent_hp_msa [OPTIONS] HOST
-       agent_hp_msa -h
-
-ARGUMENTS:
-  HOST                          Host name or IP address
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -u                            Username
-  -p                            Password
-  --debug                       Debug mode: let Python exceptions come through
-""")
+LOGGER = logging.getLogger(__name__)
 
 
-short_options = 'h:du:p:'
-long_options = ['help', 'debug']
+def parse_arguments(argv):
+    pars = argparse.ArgumentParser(description=__doc__)
 
-host_address = None
-opt_debug = False
-username = None
-password = None
-opt_timeout = 10
+    # flags
+    pars.add_argument("--debug",
+                      action="store_true",
+                      help="""Debug mode: let Python exceptions come through""")
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
+    pars.add_argument("hostaddress", help="HP MSA host name")
+    pars.add_argument("-u", "--username", required=True, help="HP MSA user name")
+    pars.add_argument("-p", "--password", required=True, help="HP MSA user password")
 
-for o, a in opts:
-    if o in ['--debug']:
-        opt_debug = True
-    elif o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
-    elif o in ['-u']:
-        username = a
-    elif o in ['-p']:
-        password = a
+    args = pars.parse_args(argv)
 
-if len(args) == 1:
-    host_address = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
+    if args.debug:
+        fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
+        lvl = logging.DEBUG
+    else:
+        fmt = "%(levelname)s: %(message)s"
+        lvl = logging.WARNING
+    logging.basicConfig(level=lvl, format=fmt)
 
-if not username or not password:
-    sys.stderr.write("ERROR: Credentials are missing.\n")
-    sys.exit(1)
+    return args
+
 
 # The dict key is the section, the values the list of lines
 sections = {}
@@ -123,12 +94,9 @@ property_to_section = {
     "volume-statistics": "volume",
 }
 
-# Debug parameter. Contains full list of variables
-complete_list = []
-
 
 def store_property(prop):
-    complete_list.append(prop)  # Used for debugging
+    LOGGER.debug("storing property: %s", prop)
     if prop[0] in property_to_section:
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
 
@@ -163,35 +131,40 @@ class HTMLObjectParser(HTMLParser):
 
 parser = HTMLObjectParser()
 
-try:
-    session = requests.Session()
-    # Login
-    login_hash = hashlib.md5()
-    login_hash.update("%s_%s" % (username, password))
-    login_url = "https://%s/v3/api/login/%s" % (host_address, login_hash.hexdigest())
-    socket.setdefaulttimeout(opt_timeout)
-    r = session.get(login_url, verify=False)
 
-    # Extract sessionKey
-    session_key = re.match('.*"response">(.*?)<.*', r.text).groups()[0]
-    session.headers.update({"sessionKey": session_key, "User-agent": "Check_MK agent_hp_msa"})
+def main(argv=None):
+    args = parse_arguments(argv or sys.argv[1:])
+    opt_timeout = 10
 
-    # Query objects
-    for element in api_get_objects:
-        show_url = "https://%s/v3/api/show/%s" % (host_address, element)
-        parser.feed(session.get(show_url, verify=False).text)
+    try:
+        session = requests.Session()
+        # Login
+        login_hash = hashlib.md5()
+        login_hash.update("%s_%s" % (args.username, args.password))
+        login_url = "https://%s/v3/api/login/%s" % (args.hostaddress, login_hash.hexdigest())
+        socket.setdefaulttimeout(opt_timeout)
+        r = session.get(login_url, verify=False)
 
-    # Output sections
-    for section, lines in sections.items():
-        print "<<<hp_msa_%s>>>" % section
-        print "\n".join(x.encode("utf-8") for x in lines)
+        # Extract sessionKey
+        session_key = re.match('.*"response">(.*?)<.*', r.text).groups()[0]
+        session.headers.update({"sessionKey": session_key, "User-agent": "Check_MK agent_hp_msa"})
 
-except Exception, e:
-    if opt_debug:
-        sys.stdout.write('----------------------------\n')
-        sys.stdout.write(traceback.format_exc())
-        sys.stdout.write('============================\n')
-        import pprint
-        pprint.pprint(complete_list)
-    sys.stderr.write("Connection error: %s" % e)
-    sys.exit(1)
+        # Query objects
+        for element in api_get_objects:
+            show_url = "https://%s/v3/api/show/%s" % (args.hostaddress, element)
+            parser.feed(session.get(show_url, verify=False).text)
+
+        # Output sections
+        for section, lines in sections.items():
+            print "<<<hp_msa_%s>>>" % section
+            print "\n".join(x.encode("utf-8") for x in lines)
+
+    except Exception as exc:
+        if args.debug:
+            raise
+        raise SystemExit(exc)
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

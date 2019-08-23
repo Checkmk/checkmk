@@ -68,7 +68,7 @@ def parse_mknotifyd(info):
             }
             sub_entry = site_entry
             parsed[site] = site_entry
-        else:
+        elif ":" in line[0]:
             varname, value = line[0].split(":", 1)
             value = value.strip()
 
@@ -152,7 +152,7 @@ def check_mknotifyd(item, _no_params, parsed):
     # dict will never be completely empty. We check for Version
     # because this should be always present in a valid state file.
     elif not parsed[item].get("Version"):
-        yield 2, "The state file seems to be empty. It is very likely that the spooler is not working properly"
+        yield 2, "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly"
         return
 
     now = time.time()

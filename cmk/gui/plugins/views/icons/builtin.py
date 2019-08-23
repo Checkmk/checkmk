@@ -821,7 +821,7 @@ class PassiveChecksIcon(Icon):
         return "status_passive_checks"
 
     def columns(self):
-        return ['modified_attributes_list', 'active_passive_checks']
+        return ['modified_attributes_list', 'accept_passive_checks']
 
     def default_toplevel(self):
         return True

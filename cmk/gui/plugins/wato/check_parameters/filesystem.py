@@ -40,13 +40,13 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
 
 @rulespec_registry.register
-class RulespecInventoryDfRules(HostRulespec):
+class RulespecInventoryDfRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery
@@ -88,7 +88,7 @@ class RulespecInventoryDfRules(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecFilesystemGroups(HostRulespec):
+class RulespecFilesystemGroups(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersStorage

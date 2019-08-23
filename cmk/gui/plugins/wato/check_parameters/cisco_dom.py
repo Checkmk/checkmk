@@ -35,7 +35,7 @@ from cmk.gui.valuespec import (
     ListChoice,
 )
 from cmk.gui.plugins.wato import (
-    HostRulespec,
+    ABCHostValueRulespec,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
@@ -118,7 +118,7 @@ class RulespecCheckgroupParametersCiscoDOM(CheckParameterRulespecWithItem):
 
 
 @rulespec_registry.register
-class RulespecDiscoveryCiscoDomRules(HostRulespec):
+class RulespecDiscoveryCiscoDomRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

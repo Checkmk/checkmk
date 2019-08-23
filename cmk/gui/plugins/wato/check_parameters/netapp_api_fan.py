@@ -33,12 +33,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecInventoryIpmiRules(HostRulespec):
+class RulespecInventoryIpmiRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

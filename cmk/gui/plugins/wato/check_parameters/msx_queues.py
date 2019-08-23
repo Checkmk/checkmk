@@ -39,7 +39,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 
 
@@ -50,7 +50,7 @@ def transform_msx_queues(params):
 
 
 @rulespec_registry.register
-class RulespecWinperfMsxQueuesInventory(HostRulespec):
+class RulespecWinperfMsxQueuesInventory(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

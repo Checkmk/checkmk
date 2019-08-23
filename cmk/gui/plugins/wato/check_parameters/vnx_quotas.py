@@ -34,12 +34,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     rulespec_registry,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecDiscoveryRulesVnxQuotas(HostRulespec):
+class RulespecDiscoveryRulesVnxQuotas(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

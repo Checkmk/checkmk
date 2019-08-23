@@ -37,12 +37,12 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     Levels,
     RulespecGroupCheckParametersStorage,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecDiskstatInventory(HostRulespec):
+class RulespecDiskstatInventory(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersStorage

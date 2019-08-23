@@ -621,7 +621,7 @@ class ABCValueRulespec(Rulespec):
         return self.valuespec.help()
 
 
-class HostRulespec(ABCHostRulespec, ABCValueRulespec):
+class ABCHostValueRulespec(ABCHostRulespec, ABCValueRulespec):
     """Base class for all rulespecs managing host rule sets with values"""
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
@@ -695,7 +695,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         raise NotImplementedError()
 
 
-class CheckParameterRulespecWithoutItem(HostRulespec):
+class CheckParameterRulespecWithoutItem(ABCHostValueRulespec):
     """Base class for all rulespecs managing parameters for check groups without item
 
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
@@ -729,7 +729,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         raise NotImplementedError()
 
 
-class ManualCheckParameterRulespec(HostRulespec):
+class ManualCheckParameterRulespec(ABCHostValueRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
@@ -825,7 +825,7 @@ def register_rule(
     elif valuespec is None:
         base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
     else:
-        base_class = ServiceRulespec if itemtype is not None else HostRulespec
+        base_class = ServiceRulespec if itemtype is not None else ABCHostValueRulespec
 
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_attrs["check_group_name"] = varname.split(":", 1)[1]

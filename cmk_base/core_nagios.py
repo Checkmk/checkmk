@@ -935,6 +935,7 @@ def _precompile_hostcheck(config_cache, hostname):
     output.write("#!/usr/bin/env python\n")
     output.write("# encoding: utf-8\n\n")
 
+    output.write("import logging\n")
     output.write("import sys\n\n")
 
     output.write("if not sys.executable.startswith('/omd'):\n")
@@ -961,7 +962,6 @@ def _precompile_hostcheck(config_cache, hostname):
     # we are run for the first time
     if config.delay_precompile:
         output.write("""
-import logging
 import os
 if os.path.islink(%(dst)r):
     import py_compile

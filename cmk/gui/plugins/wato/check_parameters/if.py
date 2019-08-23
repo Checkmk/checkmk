@@ -51,7 +51,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
     rulespec_registry,
     ABCHostValueRulespec,
-    BinaryHostRulespec,
+    ABCBinaryHostRulespec,
     CheckParameterRulespecWithItem,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
@@ -337,7 +337,7 @@ class RulespecIfGroups(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecIfDisableIf64Hosts(BinaryHostRulespec):
+class RulespecIfDisableIf64Hosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersNetworking

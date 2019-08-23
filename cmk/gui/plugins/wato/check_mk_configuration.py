@@ -79,7 +79,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     ABCHostValueRulespec,
     ABCServiceValueRulespec,
-    BinaryHostRulespec,
+    ABCBinaryHostRulespec,
     BinaryServiceRulespec,
     rulespec_group_registry,
     RulespecGroup,
@@ -3751,7 +3751,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecOnlyHosts(BinaryHostRulespec):
+class RulespecOnlyHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -4354,7 +4354,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecDyndnsHosts(BinaryHostRulespec):
+class RulespecDyndnsHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentGeneralSettings
@@ -4483,7 +4483,7 @@ class RulespecSnmpCharacterEncodings(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecBulkwalkHosts(BinaryHostRulespec):
+class RulespecBulkwalkHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4538,7 +4538,7 @@ class RulespecSnmpBulkSize(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpWithoutSysDescr(BinaryHostRulespec):
+class RulespecSnmpWithoutSysDescr(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4559,7 +4559,7 @@ class RulespecSnmpWithoutSysDescr(BinaryHostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpv2CHosts(BinaryHostRulespec):
+class RulespecSnmpv2CHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4634,7 +4634,7 @@ class RulespecSnmpTiming(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecNonInlineSnmpHosts(BinaryHostRulespec):
+class RulespecNonInlineSnmpHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4658,7 +4658,7 @@ class RulespecNonInlineSnmpHosts(BinaryHostRulespec):
 
 
 @rulespec_registry.register
-class RulespecUsewalkHosts(BinaryHostRulespec):
+class RulespecUsewalkHosts(ABCBinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP

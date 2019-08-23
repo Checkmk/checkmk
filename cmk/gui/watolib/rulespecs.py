@@ -580,7 +580,7 @@ class ABCBinaryRulespec(Rulespec):
         raise NotImplementedError()
 
 
-class BinaryHostRulespec(ABCHostRulespec, ABCBinaryRulespec):
+class ABCBinaryHostRulespec(ABCHostRulespec, ABCBinaryRulespec):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -823,7 +823,7 @@ def register_rule(
     elif varname.startswith("checkgroup_parameters:"):
         base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem
     elif valuespec is None:
-        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
+        base_class = BinaryServiceRulespec if itemtype is not None else ABCBinaryHostRulespec
     else:
         base_class = ABCServiceValueRulespec if itemtype is not None else ABCHostValueRulespec
 

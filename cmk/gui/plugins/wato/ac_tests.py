@@ -451,7 +451,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
-class ACApacheTest(ACTest):
+class ABCACApacheTest(ACTest):
     """Abstract base class for apache related tests"""
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
@@ -489,7 +489,7 @@ class ACApacheTest(ACTest):
 
 
 @ac_test_registry.register
-class ACTestApacheNumberOfProcesses(ACApacheTest):
+class ACTestApacheNumberOfProcesses(ABCACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -569,7 +569,7 @@ class ACTestApacheNumberOfProcesses(ACApacheTest):
 
 
 @ac_test_registry.register
-class ACTestApacheProcessUsage(ACApacheTest):
+class ACTestApacheProcessUsage(ABCACApacheTest):
     def category(self):
         return ACTestCategories.performance
 

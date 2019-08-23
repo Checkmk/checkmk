@@ -2019,12 +2019,16 @@ class CascadingDropdown(ValueSpec):
             vp = "%s_%d" % (varprefix, nr)
             if cur_val is not None:
                 # Form already submitted once (and probably in complain state)
-                try:
-                    def_val_2 = vs.from_html_vars(vp)
-                except MKUserError:
-                    def_val_2 = vs.default_value()
-
                 show = nr == int(cur_val)
+
+                def_val_2 = vs.default_value()
+                # Only try to get the current value for the currently selected choice
+                if show:
+                    try:
+                        def_val_2 = vs.from_html_vars(vp)
+                    except MKUserError:
+                        pass  # Fallback to default value here
+
             else:
                 # Form painted the first time
                 if nr == int(def_val):

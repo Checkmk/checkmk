@@ -1311,7 +1311,7 @@ fi
 
 # Get list of all running databases
 # Do not work on ASM in this plugin. => Ignore a running ASM-Instance!
-SIDS=$(UNIX95=true ps -ef | ${AWK} '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_XE' | cut -d"_" -f3-)
+SIDS=$(UNIX95=true ps -ef | ${AWK} '{print $NF}' | ${GREP} -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' | cut -d"_" -f3-)
 
 # If we do not have found any running database instance, then either
 # no ORACLE is present on this system or it's just currently not running.

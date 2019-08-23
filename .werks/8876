@@ -1,0 +1,10 @@
+Title: Fix broken "Passive checks enabled/disabled" icon
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1566558115
+Class: fix
+
+

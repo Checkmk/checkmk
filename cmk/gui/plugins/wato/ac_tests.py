@@ -453,6 +453,11 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
 
 class ACApacheTest(ACTest):
     """Abstract base class for apache related tests"""
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
     __metaclass__ = abc.ABCMeta
 
     def _get_number_of_idle_processes(self):

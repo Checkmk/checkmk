@@ -79,7 +79,7 @@ static size_t WriteDataToSocket(asio::ip::tcp::socket &sock, const char *data,
 
     // error processing
     if (ec.value() != 0) {
-        XLOG::d(XLOG_FUNC + " write [{}] bytes to socket failed [{}] '{}'", sz,
+        XLOG::l(XLOG_FUNC + " write [{}] bytes to socket failed [{}] '{}'", sz,
                 ec.value(), ec.message());
         return 0;
     }

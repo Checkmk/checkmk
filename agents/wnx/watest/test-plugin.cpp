@@ -646,39 +646,45 @@ TEST(PluginTest, FilesAndFolders) {
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> exe_units_base = {
     //
-    {"*.ps1", true, 10, 0, 5, true},     //
-    {"*.cmd", false, 12, 500, 3, true},  //
-    {"*", true, 10, 0, 3, false},        //
+    {"*.ps1",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 5\nrun: yes\n"},  //
+    {"*.cmd",
+     "async: no\ntimeout: 12\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+    {"*", "run: no\n"},                                                      //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x2_sync = {
     //
-    {"*.ps1", false, 13, 0, 9, true},  //
-    {"*", true, 10, 0, 3, false},      //
+    {"*.ps1",
+     "async: no\ntimeout: 13\ncache_age: 0\nretry_count: 9\nrun: yes\n"},  //
+    {"*", "run: no\n"},                                                    //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x2_async_0_cache_age = {
     //
-    {"*.ps1", true, 13, 0, 9, true},  //
-    {"*", true, 10, 0, 3, false},     //
+    {"*.ps1",
+     "async: yes\ntimeout: 13\ncache_age: 0\nretry_count: 9\nrun: yes\n"},  //
+    {"*", "run: no\n"},                                                     //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x2_async_low_cache_age = {
     //
-    {"*.ps1", true, 13, 119, 9, true},  //
-    {"*", true, 10, 0, 3, false},       //
+    {"*.ps1",
+     "async: yes\ntimeout: 13\ncache_age: 119\nretry_count: 9\nrun: yes\n"},  //
+    {"*", "run: no\n"},                                                       //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x3_cmd = {
     //
-    {"???-?.cmd", true, 10, 0, 5, true},  //
-    {"*", true, 10, 0, 3, false},         //
+    {"???-?.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 5\nrun: yes\n"},  //
+    {"*", "run: no\n"},                                                     //
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x4_all = {
     //
-    {"*.cmd", true, 10, 0, 5, false},  // disable all cmd
-    {"*", true, 10, 0, 3, true},       // enable all other
+    {"*.cmd", "run: no\n"},  // disable all cmd
+    {"*", "run: yes\n"},     //
 };
 
 static const cma::PathVector pv_main = {
@@ -818,9 +824,9 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, e);
         EXPECT_EQ(e->async(), false);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), x2_sync[0].timeout());
-        EXPECT_EQ(e->cacheAge(), x2_sync[0].cacheAge());
-        EXPECT_EQ(e->retry(), x2_sync[0].retry());
+        EXPECT_EQ(e->timeout(), 13);
+        EXPECT_EQ(e->cacheAge(), 0);
+        EXPECT_EQ(e->retry(), 9);
 
         // Update, async+0
         UpdatePluginMap(pm, false, pv_main, x2_async_0_cache_age, false);
@@ -829,9 +835,9 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, e);
         EXPECT_EQ(e->async(), true);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), x2_async_0_cache_age[0].timeout());
-        EXPECT_EQ(e->cacheAge(), x2_async_0_cache_age[0].cacheAge());
-        EXPECT_EQ(e->retry(), x2_async_0_cache_age[0].retry());
+        EXPECT_EQ(e->timeout(), 13);
+        EXPECT_EQ(e->cacheAge(), 0);
+        EXPECT_EQ(e->retry(), 9);
 
         // Update, async+119
         UpdatePluginMap(pm, false, pv_main, x2_async_low_cache_age, false);
@@ -840,9 +846,9 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, e);
         EXPECT_EQ(e->async(), true);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd.d.ps1");
-        EXPECT_EQ(e->timeout(), x2_async_low_cache_age[0].timeout());
+        EXPECT_EQ(e->timeout(), 13);
         EXPECT_EQ(e->cacheAge(), kMinimumCacheAge);
-        EXPECT_EQ(e->retry(), x2_async_low_cache_age[0].retry());
+        EXPECT_EQ(e->retry(), 9);
 
         // Update
         UpdatePluginMap(pm, false, pv_short, x3_cmd, false);
@@ -851,9 +857,9 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, e);
         EXPECT_EQ(e->async(), true);
         EXPECT_EQ(e->path(), "c:\\z\\x\\asd-d.cmd");
-        EXPECT_EQ(e->timeout(), x3_cmd[0].timeout());
-        EXPECT_EQ(e->cacheAge(), x3_cmd[0].cacheAge());
-        EXPECT_EQ(e->retry(), x3_cmd[0].retry());
+        EXPECT_EQ(e->timeout(), 10);
+        EXPECT_EQ(e->cacheAge(), 0);
+        EXPECT_EQ(e->retry(), 5);
 
         UpdatePluginMap(pm, false, pv_main, x4_all, false);
         EXPECT_EQ(pm.size(), 4);
@@ -869,32 +875,53 @@ TEST(PluginTest, GeneratePluginEntry) {
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[1].u8string()));
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[2].u8string()));
         ASSERT_NE(nullptr, GetEntrySafe(pm, pv_main[4].u8string()));
+        for (auto i : {0, 1, 2, 4}) {
+            e = GetEntrySafe(pm, pv_main[i].u8string());
+            ASSERT_NE(nullptr, e);
+            EXPECT_EQ(e->async(), false);
+            EXPECT_EQ(e->path(), pv_main[i].u8string());
+            EXPECT_EQ(e->timeout(), cma::cfg::kDefaultPluginTimeout);
+            EXPECT_EQ(e->cacheAge(), 0);
+            EXPECT_EQ(e->retry(), 0);
+        }
     }
 }
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> typical_units = {
     //
-    {"c:\\z\\user\\*.ps1", true, 10, 0, 5, true},    // enable ps1 in user
-    {"c:\\z\\core\\*.ps1", false, 10, 0, 5, false},  // disable ps1 in core
-    {"*", true, 10, 0, 3, false},                    // enable all other
+    {"c:\\z\\user\\*.ps1",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: yes\n"},  // enable ps1 in
+    // user
+    {"c:\\z\\core\\*.ps1",
+     "async: no\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: yes\n"},  // disable
+                                                                           // ps1
+    // in core
+    {"*", "run: no\n"},  // enable all
+                         // other
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> exe_units = {
-    //
-    {"*.exe", true, 10, 0, 5, true},  // enable exe in user
-    {"*", true, 10, 0, 3, false},     // disable all other
+    // enable exe
+    {"*", "async: no\ncache_age: 0\nretry_count: 5\n"},
+    {"*.exe", "run: yes\n"},
+    {"*", "async: yes\ntimeout: 11\ncache_age: 100\n"},
+    {"*", "run: no\n"},  // disable all other
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> all_units = {
     //
-    {"*.cmd", true, 10, 0, 5, false},  // enable exe in user
-    {"*", true, 9, 0, 3, true},        // disable all other
+    // enable exe
+    {"*.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: no\n"},
+    {"*", "timeout: 13\n"},
+    {"*", "run: yes\n"},  // ENABLE all other
 };
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> none_units = {
     //
-    {"*.cmd", true, 10, 0, 5, true},  // enable exe in user
-    {"*", true, 10, 0, 3, false},     // disable all other
+    {"*.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: yes\n"},
+    {"*", "run: no\n"},  // DISABLE all other
 };
 static const cma::PathVector typical_files = {
     "c:\\z\\user\\0.ps1",  //
@@ -910,13 +937,26 @@ static const cma::PathVector typical_files = {
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> many_exe_units = {
     //
-    {"*.ps1", false, 1, 0, 1, true},                 // [+] 2*ps1: 0,1
-    {"c:\\z\\user\\0.ps1", true, 99, 0, 99, true},   // [-] ignored
-    {"*.ps1", true, 99, 0, 99, true},                // [-] ignored
-    {"loc\\*.bat", false, 1, 0, 1, true},            // [+] 1*bat: 3
-    {"*.bat", true, 99, 0, 99, true},                // [-] ignored
-    {"\\\\srv\\p\\t\\*.exe", false, 1, 0, 1, true},  // [+] 1*exe: 7
-    {"*", true, 10, 0, 3, false},                    // [+] disabled 2
+    // [+] 2*ps1: 0,1
+    {"*.ps1",
+     "async: no\ntimeout: 1\ncache_age: 0\nretry_count: 1\nrun: yes\n"},
+    // [-] ignored
+    {"c:\\z\\user\\0.ps1",
+     "async: no\ntimeout: 99\ncache_age: 0\nretry_count: 99\nrun: yes\n"},
+    // [-] ignored
+    {"*.ps1",
+     "async: no\ntimeout: 99\ncache_age: 0\nretry_count: 99\nrun: yes\n"},
+    // [+] 1*bat: 3
+    {"loc\\*.bat",
+     "async: no\ntimeout: 1\ncache_age: 0\nretry_count: 1\nrun: yes\n"},
+    // [-] ignored
+    {"*.bat",
+     "async: no\ntimeout: 99\ncache_age: 0\nretry_count: 99\nrun: yes\n"},
+    // [+] 1*exe: 7
+    {"\\\\srv\\p\\t\\*.exe",
+     "async: no\ntimeout: 1\ncache_age: 0\nretry_count: 1\nrun: yes\n"},
+    // [+] disabled 2
+    {"*", "run: no\n"},  // DISABLE all other
 };
 
 static const cma::PathVector many_files = {
@@ -967,10 +1007,10 @@ TEST(PluginTest, ApplyEverything) {
                 auto end_path = entry.second.path();
                 auto expected_path = typical_files[expected_index];
                 EXPECT_EQ(end_path.u8string(), expected_path.u8string());
-                EXPECT_EQ(entry.second.cacheAge(), exe_units[0].cacheAge());
-                EXPECT_EQ(entry.second.retry(), exe_units[0].retry());
-                EXPECT_EQ(entry.second.async(), exe_units[0].async());
-                EXPECT_EQ(entry.second.timeout(), exe_units[0].timeout());
+                EXPECT_EQ(entry.second.cacheAge(), 0);
+                EXPECT_EQ(entry.second.retry(), 5);
+                EXPECT_EQ(entry.second.async(), false);
+                EXPECT_EQ(entry.second.timeout(), 11);
             }
         }
 
@@ -985,10 +1025,10 @@ TEST(PluginTest, ApplyEverything) {
                 auto end_path = unit.path();
                 auto expected_path = typical_files[expected_index];
                 EXPECT_EQ(end_path.u8string(), expected_path.u8string());
-                EXPECT_EQ(unit.cacheAge(), all_units[1].cacheAge());
-                EXPECT_EQ(unit.retry(), all_units[1].retry());
-                EXPECT_EQ(unit.async(), all_units[1].async());
-                EXPECT_EQ(unit.timeout(), all_units[1].timeout());
+                EXPECT_EQ(unit.cacheAge(), 0);   // default
+                EXPECT_EQ(unit.retry(), 0);      // default
+                EXPECT_EQ(unit.async(), false);  // default
+                EXPECT_EQ(unit.timeout(), 13);   // set
             }
         }
 
@@ -1008,13 +1048,52 @@ TEST(PluginTest, ApplyEverything) {
                 auto end_path = unit.path();
                 auto expected_path = many_files[expected_index];
                 EXPECT_EQ(end_path.u8string(), expected_path.u8string());
-                EXPECT_EQ(unit.cacheAge(), many_exe_units[0].cacheAge());
-                EXPECT_EQ(unit.retry(), many_exe_units[0].retry());
-                EXPECT_EQ(unit.async(), many_exe_units[0].async());
-                EXPECT_EQ(unit.timeout(), many_exe_units[0].timeout());
+                EXPECT_EQ(unit.cacheAge(), 0);
+                EXPECT_EQ(unit.retry(), 1);
+                EXPECT_EQ(unit.async(), false);
+                EXPECT_EQ(unit.timeout(), 1);
             }
         }
     }
+}
+
+TEST(PluginTest, DuplicatedFileRemove) {
+    namespace fs = std::filesystem;
+    //
+    {
+        std::vector<fs::path> found_files = {
+            "c:\\t\\A.exe", "c:\\r\\a.exe", "c:\\v\\x\\a.exe",
+            "c:\\t\\b.exe", "c:\\r\\a.exe", "c:\\v\\x\\a.exe",
+            "c:\\t\\a.exe", "c:\\r\\a.exe", "c:\\v\\x\\c.cmd",
+        };
+        auto files = RemoveDuplicatedFilesByName(found_files, true);
+        EXPECT_TRUE(files.size() == 3);
+    }
+    {
+        std::vector<fs::path> found_files = {
+            "c:\\t\\a.exe", "c:\\r\\a.exe",    "c:\\t\\a.exe",
+            "c:\\r\\a.exe", "c:\\v\\x\\c.cmd",
+        };
+        auto files = RemoveDuplicatedFilesByName(found_files, true);
+        EXPECT_TRUE(files.size() == 2);
+    }
+}
+
+TEST(PluginTest, DuplicatedUnitsRemove) {
+    namespace fs = std::filesystem;
+    UnitMap um;
+    const char* const paths[] = {
+        "c:\\t\\1b\\abC", "c:\\t\\2b\\xxx", "c:\\t\\3b\\abc", "c:\\t\\4b\\XXX",
+        "c:\\t\\5b\\abc", "c:\\t\\6b\\abc", "c:\\t\\7b\\ccc", "c:\\t\\8b\\abc"};
+
+    for (auto name : paths) um[name] = cma::cfg::Plugins::ExeUnit(name, "");
+    EXPECT_TRUE(um.size() == 8);
+    RemoveDuplicatedEntriesByName(um, true);
+    EXPECT_EQ(um.size(), 3);
+    int count = 0;
+    EXPECT_FALSE(um[paths[0]].pattern().empty());
+    EXPECT_FALSE(um[paths[1]].pattern().empty());
+    EXPECT_FALSE(um[paths[6]].pattern().empty());
 }
 
 TEST(PluginTest, SyncStartSimulationFuture_Long) {
@@ -1132,33 +1211,28 @@ const std::vector<std::string> strings = {
 };
 
 std::vector<cma::cfg::Plugins::ExeUnit> exe_units_async_0 = {
-    //        Async  Timeout CacheAge  Retry  Run
-    // clang-format off
-    {"*.cmd", true,  10,     0,        3,     true},
-    {"*",     true,  10,     0,        3,     false},
-    // clang-format off
-
+    //
+    {"*.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: yes\n"},
+    {"*", "run: no\n"},  // DISABLE all other
 };
-
 
 PathVector as_files;
 
 PathVector as_vp;
 
 std::vector<cma::cfg::Plugins::ExeUnit> exe_units_async_121 = {
-    //       Async  Timeout CacheAge              Retry  Run
-    // clang-format off
-    {"*.cmd", true, 10,     cma::cfg::kMinimumCacheAge + 1, 3,     true},
-    {"*",     true, 10,     cma::cfg::kMinimumCacheAge + 1, 3,     false},
-    // clang-format on
+    //
+    {"*.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 121\nretry_count: 3\nrun: yes\n"},
+    {"*", "run: no\n"},  // DISABLE all other
 };
 
 std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC = {
-    //       Async  Timeout CacheAge              Retry  Run
-    // clang-format off
-    {"*.cmd", false, 10,     0, 3,     true},
-    {"*",     false, 10,     0, 3,     false},
-    // clang-format on
+    //
+    {"*.cmd",
+     "async: no\ntimeout: 10\ncache_age: 0\nretry_count: 3\nrun: yes\n"},
+    {"*", "run: no\n"},  // DISABLE all other
 };
 
 struct PluginDesc {
@@ -1934,8 +2008,10 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     cma::OnStart(cma::AppType::test);
     std::vector<Plugins::ExeUnit> exe_units = {
         //
-        {"*.cmd", false, 10, 0, 3, true},  //
-        {"*", true, 10, 0, 3, false},      //
+        {"*.cmd",
+         "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
+        {"*", "run: no\n"},  //
+
     };
 
     fs::path temp_folder = cma::cfg::GetTempDir();
@@ -2066,7 +2142,54 @@ TEST(CmaMain, MiniBoxStartMode) {
         EXPECT_TRUE(!accu.empty());
     }
 }
+#if 0
+static std::string s_user_config =
+    "global:\n"
+    "  enabled: true\n"
+    "  async_script_execution: parallel\n"
+    "  encrypted: yes\n"
+    "  realtime:\n"
+    "    encrypted: yes\n"
+    "  passphrase: XXXXXXXXXX\n"
+    "  port: 6556\n"
+    "local:\n"
+    "  enabled: true\n"
+    "  execution:\n"
+    "    - pattern: \"*\"\n"
+    "      async: yes\n"
+    "plugins:\n"
+    "  enabled: true\n"
+    "  execution:\n"
+    "    - pattern: $CUSTOM_PLUGINS_PATH$\\*\n"
+    "      async: yes\n"
+    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mssql.vbs\n"
+    "      retry_count: 3\n"
+    "      timeout: 45\n"
+    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mk_mysql.vbs\n"
+    "      retry_count: 1\n"
+    "      timeout: 45\n"
+    "    - pattern: $CUSTOM_PLUGINS_PATH$\\msexch_database.ps1\n"
+    "      retry_count: 1\n"
+    "      timeout: 120\n";
 
+TEST(PluginTest, CheckRules) {
+    namespace fs = std::filesystem;
+
+    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
+    tst::SafeCleanTmpxDir();
+    {
+        fs::path root = tst::very_temp;
+        std::error_code ec;
+        fs::create_directory(root, ec);
+        tst::ConstructFile(root / cma::cfg::files::kDefaultMainConfig,
+                           s_user_config);
+        cma::tools::win::WithEnv we(std::wstring(kTemporaryRoot),
+                                    root.wstring());
+        cma::OnStart(AppType::exe);
+        EXPECT_TRUE(false);
+    }
+}
+#endif
 TEST(PluginTest, DebugInit) {
     std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC_local = {
         //       Async  Timeout CacheAge              Retry  Run

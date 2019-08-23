@@ -683,7 +683,17 @@ PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
 
 void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
 
+using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
+
+void RemoveDuplicatedEntriesByName(UnitMap& um, bool local);
+std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
+    const std::vector<std::filesystem::path>& found_files, bool local);
+
 void ApplyEverythingToPluginMap(
+    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    const std::vector<std::filesystem::path>& files, bool Local);
+
+void ApplyEverythingToPluginMapDeprecated(
     PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
     const std::vector<std::filesystem::path>& files, bool Local);
 
@@ -718,7 +728,7 @@ namespace tools {
 using StringSet = std::set<std::string>;
 // returns true if string added
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
-                                  const std::string value) noexcept;
+                                  const std::string& value) noexcept;
 // returns true if string added
 bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
 }  // namespace tools

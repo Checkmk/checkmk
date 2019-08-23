@@ -105,6 +105,16 @@ bool AsyncAnswer::prepareAnswer(std::string_view Ip) noexcept {
     return true;
 }
 
+// sorted list of all received sections
+std::vector<std::string> AsyncAnswer::segmentNameList() {
+    std::unique_lock lk(lock_);
+    std::vector<std::string> list;
+    for (const auto& s : segments_) list.emplace_back(s.name_);
+    lk.unlock();
+    std::sort(list.begin(), list.end());
+    return list;
+}
+
 // Reporting Function, which called by the section plugins and providers
 // Thread safe!
 bool AsyncAnswer::addSegment(

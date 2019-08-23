@@ -297,7 +297,7 @@ class ConfigDomainDiskspace(ConfigDomain):
 
     def default_globals(self):
         diskspace_context = {}
-        execfile("%s/bin/diskspace" % cmk.utils.paths.omd_root, {}, diskspace_context)
+        exec (open("%s/bin/diskspace" % cmk.utils.paths.omd_root, {}, diskspace_context).read())
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }

@@ -29,40 +29,55 @@
 # check is SNMP-Based, then remove this section
 
 tsm_scratch_default_levels = ( 5, 7 )
-def inventory_tsm_scratch(info):
-    inventory = []
-    for inst, tapes, library in info:
+
+
+def parse_tsm_scratch(info):
+    parsed = {}
+    for line in info:
+        if len(line) != 3:
+            continue
+	
+        inst, tapes, library = line
+	
+        try:
+            num_tapes = int(tapes)
+        except ValueError:
+            continue
+	
         if inst != 'default':
-            item = "%s / %s" % ( inst, library )
+            item = "%s / %s" % (inst, library)
         else:
             item = library
-        inventory.append((item, "tsm_scratch_default_levels"))
+        parsed[item] = num_tapes
+    return parsed
 
-    return inventory
 
-def check_tsm_scratch(item, params, info):
+def inventory_tsm_scratch(parsed):
+    return [(lib, "tsm_scratch_default_levels") for lib in parsed]
+
+
+def check_tsm_scratch(item, params, parsed):
+    # Conventionally upper or lower levels are of the form
+    #   warn, crit = levels
+    # Be aware of the following levels construction:
     crit, warn = params
-    for inst, tapes, library in info:
-        if inst != 'default':
-            found_item = "%s / %s" % ( inst, library )
-        else:
-            found_item = library
 
-        if found_item == item:
-            tapes = saveint(tapes)
-            state = 0
-            if tapes <= crit:
-                state = 2
-            elif tapes <= warn:
-                state = 1
+    num_tapes = parsed.get(item)
+    if num_tapes is None:
+        return
 
-            return state, "Found %d tapes" % tapes, \
-                        [ ("tapes_free", tapes, warn, crit) ]
+    state = 0
+    if num_tapes <= crit:
+        state = 2
+    elif num_tapes <= warn:
+        state = 1
 
+    return state, "Found %d tapes" % num_tapes, \
+                [ ("tapes_free", num_tapes, warn, crit) ]
 
-    return 3, "UNKNOWN - Check no implemented"
 
 check_info["tsm_scratch"] = {
+    "parse_function"        : parse_tsm_scratch,
     "inventory_function"    : inventory_tsm_scratch,
     "check_function"        : check_tsm_scratch,
     "service_description"   : "Scratch Pool %s",

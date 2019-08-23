@@ -1,0 +1,32 @@
+Title: netapp_api_volumes: Fixed wrong scaling of latency values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b7
+Date: 1566225807
+
+The affected performance values are
+<ul>
+<li>read_latency</li>
+<li>write_latency</li>
+<li>other_latency</li>
+<li>nfs_read_latency</li>
+<li>nfs_write_latency</li>
+<li>nfs_other_latency</li>
+<li>cifs_read_latency</li>
+<li>cifs_write_latency</li>
+<li>cifs_other_latency</li>
+<li>san_read_latency</li>
+<li>san_write_latency</li>
+<li>san_other_latency</li>
+<li>fcp_read_latency</li>
+<li>fcp_write_latency</li>
+<li>fcp_other_latency</li>
+<li>iscsi_read_latency</li>
+<li>iscsi_write_latency</li>
+<li>iscsi_other_latency</li>
+</ul>
+which are now displayed and scaled correctly.

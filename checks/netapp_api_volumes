@@ -95,8 +95,6 @@ def check_netapp_api_volumes(item, params, parsed):
                                          now,
                                          value,
                                          onwrap=RAISE)
-                        perf.append((key, delta))
-
                         # Quite hacky.. this base information is used later on by the "latency" field
                         if field == "ops":
                             if delta == 0.0:
@@ -135,10 +133,12 @@ def check_netapp_api_volumes(item, params, parsed):
                                 else:
                                     divisor = 1000.0
                                 delta = delta / (divisor * base[protocol + mode + "ops"])
+
                             if format_text:
                                 counters.append(format_text % (key, delta))
                             else:
                                 counters.append("%s: %s" % (key, get_bytes_human_readable(delta)))
+                        perf.append((key, delta))
                     except MKCounterWrapped:
                         counter_wrapped = True
 

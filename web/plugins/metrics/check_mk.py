@@ -1860,6 +1860,12 @@ metric_info["write_latency"] = {
     "color" : "45/a",
 }
 
+metric_info["other_latency"] = {
+    "title": _("Other latency"),
+    "unit": "s",
+    "color": "21/a",
+}
+
 metric_info["disk_queue_length"] = {
     "title" : _("Average disk I/O-queue length"),
     "unit"  : "",
@@ -3323,6 +3329,14 @@ for volume_info in [ "NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI" ]:
             "unit"  : unit,
             "color" : "44/a",
         }
+
+        if what in ["data", "ops", "latency"]:
+            metric_info["%s_other_%s" % (volume, what)] = {
+                "title": _("%s other %s") % (volume_info, what),
+                "unit": unit,
+                "color": "21/a",
+            }
+
 
 metric_info["nfs_ios"] = {
     "title" : _( "NFS operations"),
@@ -5101,16 +5115,24 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
+    "read_latency"          : { "scale": m },
+    "write_latency"         : { "scale": m },
+    "other_latency"         : { "scale": m },
     "nfs_read_latency"      : { "scale" : m },
     "nfs_write_latency"     : { "scale" : m },
+    "nfs_other_latency"     : { "scale" : m },
     "cifs_read_latency"     : { "scale" : m },
     "cifs_write_latency"    : { "scale" : m },
+    "cifs_other_latency"    : { "scale" : m },
     "san_read_latency"      : { "scale" : m },
     "san_write_latency"     : { "scale" : m },
+    "san_other_latency"     : { "scale" : m },
     "fcp_read_latency"      : { "scale" : m },
     "fcp_write_latency"     : { "scale" : m },
+    "fcp_other_latency"     : { "scale" : m },
     "iscsi_read_latency"    : { "scale" : m },
     "iscsi_write_latency"   : { "scale" : m },
+    "iscsi_other_latency"   : { "scale" : m },
 }
 
 

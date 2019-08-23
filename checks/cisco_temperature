@@ -179,11 +179,17 @@ def check_cisco_temperature(item, params, parsed):
         data = temp_parsed[item]
         if data.get("obsolete", False):
             return 3, "This sensor is obsolete, please rediscover"
-        else:
-            state, state_readable = data['dev_state']
-            return check_temperature(data['reading'], params, "cisco_temperature_%s" % item,
-                        dev_levels=data['dev_levels'],
-                        dev_status=state, dev_status_name=state_readable)
+
+        state, state_readable = data['dev_state']
+        reading = data.get('reading')
+        if reading is None:
+            return state, 'Status: %s' % state_readable
+        return check_temperature(reading,
+                                 params,
+                                 "cisco_temperature_%s" % item,
+                                 dev_levels=data['dev_levels'],
+                                 dev_status=state,
+                                 dev_status_name=state_readable)
 
 
 check_info['cisco_temperature'] = {

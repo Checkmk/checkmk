@@ -218,7 +218,7 @@ class ACTest(object):
 
     def _get_effective_global_setting(self, varname):
         global_settings = load_configuration_settings()
-        default_values = ConfigDomain().get_all_default_globals()
+        default_values = ConfigDomain.get_all_default_globals()
 
         if cmk.gui.config.is_wato_slave_site():
             current_settings = load_configuration_settings(site_specific=True)

@@ -44,11 +44,16 @@ def wato_fileheader():
 
 
 class ConfigDomain(object):
+    __metaclass__ = abc.ABCMeta
+
     needs_sync = True
     needs_activation = True
     always_activate = False
-    ident = None
     in_global_settings = True
+
+    @abc.abstractproperty
+    def ident(self):
+        raise NotImplementedError()
 
     @classmethod
     def enabled_domains(cls):
@@ -73,6 +78,7 @@ class ConfigDomain(object):
             settings.update(domain().default_globals())
         return settings
 
+    @abc.abstractmethod
     def config_dir(self):
         raise NotImplementedError()
 
@@ -119,6 +125,7 @@ class ConfigDomain(object):
     def save_site_globals(self, settings):
         self.save(settings, site_specific=True)
 
+    @abc.abstractmethod
     def default_globals(self):
         """Returns a dictionary that contains the default settings
         of all configuration variables of this config domain."""

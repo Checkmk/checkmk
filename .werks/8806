@@ -1,0 +1,12 @@
+Title: mk_oracle: Fixed discovery of XE instances on Oracle 18c
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1566547253
+Class: fix
+
+In newer version of Oracle (at least since 18c) the instance name is not
+pinned to XE if the free version is used. The discovery pattern for running
+instance does now represent this change.

@@ -77,7 +77,7 @@ class UpdateConfig(object):
         self._logger = logger
 
     def run(self):
-        self._logger.info("Updating Checkmk configuration")
+        self._logger.info("Updating Checkmk configuration with \"cmk-update-config -v\"")
         self._initialize_gui_environment()
 
         environ = dict(create_environ(), REQUEST_URI='')
@@ -121,6 +121,9 @@ class UpdateConfig(object):
 
     def _initialize_gui_environment(self):
         cmk.gui.modules.load_all_plugins()
+        # TODO: We are about to rewrite parts of the config. Would be better to be executable without
+        # loading the configuration first (because the load_config() may miss some conversion logic
+        # which is only known to cmk.update_config in the future).
         cmk.gui.config.load_config()
         cmk.gui.config.set_super_user()
 
@@ -144,7 +147,7 @@ def main(args):
         if arguments.debug:
             raise
         if logger:
-            logger.exception("ERROR")
+            logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
         else:
             print("ERROR: %s" % e)
         return 1

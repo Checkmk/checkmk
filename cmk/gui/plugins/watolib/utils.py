@@ -43,7 +43,7 @@ def wato_fileheader():
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ConfigDomain(object):
+class ABCConfigDomain(object):
     __metaclass__ = abc.ABCMeta
 
     needs_sync = True
@@ -74,7 +74,7 @@ class ConfigDomain(object):
     @classmethod
     def get_all_default_globals(cls):
         settings = {}
-        for domain in ConfigDomain.enabled_domains():
+        for domain in ABCConfigDomain.enabled_domains():
             settings.update(domain().default_globals())
         return settings
 
@@ -142,7 +142,7 @@ class ConfigDomain(object):
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
-        return ConfigDomain
+        return ABCConfigDomain
 
     def plugin_name(self, plugin_class):
         return plugin_class.ident
@@ -262,7 +262,7 @@ class ConfigVariable(object):
         raise NotImplementedError()
 
     def domain(self):
-        # type: () -> Type[ConfigDomain]
+        # type: () -> Type[ABCConfigDomain]
         """Returns the class of the config domain this configuration variable belongs to"""
         return config_domain_registry["check_mk"]
 
@@ -320,7 +320,7 @@ def register_configvar(group,
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
     if isinstance(domain, six.string_types):
-        domain = ConfigDomain.get_class(domain)
+        domain = ABCConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
     if isinstance(group, six.string_types):

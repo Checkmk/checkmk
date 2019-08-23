@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import (
     config_variable_group_registry,
     ConfigVariableGroup,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainOMD,
     LivestatusViaTCP,
     config_variable_registry,
@@ -241,7 +241,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 
 # TODO: Diskspace cleanup does not support site specific globals!
 @config_domain_registry.register
-class ConfigDomainDiskspace(ConfigDomain):
+class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
     ident = "diskspace"
@@ -413,7 +413,7 @@ add_replication_paths([
 
 
 @config_domain_registry.register
-class ConfigDomainApache(ConfigDomain):
+class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "apache"
@@ -530,7 +530,7 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 
 
 @config_domain_registry.register
-class ConfigDomainRRDCached(ConfigDomain):
+class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "rrdcached"

@@ -180,7 +180,7 @@ from cmk.gui.watolib import (
     ACResultWARN,
     ACResultOK,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainCore,
     ConfigDomainOMD,
     ConfigDomainEventConsole,

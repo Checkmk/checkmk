@@ -35,7 +35,7 @@
 #   '----------------------------------------------------------------------'
 
 from cmk.gui.plugins.watolib.utils import (
-    ConfigDomain,
+    ABCConfigDomain,
     config_domain_registry,
 )
 

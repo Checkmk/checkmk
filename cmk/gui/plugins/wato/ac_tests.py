@@ -659,7 +659,7 @@ class ACTestCheckMKHelperUsage(ACTest):
               "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ConfigDomain.get_all_default_globals()
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
         if self._get_effective_global_setting(
                 "cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and helper_usage_perc < 50:
             yield ACResultWARN(

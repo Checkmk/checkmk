@@ -916,17 +916,34 @@ protected:
     bool defined_ = false;
     bool async_ = false;
 
-    int timeout_ = 0;    // from the config file, #TODO use chrono
-    int cache_age_ = 0;  // from the config file, #TODO use chrono
+    int timeout_ =
+        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
+    int cache_age_ = 0;         // from the config file, #TODO use chrono
 
     int retry_ = 0;
 };
+
+template <typename T>
+void ApplyValueIfScalar(const YAML::Node& entry, T& var,
+                        std::string_view name) noexcept {
+    if (!name.data()) {
+        XLOG::l(XLOG_FUNC + "name is null");
+        return;
+    }
+    try {
+        auto v = entry[name.data()];
+        if (v.IsDefined() && v.IsScalar()) var = v.as<T>(var);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + "Exception '{}'", e.what());
+    }
+}
 
 struct Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
         ExeUnit() = default;
+
         // Sync
         ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
             : PluginInfo(Timeout, Retry)  //
@@ -940,6 +957,13 @@ public:
             , pattern_(Pattern)                //
             , run_(Run) {
             validateAndFix();
+        }
+
+        // only for testing
+        ExeUnit(std::string_view pattern, const std::string& entry)
+            : pattern_(pattern)  //
+        {
+            assign(YAML::Load(entry));
         }
 
         // Only For Testing Automation with Initializer Lists
@@ -960,6 +984,17 @@ public:
 
         auto pattern() const noexcept { return pattern_; }
         auto run() const noexcept { return run_; }
+        void assign(const YAML::Node& node) noexcept;
+        void apply(const YAML::Node& node) noexcept;
+        const YAML::Node source() const noexcept { return source_; }
+
+        void resetConfig() {
+            async_ = false;
+            timeout_ = kDefaultPluginTimeout;
+            cache_age_ = 0;
+            retry_ = 0;
+            run_ = true;
+        }
 
     private:
         void validateAndFix() {
@@ -974,8 +1009,13 @@ public:
             cache_age_ = kMinimumCacheAge;
         }
 
-        const std::string pattern_;
-        bool run_;
+        std::string pattern_;
+        bool run_ = true;
+        YAML::Node source_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+        friend class AgentConfig;
+        FRIEND_TEST(AgentConfig, ExeUnitTest);
+#endif
     };
 
     struct CmdLineInfo {

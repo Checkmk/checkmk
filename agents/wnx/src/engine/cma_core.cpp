@@ -229,7 +229,6 @@ void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles) {
     }
 }
 
-using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
 static cma::cfg::Plugins::ExeUnit* GetEntrySafe(UnitMap& Pm,
                                                 const std::string& Key) {
     try {
@@ -240,7 +239,8 @@ static cma::cfg::Plugins::ExeUnit* GetEntrySafe(UnitMap& Pm,
     }
 }
 
-static void UpdatePluginapWithUnitMap(PluginMap& out, UnitMap& um, bool local) {
+static void UpdatePluginMapWithUnitMap(PluginMap& out, UnitMap& um,
+                                       bool local) {
     for (auto& [name, unit] : um) {
         auto ptr = GetEntrySafe(out, name);
         if (ptr) {
@@ -264,11 +264,21 @@ static void UpdatePluginapWithUnitMap(PluginMap& out, UnitMap& um, bool local) {
             p.removeFromExecution();
         }
     }
+
+    // reporting
+    for (auto& [name, unit] : um) {
+        auto ptr = GetEntrySafe(out, name);
+        if (ptr == nullptr) continue;
+        XLOG::d.i("{} '{}'  is  {} with age:{} timeout:{} retry:{}",
+                  local ? "Local" : "Plugin", name,
+                  ptr->async() ? "async" : "sync", ptr->cacheAge(),
+                  ptr->timeout(), ptr->retry());
+    }
 }
 
 namespace tools {
 bool AddUniqStringToSetIgnoreCase(std::set<std::string>& cache,
-                                  const std::string value) noexcept {
+                                  const std::string& value) noexcept {
     auto to_insert = value;
     cma::tools::StringUpper(to_insert);
     auto found = cache.find(to_insert);
@@ -296,10 +306,107 @@ bool AddUniqStringToSetAsIs(std::set<std::string>& cache,
 
 static void ApplyEverythingLogResult(const std::string& format,
                                      std::string_view file, bool local) {
-    XLOG::d.t(format, file, local ? "[local]" : "[plugins]");
+    XLOG::t(format, file, local ? "[local]" : "[plugins]");
+}
+
+static void PrintNode(YAML::Node node, std::string_view S) {
+    if (tgt::IsDebug()) {
+        YAML::Emitter emit;
+        emit << node;
+        XLOG::l("{}:\n{}", S, emit.c_str());
+    }
+}
+
+std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
+    const std::vector<std::filesystem::path>& found_files, bool local) {
+    std::set<std::string> cache;
+    auto files = found_files;
+    files.erase(
+        std::remove_if(files.begin(), files.end(),
+                       [&cache, local](const std::filesystem::path& candidate) {
+                           auto fname = candidate.filename().u8string();
+                           auto new_file = tools::AddUniqStringToSetIgnoreCase(
+                               cache, fname);
+                           if (!new_file)
+                               ApplyEverythingLogResult(
+                                   "Skipped duplicated file '{}'",
+                                   candidate.u8string(), local);
+                           return !new_file;
+                       }),
+        files.end());
+    return files;
+}
+
+void RemoveDuplicatedEntriesByName(UnitMap& um, bool local) {
+    namespace fs = std::filesystem;
+    std::set<std::string> cache;
+    std::vector<std::string> to_remove;
+    for (auto& u : um) {
+        fs::path p = u.second.pattern();
+        auto new_file =
+            tools::AddUniqStringToSetIgnoreCase(cache, p.filename().u8string());
+        if (!new_file) {
+            ApplyEverythingLogResult("Skipped duplicated file '{}'",
+                                     p.u8string(), local);
+            to_remove.emplace_back(u.first);
+        }
+    }
+    for (auto& str : to_remove) um.erase(str);
 }
 
 void ApplyEverythingToPluginMap(
+    PluginMap& out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    const std::vector<std::filesystem::path>& found_files, bool local) {
+    UnitMap um;
+
+    auto files = found_files;
+
+    for (auto& f : files) {
+        for (auto it = Units.rbegin(); it != Units.rend(); ++it) {
+            if (!MatchPattern(it->pattern(), f)) continue;
+
+            // string is match
+            auto entry_full_name = f.u8string();
+            auto exe = GetEntrySafe(um, entry_full_name);
+            std::string fmt_string;
+            if (exe) {
+                fmt_string = "Plugin '{}' to be updated to {}";
+
+            } else {
+                // check duplicated filename
+                um.emplace(std::make_pair(entry_full_name,
+                                          cma::cfg::Plugins::ExeUnit()));
+                fmt_string = "Plugin '{}' added to {}";
+                exe = GetEntrySafe(um, entry_full_name);
+            }
+
+            if (exe) {
+                exe->apply(it->source());
+            }
+
+            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
+        }
+    }
+
+    std::set<std::string> cache;
+    for (auto& f : files) {
+        auto entry_full_name = f.u8string();
+        cma::tools::StringLower(entry_full_name);
+        auto exe = GetEntrySafe(um, entry_full_name);
+        if (exe == nullptr || !exe->run()) continue;
+        auto fname = f.filename().u8string();
+        auto added = tools::AddUniqStringToSetIgnoreCase(cache, fname);
+        if (!added) {
+            um.erase(entry_full_name);
+            auto fmt_string = "Skipped duplicated file by name '{}' in {}";
+            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
+        }
+    }
+    // apply config for presented
+    UpdatePluginMapWithUnitMap(out, um, local);
+}
+
+void ApplyEverythingToPluginMapDeprecated(
     PluginMap& out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
     const std::vector<std::filesystem::path>& found_files, bool local) {
     UnitMap um;
@@ -335,7 +442,7 @@ void ApplyEverythingToPluginMap(
     }
 
     // apply config for presented
-    UpdatePluginapWithUnitMap(out, um, local);
+    UpdatePluginMapWithUnitMap(out, um, local);
 }
 
 // Main API

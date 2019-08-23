@@ -91,6 +91,11 @@ inline void SafeCleanBakeryDir() {
                 wtools::ConvertToUTF8(bakery_dir));
     }
 }
+
+const std::string_view very_temp = "tmpx";
+
+void SafeCleanTmpxDir();
+
 void PrintNode(YAML::Node node, std::string_view S);
 }  // namespace tst
 #endif  // test_tools_h__

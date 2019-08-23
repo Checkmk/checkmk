@@ -296,6 +296,49 @@ inline bool SetEnv(const std::basic_string<T>& EnvVarName,
     }
 }
 
+// safe temporary setting environment variable
+// sets variable on ctor
+// remove variable on dtor
+// NOT THREAD SAFE and cannot be Thread Safe by nature of the _setenv
+// Usage {WithEnv we("PATH", ".");.........;}
+template <typename T>
+class WithEnv {
+public:
+    // ctor
+    WithEnv(const std::basic_string<T>& name, const std::basic_string<T>& value)
+        : name_(name) {
+        if (!name_.empty()) SetEnv(name, value);
+    }
+
+    ~WithEnv() {
+        if (!name_.empty()) SetEnv(name_, {});
+    }
+
+    // no copy - environment variable are persistent globals
+    WithEnv(const WithEnv& rhs) = delete;
+    WithEnv& operator=(const WithEnv& rhs) = delete;
+
+    // move is allowed
+    WithEnv(WithEnv&& rhs) {
+        name_ = rhs.name_;
+        rhs.name_.clear();
+    }
+    WithEnv& operator=(WithEnv&& rhs) {
+        if (!name_.empty()) SetEnv(name_, {});
+        name_ = rhs.name_;
+        rhs.name_.clear();
+    }
+
+    const auto name() noexcept { return name_; }
+
+private:
+    std::basic_string<T> name_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class Misc;
+    FRIEND_TEST(Misc, WithEnv);
+#endif
+};
+
 template <typename T>
 std::basic_string<T> GetEnv(const T* Name) noexcept {
     T env_var_value[MAX_PATH];

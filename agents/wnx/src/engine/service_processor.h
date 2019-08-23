@@ -410,6 +410,32 @@ private:
         return result;
     }
 
+    void logAnswerProcessing(bool success) {
+        auto get_segments_text = [this]() -> std::string {
+            auto list = answer_.segmentNameList();
+            std::string s;
+            for (auto const& l : list) {
+                s += " " + l;
+            }
+            return s;
+        };
+
+        if (success) {
+            XLOG::t(XLOG_FLINE + " full answer: \n\t {}",
+                    get_segments_text());  // on the hand
+
+        } else {
+            XLOG::l(XLOG_FLINE +
+                        " no full answer: awaited [{}], received [{}]\n\t {}",
+                    answer_.awaitingSegments(),  // expected count
+                    answer_.receivedSegments(),
+                    get_segments_text());  // on the hand
+        }
+
+        XLOG::d.i("perf: Answer is ready in [{}] milliseconds",
+                  answer_.getStopWatch().getUsCount() / 1000);
+    }
+
     // We wait here for all answers from all providers, internal and external.
     // The call is *blocking*
     // #TODO break waiting
@@ -439,14 +465,9 @@ private:
         answer_.exeKickedCount(count);
 
         // now wait for answers
-        if (!answer_.waitAnswer(std::chrono::seconds(max_timeout_))) {
-            XLOG::l(XLOG_FLINE + " no full answer: awaited [{}], received [{}]",
-                    answer_.awaitingSegments(),   // expected count
-                    answer_.receivedSegments());  // on the hand
-        }
+        auto success = answer_.waitAnswer(seconds(max_timeout_));
+        logAnswerProcessing(success);
 
-        XLOG::d.i("perf: Answer is ready in [{}] milliseconds",
-                  answer_.getStopWatch().getUsCount() / 1000);
         auto result = std::move(answer_.getDataAndClear());
         return wrapResultWithStaticSections(result);
     }

@@ -259,6 +259,7 @@
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="onlyfrom.h" />
+    <ClInclude Include="on_start.h" />
     <ClInclude Include="providers\check_mk.h" />
     <ClInclude Include="providers\df.h" />
     <ClInclude Include="providers\fileinfo.h" />

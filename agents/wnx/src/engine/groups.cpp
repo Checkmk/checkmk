@@ -256,11 +256,47 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                 ExeUnit.emplace_back(pattern, timeout, cache_age, retry, run);
             else
                 ExeUnit.emplace_back(pattern, timeout, retry, run);
+            ExeUnit.back().assign(entry);
             // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
                     vars::kPluginsExecution, e.what());
         }
+    }
+}
+
+void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
+    try {
+        source_ = YAML::Clone(entry);
+        ApplyValueIfScalar(source_, run_, vars::kPluginRun);
+    } catch (const std::exception& e) {
+        pattern_ = "";
+        source_.reset();
+        XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
+                vars::kPluginsExecution, e.what());
+    }
+}
+
+void Plugins::ExeUnit::apply(const YAML::Node& entry) noexcept {
+    try {
+        if (entry.IsMap()) {
+            ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
+            ApplyValueIfScalar(entry, run_, vars::kPluginRun);
+            ApplyValueIfScalar(entry, retry_, vars::kPluginRetry);
+            ApplyValueIfScalar(entry, cache_age_, vars::kPluginCacheAge);
+            ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
+            if (cache_age_ && !async_) {
+                XLOG::d.t(
+                    "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
+                    pattern_, cache_age_);
+                async_ = true;
+            }
+        }
+    } catch (const std::exception& e) {
+        pattern_ = "";
+        source_.reset();
+        XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
+                vars::kPluginsExecution, e.what());
     }
 }
 
@@ -378,6 +414,6 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
               wtools::ConvertToUTF8(cli.cmd_line_));
 
     return cli;
-}  // namespace cma::cfg
+}
 
 }  // namespace cma::cfg

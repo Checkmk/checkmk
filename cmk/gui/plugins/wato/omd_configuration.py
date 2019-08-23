@@ -246,6 +246,9 @@ class ConfigDomainDiskspace(ConfigDomain):
     def activate(self):
         pass
 
+    def config_dir(self):
+        return ""  # unused, we override load and save below
+
     def load(self, site_specific=False):
         cleanup_settings = {}
         exec (open(self.diskspace_config).read(), {}, cleanup_settings)

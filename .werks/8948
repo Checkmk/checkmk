@@ -1,0 +1,11 @@
+Title: heartbeat_crm: Fixed crash while checking status of the resource
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1566546863
+
+

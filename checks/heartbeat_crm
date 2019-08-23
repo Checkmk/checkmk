@@ -305,7 +305,7 @@ def check_heartbeat_crm_resources(item, target_node, info):
 
     for resource in resources:
         output += ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
-        if len(resource) == 3 or resource[2] != 'Started':
+        if len(resource) == 3 and resource[2] != 'Started':
             status = 2
             output += ' (Resource is in state "%s" (!!))' % resource[2]
         elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[

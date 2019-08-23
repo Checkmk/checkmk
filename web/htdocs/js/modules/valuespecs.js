@@ -203,6 +203,10 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
 
             var container = document.getElementById(handler_data.varprefix + "_sub");
             container.innerHTML = response.result.html_code;
+
+            utils.execute_javascript_by_object(container);
+            forms.enable_dynamic_form_elements(container);
+
         },
         handler_data: {
             varprefix: varprefix,

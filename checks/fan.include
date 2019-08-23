@@ -29,23 +29,15 @@ def check_fan(rpm, params):
     if isinstance(params, tuple):
         params = {"lower": params}
 
-    warn, crit = params["lower"]
-    warn_upper, crit_upper = params.get("upper", (None, None))
-    message = "Speed at %d RPM" % rpm
-    levelstext = " (warn/crit below %s/%s RPM)" % (warn, crit)
-    if warn_upper and crit_upper:
-        levelstext = levelstext[:-1] + \
-            " and at or above %s/%s RPM)" % (warn_upper, crit_upper)
+    levels = params.get("upper", (None, None)) + params["lower"]
+    state, infotext, perfdata = check_levels(rpm,
+                                             "fan",
+                                             levels,
+                                             unit="RPM",
+                                             human_readable_func=int,
+                                             infoname="Speed")
 
-    perfdata = []
-    if params.get("output_metrics"):
-        perfdata = [("fan", rpm, warn, crit, warn_upper, crit_upper)]
+    if not params.get("output_metrics"):
+        perfdata = []
 
-    # Note that None < int
-    if rpm < crit or crit_upper is not None and rpm >= crit_upper:
-        message += levelstext
-        return 2, message, perfdata
-    elif rpm < warn or warn_upper is not None and rpm >= warn_upper:
-        message += levelstext
-        return 1, message, perfdata
-    return 0, message, perfdata
+    return state, infotext, perfdata

@@ -277,7 +277,7 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
 from cmk.gui.plugins.watolib.utils import (
-    ConfigDomain,
+    ABCConfigDomain,
     config_domain_registry,
     config_variable_registry,
     wato_fileheader,

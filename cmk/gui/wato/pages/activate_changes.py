@@ -127,12 +127,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         # All sites and domains can be affected by a restore: Better restart everything.
         watolib.add_change("changes-discarded",
                            msg,
-                           domains=watolib.ConfigDomain.enabled_domains(),
+                           domains=watolib.ABCConfigDomain.enabled_domains(),
                            need_restart=True)
 
         self._extract_snapshot(file_to_restore)
         cmk.gui.watolib.activate_changes.execute_activate_changes(
-            [d.ident for d in watolib.ConfigDomain.enabled_domains()])
+            [d.ident for d in watolib.ABCConfigDomain.enabled_domains()])
 
         for site_id in cmk.gui.watolib.changes.activation_sites():
             self.confirm_site_changes(site_id)

@@ -63,7 +63,7 @@ from cmk.gui.watolib.changes import (
     log_audit,
     activation_sites,
 )
-from cmk.gui.plugins.watolib import ConfigDomain
+from cmk.gui.plugins.watolib import ABCConfigDomain
 
 # TODO: Make private
 PHASE_INITIALIZED = "initialized"  # Thread object has been initialized (not in thread yet)
@@ -1164,11 +1164,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
 def execute_activate_changes(domains):
-    domains = set(domains).union(ConfigDomain.get_always_activate_domain_idents())
+    domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
 
     results = {}
     for domain in sorted(domains):
-        domain_class = ConfigDomain.get_class(domain)
+        domain_class = ABCConfigDomain.get_class(domain)
         warnings = domain_class().activate()
         results[domain] = warnings or []
 

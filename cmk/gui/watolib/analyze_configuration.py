@@ -40,7 +40,7 @@ from cmk.gui.globals import html
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.plugins.watolib.utils import ConfigDomain
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
@@ -218,7 +218,7 @@ class ACTest(object):
 
     def _get_effective_global_setting(self, varname):
         global_settings = load_configuration_settings()
-        default_values = ConfigDomain.get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
 
         if cmk.gui.config.is_wato_slave_site():
             current_settings = load_configuration_settings(site_specific=True)

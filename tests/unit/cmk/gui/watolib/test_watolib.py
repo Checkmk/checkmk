@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     ConfigVariableGroup,
-    ConfigDomain,
+    ABCConfigDomain,
     config_variable_registry,
     configvar_order,
 )
@@ -240,7 +240,7 @@ def test_registered_configvars_types():
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)
-        assert issubclass(var.domain(), ConfigDomain)
+        assert issubclass(var.domain(), ABCConfigDomain)
         assert isinstance(var.ident(), str)
         assert isinstance(var.valuespec(), ValueSpec)
 

@@ -37,7 +37,7 @@ from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     config_variable_registry,
-    ConfigDomain,
+    ABCConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
@@ -58,7 +58,7 @@ class GlobalSettingsMode(WatoMode):
 
         super(GlobalSettingsMode, self).__init__()
 
-        self._default_values = ConfigDomain.get_all_default_globals()
+        self._default_values = ABCConfigDomain.get_all_default_globals()
         self._global_settings = {}
         self._current_settings = {}
 
@@ -281,7 +281,7 @@ class EditGlobalSettingMode(WatoMode):
         is_configured = self._varname in self._current_settings
         is_configured_globally = self._varname in self._global_settings
 
-        default_values = watolib.ConfigDomain.get_all_default_globals()
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
 
         defvalue = default_values[self._varname]
         value = self._current_settings.get(self._varname,

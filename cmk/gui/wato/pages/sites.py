@@ -213,7 +213,7 @@ class ModeEditSite(WatoMode):
         watolib.add_change("edit-sites",
                            msg,
                            sites=[self._site_id],
-                           domains=watolib.ConfigDomain.enabled_domains())
+                           domains=watolib.ABCConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not site_spec["replication"]:
@@ -1095,7 +1095,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         global_settings = watolib.load_configuration_settings()
         trusted = global_settings.get(
             "trusted_certificate_authorities",
-            watolib.ConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
+            watolib.ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
         trusted_cas = trusted.setdefault("trusted_cas", [])
 
         if cert_pem in trusted_cas:

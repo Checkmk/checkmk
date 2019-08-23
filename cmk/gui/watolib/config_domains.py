@@ -51,12 +51,12 @@ from cmk.gui.watolib.utils import (
 )
 from cmk.gui.plugins.watolib import (
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
 )
 
 
 @config_domain_registry.register
-class ConfigDomainCore(ConfigDomain):
+class ConfigDomainCore(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "check_mk"
@@ -77,7 +77,7 @@ class ConfigDomainCore(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainGUI(ConfigDomain):
+class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
     ident = "multisite"
@@ -97,7 +97,7 @@ class ConfigDomainGUI(ConfigDomain):
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
 @config_domain_registry.register
-class ConfigDomainLiveproxy(ConfigDomain):
+class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
     ident = "liveproxyd"
@@ -168,7 +168,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainEventConsole(ConfigDomain):
+class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "ec"
@@ -194,7 +194,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainCACertificates(ConfigDomain):
+class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
@@ -317,7 +317,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainOMD(ConfigDomain):
+class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"

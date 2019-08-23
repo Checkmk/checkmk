@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato.utils import (
     host_status_button,
     CheckTypeSelection,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainCore,
     ConfigDomainEventConsole,
     ConfigDomainGUI,

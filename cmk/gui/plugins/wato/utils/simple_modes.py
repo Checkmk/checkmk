@@ -97,7 +97,7 @@ class SimpleModeType(object):
 
     @abc.abstractmethod
     def affected_config_domains(self):
-        # type: () -> List[Type[watolib.ConfigDomain]]
+        # type: () -> List[Type[watolib.ABCConfigDomain]]
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 

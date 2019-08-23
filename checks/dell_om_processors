@@ -30,23 +30,23 @@ def inventory_dell_om_processors(info):
 def check_dell_om_processors(item, _no_params, info):
     #Probetypes found in check_openmanage3.pl
     cpu_states = {
-         1 : 'Other',         # other than following values
-         2 : 'Unknown',       # unknown
-         3 : 'Enabled',       # enabled
-         4 : 'User Disabled', # disabled by user via BIOS setup
-         5 : 'BIOS Disabled', # disabled by BIOS (POST error)
-         6 : 'Idle',          # idle
+        '1': 'Other',  # other than following values
+        '2': 'Unknown',  # unknown
+        '3': 'Enabled',  # enabled
+        '4': 'User Disabled',  # disabled by user via BIOS setup
+        '5': 'BIOS Disabled',  # disabled by BIOS (POST error)
+        '6': 'Idle',  # idle
     }
 
     cpu_readings = {
-         0    : 'Unknown',
-         1    : 'Internal Error',      # Internal Error
-         2    : 'Thermal Trip',        # Thermal Trip
-         32   : 'Configuration Error', # Configuration Error
-         128  : 'Present',             # Processor Present
-         256  : 'Disabled',            # Processor Disabled
-         512  : 'Terminator Present',  # Terminator Present
-         1024 : 'Throttled',           # Processor Throttled
+        '0': 'Unknown',
+        '1': 'Internal Error',  # Internal Error
+        '2': 'Thermal Trip',  # Thermal Trip
+        '32': 'Configuration Error',  # Configuration Error
+        '128': 'Present',  # Processor Present
+        '256': 'Disabled',  # Processor Disabled
+        '512': 'Terminator Present',  # Terminator Present
+        '1024': 'Throttled',  # Processor Throttled
     }
 
     for index, status, manuf, status2, reading in info:
@@ -54,15 +54,25 @@ def check_dell_om_processors(item, _no_params, info):
             state = 0
             if not status:
                 status = status2
-            status = saveint(status)
-            reading = saveint(reading)
-            msg = "Cpu (%s) State: %s, CPU Reading: %s" % \
-            (manuf, cpu_states.get(status, 'ukn (%s)' % status ), cpu_readings[int(reading)])
-            if status != 3:
+
+            if status != '3':
                 state = 2
-            if reading in [ 1, 32 ]:
+            if reading in ['1', '32']:
                 state = 2
-            return state, msg
+
+            if status in cpu_states:
+                cpu_state_readable = cpu_states[status]
+            else:
+                cpu_state_readable = 'unknown[%s]' % status
+                state = 3
+
+            if reading in cpu_readings:
+                cpu_reading_readable = cpu_readings[reading]
+            else:
+                cpu_reading_readable = 'unknown[%s]' % reading
+                state = 3
+            return state, "[%s] CPU status: %s, CPU reading: %s" % (manuf, cpu_state_readable,
+                                                                    cpu_reading_readable)
 
     return 2, "Processor not found"
 

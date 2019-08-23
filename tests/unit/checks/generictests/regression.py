@@ -113,6 +113,6 @@ def test_main(check_manager, datasetfile):
 
     generictests.run(check_manager, regression, write=True)
 
-    directory = os.path.expanduser('~/git/check_mk/tests/unit/checks/generictests/datasets')
+    directory = os.path.join(os.path.dirname(__file__), "datasets")
     regression.write(directory)
     return

@@ -1,0 +1,11 @@
+Title: View editor: Fixed handling of invalid user input
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1566554647
+Class: fix
+
+Fixed a case where invalid user input could lead to a crash
+in the view editor.

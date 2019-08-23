@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterfa
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
 from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.rulespecs import ServiceRulespec
+from cmk.gui.watolib.rulespecs import ABCServiceValueRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
@@ -55,7 +55,7 @@ from cmk.gui.plugins.wato import (
 
 
 def dummy_rulespec():
-    rulespec_class = type("DummyRulespec", (ServiceRulespec,), {
+    rulespec_class = type("DummyRulespec", (ABCServiceValueRulespec,), {
         "group": RulespecGroupUserInterface,
         "name": "dummy",
         "valuespec": None,

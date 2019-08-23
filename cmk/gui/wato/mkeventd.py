@@ -126,7 +126,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
     rulespec_registry,
     ABCHostValueRulespec,
-    ServiceRulespec,
+    ABCServiceValueRulespec,
     main_module_registry,
     MainModule,
     wato_confirm,
@@ -3954,7 +3954,7 @@ class RulespecExtraHostConfEcSl(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfEcSl(ServiceRulespec):
+class RulespecExtraServiceConfEcSl(ABCServiceValueRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -4009,7 +4009,7 @@ class RulespecExtraHostConfEcContact(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfEcContact(ServiceRulespec):
+class RulespecExtraServiceConfEcContact(ABCServiceValueRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole

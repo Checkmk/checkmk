@@ -112,7 +112,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     Rulespec,
     ABCHostValueRulespec,
-    ServiceRulespec,
+    ABCServiceValueRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,
     CheckParameterRulespecWithItem,

@@ -631,7 +631,7 @@ class ABCHostValueRulespec(ABCHostRulespec, ABCValueRulespec):
     __metaclass__ = abc.ABCMeta
 
 
-class ServiceRulespec(ABCServiceRulespec, ABCValueRulespec):
+class ABCServiceValueRulespec(ABCServiceRulespec, ABCValueRulespec):
     """Base class for all rulespecs managing service rule sets with values"""
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
@@ -641,7 +641,7 @@ class ServiceRulespec(ABCServiceRulespec, ABCValueRulespec):
     __metaclass__ = abc.ABCMeta
 
 
-class CheckParameterRulespecWithItem(ServiceRulespec):
+class CheckParameterRulespecWithItem(ABCServiceValueRulespec):
     """Base class for all rulespecs managing parameters for check groups with item
 
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
@@ -825,7 +825,7 @@ def register_rule(
     elif valuespec is None:
         base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
     else:
-        base_class = ServiceRulespec if itemtype is not None else ABCHostValueRulespec
+        base_class = ABCServiceValueRulespec if itemtype is not None else ABCHostValueRulespec
 
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_attrs["check_group_name"] = varname.split(":", 1)[1]

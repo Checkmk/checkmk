@@ -50,12 +50,12 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     rulespec_registry,
     ABCHostValueRulespec,
-    ServiceRulespec,
+    ABCServiceValueRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecLogwatchRules(ServiceRulespec):
+class RulespecLogwatchRules(ABCServiceValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications

@@ -36,6 +36,19 @@ void SafeCleanTempDir() {
     fs::create_directory(temp_dir);
 }
 
+void SafeCleanTmpxDir() {
+    namespace fs = std::filesystem;
+    if (very_temp != "tmpx") {
+        XLOG::l.crit(
+            "Recursive folder remove is allowed only for very temporary folders");
+        terminate();
+        return;
+    }
+
+    // clean
+    fs::remove_all(very_temp);
+}
+
 void SafeCleanTempDir(std::string_view sub_dir) {
     namespace fs = std::filesystem;
     auto temp_dir = cma::cfg::GetTempDir();
@@ -478,5 +491,29 @@ TEST(CmaTools, StringCache) {
         ASSERT_TRUE(cache.size() == 4);
     }
 }
+
+namespace win {
+TEST(Misc, WithEnv) {
+    std::string env_var_name = "XxYyZz_1";
+    std::string env_var_value = "aaa";
+    EXPECT_EQ(GetEnv(env_var_name), "");
+    {
+        WithEnv with_env(env_var_name, env_var_value);
+        EXPECT_EQ(GetEnv(env_var_name), env_var_value);
+        EXPECT_EQ(with_env.name(), env_var_name);
+        auto w_e = std::move(with_env);
+        EXPECT_EQ(GetEnv(env_var_name), env_var_value);
+        EXPECT_TRUE(with_env.name_.empty());
+        EXPECT_TRUE(with_env.name().empty());
+        EXPECT_EQ(w_e.name_, env_var_name);
+        auto w_e2(std::move(w_e));
+        EXPECT_EQ(GetEnv(env_var_name), env_var_value);
+        EXPECT_TRUE(w_e.name_.empty());
+        EXPECT_EQ(w_e2.name_, env_var_name);
+    }
+    EXPECT_EQ(GetEnv(env_var_name), "");
+}
+
+}  // namespace win
 
 }  // namespace cma::tools

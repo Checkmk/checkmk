@@ -1299,6 +1299,7 @@ static YAML::Node generateTestNode(const std::string& node_text) {
 
 TEST(AgentConfig, NodeCleanup) {
     ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
     {
         const auto node_base = generateTestNode(node_text);
         YAML::Node node = YAML::Clone(node_base);
@@ -1359,6 +1360,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
         EXPECT_EQ(exe_units[0].pattern(), "a_1");
         EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
         EXPECT_EQ(exe_units[0].async(), true);
+        for (auto e : exe_units) EXPECT_TRUE(e.source().IsMap());
 
         EXPECT_EQ(exe_units[1].pattern(), "a_0");
         EXPECT_EQ(exe_units[1].cacheAge(), 0);
@@ -1381,4 +1383,78 @@ TEST(AgentConfig, PluginsExecutionParams) {
         EXPECT_EQ(exe_units[4].retry(), 1);
     }
 }
+
+TEST(AgentConfig, ApplyValueIfScalar) {
+    auto e = YAML::Load(
+        "pattern: '*'\n"
+        "run: no\n"
+        "async: yes\n"
+        "cache_age: 193\n"
+        "timeout: 77\n"
+        "retry_count: 7\n");
+    auto e_ = YAML::Load(
+        "pattern: '*'\n"
+        "_run: no\n"
+        "_async: yes\n"
+        "_cache_age: 193\n"
+        "_timeout: 77\n"
+        "_retry_count: 7\n");
+    bool run = true;
+    bool async = false;
+    int cache_age = 0;
+    int timeout = cma::cfg::kDefaultPluginTimeout;
+    int retry = 0;
+    EXPECT_NO_THROW(ApplyValueIfScalar(YAML::Node(), run, ""));
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, run, ""));
+    EXPECT_TRUE(run);
+
+    // values should not be changed here
+    EXPECT_NO_THROW(ApplyValueIfScalar(e_, run, vars::kPluginRun));
+    EXPECT_TRUE(run);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e_, async, vars::kPluginAsync));
+    EXPECT_FALSE(async);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e_, retry, vars::kPluginRetry));
+    EXPECT_EQ(retry, 0);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e_, timeout, vars::kPluginTimeout));
+    EXPECT_EQ(timeout, cma::cfg::kDefaultPluginTimeout);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e_, cache_age, vars::kPluginCacheAge));
+    EXPECT_EQ(cache_age, 0);
+
+    // values should BE changed here
+    tst::PrintNode(e, "a");
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, run, vars::kPluginRun));
+    EXPECT_FALSE(run);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, async, vars::kPluginAsync));
+    EXPECT_TRUE(async);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, retry, vars::kPluginRetry));
+    EXPECT_EQ(retry, 7);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, timeout, vars::kPluginTimeout));
+    EXPECT_EQ(timeout, 77);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, cache_age, vars::kPluginCacheAge));
+    EXPECT_EQ(cache_age, 193);
+}
+
+TEST(AgentConfig, ExeUnitTest) {
+    Plugins::ExeUnit e;
+    Plugins::ExeUnit e2;
+    EXPECT_EQ(e.async(), false);
+    EXPECT_EQ(e.run(), true);
+    EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
+    EXPECT_EQ(e.cacheAge(), 0);
+    EXPECT_EQ(e.retry(), 0);
+
+    e.async_ = true;
+    e.run_ = false;
+
+    e.timeout_ = 1;
+    e.cache_age_ = 1111;
+    e.retry_ = 3;
+    e.resetConfig();
+    EXPECT_EQ(e.async(), false);
+    EXPECT_EQ(e.run(), true);
+    EXPECT_EQ(e.timeout(), cma::cfg::kDefaultPluginTimeout);
+    EXPECT_EQ(e.cacheAge(), 0);
+    EXPECT_EQ(e.retry(), 0);
+}
+
 }  // namespace cma::cfg

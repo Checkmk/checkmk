@@ -210,6 +210,9 @@
     <ClInclude Include="..\common\stop_watch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="on_start.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

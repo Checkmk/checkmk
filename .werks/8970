@@ -1,0 +1,11 @@
+Title: diskstat: fix of parsing functionality concerning device names
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1566561549
+
+This is a bug fix for the diskstat check. This fix primarily concerns users who rely on XEN servers where the name format of discs slightly differs. The updated version makes sure that no discs are accidentally skipper over during the parsing process of the information. The mentioned name format does not concern all users. 

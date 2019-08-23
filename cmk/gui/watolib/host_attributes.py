@@ -742,6 +742,13 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
 
 class ABCHostAttributeText(ABCHostAttribute):
     """A simple text attribute. It is stored in a Python unicode string"""
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     @property
     def _allow_empty(self):
         return True
@@ -827,6 +834,13 @@ class ABCHostAttributeFixedText(ABCHostAttributeText):
     It can be used to store context information from other
     systems (e.g. during an import of a host database from
     another system)."""
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     def render_input(self, varprefix, value):
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
@@ -894,6 +908,13 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag):
     """A selection dropdown for a host tag"""
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     def valuespec(self):
         choices = self._tag_group.get_tag_choices()
         return DropdownChoice(
@@ -915,6 +936,13 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag):
 
 class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
     """A checkbox for a host tag group"""
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     def valuespec(self):
         choice = self._tag_group.get_tag_choices()[0]
         return Checkbox(

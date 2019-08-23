@@ -581,11 +581,21 @@ class ABCBinaryRulespec(Rulespec):
 
 
 class BinaryHostRulespec(ABCHostRulespec, ABCBinaryRulespec):
-    pass
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
 
 
 class BinaryServiceRulespec(ABCServiceRulespec, ABCBinaryRulespec):
-    pass
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
 
 
 class ABCValueRulespec(Rulespec):
@@ -613,12 +623,22 @@ class ABCValueRulespec(Rulespec):
 
 class HostRulespec(ABCHostRulespec, ABCValueRulespec):
     """Base class for all rulespecs managing host rule sets with values"""
-    pass
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
 
 
 class ServiceRulespec(ABCServiceRulespec, ABCValueRulespec):
     """Base class for all rulespecs managing service rule sets with values"""
-    pass
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
 
 
 class CheckParameterRulespecWithItem(ServiceRulespec):

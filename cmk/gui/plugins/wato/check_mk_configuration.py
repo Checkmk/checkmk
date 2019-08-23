@@ -80,7 +80,7 @@ from cmk.gui.plugins.wato import (
     ABCHostValueRulespec,
     ABCServiceValueRulespec,
     ABCBinaryHostRulespec,
-    BinaryServiceRulespec,
+    ABCBinaryServiceRulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -3777,7 +3777,7 @@ class RulespecOnlyHosts(ABCBinaryHostRulespec):
 
 
 @rulespec_registry.register
-class RulespecIgnoredServices(BinaryServiceRulespec):
+class RulespecIgnoredServices(ABCBinaryServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3825,7 +3825,7 @@ class RulespecIgnoredChecks(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecClusteredServices(BinaryServiceRulespec):
+class RulespecClusteredServices(ABCBinaryServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK

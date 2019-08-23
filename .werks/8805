@@ -1,0 +1,15 @@
+Title: mk_oracle: Fixed jobs with auto_drop
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1566542577
+
+All Schduler-Jobs with auto_drop=True were ignored by the plugin. This has
+been fixed to:
+not (auto_drop = 'TRUE' and REPEAT_INTERVAL is null)
+
+You will need to replace the agent plugin to profit from this fix.

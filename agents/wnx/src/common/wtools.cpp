@@ -2020,6 +2020,35 @@ bool IsAgentHealthy() noexcept {
 }
 }  // namespace monitor
 
+// Low level function to get parent reliable
+uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
+{
+    ULONG_PTR pbi[6];
+    ULONG ulSize = 0;
+    LONG(WINAPI * NtQueryInformationProcess)
+    (HANDLE ProcessHandle, ULONG ProcessInformationClass,
+     PVOID ProcessInformation, ULONG ProcessInformationLength,
+     PULONG ReturnLength);
+    *(FARPROC*)&NtQueryInformationProcess =
+        GetProcAddress(LoadLibraryA("NTDLL.DLL"), "NtQueryInformationProcess");
+    if (!NtQueryInformationProcess) return 0;
+
+    auto h = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (h == 0) {
+        XLOG::l.w("Can't get info from process [{}] error [{}]", pid,
+                  GetLastError());
+
+        return 0;
+    }
+    ON_OUT_OF_SCOPE(CloseHandle(h));
+
+    if (NtQueryInformationProcess(h, 0, &pbi, sizeof(pbi), &ulSize) >= 0 &&
+        ulSize == sizeof(pbi))
+        return (uint32_t)(pbi[5]);
+
+    return 0;
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

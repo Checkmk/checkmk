@@ -655,7 +655,8 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        wtools::KillProcessTree(pid);
+        if (wtools::kProcessTreeKillAllowed) wtools::KillProcessTree(pid);
+
         wtools::KillProcess(pid);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
         return true;

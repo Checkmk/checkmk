@@ -359,4 +359,15 @@ TEST(Wtools, MemSize) {
     EXPECT_TRUE(sz > static_cast<size_t>(400'000));
 }
 
+TEST(Wtools, ParentPid) {
+    //    uint32_t pid = 0;
+    //    auto parent_pid = GetParentPid(pid);
+    //    EXPECT_TRUE(pid == 0);
+}
+
+TEST(Wtools, KillTree) {
+    //
+    EXPECT_FALSE(kProcessTreeKillAllowed);
+}
+
 }  // namespace wtools

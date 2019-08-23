@@ -177,18 +177,22 @@ check_info['aws_ec2.cpu_util'] = {
 @get_parsed_item_data
 def check_aws_ec2_disk_io(item, params, metrics):
     now = time.time()
-    disks = {
-        item: {
-            "read_ios": get_rate("aws_ebs_disk_io_read_ios.%s" % item, now, metrics['DiskReadOps']),
-            "write_ios": get_rate("aws_ebs_disk_io_write_ios.%s" % item, now,
-                                  metrics['DiskWriteOps']),
-            "read_throughput": get_rate("aws_ebs_disk_io_read_throughput.%s" % item, now,
-                                        metrics['DiskReadBytes']),
-            "write_throughput": get_rate("aws_ebs_disk_io_write_throughput.%s" % item, now,
-                                         metrics['DiskWriteBytes']),
-        }
-    }
-    return check_diskstat_dict(item, params, disks)
+    disk_data = {}
+    for key, metrics_key in [
+        ("read_ios", "DiskReadOps"),
+        ("write_ios", "DiskWriteOps"),
+        ("read_throughput", "DiskReadBytes"),
+        ("write_throughput", "DiskWriteBytes"),
+    ]:
+        value = metrics.get(metrics_key)
+        if value is None:
+            continue
+        disk_data[key] = get_rate("aws_ebs_disk_io_%s.%s" % (key, item), now, value)
+
+    if not disk_data:
+        return
+
+    return check_diskstat_dict(item, params, {item: disk_data})
 
 
 check_info['aws_ec2.disk_io'] = {

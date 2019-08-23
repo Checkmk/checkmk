@@ -1,0 +1,11 @@
+Title: aws_ec2.disk_io: Do not crash if some values about disk IO are missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566552261
+
+

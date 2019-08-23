@@ -68,9 +68,14 @@ def parse_websphere_mq_queues(info):
         if len(line) < 2:
             continue
 
+        try:
+            cur_depth = int(line[0])
+        except ValueError:
+            continue
+
         queue_name = line[1]
         parsed.setdefault(queue_name, {})
-        parsed[queue_name].setdefault('cur_depth', int(line[0]))
+        parsed[queue_name].setdefault('cur_depth', cur_depth)
 
         if len(line) >= 3:
             if line[2].isdigit():

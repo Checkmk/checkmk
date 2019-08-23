@@ -483,7 +483,7 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
 
     # Inventory checks - if user has configured them.
     params = host_config.discovery_check_parameters
-    if params["check_interval"] \
+    if params and params["check_interval"] \
         and not config.service_ignored(hostname, None, service_discovery_name) \
         and not host_config.is_ping_host:
         service_spec = {

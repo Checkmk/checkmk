@@ -130,7 +130,7 @@ from cmk.gui.watolib.rulespecs import (
     ABCHostValueRulespec,
     ABCServiceValueRulespec,
     ABCBinaryHostRulespec,
-    BinaryServiceRulespec,
+    ABCBinaryServiceRulespec,
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     ManualCheckParameterRulespec,

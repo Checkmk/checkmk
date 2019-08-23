@@ -70,7 +70,7 @@ body.side {
   left: 0;
   z-index: 10;
   width: 100%;
-  height: 64px;
+  height: $side-header-height;
   margin: 0;
   background: $theme-color-sidebar-background;
   border: none;

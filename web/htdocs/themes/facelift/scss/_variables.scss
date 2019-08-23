@@ -275,8 +275,6 @@ $select2-selected-bg-color:		    null;
 $select2-highlighted-bg-color:		    null;
 
 $td-single-bg-color:			    $theme-color-white;
-$td-single-left-color:			    null;
-
 $wato-tr-bg-color:			    transparent;
 $wato-a-hover-bg-color:			    $theme-color-table-background;
 
@@ -286,7 +284,7 @@ $color-div-box-shadow:			    0.5px 0.5px 1px #888;
 
 $graph-legend-color:			    null;
 
-$state0-font-color:			    null;
+$dark-font-color:			    null;
 
 $body-dashlet-bg-color:			    transparent;
 $dashlet-bg-color:			    null;
@@ -331,10 +329,7 @@ $wato-subtitle-color:			    $theme-color-darkgrey;
 
 $footnote-link-color:			    #13d389;
 
-$table-data-single-border-color:	    null;
 $table-data-single-padding:		    8px 16px;
-$td-single-left-text-align:		    null;
-$td-single-left-text-transform:		    null;
 $td-single-left-border-right:		    1px solid $theme-color-table-border;
 
 $host-diag-success-bg-color:		    #efe;
@@ -367,3 +362,16 @@ $groupheader-first-padding-top:		    null;
 $boxlayout-tr-bg-color:			    transparent;
 
 $age-font-color:			    #666;
+
+$mk-search-results-bg-color:		    #dfdfdf;
+$mk-search-results-hover-bg-color:	    #bfbfbf;
+$mk-search-results-border:		    1px solid $white;
+
+$repprogress-msg-color:			    null;
+$repprogress-progress-bg-color:		    $theme-color-state-6-background;
+$repprogress-progress-border-color:	    $theme-color-nuance-17;
+
+$side-header-height:			    64px;
+
+$first-child-border-radius:		    4px 0 0 4px;
+$optiondial-refresh-border-radius:	    0 4px 4px 0;

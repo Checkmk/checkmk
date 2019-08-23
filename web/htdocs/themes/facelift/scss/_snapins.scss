@@ -583,20 +583,20 @@ div.spacertop {
   float: left;
   width: 223px;
   font-size: 80%;
-  color: #000;
-  background-color: #dfdfdf;
-  border: 1px solid #fff;
+  color: $primary-font-color;
+  background-color: $mk-search-results-bg-color;
+  border: $mk-search-results-border;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    color: #000;
+    color: $primary-font-color;
     text-align: left;
     text-decoration: none;
 
     &:hover, &.active {
-      background-color: #bfbfbf;
+      background-color: $mk-search-results-hover-bg-color;
     }
   }
 

@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
     rulespec_registry,
-    HostRulespec,
+    ABCHostValueRulespec,
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
@@ -547,7 +547,7 @@ def convert_inventory_processes(old_dict):
 
 
 @rulespec_registry.register
-class RulespecInventoryProcessesRules(HostRulespec):
+class RulespecInventoryProcessesRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery
@@ -774,7 +774,7 @@ def hr_process_parameter_elements():
 
 
 @rulespec_registry.register
-class RulespecDiscoveryHRProcessesRules(HostRulespec):
+class RulespecDiscoveryHRProcessesRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

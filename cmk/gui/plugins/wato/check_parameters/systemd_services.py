@@ -43,12 +43,12 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecDiscoverySystemdUnitsServicesRules(HostRulespec):
+class RulespecDiscoverySystemdUnitsServicesRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

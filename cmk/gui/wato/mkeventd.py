@@ -125,7 +125,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     RulespecGroup,
     rulespec_registry,
-    HostRulespec,
+    ABCHostValueRulespec,
     ServiceRulespec,
     main_module_registry,
     MainModule,
@@ -3780,7 +3780,7 @@ def convert_mkevents_hostspec(value):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcEventLimit(HostRulespec):
+class RulespecExtraHostConfEcEventLimit(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole
@@ -3799,7 +3799,7 @@ class RulespecExtraHostConfEcEventLimit(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksMkevents(HostRulespec):
+class RulespecActiveChecksMkevents(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole
@@ -3935,7 +3935,7 @@ def _sl_help():
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcSl(HostRulespec):
+class RulespecExtraHostConfEcSl(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -3994,7 +3994,7 @@ def _vs_contact(title):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcContact(HostRulespec):
+class RulespecExtraHostConfEcContact(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole

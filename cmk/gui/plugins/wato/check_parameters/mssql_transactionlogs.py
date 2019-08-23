@@ -36,13 +36,13 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
 
 
 @rulespec_registry.register
-class RulespecMssqlTransactionlogsDiscovery(HostRulespec):
+class RulespecMssqlTransactionlogsDiscovery(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

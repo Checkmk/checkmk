@@ -34,7 +34,7 @@ from cmk.gui.plugins.wato import (
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
-    HostRulespec,
+    ABCHostValueRulespec,
 )
 from cmk.gui.valuespec import (
     ID,
@@ -81,7 +81,7 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 
 
 @rulespec_registry.register
-class RulespecDatasourcePrograms(HostRulespec):
+class RulespecDatasourcePrograms(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -109,7 +109,7 @@ class RulespecDatasourcePrograms(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsDdnS2A(HostRulespec):
+class RulespecSpecialAgentsDdnS2A(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -132,7 +132,7 @@ class RulespecSpecialAgentsDdnS2A(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsKubernetes(HostRulespec):
+class RulespecSpecialAgentsKubernetes(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -215,7 +215,7 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsVsphere(HostRulespec):
+class RulespecSpecialAgentsVsphere(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -404,7 +404,7 @@ class RulespecSpecialAgentsVsphere(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsHpMsa(HostRulespec):
+class RulespecSpecialAgentsHpMsa(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -434,7 +434,7 @@ class RulespecSpecialAgentsHpMsa(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsIpmiSensors(HostRulespec):
+class RulespecSpecialAgentsIpmiSensors(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -517,7 +517,7 @@ class RulespecSpecialAgentsIpmiSensors(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsNetapp(HostRulespec):
+class RulespecSpecialAgentsNetapp(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -562,7 +562,7 @@ class RulespecSpecialAgentsNetapp(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsActivemq(HostRulespec):
+class RulespecSpecialAgentsActivemq(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -607,7 +607,7 @@ class RulespecSpecialAgentsActivemq(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsEmcvnx(HostRulespec):
+class RulespecSpecialAgentsEmcvnx(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -678,7 +678,7 @@ class RulespecSpecialAgentsEmcvnx(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsIbmsvc(HostRulespec):
+class RulespecSpecialAgentsIbmsvc(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -759,7 +759,7 @@ class RulespecSpecialAgentsIbmsvc(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsRandom(HostRulespec):
+class RulespecSpecialAgentsRandom(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -785,7 +785,7 @@ class RulespecSpecialAgentsRandom(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsAcmeSbc(HostRulespec):
+class RulespecSpecialAgentsAcmeSbc(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -812,7 +812,7 @@ class RulespecSpecialAgentsAcmeSbc(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsFritzbox(HostRulespec):
+class RulespecSpecialAgentsFritzbox(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -849,7 +849,7 @@ class RulespecSpecialAgentsFritzbox(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsInnovaphone(HostRulespec):
+class RulespecSpecialAgentsInnovaphone(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -876,7 +876,7 @@ class RulespecSpecialAgentsInnovaphone(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsHivemanager(HostRulespec):
+class RulespecSpecialAgentsHivemanager(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -901,7 +901,7 @@ class RulespecSpecialAgentsHivemanager(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsHivemanagerNg(HostRulespec):
+class RulespecSpecialAgentsHivemanagerNg(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -955,7 +955,7 @@ class RulespecSpecialAgentsHivemanagerNg(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsAllnetIpSensoric(HostRulespec):
+class RulespecSpecialAgentsAllnetIpSensoric(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -992,7 +992,7 @@ class RulespecSpecialAgentsAllnetIpSensoric(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsUcsBladecenter(HostRulespec):
+class RulespecSpecialAgentsUcsBladecenter(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1029,7 +1029,7 @@ class RulespecSpecialAgentsUcsBladecenter(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsSiemensPlc(HostRulespec):
+class RulespecSpecialAgentsSiemensPlc(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1212,7 +1212,7 @@ class RulespecSpecialAgentsSiemensPlc(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsRuckusSpot(HostRulespec):
+class RulespecSpecialAgentsRuckusSpot(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1261,7 +1261,7 @@ class RulespecSpecialAgentsRuckusSpot(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsAppdynamics(HostRulespec):
+class RulespecSpecialAgentsAppdynamics(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1324,7 +1324,7 @@ class RulespecSpecialAgentsAppdynamics(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsJolokia(HostRulespec):
+class RulespecSpecialAgentsJolokia(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1388,7 +1388,7 @@ class RulespecSpecialAgentsJolokia(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsTinkerforge(HostRulespec):
+class RulespecSpecialAgentsTinkerforge(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1421,7 +1421,7 @@ class RulespecSpecialAgentsTinkerforge(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsPrism(HostRulespec):
+class RulespecSpecialAgentsPrism(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1448,7 +1448,7 @@ class RulespecSpecialAgentsPrism(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgents3Par(HostRulespec):
+class RulespecSpecialAgents3Par(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1507,7 +1507,7 @@ class RulespecSpecialAgents3Par(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsStoreonce(HostRulespec):
+class RulespecSpecialAgentsStoreonce(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1537,7 +1537,7 @@ class RulespecSpecialAgentsStoreonce(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsSalesforce(HostRulespec):
+class RulespecSpecialAgentsSalesforce(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1570,7 +1570,7 @@ class RulespecSpecialAgentsSalesforce(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsAzure(HostRulespec):
+class RulespecSpecialAgentsAzure(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1815,7 +1815,7 @@ class MultisiteBiDatasource(object):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsBi(HostRulespec):
+class RulespecSpecialAgentsBi(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -1910,7 +1910,7 @@ def _vs_element_aws_limits():
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsAws(HostRulespec):
+class RulespecSpecialAgentsAws(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -2064,7 +2064,7 @@ class RulespecSpecialAgentsAws(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsVnxQuotas(HostRulespec):
+class RulespecSpecialAgentsVnxQuotas(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -2092,7 +2092,7 @@ class RulespecSpecialAgentsVnxQuotas(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsElasticsearch(HostRulespec):
+class RulespecSpecialAgentsElasticsearch(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -2165,7 +2165,7 @@ class RulespecSpecialAgentsElasticsearch(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsSplunk(HostRulespec):
+class RulespecSpecialAgentsSplunk(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms
@@ -2241,7 +2241,7 @@ class RulespecSpecialAgentsSplunk(HostRulespec):
 
 
 @rulespec_registry.register
-class RulespecSpecialAgentsJenkins(HostRulespec):
+class RulespecSpecialAgentsJenkins(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupDatasourcePrograms

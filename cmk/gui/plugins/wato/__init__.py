@@ -111,7 +111,7 @@ from cmk.gui.plugins.wato.utils import (
     NotificationParameter,
     rulespec_registry,
     Rulespec,
-    HostRulespec,
+    ABCHostValueRulespec,
     ServiceRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,

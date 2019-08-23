@@ -127,7 +127,7 @@ from cmk.gui.watolib.rulespecs import (
     TimeperiodValuespec,
     rulespec_registry,
     Rulespec,
-    HostRulespec,
+    ABCHostValueRulespec,
     ServiceRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,

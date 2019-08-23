@@ -33,6 +33,8 @@
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
 
+uint32_t GetParentPid(uint32_t pid);
+
 //
 //   FUNCTION: InstallService
 //
@@ -227,6 +229,8 @@ bool KillProcessFully(const std::wstring& process_name,
 // calculates count of processes in the system
 int FindProcess(std::wstring_view process_name) noexcept;
 
+constexpr bool kProcessTreeKillAllowed = false;
+
 // WIN32 described method of killing process tree
 void KillProcessTree(uint32_t ProcessId);
 
@@ -277,7 +281,7 @@ public:
                 CloseHandle(process_handle_);  // must
                 process_handle_ = nullptr;
             } else {
-                KillProcessTree(proc_id);
+                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
             }
 
             return;

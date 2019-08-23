@@ -145,7 +145,7 @@ $theme-color-table-header-text:             #2a2a2a80; // half transparent
 // Sidebar
 
 $theme-color-sidebar-background:            $grey-7; // dark grey
-$theme-color-sidebar-border:                $grey-7;
+$theme-color-sidebar-border:                $grey-5;
 
 $theme-snapin-width:                        230px;
 
@@ -275,7 +275,6 @@ $select2-selected-bg-color:		    $grey-5;
 $select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
 $td-single-bg-color:			    null;
-$td-single-left-color:			    #a8a8a8;
 $wato-tr-bg-color:			    null;
 $wato-a-hover-bg-color:			    mix($white, $grey-6, 10%);
 
@@ -285,7 +284,7 @@ $color-div-box-shadow:			    null;
 
 $graph-legend-color:			    $grey-1;
 
-$state0-font-color:			    $grey-7;
+$dark-font-color:			    $grey-7;
 
 $body-dashlet-bg-color:			    $grey-6;
 $dashlet-bg-color:			    $grey-6;
@@ -330,10 +329,7 @@ $wato-subtitle-color:			    $grey-2;
 
 $footnote-link-color:			    $grey-1;
 
-$table-data-single-border-color:	    transparent !important;
-$table-data-single-padding:		    0 16px;
-$td-single-left-text-align:		    right;
-$td-single-left-text-transform:		    uppercase;
+$table-data-single-padding:		    2px 16px;
 $td-single-left-border-right:		    null;
 
 $host-diag-success-bg-color:		    rgb(50, 54, 50);
@@ -367,3 +363,16 @@ $groupheader-first-padding-top:		    0;
 $boxlayout-tr-bg-color:			    null;
 
 $age-font-color:			    rgb(150, 150, 150);
+
+$mk-search-results-bg-color:		    $grey-3;
+$mk-search-results-hover-bg-color:	    rgb(93, 93, 93);
+$mk-search-results-border:		    $primary-border;
+
+$repprogress-msg-color:			    rgb(100, 100, 100,);
+$repprogress-progress-bg-color:		    rgb(105, 156, 170);	// darkened state6 bg color
+$repprogress-progress-border-color:	    rgb(111, 180, 198); // darkened nuance17
+
+$side-header-height:			    65px;
+
+$first-child-border-radius:		    $primary-border-radius;
+$optiondial-refresh-border-radius:	    $primary-border-radius;

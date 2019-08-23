@@ -608,7 +608,7 @@ table.data {
       }
 
       &:first-child {
-        border-radius: $theme-border-radius 0 0 4px;
+        border-radius: $first-child-border-radius;
 
 	&:not(.state):not(.gap):not(.bulksearch) {
 	  border-left: 1px solid $theme-color-table-border;

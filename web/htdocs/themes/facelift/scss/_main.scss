@@ -84,7 +84,7 @@ input, select, textarea {
 select:not([multiple]) {
   padding: 8px 16px;
   padding-right: 2.5em;
-  background: #fff url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background: $secondary-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
 }
@@ -939,6 +939,13 @@ tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
 }
 
 table.data.werks {
+  td.werkclassfeature, td.werkclassfix, td.werklevel2, td.werklevel3,
+  td.werkcompincomp_ack {
+    color: $dark-font-color;
+  }
+}
+
+table.data.werks {
   tr {
     &:nth-child(odd) {
       td.werklevel2 {
@@ -1178,6 +1185,12 @@ div.graph {
 
     div.title {
       padding: 8px;
+    }
+
+    pre {
+      padding: 0 8px 8px;
+      margin: 0;
+      color: $graph-time-color;
     }
   }
 }

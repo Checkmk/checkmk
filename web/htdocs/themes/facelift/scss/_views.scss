@@ -400,7 +400,6 @@ div.optiondial {
     color: $theme-color-text;
     background: $theme-color-white;
     border: 1px solid $theme-color-table-border;
-    border-radius: $theme-border-radius;
     box-shadow: none;
 
     div {
@@ -418,18 +417,19 @@ div.optiondial {
     color: #222;
     text-shadow: 0 0.5px 0.5px #fff;
     cursor: pointer;
+    border-radius: $primary-border-radius;
     box-shadow: 0 0 3px #123;
   }
 
   &.num_columns {
     margin-right: 0;
     border-right: none;
-    border-radius: $theme-border-radius 0 0 4px;
+    border-radius: $first-child-border-radius;
   }
 
   &.refresh {
     margin-left: -6px;
-    border-radius: 0 4px 4px 0;
+    border-radius: $optiondial-refresh-border-radius;
   }
 
   div {
@@ -585,30 +585,19 @@ table.data.single {
   border-spacing: 1px;
   empty-cells: show;
 
-  tr[class*="odd"] {
-    background-color: $odd-tr-bg-color;
-  }
-
   tr.data {
-    border-color: $table-data-single-border-color;
-
     > td {
       height: 16px;
       padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
       text-align: left;
-      vertical-align: top;
-      border-top-color: $table-data-single-border-color;
-      border-bottom-color: $table-data-single-border-color;
     }
 
     td.left {
       width: 10%;
       padding-right: 20px;
-      text-align: $td-single-left-text-align;
       white-space: nowrap;
-      vertical-align: top;
     }
   }
 
@@ -621,9 +610,6 @@ table.data.single {
 
     &.left {
       font-weight: $theme-font-weight-bold;
-      color: $td-single-left-color;
-      text-transform: $td-single-left-text-transform;
-      background-color: $secondary-bg-color;
       border-right: $td-single-left-border-right;
       transition: .15s ease-in-out;
     }

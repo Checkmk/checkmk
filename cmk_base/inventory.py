@@ -130,8 +130,10 @@ def do_inv_check(hostname, options):
     else:
         infotexts.append("Found %d inventory entries" % inventory_tree.count_entries())
 
-        if not inventory_tree.has_edge("software") and _inv_sw_missing:
-            infotexts.append("software information is missing" +
+        # Node 'software' is always there because _do_inv_for creates this node for cluster info
+        if not inventory_tree.get_sub_container(['software']).has_edge('packages')\
+           and _inv_sw_missing:
+            infotexts.append("software packages information is missing" +
                              check_api_utils.state_markers[_inv_sw_missing])
             status = max(status, _inv_sw_missing)
 

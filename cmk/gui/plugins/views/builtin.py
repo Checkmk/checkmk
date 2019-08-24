@@ -4063,3 +4063,39 @@ multisite_builtin_views["docker_containers"] = _simple_host_view(
         },
     },
 )
+
+multisite_builtin_views["vsphere_servers"] = _simple_host_view(
+    {
+        'title': _('vSphere Servers'),
+        'topic': _('Applications'),
+        'description': _(
+            'Overall state of all vSphere servers, with counts of services in the various states.'),
+        'add_context_to_title': False,
+        'painters': host_view_painters
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/vsphere_object:server"}]'
+        },
+    },
+)
+
+multisite_builtin_views["vpshere_vms"] = _simple_host_view(
+    {
+        'title': _('vSphere VMs'),
+        'topic': _('Applications'),
+        'description': _('Overall state of all vSphere based virtual machines.'),
+        'add_context_to_title': False,
+        'painters': host_view_painters + [
+            ('svc_plugin_output', None, None, u'ESX Hostsystem', u'Server'),
+            ('perfometer', None, '', 'CPU utilization'),
+            ('perfometer', None, '', 'ESX Memory'),
+            ('svc_plugin_output', None, None, u'ESX Guest Tools', u'Guest tools'),
+        ],
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/vsphere_object:vm"}]'
+        },
+    },
+)

@@ -344,6 +344,8 @@ def test_registered_permissions():
         'view.downtimes_of_service',
         'view.docker_containers',
         'view.docker_nodes',
+        'view.vpshere_vms',
+        'view.vsphere_servers',
         'view.ec_event',
         'view.ec_event_mobile',
         'view.ec_events',

@@ -206,13 +206,13 @@ def check_temperature_trend(temp, params, output_unit, crit, crit_lower, unique_
             if limit:  # crit levels may not be set, especially lower level
                 diff_to_limit = limit - temp
                 if rate_avg != 0.0:
-                    minutes_left = (diff_to_limit / rate_avg) / 60.0
+                    minutes_left = (diff_to_limit / rate_avg) / 60.0  # fixed: true-division
                 else:
                     minutes_left = float("inf")
 
                 def format_minutes(minutes):
                     if minutes > 60:  # hours
-                        hours = minutes / 60
+                        hours = int(minutes / 60.0)
                         minutes += -int(hours) * 60
                         return "%dh %02dm" % (hours, minutes)
                     return "%d minutes" % minutes

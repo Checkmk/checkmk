@@ -31,7 +31,7 @@ def parse_statgrab_mem(info):
     parsed = {}
     for var, value in info:
         try:
-            parsed.setdefault(var, int(value) / 1024)
+            parsed.setdefault(var, int(value) // 1024)
         except ValueError:
             pass
 

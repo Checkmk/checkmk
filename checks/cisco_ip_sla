@@ -173,7 +173,8 @@ def check_cisco_ip_sla(_item, params, data):
             if state:
                 infotext += ' (warn/crit at %s/%s)' % (warn, crit)
             factor = 1e3 if unit == 'ms' else 1e6
-            perfdata = [('rtt', value / factor, warn / factor, crit / factor)]
+            perfdata = [('rtt', value / factor, warn / factor, crit / factor)
+                       ]  # fixed: true-division
 
         yield state, infotext, perfdata
 

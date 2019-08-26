@@ -49,5 +49,6 @@ def check_cpu_load_generic(params, load, num_cpus=1):
                                          infoname="15 min load")
     perfdata += perf[1:]
     if num_cpus > 1:
-        infotext += " at %d Cores (%.2f per Core)" % (num_cpus, load[2] / num_cpus)
+        infotext += " at %d Cores (%.2f per Core)" % (num_cpus, load[2] / num_cpus
+                                                     )  # fixed:true-division
     return state, infotext, perfdata

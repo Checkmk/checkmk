@@ -127,7 +127,7 @@ def parse_cisco_temp_sensor(info):
     sensors = []
     for id_, sensortype, scale, precision, value, sensorstate in state_info:
         value = float(value) / (10**int(precision))
-        threshold = thresholds[id_] / (10**int(precision))
+        threshold = thresholds[id_] / (10**int(precision))  # fixed: true-division
 
         sensors.append(
             (id_, descriptions.get(id_), sensortype, scale, value, sensorstate, threshold))

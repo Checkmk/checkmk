@@ -78,6 +78,11 @@ def transform_if(v):
     if new_traffic:
         v['traffic'] = new_traffic
 
+    if "errors" in v:
+        error_levels = v.pop("errors")
+        v["errors_in"] = error_levels
+        v["errors_out"] = error_levels
+
     return v
 
 
@@ -358,6 +363,34 @@ class RulespecIfDisableIf64Hosts(ABCBinaryHostRulespec):
                  "instead.")
 
 
+def _vs_if_errors(title):
+    return Alternative(
+        title=_("Levels for %s error rates" % title),
+        help=_(
+            "These levels make the check go warning or critical whenever the "
+            "<b>percentual {0} error rate</b> or the <b>absolute {0} error rate</b> of the monitored interface reaches "
+            "the given bounds. The percentual {0} error rate is computed by dividing number of "
+            "errors by the total number of packets (successful plus errors).".format(title)),
+        elements=[
+            Tuple(title=_("Percentual levels for %s error rates" % title),
+                  elements=[
+                      Percentage(title=_("Warning at"),
+                                 unit=_("percent errors"),
+                                 default_value=0.01,
+                                 display_format='%.3f'),
+                      Percentage(title=_("Critical at"),
+                                 unit=_("percent errors"),
+                                 default_value=0.1,
+                                 display_format='%.3f')
+                  ]),
+            Tuple(title=_("Absolute levels for %s error rates" % title),
+                  elements=[
+                      Integer(title=_("Warning at"), unit=_("errors")),
+                      Integer(title=_("Critical at"), unit=_("errors"))
+                  ])
+        ])
+
+
 @rulespec_registry.register
 class RulespecCheckgroupParametersIf(CheckParameterRulespecWithItem):
     @property
@@ -384,32 +417,8 @@ class RulespecCheckgroupParametersIf(CheckParameterRulespecWithItem):
             Dictionary(
                 ignored_keys=["aggregate"],  # Created by discovery when using interface grouping
                 elements=[
-                    ("errors",
-                     Alternative(
-                         title=_("Levels for error rates"),
-                         help=
-                         _("These levels make the check go warning or critical whenever the "
-                           "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
-                           "the given bounds. The percentual error rate is computed by dividing number of "
-                           "errors by the total number of packets (successful plus errors)."),
-                         elements=[
-                             Tuple(title=_("Percentual levels for error rates"),
-                                   elements=[
-                                       Percentage(title=_("Warning at"),
-                                                  unit=_("percent errors"),
-                                                  default_value=0.01,
-                                                  display_format='%.3f'),
-                                       Percentage(title=_("Critical at"),
-                                                  unit=_("percent errors"),
-                                                  default_value=0.1,
-                                                  display_format='%.3f')
-                                   ]),
-                             Tuple(title=_("Absolute levels for error rates"),
-                                   elements=[
-                                       Integer(title=_("Warning at"), unit=_("errors")),
-                                       Integer(title=_("Critical at"), unit=_("errors"))
-                                   ])
-                         ])),
+                    ("errors_in", _vs_if_errors("IN")),
+                    ("errors_out", _vs_if_errors("OUT")),
                     ("speed",
                      OptionalDropdownChoice(
                          title=_("Operating speed"),

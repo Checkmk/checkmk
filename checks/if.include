@@ -815,6 +815,8 @@ def check_if_common_single(item,
 
     # error checking might be turned off
     err_warn, err_crit = params.get("errors", (None, None))
+    err_in_warn, err_in_crit = params.get("errors_in", (err_warn, err_crit))
+    err_out_warn, err_out_crit = params.get("errors_out", (err_warn, err_crit))
 
     # broadcast storm detection is turned off by default
     if "nucasts" in params:
@@ -969,14 +971,14 @@ def check_if_common_single(item,
             ("innucast", saveint(interface.inmcast) + saveint(interface.inbcast), nucast_warn,
              nucast_crit, None, None),
             ("indisc", interface.ifInDiscards, disc_warn, disc_crit, None, None),
-            ("inerr", interface.ifInErrors, err_warn, err_crit, None, None),
+            ("inerr", interface.ifInErrors, err_in_warn, err_in_crit, None, None),
             ("out", interface.ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
              traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
             ("outucast", interface.outucast, None, None, None, None),
             ("outnucast", saveint(interface.outmcast) + saveint(interface.outbcast), nucast_warn,
              nucast_crit, None, None),
             ("outdisc", interface.ifOutDiscards, disc_warn, disc_crit, None, None),
-            ("outerr", interface.ifOutErrors, err_warn, err_crit, None, None),
+            ("outerr", interface.ifOutErrors, err_out_warn, err_out_crit, None, None),
         ]:
 
             try:
@@ -1016,10 +1018,10 @@ def check_if_common_single(item,
                 return "%s/s" % get_bytes_human_readable(value)
 
             # loop over incoming and outgoing traffic
-            for what, traffic, urate, nurate, discrate, errorrate, speed in \
-                [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
-                    ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
-
+            for what, traffic, urate, nurate, discrate, errorrate, speed in [
+                ("in", rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
+                ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out),
+            ]:
                 if (what, 'predictive') in traffic_levels:
                     params = traffic_levels[(what, 'predictive')]
                     bw_warn, bw_crit = None, None

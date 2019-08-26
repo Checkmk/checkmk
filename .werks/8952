@@ -1,0 +1,10 @@
+Title: if.include: Levels for IN/OUT errors are configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566799904
+Class: feature
+
+Old error levels (for both IN and OUT) are applied to IN and OUT.

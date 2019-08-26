@@ -8,7 +8,7 @@ from cmk.gui.globals import html
 from tools import compare_html
 
 
-def test_HTMLGenerator(register_builtin_html):
+def test_ABCHTMLGenerator(register_builtin_html):
     with html.plugged():
 
         with html.plugged():

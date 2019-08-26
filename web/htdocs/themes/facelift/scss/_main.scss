@@ -84,9 +84,13 @@ input, select, textarea {
 select:not([multiple]) {
   padding: 8px 16px;
   padding-right: 2.5em;
-  background: $secondary-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background: $primary-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
+}
+
+div.popup_menu select:not([multiple]) {
+  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
 }
 
 select::-ms-expand {
@@ -622,9 +626,6 @@ table.valuespec_listof {
       margin-right: 5px;
       white-space: nowrap;
       vertical-align: middle;
-    }
-
-    td.vlof_content {
     }
   }
 
@@ -1218,6 +1219,10 @@ body.main img.treeangle {
 .bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
   &, body.main & {
     filter: invert(0%);
+
+    &.open, &.closed {
+      filter: $invtree-collapse-filter;
+    }
   }
 }
 

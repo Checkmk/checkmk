@@ -981,6 +981,10 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
+
+  &:focus, &:active {
+    box-shadow: 0 0 1px $input-focus-box-shadow-color inset;
+  }
 }
 
 span.select2 .select2-selection {
@@ -1259,7 +1263,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: #e5e5e5;
+    background-color: $nform-table-hr-color;
   }
 
   .ruleset {
@@ -1504,7 +1508,7 @@ body.main .popup_menu span {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid $nform-table-hr-color;
   }
 
   li {
@@ -1515,7 +1519,6 @@ body.main .popup_menu span {
       height: 21px;
       padding: 0 5px;
       line-height: 21px;
-      border-right: 1px solid #fff;
 
       &:hover {
         color: #fff;
@@ -1525,7 +1528,7 @@ body.main .popup_menu span {
     }
 
     &.active a {
-      color: #000;
+      color: $primary-font-color;
       border-bottom: 1px solid #508aa1;
     }
   }
@@ -1655,6 +1658,7 @@ a.element_dragger {
 
 .dragging {
   cursor: move;
+  background-color: $dragging-bg-color;
   transform: scale(1.005);
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
   -webkit-transform: scale(1.005);
@@ -1711,6 +1715,7 @@ div.popup_trigger {
 
   img.iconbutton {
     padding: 0;
+    filter: $iconbutton-filter;
   }
 }
 
@@ -1815,6 +1820,14 @@ table.data.job_table {
     display: none;
   }
 
+  &__input::before {
+    color: inherit;
+  }
+
+  &__input:not(:empty)::before {
+    content: none;
+  }
+
   &[readonly] {
     tag > div {
       padding: $tag-padding;
@@ -1843,20 +1856,25 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      opacity: 0.5;
+      opacity: $tag-hover-opacity;
       box-shadow: none;
     }
   }
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before {
-      background: #cccfdb;
+    > div::before, &:hover > div::before {
+      background: $tag-input-bg-color;
+      opacity: 1;
     }
 
     > div {
       color: #000;
     }
+  }
+
+  &__tag-text {
+    color: $tag-dropdown-active-color;
   }
 
   tag, &[readonly] tag {
@@ -1865,7 +1883,8 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      background: $tag-bg-color;
+      background: #00a8b5;
+      opacity: $tag-opacity;
       box-shadow: none;
       animation: none;
     }
@@ -1880,6 +1899,11 @@ table.data.job_table {
 
     &.discovered > div::before {
       background: #f3ae4b;
+      opacity: $tag-discovered-opacity;
+    }
+
+    &.discovered:hover > div::before {
+      opacity: $tag-hover-opacity;
     }
   }
 
@@ -1890,9 +1914,25 @@ table.data.job_table {
   a tag {
     cursor: pointer;
   }
+
+  &__dropdown {
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    &__item {
+      margin: 1px;
+
+      &--active {
+	color: $tag-dropdown-active-color;
+	background-color: $tag-dropdown-active-bg-color;
+	border: $primary-table-border;
+      }
+    }
+  }
 }
 
 .tagify.display[readonly] tag {
-    padding: 1px 0px;
-    margin: 0px 0px;
+  padding: 1px 0;
+  margin: 0;
 }

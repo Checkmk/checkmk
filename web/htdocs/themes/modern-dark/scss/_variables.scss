@@ -70,7 +70,7 @@ $input__border-color:      $grey-3;
 
 // General
 
-$theme-color-black:                         #000; // black
+$theme-color-black:                         $black; // black
 $theme-color-white:                         $grey-7; // white
 $theme-color-lightgrey:                     #f8f8f8; // light grey
 $theme-color-darkgrey:                      #838383; // dark grey
@@ -190,8 +190,14 @@ $theme-letter-spacing-table:                1px;
 
 $tag-margin:                                0 5px 2px 0;
 $tag-padding:                               .1em .3em;
-$tag-font-color:			    rgb(220, 220, 220);
-$tag-bg-color:				    rgb(85, 85, 85);
+$tag-font-color:			    rgb(240, 240, 240);
+$tag-opacity:				    .6;
+$tag-discovered-opacity:		    .7;
+$tag-hover-opacity:			    .8;
+
+$tag-input-bg-color:			    rgb(85, 85, 85);
+$tag-dropdown-active-color:		    $tag-font-color;
+$tag-dropdown-active-bg-color:		    $grey-3;
 
 
 // -----------------------------------------------------------------------------
@@ -376,3 +382,16 @@ $side-header-height:			    65px;
 
 $first-child-border-radius:		    $primary-border-radius;
 $optiondial-refresh-border-radius:	    $primary-border-radius;
+
+$nform-table-hr-color:			    rgba(255, 255, 255, .1);
+
+$iconbutton-filter:			    invert(40%);
+
+$multiple-select-bg-color:		    $grey-5;
+$popup-menu-select-bg-color:		    $grey-5;
+
+$invtree-collapse-filter:		    invert(70%);
+
+$input-focus-box-shadow-color:		    $grey-2;
+
+$dragging-bg-color:			    $grey-5;

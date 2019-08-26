@@ -1,0 +1,14 @@
+Title: sap_hana_events: Do not gather informational, low or medium alerts
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1566808845
+
+The following mapping holds for alert_rating:
+'1', 'INFO', '2', 'LOW', '3', 'MEDIUM', '4', 'HIGH', '5', 'ERROR'
+
+We gather alerts in state high or error.

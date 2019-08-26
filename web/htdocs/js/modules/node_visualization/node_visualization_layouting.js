@@ -1099,12 +1099,13 @@ class LayoutApplier{
                            img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
             }
         }
-        // TODO: cleanup
-//        let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
-//        elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
-//                       on: ()=>modification_element.show_style_configuration(this.layout_manager.force_style),
-//                       href: "",
-//                       img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+        if (node && node.data.use_style) {
+            elements.push({text: "Remove style",
+                           on: ()=> this._convert_node(node, null),
+                           href: "",
+                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+        }
+
         return elements
     }
 
@@ -1113,7 +1114,7 @@ class LayoutApplier{
         let current_style = node.data.use_style
 
         // Do nothing on same style
-        if (current_style && current_style.type() == style_class.prototype.type())
+        if (current_style && style_class != null && current_style.type() == style_class.prototype.type())
             return
 
         // Remove existing style
@@ -1121,11 +1122,15 @@ class LayoutApplier{
             chunk_layout.remove_style(current_style)
         }
 
-        let new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
-        chunk_layout.save_style(new_style.style_config)
+        let new_style = null
+        if (style_class != null) {
+            new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
+            chunk_layout.save_style(new_style.style_config)
+        }
+
         this.layout_manager.layout_applier.apply_all_layouts()
-    
-        new_style.update_style_indicator()
+        if (new_style)
+            new_style.update_style_indicator()
         this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(new_style)
         this.layout_manager.create_undo_step()
     }

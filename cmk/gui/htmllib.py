@@ -54,7 +54,7 @@
 #
 # - Split HTML handling (page generating) code and generic request
 #   handling (vars, cookies, ...) up into separate classes to make
-#   the different tasks clearer. For HTMLGenerator() or similar.
+#   the different tasks clearer. For ABCHTMLGenerator() or similar.
 
 import time
 import os
@@ -439,7 +439,7 @@ class OutputFunnel(object):
 #   '----------------------------------------------------------------------'
 
 
-class HTMLGenerator(OutputFunnel):
+class ABCHTMLGenerator(OutputFunnel):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -474,6 +474,13 @@ class HTMLGenerator(OutputFunnel):
           - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
             non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'. """
 
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     # TODO: Replace u, i, b with underline, italic, bold, usw.
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
@@ -491,7 +498,7 @@ class HTMLGenerator(OutputFunnel):
     _tag_names.update(_shortcut_tags)
 
     def __init__(self):
-        super(HTMLGenerator, self).__init__()
+        super(ABCHTMLGenerator, self).__init__()
         self.escaper = Escaper()
 
     #
@@ -934,7 +941,7 @@ class TransactionManager(object):
 #   '----------------------------------------------------------------------'
 
 
-class html(HTMLGenerator):
+class html(ABCHTMLGenerator):
     def __init__(self, request, response):
         super(html, self).__init__()
 

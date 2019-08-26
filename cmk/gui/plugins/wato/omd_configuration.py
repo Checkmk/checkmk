@@ -28,6 +28,10 @@ import os
 import glob
 import subprocess
 import traceback
+try:
+    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -297,7 +301,10 @@ class ConfigDomainDiskspace(ConfigDomain):
 
     def default_globals(self):
         diskspace_context = {}
-        exec (open("%s/bin/diskspace" % cmk.utils.paths.omd_root, {}, diskspace_context).read())
+        filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
+        with (open(str(filename))) as f:
+            code = compile(f.read(), str(filename), 'exec')
+            exec (code, {}, diskspace_context)
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }

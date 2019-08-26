@@ -1,6 +1,93 @@
 # -*- coding: utf-8 -*-
 
-from cmk.notification_plugins.mail import SingleEmailContent
+import pytest  # type: ignore
+
+import cmk.notification_plugins.mail as mail
+
+HOSTNAME_ELEMENT = (
+    "hostname",
+    "both",
+    True,
+    "all",
+    "Host",
+    "$HOSTNAME$ ($HOSTALIAS$)",
+    "$LINKEDHOSTNAME$ ($HOSTALIAS$)",
+)
+SERVICEDESC_ELEMENT = (
+    "servicedesc",
+    "service",
+    True,
+    "all",
+    "Service",
+    "$SERVICEDESC$",
+    "$LINKEDSERVICEDESC$",
+)
+
+ALERTHANDLER_NAME_ELEMENT = (
+    "alerthandler_name",
+    "both",
+    True,
+    "alerthandler",
+    "Name of alert handler",
+    "$ALERTHANDLERNAME$",
+    "$ALERTHANDLERNAME$",
+)
+
+
+@pytest.mark.parametrize(
+    "args, expected",
+    [
+        (  # Show the hostname column in host notifications
+            ("host", False, ['hostname'], [HOSTNAME_ELEMENT]),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
+            ),
+        ),
+        (  # Show the hostname column in service notifications
+            ("service", False, ['hostname'], [HOSTNAME_ELEMENT]),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
+            ),
+        ),
+        (  # Don't show the servicedesc column in host notifications
+            ("host", False, ['servicedesc'], [SERVICEDESC_ELEMENT]),
+            ('', ''),
+        ),
+        (  # Show the servicedesc column in service notifications
+            ("service", False, ['servicedesc'], [SERVICEDESC_ELEMENT]),
+            (
+                'Service:             $SERVICEDESC$\n',
+                '<tr class="even0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
+            ),
+        ),
+        (  # Columns are concatenated, the order is determined by the body elements
+            (
+                "service",
+                False,
+                ['servicedesc', 'hostname'],
+                [HOSTNAME_ELEMENT, SERVICEDESC_ELEMENT],
+            ),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\nService:             $SERVICEDESC$\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr><tr class="odd0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
+            ),
+        ),
+        (  # Don't show the alerthandler_name if is_alert_handler is False
+            ("service", False, ['alerthandler_name'], [ALERTHANDLER_NAME_ELEMENT]),
+            ('', ''),
+        ),
+        (  # Show the alerthandler_name if is_alert_handler is True
+            ("service", True, ['alerthandler_name'], [ALERTHANDLER_NAME_ELEMENT]),
+            (
+                'Name of alert handler: $ALERTHANDLERNAME$\n',
+                '<tr class="even0"><td class=left>Name of alert handler</td><td>$ALERTHANDLERNAME$</td></tr>',
+            ),
+        ),
+    ])
+def test_body_templates(args, expected):
+    assert mail.body_templates(*args) == expected
 
 
 def mock_service_context():
@@ -139,7 +226,7 @@ def test_mail_content_from_service_context(mocker):
     assert "LINKEDHOSTNAME" not in context
     assert "LINKEDSERVICEDESC" not in context
 
-    content = SingleEmailContent(mock_service_context)
+    content = mail.SingleEmailContent(mock_service_context)
 
     # The state markers (!) and (!!) as well as the states in EVENT_TXT have to be
     # replaced with HTML, but raw input from plugins has to be escaped.
@@ -264,7 +351,7 @@ def test_mail_content_from_host_context(mocker):
     assert "LINKEDHOSTNAME" not in context
     assert "LINKEDSERVICEDESC" not in context
 
-    content = SingleEmailContent(mock_host_context)
+    content = mail.SingleEmailContent(mock_host_context)
 
     assert content.context["EVENT_TXT"] == "DOWN -> UP"
     assert content.context[

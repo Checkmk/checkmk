@@ -263,7 +263,7 @@ table.context td {
 <body>''' + html_section + '<table>'
 
 
-tmpl_foot_html = '''</table>
+TMPL_FOOT_HTML = '''</table>
 </body>
 </html>'''
 
@@ -276,7 +276,7 @@ tmpl_foot_html = '''</table>
 # 6. Text template
 # 7. HTML template
 
-body_elements = [
+BODY_ELEMENTS = [
     ("hostname", "both", True, "all", "Host", "$HOSTNAME$ ($HOSTALIAS$)",
      "$LINKEDHOSTNAME$ ($HOSTALIAS$)"),
     ("servicedesc", "service", True, "all", "Service", "$SERVICEDESC$", "$LINKEDSERVICEDESC$"),
@@ -474,8 +474,8 @@ body_elements = [
     ),
 ]
 
-tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
-tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$'
+TMPL_HOST_SUBJECT = 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
+TMPL_SERVICE_SUBJECT = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$'
 
 opt_debug = '-d' in sys.argv
 bulk_mode = '--bulk' in sys.argv
@@ -861,14 +861,21 @@ def construct_content(context):
 
     # Compute the subject of the mail
     if context['WHAT'] == 'HOST':
-        tmpl = context.get('PARAMETER_HOST_SUBJECT') or tmpl_host_subject
+        tmpl = context.get('PARAMETER_HOST_SUBJECT') or TMPL_HOST_SUBJECT
         context['SUBJECT'] = utils.substitute_context(tmpl, context)
     else:
-        tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or tmpl_service_subject
+        tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or TMPL_SERVICE_SUBJECT
         context['SUBJECT'] = utils.substitute_context(tmpl, context)
 
     # Prepare the mail contents
-    content_txt, content_html = render_elements(context, elements)
+    template_txt, template_html = body_templates(
+        context['WHAT'].lower(),
+        "ALERTHANDLEROUTPUT" in context,
+        elements,
+        BODY_ELEMENTS,
+    )
+    content_txt = utils.substitute_context(template_txt, context)
+    content_html = utils.substitute_context(template_html, context)
 
     if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
         # Add PNP or Check_MK graph
@@ -884,14 +891,12 @@ def construct_content(context):
 
     content_html = utils.substitute_context(tmpl_head_html(extra_html_section), context) + \
                    content_html + \
-                   utils.substitute_context(tmpl_foot_html, context)
+                   utils.substitute_context(TMPL_FOOT_HTML, context)
 
     return content_txt, content_html, attachments
 
 
-def render_elements(context, elements):
-    what = context['WHAT'].lower()
-    is_alert_handler = "ALERTHANDLEROUTPUT" in context
+def body_templates(what, is_alert_handler, elements, body_elements):
     even = "even"
     tmpl_txt = ""
     tmpl_html = ""
@@ -902,15 +907,13 @@ def render_elements(context, elements):
         if nottype not in ("alerthandler", "all") and is_alert_handler:
             continue
 
-        if (whence == "both" or whence == what) and \
-            (forced or (name in elements)):
+        if (whence == "both" or whence == what) and (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
             tmpl_html += '<tr class="%s0"><td class=left>%s</td><td>%s</td></tr>' % (even, title,
                                                                                      html)
             even = 'odd' if even == 'even' else 'even'
 
-    return utils.substitute_context(tmpl_txt, context), \
-           utils.substitute_context(tmpl_html, context)
+    return tmpl_txt, tmpl_html
 
 
 class BulkEmailContent(object):

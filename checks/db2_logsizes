@@ -101,8 +101,8 @@ def check_db2_logsizes(item, params, parsed):
     free = total - int(db["usedspace"][data_offset])
 
     return df_check_filesystem_single(item,
-                                      total / 1024**2,
-                                      free / 1024**2,
+                                      total >> 20,
+                                      free >> 20,
                                       0,
                                       None,
                                       None,

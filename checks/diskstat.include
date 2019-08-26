@@ -229,7 +229,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         if not ios_per_sec:
             latency = 0.0
         else:
-            latency = timems_per_sec / ios_per_sec
+            latency = timems_per_sec / ios_per_sec  # fixed: true-division
         infos.append("Latency: %.2fms" % latency)
         if "latency" in params:
             warn, crit = params["latency"]

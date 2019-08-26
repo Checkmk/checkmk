@@ -153,7 +153,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                     "uncorrectable",
                     "uncorrectable errors",
             )]:
-                ratio = rates[what] / total_rate
+                ratio = rates[what] / total_rate  # fixed: true-division
                 perc = 100.0 * ratio
                 warn, crit = params[what]
                 infotext = "%s %s" % (get_percent_human_readable(perc), title)

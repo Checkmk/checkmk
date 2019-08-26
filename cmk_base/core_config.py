@@ -93,6 +93,29 @@ def get_configuration_warnings():
     return warnings
 
 
+# TODO: Just for documentation purposes for now, add typing_extensions and use this.
+#
+# HostCheckCommand = NewType('HostCheckCommand',
+#                            Union[Literal["smart"],
+#                                  Literal["ping"],
+#                                  Literal["ok"],
+#                                  Literal["agent"],
+#                                  Tuple[Literal["service"], TextUnicode],
+#                                  Tuple[Literal["tcp"], Integer],
+#                                  Tuple[Literal["custom"], TextAscii]])
+
+
+def _get_host_check_command(host_config):
+    explicit_command = host_config.explicit_check_command
+    if explicit_command is not None:
+        return explicit_command
+    if host_config.is_no_ip_host:
+        return "ok"
+    if config.monitoring_core == "cmc":
+        return "smart"
+    return "ping"
+
+
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
 def host_check_command(config_cache,
                        host_config,
@@ -100,16 +123,7 @@ def host_check_command(config_cache,
                        is_clust,
                        hostcheck_commands_to_define=None,
                        custom_commands_to_define=None):
-
-    explicit_command = host_config.explicit_check_command
-    if explicit_command is not None:
-        value = explicit_command
-    elif host_config.is_no_ip_host:
-        value = "ok"
-    elif config.monitoring_core == "cmc":
-        value = "smart"
-    else:
-        value = "ping"
+    value = _get_host_check_command(host_config)
 
     if value == "smart" and not is_clust:
         return "check-mk-host-smart"

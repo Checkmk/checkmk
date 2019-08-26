@@ -489,6 +489,7 @@ if [ -e /sys/fs/cgroup ]; then
 fi
 echo -n '[header] '
 ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
+echo
 
 # Memory usage
 section_mem

@@ -562,18 +562,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         if (!this.layout_manager.edit_layout)
             return
 
-
-        // Layout management box
-        //let layouting_div = this.content_selection.selectAll("div#layout_management").data([null])
-        //layouting_div = layouting_div.enter().append("div").attr("id", "layout_management")
-        //                            .classed("noselect", true)
-        //                            .classed("box", true)
-        //                        .merge(layouting_div)
-        //let aggr_div = layouting_div.selectAll("div#aggr_div").data([null])
-        //aggr_div = aggr_div.enter().append("div").attr("id", "aggr_div").merge(aggr_div)
-        //let template_div = layouting_div.selectAll("div#template_div").data([null])
-        //template_div = template_div.enter().append("div").attr("id", "template_div").merge(template_div)
-
         // Layout configuration box
         let configuration_div_box = this.content_selection.selectAll("div#configuration_management").data([null])
         configuration_div_box = configuration_div_box.enter().append("div").attr("id", "configuration_management")
@@ -600,25 +588,24 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                                 .merge(history_div_box)
         this._render_layout_history(history_div_box)
 
-//        this._render_aggregation_configuration(aggr_div)
-//        this._render_layout_management(template_div)
+        //
         this._render_aggregation_configuration(configuration_div)
         this._render_layout_configuration(configuration_div)
         this.layout_style_configuration.render_style_config(style_div_box)
     }
 
     _render_aggregation_configuration(into_selection) {
+        into_selection.selectAll("#layout_configuration_headline").data([null]).enter().append("h2")
+                        .attr("id", "layout_configuration_headline").text("Layout Configuration")
+
         let chunk = this.layout_manager.viewport.get_hierarchy_list()[0]
         let aggr_name = chunk.tree.data.name
-
-        into_selection.selectAll("#aggregation_headline").data([null]).enter().append("h2")
-                        .attr("id", "aggregation_headline").text("Aggregation layout")
 
         let table_selection = into_selection.selectAll("table#layout_settings").data([null])
         let table_enter = table_selection.enter().append("table").attr("id", "layout_settings")
 
         let row_enter = table_enter.append("tr")
-        row_enter.append("td").text("Name")
+        row_enter.append("td").text("Aggregation Name")
         row_enter.append("td").text(aggr_name)
 
         row_enter = table_enter.append("tr")
@@ -661,10 +648,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
 
 
     _render_layout_configuration(into_selection) {
-        into_selection.selectAll("#layout_configuration_headline").data([null]).enter().append("h2")
-                        .attr("id", "layout_configuration_headline").text("Layout Configuration")
-
-
         this.layout_manager.viewport.get_layer("nodes").render_line_style(into_selection)
 
         let layers = this.layout_manager.viewport.get_layers()
@@ -726,6 +709,12 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                 .attr("src", d=>this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icons/" + d.icon)
                 .on("click", d=>d.handler())
             .merge(icon_selection)
+
+        if (this.layout_manager.layout_applier._undo_history.length == 0)
+            this.layout_manager.layout_applier.create_undo_step()
+
+        this._update_history_icons()
+
     }
 
     _update_history_icons() {
@@ -1172,9 +1161,8 @@ class LayoutApplier{
     _create_manual_layout_settings() {
         let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
         let layout_settings = {
-            explicit_id: "manually",
-            origin_info: "manually set",
-            origin_type: "manual",
+            origin_info: "Explicit set",
+            origin_type: "explicit",
             config: JSON.parse(JSON.stringify(current_layout_group))
         }
         return layout_settings

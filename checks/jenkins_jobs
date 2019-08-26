@@ -142,7 +142,7 @@ def handle_single_job(job):
         last_br = job["lastBuild"]['result']
         last_bn = job["lastBuild"]['number']
         last_bd = float(job["lastBuild"]["duration"]) / 1000.0
-        last_bt = int(job["lastBuild"]['timestamp']) / 1000
+        last_bt = int(int(job["lastBuild"]['timestamp']) / 1000)
     except (KeyError, TypeError, ValueError):
         last_br = None
         last_bn = None

@@ -293,7 +293,7 @@ def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed
             # are of type absolute, convert these 'bit' entries to byte
             # still reported as bytes to stay compatible with older rrd data
             if unit == 'Bit' and level_type == 'abs':
-                level_value = level_value / 8
+                level_value = level_value // 8
             elif level_type == 'perc':
                 # convert percentages to absolute values. Use either the assumed speed
                 # or the reference speed. When none of both are available, ignore
@@ -945,8 +945,8 @@ def check_if_common_single(item,
                                                      assumed_speed_in, assumed_speed_out)
 
         # Speed in bytes
-        speed_b_in = (assumed_speed_in / 8) if assumed_speed_in else ref_speed
-        speed_b_out = (assumed_speed_out / 8) if assumed_speed_out else ref_speed
+        speed_b_in = (assumed_speed_in // 3) if assumed_speed_in else ref_speed
+        speed_b_out = (assumed_speed_out // 3) if assumed_speed_out else ref_speed
 
         #
         # All internal values within ths check after this point are bytes, not bits!

@@ -37,8 +37,8 @@ def check_df_netapp(item, params, info):
     fslist = []
     for mp, size_kb, used_kb in info:
         if "patterns" in params or item == mp:
-            size_mb = int(size_kb) / 1024
-            used_mb = int(used_kb) / 1024
+            size_mb = int(size_kb) >> 10
+            used_mb = int(used_kb) >> 10
             avail_mb = size_mb - used_mb
             fslist.append((mp, size_mb, avail_mb, 0))
     return df_check_filesystem_list(item, params, fslist)

@@ -82,7 +82,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         for time_interval, value in zip(time_intervals, values):
             number_of_values += value
             total_time += time_interval * value
-        return total_time / number_of_values
+        return total_time / number_of_values  # fixed: true-division
 
     def _check_levels(infotext_formatstring, value, levels, perfname):
         infotext = infotext_formatstring % value

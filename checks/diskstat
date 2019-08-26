@@ -183,7 +183,7 @@ def parse_diskstat(info):
         read_ios_rate = get_rate(counter_base + "read_ios", timestamp, int(read_ios), onwrap=0.0)
         write_ios_rate = get_rate(counter_base + "write_ios", timestamp, int(write_ios), onwrap=0.0)
         total_ios_rate = read_ios_rate + write_ios_rate
-        utilization = total_ticks_rate / 1000  # not percent, but 0...1
+        utilization = total_ticks_rate / 1000.0  # not percent, but 0...1
         read_bytes_rate = get_rate(
             counter_base + "read_sectors", timestamp, int(read_sectors), onwrap=0.0) * 512
         write_bytes_rate = get_rate(
@@ -194,9 +194,9 @@ def parse_diskstat(info):
         # e.g. 0.34 (34%) of the time and we can do 17 operations in that
         # time then the average latency is time * 0.34 / 17
         if total_ios_rate:
-            latency = utilization / total_ios_rate
+            latency = utilization / total_ios_rate  # fixed: true-division
             average_wait = (read_ticks_rate + write_ticks_rate) / total_ios_rate / 1000.0
-            average_request_size = total_bytes_rate / total_ios_rate
+            average_request_size = total_bytes_rate / total_ios_rate  # fixed: true-division
         else:
             latency = 0.0
             average_wait = 0.0
@@ -206,14 +206,14 @@ def parse_diskstat(info):
         # and average size of one request
         if read_ticks_rate and read_ios_rate > 0:
             average_read_wait = read_ticks_rate / read_ios_rate / 1000.0
-            average_read_size = read_bytes_rate / read_ios_rate
+            average_read_size = read_bytes_rate / read_ios_rate  # fixed: true-division
         else:
             average_read_wait = 0.0
             average_read_size = 0.0
 
         if write_ticks_rate and write_ios_rate > 0:
             average_write_wait = write_ticks_rate / write_ios_rate / 1000.0
-            average_write_size = write_bytes_rate / write_ios_rate
+            average_write_size = write_bytes_rate / write_ios_rate  # fixed: true-division
         else:
             average_write_wait = 0.0
             average_write_size = 0.0

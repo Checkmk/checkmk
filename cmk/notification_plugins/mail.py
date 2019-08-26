@@ -773,9 +773,6 @@ def construct_content(context):
     else:
         elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
 
-    # If argument 2 is given (old style) or the parameter url_prefix is set (new style),
-    # we know the base url to the installation and can add
-    # links to hosts and services. ubercomfortable!
     if context.get('PARAMETER_2'):
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
@@ -786,67 +783,15 @@ def construct_content(context):
                                                      utils.service_url_from_context(context),
                                                      context.get("SERVICEDESC", ''))
 
-    # Create a notification summary in a new context variable
-    # Note: This code could maybe move to cmk --notify in order to
-    # make it available every in all notification scripts
-    # We have the following types of notifications:
+    event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
 
-    # - Alerts                OK -> CRIT
-    #   NOTIFICATIONTYPE is "PROBLEM" or "RECOVERY"
+    event_txt = utils.substitute_context(event_template_txt.replace("@", context["WHAT"]), context)
+    context["EVENT_TXT"] = event_txt
 
-    # - Flapping              Started, Ended
-    #   NOTIFICATIONTYPE is "FLAPPINGSTART" or "FLAPPINGSTOP"
+    event_html = utils.substitute_context(event_template_html.replace("@", context["WHAT"]),
+                                          context)
+    context["EVENT_HTML"] = event_html
 
-    # - Downtimes             Started, Ended, Cancelled
-    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMEEND"
-
-    # - Acknowledgements
-    #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"
-
-    # - Custom notifications
-    #   NOTIFICATIONTYPE is "CUSTOM"
-
-    html_info = ""
-    html_state = '<span class="state$@STATE$">$@STATE$</span>'
-    notification_type = context["NOTIFICATIONTYPE"]
-    if notification_type in ["PROBLEM", "RECOVERY"]:
-        txt_info = "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
-        html_info = '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; ' + \
-                    html_state
-
-    elif notification_type.startswith("FLAP"):
-        if "START" in notification_type:
-            txt_info = "Started Flapping"
-        else:
-            txt_info = "Stopped Flapping ($@SHORTSTATE$)"
-            html_info = "Stopped Flapping (while " + html_state + ")"
-
-    elif notification_type.startswith("DOWNTIME"):
-        what = notification_type[8:].title()
-        txt_info = "Downtime " + what + " ($@SHORTSTATE$)"
-        html_info = "Downtime " + what + " (while " + html_state + ")"
-
-    elif notification_type == "ACKNOWLEDGEMENT":
-
-        txt_info = "Acknowledged ($@SHORTSTATE$)"
-        html_info = "Acknowledged (while " + html_state + ")"
-
-    elif notification_type == "CUSTOM":
-        txt_info = "Custom Notification ($@SHORTSTATE$)"
-        html_info = "Custom Notification (while " + html_state + ")"
-
-    else:
-        txt_info = notification_type  # Should never happen
-
-    if not html_info:
-        html_info = txt_info
-
-    txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
-    context["EVENT_TXT"] = txt_info
-
-    # Add HTML formated plugin output
-    html_info = utils.substitute_context(html_info.replace("@", context["WHAT"]), context)
-    context["EVENT_HTML"] = html_info
     if "HOSTOUTPUT" in context:
         context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
@@ -896,10 +841,61 @@ def construct_content(context):
     return content_txt, content_html, attachments
 
 
+def event_templates(notification_type):
+    # Return a notification summary
+    # Note: This code could maybe move to cmk --notify in order to
+    # make it available every in all notification scripts
+    # We have the following types of notifications:
+
+    # - Alerts                OK -> CRIT
+    #   NOTIFICATIONTYPE is "PROBLEM" or "RECOVERY"
+
+    # - Flapping              Started, Ended
+    #   NOTIFICATIONTYPE is "FLAPPINGSTART" or "FLAPPINGSTOP"
+
+    # - Downtimes             Started, Ended, Cancelled
+    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMEEND"
+
+    # - Acknowledgements
+    #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"
+
+    # - Custom notifications
+    #   NOTIFICATIONTYPE is "CUSTOM"
+
+    html_info = ""
+    html_state = '<span class="state$@STATE$">$@STATE$</span>'
+    if notification_type in ["PROBLEM", "RECOVERY"]:
+        txt_info = "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
+        html_info = '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; ' + html_state
+    elif notification_type.startswith("FLAP"):
+        if "START" in notification_type:
+            txt_info = "Started Flapping"
+        else:
+            txt_info = "Stopped Flapping ($@SHORTSTATE$)"
+            html_info = "Stopped Flapping (while " + html_state + ")"
+    elif notification_type.startswith("DOWNTIME"):
+        what = notification_type[8:].title()
+        txt_info = "Downtime " + what + " ($@SHORTSTATE$)"
+        html_info = "Downtime " + what + " (while " + html_state + ")"
+    elif notification_type == "ACKNOWLEDGEMENT":
+        txt_info = "Acknowledged ($@SHORTSTATE$)"
+        html_info = "Acknowledged (while " + html_state + ")"
+    elif notification_type == "CUSTOM":
+        txt_info = "Custom Notification ($@SHORTSTATE$)"
+        html_info = "Custom Notification (while " + html_state + ")"
+    else:
+        txt_info = notification_type  # Should never happen
+
+    if not html_info:
+        html_info = txt_info
+
+    return txt_info, html_info
+
+
 def body_templates(what, is_alert_handler, elements, body_elements):
     even = "even"
-    tmpl_txt = ""
-    tmpl_html = ""
+    tmpl_txt = []
+    tmpl_html = []
     for name, whence, forced, nottype, title, txt, html in body_elements:
         if nottype == "alerthandler" and not is_alert_handler:
             continue
@@ -913,7 +909,7 @@ def body_templates(what, is_alert_handler, elements, body_elements):
                                                                                      html)
             even = 'odd' if even == 'even' else 'even'
 
-    return tmpl_txt, tmpl_html
+    return ''.join(tmpl_txt), ''.join(tmpl_html)
 
 
 class BulkEmailContent(object):

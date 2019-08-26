@@ -76,9 +76,9 @@ def parse_hpux_lunstats(info):
             if left == 'STATISTICS FOR LUN':
                 lun = right
             elif left == 'Bytes read':
-                bytes_read = int(right) / 512
+                bytes_read = int(right) // 512
             elif left == 'Bytes written':
-                bytes_written = int(right) / 512
+                bytes_written = int(right) // 512
                 luns.append((None, lun, bytes_read, bytes_written))
     return luns
 

@@ -127,7 +127,7 @@ def get_aggregated_values(vserver):
         ("connections_duration_min", min),
         ("connections_duration_max", max),
         ("connections", sum),
-        ("connections_duration_mean", lambda x: float(sum(x) / len(x))),
+        ("connections_duration_mean", lambda x: float(sum(x)) / len(x)),
     ]:
         value_list = vserver.get(what)
         if value_list:

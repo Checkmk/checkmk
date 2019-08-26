@@ -49,9 +49,10 @@ def check_fortigate_memory_base(item, params, info):
         state = 0
 
     capacity = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
-    used = (percent * capacity) / 100
+    used = int((percent * capacity) / 100)
 
-    perf = [("mem_used", used, (warn * capacity) / 100, (crit * capacity) / 100, 0, capacity)]
+    perf = [("mem_used", used, int((warn * capacity) / 100.0), int(
+        (crit * capacity) / 100.0), 0, capacity)]
     return state, "%d%% (warn/crit at %d%%/%d%%)" % (percent, warn, crit), perf
 
 

@@ -318,7 +318,7 @@ def check_hp_proliant_mem(item, params, info):
             board_index, module_index, module_size, module_type, \
             module_status, module_condition = line[:6]
 
-            module_size_mb = int(module_size) / 1024
+            module_size_mb = int(module_size) // 1024
 
             type_ = 'n/a'
             if int(module_type) in hp_proliant_mem_type_map:

@@ -1,0 +1,98 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<jenkins_queue>>>
+# [[u'[{"task": {"color": "blue_anime", "_class":
+# "org.jenkinsci.plugins.workflow.job.WorkflowJob", "name": "testbuild"},
+# "inQueueSince": 1566823138742, "why": "Build #471 is already in progress
+# (ETA: 38 min)", "stuck": false, "_class": "hudson.model.Queue$BlockedItem",
+# "buildableStartMilliseconds": 1566823144626, "id": 174032, "blocked":
+# true}]']]
+
+import json
+
+
+def parse_jenkins_queue(info):
+    parsed = []
+
+    for line in info:
+        parsed.extend(json.loads(line[0]))
+
+    return parsed
+
+
+def inventory_jenkins_health(parsed):
+    yield None, {}
+
+
+def check_jenkins_queue(no_item, params, parsed):
+    if not parsed:
+        yield 0, "Queue lenght: 0 Tasks"
+        return
+
+    long_output = []
+
+    yield check_levels(len(parsed),
+                       "queue",
+                       params.get("queue_lenght"),
+                       human_readable_func=int,
+                       unit="Tasks",
+                       infoname="Queue lenght")
+
+    levels = params.get("in_queue_since")
+
+    for task in parsed:
+        now = time.time()
+        state = 0
+        timestamp_in_queue = task["inQueueSince"] / 1000
+        since = now - timestamp_in_queue
+
+        if levels is not None:
+            state, _since_infotext, _perf_data = check_levels(since, "in_queue_since", levels)
+
+        long_output.append(
+            (state, "ID: %d, In queue since: %s (%s)%s, Stuck: %s, Blocked: %s, Why kept: %s" %
+             (task["id"], get_age_human_readable(since),
+              get_timestamp_human_readable(timestamp_in_queue), state_markers[state], task["stuck"],
+              task["blocked"], task["why"])))
+
+    max_state = max([state for state, _infotext in long_output])
+    if max_state and levels is not None:
+        yield max_state, 'At least one task above thresholds (warn/crit at %s/%s)' % (
+            get_age_human_readable(levels[0]), get_age_human_readable(levels[1]))
+
+    for state, line in long_output:
+        yield 0, "\n%s" % line
+
+
+check_info["jenkins_queue"] = {
+    "parse_function": parse_jenkins_queue,
+    "check_function": check_jenkins_queue,
+    "inventory_function": inventory_jenkins_health,
+    "service_description": "Jenkins Queue",
+    "has_perfdata": True,
+    "group": "jenkins_queue",
+}

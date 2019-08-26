@@ -4,6 +4,53 @@ import pytest  # type: ignore
 
 import cmk.notification_plugins.mail as mail
 
+
+@pytest.mark.parametrize("notification_type, expected", [
+    ("PROBLEM", (
+        "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
+    )),
+    ("RECOVERY", (
+        "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
+    )),
+    ("FLAPPINGSTART", (
+        "Started Flapping",
+        "Started Flapping",
+    )),
+    ("FLAPPINGSTOP", (
+        'Stopped Flapping ($@SHORTSTATE$)',
+        'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMESTART", (
+        "Downtime Start ($@SHORTSTATE$)",
+        'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMEEND", (
+        "Downtime End ($@SHORTSTATE$)",
+        'Downtime End (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMECANCELLED", (
+        "Downtime Cancelled ($@SHORTSTATE$)",
+        'Downtime Cancelled (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("ACKNOWLEDGEMENT", (
+        "Acknowledged ($@SHORTSTATE$)",
+        'Acknowledged (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("CUSTOM", (
+        "Custom Notification ($@SHORTSTATE$)",
+        'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ('UNKNOWN', (
+        "UNKNOWN",
+        "UNKNOWN",
+    )),
+])
+def test_event_templates(notification_type, expected):
+    assert mail.event_templates(notification_type) == expected
+
+
 HOSTNAME_ELEMENT = (
     "hostname",
     "both",

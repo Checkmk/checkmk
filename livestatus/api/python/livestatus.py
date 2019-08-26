@@ -321,7 +321,7 @@ class BaseConnection:
                 pass
 
     def receive_data(self, size):
-        result = ""
+        result = b""
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
         while size > 0:
@@ -382,6 +382,7 @@ class BaseConnection:
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query = None, add_headers = "", timeout_at = None):
         try:
+            # Headers are always ASCII encoded
             resp = self.receive_data(16)
             code = resp[0:3]
             try:
@@ -390,7 +391,7 @@ class BaseConnection:
                 self.disconnect()
                 raise MKLivestatusSocketError("Malformed output. Livestatus TCP socket might be unreachable.")
 
-            data = self.receive_data(length)
+            data = self.receive_data(length).decode("utf-8")
 
             if code == "200":
                 try:

@@ -125,6 +125,18 @@ def _cluster_ping_command(config_cache, host_config, ip):
     return None
 
 
+def _service_check_command(host_config, hostcheck_commands_to_define, service):
+    if config.monitoring_core == "cmc":
+        return "check-mk-host-service!" + service
+
+    command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
+    hostcheck_commands_to_define.append(
+        (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+         (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
+          host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+    return command
+
+
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
 def host_check_command(config_cache,
                        host_config,
@@ -150,18 +162,11 @@ def host_check_command(config_cache,
     if value == "ok":
         return "check-mk-host-ok"
 
-    if value == "agent" or value[0] == "service":
-        service = "Check_MK" if value == "agent" else value[1]
+    if value == "agent":
+        return _service_check_command(host_config, hostcheck_commands_to_define, "Check_MK")
 
-        if config.monitoring_core == "cmc":
-            return "check-mk-host-service!" + service
-
-        command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-        hostcheck_commands_to_define.append(
-            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
-              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
-        return command
+    if value[0] == "service":
+        return _service_check_command(host_config, hostcheck_commands_to_define, value[1])
 
     if value[0] == "tcp":
         return "check-mk-host-tcp!" + str(value[1])

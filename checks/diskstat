@@ -136,7 +136,7 @@ def parse_diskstat(info):
     real_partitions = {
         device_name for device_name in device_names
         if diskstat_diskless_pattern.match(device_name) and
-        re.sub('[0-9]+$', '', device_name in device_names)
+        re.sub('[0-9]+$', '', device_name) in device_names
     }
     disks = {}
     for line in proc_diskstat:

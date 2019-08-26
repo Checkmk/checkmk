@@ -1147,11 +1147,11 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
     render_line_style(into_selection) {
         let line_style_div = into_selection.selectAll("select").data([null])
 
-
         let line_style_div_enter = line_style_div.enter()
-        line_style_div_enter.append("label").text("Line style")
+        let row_enter = line_style_div_enter.append("table").append("tr")
+        row_enter.append("td").text("Line style")
 
-        let select = line_style_div_enter.append("select")
+        let select = row_enter.append("select")
                         .style("pointer-events", "all")
                         .style("width", "200px")
 
@@ -1399,5 +1399,5 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
 node_visualization_utils.layer_registry.register(LayeredRuleIconOverlay, 10)
 node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20)
-node_visualization_utils.layer_registry.register(LayeredCustomOverlay, 30)
+//node_visualization_utils.layer_registry.register(LayeredCustomOverlay, 30)
 node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50)

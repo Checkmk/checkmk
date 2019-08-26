@@ -2681,6 +2681,9 @@ class FilterHostLabels(ABCLabelFilter):
     def title(self):
         return _("Host labels")
 
+    def double_height(self):
+        return True
+
 
 @filter_registry.register
 class FilterServiceLabels(ABCLabelFilter):
@@ -2695,6 +2698,9 @@ class FilterServiceLabels(ABCLabelFilter):
     @property
     def title(self):
         return _("Service labels")
+
+    def double_height(self):
+        return True
 
 
 class ABCFilterCustomAttribute(Filter):

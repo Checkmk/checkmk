@@ -94,7 +94,7 @@ body.main .popup_menu .hstate0 span {
   .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
   body.main .popup_menu & .state0 span, .hstate0 a,
   .hstate0 body.main .popup_menu span, body.main .popup_menu & .hstate0 span {
-    color: $dark-font-color;
+    color: $dark-font-color !important;
     background-color: $theme-color-state-success-background !important;
     border-color: $theme-color-state-success-border !important;
   }

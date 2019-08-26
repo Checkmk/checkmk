@@ -22,6 +22,10 @@ import cmk.notification_plugins.mail as mail
         'Stopped Flapping ($@SHORTSTATE$)',
         'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
     )),
+    ("FLAPPINGDISABLED", (
+        'Disabled Flapping ($@SHORTSTATE$)',
+        'Disabled Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
     ("DOWNTIMESTART", (
         "Downtime Start ($@SHORTSTATE$)",
         'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)',
@@ -41,6 +45,10 @@ import cmk.notification_plugins.mail as mail
     ("CUSTOM", (
         "Custom Notification ($@SHORTSTATE$)",
         'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("ALERTHANDLER (OK)", (
+        "ALERTHANDLER (OK)",
+        'ALERTHANDLER (OK)',
     )),
     ('UNKNOWN', (
         "UNKNOWN",

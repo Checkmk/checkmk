@@ -776,12 +776,10 @@ def construct_content(context):
 
     event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
 
-    event_txt = utils.substitute_context(event_template_txt.replace("@", context["WHAT"]), context)
-    context["EVENT_TXT"] = event_txt
-
-    event_html = utils.substitute_context(event_template_html.replace("@", context["WHAT"]),
-                                          context)
-    context["EVENT_HTML"] = event_html
+    context["EVENT_TXT"] = utils.substitute_context(
+        event_template_txt.replace("@", context["WHAT"]), context)
+    context["EVENT_HTML"] = utils.substitute_context(
+        event_template_html.replace("@", context["WHAT"]), context)
 
     if "HOSTOUTPUT" in context:
         context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
@@ -841,54 +839,32 @@ def construct_content(context):
 
 
 def event_templates(notification_type):
-    # Return a notification summary
-    # Note: This code could maybe move to cmk --notify in order to
-    # make it available every in all notification scripts
-    # We have the following types of notifications:
-
-    # - Alerts                OK -> CRIT
-    #   NOTIFICATIONTYPE is "PROBLEM" or "RECOVERY"
-
-    # - Flapping              Started, Ended
-    #   NOTIFICATIONTYPE is "FLAPPINGSTART" or "FLAPPINGSTOP"
-
-    # - Downtimes             Started, Ended, Cancelled
-    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMEEND"
-
-    # - Acknowledgements
-    #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"
-
-    # - Custom notifications
-    #   NOTIFICATIONTYPE is "CUSTOM"
-
-    html_info = ""
-    html_state = '<span class="state$@STATE$">$@STATE$</span>'
+    # Returns an event summary
     if notification_type in ["PROBLEM", "RECOVERY"]:
-        txt_info = "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
-        html_info = '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; ' + html_state
-    elif notification_type.startswith("FLAP"):
-        if "START" in notification_type:
-            txt_info = "Started Flapping"
-        else:
-            txt_info = "Stopped Flapping ($@SHORTSTATE$)"
-            html_info = "Stopped Flapping (while " + html_state + ")"
-    elif notification_type.startswith("DOWNTIME"):
-        what = notification_type[8:].title()
-        txt_info = "Downtime " + what + " ($@SHORTSTATE$)"
-        html_info = "Downtime " + what + " (while " + html_state + ")"
-    elif notification_type == "ACKNOWLEDGEMENT":
-        txt_info = "Acknowledged ($@SHORTSTATE$)"
-        html_info = "Acknowledged (while " + html_state + ")"
-    elif notification_type == "CUSTOM":
-        txt_info = "Custom Notification ($@SHORTSTATE$)"
-        html_info = "Custom Notification (while " + html_state + ")"
-    else:
-        txt_info = notification_type  # Should never happen
-
-    if not html_info:
-        html_info = txt_info
-
-    return txt_info, html_info
+        return (
+            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+            '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
+        )
+    if notification_type == "FLAPPINGSTART":
+        return "Started Flapping", "Started Flapping"
+    if notification_type == "FLAPPINGSTOP":
+        return "Stopped Flapping ($@SHORTSTATE$)", 'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "FLAPPINGDISABLED":
+        return "Disabled Flapping ($@SHORTSTATE$)", 'Disabled Flapping (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "DOWNTIMESTART":
+        return "Downtime Start ($@SHORTSTATE$)", 'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "DOWNTIMEEND":
+        return "Downtime End ($@SHORTSTATE$)", 'Downtime End (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "DOWNTIMECANCELLED":
+        return "Downtime Cancelled ($@SHORTSTATE$)", 'Downtime Cancelled (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "ACKNOWLEDGEMENT":
+        return "Acknowledged ($@SHORTSTATE$)", 'Acknowledged (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type == "CUSTOM":
+        return "Custom Notification ($@SHORTSTATE$)", 'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)'
+    if notification_type.startswith("ALERTHANDLER"):
+        # The notification_type here is "ALERTHANDLER (exit_code)"
+        return notification_type, notification_type
+    return notification_type, notification_type
 
 
 def body_templates(what, is_alert_handler, elements, body_elements):

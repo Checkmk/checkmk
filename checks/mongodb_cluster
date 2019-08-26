@@ -28,7 +28,6 @@
 # <json>
 
 import json
-import sys
 
 factory_settings["mongodb_cluster_levels"] = {"levels_number_jumbo": (1, 2)}
 

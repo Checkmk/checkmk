@@ -113,14 +113,6 @@ def test_main(check_manager, datasetfile):
 
     generictests.run(check_manager, regression, write=True)
 
-    directory = os.path.expanduser('~/git/check_mk/tests/unit/checks/generictests/datasets')
-    # hack to fix simon's hack
-    virtual_env_dir = os.environ['VIRTUAL_ENV']
-    if virtual_env_dir:
-        project_root_dir = virtual_env_dir.split("virtual-envs")
-        if project_root_dir and project_root_dir[0]:
-            directory = os.path.expanduser(
-                project_root_dir[0]) + '/tests/unit/checks/generictests/datasets'
-
+    directory = os.path.join(os.path.dirname(__file__), "datasets")
     regression.write(directory)
     return

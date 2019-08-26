@@ -30,6 +30,7 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import abc
 import errno
 import glob
 import os
@@ -915,7 +916,7 @@ class Target(BackupEntity):
         return self._config["remote"][0]
 
     def type_class(self):
-        return BackupTargetType.get_type(self.type_ident())
+        return ABCBackupTargetType.get_type(self.type_ident())
 
     def type_params(self):
         return self._config["remote"][1]
@@ -1144,7 +1145,7 @@ class PageEditBackupTarget(object):
                 ("remote",
                  CascadingDropdown(
                      title=_("Destination"),
-                     choices=BackupTargetType.choices,
+                     choices=ABCBackupTargetType.choices,
                  )),
             ],
             optional_keys=[],
@@ -1216,8 +1217,12 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class BackupTargetType(object):
-    ident = None
+class ABCBackupTargetType(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        raise NotImplementedError()
 
     @classmethod
     def choices(cls):
@@ -1241,14 +1246,16 @@ class BackupTargetType(object):
     def __init__(self, params):
         self._params = params
 
+    @abc.abstractmethod
     def valuespec(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def backups(self):
         raise NotImplementedError()
 
 
-class BackupTargetLocal(BackupTargetType):
+class BackupTargetLocal(ABCBackupTargetType):
     ident = "local"
 
     @classmethod

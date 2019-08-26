@@ -2309,6 +2309,7 @@ class RulespecSpecialAgentsJenkins(ABCHostValueRulespec):
                             "job states."),
                      choices=[
                          ("jobs", _("Job state")),
+                         ("queue", _("Queue Info")),
                      ],
                      default_value=["jobs"],
                      allow_empty=False,

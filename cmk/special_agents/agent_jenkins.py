@@ -30,7 +30,7 @@ import json
 import sys
 import requests
 
-Section = namedtuple('Section', ['name', 'uri'])
+Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 JenkinsJobInfo = namedtuple("job_info", [
     "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
@@ -47,9 +47,16 @@ def main():
     sections = [
         Section(
             name="jobs",
+            key="jobs",
             uri=
             "/api/json?tree=jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
         ),
+        Section(
+            name="queue",
+            key="items",
+            uri=
+            "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,why,buildableStartMilliseconds,task[name,color]]"
+        )
     ]
 
     args = parse_arguments()
@@ -67,17 +74,18 @@ def handle_request(args, sections):
     url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
 
     for section in sections:
-        sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
-        try:
-            url = url_base + section.uri
-            response = requests.get(url, auth=(args.user, args.password))
+        if section.name in args.modules:
+            sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
+            try:
+                url = url_base + section.uri
+                response = requests.get(url, auth=(args.user, args.password))
 
-            value = response.json()[section.name]
-            sys.stdout.write("%s\n" % json.dumps(value))
+                value = response.json()[section.key]
+                sys.stdout.write("%s\n" % json.dumps(value))
 
-        except requests.exceptions.RequestException:
-            if args.debug:
-                raise
+            except requests.exceptions.RequestException:
+                if args.debug:
+                    raise
 
 
 def parse_arguments(argv=None):
@@ -101,9 +109,9 @@ def parse_arguments(argv=None):
     parser.add_argument(
         "-m",
         "--modules",
-        default="jobs",
+        default="jobs queue",
         type=lambda x: x.split(' '),
-        help="Space-separated list of data to query. Possible values: 'jobs' (default: all)")
+        help="Space-separated list of data to query. Possible values: 'jobs, queue' (default: all)")
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")

@@ -121,8 +121,8 @@ def check_memory(params, meminfo):
 
     # Prepare performance data
     perfdata = [
-        ('ramused', (memused_kb - caches_kb) / 1024, None, None, 0, totalmem_mb),
-        ('swapused', swapused_kb / 1024, None, None, 0, meminfo['SwapTotal'] / 1024),
+        ('ramused', (memused_kb - caches_kb) // 1024, None, None, 0, totalmem_mb),
+        ('swapused', swapused_kb // 1024, None, None, 0, meminfo['SwapTotal'] // 1024),
         ('memused', totalused_mb, warn_mb, crit_mb, 0, totalvirt_mb),
     ]
 
@@ -150,9 +150,9 @@ def check_memory(params, meminfo):
     # Add additional metrics, provided by Linux.
     mapped = meminfo.get('Mapped')
     if mapped:
-        mapped_mb = int(mapped) / 1024
-        committed_as_mb = int(meminfo.get('Committed_AS', 0)) / 1024
-        shared_mb = int(meminfo.get('Shmem', 0)) / 1024
+        mapped_mb = int(mapped) // 1024
+        committed_as_mb = int(meminfo.get('Committed_AS', 0)) // 1024
+        shared_mb = int(meminfo.get('Shmem', 0)) // 1024
 
         perfdata += [
             ('mapped', mapped_mb),

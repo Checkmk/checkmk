@@ -1079,7 +1079,7 @@ def logwatch_load_spooled_messages(method, result):
 
     # Delete by size till half of target size has been deleted (oldest spool files first)
     if total_size > spool_params["max_size"]:
-        target_size = spool_params["max_size"] / 2
+        target_size = int(spool_params["max_size"] / 2.0)
 
         for filename in spool_files:
             path = logwatch_spool_path() + "/" + filename

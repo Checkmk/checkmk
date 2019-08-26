@@ -68,8 +68,8 @@ def check_netapp_api_volumes(item, params, parsed):
         return 1, "Volume is %s" % volume.get("state")
 
     mega = 1024.0 * 1024.0
-    size_total = int(volume.get("size-total")) / mega
-    size_avail = int(volume.get("size-available")) / mega
+    size_total = int(volume.get("size-total")) / mega  # fixed: true-division
+    size_avail = int(volume.get("size-available")) / mega  # fixed: true-division
     inodes_total = int(volume.get("files-total"))
     inodes_avail = inodes_total - int(volume.get("files-used"))
     state, info, perf = df_check_filesystem_single(item, size_total, size_avail, 0, inodes_total,
@@ -142,7 +142,8 @@ def check_netapp_api_volumes(item, params, parsed):
                             divisor = 1.0
                         else:
                             divisor = 1000.0
-                        delta = delta / (divisor * base[_create_key(protocol, mode, "ops")])
+                        delta = delta / (divisor * base[_create_key(protocol, mode, "ops")]
+                                        )  # fixed: true-division
                     infotexts.append("%s: %s" % (key, format_func(delta)))
 
                 perf.append((key, delta))

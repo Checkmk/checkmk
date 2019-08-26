@@ -293,7 +293,7 @@ def check_oracle_tablespaces(item, params, parsed):
                 if incsize == datafile["block_size"]:
                     uses_default_increment = True
 
-                num_increments += (free_extension / incsize)
+                num_increments += free_extension // incsize
                 increment_size += free_extension
 
                 if db_version >= 11:

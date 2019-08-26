@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import errno
 import logging
 import os
@@ -32,16 +33,16 @@ import time
 import zipfile
 import cStringIO
 
-from pysmi.compiler import MibCompiler
-from pysmi.parser.smiv1compat import SmiV1CompatParser
-from pysmi.searcher.pypackage import PyPackageSearcher
-from pysmi.searcher.pyfile import PyFileSearcher
-from pysmi.writer.pyfile import PyFileWriter
-from pysmi.reader.localfile import FileReader
-from pysmi.codegen.pysnmp import PySnmpCodeGen
-from pysmi.reader.callback import CallbackReader
-from pysmi.searcher.stub import StubSearcher
-from pysmi.error import PySmiError
+from pysmi.compiler import MibCompiler  # type: ignore
+from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore
+from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore
+from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore
+from pysmi.writer.pyfile import PyFileWriter  # type: ignore
+from pysmi.reader.localfile import FileReader  # type: ignore
+from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore
+from pysmi.reader.callback import CallbackReader  # type: ignore
+from pysmi.searcher.stub import StubSearcher  # type: ignore
+from pysmi.error import PySmiError  # type: ignore
 import six
 
 import cmk.utils.log
@@ -1031,10 +1032,17 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 #   '----------------------------------------------------------------------'
 
 
-class EventConsoleMode(WatoMode):
+class ABCEventConsoleMode(WatoMode):
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         self._rule_packs = load_mkeventd_rules()
-        super(EventConsoleMode, self).__init__()
+        super(ABCEventConsoleMode, self).__init__()
 
     def _verify_ec_enabled(self):
         if not config.mkeventd_enabled:
@@ -1183,7 +1191,7 @@ class EventConsoleMode(WatoMode):
 
 
 @mode_registry.register
-class ModeEventConsoleRulePacks(EventConsoleMode):
+class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_rule_packs"
@@ -1518,7 +1526,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleRules(EventConsoleMode):
+class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_rules"
@@ -1807,7 +1815,7 @@ class ModeEventConsoleRules(EventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleEditRulePack(EventConsoleMode):
+class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_edit_rule_pack"
@@ -1907,7 +1915,7 @@ class ModeEventConsoleEditRulePack(EventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleEditRule(EventConsoleMode):
+class ModeEventConsoleEditRule(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_edit_rule"
@@ -2076,7 +2084,7 @@ class ModeEventConsoleEditRule(EventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleStatus(EventConsoleMode):
+class ModeEventConsoleStatus(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_status"
@@ -2163,7 +2171,7 @@ class ModeEventConsoleStatus(EventConsoleMode):
 
 
 @mode_registry.register
-class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
+class ModeEventConsoleSettings(ABCEventConsoleMode, GlobalSettingsMode):
     @classmethod
     def name(cls):
         return "mkeventd_config"
@@ -2313,7 +2321,7 @@ def _get_event_console_sync_sites():
 
 
 @mode_registry.register
-class ModeEventConsoleMIBs(EventConsoleMode):
+class ModeEventConsoleMIBs(ABCEventConsoleMode):
     @classmethod
     def name(cls):
         return "mkeventd_mibs"

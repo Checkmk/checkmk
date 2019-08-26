@@ -764,41 +764,6 @@ def render_performance_graphs(context):
 
 
 def construct_content(context):
-    if context.get('PARAMETER_2'):
-        context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
-
-    context["LINKEDHOSTNAME"] = utils.format_link('<a href="%s">%s</a>',
-                                                  utils.host_url_from_context(context),
-                                                  context["HOSTNAME"])
-    context["LINKEDSERVICEDESC"] = utils.format_link('<a href="%s">%s</a>',
-                                                     utils.service_url_from_context(context),
-                                                     context.get("SERVICEDESC", ''))
-
-    event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
-
-    context["EVENT_TXT"] = utils.substitute_context(
-        event_template_txt.replace("@", context["WHAT"]), context)
-    context["EVENT_HTML"] = utils.substitute_context(
-        event_template_html.replace("@", context["WHAT"]), context)
-
-    if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
-    if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
-
-        long_serviceoutput = context["LONGSERVICEOUTPUT"]\
-            .replace('\\n', '<br>')\
-            .replace('\n', '<br>')
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
-
-    # Compute the subject of the mail
-    if context['WHAT'] == 'HOST':
-        tmpl = context.get('PARAMETER_HOST_SUBJECT') or TMPL_HOST_SUBJECT
-        context['SUBJECT'] = utils.substitute_context(tmpl, context)
-    else:
-        tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or TMPL_SERVICE_SUBJECT
-        context['SUBJECT'] = utils.substitute_context(tmpl, context)
-
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -836,6 +801,43 @@ def construct_content(context):
                    utils.substitute_context(TMPL_FOOT_HTML, context)
 
     return content_txt, content_html, attachments
+
+
+def extend_context(context):
+    if context.get('PARAMETER_2'):
+        context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
+
+    context["LINKEDHOSTNAME"] = utils.format_link('<a href="%s">%s</a>',
+                                                  utils.host_url_from_context(context),
+                                                  context["HOSTNAME"])
+    context["LINKEDSERVICEDESC"] = utils.format_link('<a href="%s">%s</a>',
+                                                     utils.service_url_from_context(context),
+                                                     context.get("SERVICEDESC", ''))
+
+    event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
+
+    context["EVENT_TXT"] = utils.substitute_context(
+        event_template_txt.replace("@", context["WHAT"]), context)
+    context["EVENT_HTML"] = utils.substitute_context(
+        event_template_html.replace("@", context["WHAT"]), context)
+
+    if "HOSTOUTPUT" in context:
+        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+    if context["WHAT"] == "SERVICE":
+        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+
+        long_serviceoutput = context["LONGSERVICEOUTPUT"]\
+            .replace('\\n', '<br>')\
+            .replace('\n', '<br>')
+        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
+
+    # Compute the subject of the mail
+    if context['WHAT'] == 'HOST':
+        tmpl = context.get('PARAMETER_HOST_SUBJECT') or TMPL_HOST_SUBJECT
+        context['SUBJECT'] = utils.substitute_context(tmpl, context)
+    else:
+        tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or TMPL_SERVICE_SUBJECT
+        context['SUBJECT'] = utils.substitute_context(tmpl, context)
 
 
 def event_templates(notification_type):
@@ -897,6 +899,8 @@ class BulkEmailContent(object):
         for context in contexts:
             context.update(parameters)
             utils.html_escape_context(context)
+            extend_context(context)
+
             txt, html, att = construct_content(context)
             self.content_txt += txt
             self.content_html += html
@@ -922,6 +926,8 @@ class SingleEmailContent(object):
         # gather all options from env
         context = context_function()
         utils.html_escape_context(context)
+        extend_context(context)
+
         content_txt, content_html, attachments = construct_content(context)
 
         self.content_txt = content_txt

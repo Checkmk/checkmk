@@ -30,6 +30,8 @@ import json
 import sys
 import requests
 
+from cmk.special_agents.utils import vcrtrace
+
 Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 
@@ -104,6 +106,7 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
 
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
     parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
     parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
     parser.add_argument("-P",

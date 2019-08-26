@@ -27,6 +27,8 @@
 from __future__ import print_function
 
 import abc
+import argparse
+import atexit
 import datetime
 import errno
 import getopt
@@ -212,3 +214,59 @@ class DataCache(six.with_metaclass(abc.ABCMeta, object)):
 
         json_dump = json.dumps(raw_content, default=datetime_serializer)
         cmk.utils.store.save_file(str(self._cache_file), json_dump)
+
+
+class _NullContext(object):
+    """A context manager that does nothing and is falsey"""
+    def __call__(self, *_args, **_kwargs):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        pass
+
+
+def vcrtrace(**vcr_init_kwargs):
+    """Returns the class of an argparse.Action to enter a vcr context
+
+    Provided keyword arguments will be passed to the call of vcrpy.VCR.
+    The minimal change to use vcrtrace in your program is to add this
+    line to your argument parsing:
+
+        parser.add_argument("--vcrtrace", action=vcrtrace())
+
+    If this flag is set to a TRACEFILE that does not exist yet, it will be created and
+    all requests the program sends and their corresponding answers will be recorded in said file.
+    If the file already exists, no requests are sent to the server, but the responses will be
+    replayed from the tracefile.
+
+    If you need to access the VCRs use_cassette method (e.g. to filter out sensitive data),
+    you can do so via the returned args namespace (omitting the filename argument):
+
+        with args.vcrtrace(filter_headers=[('authorization', '*********')]):
+            requests.get('https://www.google.de', headers={'authorization': 'mooop'})
+
+    If the corresponding flag ('--vcrtrace' in the above example) was not specified,
+    the args attribute will be a null-context.
+    """
+    class VcrTraceAction(argparse.Action):
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("metavar", "TRACEFILE")
+            kwargs["help"] = "%s %s" % (vcrtrace.__doc__.split('\n\n')[3], kwargs.get("help", ""))
+            super(VcrTraceAction, self).__init__(*args, nargs=None, default=False, **kwargs)
+
+        def __call__(self, _parser, namespace, filename, option_string=None):
+            if not filename:
+                setattr(namespace, self.dest, _NullContext())
+                return
+
+            import vcr  # type: ignore
+            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
+            setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
+            global_context = use_cassette(filename)
+            atexit.register(global_context.__exit__)
+            global_context.__enter__()
+
+    return VcrTraceAction

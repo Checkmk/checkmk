@@ -1,0 +1,11 @@
+Title: mknotifyd: Do not crash if agent output contains invalid lines
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566554443
+
+

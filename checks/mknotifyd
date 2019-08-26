@@ -67,7 +67,7 @@ def parse_mknotifyd(info):
             }
             sub_entry = site_entry
             parsed[site] = site_entry
-        else:
+        elif ":" in line[0]:
             varname, value = line[0].split(":", 1)
             value = value.strip()
 
@@ -140,6 +140,12 @@ def inventory_mknotifyd(parsed):
 def check_mknotifyd(item, _no_params, parsed):
     if item not in parsed:
         yield 2, "No status information, Spooler not running"
+        return
+    # There are dummy-entries created during the parsing. So the
+    # dict will never be completely empty. We check for Version
+    # because this should be always present in a valid state file.
+    elif not parsed[item].get("Version"):
+        yield 2, "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly"
         return
 
     now = time.time()

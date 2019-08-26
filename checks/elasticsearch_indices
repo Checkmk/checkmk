@@ -80,8 +80,8 @@ def check_elasticsearch_indices(item, params, item_data):
 
         if params.get("%s_rate" % name):
             warn, crit, avg = params["%s_rate" % name]
-            avg_rate_warn = (avg_rate * (warn / 100 + 1))
-            avg_rate_crit = (avg_rate * (crit / 100 + 1))
+            avg_rate_warn = (avg_rate * (warn / 100.0 + 1))
+            avg_rate_crit = (avg_rate * (crit / 100.0 + 1))
             params_avg = (avg_rate_warn, avg_rate_crit)
         else:
             params_avg = (None, None)

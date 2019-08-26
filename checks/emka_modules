@@ -326,7 +326,7 @@ def inventory_emka_modules_sensor_volt(parsed):
 def check_emka_modules_sensor_volt(item, params, parsed):
     if item in parsed.get("sensor_volt", {}):
         attrs = parsed["sensor_volt"][item]
-        value = attrs["value"] / 1000
+        value = attrs["value"] / 1000.0
         return check_elphase(item, params, {item: {"voltage": value}})
 
 

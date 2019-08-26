@@ -202,6 +202,9 @@ def cached(function):
 
 
 class JolokiaInstance(object):
+    # use this to filter headers whien recording via vcr trace
+    FILTER_SENSITIVE = {'filter_headers': [('authorization', '****')]}
+
     @staticmethod
     def _sanitize_config(config):
         instance = config.get("instance")

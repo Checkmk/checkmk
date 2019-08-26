@@ -28,6 +28,7 @@
 import os
 import sys
 import argparse
+from cmk.special_agents.utils import vcrtrace
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
@@ -46,6 +47,8 @@ def parse_arguments(argv=None):
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let python exceptions come through")
+    parser.add_argument("--vcrtrace",
+                        action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE))
 
     opts_with_help = (t for t in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(t) == 3)
 

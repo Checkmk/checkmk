@@ -66,7 +66,7 @@ def check_apc_test(item, params, info):
 
     year_format = '%y' if len(last_date) == 8 else '%Y'
     last_ts = time.mktime(time.strptime(last_date, '%m/%d/' + year_format))
-    days_diff = (time.time() - last_ts) / 86400
+    days_diff = (time.time() - last_ts) / 86400.0
 
     diagnostic_status_text = {1: "OK", 2: "failed", 3: "invalid", 4: "in progress"}
 

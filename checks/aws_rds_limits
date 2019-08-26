@@ -48,7 +48,7 @@ def parse_aws_rds_limits(info):
     for resource_key, resource_title, limit, amount, region in parse_aws(info):
         if resource_key == "allocated_storage":
             # Allocated Storage has unit TiB
-            factor = 1024**4 / 1000
+            factor = 1024**4 / 1000.0
             limit = limit * factor
             amount = amount * factor
             human_readable_f = get_bytes_human_readable

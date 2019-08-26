@@ -433,7 +433,7 @@ class SingleSiteConnection(Helpers):
                 pass
 
     def receive_data(self, size):
-        result = u""
+        result = b""
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
         while size > 0:
@@ -442,7 +442,7 @@ class SingleSiteConnection(Helpers):
                 raise MKLivestatusSocketClosed(
                     "Read zero data from socket, nagios server closed connection")
             size -= len(packet)
-            result += packet.decode("utf-8")
+            result += packet
         return result
 
     def do_query(self, query, add_headers=""):
@@ -494,6 +494,7 @@ class SingleSiteConnection(Helpers):
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query=None, add_headers="", timeout_at=None):
         try:
+            # Headers are always ASCII encoded
             resp = self.receive_data(16)
             code = resp[0:3]
             try:
@@ -504,7 +505,7 @@ class SingleSiteConnection(Helpers):
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
                     "encryption settings are used.")
 
-            data = self.receive_data(length)
+            data = self.receive_data(length).decode("utf-8")
 
             if code == "200":
                 try:

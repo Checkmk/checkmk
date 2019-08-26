@@ -203,10 +203,27 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         if key[0] == '_':
             host_spec[key] = value
 
+    def host_check_via_service_status(service):
+        command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
+        cfg.hostcheck_commands_to_define.append(
+            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
+              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+        return command
+
+    def host_check_via_custom_check(command_name, command):
+        cfg.custom_commands_to_define.add(command_name)
+        return command
+
     # Host check command might differ from default
-    command = core_config.host_check_command(config_cache, host_config, ip, host_config.is_cluster,
-                                             cfg.hostcheck_commands_to_define,
-                                             cfg.custom_commands_to_define)
+    command = core_config.host_check_command(
+        config_cache,  #
+        host_config,
+        ip,
+        host_config.is_cluster,
+        "ping",
+        host_check_via_service_status,
+        host_check_via_custom_check)
     if command:
         host_spec["check_command"] = command
 

@@ -122,8 +122,8 @@ def check_j4p_performance_mem(item, params, info):
         return (3, "data not found in agent output")
     d = parsed[item]
     mb = 1024 * 1024.0
-    heap = saveint(d["HeapMemoryUsage"]) / mb
-    non_heap = saveint(d["NonHeapMemoryUsage"]) / mb
+    heap = saveint(d["HeapMemoryUsage"]) / mb  # fixed: true-division
+    non_heap = saveint(d["NonHeapMemoryUsage"]) / mb  # fixed: true-division
     total = heap + non_heap
     perfdata = [
         ("heap", heap, warn, crit),
@@ -199,13 +199,13 @@ def check_j4p_performance_uptime(item, _unused, info):
     parsed = j4p_performance_parse(info)
     if item not in parsed:
         return (3, "data not found in agent output")
-    uptime = saveint(parsed[item]['Uptime']) / 1000
+    uptime = int(saveint(parsed[item]['Uptime']) / 1000.0)
 
     seconds = uptime % 60
-    rem = uptime / 60
+    rem = int(uptime / 60.0)
     minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
+    hours = int((rem % 1440) / 60.0)
+    days = int(rem / 1440)
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
     return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds),

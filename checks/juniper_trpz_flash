@@ -35,10 +35,10 @@ def check_juniper_trpz_flash(_no_item, params, info):
     warn, crit = params
     used, total = map(savefloat, info[0])
     message = "Used: %s of %s " % (get_bytes_human_readable(used), get_bytes_human_readable(total))
-    perc_used = (used / total) * 100
+    perc_used = (used / total) * 100  # fixed: true-division
     if isinstance(crit, float):
-        a_warn = (warn / 100) * total
-        a_crit = (crit / 100) * total
+        a_warn = (warn / 100.0) * total
+        a_crit = (crit / 100.0) * total
         perf = [("used", used, a_warn, a_crit, 0, total)]
         levels = "Levels Warn/Crit are (%.2f%%, %.2f%%)" % (warn, crit)
         if perc_used > crit:

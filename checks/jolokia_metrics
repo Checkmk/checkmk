@@ -331,10 +331,10 @@ def check_jolokia_metrics_mem(item, params, info):
         or "HeapMemoryMax" not in d or "NonHeapMemoryMax" not in d:
         return 3, "data in agent output incomplete"
 
-    heap = saveint(d["HeapMemoryUsage"]) / mb
-    heapmax = saveint(d.get("HeapMemoryMax", -1)) / mb
-    nonheap = saveint(d["NonHeapMemoryUsage"]) / mb
-    nonheapmax = saveint(d.get("NonHeapMemoryMax", -1)) / mb
+    heap = saveint(d["HeapMemoryUsage"]) / mb  # fixed: true-division
+    heapmax = saveint(d.get("HeapMemoryMax", -1)) / mb  # fixed: true-division
+    nonheap = saveint(d["NonHeapMemoryUsage"]) / mb  # fixed: true-division
+    nonheapmax = saveint(d.get("NonHeapMemoryMax", -1)) / mb  # fixed: true-division
     total = heap + nonheap
     if heapmax > 0 and nonheapmax > 0:
         totalmax = heapmax + nonheapmax
@@ -429,7 +429,7 @@ def check_jolokia_metrics_uptime(item, params, info):
         raise MKCounterWrapped("No information from Jolokia agent")
     if item in parsed:
         if "Uptime" in parsed[item]:
-            uptime = int(parsed[item]['Uptime']) / 1000
+            uptime = int(int(parsed[item]['Uptime']) / 1000)
             return check_uptime_seconds(params, uptime)
 
 

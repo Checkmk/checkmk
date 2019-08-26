@@ -186,7 +186,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
                 pass
 
     if ambient_count > 0:
-        perfdata = [("ambient_temp", ambient_sum / ambient_count)]
+        perfdata = [("ambient_temp", ambient_sum / ambient_count)]  # fixed: true-division
     else:
         perfdata = []
 

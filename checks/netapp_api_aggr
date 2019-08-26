@@ -42,8 +42,8 @@ def check_netapp_api_aggr(item, params, aggr):
     if not ("size-total" in aggr and "size-available" in aggr):
         return
     mega = 1024.0 * 1024.0
-    size_total = int(aggr.get("size-total")) / mega
-    size_avail = int(aggr.get("size-available")) / mega
+    size_total = int(aggr.get("size-total")) / mega  # fixed: true-division
+    size_avail = int(aggr.get("size-available")) / mega  # fixed: true-division
     return df_check_filesystem_list(item, params, [(item, size_total, size_avail, 0)])
 
 

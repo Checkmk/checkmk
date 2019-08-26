@@ -303,8 +303,8 @@ def check_oracle_asm_diskgroup(item, params, parsed):
                     else:
                         dg_sizefactor = 3
 
-        total_mb = int(total_mb) / dg_sizefactor
-        free_space_mb = int(free_mb) / dg_sizefactor
+        total_mb = int(total_mb) // dg_sizefactor
+        free_space_mb = int(free_mb) // dg_sizefactor
 
         if params.get('req_mir_free'):
             req_mir_free_mb = int(req_mir_free_mb)

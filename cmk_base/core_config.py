@@ -117,6 +117,15 @@ def _get_host_check_command(host_config):
     return "ping"
 
 
+def _cluster_ping_command(config_cache, host_config, ip):
+    ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
+    if ip:  # Do check cluster IP address if one is there
+        return "check-mk-host-ping!%s" % ping_args
+    if ping_args:  # use check_icmp in cluster mode
+        return "check-mk-host-ping-cluster!%s" % ping_args
+    return None
+
+
 # TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
 def host_check_command(config_cache,
                        host_config,
@@ -126,19 +135,17 @@ def host_check_command(config_cache,
                        custom_commands_to_define=None):
     value = _get_host_check_command(host_config)
 
-    if value == "smart" and not is_clust:
+    if value == "smart":
+        if is_clust:
+            return _cluster_ping_command(config_cache, host_config, ip)
         return "check-mk-host-smart"
 
-    if value in ["ping", "smart"]:  # Cluster host
+    if value == "ping":
+        if is_clust:
+            return _cluster_ping_command(config_cache, host_config, ip)
         ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
-
-        if is_clust and ip:  # Do check cluster IP address if one is there
+        if ping_args:  # use special arguments
             return "check-mk-host-ping!%s" % ping_args
-        elif ping_args and is_clust:  # use check_icmp in cluster mode
-            return "check-mk-host-ping-cluster!%s" % ping_args
-        elif ping_args:  # use special arguments
-            return "check-mk-host-ping!%s" % ping_args
-
         return None
 
     if value == "ok":

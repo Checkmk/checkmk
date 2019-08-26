@@ -1,0 +1,11 @@
+Title: livestatus: Fixed possible decode error
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1566822637
+
+Do not break the unique grouping of the received sequence of bytes

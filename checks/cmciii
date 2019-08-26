@@ -560,7 +560,7 @@ def check_cmciii_can_current(item, params, parsed):
 
         return state, "Status: %s, Current: %s mA (warn/crit at %s/%s mA)" % \
                (state_readable, value, warn, crit), \
-               [("current", value / 1000, warn, crit )]
+               [("current", value / 1000.0, warn, crit )]
 
 
 check_info['cmciii.can_current'] = {

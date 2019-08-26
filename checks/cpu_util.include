@@ -270,7 +270,7 @@ def check_cpu_util_linux_container(_no_item, params, info):
     if not node_delta or not container_delta:
         raise MKCounterWrapped("Too short time difference since last check")
 
-    cpu_usage = (container_delta / node_delta) * ticks["num_cpus"] * 100.0
+    cpu_usage = (container_delta / node_delta) * ticks["num_cpus"] * 100.0  # fixed: true-division
 
     return check_cpu_util(cpu_usage, params)
 

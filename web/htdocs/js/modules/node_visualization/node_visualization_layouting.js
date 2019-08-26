@@ -53,7 +53,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     create_undo_step() {
         this.layout_applier.create_undo_step()
-        this.toolbar_plugin._render_history_text()
+        this.toolbar_plugin._update_history_icons()
     }
 
     get_overlay_config() {
@@ -527,6 +527,11 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     enable_actions() {
         this.layout_manager.show_layout_options()
 
+        this.layout_manager.viewport.update_gui_of_layers()
+        for (var idx in this.layout_manager._active_styles) {
+            this.layout_manager._active_styles[idx].generate_overlay()
+        }
+
         this.content_selection.selectAll(".edit_mode_only").style("display", null)
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
@@ -588,6 +593,12 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                                 .merge(style_div_box)
 
 
+
+        let history_div_box = this.content_selection.selectAll("div#history_icons").data([null])
+        history_div_box = history_div_box.enter().append("div").attr("id", "history_icons")
+                                    .classed("noselect", true)
+                                .merge(history_div_box)
+        this._render_layout_history(history_div_box)
 
 //        this._render_aggregation_configuration(aggr_div)
 //        this._render_layout_management(template_div)
@@ -654,7 +665,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                         .attr("id", "layout_configuration_headline").text("Layout Configuration")
 
 
-        this._render_layout_history(into_selection)
         this.layout_manager.viewport.get_layer("nodes").render_line_style(into_selection)
 
         let layers = this.layout_manager.viewport.get_layers()
@@ -701,30 +711,29 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         }
     }
 
-    _render_layout_history(into_selection) {
-        let undo_history = into_selection.selectAll("div.undo_history").data([null])
-        let undo_enter = undo_history.enter().append("div")
-                            .classed("noselect", true)
-                            .classed("undo_history", true)
+    _render_layout_history(history_selection) {
+        let icons = [{"icon": "icons8-undo.svg", "id": "undo", "title": "Undo", "handler": ()=>this._move_in_history(1)},
+                     {"icon": "icons8-redo.svg", "id": "redo", "title": "Redo", "handler": ()=>this._move_in_history(-1)}]
 
-        undo_enter.append("label").classed("undo_history_info", true)
-        undo_enter.append("input")
-            .attr("type", "button")
-            .attr("value", "Back")
-            .on("click", ()=>this._move_in_history(1))
-        undo_enter.append("input")
-            .attr("type", "button")
-            .attr("value", "Forward")
-            .on("click", ()=>this._move_in_history(-1))
 
-        this._render_history_text()
+        let icon_selection = history_selection.selectAll("img.icon").data(icons)
+        icon_selection = icon_selection.enter()
+            .append("img")
+                .classed("icon", true)
+                .classed("box", true)
+                .attr("id", d=>d.id)
+                .attr("title", d=>d.title)
+                .attr("src", d=>this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icons/" + d.icon)
+                .on("click", d=>d.handler())
+            .merge(icon_selection)
     }
 
-    _render_history_text() {
-        this.content_selection.select(".undo_history_info").text(
-            "Undo History: " +
-            (this.layout_manager.layout_applier._undo_history.length - this.layout_manager.layout_applier._undo_end_offset) + "/" +
-            (this.layout_manager.layout_applier._undo_history.length))
+    _update_history_icons() {
+        let history_icons = this.content_selection.select("#history_icons")
+        let end_offset = this.layout_manager.layout_applier._undo_end_offset
+        let history_length = this.layout_manager.layout_applier._undo_history.length
+        history_icons.selectAll("#undo").classed("disabled", history_length - end_offset <= 1)
+        history_icons.selectAll("#redo").classed("disabled", end_offset == 0)
     }
 
     _move_in_history(step_direction) {
@@ -744,7 +753,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             delete node_chunk.layout_instance
         })
 
-        this._render_history_text()
+        this._update_history_icons()
         this.layout_manager.layout_applier.apply_all_layouts()
     }
 

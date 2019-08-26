@@ -84,6 +84,7 @@ export class AbstractLayoutStyle {
         this._update_options_in_input_field(varprefix)
     }
 
+    generate_overlay() {}
 
     _update_options_in_input_field(varprefix="") {
         if (!this.options_selection)

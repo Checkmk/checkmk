@@ -104,7 +104,6 @@ div.node_vis div#layouting_toolbar {
     top: 12px;
     right: 12px;
     width: 340px;
-    overflow: hidden;
 }
 
 div.node_vis div#layout_management{
@@ -326,13 +325,29 @@ div.node_vis input.reset_options {
 
 div.node_vis #reset_pan_and_zoom{
     position: absolute;
-    right: 356px;
-    top: 12px;
+    right: 406px;
+    top: 14px;
 }
 
 div.node_vis #translation_infobox{
     position: absolute;
     width: 200px;
-    right: 342px;
+    right: 369px;
     top: 50px;
+}
+
+div.node_vis div#history_icons {
+    position: absolute;
+    width: 60px;
+    right: 336px;
+    top: 8px;
+}
+
+div.node_vis div#history_icons img {
+    width: 24px;
+    height: 24px;
+}
+
+div.node_vis div#history_icons img.disabled {
+    opacity: 0.3
 }

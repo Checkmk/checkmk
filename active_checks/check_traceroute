@@ -101,7 +101,7 @@ def check_traceroute(target, routes, nodns, method):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info = "%s - %d hops, missing routers: %s, bad routers: %s" % (
+    info = "%s - %d hops, missing routers: %s, bad routers: %s |hops=%d" % (
         {
             0: "OK",
             1: "WARN",
@@ -110,6 +110,7 @@ def check_traceroute(target, routes, nodns, method):
         len(sto.split("\n")[1:]),
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
+        len(sto.split("\n")[1:]),
     )
 
     return state, info, sto

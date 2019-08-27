@@ -1216,12 +1216,14 @@ body.main img.treeangle {
   width: 60px !important;
 }
 
-.bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
+.bi_rule_tree img.treeangle, .invtree img.treeangle,
+.grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
   &, body.main & {
     filter: invert(0%);
 
     &.open, &.closed {
-      filter: $invtree-collapse-filter;
+      margin: 1px 4px 0;
+      filter: $tree-collapse-img-filter;
     }
   }
 }
@@ -1252,7 +1254,7 @@ div.graph_with_timeranges {
     }
 
     &.preview canvas {
-      margin-bottom: 0px;
+      margin-bottom: 0;
     }
 
     &.preview .title {
@@ -1327,7 +1329,7 @@ td.agent_config table.rulesets td {
 
 div.metricchoice select, div.metricchoice input, div.metricchoice select,
 div.metricchoice textarea, div.metricchoice #mk_side_search_field {
-  margin: 4px 0px;
+  margin: 4px 0;
 }
 
 td.title {

@@ -381,7 +381,7 @@ $repprogress-progress-border-color:	    rgb(111, 180, 198); // darkened nuance17
 $side-header-height:			    65px;
 
 $first-child-border-radius:		    $primary-border-radius;
-$optiondial-refresh-border-radius:	    $primary-border-radius;
+$last-child-border-radius:		    $primary-border-radius;
 
 $nform-table-hr-color:			    rgba(255, 255, 255, .1);
 
@@ -390,8 +390,23 @@ $iconbutton-filter:			    invert(40%);
 $multiple-select-bg-color:		    $grey-5;
 $popup-menu-select-bg-color:		    $grey-5;
 
-$invtree-collapse-filter:		    invert(70%);
+$tree-collapse-img-filter:		    invert(90%);
 
 $input-focus-box-shadow-color:		    $grey-2;
 
 $dragging-bg-color:			    $grey-5;
+
+$invtree-th-bg-color:			    $grey-3;
+$invtree-td-bg-color:			    rgb(100, 100, 100);
+
+$availability-table-border-color:	    $grey-7;
+$availability-summary-bg-color:		    null;
+$lightened-state0-bg-color:		    lighten($theme-color-state-success-background, 10%);
+$lightened-state1-bg-color:		    lighten($theme-color-state-1-background, 10%);
+$lightened-state2-bg-color:		    lighten($theme-color-state-2-background, 10%);
+$lightened-state3-bg-color:		    lighten($theme-color-state-3-background, 10%);
+$unmonitored-font-color:		    $grey-7;
+$unmonitored-bg-color:			    rgb(134, 134, 134);
+$lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
+$hostdown-bg-color:			    rgb(0, 102, 170);
+$lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);

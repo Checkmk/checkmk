@@ -98,9 +98,9 @@ def check_cmk_agent_update(_no_item, _no_params, info):
             now = time.time()
 
             if parsed["error"] != "None":
-                yield 1, "error: %s" % parsed["error"]
+                yield 1, "Error: %s" % parsed["error"]
             else:
-                yield 0, "no errors"
+                yield 0, "No errors"
 
             if parsed["last_check"]:
                 try:
@@ -116,17 +116,20 @@ def check_cmk_agent_update(_no_item, _no_params, info):
                         levels_text = " (warn at %s)" % (get_age_human_readable(warn))
                     else:
                         levels_text = ""
-                    yield state, "last update check: " + get_timestamp_human_readable(
+                    yield state, "Last update check: " + get_timestamp_human_readable(
                         parsed["last_check"]) + levels_text
                 except Exception:
-                    yield 1, "no successful connect to server yet"
+                    yield 1, "No successful connect to server yet"
 
             if parsed["last_update"]:
-                yield 0, "last agent update: %s" % get_timestamp_human_readable(
+                yield 0, "Last agent update: %s" % get_timestamp_human_readable(
                     parsed["last_update"])
 
+            if parsed.get("update_url"):
+                yield 0, "Update URL: %s" % parsed["update_url"]
+
             if parsed["aghash"]:
-                yield 0, "agent configuration: %s" % parsed["aghash"][:8]
+                yield 0, "Agent configuration: %s" % parsed["aghash"][:8]
 
             return
 

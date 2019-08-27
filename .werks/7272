@@ -1,0 +1,12 @@
+Title: agent_netapp: now able to continue on malformed xml data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p22
+Date: 1566915838
+Class: fix
+
+Malformed xml data is now ignored. The agent tries to continue with the working data
+and reports erroneous instances in the netapp_api_connection service.
+

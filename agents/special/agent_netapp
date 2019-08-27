@@ -394,7 +394,13 @@ else:
                 return
 
             # We except an XML answer (not HTML)
-            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            try:
+                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+            except Exception as e:
+                # Catching all exceptions, since ET may be from the lxml or the xml module
+                self.status  = "failed"
+                self.reason  = "Unable to parse xml response (broken xml data)"
+                return
 
             self.status = self.content.child_get("results").node.attrib["status"]
             if self.status != "passed":

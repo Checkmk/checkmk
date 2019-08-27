@@ -121,7 +121,7 @@ def inventory_wagner_titanus_topsense_info(info):
 def check_wagner_titanus_topsense_info(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
     message = "System: " + parsed[0][0][0]
-    message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) / 100)
+    message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) // 100)
     message += ", System Name: " + parsed[0][0][3]
     message += ", System Contact: " + parsed[0][0][2]
     message += ", System Location: " + parsed[0][0][4]

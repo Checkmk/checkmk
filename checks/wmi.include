@@ -517,7 +517,7 @@ def wmi_calculate_raw_average_time(table, row, column):
 
     if base_per_sec == 0:
         return 0
-    return value_per_sec / base_per_sec
+    return value_per_sec / base_per_sec  # fixed: true-division
 
 
 def wmi_yield_raw_average(table, row, column, label, perfvar, levels=None, perfscale=1.0):
@@ -538,7 +538,8 @@ def wmi_yield_raw_average_timer(table, row, column, label, perfvar, levels=None,
     levels = wmi_fix_levels(levels)
 
     try:
-        average = wmi_calculate_raw_average_time(table, row, column) / table.frequency()
+        average = wmi_calculate_raw_average_time(table, row,
+                                                 column) / table.frequency()  # fixed: true-division
     except KeyError:
         return 3, "item not present anymore", []
     status, levels_text = wmi_determine_status(average, levels)

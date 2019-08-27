@@ -8,6 +8,6 @@ Date: 1566825734
 Class: feature
 
 This check monitors the state of the jenkins task queue. The service output
-gives information about the queue lenght, the long output lists all jobs with
+gives information about the queue length, the long output lists all jobs with
 its associated details (eg. "ID", "In queue since", "Stuck", "Blocked", "Why
 kept").

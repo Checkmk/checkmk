@@ -50,17 +50,17 @@ def inventory_jenkins_health(parsed):
 
 def check_jenkins_queue(no_item, params, parsed):
     if not parsed:
-        yield 0, "Queue lenght: 0 Tasks"
+        yield 0, "Queue length: 0 Tasks"
         return
 
     long_output = []
 
     yield check_levels(len(parsed),
                        "queue",
-                       params.get("queue_lenght"),
+                       params.get("queue_length"),
                        human_readable_func=int,
                        unit="Tasks",
-                       infoname="Queue lenght")
+                       infoname="Queue length")
 
     levels = params.get("in_queue_since")
 

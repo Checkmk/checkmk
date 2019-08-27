@@ -60,9 +60,9 @@ class RulespecCheckgroupParametersWindowsMultipath(CheckParameterRulespecWithout
     @property
     def parameter_valuespec(self):
         return Dictionary(elements=[
-            ("queue_lenght",
+            ("queue_length",
              Tuple(
-                 title=_("Queue lenght"),
+                 title=_("Queue length"),
                  elements=[
                      Integer(title=_("Warning above"), unit="Tasks"),
                      Integer(title=_("Critical above"), unit="Tasks"),

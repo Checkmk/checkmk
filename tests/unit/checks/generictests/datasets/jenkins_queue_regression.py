@@ -17,7 +17,7 @@ discovery = {'': [(None, {})]}
 checks = {'': [(None,
                 {},
                 [(0,
-                  'Queue lenght: 1 Tasks',
+                  'Queue length: 1 Tasks',
                   [('queue', 1, None, None, None, None)]),
                  (0,
                   u'\nID: 174702, In queue since: 192 m (2019-08-27 10:02:02), Stuck: False, Blocked: True, Why kept: Build #475 is already in progress (ETA: 23 min)',

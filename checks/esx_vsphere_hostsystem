@@ -89,7 +89,7 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
     num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
     num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
     used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
-    mhz_per_core = float(data['hardware.cpuInfo.hz'][0]) / 1000.0 / 1000.0
+    mhz_per_core = (float(data['hardware.cpuInfo.hz'][0]) / 1000.0) / 1000.0
     total_mhz = mhz_per_core * num_cores
 
     usage = used_mhz / total_mhz * 100
@@ -186,7 +186,7 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
         num_cores = int(node['hardware.cpuInfo.numCpuCores'])
         num_threads = int(node['hardware.cpuInfo.numCpuThreads'])
         used_mhz = float(node['summary.quickStats.overallCpuUsage'])
-        mhz_per_core = float(node['hardware.cpuInfo.hz']) / 1024.0 / 1024.0
+        mhz_per_core = (float(node['hardware.cpuInfo.hz']) / 1024.0) / 1024.0
         total_mhz = mhz_per_core * num_cores
         return used_mhz, total_mhz, num_threads
 

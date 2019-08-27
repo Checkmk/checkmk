@@ -88,7 +88,7 @@ def check_dell_poweredge_mem(item, _no_params, info):
     di = dict()
     for status, location, size, di['Speed'], di['MFR'], di['P/N'], di['S/N'] in info:
 
-        di['Size'] = str(saveint(size) / 1024 / 1024) + "GB"
+        di['Size'] = str(int((saveint(size) / 1024.0) / 1024.0)) + "GB"
         if item == location:
             state_table = {
                 "1": ("other", 1),

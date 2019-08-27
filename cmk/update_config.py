@@ -49,10 +49,10 @@ from werkzeug.test import create_environ
 import cmk_base.autochecks
 
 import cmk.utils.log as log
+from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils
-import cmk.gui.log
 import cmk.gui.watolib.tags
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
@@ -76,19 +76,26 @@ class UpdateConfig(object):
         super(UpdateConfig, self).__init__()
         self._arguments = arguments
         self._logger = logger
+        # TODO: Fix this cruel hack caused by our funny mix of GUI + console
+        # stuff. Currently, we just move the console handler to the top, so
+        # both worlds are happy. We really, really need to split business logic
+        # from presentation code... :-/
+        console_handler = log.logger.handlers[0]
+        del log.logger.handlers[:]
+        logging.getLogger().addHandler(console_handler)
 
     def run(self):
-        self._logger.info("Updating Checkmk configuration with \"cmk-update-config -v\"")
+        self._logger.log(VERBOSE, "Updating Checkmk configuration...")
 
         environ = dict(create_environ(), REQUEST_URI='')
         with AppContext(DummyApplication(environ, None)), \
              RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
             self._initialize_gui_environment()
             for step_func, title in self._steps():
-                self._logger.info(" + %s..." % title)
+                self._logger.log(VERBOSE, " + %s..." % title)
                 step_func()
 
-        self._logger.info("Done")
+        self._logger.log(VERBOSE, "Done")
 
     def _steps(self):
         return [
@@ -132,26 +139,19 @@ class UpdateConfig(object):
 def main(args):
     # type: (List[str]) -> int
     arguments = parse_arguments(args)
+    log.setup_console_logging()
+    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+    logger = logging.getLogger("cmk.update_config")
+    if arguments.debug:
+        cmk.utils.debug.enable()
+    logger.debug("parsed arguments: %s", arguments)
 
     try:
-        cmk.gui.log.init_logging()
-        log.setup_console_logging()
-        log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
-        logger = logging.getLogger("cmk.update_config")
-        if arguments.debug:
-            cmk.utils.debug.enable()
-
-        logger.debug("parsed arguments: %s", arguments)
-
         UpdateConfig(logger, arguments).run()
-
-    except Exception as e:
+    except Exception:
         if arguments.debug:
             raise
-        if logger:
-            logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
-        else:
-            print("ERROR: %s" % e)
+        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
         return 1
     return 0
 

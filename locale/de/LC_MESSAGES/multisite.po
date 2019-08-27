@@ -14308,7 +14308,7 @@ msgid "English"
 msgstr "Englisch"
 
 #, fuzzy
-msgid "Ent-to-end latency"
+msgid "End-to-end latency"
 msgstr "Leselatenz"
 
 msgid "Enter"

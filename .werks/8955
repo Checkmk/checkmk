@@ -1,0 +1,18 @@
+Title: esx_vsphere_hostsystem: Fixed evaluating additional CPU levels
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1566826131
+
+Only {{Levels on total CPU utilization}} was checked and
+the following levels were ignored:
+<ul>
+<li>Levels over an extended time period on total CPU utilization</li>
+<li>Graphs for individual cores</li>
+<li>Levels over an extended time period on a single core CPU utilization</li>
+<li>Levels on single cores</li>
+</ul>

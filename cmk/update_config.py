@@ -52,6 +52,7 @@ import cmk.utils.log as log
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils
+import cmk.gui.log
 import cmk.gui.watolib.tags
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
@@ -78,11 +79,11 @@ class UpdateConfig(object):
 
     def run(self):
         self._logger.info("Updating Checkmk configuration with \"cmk-update-config -v\"")
-        self._initialize_gui_environment()
 
         environ = dict(create_environ(), REQUEST_URI='')
         with AppContext(DummyApplication(environ, None)), \
              RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            self._initialize_gui_environment()
             for step_func, title in self._steps():
                 self._logger.info(" + %s..." % title)
                 step_func()
@@ -133,6 +134,7 @@ def main(args):
     arguments = parse_arguments(args)
 
     try:
+        cmk.gui.log.init_logging()
         log.setup_console_logging()
         log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
         logger = logging.getLogger("cmk.update_config")
@@ -164,5 +166,4 @@ def parse_arguments(args):
                    default=0,
                    help='Verbose mode (use multiple times for more output)')
 
-    arguments = p.parse_args(args)
-    return arguments
+    return p.parse_args(args)

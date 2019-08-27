@@ -764,15 +764,6 @@ def render_performance_graphs(context):
 
 
 def construct_content(context):
-    # A list of optional information is configurable via the parameter "elements"
-    # (new configuration style)
-    # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
-    #       Have a look at the function events.py:add_to_event_context(..)
-    if "PARAMETER_ELEMENTSS" in context:
-        elements = context["PARAMETER_ELEMENTSS"].split()
-    else:
-        elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
-
     if context.get('PARAMETER_2'):
         context["PARAMETER_URL_PREFIX"] = context["PARAMETER_2"]
 
@@ -802,8 +793,6 @@ def construct_content(context):
             .replace('\n', '<br>')
         context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
 
-    attachments = []
-
     # Compute the subject of the mail
     if context['WHAT'] == 'HOST':
         tmpl = context.get('PARAMETER_HOST_SUBJECT') or TMPL_HOST_SUBJECT
@@ -811,6 +800,15 @@ def construct_content(context):
     else:
         tmpl = context.get('PARAMETER_SERVICE_SUBJECT') or TMPL_SERVICE_SUBJECT
         context['SUBJECT'] = utils.substitute_context(tmpl, context)
+
+    # A list of optional information is configurable via the parameter "elements"
+    # (new configuration style)
+    # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
+    #       Have a look at the function events.py:add_to_event_context(..)
+    if "PARAMETER_ELEMENTSS" in context:
+        elements = context["PARAMETER_ELEMENTSS"].split()
+    else:
+        elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
 
     # Prepare the mail contents
     template_txt, template_html = body_templates(
@@ -822,6 +820,7 @@ def construct_content(context):
     content_txt = utils.substitute_context(template_txt, context)
     content_html = utils.substitute_context(template_html, context)
 
+    attachments = []
     if "graph" in elements and not "ALERTHANDLEROUTPUT" in context:
         # Add PNP or Check_MK graph
         try:

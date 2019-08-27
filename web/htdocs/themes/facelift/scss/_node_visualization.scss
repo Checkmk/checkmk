@@ -1,353 +1,347 @@
 #node_visualization {
-    position: absolute;
-    top: 70px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
+  position: absolute;
+  top: 70px;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
 }
 
 #node_visualization_root_div {
-    position: absolute;
-    top: 0px;
-    bottom: 0px;
-    left: 0px;
-    right: 0px;
-    background: ghostwhite;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgb(248, 248, 255); // ghostwhite
 }
 
 div.node_vis #viewport {
-    position: absolute;
-    width: 100%;
-    height: 100%;
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 
 div.node_vis #toolbar div.content {
-    top: 25px;
+  top: 25px;
 }
 
 div.node_vis #togglebuttons {
-    position: absolute;
-    top: 9px;
-    left: 280px;
+  position: absolute;
+  top: 9px;
+  left: 280px;
 }
 
 div.node_vis .togglebutton {
-    padding: 5px;
+  width: 34px;
+  height: 34px;
+  padding: 8px;
 }
 
 div.node_vis div.box, div.node_vis img.box {
-    border-radius: 4px;
-    border: 1px solid #cccfdb;
-    background: #FFFFFF;
-    box-shadow: 2px 2px 2px #444;
+  background: $white;
+  border: 1px solid #cccfdb;
+  border-radius: 4px;
+  box-shadow: 2px 2px 2px #444;
 }
 
 
 div.node_vis img.layouting_icon {
-    width: 30px;
-    height: 30px;
+  width: 30px;
+  height: 30px;
 }
 
-div.node_vis img.bi_rule_icon{
-    width: 30px;
-    height: 30px;
+div.node_vis img.bi_rule_icon {
+  width: 30px;
+  height: 30px;
 }
 
 /* toolbar plugin positioning */
 /* search */
 div.node_vis div.toolbar_search {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    width: 250px;
-    overflow: hidden;
-    box-shadow: 2px 2px 2px #444;
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 250px;
+  overflow: hidden;
+  box-shadow: 2px 2px 2px #444;
 }
 
 div.node_vis input.search_node {
-    width: 100%;
+  width: 100%;
 }
 
 /* infobox */
 div.node_vis #infobox {
-    position: absolute;
-    overflow: hidden;
-    top: 60px;
-    left: 12px;
-    width: 250px;
+  position: absolute;
+  top: 60px;
+  left: 12px;
+  width: 250px;
+  overflow: hidden;
 }
 
 div.node_vis div#infobox div#content {
-    padding: 8px;
+  padding: 8px;
 }
 
 div.node_vis #infobox table {
-    width: 100%;
+  width: 100%;
 }
 
 /* datasources */
 div.node_vis div.toolbar_datasources {
-    position: absolute;
-    top: 300px;
-    left: 300px;
-    width: 500px;
-    height: 500px;
+  position: absolute;
+  top: 300px;
+  left: 300px;
+  width: 500px;
+  height: 500px;
 }
 
 /* layouting*/
 div.node_vis #available_layouts {
-    width: 180px;
+  width: 180px;
 }
 
 div.node_vis div#layouting_toolbar {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 340px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 340px;
+  overflow: hidden;
 }
 
-div.node_vis div#layout_management{
-    margin: 3px;
-    padding: 8px;
-    padding-top: 0px;
+div.node_vis div#layout_management {
+  padding: 8px;
+  padding-top: 0;
+  margin: 3px;
 }
 
 div.node_vis div#configuration_management{
-    margin: 3px;
-    margin-top: 8px;
-    padding: 8px;
-    padding-top: 0px;
+  padding: 8px;
+  padding-top: 0;
+  margin: 3px;
+  margin-top: 8px;
 }
 
 div.node_vis div#style_management{
-    margin: 3px;
-    margin-top: 8px;
-    padding: 8px;
-    padding-top: 0px;
-    overflow: hidden;
+  padding: 8px;
+  padding-top: 0;
+  margin: 3px;
+  margin-top: 8px;
+  overflow: hidden;
 }
 
 div.node_vis #matcher_config {
-    margin-top: 8px;
-    margin-left: 6px;
+  margin-top: 8px;
+  margin-left: 6px;
 }
 
 div.node_vis input[type="checkbox"] {
-    display: unset;
+  display: unset;
 }
 
-div.node_vis #current_style{
-    font-size: 18px;
-    text-align: center;
-    width: 100%;
+div.node_vis #current_style {
+  width: 100%;
+  font-size: 18px;
+  text-align: center;
 }
 
 div.node_vis .delete_icon {
-    height: 48px;
-    width: 48px;
+  width: 48px;
+  height: 48px;
 }
 
 div.node_vis img.treeangle {
-    filter: invert($filter-inversion-percentage);
+  filter: invert($filter-inversion-percentage);
 }
 
 div.node_vis .path_details table th {
-    text-align: left;
+  text-align: left;
 }
 
 div.node_vis .path_details table {
-    padding-left: 12px;
+  padding-left: 12px;
 }
 
 
 div.node_vis .node_element, div.node_vis .infobox_entry {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 div.node_vis g.edit .node_element circle.style_root_node,
 div.node_vis g.edit .node_element .free_floating_node {
-    cursor: move;
+  cursor: move;
 }
 
 div.node_vis .node_element circle.topology_root {
   stroke-width: 3;
-  stroke: black;
+  stroke: $black;
 }
 
 div.node_vis .node_element circle {
+  filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, .7));
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, .7));
-
 }
 
 div.node_vis .node_element circle.collapsed {
-  stroke: grey;
+  stroke: rgb(128, 128, 128); // grey
   stroke-width: 15;
 }
 
-div.node_vis .node_element.focus circle{
-  stroke: yellow;
+div.node_vis .node_element.focus circle {
+  stroke: rgb(255, 255, 0); // yellow
   stroke-width: 6;
 }
 
 div.node_vis div.togglebutton.down {
-    background-color: #d9d9d9;
-    border-color: #ccc;
+  background-color: #d9d9d9;
+  border-color: #ccc;
 }
 
 div.node_vis .state0 {
-    fill: #13d389;
+  fill: #13d389;
 }
 
 div.node_vis .state1 {
-    fill: #fffe44;
+  fill: #fffe44;
 }
 
 div.node_vis .state2 {
-    fill: #ff3232;
+  fill: #ff3232;
 }
 
+div.node_vis .state3 {
+  fill: #f91;
+}
+
+// State pending
+div.node_vis .state-1 {
+  fill: #888;
+}
 
 div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
+  animation-duration: 25s;
+  animation-iteration-count: infinite;
+  animation-name: dash;
+  animation-timing-function: linear;
+  animation-direction: reverse;
   stroke-dasharray: 20 4;
   stroke-dashoffset: 0;
-  animation-name: dash;
-  animation-duration: 25s;
-  animation-direction: reverse;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
 }
 
 @keyframes dash {
-    to {
-        stroke-dashoffset: 500
-    }
+  to {
+    stroke-dashoffset: 500;
+  }
 }
 
 .zoom {
+  pointer-events: all;
   cursor: move2;
   fill: none;
-  pointer-events: all;
 }
 
 .noselect {
+  user-select: none; /* Non-prefixed version, currently
+                        supported by Chrome and Opera */
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
 }
 
 
 #togglebox_choices {
   position: absolute;
-  left: 380px;
   top: 12px;
+  left: 380px;
 }
 
 div.node_vis .togglebox {
+  display: table-cell;
   width: 150px;
   height: 30px;
-  display: table-cell;
   text-align: center;
   vertical-align: middle;
 }
 
-div.node_vis .togglebox.enabled{
-  background: gold;
+div.node_vis .togglebox.enabled {
+  background: rgb(255, 215, 0); // gold
 }
 
 
 /* Context popup Popup */
 div.node_vis li a {
-   cursor: pointer;
+  cursor: pointer;
 }
 
 div.node_vis li div:hover {
-   text-decoration: underline;
+  text-decoration: underline;
 }
 
 /* Style indicators */
 div.node_vis .style_indicator {
-    stroke: "black";
-    stroke-width: 1;
-    opacity: 0.3;
+  opacity: 0.3;
+  stroke: "black";
+  stroke-width: 1;
 }
 
-div.node_vis circle.style_indicator.focus{
-    stroke: #fffe44;
-    stroke-width: 3;
-    opacity: 0.5;
+div.node_vis circle.style_indicator.focus {
+  opacity: 0.5;
+  stroke: #fffe44;
+  stroke-width: 3;
 }
 
 .style_overlay {
+  pointer-events: none;
   opacity: 0.2;
   fill: none;
-  stroke: darkgrey;
+  stroke: $node-vis-darkgrey;
   stroke-width: 2px;
   stroke-linejoin: round;
-  pointer-events: none;
 }
 
 .block_style_overlay {
-  vector-effect: non-scaling-stroke;
   opacity: 0.3;
-  fill: darkgrey;
-  stroke: darkgrey;
+  vector-effect: non-scaling-stroke;
+  fill: $node-vis-darkgrey;
+  stroke: $node-vis-darkgrey;
   stroke-width: 2px;
-  stroke-linejoin: round
+  stroke-linejoin: round;
 }
 
 div.node_vis .block_style_overlay.root_children_connection {
   stroke-width: 6px;
-  stroke-linejoin: round
+  stroke-linejoin: round;
 }
 
 div.node_vis .style_infotext {
-    width: 159px;
+  width: 159px;
 }
 
 div.node_vis input.range {
-    width: 79px;
+  width: 79px;
 }
 
 
 div.node_vis div.quickinfo {
-    min-width: 600px;
+  min-width: 600px;
 }
 
 div.node_vis input.reset_options {
-    float: right;
+  float: right;
 }
 
-div.node_vis #reset_pan_and_zoom{
-    position: absolute;
-    right: 406px;
-    top: 14px;
+div.node_vis #reset_pan_and_zoom {
+  position: absolute;
+  top: 12px;
+  right: 356px;
 }
 
-div.node_vis #translation_infobox{
-    position: absolute;
-    width: 200px;
-    right: 369px;
-    top: 50px;
-}
-
-div.node_vis div#history_icons {
-    position: absolute;
-    width: 60px;
-    right: 336px;
-    top: 8px;
-}
-
-div.node_vis div#history_icons img {
-    width: 24px;
-    height: 24px;
-}
-
-div.node_vis div#history_icons img.disabled {
-    opacity: 0.3
+div.node_vis #translation_infobox {
+  position: absolute;
+  top: 50px;
+  right: 342px;
+  width: 200px;
 }

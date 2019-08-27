@@ -339,10 +339,10 @@ class FilterInvtableVersion(Filter):
 
     def display(self):
         html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], size=9)
+        html.text_input(self.htmlvars[0], size=7)
         html.write_text(" &nbsp; ")
         html.write_text(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], size=9)
+        html.text_input(self.htmlvars[1], size=7)
 
     def filter_table(self, rows):
         from_version = html.request.var(self.htmlvars[0])

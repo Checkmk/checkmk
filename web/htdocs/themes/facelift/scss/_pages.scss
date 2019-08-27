@@ -569,7 +569,6 @@ table.data {
 
     &.unused {
       color: #888;
-      text-shadow: 1px 1px 0.5px #fff;
     }
 
     &:not(.state) {
@@ -617,7 +616,7 @@ table.data {
 
       &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
-        border-radius: 0 4px 4px 0;
+        border-radius: $last-child-border-radius;
       }
 
       &:only-child {

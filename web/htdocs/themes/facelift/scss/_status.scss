@@ -579,3 +579,21 @@ td.matchgroups span {
   border-radius: 3px;
   box-shadow: 0 0 1px #888;
 }
+
+table.data.availability tr.even0 td {
+  &.state0 {
+    background-color: $lightened-state0-bg-color !important;
+  }
+
+  &.state1 {
+    background-color: $lightened-state1-bg-color !important;
+  }
+
+  &.state2 {
+    background-color: $lightened-state2-bg-color !important;
+  }
+
+  &.state3 {
+    background-color: $lightened-state3-bg-color !important;
+  }
+}

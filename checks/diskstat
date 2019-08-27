@@ -195,8 +195,9 @@ def parse_diskstat(info):
         # time then the average latency is time * 0.34 / 17
         if total_ios_rate:
             latency = utilization / total_ios_rate  # fixed: true-division
-            average_wait = (read_ticks_rate + write_ticks_rate) / total_ios_rate / 1000.0
             average_request_size = total_bytes_rate / total_ios_rate  # fixed: true-division
+            average_wait = ((read_ticks_rate + write_ticks_rate) /
+                            total_ios_rate) / 1000.0  # fixed: true-division
         else:
             latency = 0.0
             average_wait = 0.0
@@ -205,14 +206,15 @@ def parse_diskstat(info):
         # Average read and write rate, from end to end, including queuing, etc.
         # and average size of one request
         if read_ticks_rate and read_ios_rate > 0:
-            average_read_wait = read_ticks_rate / read_ios_rate / 1000.0
+            average_read_wait = (read_ticks_rate / read_ios_rate) / 1000.0  # fixed: true-division
             average_read_size = read_bytes_rate / read_ios_rate  # fixed: true-division
         else:
             average_read_wait = 0.0
             average_read_size = 0.0
 
         if write_ticks_rate and write_ios_rate > 0:
-            average_write_wait = write_ticks_rate / write_ios_rate / 1000.0
+            average_write_wait = (write_ticks_rate /
+                                  write_ios_rate) / 1000.0  # fixed: true-division
             average_write_size = write_bytes_rate / write_ios_rate  # fixed: true-division
         else:
             average_write_wait = 0.0

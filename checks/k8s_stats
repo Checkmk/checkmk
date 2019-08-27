@@ -126,8 +126,8 @@ def check_k8s_stats_fs(item, params, parsed):
 
     yield df_check_filesystem_single(
         item,
-        disk['capacity'] / 1024.0 / 1024.0,
-        disk['available'] / 1024.0 / 1024.0,
+        (disk['capacity'] / 1024.0) / 1024.0,
+        (disk['available'] / 1024.0) / 1024.0,
         0,
         disk['inodes'],
         disk['inodes_free'],

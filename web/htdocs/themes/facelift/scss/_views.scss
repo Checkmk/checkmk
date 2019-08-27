@@ -154,6 +154,12 @@ div.floatfilter {
       margin-bottom: 0 !important;
     }
   }
+
+  &.invswpac_version, &.invswpac_package_version {
+    input.text {
+      margin-left: 4px;
+    }
+  }
 }
 
 .filterform > tbody > tr > td div.floatfilter {
@@ -429,7 +435,7 @@ div.optiondial {
 
   &.refresh {
     margin-left: -6px;
-    border-radius: $optiondial-refresh-border-radius;
+    border-radius: $last-child-border-radius;
   }
 
   div {
@@ -804,27 +810,22 @@ table.data.availability {
 
   td.unused {
     color: #888;
-    text-shadow: 1px 1px 0.5px #fff;
   }
 
-  tr.summary {
-    background-color: #bbb;
-
-    td {
-      padding-top: 1px;
-      padding-bottom: 1px;
-      font-weight: bold;
-      border-top: 1px solid $theme-color-table-border;
-      border-bottom-style: none;
-    }
-  }
-
-  td.number.stats, tr.odd0 td.number:not(.unused) {
-    opacity: .7;
+  tr.summary td {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-weight: bold;
+    border-top: 1px solid $theme-color-table-border;
+    border-bottom-style: none;
   }
 
   tr.odd0 td.number.stats {
     opacity: .5;
+  }
+
+  td {
+    border-color: $theme-color-table-border !important;
   }
 }
 
@@ -834,16 +835,26 @@ table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.st
 table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
   background-color: #0af;
 }
-table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
-  color: #fff;
-  background-color: #048;
+table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
+  color: $white;
+  background-color: $hostdown-bg-color;
 }
 
-table.data td.unmonitored,
+table.data tr.data td.unmonitored,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored {
-  color: #888;
-  background-color: #cacaca;
+  color: $unmonitored-font-color;
+  background-color: $unmonitored-bg-color;
+}
+
+table.data.availability tr.even0 td {
+  &.unmonitored {
+    background-color: $lightened-unmonitored-bg-color;
+  }
+
+  &.hostdown {
+    background-color: $lightened-hostdown-bg-color;
+  }
 }
 
 table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
@@ -1085,14 +1096,14 @@ table.data.single {
 
     th, td {
       height: 14px;
-      padding: 2px 4px;
-      background-color: $primary-td-bg-color;
+      padding: 2px 6px;
+      background-color: $invtree-td-bg-color;
       border: 1px solid $theme-color-table-border;
     }
 
     th {
       color: $theme-color-text;
-      background-color: $primary-th-bg-color;
+      background-color: $invtree-th-bg-color;
     }
   }
 

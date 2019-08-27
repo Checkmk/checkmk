@@ -43,11 +43,16 @@ def check_icmp_arguments(params):
     args += ["-c", "%.2f,%d%%" % (rta[1], loss[1])]
 
     target = params.get("address", "address")
+
     if target == "address":
-        args.append("'$HOSTADDRESS$'")
+        if is_ipv6_primary(host_name()):
+            args.append('-6')
+        args.append("$HOSTADDRESS$")
 
     elif target == "alias":
-        args.append("'$HOSTALIAS$'")
+        if is_ipv6_primary(host_name()):
+            args.append('-6')
+        args.append("$HOSTALIAS$")
 
     elif target == "all_ipv4addresses":
         args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]

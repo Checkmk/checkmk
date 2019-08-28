@@ -200,11 +200,6 @@ $tag-dropdown-active-color:		    inherit;
 $tag-dropdown-active-bg-color:		    null;
 
 
-// Node visualization
-
-$node-vis-darkgrey:			    rgb(169, 169, 169);
-
-
 // -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
@@ -241,7 +236,7 @@ $checkbox-checked-bg-color:		    #ddd;
 
 $toggle-switch-on-bg-color:		    #54a626;
 $toggle-switch-off-bg-color:		    #f60000;
-$toggle-button-off-border:		    none;
+$toggle-button-off-border:		    null;
 $toggle-button-down-bg-color:		    $theme-color-text-light;
 $toggle-button-down-border-color:	    $theme-button-border;
 $toggle-button-down-hover-bg-color:	    $theme-button-border;
@@ -414,3 +409,15 @@ $unmonitored-bg-color:			    rgb(202, 202, 202);
 $lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
 $hostdown-bg-color:			    rgb(0, 102, 170);
 $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
+
+// Node visualization
+
+$node-vis-darkgrey:			    rgb(169, 169, 169);
+$node-vis-search-box-border:		    null;
+$node-vis-search-box-bg-color:		    null;
+$node-vis-search-field-border-color:	    transparent;
+$node-vis-box-border:			    1px solid rgb(204, 207, 219); // grey
+$node-vis-box-shadow:			    2px 2px 2px #444;
+$node-vis-toggle-hover-bg-color:	    $grey-1;
+$node-vis-toggle-down-bg-color:		    rgb(230, 230, 230); // light grey 
+$node-vis-toggle-down-border-color:	    rgb(204, 204, 204); // light grey 

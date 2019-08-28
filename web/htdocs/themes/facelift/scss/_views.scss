@@ -400,11 +400,11 @@ div.optiondial {
   &, &.num_columns, &.refresh {
     top: 0;
     width: 80.5px;
-    height: 26px;
+    height: 27px;
     margin-right: 5px;
     margin-bottom: 5px;
     color: $theme-color-text;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     box-shadow: none;
 

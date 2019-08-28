@@ -634,8 +634,8 @@ table.data {
       }
 
       &.state {
-	border-top: $data-table-state-border-top !important;
-	border-bottom: $data-table-state-border-bottom !important;
+	border-top: $data-table-state-border-top;
+	border-bottom: $data-table-state-border-bottom;
       }
 
       &:not(.state) {

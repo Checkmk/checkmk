@@ -27,14 +27,13 @@
 import abc
 import collections
 from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+import six
 
 import six
 from cmk.utils.exceptions import MKGeneralException
 
 
-class ABCDiscoveredLabels(collections.MutableMapping, object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
     def __init__(self, *args):
         super(ABCDiscoveredLabels, self).__init__()
         self._labels = {}

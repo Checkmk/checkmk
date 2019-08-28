@@ -101,7 +101,7 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
             perfdata = [(item, old_perf_val, warn_high, crit_high)]
 
         elif what == "freeipmi" and \
-             ("temperature" in item.lower() or "temp" in item.lower()):
+             ("temperature" in item.lower() or "temp" in item.lower() or unit == 'C'):
             # Do not save performance data for FANs. This produces
             # much data and is - in my opinion - useless.
             perfdata = [("value", val, None, crit_high)]

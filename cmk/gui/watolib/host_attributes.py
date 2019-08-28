@@ -457,8 +457,8 @@ def get_sorted_host_attribute_topics(for_what, new):
         if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
             needed_topics.add(attr.topic())
 
-    return [(t.ident, t.title)
-            for t in sorted([t_class() for t_class in needed_topics], key=lambda e: e.sort_index)]
+    return [(t.ident, t.title) for t in sorted([t_class() for t_class in needed_topics],
+                                               key=lambda e: (e.sort_index, e.title))]
 
 
 def get_sorted_host_attributes_by_topic(topic_id):

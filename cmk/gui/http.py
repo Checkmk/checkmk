@@ -192,6 +192,7 @@ class Request(object):
             self.del_var(varname)
 
     def uploaded_file(self, varname):
+        # returns either a triple of (filename, mime-type, content) or None
         return self._uploads.get(varname)
 
 

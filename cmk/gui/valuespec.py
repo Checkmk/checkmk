@@ -4149,6 +4149,9 @@ class FileUpload(ValueSpec):
         return ''
 
     def validate_value(self, value, varprefix):
+        if not value:
+            raise MKUserError(varprefix, _('Please select a file.'))
+
         file_name, _mime_type, content = value
 
         if not self._allow_empty and (content == '' or file_name == ''):
@@ -4176,7 +4179,6 @@ class FileUpload(ValueSpec):
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix):
-        # returns a triple of (filename, mime-type, content)
         return html.request.uploaded_file(varprefix)
 
 
@@ -4206,9 +4208,12 @@ class ImageUpload(FileUpload):
             super(ImageUpload, self).render_input(varprefix, value)
 
     def validate_value(self, value, varprefix):
+        if not value:
+            raise MKUserError(varprefix, _('Please choose a PNG image.'))
+
         file_name, mime_type, content = value
 
-        if file_name[-4:] != '.png' \
+        if not file_name.endswith('.png') \
            or mime_type != 'image/png' \
            or not content.startswith('\x89PNG'):
             raise MKUserError(varprefix, _('Please choose a PNG image.'))

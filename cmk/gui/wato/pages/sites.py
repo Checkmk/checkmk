@@ -502,6 +502,11 @@ class ModeDistributedMonitoring(WatoMode):
         test_sites = dict(configured_sites.items())
         del test_sites[delete_id]
 
+        # Prevent deletion of the local site. This does not make sense, even on
+        # standalone sites or distributed remote sites.
+        if delete_id == config.omd_site():
+            raise MKUserError(None, _("You can not delete the connection to the local site."))
+
         # Make sure that site is not being used by hosts and folders
         if delete_id in watolib.Folder.root_folder().all_site_ids():
             search_url = html.makeactionuri_contextless([
@@ -674,8 +679,13 @@ class ModeDistributedMonitoring(WatoMode):
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"),
                          "clone")
 
-        delete_url = html.makeactionuri([("_delete", site_id)])
-        html.icon_button(delete_url, _("Delete"), "delete")
+        # Prevent deletion of the local site. This does not make sense, even on
+        # standalone sites or distributed remote sites.
+        if site_id == config.omd_site():
+            html.empty_icon_button()
+        else:
+            delete_url = html.makeactionuri([("_delete", site_id)])
+            html.icon_button(delete_url, _("Delete"), "delete")
 
         if _site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),

@@ -26,52 +26,61 @@
 
 
 # Agent / MIB output
-# see: 1.3.6.1.4.1.3375.2.1.3.2.1.2 (Chassis fans)
-# F5-BIGIP-SYSTEM-MIB::sysChassisFanEntry
-# see: 1.3.6.1.4.1.3375.2.1.3.1.1 (CPU & CPU fans)
-# sysCpuGroup
+# see 1.3.6.1.4.1.3375.2.1.3.2.1.1.0
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanIndex.1   .1.3.6.1.4.1.3375.2.1.3.2.1.1.1 = 1
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanIndex.2   .1.3.6.1.4.1.3375.2.1.3.2.1.1.2 = 2
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanIndex.3   .1.3.6.1.4.1.3375.2.1.3.2.1.1.3 = 3
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanIndex.4   .1.3.6.1.4.1.3375.2.1.3.2.1.1.4 = 4
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanSpeed.1   .1.3.6.1.4.1.3375.2.1.3.2.1.3.1 = 2915
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanSpeed.2   .1.3.6.1.4.1.3375.2.1.3.2.1.3.2 = 2930
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanSpeed.3   .1.3.6.1.4.1.3375.2.1.3.2.1.3.3 = 2945
+# F5-BIGIP-SYSTEM-MIB::sysChassisFanSpeed.4   .1.3.6.1.4.1.3375.2.1.3.2.1.3.4 = 2960
+# see 1.3.6.1.4.1.3375.2.1.3.6.1.0
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorFanSpeed.1.1.   1.3.6.1.4.1.3375.2.1.3.6.2.1.3.1.1 = 4715
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorFanSpeed.2.1.   1.3.6.1.4.1.3375.2.1.3.6.2.1.3.2.1 = 4730
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.1.1.       1.3.6.1.4.1.3375.2.1.3.6.2.1.4.1.1 = 1/cpu1
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.2.1.       1.3.6.1.4.1.3375.2.1.3.6.2.1.4.2.1 = 2/cpu1
 
 
 f5_bigip_fans_default_levels = (2000,500)
 
 
-def f5_bigip_fans_genitem(fanid):
-    fanid = int(fanid)
-    if   fanid < 10:
-        fantype = "Processor"
-    elif fanid >=100:
-        fantype = "Chassis"
-    else:
-        fantype = "Unknown"
-    return ("%s %d" % (fantype, fanid))
+def parse_f5_bigip_fans(info):
+    fantyp = ['Chassis', 'Processor']
+    fanchoice = 0
+    parsed = {}
+
+    for line in info:
+        for fanentry in line:
+            if fanchoice == 0:
+                parsed[("%s %d" % (fantyp[fanchoice], int(fanentry[0])))] = int(fanentry[1])
+            else:
+                parsed[("%s %s" % (fantyp[fanchoice], fanentry[0]))] = int(fanentry[1])
+        fanchoice += 1
+
+    return parsed
 
 
-def inventory_f5_bigip_fans(info):
+def inventory_f5_bigip_fans(parsed):
     inventory = []
-    for line in info:
-        for fanentry in line:
-            inventory.append((f5_bigip_fans_genitem(fanentry[0]), "f5_bigip_fans_default_levels"))
-
-    return inventory
+    for item in parsed.keys():
+        yield item, "f5_bigip_fans_default_levels"
 
 
-def check_f5_bigip_fans(item, _no_params, info):
-    for line in info:
-        for fanentry in line:
-            if f5_bigip_fans_genitem(fanentry[0]) == item:
-                speed = int(fanentry[1])
-                warn, crit = f5_bigip_fans_default_levels
-                msgtxt = "speed is %d rpm" % speed
-                if speed > warn:
-                    return (0, msgtxt)
-                elif speed < crit:
-                    return (2, msgtxt)
-                elif speed < warn:
-                    return (1, msgtxt)
-                else:
-                    return (3, "could not detect speed")
+def check_f5_bigip_fans(item, params, parsed):
+    warn, crit = params
 
-    return (3, "item not found in SNMP output")
+    fanspeed = parsed.get(item)
+    if not fanspeed:
+        yield 3, "could not detect speed"
+
+    msgtxt = "speed is %d rpm" % fanspeed
+    if fanspeed >= warn:
+        yield 0, msgtxt
+    elif fanspeed < warn and fanspeed >= crit:
+        yield 1, msgtxt
+    elif fanspeed < crit and fanspeed > 0:
+        yield 2, msgtxt
 
 
 # Get ID and Speed from the CPU and chassis fan tables
@@ -79,8 +88,10 @@ def check_f5_bigip_fans(item, _no_params, info):
 check_info["f5_bigip_fans"] = {
     'check_function':          check_f5_bigip_fans,
     'inventory_function':      inventory_f5_bigip_fans,
+    'parse_function':          parse_f5_bigip_fans,
     'service_description':     'FAN %s',
-    'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.1.2.1', [1, 3]), ('.1.3.6.1.4.1.3375.2.1.3.1.2.1', [1, 3])],
+    'group':                   'hw_fans',
+    'snmp_info':               [('.1.3.6.1.4.1.3375.2.1.3.2.1.2.1', [1, 3]), ('.1.3.6.1.4.1.3375.2.1.3.6.2.1', [4, 3])],
     'snmp_scan_function':      \
      lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
 }

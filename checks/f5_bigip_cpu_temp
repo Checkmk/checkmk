@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Agent / MIB output
+# see 1.3.6.1.4.1.3375.2.1.3.6.1.0
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorTemperature.1.1.   1.3.6.1.4.1.3375.2.1.3.6.2.1.2.1.1 = 31
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorTemperature.2.1.   1.3.6.1.4.1.3375.2.1.3.6.2.1.2.2.1 = 35
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.1.1.          1.3.6.1.4.1.3375.2.1.3.6.2.1.4.1.1 = 1/cpu1
+# F5-BIGIP-SYSTEM-MIB::sysCpuSensorName.2.1.          1.3.6.1.4.1.3375.2.1.3.6.2.1.4.2.1 = 2/cpu1
+
 
 f5_bigip_cpu_temp_default_params = (60, 80)
 
@@ -31,7 +38,6 @@ f5_bigip_cpu_temp_default_params = (60, 80)
 def inventory_f5_bigip_cpu_temp(info):
     for line in info:
         yield line[0], "f5_bigip_cpu_temp_default_params"
-
 
 
 def check_f5_bigip_cpu_temp(item, params, info):
@@ -47,7 +53,7 @@ check_info["f5_bigip_cpu_temp"] = {
     'group':                'temperature',
     'has_perfdata':         True,
     'includes':             [ 'temperature.include' ],
-    'snmp_info':            ( '.1.3.6.1.4.1.3375.2.1.3.1.2.1', [1, 2] ),
+    'snmp_info':            ( '.1.3.6.1.4.1.3375.2.1.3.6.2.1', [4, 2] ),
     'snmp_scan_function':      \
      lambda oid: '.1.3.6.1.4.1.3375.2' in oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower(),
 }

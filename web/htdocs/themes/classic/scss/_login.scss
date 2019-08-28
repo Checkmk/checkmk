@@ -37,139 +37,154 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 body.login {
-    background-image: none;
-    background-color: #285069;
-    text-align: center;
-    vertical-align: middle;
+  background-image: none;
+  background-color: #285069;
+  text-align: center;
+  vertical-align: middle;
 }
 
 body.login.screenshotmode div#login {
-    background-image: url("");
+  background-image: url("");
 }
 
 body.login {
-    div#login {
-        width: 770px;
-        height: 605px;
-        position: absolute;
-        top:0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: auto;
-    }
+  div#login {
+    width: 770px;
+    height: 605px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 
-    #login_window {
-        background-image: url("images/login_window.png");
-        width: 370px;
-        height: 230px;
-        left: 10px;
-        top: 187px;
-        position: relative;
-        margin: -30px auto 10px auto;
+    #version::before {
+      position: absolute;
+      top: 25px;
+      left: -145px;
+      width: 200px;
+      height: 30px;
+      background-image: url("images/mk-logo.png");
+      background-position: 16px center;
+      background-repeat: no-repeat;
+      background-size: auto 30px;
+      content: " ";
     }
+  }
 
-    label {
-        color: white;
-    }
+  #login_window {
+    position: relative;
+    top: 187px;
+    left: 10px;
+    width: 355px;
+    height: 225px;
+    margin: -30px auto 10px;
+    background-color: rgb(73, 138, 166);
+    border: 1px solid rgb(73, 138, 166);
+    border-radius: 15px;
+    box-shadow: 0 0 1px #fff inset;
+  }
 
-    #version {
-        position: absolute;
-        text-align: right;
-        width: 150px;
-        top: 15px;
-        right: 20px;
-        color: white;
-        font-size: 8pt;
-    }
+  label {
+    color: white;
+  }
 
-    #label_user, #label_pass {
-        left: 55px;
-    }
+  #version {
+    position: absolute;
+    text-align: right;
+    width: 150px;
+    top: 15px;
+    right: 20px;
+    color: white;
+    font-size: 8pt;
+  }
 
-    #input_user, #input_pass {
-        left: 121px;
-    }
+  #label_user, #label_pass {
+    left: 55px;
+  }
 
-    #label_user {
-        position: absolute;
-        top: 115px;
-    }
-    #input_user {
-        position: absolute;
-        top: 110px;
-    }
+  #input_user, #input_pass {
+    left: 120px;
+  }
 
-    #label_pass {
-        position: absolute;
-        top: 155px;
-    }
-    #input_pass {
-        position: absolute;
-        top: 150px;
-    }
+  #label_user {
+    position: absolute;
+    top: 95px;
+  }
+  #input_user {
+    position: absolute;
+    top: 90px;
+  }
 
-    #input_user, #input_pass {
-        width: 150px;
-        height: 17px;
-        border: none;
-        border-radius: 0px;
-        outline: none;
-        padding: 3px 5px 3px 5px;
-        background-image: url("images/login_input_normal.png");
-        background-repeat: no-repeat;
-        box-shadow: none;
-    }
+  #label_pass {
+    position: absolute;
+    top: 135px;
+  }
+  #input_pass {
+    position: absolute;
+    top: 130px;
+  }
 
-    .inputerror #input_user, .inputerror #input_pass {
-        background-image: url("images/login_input_error.png");
-        background-repeat: no-repeat;
-    }
+  #input_user, #input_pass {
+    width: 150px;
+    height: 17px;
+    border: none;
+    border-radius: 0px;
+    outline: none;
+    padding: 3px 5px 3px 5px;
+    background-image: url("images/login_input_normal.png");
+    background-repeat: no-repeat;
+    box-shadow: none;
+  }
 
-    #_login {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-    }
+  .inputerror #input_user, .inputerror #input_pass {
+    background-image: url("images/login_input_error.png");
+    background-repeat: no-repeat;
+  }
 
-    #login_error {
-        position: absolute;
-        bottom: 15px;
-        left: 105px;
-        width: 180px;
-        height: 30px;
-        z-index: 100;
-        background-image: url("images/login_error_message.png");
-        background-repeat: no-repeat;
-        border: none;
-        margin: 0px;
-        padding: 0px;
-    }
+  #_login {
+    position: absolute;
+    right: 140px;
+    bottom: 30px;
+  }
 
-    #login_error div.error {
-        border-style: none;
-        background-color: transparent;
-        margin: 0px;
-        padding: 8px 0px 0px 0px;
-        color: black;
-        border-radius: 0;
-        box-shadow: 0 0 0;
-    }
+  #login_error {
+    position: absolute;
+    bottom: 15px;
+    left: 105px;
+    width: 180px;
+    height: 30px;
+    z-index: 100;
+    background-image: url("images/login_error_message.png");
+    background-repeat: no-repeat;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+  }
 
-    #foot {
-        text-align: center;
-        width: 350px;
-        color: white;
-        font-size: 8pt;
+  #login_error div.error {
+    border-style: none;
+    background-color: transparent;
+    margin: 0px;
+    padding: 8px 0px 0px 0px;
+    color: black;
+    border-radius: 0;
+    box-shadow: 0 0 0;
+  }
 
-        position: relative;
-        left: 10px;
-        top: 187px;
-        margin: 0 auto 10px auto;
-    }
+  #foot {
+    text-align: center;
+    width: 350px;
+    color: white;
+    font-size: 8pt;
 
+    position: relative;
+    left: 10px;
+    top: 187px;
+    margin: 0 auto 10px auto;
+  }
 
-    #foot a, #foot a:hover {
-        color: white;
-    }
+  #foot a, #foot a:hover {
+    color: white;
+  }
 }

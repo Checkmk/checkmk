@@ -49,10 +49,8 @@ from cmk.gui.watolib.automations import check_mk_local_automation
 from cmk.gui.i18n import _
 
 
-class RulespecBaseGroup(object):
+class RulespecBaseGroup(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all rulespec group types"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def name(self):
         # type: () -> Text
@@ -110,9 +108,7 @@ class RulespecGroup(RulespecBaseGroup):
         return self.title
 
 
-class RulespecSubGroup(RulespecBaseGroup):
-    __metaclass__ = abc.ABCMeta
-
+class RulespecSubGroup(six.with_metaclass(abc.ABCMeta, RulespecBaseGroup)):
     @abc.abstractproperty
     def main_group(self):
         """A reference to the main group class"""
@@ -377,10 +373,7 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
     })
 
 
-class Rulespec(object):
-    __metaclass__ = abc.ABCMeta
-
-    # needed for unique ID
+class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
     NO_FACTORY_DEFAULT = []  # type: list
     # means this ruleset is not used if no rule is entered
     FACTORY_DEFAULT_UNUSED = []  # type: list
@@ -580,22 +573,23 @@ class ABCBinaryRulespec(Rulespec):
         raise NotImplementedError()
 
 
-class ABCBinaryHostRulespec(ABCHostRulespec, ABCBinaryRulespec):
+class ABCBinaryHostRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCBinaryRulespec)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
+    pass
 
 
-class ABCBinaryServiceRulespec(ABCServiceRulespec, ABCBinaryRulespec):
+class ABCBinaryServiceRulespec(
+        six.with_metaclass(abc.ABCMeta, ABCServiceRulespec, ABCBinaryRulespec)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
+    pass
 
 
 class ABCValueRulespec(Rulespec):
@@ -621,24 +615,27 @@ class ABCValueRulespec(Rulespec):
         return self.valuespec.help()
 
 
-class ABCHostValueRulespec(ABCHostRulespec, ABCValueRulespec):
+class ABCHostValueRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCValueRulespec)):
     """Base class for all rulespecs managing host rule sets with values"""
+
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
+    pass
 
 
-class ABCServiceValueRulespec(ABCServiceRulespec, ABCValueRulespec):
+class ABCServiceValueRulespec(six.with_metaclass(abc.ABCMeta, ABCServiceRulespec,
+                                                 ABCValueRulespec)):
     """Base class for all rulespecs managing service rule sets with values"""
+
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
+    pass
 
 
 class CheckParameterRulespecWithItem(ABCServiceValueRulespec):

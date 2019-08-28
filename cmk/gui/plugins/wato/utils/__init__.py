@@ -1084,9 +1084,7 @@ class ConfigHostname(TextAsciiAutocomplete):
         return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
 
 
-class EventsMode(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1695,9 +1693,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(object):
-    __metaclass__ = abc.ABCMeta
-
+class NotificationParameter(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

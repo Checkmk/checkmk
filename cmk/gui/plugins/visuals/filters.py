@@ -27,6 +27,7 @@
 import abc
 import re
 import json
+import six
 
 import livestatus
 
@@ -2414,9 +2415,7 @@ class FilterDowntimeId(FilterText):
         FilterText.__init__(self, "downtime", "downtime_id", "downtime_id", "=")
 
 
-class ABCTagFilter(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCTagFilter(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -2439,7 +2438,9 @@ class ABCTagFilter(Filter):
                 '%s%d_val' % (self._var_prefix, num),
             ]
 
-        Filter.__init__(self, info=self.object_type, htmlvars=htmlvars, link_columns=[])
+        super(ABCTagFilter, self).__init__(info=self.object_type,
+                                           htmlvars=htmlvars,
+                                           link_columns=[])
 
     def display(self):
         groups = config.tags.get_tag_group_choices()
@@ -2608,9 +2609,7 @@ class FilterHostAuxTags(Filter):
         return True
 
 
-class ABCLabelFilter(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCLabelFilter(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -2628,7 +2627,9 @@ class ABCLabelFilter(Filter):
         return "%s_labels" % self.object_type
 
     def __init__(self):
-        Filter.__init__(self, info=self.object_type, htmlvars=[self._var_prefix], link_columns=[])
+        super(ABCLabelFilter, self).__init__(info=self.object_type,
+                                             htmlvars=[self._var_prefix],
+                                             link_columns=[])
 
     def _current_value(self):
         return self._valuespec().from_html_vars(self._var_prefix)
@@ -2702,18 +2703,16 @@ class FilterServiceLabels(ABCLabelFilter):
         return True
 
 
-class ABCFilterCustomAttribute(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCFilterCustomAttribute(six.with_metaclass(abc.ABCMeta, Filter)):
     @property
     def sort_index(self):
         return 103
 
     def __init__(self, info):
-        Filter.__init__(self,
-                        info=info,
-                        htmlvars=[self.name_varname, self.value_varname],
-                        link_columns=[])
+        super(ABCFilterCustomAttribute,
+              self).__init__(info=info,
+                             htmlvars=[self.name_varname, self.value_varname],
+                             link_columns=[])
 
     @property
     def name_varname(self):

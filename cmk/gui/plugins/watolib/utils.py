@@ -28,7 +28,6 @@ import abc
 import os
 import pprint
 from typing import Optional, Type, Text, List  # pylint: disable=unused-import
-
 import six
 
 import cmk.utils.store as store
@@ -43,9 +42,7 @@ def wato_fileheader():
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ABCConfigDomain(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
     needs_sync = True
     needs_activation = True
     always_activate = False
@@ -151,11 +148,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(object):
-    __metaclass__ = abc.ABCMeta
-
-    # Is currently not possible to do this with Python 2.7:
-    # TODO: @abc.abstractmethod
+class SampleConfigGenerator(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     def ident(cls):
         # type: () -> str

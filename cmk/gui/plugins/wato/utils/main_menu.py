@@ -27,6 +27,7 @@
 import abc
 import re
 from typing import Optional, Text  # pylint: disable=unused-import
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -121,9 +122,7 @@ class MenuItem(object):
             (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
 
 
-class MainModule(MenuItem):
-    __metaclass__ = abc.ABCMeta
-
+class MainModule(six.with_metaclass(abc.ABCMeta, MenuItem)):
     def __init__(self):
         # TODO: Cleanup hierarchy
         super(MainModule, self).__init__(mode_or_url=None,

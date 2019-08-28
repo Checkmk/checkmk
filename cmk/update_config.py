@@ -78,14 +78,14 @@ class UpdateConfig(object):
         self._logger = logger
 
     def run(self):
-        self._logger.info("Updating Checkmk configuration with \"cmk-update-config -v\"")
+        self._logger.verbose("Updating Checkmk configuration...")
         self._initialize_gui_environment()
 
         for step_func, title in self._steps():
-            self._logger.info(" + %s..." % title)
+            self._logger.verbose(" + %s..." % title)
             step_func()
 
-        self._logger.info("Done")
+        self._logger.verbose("Done")
 
     def _steps(self):
         return [
@@ -133,25 +133,19 @@ class UpdateConfig(object):
 def main(args):
     # type: (List[str]) -> int
     arguments = parse_arguments(args)
+    cmk.utils.log.setup_console_logging()
+    cmk.utils.log.set_verbosity(arguments.verbose)
+    logger = cmk.utils.log.get_logger("update_config")
+    if arguments.debug:
+        cmk.utils.debug.enable()
+    logger.debug("parsed arguments: %s", arguments)
 
     try:
-        cmk.utils.log.setup_console_logging()
-        cmk.utils.log.set_verbosity(arguments.verbose)
-        if arguments.debug:
-            cmk.utils.debug.enable()
-        logger = cmk.utils.log.get_logger("update_config")
-
-        logger.debug("parsed arguments: %s", arguments)
-
         UpdateConfig(logger, arguments).run()
-
-    except Exception as e:
+    except Exception:
         if arguments.debug:
             raise
-        if logger:
-            logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
-        else:
-            print("ERROR: %s" % e)
+        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
         return 1
     return 0
 

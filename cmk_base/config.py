@@ -35,7 +35,6 @@ import py_compile
 import struct
 import sys
 import itertools
-import functools
 from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 from pathlib2 import Path
@@ -336,7 +335,7 @@ def _get_config_file_paths(with_conf_d):
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
         list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
-                                key=functools.cmp_to_key(cmk.utils.cmp_config_paths))
+                                key=cmk.utils.key_config_paths)
     for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
         if path.exists():
             list_of_files.append(path)

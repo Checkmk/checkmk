@@ -638,7 +638,7 @@ def _wait_for_bulk_discovery_job(web):
         status = web.bulk_discovery_status()
         return status["job"]["state"] != "initialized" and status["is_active"] is False
 
-    wait_until(job_completed, timeout=15, interval=1)
+    wait_until(job_completed, timeout=30, interval=1)
 
 
 def test_bulk_discovery_start_with_defaults(web, local_test_hosts):

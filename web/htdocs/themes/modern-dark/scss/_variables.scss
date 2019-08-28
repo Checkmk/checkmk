@@ -200,10 +200,6 @@ $tag-dropdown-active-color:		    $tag-font-color;
 $tag-dropdown-active-bg-color:		    $grey-3;
 
 
-// Node visualization
-
-$node-vis-darkgrey:			    rgb(169, 169, 169);
-
 // -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
@@ -265,8 +261,8 @@ $data-table-border-spacing:		    0;
 $data-table-border-topmost:		    null;
 $data-table-border-top:			    $primary-table-border;
 $data-table-border-bottom:		    $secondary-table-border;
-$data-table-state-border-top:		    none;
-$data-table-state-border-bottom:	    $secondary-table-border;
+$data-table-state-border-top:		    none !important;
+$data-table-state-border-bottom:	    $secondary-table-border !important;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
@@ -292,9 +288,9 @@ $td-unused-color:			    $grey-2;
 
 $color-div-box-shadow:			    null;
 
-$graph-legend-color:			    $grey-1;
+$graph-legend-color:			    $grey-1 !important;
 
-$dark-font-color:			    $grey-7;
+$dark-font-color:			    $grey-7 !important;
 
 $body-dashlet-bg-color:			    $grey-6;
 $dashlet-bg-color:			    $grey-6;
@@ -414,3 +410,15 @@ $unmonitored-bg-color:			    rgb(134, 134, 134);
 $lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
 $hostdown-bg-color:			    rgb(0, 102, 170);
 $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
+
+// Node visualization
+
+$node-vis-darkgrey:			    rgb(169, 169, 169);
+$node-vis-search-box-border:		    none;
+$node-vis-search-box-bg-color:		    transparent;
+$node-vis-search-field-border-color:	    $grey-3;
+$node-vis-box-shadow:			    none;
+$node-vis-box-border:			    1px solid $grey-3;
+$node-vis-toggle-hover-bg-color:	    rgb(94, 93, 93); // grey
+$node-vis-toggle-down-bg-color:		    null;
+$node-vis-toggle-down-border-color:	    null;

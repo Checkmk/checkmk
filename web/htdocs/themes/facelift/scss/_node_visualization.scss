@@ -1,3 +1,8 @@
+#svg_content {
+  min-height: 630px;
+  background-color: $secondary-bg-color;
+}
+
 #node_visualization {
   position: absolute;
   top: 70px;
@@ -28,21 +33,31 @@ div.node_vis {
 
   #togglebuttons {
     position: absolute;
-    top: 9px;
+    top: 18px;
     left: 280px;
   }
 
   .togglebutton {
-    width: 34px;
-    height: 34px;
-    padding: 8px;
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+    padding-left: 0;
+
+    &.down {
+      background-color: $node-vis-toggle-down-bg-color; // light grey
+      border-color: $node-vis-toggle-down-bg-color; // light grey
+    }
+
+    &:hover, &.down:hover {
+      background-color: $node-vis-toggle-hover-bg-color;
+    }
   }
 
   div.box, img.box {
-    background: $white;
-    border: 1px solid #cccfdb;
+    background-color: $primary-bg-color;
+    border: $node-vis-box-border;
     border-radius: 4px;
-    box-shadow: 2px 2px 2px #444;
+    box-shadow: $node-vis-box-shadow;
   }
 
   img.layouting_icon, img.bi_rule_icon {
@@ -54,15 +69,18 @@ div.node_vis {
   /* search */
   div.toolbar_search {
     position: absolute;
-    top: 12px;
+    top: 19px;
     left: 12px;
     width: 250px;
     overflow: hidden;
-    box-shadow: 2px 2px 2px #444;
+    background-color: $node-vis-search-box-bg-color;
+    border: $node-vis-search-box-border;
+    box-shadow: $node-vis-box-shadow;
   }
 
   input.search_node {
-    width: 100%;
+    width: 236px;
+    border-color: $node-vis-search-field-border-color;
   }
 
   /* infobox */
@@ -101,7 +119,6 @@ div.node_vis {
     top: 12px;
     right: 12px;
     width: 340px;
-    overflow: hidden;
   }
 
   div#layout_management {
@@ -117,12 +134,37 @@ div.node_vis {
     margin-top: 8px;
   }
 
+  div#configuration_div table select {
+    margin-left: 34px;
+  }
+
   div#style_management {
     padding: 8px;
     padding-top: 0;
     margin: 3px;
     margin-top: 8px;
     overflow: hidden;
+  }
+
+  div#history_icons {
+    position: absolute;
+    top: 8px;
+    right: 339px;
+    width: 60px;
+
+    img {
+      width: 24px;
+      height: 24px;
+      margin-right: 2px;
+
+      &.disabled {
+	opacity: 0.3;
+      }
+
+      &:hover {
+	cursor: pointer;
+      }
+    }
   }
 
   #matcher_config {
@@ -183,16 +225,12 @@ div.node_vis {
   }
 
   .node_element.focus circle {
-    stroke: rgb(255, 255, 0); // yellow
-    stroke-width: 6;
-  }
-
-  div.togglebutton.down {
-    background-color: #d9d9d9;
-    border-color: #ccc;
+    stroke: rgb(25, 90, 230); // blue
+    stroke-width: 3;
   }
 
   .state0 {
+    color: $black;
     fill: #13d389;
   }
 
@@ -270,15 +308,19 @@ div.node_vis {
 
   #reset_pan_and_zoom {
     position: absolute;
-    top: 12px;
-    right: 356px;
+    top: 13px;
+    right: 408px;
   }
 
   #translation_infobox {
     position: absolute;
     top: 50px;
-    right: 342px;
+    right: 369px;
     width: 200px;
+  }
+
+  text {
+    fill: $primary-font-color;
   }
 }
 

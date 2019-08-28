@@ -24,44 +24,44 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Dictionary,
+    ListChoice,
+)
 
-# Transforms all lines into a dictionary.
-# The first key is the dictionary key, unless modified by the custom_keys
-def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None, ports=False):
-    if custom_keys is None:
-        custom_keys = []
-
-    instances = {}
-    for line in info:
-        instance = {}
-        name = line[0].split(" ", 1)[1]
-        for element in line:
-            tokens = element.split(" ", 1)
-            instance[tokens[0]] = tokens[1]
-
-        if custom_keys:
-            custom_name = []
-            for key in custom_keys:
-                if key in instance:
-                    custom_name.append(instance[key])
-            name = ".".join(custom_name)
-
-        if item_func:
-            name = item_func(name)
-
-        if ports:
-            name = "%s port %s" % (instance.get("port-type").capitalize(), name)
-
-        if as_dict_list:
-            instances.setdefault(name, [])
-            instances[name].append(instance)
-        else:
-            instances[name] = instance
-
-    return instances
+from cmk.gui.plugins.wato import (
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    ABCHostValueRulespec,
+)
 
 
-def _discover_single_items(discovery_rules):
-    config = host_extra_conf_merged(host_name(), discovery_rules)
-    mode = config.get("mode", "single")
-    return mode == "single"
+@rulespec_registry.register
+class RulespecDiscoveryNetappPortsRules(ABCHostValueRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_netapp_api_ports_ignored"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(title=_("Discovery of Netapp ports"),
+                          elements=[
+                              ("ignored_ports",
+                               ListChoice(
+                                   title=_("Ignore port types during discovery"),
+                                   help=_("Specify which port types should not be discovered"),
+                                   choices=[
+                                       ("physical", _("Physical")),
+                                       ("vlan", _("Vlan")),
+                                       ("trunk", _("Trunk")),
+                                   ])),
+                          ])

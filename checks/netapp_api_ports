@@ -24,44 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# Transforms all lines into a dictionary.
-# The first key is the dictionary key, unless modified by the custom_keys
-def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None, ports=False):
-    if custom_keys is None:
-        custom_keys = []
-
-    instances = {}
-    for line in info:
-        instance = {}
-        name = line[0].split(" ", 1)[1]
-        for element in line:
-            tokens = element.split(" ", 1)
-            instance[tokens[0]] = tokens[1]
-
-        if custom_keys:
-            custom_name = []
-            for key in custom_keys:
-                if key in instance:
-                    custom_name.append(instance[key])
-            name = ".".join(custom_name)
-
-        if item_func:
-            name = item_func(name)
-
-        if ports:
-            name = "%s port %s" % (instance.get("port-type").capitalize(), name)
-
-        if as_dict_list:
-            instances.setdefault(name, [])
-            instances[name].append(instance)
-        else:
-            instances[name] = instance
-
-    return instances
+# consideration of health status and port speed availability status quo
+discovery_netapp_api_ports_ignored = []
 
 
-def _discover_single_items(discovery_rules):
-    config = host_extra_conf_merged(host_name(), discovery_rules)
-    mode = config.get("mode", "single")
-    return mode == "single"
+def parse_netapp_ports(info):
+    return netapp_api_parse_lines(info, ports=True)
+
+
+def _identify_ignored_port_types(discovery_ignored):
+    return host_extra_conf_merged(host_name(), discovery_ignored).get("ignored_ports", ())
+
+
+def discovery_netapp_api_port(parsed):
+    ignored_ports = _identify_ignored_port_types(discovery_netapp_api_ports_ignored)
+    for item, values in parsed.iteritems():
+        if values.get("port-type") in ignored_ports:
+            continue
+        if "health-status" in values:
+            yield item, {}
+
+
+@get_parsed_item_data
+def check_netapp_api_port(item, params, data):
+    health_state = data.get("health-status", "unknown")
+    status = {"healthy": 0, "unknown": 3}.get(health_state, 2)
+    yield status, "Health status: %s, Operational speed: %s" % (
+        health_state, data.get("operational-speed", "undetermined"))
+
+
+check_info["netapp_api_ports"] = {
+    'check_function': check_netapp_api_port,
+    'inventory_function': discovery_netapp_api_port,
+    'parse_function': parse_netapp_ports,
+    'service_description': '%s',
+    'includes': ['netapp_api.include'],
+}

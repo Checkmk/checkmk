@@ -13,7 +13,7 @@ def mk_filestats():
 
 def test_lazy_file(mk_filestats):
     lfile = mk_filestats.LazyFileStats("no such file")
-    assert lfile.path == os.path.abspath("no such file")
+    assert lfile.path == "no such file"
     assert lfile._size is None
     assert lfile._age is None
 
@@ -25,7 +25,7 @@ def test_lazy_file(mk_filestats):
     assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
     lfile = mk_filestats.LazyFileStats(__file__)  # this should exist...
-    assert lfile.path == os.path.abspath(__file__)
+    assert lfile.path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert lfile.age is not None
@@ -54,7 +54,7 @@ def test_get_file_iterator_invalid(mk_filestats, config):
 def test_get_file_iterator_pattern(mk_filestats, config, pat_list):
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
-    assert iter_obj._patterns == pat_list
+    assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
 
 
 @pytest.mark.parametrize("operator,values,results", [
@@ -76,13 +76,11 @@ def test_numeric_filter_raises(mk_filestats, invalid_arg):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
 
-@pytest.mark.parametrize("reg_pat,paths,results",
-                         [(
-                             r'.*\.txt',
-                             ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
-                             (True, False, False),
-                         ), (r'/.*', ("relative/path/should/be/resolved",), (True,)),
-                          (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'), (False, True))])
+@pytest.mark.parametrize("reg_pat,paths,results", [(
+    r'.*\.txt',
+    ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
+    (True, False, False),
+), (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'), (False, True))])
 def test_path_filter(mk_filestats, reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):

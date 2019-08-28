@@ -40,7 +40,7 @@ from cmk.gui.plugins.wato import (
 
 
 @rulespec_registry.register
-class RulespecCheckgroupParametersWindowsMultipath(CheckParameterRulespecWithoutItem):
+class RulespecCheckgroupParametersJenkinsQueue(CheckParameterRulespecWithoutItem):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications

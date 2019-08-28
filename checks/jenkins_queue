@@ -44,7 +44,7 @@ def parse_jenkins_queue(info):
     return parsed
 
 
-def inventory_jenkins_health(parsed):
+def inventory_jenkins_queue(parsed):
     yield None, {}
 
 
@@ -91,7 +91,7 @@ def check_jenkins_queue(no_item, params, parsed):
 check_info["jenkins_queue"] = {
     "parse_function": parse_jenkins_queue,
     "check_function": check_jenkins_queue,
-    "inventory_function": inventory_jenkins_health,
+    "inventory_function": inventory_jenkins_queue,
     "service_description": "Jenkins Queue",
     "has_perfdata": True,
     "group": "jenkins_queue",

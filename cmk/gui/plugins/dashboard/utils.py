@@ -27,6 +27,7 @@
 
 import abc
 import json
+import six
 
 import cmk.utils.plugin_registry
 
@@ -43,9 +44,8 @@ GROW = 0
 MAX = -1
 
 
-class Dashlet(object):
+class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all dashboard dashlet implementations"""
-    __metaclass__ = abc.ABCMeta
 
     # Minimum width and height of dashlets in raster units
     minimum_size = (10, 5)
@@ -315,10 +315,8 @@ class Dashlet(object):
         return globals()[urlfunc]()
 
 
-class IFrameDashlet(Dashlet):
+class IFrameDashlet(six.with_metaclass(abc.ABCMeta, Dashlet)):
     """Base class for all dashlet using an iframe"""
-    __metaclass__ = abc.ABCMeta
-
     @classmethod
     def is_iframe_dashlet(cls):
         """Whether or not the dashlet is rendered in an iframe"""

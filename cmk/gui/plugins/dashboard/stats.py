@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import six
 
 from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
@@ -40,9 +41,7 @@ from cmk.gui.plugins.dashboard import (
 )
 
 
-class DashletStats(Dashlet):
-    __metaclass__ = abc.ABCMeta
-
+class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
     @classmethod
     def is_resizable(cls):
         return False

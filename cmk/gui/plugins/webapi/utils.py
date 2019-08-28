@@ -30,6 +30,7 @@
 import abc
 import json
 from hashlib import md5
+import six
 
 import cmk.utils.plugin_registry
 
@@ -43,9 +44,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
 
 
-class APICallCollection(object):
-    __metaclass__ = abc.ABCMeta
-
+class APICallCollection(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")

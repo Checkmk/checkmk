@@ -1864,10 +1864,8 @@ class LDAPConnectionValuespec(Transform):
 #   '----------------------------------------------------------------------'
 
 
-class LDAPAttributePlugin(object):
+class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all LDAP attribute synchronization plugins"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

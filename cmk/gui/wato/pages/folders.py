@@ -28,6 +28,7 @@
 import abc
 import functools
 import json
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -838,9 +839,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return choices
 
 
-class FolderMode(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class FolderMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     def __init__(self):
         super(FolderMode, self).__init__()
         self._folder = self._init_folder()

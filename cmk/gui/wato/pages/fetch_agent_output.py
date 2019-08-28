@@ -28,6 +28,7 @@ import abc
 import ast
 import os
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
 
@@ -95,9 +96,7 @@ class FetchAgentOutputRequest(object):
 
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(Page):
-    __metaclass__ = abc.ABCMeta
-
+class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
     def __init__(self):
         super(AgentOutputPage, self).__init__()
         self._from_vars()
@@ -198,14 +197,12 @@ class PageFetchAgentOutput(AgentOutputPage):
                                             ])
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand):
+class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCommand)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def get_request(self):
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")

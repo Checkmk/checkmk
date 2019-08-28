@@ -26,6 +26,7 @@
 
 import os
 import abc
+import six
 
 import cmk.utils.paths
 
@@ -64,9 +65,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ModeGroups(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class ModeGroups(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @abc.abstractproperty
     def type_name(self):
         # type: () -> str
@@ -146,9 +145,7 @@ class ModeGroups(WatoMode):
                 self._show_row_cells(table, name, group)
 
 
-class ModeEditGroup(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class ModeEditGroup(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @abc.abstractproperty
     def type_name(self):
         # type: () -> str

@@ -1,0 +1,11 @@
+Title: Custom logos were not copied to slave sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.7.0i1
+Date: 1567000095
+
+

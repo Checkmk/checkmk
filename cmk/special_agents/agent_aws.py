@@ -39,6 +39,8 @@ from typing import (  # pylint: disable=unused-import
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
+import six
+
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
 from cmk.special_agents.utils import (
@@ -539,9 +541,7 @@ AWSComputedContent = NamedTuple("AWSComputedContent", [
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
-class AWSSection(DataCache):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
     def __init__(self, client, region, config, distributor=None):
         cache_dir = AWSCacheFilePath / region / config.hostname
         super(AWSSection, self).__init__(cache_dir, self.name)
@@ -711,9 +711,7 @@ class AWSSection(DataCache):
         return prepared_tags
 
 
-class AWSSectionLimits(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionLimits(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def __init__(self, client, region, config, distributor=None):
         super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
         self._limits = {}
@@ -734,9 +732,7 @@ class AWSSectionLimits(AWSSection):
         ]
 
 
-class AWSSectionLabels(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionLabels(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def _create_results(self, computed_content):
         assert isinstance(
             computed_content.content,
@@ -752,13 +748,11 @@ class AWSSectionLabels(AWSSection):
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
-class AWSSectionGeneric(AWSSection):
-    __metaclass__ = abc.ABCMeta
+class AWSSectionGeneric(six.with_metaclass(abc.ABCMeta, AWSSection)):
+    pass
 
 
-class AWSSectionCloudwatch(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionCloudwatch(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def get_live_data(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
@@ -2976,9 +2970,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
-class AWSSections(object):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSections(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, hostname, session, debug=False):
         self._hostname = hostname
         self._session = session

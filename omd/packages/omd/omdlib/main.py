@@ -49,6 +49,7 @@ from typing import Dict  # pylint: disable=unused-import
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
 from pathlib2 import Path
+import six
 
 import omdlib
 import omdlib.certs
@@ -3975,9 +3976,7 @@ def _cleanup_global_files():
         groupdel("omd")
 
 
-class PackageManager(object):
-    __metaclass__ = abc.ABCMeta
-
+class PackageManager(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     def factory(cls):
         if os.path.exists("/etc/cma"):
@@ -4049,10 +4048,8 @@ class PackageManagerRPM(PackageManager):
         return output.strip().split("\n")
 
 
-class AbstractSiteContext(object):
+class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
     """Object wrapping site specific information"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, sitename):
         super(AbstractSiteContext, self).__init__()
         self._sitename = sitename

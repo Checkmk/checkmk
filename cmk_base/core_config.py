@@ -29,6 +29,7 @@ import numbers
 import os
 import sys
 from typing import Text, Optional, Any, List, Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -41,9 +42,7 @@ import cmk_base.ip_lookup as ip_lookup
 from cmk_base.check_utils import Service  # pylint: disable=unused-import
 
 
-class MonitoringCore(object):
-    __metaclass__ = abc.ABCMeta
-
+class MonitoringCore(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def create_config(self):
         pass

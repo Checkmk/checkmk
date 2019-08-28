@@ -29,6 +29,7 @@ import requests  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
 import freezegun
+import six
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -2240,10 +2241,8 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(object):
+class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for Check and ActiveCheck"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, name):
         import cmk_base.check_api_utils
         self.set_hostname = cmk_base.check_api_utils.set_hostname

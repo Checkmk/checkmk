@@ -28,6 +28,7 @@
 import re
 import abc
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
@@ -64,9 +65,7 @@ def _validate_tag_id(tag_id):
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-class ABCTag(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(ABCTag, self).__init__()
         self._initialize()

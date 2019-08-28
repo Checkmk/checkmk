@@ -2,6 +2,8 @@
 
 import abc
 import random
+import six
+
 from cmk.special_agents.agent_aws import (
     AWSEC2InstTypes,)
 
@@ -17,9 +19,7 @@ from cmk.special_agents.agent_aws import (
 #   ---abc------------------------------------------------------------------
 
 
-class Entity(object):
-    __metaclass__ = abc.ABCMeta
-
+class Entity(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, key):
         self.key = key
 
@@ -122,9 +122,7 @@ class BoolChoice(Choice):
 #   .--abc------------------------------------------------------------------
 
 
-class InstanceBuilder(object):
-    __metaclass__ = abc.ABCMeta
-
+class InstanceBuilder(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, idx, amount):
         self._idx = idx
         self._amount = amount

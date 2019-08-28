@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import six
 
 # TODO: Refactor all plugins to one way of telling the registry it's name.
 #       for example let all use a static/class method .name().
@@ -35,7 +36,7 @@ import abc
 # (https://docs.python.org/2/library/collections.html) and cleanup
 
 
-class ClassRegistry(object):
+class ClassRegistry(six.with_metaclass(abc.ABCMeta, object)):
     """The management object for all available plugins of a component.
 
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
@@ -44,8 +45,6 @@ class ClassRegistry(object):
     Entries are registered with this registry using register(), typically via decoration.
 
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         super(ClassRegistry, self).__init__()
         self._entries = {}

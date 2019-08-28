@@ -31,6 +31,7 @@ import time
 import abc
 import logging
 import sys
+import six
 
 import cmk.utils.log  # TODO: Remove this!
 from cmk.utils.log import VERBOSE
@@ -54,9 +55,8 @@ from cmk_base.check_api_utils import state_markers
 from .host_sections import HostSections
 
 
-class DataSource(object):
+class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all data source classes"""
-    __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = False
 
@@ -522,7 +522,7 @@ class DataSource(object):
         cls._use_outdated_cache_file = state
 
 
-class CheckMKAgentDataSource(DataSource):
+class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -530,7 +530,6 @@ class CheckMKAgentDataSource(DataSource):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, hostname, ipaddress):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
@@ -794,7 +793,7 @@ class CheckMKAgentDataSource(DataSource):
                 (agent_version, expected_version, e))
 
 
-class ManagementBoardDataSource(DataSource):
+class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     """Abstract base class for all data sources that work with the management board configuration"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -802,7 +801,6 @@ class ManagementBoardDataSource(DataSource):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = True
 

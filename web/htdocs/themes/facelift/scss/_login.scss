@@ -50,6 +50,19 @@ body.login {
     height: 605px;
     margin: auto;
     background: transparent;
+
+    #version::before {
+      position: absolute;
+      top: -8px;
+      left: -156px;
+      width: 200px;
+      height: 30px;
+      background-image: url("images/mk-logo.png");
+      background-position: 16px center;
+      background-repeat: no-repeat;
+      background-size: auto 30px;
+      content: " ";
+    }
   }
 
   #login_window {
@@ -74,19 +87,6 @@ body.login {
     letter-spacing: $theme-letter-spacing-table;
     color: $theme-color-lightgrey;
     text-align: right;
-  }
-
-  div#login #version::before {
-    position: absolute;
-    top: -8px;
-    left: -156px;
-    width: 200px;
-    height: 30px;
-    background-image: url("images/mk-logo.png");
-    background-position: 16px center;
-    background-repeat: no-repeat;
-    background-size: auto 30px;
-    content: " ";
   }
 
   label {

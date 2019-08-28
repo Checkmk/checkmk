@@ -860,6 +860,7 @@ def process_clustermode(server, netapp_mode, licenses):
     process_vserver_status(server)
     process_vserver_traffic(server, netapp_mode)
     process_interfaces(server, netapp_mode)
+    process_ports(server, netapp_mode)
     process_fibrechannel_ports(server, netapp_mode)
     process_cpu(server)
 
@@ -1168,6 +1169,13 @@ def process_interfaces(server, netapp_mode):
                                 "recv_packet",
                                 "send_packet",
                             ]))
+
+
+def process_ports(server, netapp_mode):
+    ports = query(server, "net-port-get-iter")
+    if ports:
+        print("<<<netapp_api_ports:sep(9)>>>")
+        print(format_config(ports, "port", ["node", "port"]))
 
 
 def process_fibrechannel_ports(server, netapp_mode):

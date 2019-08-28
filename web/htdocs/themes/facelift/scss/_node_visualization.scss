@@ -33,19 +33,23 @@ div.node_vis {
 
   #togglebuttons {
     position: absolute;
-    top: 18px;
+    top: 16px;
     left: 280px;
   }
 
   .togglebutton {
-    width: 24px;
-    height: 24px;
-    padding: 2px;
-    padding-left: 0;
+    width: 29px;
+    height: 29px;
+    padding: 5px;
+    padding-left: 3px;
 
     &.down {
       background-color: $node-vis-toggle-down-bg-color; // light grey
       border-color: $node-vis-toggle-down-bg-color; // light grey
+
+      img {
+	left: 0;
+      }
     }
 
     &:hover, &.down:hover {
@@ -63,6 +67,12 @@ div.node_vis {
   img.layouting_icon, img.bi_rule_icon {
     width: 30px;
     height: 30px;
+  }
+
+  img.layouting_icon {
+    background-color: $node-vis-history-bg-color;
+    border-color: $node-vis-history-border-color;
+    filter: $node-vis-history-filter;
   }
 
   /* toolbar plugin positioning */
@@ -132,6 +142,7 @@ div.node_vis {
     padding-top: 0;
     margin: 3px;
     margin-top: 8px;
+    background-color: $node-vis-menu-bg-color;
   }
 
   div#configuration_div table select {
@@ -144,6 +155,7 @@ div.node_vis {
     margin: 3px;
     margin-top: 8px;
     overflow: hidden;
+    background-color: $node-vis-menu-bg-color;
   }
 
   div#history_icons {
@@ -156,6 +168,9 @@ div.node_vis {
       width: 24px;
       height: 24px;
       margin-right: 2px;
+      background-color: $node-vis-history-bg-color;
+      border-color: $node-vis-history-border-color;
+      filter: $node-vis-history-filter;
 
       &.disabled {
 	opacity: 0.3;
@@ -259,7 +274,7 @@ div.node_vis {
     vertical-align: middle;
 
     &.enabled {
-      background: rgb(255, 215, 0); // gold
+      background: $node-vis-togglebox-enabled;
     }
   }
 
@@ -318,10 +333,6 @@ div.node_vis {
     right: 369px;
     width: 200px;
   }
-
-  text {
-    fill: $primary-font-color;
-  }
 }
 
 div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
@@ -358,7 +369,7 @@ div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
 
 #togglebox_choices {
   position: absolute;
-  top: 12px;
+  top: 15px;
   left: 380px;
 }
 
@@ -378,4 +389,8 @@ div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
   stroke: $node-vis-darkgrey;
   stroke-width: 2px;
   stroke-linejoin: round;
+}
+
+svg text {
+  fill: $primary-font-color;
 }

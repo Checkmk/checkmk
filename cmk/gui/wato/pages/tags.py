@@ -29,6 +29,7 @@ to hosts and that is the basis of the rules."""
 from typing import Text, Dict, List  # pylint: disable=unused-import
 import abc
 from enum import Enum
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -76,14 +77,12 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ABCTagMode(WatoMode):
+class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         super(ABCTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
@@ -301,9 +300,7 @@ class ModeTags(ABCTagMode):
         return sorted(used_tags)
 
 
-class ABCEditTagMode(ABCTagMode):
-    __metaclass__ = abc.ABCMeta
-
+class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
@@ -605,24 +602,20 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(object):
+class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
     """Base for all tag cleanup operations"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def confirm_title(self):
         # type: () -> Text
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(ABCOperation):
+class ABCTagGroupOperation(six.with_metaclass(abc.ABCMeta, ABCOperation)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, tag_group_id):
         # type: (str) -> None
         super(ABCTagGroupOperation, self).__init__()

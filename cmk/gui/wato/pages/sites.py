@@ -493,6 +493,8 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(login_id)
 
     def _action_delete(self, delete_id):
+        # TODO: Can we delete this ancient code? The site attribute is always available
+        # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
         # fall back to non-distributed-WATO and the site attribute
@@ -502,9 +504,9 @@ class ModeDistributedMonitoring(WatoMode):
 
         # Make sure that site is not being used by hosts and folders
         if delete_id in watolib.Folder.root_folder().all_site_ids():
-            search_url = html.makeactionuri([
+            search_url = html.makeactionuri_contextless([
                 ("host_search_change_site", "on"),
-                ("host_search_site", delete_id),
+                ("host_search_site", DropdownChoice.option_id(delete_id)),
                 ("host_search", "1"),
                 ("folder", ""),
                 ("mode", "search"),

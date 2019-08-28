@@ -40,6 +40,7 @@ import socket
 import subprocess
 import time
 import json
+import six
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -1217,9 +1218,7 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         raise NotImplementedError()

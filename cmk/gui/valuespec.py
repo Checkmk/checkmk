@@ -1585,9 +1585,7 @@ class ListOfMultiple(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
 
-class ABCPageListOfMultipleGetChoice(AjaxPage):
-    __metaclass__ = abc.ABCMeta
-
+class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
     @abc.abstractmethod
     def _get_choices(self, request):
         raise NotImplementedError()

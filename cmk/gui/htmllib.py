@@ -363,9 +363,7 @@ class HTML(object):
 #   '----------------------------------------------------------------------'
 
 
-class OutputFunnel(object):
-    __metaclass__ = abc.ABCMeta
-
+class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(OutputFunnel, self).__init__()
         self.plug_text = []
@@ -439,7 +437,7 @@ class OutputFunnel(object):
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(OutputFunnel):
+class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -479,7 +477,6 @@ class ABCHTMLGenerator(OutputFunnel):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     # TODO: Replace u, i, b with underline, italic, bold, usw.
 

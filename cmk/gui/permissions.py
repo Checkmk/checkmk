@@ -26,13 +26,12 @@
 
 import abc
 from typing import Text, Type, List  # pylint: disable=unused-import
+import six
 
 import cmk.utils.plugin_registry
 
 
-class PermissionSection(object):
-    __metaclass__ = abc.ABCMeta
-
+class PermissionSection(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def name(self):
         # type: () -> str
@@ -74,8 +73,7 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 permission_section_registry = PermissionSectionRegistry()
 
 
-class Permission(object):
-    __metaclass__ = abc.ABCMeta
+class Permission(six.with_metaclass(abc.ABCMeta, object)):
     _sort_index = 0
 
     @abc.abstractproperty

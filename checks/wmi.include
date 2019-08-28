@@ -164,8 +164,8 @@ class WMITable(object):
             try:
                 col_index = self.__headers[self._normalize_key(column)]
             except KeyError as e:
-                raise MKGeneralException(e.message + " missing, valid keys: " +
-                                         ", ".join(self.__headers.keys()))
+                raise KeyError(e.message + " missing, valid keys: " +
+                               ", ".join(self.__headers.keys()))
         return self.__rows[row_index][col_index]
 
     def row_labels(self):
@@ -469,7 +469,7 @@ def wmi_yield_raw_counter(table, row, column, label, perfvar, levels=None, perfs
     try:
         value = int(table.get(row, column))
     except KeyError:
-        return 3, "item not present anymore", []
+        return 3, "counter %r not present anymore" % ((row, column),), []
 
     status, levels_text = wmi_determine_status(value, levels)
 

@@ -336,10 +336,13 @@ table.nform table.valuespec_listof {
     vertical-align: middle;
   }
 
+  .vlof_content, .vlof_buttons {
+    border-bottom: 1px solid $nform-vlof-border-color;
+  }
+
   .vlof_content {
     padding: 8px 0;
     vertical-align: top;
-    border-bottom: 1px solid $theme-color-table-border;
 
     .valuespec_tuple {
       border-spacing: 8px;
@@ -356,7 +359,6 @@ table.nform table.valuespec_listof {
     padding-top: 14px;
     padding-bottom: 26px;
     vertical-align: middle;
-    border-bottom: 1px solid $theme-color-table-border;
   }
 
   &.filter {

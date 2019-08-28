@@ -411,9 +411,12 @@ $lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
 $hostdown-bg-color:			    rgb(0, 102, 170);
 $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
 
+$nform-vlof-border-color:		    rgb(60, 60, 60);
+
 // Node visualization
 
 $node-vis-darkgrey:			    rgb(169, 169, 169);
+$node-vis-togglebox-enabled:		    rgb(94, 93, 93);
 $node-vis-search-box-border:		    none;
 $node-vis-search-box-bg-color:		    transparent;
 $node-vis-search-field-border-color:	    $grey-3;
@@ -422,3 +425,7 @@ $node-vis-box-border:			    1px solid $grey-3;
 $node-vis-toggle-hover-bg-color:	    rgb(94, 93, 93); // grey
 $node-vis-toggle-down-bg-color:		    null;
 $node-vis-toggle-down-border-color:	    null;
+$node-vis-menu-bg-color:		    $grey-5;
+$node-vis-history-bg-color:		    $grey-1;
+$node-vis-history-border-color:		    $grey-1;
+$node-vis-history-filter:		    invert(70%);

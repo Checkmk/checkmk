@@ -1,0 +1,13 @@
+Title: zfsget: readd fallback for very old zfs pool versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566986307
+Class: fix
+
+Some used options of the zfs query have been introduced later in the
+development. Although all used options are available with all pools created
+with solaris 11 and later, this fix brings the fallback for older pools back
+to life.

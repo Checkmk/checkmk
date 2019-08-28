@@ -192,7 +192,7 @@ ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_object"
 #+  from builtins import object
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
+ENABLED_FIXERS+=" libfuturize.fixes.fix_metaclass"
 #-  class ABCSNMPBackend(object):
 #-      __metaclass__ = abc.ABCMeta
 #-

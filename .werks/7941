@@ -1,0 +1,18 @@
+Title: Fixed query/idle timeouts.
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p22
+Date: 1566999366
+
+The CMC has two builtin hardwired timeouts regardin Livestatus: If a client
+connects and doesn't send anything for 5 minutes, the CMC closes the
+connection (idle timeout).  If a client doesn't finish sending a complete
+query within 10 seconds, the CMC closes the connection, too (query timeout).
+
+The lengths of those timeouts have been swapped since 1.5.0i1, which has
+been fixed now.  Note that the Nagios core was not affected by this
+regression, the NEB handled the timeouts correctly.

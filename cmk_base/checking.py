@@ -494,7 +494,16 @@ def _item_not_found(is_snmp):
 
 
 def _sanitize_tuple_check_result(result, allow_missing_infotext=False):
-    if len(result) >= 3:
+    import types
+    if isinstance(result, types.GeneratorType):
+        state = 0
+        infotext = ""
+        perfdata = []
+        for state_, infotext_, perfdata_ in result:
+            if state_ != state and state_ > state:
+                state = state_
+            infotext += infotext_
+    elif not isinstance(result, types.GeneratorType) and len(result) >= 3:
         state, infotext, perfdata = result[:3]
         _validate_perf_data_values(perfdata)
     else:

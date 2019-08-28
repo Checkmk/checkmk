@@ -75,15 +75,17 @@ def check_storeonce_space(item, params, values):
     yield df_check_filesystem_list(item, params, [(item, total_bytes/factor, free_bytes/factor, 0)])
 
     if cloud_bytes and local_bytes:
-        yield 0, "Total cloud: %s, Total local: %s" % (
+        yield 0, ("Total cloud: %s, Total local: %s" % (
               get_bytes_human_readable(cloud_bytes),
-              get_bytes_human_readable(local_bytes))
+              get_bytes_human_readable(local_bytes))), []
 
     if free_cloud_bytes and free_local_bytes:
-        yield 0, "Free cloud: %s, Free local: %s" % (
+        yield 0, ("Free cloud: %s, Free local: %s" % (
               get_bytes_human_readable(free_cloud_bytes),
-              get_bytes_human_readable(free_local_bytes))
+              get_bytes_human_readable(free_local_bytes))), []
 
-    dedupl_ratio_str = values.get('Deduplication Ratio')
-    if dedupl_ratio_str is not None:
-        yield 0, "Dedup ratio: %.2f" % float(dedupl_ratio_str)
+    dedup_ratio = values.get('Deduplication Ratio')
+    if dedup_ratio is None:
+        values.get('Dedupe Ratio')
+    if dedup_ratio is not None:
+        yield 0, ("Dedup ratio: %.2f" % float(dedup_ratio)), []

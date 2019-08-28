@@ -1138,7 +1138,6 @@ checks = {
     }, [(0, 'Android: 0 active', [('ucwa_active_sessions_android', 0.0, None, None, None, None)]),
         (0, 'iPad: 0 active', [('ucwa_active_sessions_ipad', 0.0, None, None, None, None)]),
         (0, 'iPhone: 0 active', [('ucwa_active_sessions_iphone', 0.0, None, None, None, None)]),
-        (0, '', [('active_sessions_mac', 0, None, None, None, None)]),
         (0, '1 requested', [('web_requests_processing', 1.0, 10000, 20000, None, None)])])],
     'sip_stack': [(None, {
         'authentication_errors': {

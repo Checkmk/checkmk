@@ -1,7 +1,10 @@
 @echo off
 rem #  -----------------------------------------------------------------------------
 rem #  Check_MK windows agent plugin to gather information about signature date
-rem #  of Mcafee Anti-Virus software.
+rem #  of McAfee Virusscan Anti-Virus software.
+rem #
+rem #  Superseded by the mcafee_av_client.ps1 plugin which checks signature dates 
+rem #  of both Virusscan and Endpoint Security
 rem #  -----------------------------------------------------------------------------
 
 

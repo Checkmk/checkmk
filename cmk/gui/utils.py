@@ -63,6 +63,11 @@ def cmp_num_split(a, b):
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
 
 
+def key_num_split(a):
+    """Return a key from a string, separate numbers and non-numbers from before."""
+    return num_split(a)
+
+
 def is_allowed_url(url):
     """Checks whether or not the given URL is a URL it is allowed to redirect the user to"""
     # Also prevent using of "javascript:" URLs which could used to inject code

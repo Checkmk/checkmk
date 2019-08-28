@@ -27,7 +27,6 @@
 from __future__ import division
 import time
 import os
-import functools
 
 import cmk.utils.defines as defines
 import cmk.utils.paths
@@ -921,7 +920,7 @@ def compute_availability(what, av_rawdata, avoptions):
 
             availability_table.append(availability_entry)
 
-    availability_table.sort(key=functools.cmp_to_key(cmp_av_entry))
+    availability_table.sort(key=key_av_entry)
 
     # Apply filters
     filtered_table = []
@@ -1064,7 +1063,7 @@ def compute_availability_groups(what, av_data, avoptions):
                 else:
                     title = group_titles.get(group_id, group_id)
                 titled_groups.append((title, group_id))  ## ACHTUNG
-        titled_groups.sort(key=functools.cmp_to_key(lambda a, b: (a[1] - b[1])))
+        titled_groups.sort(key=lambda x: x[1])
 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:
@@ -2039,15 +2038,11 @@ def get_av_groups(availability_table, avoptions):
 
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
-def cmp_av_entry(a, b):
+def key_av_entry(a):
     # This local import currently needed
     import cmk.gui.plugins.views  # pylint: disable=redefined-outer-name
-    return utils.cmp_num_split(a["site"], b["site"]) or \
-           utils.cmp_num_split(a["host"], b["host"]) or \
-           (cmk.gui.plugins.views.cmp_service_name_equiv(a["service"]) >
-               cmk.gui.plugins.views.cmp_service_name_equiv(b["service"])) - (cmk.gui.plugins.views.cmp_service_name_equiv(a["service"]) <
-               cmk.gui.plugins.views.cmp_service_name_equiv(b["service"])) or \
-           utils.cmp_num_split(a["service"], b["service"])
+    return utils.key_num_split(a["service"]), cmk.gui.plugins.views.cmp_service_name_equiv(
+        a["service"]), utils.key_num_split(a["host"]), utils.key_num_split(a["site"])
 
 
 def history_url_of(av_object, time_range):

@@ -215,6 +215,9 @@ if type zfs &>/dev/null
 then
     echo '<<<zfsget>>>'
     zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
+    if [ $? -ne 0  ] ; then
+        zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+    fi
     echo '[df]'
     df -l -k -F zfs 2>/dev/null | sed 1d
 fi

@@ -32,6 +32,7 @@ import pprint
 import traceback
 import json
 from typing import Dict, Optional, List  # pylint: disable=unused-import
+import six
 
 import livestatus
 
@@ -323,9 +324,7 @@ class View(object):
         self._user_sorters = user_sorters
 
 
-class ViewRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, view):
         super(ViewRenderer, self).__init__()
         self.view = view

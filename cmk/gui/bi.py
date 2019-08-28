@@ -2790,9 +2790,7 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-class ABCFoldableTreeRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root

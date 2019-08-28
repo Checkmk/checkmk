@@ -27,6 +27,8 @@
 import abc
 import json
 import inspect
+import six
+
 import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -34,9 +36,7 @@ from cmk.gui.exceptions import MKException
 from cmk.gui.log import logger
 
 
-class Page(object):
-    __metaclass__ = abc.ABCMeta
-
+class Page(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     #TODO: Use when we are using python3 abc.abstractmethod
     def ident(cls):
@@ -52,10 +52,8 @@ class Page(object):
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(Page):
+class AjaxPage(six.with_metaclass(abc.ABCMeta, Page)):
     """Generic page handler that wraps page() calls into AJAX respones"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         super(AjaxPage, self).__init__()
         self._from_vars()

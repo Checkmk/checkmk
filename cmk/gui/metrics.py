@@ -323,8 +323,7 @@ class Perfometers(object):
         return not required_metric_names.issubset(available_metric_names)
 
 
-class MetricometerRenderer(object):
-    __metaclass__ = abc.ABCMeta
+class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls):

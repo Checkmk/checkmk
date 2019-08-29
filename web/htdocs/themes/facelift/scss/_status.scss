@@ -55,11 +55,6 @@ td.state {
   text-align: center;
 }
 
-td.svcstate.stale {
-  background-image: url("images/white_60percent.png");
-  background-repeat: repeat;
-}
-
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
   color: #888;
@@ -225,6 +220,7 @@ img.pluginurl {
 }
 
 /* *some* problem */
+/* TODO: Check if the background is still needed */
 .states, .hstates {
   color: #000;
   background-image: url("images/someproblem.png");

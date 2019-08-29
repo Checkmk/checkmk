@@ -5,6 +5,7 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+THEMES="classic facelift modern-dark"
 export NO_BABEL_LOADER=1
 
 echo "Updating compiled JS/CSS files..."
@@ -12,8 +13,7 @@ make -C .. \
     web/htdocs/js/main_min.js \
     web/htdocs/js/mobile_min.js \
     web/htdocs/js/side_min.js \
-    web/htdocs/themes/facelift/theme.css \
-    web/htdocs/themes/classic/theme.css
+    $(for theme in $THEMES; do echo "web/htdocs/themes/$theme/theme.css"; done)
 
 echo "Update site $SITE..."
 

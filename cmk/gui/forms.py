@@ -247,7 +247,7 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
 
     g_section_isopen = html.begin_foldable_container(
         treename=html.form_name if html.form_name else "nform",
-        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, unicode) else title),
+        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, six.text_type) else title),
         isopen=isopen,
         title=title,
         indent="nform")

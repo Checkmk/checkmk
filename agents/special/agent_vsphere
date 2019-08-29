@@ -41,6 +41,7 @@ import re
 import argparse
 import socket
 import sys
+import six
 import time
 from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
@@ -743,7 +744,7 @@ def write_output(lines, opt):
             sys.stdout.write(chunk)
 
     for line in lines:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
+        sys.stdout.write((line.encode("utf-8") if isinstance(line, six.text_type) else line) + "\n")
     sys.stdout.flush()
 
 

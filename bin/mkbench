@@ -63,6 +63,7 @@ import getopt
 import pprint
 import select
 import shutil
+import six
 import signal
 import socket
 import logging
@@ -925,7 +926,7 @@ class Measurement(object):
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, unicode):
+                            if isinstance(value, six.text_type):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values

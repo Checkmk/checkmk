@@ -175,9 +175,9 @@ class Request(object):
         # All items in self._vars are encoded at the moment. This should be changed one day,
         # but for the moment we treat vars set with set_var() equal to the vars received from
         # the HTTP request.
-        if isinstance(varname, unicode):
+        if isinstance(varname, six.text_type):
             varname = varname.encode("utf-8")
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
 
         self._vars[varname] = value

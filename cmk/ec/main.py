@@ -154,7 +154,7 @@ def decode_from_bytes(string_as_bytes):
     # conversions between str and unicode are a fundamentally broken idea, just
     # like all implicit things and "helpful" ideas in general. :-P For further
     # info see e.g. http://nedbatchelder.com/text/unipain.html
-    if isinstance(string_as_bytes, unicode):
+    if isinstance(string_as_bytes, six.text_type):
         return string_as_bytes
 
     try:

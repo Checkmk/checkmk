@@ -191,7 +191,7 @@ class Encoder(object):
 
             if isinstance(value, int):
                 value = str(value)
-            elif isinstance(value, unicode):
+            elif isinstance(value, six.text_type):
                 value = value.encode("utf-8")
             elif value is None:
                 # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
@@ -213,7 +213,7 @@ class Encoder(object):
         Note: This should be changed once we change everything to
         unicode internally.
         """
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
         elif value is None:
             return ""
@@ -387,7 +387,7 @@ class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
             # encode when really writing out the data. Not when writing plugged,
             # because the plugged code will be handled somehow by our code. We
             # only encode when leaving the pythonic world.
-            if isinstance(text, unicode):
+            if isinstance(text, six.text_type):
                 text = text.encode("utf-8")
             self._lowlevel_write(text)
 
@@ -2889,7 +2889,7 @@ class html(ABCHTMLGenerator):
             for k, v in self.page_context.items():
                 if v is None:
                     v = ''
-                elif isinstance(v, unicode):
+                elif isinstance(v, six.text_type):
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 

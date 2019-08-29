@@ -29,6 +29,7 @@ import os
 import time
 import traceback
 from hashlib import md5
+import six
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -70,7 +71,7 @@ def authenticate(request):
 # After the user has been authenticated, tell the different components
 # of the GUI which user is authenticated.
 def login(user_id):
-    if not isinstance(user_id, unicode):
+    if not isinstance(user_id, six.text_type):
         raise MKInternalError("Invalid user id type")
     config.set_user_by_id(user_id)
     html.set_user_id(user_id)
@@ -290,7 +291,7 @@ def check_auth(request):
     if user_id is None:
         user_id = check_auth_by_cookie()
 
-    if (user_id is not None and not isinstance(user_id, unicode)) or user_id == u'':
+    if (user_id is not None and not isinstance(user_id, six.text_type)) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
 
     if user_id and not userdb.is_customer_user_allowed_to_login(user_id):

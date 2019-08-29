@@ -200,9 +200,9 @@ def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).iteritems():
-        if isinstance(key, unicode):
+        if isinstance(key, six.text_type):
             key = key.encode("utf-8")
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -464,6 +464,6 @@ def _core_has_notifications_disabled(event, logger):
 
 
 def to_utf8(x):
-    if isinstance(x, unicode):
+    if isinstance(x, six.text_type):
         return x.encode("utf-8")
     return x

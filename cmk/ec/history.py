@@ -607,7 +607,7 @@ def _get_logfile_timespan(path):
 def scrub_string(s):
     if isinstance(s, str):
         return s.translate(scrub_string.str_table, "\0\1\2\n")
-    if isinstance(s, unicode):
+    if isinstance(s, six.text_type):
         return s.translate(scrub_string.unicode_table)
     raise TypeError("scrub_string expects a string argument")
 

@@ -2590,7 +2590,9 @@ class html(ABCHTMLGenerator):
                        id_=None,
                        bestof=None,
                        hover_title=None,
-                       class_=None):
+                       class_=None,
+                       is_download=False,
+                       mime_type=None):
         self._context_button(title,
                              url,
                              icon=icon,
@@ -2598,7 +2600,9 @@ class html(ABCHTMLGenerator):
                              id_=id_,
                              bestof=bestof,
                              hover_title=hover_title,
-                             class_=class_)
+                             class_=class_,
+                             is_download=is_download,
+                             mime_type=mime_type)
 
     def _context_button(self,
                         title,
@@ -2608,7 +2612,9 @@ class html(ABCHTMLGenerator):
                         id_=None,
                         bestof=None,
                         hover_title=None,
-                        class_=None):
+                        class_=None,
+                        is_download=False,
+                        mime_type=None):
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -2636,6 +2642,8 @@ class html(ABCHTMLGenerator):
 
         self.open_a(href=url,
                     title=hover_title,
+                    download="" if is_download else None,
+                    type=mime_type,
                     onclick="cmk.utils.count_context_button(this);" if bestof else None)
 
         if icon:
@@ -2740,7 +2748,9 @@ class html(ABCHTMLGenerator):
                            style=None,
                            target=None,
                            cssclass=None,
-                           class_=None):
+                           class_=None,
+                           is_download=False,
+                           mime_type=None):
         # Same API as other elements: class_ can be a list or string/None
         classes = []
         if cssclass:
@@ -2759,7 +2769,9 @@ class html(ABCHTMLGenerator):
                 'target': target if target else '',
                 'href': url if not onclick else "javascript:void(0)",
                 'onfocus': "if (this.blur) this.blur();",
-                'onclick': onclick
+                'onclick': onclick,
+                'download': "" if is_download else None,
+                'type': mime_type
             })
 
     def icon_button(self, *args, **kwargs):

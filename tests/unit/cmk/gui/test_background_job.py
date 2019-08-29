@@ -4,6 +4,7 @@ import multiprocessing
 import sys
 import pytest  # type: ignore
 import testlib  # type: ignore
+import six
 
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
@@ -39,7 +40,7 @@ def test_registered_background_jobs():
 def test_registered_background_jobs_attributes():
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
-        assert isinstance(job_class.gui_title(), unicode)
+        assert isinstance(job_class.gui_title(), six.text_type)
 
 
 @pytest.fixture(autouse=True)

@@ -87,7 +87,7 @@ node {
                         ])
                     }
 
-                    THEME_LIST = ["classic", "facelift"]
+                    THEME_LIST = ["classic", "facelift", "modern-dark"]
                     switch(EDITION) {
                         case 'raw':
                             AGENT_LIST = ["windows", "windows-legacy"]

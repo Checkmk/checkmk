@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import locale
 import pytest  # type: ignore
 from testlib import import_module
 import six
@@ -276,7 +277,7 @@ def test_ip_in_subnetwork(mk_logwatch):
 @pytest.mark.parametrize("buff,encoding,position", [
     ('\xFE\xFF', 'utf_16_be', 2),
     ('\xFF\xFE', 'utf_16', 2),
-    ('no encoding in this file!', 'utf_8', 0),
+    ('no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)

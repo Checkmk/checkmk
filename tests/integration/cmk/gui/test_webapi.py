@@ -10,6 +10,7 @@ from StringIO import StringIO
 import subprocess
 import sys
 import time
+import six
 
 import pytest  # type: ignore
 from PIL import Image  # type: ignore
@@ -412,8 +413,8 @@ def test_write_host_labels(web, site):
         }
 
         for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
-            assert isinstance(label_id, unicode)
-            assert isinstance(label_value, unicode)
+            assert isinstance(label_id, six.text_type)
+            assert isinstance(label_value, six.text_type)
 
     finally:
         web.delete_hosts(["test-host-lan"])

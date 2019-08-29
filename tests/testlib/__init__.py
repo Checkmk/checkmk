@@ -22,6 +22,7 @@ import json
 import fcntl
 from contextlib import contextmanager
 from urlparse import urlparse
+import six
 
 import pathlib2 as pathlib
 import pytest  # type: ignore
@@ -1837,7 +1838,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, unicode)
+        assert isinstance(result, six.text_type)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):

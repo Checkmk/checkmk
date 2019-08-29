@@ -32,6 +32,7 @@ import sys
 import struct
 import termios
 import io
+import six
 
 if sys.stdout.isatty():
     red = '\033[31m'
@@ -132,6 +133,6 @@ def _row_template(lengths, colors, indent):
 
 
 def _make_utf8(x):
-    if isinstance(x, unicode):
+    if isinstance(x, six.text_type):
         return x.encode('utf-8')
     return str(x)

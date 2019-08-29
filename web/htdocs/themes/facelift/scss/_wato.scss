@@ -1131,7 +1131,7 @@ table.data tr.data.dcd_log_entries {
       div.exc {
         padding: 5px;
         margin: 10px;
-        border: 1px solid #ff0000;
+        border: 1px solid #f00;
       }
     }
 
@@ -1359,6 +1359,7 @@ table.data td.bi_rule_tree {
     &.diag_success {
       background-color: $host-diag-success-bg-color;
     }
+
     &.diag_failed {
       background-color: $host-diag-failed-bg-color;
     }
@@ -1549,11 +1550,6 @@ table.nform.rulesettings td.legend {
     position: absolute;
     right: 0;
     background: transparent;
-  }
-
-  td.state.acknowledged {
-    background-image: url("images/white_60percent.png");
-    background-repeat: repeat;
   }
 
   tr.ac_test_details td a {

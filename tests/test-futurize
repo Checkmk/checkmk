@@ -35,9 +35,6 @@ ENABLED_FIXERS=
 #---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_asserts"
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_buffer"
-# from futurize docs: perhaps not safe
-#---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
 # No diff, this fixer fixes:
 #   mypkg/
@@ -53,17 +50,11 @@ ENABLED_FIXERS+=" lib2to3.fixes.fix_import"
 #   from mypkg.collections import deque
 # In Python 3 the former one is recommended.
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
-# Called by libfuturize.fixes.fix_future_standard_library
-#---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_imports2"
 # futurize does not handle this yet. Fix incompatible imports and module
 # references that must be fixed after fix_imports. No diff; maps:
 #   'whichdb' to 'dbm' (whichdb included in dbm)
 #	'anydbm' to 'dbm' (anydbm included in dbm)
-#---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
-# Unknown fixer
 #---------------------------------------------------------------------------
 ENABLED_FIXERS+=" lib2to3.fixes.fix_set_literal"
 #---------------------------------------------------------------------------
@@ -192,9 +183,6 @@ ENABLED_FIXERS+=" libpasteurize.fixes.fix_newstyle"
 #ENABLED_FIXERS+=" libfuturize.fixes.fix_xrange_with_import"
 # from builtins import range
 #---------------------------------------------------------------------------
-#ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
-# unicode (Python2) -> str (Python 3)
-#---------------------------------------------------------------------------
 ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
 #+  from __future__ import print_function
 #-    print "Foo"
@@ -218,6 +206,19 @@ ENABLED_FIXERS+=" libfuturize.fixes.fix_print_with_import"
 #---------------------------------------------------------------------------
 
 # *** Useless fixers ***
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_imports"
+# Called by libfuturize.fixes.fix_future_standard_library
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_reload"
+# Unknown fixer
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" lib2to3.fixes.fix_buffer"
+# from futurize docs: perhaps not safe
+#---------------------------------------------------------------------------
+#ENABLED_FIXERS+=" libfuturize.fixes.fix_unicode_keep_u"
+# unicode (Python2) -> str (Python 3)
+# unicode will be removed and marked as bad-function in .pylintrc
 #---------------------------------------------------------------------------
 # lib2to3.fixes.fix_ws_comma
 # This performs cosmetic changes. This is not applied by default because it

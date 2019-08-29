@@ -149,7 +149,6 @@ try {
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
                                 cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
-                                cp -r /omd/sites/${OMD_SITE}/var/log $DISTRO/
                                 chown -R 112:120 $DISTRO
                             """
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"

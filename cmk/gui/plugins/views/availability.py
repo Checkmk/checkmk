@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 import time
 import itertools
+import six
 
 import cmk
 import cmk.gui.config as config
@@ -1069,6 +1070,6 @@ def av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    if isinstance(filename, unicode):
+    if isinstance(filename, six.text_type):
         filename = filename.encode("utf-8")
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename

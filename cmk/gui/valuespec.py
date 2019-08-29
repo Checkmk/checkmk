@@ -202,7 +202,7 @@ class FixedValue(ValueSpec):
     def value_to_text(self, value):
         if self._totext is not None:
             return self._totext
-        elif isinstance(value, unicode):
+        elif isinstance(value, six.text_type):
             return value
         return str(value)
 
@@ -4344,14 +4344,16 @@ class Labels(ValueSpec):
 
     def validate_value(self, value, varprefix):
         for k, v in value.iteritems():
-            if not isinstance(k, unicode):
+            if not isinstance(k, six.text_type):
                 raise MKUserError(
                     varprefix,
-                    _("The label ID %r is of type %s, but should be unicode") % (k, type(k)))
-            if not isinstance(v, unicode):
+                    _("The label ID %r is of type %s, but should be %s") %
+                    (k, type(k), six.text_type))
+            if not isinstance(v, six.text_type):
                 raise MKUserError(
                     varprefix,
-                    _("The label value %r is of type %s, but should be unicode") % (k, type(v)))
+                    _("The label value %r is of type %s, but should be %s") %
+                    (k, type(v), six.text_type))
 
     def value_to_text(self, value):
         from cmk.gui.view_utils import render_labels

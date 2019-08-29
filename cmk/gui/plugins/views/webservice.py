@@ -26,6 +26,7 @@
 
 import json
 import time
+import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -112,7 +113,7 @@ class JSONLayout(Layout):
                     pass
 
                 else:
-                    if isinstance(content, unicode):
+                    if isinstance(content, six.text_type):
                         content = content.encode("utf-8")
                     else:
                         content = "%s" % content
@@ -146,7 +147,7 @@ class LayoutJSONExport(JSONLayout):
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         filename = '%s-%s.json' % (view['name'],
                                    time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-        if isinstance(filename, unicode):
+        if isinstance(filename, six.text_type):
             filename = filename.encode("utf-8")
         html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 

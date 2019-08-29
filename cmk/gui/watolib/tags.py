@@ -28,6 +28,7 @@
 import os
 import errno
 from pathlib2 import Path
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -322,7 +323,7 @@ def _format_php(data, lvl=1):
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
         s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, unicode):
+    elif isinstance(data, six.text_type):
         s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'

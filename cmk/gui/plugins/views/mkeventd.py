@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import six
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.config as config
@@ -139,7 +140,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = 0.0
             elif isinstance(row[key], str):
                 row[key] = ""
-            elif isinstance(row[key], unicode):
+            elif isinstance(row[key], six.text_type):
                 row[key] = u""
 
 

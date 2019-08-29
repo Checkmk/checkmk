@@ -71,6 +71,16 @@ div.floatfilter {
     background-color: rgba(160, 181, 190, 0.6);
     border-radius: 5px;
     color: black;
+
+    .select2-container .select2-selection--single {
+        height: 22px;
+
+        .select2-selection__arrow{
+            b{
+                margin-top: -4px;
+            }
+        }
+    }
 }
 
 body.main.screenshotmode div.floatfilter {

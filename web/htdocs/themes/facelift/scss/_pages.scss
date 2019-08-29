@@ -552,6 +552,10 @@ table.data {
       font-family: sans-serif;
       font-weight: bold;
       text-align: right;
+
+      &[class*="state"] {
+        border-color: $data-table-td-count-state-border-color;
+      }
     }
 
     &.number {
@@ -616,7 +620,7 @@ table.data {
 
       &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
-        border-radius: $last-child-border-radius;
+        border-radius: $table-cell-last-child-border-radius;
       }
 
       &:only-child {

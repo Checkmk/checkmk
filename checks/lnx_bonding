@@ -112,7 +112,7 @@ def _convert_to_generic(bonds):
             "mode": status["main"]["Bonding Mode"].split('(')[0].strip(),
             "interfaces": interfaces,
         }
-        if "802.3ad info" in status:
+        if "Aggregator ID" in status.get("802.3ad info", ()):
             converted[bond]["aggregator_id"] = status["802.3ad info"]["Aggregator ID"]
 
         if "Currently Active Slave" in status["main"]:

@@ -29,6 +29,7 @@
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
 import logging
+from io import open
 
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE
@@ -55,8 +56,8 @@ def compress_history_file(input_path, output_path):
     known_services = {}
     machine_state = "START"
 
-    output = file(output_path, "w")
-    for line in file(input_path):
+    output = open(output_path, "w", encoding="utf-8")
+    for line in open(input_path, encoding="utf-8"):
         skip_this_line = False
         timestamp = int(line[1:11])
         line_type, host, service = parse_history_line(line)

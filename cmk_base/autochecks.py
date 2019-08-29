@@ -29,6 +29,7 @@ from typing import Iterator, Any, Dict, Union, Tuple, Text, Optional, List  # py
 import os
 import sys
 import ast
+from io import open
 from pathlib2 import Path
 import six
 
@@ -144,9 +145,9 @@ class AutochecksManager(object):
         check_config = config.get_check_variables()
         try:
             cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
-            autochecks_raw = eval(
-                file(filepath).read().decode("utf-8"), check_config,
-                check_config)  # type: List[Dict]
+            autochecks_raw = eval(open(filepath, encoding="utf-8").read(),
+                                  check_config)  # type: List[Dict]
+
         except SyntaxError as e:
             cmk_base.console.verbose("Syntax error in file %s: %s\n",
                                      filepath,
@@ -212,7 +213,7 @@ def parse_autochecks_file(hostname):
     services = []  # type: List[DiscoveredService]
 
     try:
-        tree = ast.parse(open(path).read())
+        tree = ast.parse(open(path, encoding="utf-8").read())
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise

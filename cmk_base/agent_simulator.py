@@ -26,12 +26,13 @@
 
 from __future__ import division
 import math
+from io import open
 
 import cmk.utils.debug
 
 
 def our_uptime():
-    return float((file("/proc/uptime").read().split()[0]))
+    return float((open("/proc/uptime", encoding="utf-8").read().split()[0]))
 
 
 # replace simulator tags in output

@@ -4361,9 +4361,11 @@ class Labels(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.help(self.help())
+        # tagify outputs a warning for value of "[]" right now
+        # see: https://github.com/yairEO/tagify/pull/275
+        labels = _encode_labels_for_tagify(value.items())
         html.text_input(varprefix,
-                        default_value=json.dumps(_encode_labels_for_tagify(
-                            value.items())).decode("utf-8"),
+                        default_value=json.dumps(labels).decode("utf-8") if labels else "",
                         cssclass="labels",
                         attrs={
                             "placeholder": _("Add some label"),

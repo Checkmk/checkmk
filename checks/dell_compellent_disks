@@ -56,11 +56,8 @@ def parse_dell_compellent_disks(info):
     return parsed
 
 
-def check_dell_compellent_disks(item, _no_params, parsed):
-    data = parsed.get(item)
-    if data is None:
-        return
-
+@get_parsed_item_data
+def check_dell_compellent_disks(item, _no_params, data):
     dev_state, health, health_message, enclosure, serial = data
     state, state_readable = dell_compellent_dev_state_map(dev_state)
     yield state, "Status: %s" % state_readable

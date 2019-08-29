@@ -48,8 +48,8 @@ def _docker_get_bytes(string):
             'MB': 10**6,
             'KB': 10**3,
             'kB': 10**3,
-            'B' : 1,
-            ''  : 1,
+            'B': 1,
+            '': 1,
         }[unit_string]
         return int(float(value_string) * factor)
     except (ValueError, TypeError):
@@ -75,6 +75,12 @@ def _get_repo_tag(string):
     return string, "latest"
 
 
+def _fix_keys(dictionary, map_keys):
+    for old, new in map_keys:
+        if old in dictionary:
+            dictionary[new] = dictionary.pop(old)
+
+
 def parse_docker_node_info(info):
     '''parse output of "docker info"'''
     if not info:
@@ -90,9 +96,17 @@ def parse_docker_node_info(info):
     except ValueError:
         pass
 
+    # changes in 19.03.01
+    start_index = 0
+    if info[0][0] == "|Client":
+        try:
+            start_index = info.index(["|Server", ""]) + 1
+        except ValueError:
+            pass
+
     parsed = {}
     prefix = ""
-    for row in info:
+    for row in info[start_index:]:
         if not row:
             continue
         # remove '|', it was protecting leading whitespace
@@ -111,9 +125,14 @@ def parse_docker_node_info(info):
         else:
             parsed[prefix + key] = value
 
+    # changes in 19.03.01
+    _fix_keys(parsed, (("Running", "ContainersRunning"), ("Stopped", "ContainersStopped"),
+                       ("Paused", "ContainersPaused"), ("Managers", "SwarmManagers"),
+                       ("NodeID", "SwarmNodeID")))
+
     ## some modifications to match json output:
-    for key in ("Images", "Containers", "ContainersRunning",
-                "ContainersStopped", "ContainersPaused"):
+    for key in ("Images", "Containers", "ContainersRunning", "ContainersStopped",
+                "ContainersPaused"):
         try:
             parsed[key] = int(parsed[key])
         except (KeyError, ValueError):
@@ -179,7 +198,6 @@ def _docker_parse_table(rows, fields, keys):
 
 
 def parse_docker_system_df(info):
-
     def int_or_zero(s):
         return int(s.strip() or 0)
 
@@ -236,8 +254,7 @@ def parse_docker_subsection_image_labels(info):
 
     table = _get_json_list(info)
 
-    return {_docker_trunc_id(long_id): data
-            for long_id, data in table if data is not None}
+    return {_docker_trunc_id(long_id): data for long_id, data in table if data is not None}
 
 
 def parse_docker_subsection_image_inspect(info):
@@ -284,6 +301,7 @@ def parse_docker_messed_up_labels(string):
         for chunk in string.split('='):
             for item in chunk.rsplit(',', 1):
                 yield item
+
     toggler = toggle_key_value()
     return dict(zip(toggler, toggler))
 
@@ -319,8 +337,7 @@ def parse_docker_node_images(info):
         if image is not None and labels is not None:
             image["__labels__"].update(labels)
 
-    mapping = {(i['Repository'], i['Tag']): i['ID']
-               for i in images.itervalues()}
+    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
 
     for cont in containers.itervalues():
         image_id = mapping.get((cont["Repository"], cont["Tag"]))

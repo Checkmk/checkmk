@@ -1,0 +1,11 @@
+Title: check_icmp: Bug fix for connecting option IPv6
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1566896121
+
+This implementation fixes the problem where the IPv6 ping option was not correctly supported. In the default case, the check now correctly takes the configurations from the host in order to execute the ping.

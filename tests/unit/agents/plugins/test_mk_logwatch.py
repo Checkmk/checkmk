@@ -6,6 +6,7 @@ import re
 import sys
 import pytest  # type: ignore
 from testlib import import_module
+import six
 
 
 @pytest.fixture(scope="module")
@@ -293,7 +294,7 @@ def test_log_lines_iter(mk_logwatch):
     assert log_iter.get_position() == 710
 
     line = log_iter.next_line()
-    assert isinstance(line, unicode)
+    assert isinstance(line, six.text_type)
     assert line == u"# This file is part of Check_MK.\n"
     assert log_iter.get_position() == 743
 
@@ -381,7 +382,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
-    assert all(isinstance(item, unicode) for item in output)
+    assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert logfile in status

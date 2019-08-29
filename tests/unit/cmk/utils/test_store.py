@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import os
+import six
 
 import pytest
 
@@ -61,7 +62,7 @@ def test_load_data_from_file_dict(tmp_path):
     data = store.load_data_from_file(str(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
-    assert isinstance(data["ä"], unicode)
+    assert isinstance(data["ä"], six.text_type)
     assert data["ä"] == u"ß"
 
 

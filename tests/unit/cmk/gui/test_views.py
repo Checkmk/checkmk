@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 import copy
 import pytest # type: ignore
+import six
 import cmk.gui.config as config
 
 # Make it load all plugins (CEE + CME)
@@ -153,7 +154,7 @@ def test_layout_properties():
 
     for ident, spec in expected.items():
         plugin = cmk.gui.plugins.views.layout_registry[ident]()
-        assert isinstance(plugin.title, unicode)
+        assert isinstance(plugin.title, six.text_type)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
         assert spec["hide"] == plugin.is_hidden

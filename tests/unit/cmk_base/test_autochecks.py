@@ -5,6 +5,7 @@ import pytest  # type: ignore
 from pathlib2 import Path
 from testlib import CheckManager
 from testlib.base import Scenario
+import six
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -119,7 +120,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     # Check that there are no str items (None, int, ...)
     assert all(not isinstance(s.item, str) for s in result)
     # All desriptions need to be unicode
-    assert all(isinstance(s.description, unicode) for s in result)
+    assert all(isinstance(s.description, six.text_type) for s in result)
 
 
 def test_parse_autochecks_file_not_existing():

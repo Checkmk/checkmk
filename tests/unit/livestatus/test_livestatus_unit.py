@@ -2,6 +2,7 @@
 import errno
 import socket
 import ssl
+import six
 from contextlib import closing
 try:
     from pathlib import Path  # Py3 first
@@ -65,7 +66,7 @@ def test_lqencode(query_part):
 ])
 def test_quote_dict(inp, expected_result):
     result = livestatus.quote_dict(inp)
-    assert isinstance(result, unicode)
+    assert isinstance(result, six.text_type)
     assert result == expected_result
 
 

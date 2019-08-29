@@ -26,6 +26,7 @@
 
 from __future__ import division
 import time
+import six
 from cmk.utils.regex import regex
 
 import cmk.utils.defines as defines
@@ -1728,7 +1729,7 @@ class NodeRenderer(object):
             except UnicodeDecodeError:
                 text = value
             html.write_text(text)
-        elif isinstance(value, unicode):
+        elif isinstance(value, six.text_type):
             html.write_text(value)
         elif isinstance(value, int):
             html.write(str(value))

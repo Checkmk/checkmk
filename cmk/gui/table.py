@@ -27,6 +27,7 @@
 from contextlib import contextmanager
 import re
 import json
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -141,7 +142,7 @@ class Table(object):
         else:
             if isinstance(text, HTML):
                 text = "%s" % text
-            if not isinstance(text, unicode):
+            if not isinstance(text, six.text_type):
                 text = str(text)
 
         htmlcode = text + html.drain()

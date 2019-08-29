@@ -2027,7 +2027,7 @@ class EmptyCell(Cell):
 def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    if isinstance(filename, unicode):
+    if isinstance(filename, six.text_type):
         filename = filename.encode("utf-8")
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 

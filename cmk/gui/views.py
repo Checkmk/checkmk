@@ -2195,7 +2195,7 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                if isinstance(command, unicode):
+                if isinstance(command, six.text_type):
                     command = command.encode("utf-8")
 
                 executor(command, site)

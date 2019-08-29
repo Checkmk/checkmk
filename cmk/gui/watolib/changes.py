@@ -30,6 +30,7 @@ import errno
 import os
 import time
 from typing import Dict, List  # pylint: disable=unused-import
+import six
 
 import pathlib2 as pathlib
 
@@ -78,7 +79,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     )
 
     # TODO: once we know all of these are unicode, remove this line
-    write_tokens = (t if isinstance(t, unicode) else t.encode("utf-8") for t in write_tokens)
+    write_tokens = (t if isinstance(t, six.text_type) else t.encode("utf-8") for t in write_tokens)
 
     store.makedirs(audit_log_path.parent)
     with audit_log_path.open(mode="a", encoding='utf-8') as f:

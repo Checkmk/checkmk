@@ -543,10 +543,10 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if isinstance(base, unicode):
+        if isinstance(base, six.text_type):
             base = base.encode("utf-8")
 
-        if isinstance(filt, unicode):
+        if isinstance(filt, six.text_type):
             filt = filt.encode("utf-8")
 
         results = []

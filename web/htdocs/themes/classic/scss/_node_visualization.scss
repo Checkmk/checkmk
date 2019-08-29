@@ -209,6 +209,14 @@ div.node_vis .state2 {
     fill: #ff3232;
 }
 
+div.node_vis .state3 {
+    fill: #f91;
+}
+
+// State pending
+div.node_vis .state-1 {
+    fill: #888;
+}
 
 line.dashed, path.dashed{
   stroke-dasharray: 20 4;

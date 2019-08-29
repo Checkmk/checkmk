@@ -552,6 +552,10 @@ table.data {
       font-family: sans-serif;
       font-weight: bold;
       text-align: right;
+
+      &[class*="state"] {
+        border-color: $data-table-td-count-state-border-color;
+      }
     }
 
     &.number {
@@ -616,7 +620,7 @@ table.data {
 
       &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
-        border-radius: $last-child-border-radius;
+        border-radius: $table-cell-last-child-border-radius;
       }
 
       &:only-child {
@@ -669,13 +673,16 @@ table.data {
 
   th input.checkgroup {
     width: 16px;
-    height: 12px;
-    padding: 8px;
+    height: 16px;
+    padding: 4px;
     margin: 0;
-    font-size: 7px;
+    margin-left: 11px;
+    font-size: 10px;
+    font-weight: bold;
     line-height: 5px;
     text-align: center;
     vertical-align: middle;
+    cursor: pointer;
   }
 
   /* TODO: Reproduce this html element */
@@ -1156,12 +1163,8 @@ table.nform {
     }
   }
 
-  > tbody > tr td, a {
+  > tbody > tr td {
     color: $primary-font-color;
-  }
-
-  a:hover {
-    text-decoration: none;
   }
 
   > tbody > tr > td {
@@ -1257,7 +1260,7 @@ table.nform {
     }
 
     &.button {
-      margin: 0 5px 0 0;
+      margin: 1px 5px 0 0;
     }
   }
 

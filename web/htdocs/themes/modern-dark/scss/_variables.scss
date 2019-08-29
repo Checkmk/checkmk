@@ -129,7 +129,7 @@ $theme-color-perfometer-title:              $grey-7;
 // Tables
 
 $theme-color-table-border:                  $grey-7; // grey
-$theme-color-table-background:              #fafafa; // light grey
+$theme-color-table-background:              $grey-6; // light grey
 
 $theme-color-table-border-dark:             $grey-7; // dark grey
 $theme-color-table-background-dark:         #1c2528; // dark grey
@@ -205,7 +205,7 @@ $tag-dropdown-active-bg-color:		    $grey-3;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-$primary-bg-color:			    $grey-3;
+$primary-bg-color:			        $grey-3;
 $secondary-bg-color:			    $grey-6;
 
 $primary-font-color:			    $grey-1;
@@ -222,7 +222,7 @@ $primary-th-bg-color:			    $grey-7;
 $primary-td-bg-color:			    $grey-6;
 
 $primary-box-shadow:			    none;
-$primary-border-radius:			    0;
+$primary-border-radius:			    4px;
 
 $dashboard-stats-bg-color:		    transparent;
 $dashboard-tr-border-bottom:		    2px solid $grey-7;
@@ -374,7 +374,7 @@ $mk-search-results-bg-color:		    $grey-3;
 $mk-search-results-hover-bg-color:	    rgb(93, 93, 93);
 $mk-search-results-border:		    $primary-border;
 
-$repprogress-msg-color:			    rgb(100, 100, 100,);
+$repprogress-msg-color:			    rgb(100, 100, 100);
 $repprogress-progress-bg-color:		    rgb(105, 156, 170);	// darkened state6 bg color
 $repprogress-progress-border-color:	    rgb(111, 180, 198); // darkened nuance17
 
@@ -429,3 +429,16 @@ $node-vis-menu-bg-color:		    $grey-5;
 $node-vis-history-bg-color:		    $grey-1;
 $node-vis-history-border-color:		    $grey-1;
 $node-vis-history-filter:		    invert(70%);
+
+// Added by Baris - Review with Kenneth
+$availability-data-table-border:		        $wato-data-table-border;
+$availability-data-th-bg-color:		            $wato-data-th-bg-color;
+$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$data-table-td-count-state-border-color:        $grey-7!important;
+
+$timelineevents-data-table-border:		        $wato-data-table-border;
+$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
+$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$table-cell-last-child-border-radius:           0;

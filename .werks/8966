@@ -1,0 +1,11 @@
+Title: Check_MK check: Better differentiability of graph colors
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b8
+Date: 1567059744
+
+In the Check_MK check graph it was sometimes hard to distinguish between different graph colors. The 'Time spent waiting for ...'-graphs are now better differentiable.

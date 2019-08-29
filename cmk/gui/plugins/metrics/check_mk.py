@@ -2772,13 +2772,13 @@ metric_info["livestatus_overflows_rate"] = {
 metric_info["cmk_time_agent"] = {
     "title": _("Time spent waiting for Check_MK agent"),
     "unit": "s",
-    "color": "35/a",
+    "color": "36/a",
 }
 
 metric_info["cmk_time_snmp"] = {
     "title": _("Time spent waiting for SNMP responses"),
     "unit": "s",
-    "color": "36/a",
+    "color": "32/a",
 }
 
 metric_info["cmk_time_ds"] = {

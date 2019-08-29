@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import six
 from cmk.gui.htmllib import HTML
 
 
@@ -46,11 +47,11 @@ def test_class_HTML():
     assert ''.join(map(unicode, [A, B])) == A + B
 
     assert isinstance(A, HTML), type(A)
-    #    assert isinstance(A, unicode), type(A)
+    #    assert isinstance(A, six.text_type), type(A)
     assert not isinstance(A, str), type(A)
-    assert isinstance(unicode(A), unicode), unicode(A)
+    assert isinstance(u"%s" % A, six.text_type), u"%s" % A
     # One day we will fix this!
-    assert isinstance(unicode(A), unicode), unicode(A)
+    assert isinstance(u"%s" % A, six.text_type), u"%s" % A
     assert isinstance(A + B, HTML), type(A + B)
     assert isinstance(HTML('').join([A, B]), HTML)
     assert isinstance(HTML().join([A, B]), HTML)
@@ -91,7 +92,7 @@ def test_class_HTML():
     assert A != B
 
     assert isinstance(HTML(HTML(A)), HTML)
-    assert isinstance("%s" % HTML(HTML(A)), unicode)
+    assert isinstance("%s" % HTML(HTML(A)), six.text_type)
 
     assert isinstance(A, HTML)
     A += (" JO PICASSO! ")
@@ -99,14 +100,14 @@ def test_class_HTML():
 
     assert isinstance(A + "TEST", HTML)
 
-    assert isinstance("TEST%s" % A, unicode)
+    assert isinstance("TEST%s" % A, six.text_type)
 
     assert "test" + C == "test" + c
 
     assert D == d
     assert "%s" % D == "%s" % d
-    assert isinstance(u"%s" % D, unicode)
-    assert isinstance("%s" % D, unicode)
+    assert isinstance(u"%s" % D, six.text_type)
+    assert isinstance("%s" % D, six.text_type)
 
     E = A + B
     e = "%s" % E

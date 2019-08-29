@@ -389,6 +389,7 @@ td.perfometer {
     width: 120px;
     height: 22px;
     margin-bottom: 1px;
+    background-image: url(images/perfometer-bg.png);
   }
 
   table {
@@ -485,7 +486,7 @@ table.data {
     color: $theme-color-text;
   }
 
-  td.state {
+  td.state{
     border-top: none;
   }
 }

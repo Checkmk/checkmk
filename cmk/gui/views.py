@@ -1801,16 +1801,29 @@ def _show_context_links(view, show_filters, enable_commands, enable_checkboxes, 
             html.context_button(_("Export as PDF"),
                                 html.makeuri([], filename="report_instant.py"),
                                 "report",
-                                class_="context_pdf_export")
+                                class_="context_pdf_export",
+                                mime_type="application/pdf",
+                                is_download=True)
 
         # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
-            html.context_button(linktitle,
-                                url=uri,
-                                icon=icon,
-                                id_=buttonid,
-                                bestof=config.context_buttons_to_show)
+            # HACK: Fix this SOON! If the uri starts with "report.py?" it always provides some kind of pdf download
+            #       Those download links require a mime_type and the download option set
+            if uri and uri.startswith("report.py?"):
+                html.context_button(linktitle,
+                                    url=uri,
+                                    icon=icon,
+                                    id_=buttonid,
+                                    mime_type="application/pdf",
+                                    is_download=True,
+                                    bestof=config.context_buttons_to_show)
+            else:
+                html.context_button(linktitle,
+                                    url=uri,
+                                    icon=icon,
+                                    id_=buttonid,
+                                    bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):

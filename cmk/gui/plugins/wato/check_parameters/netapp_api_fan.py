@@ -38,7 +38,7 @@ from cmk.gui.plugins.wato import (
 
 
 @rulespec_registry.register
-class RulespecInventoryIpmiRules(ABCHostValueRulespec):
+class RulespecInventoryNetappFanRules(ABCHostValueRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

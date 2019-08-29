@@ -257,7 +257,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         try:
             on_refresh = self.on_refresh()
             if on_refresh:
-                return 'function() {%s}' % on_refresh
+                return '(function() {%s})' % on_refresh
             return '"%s"' % self._add_wato_folder_to_url(url)  # url to dashboard_dashlet.py
         except Exception:
             # Ignore the exceptions in non debug mode, assuming the exception also occures

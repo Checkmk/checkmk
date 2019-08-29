@@ -112,6 +112,12 @@ def _legacy_docker_trunk_id(hash_string):
     return long_id[:12]
 
 
+def _legacy_map_keys(dictionary, map_keys):
+    for old, new in map_keys:
+        if old in dictionary:
+            dictionary[new] = dictionary.pop(old)
+
+
 def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     '''parse output of "docker info"'''
     parsed = DeprecatedDict()
@@ -128,8 +134,16 @@ def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     except ValueError:
         pass
 
+    # changes in 19.03.01
+    start_index = 0
+    if info[0][0] == "|Client":
+        try:
+            start_index = info.index(["|Server", ""]) + 1
+        except ValueError:
+            pass
+
     prefix = ""
-    for row in info:
+    for row in info[start_index:]:
         if not row:
             continue
         # remove '|', it was protecting leading whitespace
@@ -147,6 +161,11 @@ def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
             prefix = key
         else:
             parsed[prefix + key] = value
+
+    # changes in 19.03.01
+    _legacy_map_keys(parsed, (("Running", "ContainersRunning"), ("Stopped", "ContainersStopped"),
+                              ("Paused", "ContainersPaused"), ("Managers", "SwarmManagers"),
+                              ("NodeID", "SwarmNodeID")))
 
     ## some modifications to match json output:
     for key in ("Images", "Containers", "ContainersRunning", "ContainersStopped",
@@ -214,12 +233,6 @@ def _legacy_docker_parse_table(rows, keys):
         table.append(line)
 
     return table
-
-
-def _legacy_map_keys(dictionary, map_keys):
-    for old, new in map_keys:
-        if old in dictionary:
-            dictionary[new] = dictionary.pop(old)
 
 
 def parse_legacy_docker_system_df(info):

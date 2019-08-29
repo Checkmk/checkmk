@@ -291,6 +291,83 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
             }),
         (
             [
+                [u'|Client', u''],
+                [u'| Debug Mode', u' false'],
+                [u'|'],
+                [u'|Server', u''],
+                [u'| Containers', u' 5'],
+                [u'| Running', u' 1'],
+                [u'| Paused', u' 0'],
+                [u'| Stopped', u' 4'],
+                [u'| Images', u' 4'],
+                [u'| Server Version', u' 19.03.1'],
+                [u'| Storage Driver', u' overlay2'],
+                [u'| Backing Filesystem', u' extfs'],
+                [u'| Supports d_type', u' true'],
+                [u'| Native Overlay Diff', u' true'],
+                [u'| Logging Driver', u' json-file'],
+                [u'| Cgroup Driver', u' cgroupfs'],
+                [u'| Plugins', u''],
+                [u'| Volume', u' local'],
+                [u'| Network', u' bridge host ipvlan macvlan null overlay'],
+                [
+                    u'| Log',
+                    u' awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog'
+                ],
+                [u'| Swarm', u' inactive'],
+                [u'| Runtimes', u' runc'],
+                [u'| Default Runtime', u' runc'],
+                [u'| Init Binary', u' docker-init'],
+                [u'| containerd version', u' 894b81a4b802e4eb2a91d1ce216b8817763c29fb'],
+                [u'| runc version', u' 425e105d5a03fabd737a126ad93d62a9eeede87f'],
+                [u'| init version', u' fec3683'],
+                [u'| Security Options', u''],
+                [u'| apparmor'],
+                [u'| seccomp'],
+                [u'| Profile', u' default'],
+                [u'| Kernel Version', u' 4.15.0-58-generic'],
+                [u'| Operating System', u' Ubuntu 18.04.3 LTS'],
+                [u'| OSType', u' linux'],
+                [u'| Architecture', u' x86_64'],
+                [u'| CPUs', u' 8'],
+                [u'| Total Memory', u' 15.54GiB'],
+                [u'| Name', u' klappson'],
+                [
+                    u'| ID', u' VAW5', u'RDCA', u'ATG7', u'24TV', u'Q7IJ', u'L33R', u'U5MX',
+                    u'XKXN', u'Z77K', u'AR22', u'QUE6', u'3JGL'
+                ],
+                [u'| Docker Root Dir', u' /var/lib/docker'],
+                [u'| Debug Mode', u' false'],
+                [u'| Registry', u' https', u'//index.docker.io/v1/'],
+                [u'| Labels', u''],
+                [u'| Experimental', u' false'],
+                [u'| Insecure Registries', u''],
+                [u'| 127.0.0.0/8'],
+                [u'| Live Restore Enabled', u' false'],
+                [u'|'],
+            ],
+            {
+                # needed for inventory:
+                "ServerVersion": "19.03.1",  # -> version
+                "IndexServerAddress": "https://index.docker.io/v1/",  # -> registry
+                "Swarm": {
+                    "LocalNodeState": "inactive",
+                },
+                "Containers": 5,
+                "ContainersRunning": 1,
+                "ContainersStopped": 4,
+                "ContainersPaused": 0,
+                "Images": 4,
+                "Labels": [],
+                # needed for check:
+                "Name": "klappson",
+                "Containers": 5,
+                "ContainersRunning": 1,
+                "ContainersStopped": 4,
+                "ContainersPaused": 0,
+            }),
+        (
+            [
                 [
                     '{"ID":"UY52:B5IQ:QBD5:M36B:EKTQ:ZR6X:NJLK:QDLG:ZFOE:KPXB:YXJK:4OAV",'
                     '"Containers":2,"ContainersRunning":1,"ContainersPaused":0,'

@@ -1,0 +1,13 @@
+Title: docker_node_info: Support yet another output format
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1567083031
+Class: fix
+
+The docker command line client version 19.03.1 has again changed the output format,
+resulting in several KeyErrors.
+
+Users who are using the mk_docker.py plugin shipped with Checkmk version 1.6 where not affected.

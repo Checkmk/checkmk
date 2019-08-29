@@ -40,25 +40,29 @@ JenkinsJobInfo = collections.namedtuple("job_info", [
 ])
 
 MAP_JOB_STATES = {
-    "aborted": 1,
-    "aborted_anime": 1,
+    "aborted": 0,
+    "aborted_anime": 0,
     "blue": 0,
     "blue_anime": 0,  # running
+    "disabled": 0,
+    "disabled_anime": 0,
+    "grey": 0,
+    "grey_anime": 0,
+    "notbuilt": 0,
+    "notbuilt_anime": 0,
     "red": 2,
     "red_anime": 1,
-    "notbuilt": 0,
     "yellow": 1,
+    "yellow_anime": 1,
 }
 
 MAP_BUILD_STATES = {
-    "0": 0,  # notbuilt
-    "ABORTED": 1,
-    "FAILURE": 2,
+    "SUCCESS": 0,  # no errors
+    "UNSTABLE": 1,  # some errors but not fatal
+    "FAILURE": 2,  # fatal error
+    "ABORTED": 0,  # manually aborted
+    "null": 1,  # module was not built
     "None": 0,  # running
-    "SUCCESS": 0,
-    "UNSTABLE": 1,
-    "null": 1,
-    "-1": 0,
 }
 
 
@@ -75,7 +79,7 @@ def parse_jenkins_jobs(info):
 
 @get_parsed_item_data
 def check_jenkins_jobs(item, params, item_data):
-    yield MAP_JOB_STATES[item_data[0].state], "State: %s" % item_data[0].state
+    yield MAP_JOB_STATES[item_data[0].state], "State: %s" % item_data[0].state.title()
 
     time_since_last_suc = None
     if item_data[0].last_suc_build:
@@ -107,13 +111,13 @@ def check_jenkins_jobs(item, params, item_data):
                                human_readable_func=hr_func,
                                infoname=infotext)
         else:
-            yield 0, "%s: not present" % infotext
+            yield 0, "%s: N/A" % infotext
 
     if item_data[0].build_result:
         yield MAP_BUILD_STATES[
             item_data[0].build_result], "Build result: %s" % item_data[0].build_result.title()
     else:
-        yield 0, "Build reult: not present"
+        yield 0, "Build reult: N/A"
 
 
 def handle_single_job(job):

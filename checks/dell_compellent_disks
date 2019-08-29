@@ -36,32 +36,43 @@
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.11.1 1
 # .1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.11.2 1
 
+dell_compellent_disks_health_map = {
+    "1": (0, "healthy"),
+    "0": (2, "not healthy"),
+}
+
 
 def parse_dell_compellent_disks(info):
     # Need to be compatible with shared inventory function
-    parsed = []
-    for part in info:
-        for line in part:
-            if len(line) == 5:
-                parsed.append(line)
-    for part in info:
-        for idx, line in enumerate(part):
-            if len(line) == 1:
-                parsed[idx].append(line[0])
+    parsed = {}
+    disk_info, disk_serials = info
+    for idx, (number, status, health, health_message, enclosure) in enumerate(disk_info):
+        inst_data = [status, health, health_message, enclosure]
+        try:
+            inst_data.append(disk_serials[idx])
+        except IndexError:
+            inst_data.append(None)
+        parsed.setdefault(number, inst_data)
     return parsed
 
 
 def check_dell_compellent_disks(item, _no_params, parsed):
-    for number, status, health, health_message, enclosure, serial in parsed:
-        if number == item:
-            state, state_readable = dell_compellent_translate("ScStatus", status)
-            yield state, "Status: %s, Location: Enclosure %s, Serial number: %s" % \
-                                (state_readable, enclosure, serial)
+    data = parsed.get(item)
+    if data is None:
+        return
 
-            if not health_message == "":
-                state = dell_compellent_translate("Health", health)
-                yield state, "Health: %s, Health message: %s" % \
-                                (health, health_message)
+    dev_state, health, health_message, enclosure, serial = data
+    state, state_readable = dell_compellent_dev_state_map(dev_state)
+    yield state, "Status: %s" % state_readable
+
+    yield 0, "Location: Enclosure %s" % enclosure
+    if serial is not None:
+        yield 0, "Serial number: %s" % serial
+
+    if health_message:
+        health_state, health_state_readable = dell_compellent_disks_health_map.get(
+            health, (3, 'unknown[%s]' % health))
+        yield health_state, "Health: %s, Reason: %s" % (health_state_readable, health_message)
 
 
 check_info['dell_compellent_disks'] = {

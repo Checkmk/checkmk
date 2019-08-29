@@ -154,7 +154,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
         rowinfo = []
         while True:
             try:
-                line = line_iter.next().strip()
+                line = next(line_iter).strip()
             except StopIteration:
                 break
 
@@ -172,7 +172,7 @@ class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
             if value == '"' or (len(value) > 1 and value[0] == '"' and
                                 (value[-1] != '"')):  # to be continued
                 while True:  # scan for end of this dataset
-                    nextline = line_iter.next().strip()
+                    nextline = next(line_iter).strip()
                     value += " " + nextline
                     if value[-1] == '"':
                         break

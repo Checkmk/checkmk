@@ -76,13 +76,13 @@ def _load_user_scripts_from(adir):
                 try:
                     lines = file(path)
                     next(lines)
-                    line = lines.next().decode("utf-8").strip()
+                    line = next(lines).decode("utf-8").strip()
                     if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
-                        line = lines.next().strip()
+                        line = next(lines).strip()
                     if line.startswith("#"):
                         info["title"] = line.lstrip("#").strip().split("#", 1)[0]
                     while True:
-                        line = lines.next().strip()
+                        line = next(lines).strip()
                         if not line.startswith("#") or ":" not in line:
                             break
                         key, value = line[1:].strip().split(":", 1)

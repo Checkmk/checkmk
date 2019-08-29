@@ -1,0 +1,10 @@
+Title: quanta checks: Set custom levels Quanta Cloud Technology checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567082093
+Class: feature
+
+Your can now set custom levels for quanta checks like: quanta_fan / quanta_voltage / quanta_temperature. The code base was refactored for the Quanta Cloud Technology checks.

@@ -289,7 +289,9 @@ def do_update(core, with_precompile):
 
 
 def active_check_arguments(hostname, description, args):
-    if not isinstance(args, (str, unicode, list)):
+    if not isinstance(
+            args,
+        (six.binary_type, six.text_type, list)):  # TODO: Check if six.binary_type is necessary
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %

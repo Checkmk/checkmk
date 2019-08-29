@@ -3,6 +3,7 @@
 import subprocess
 import gettext
 import pytest
+import six
 from pathlib2 import Path
 from testlib import cmk_path
 
@@ -67,7 +68,7 @@ msgstr "%s"
 
 def test_underscore_without_localization():
     assert i18n.get_current_language() is None
-    assert isinstance(i18n._("bla"), unicode)
+    assert isinstance(i18n._("bla"), six.text_type)
     assert i18n._("bla") == u"bla"
 
 
@@ -91,7 +92,7 @@ def test_init_language_only_builtin():
     assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "bla"
 
 
@@ -102,7 +103,7 @@ def test_init_language_with_local_modification(local_translation):
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
 
@@ -113,13 +114,13 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
     # This string is localized in the standard file, not in the locally
     # overridden file
     translated = trans.ugettext("Age")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "Alter"
 
 
@@ -127,20 +128,20 @@ def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
 
     translated = trans.ugettext("pkg1")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "lala"
 
 
 def test_get_language_alias():
-    assert isinstance(i18n.get_language_alias(None), unicode)
+    assert isinstance(i18n.get_language_alias(None), six.text_type)
     assert i18n.get_language_alias(None) == "English"
 
-    assert isinstance(i18n.get_language_alias("de"), unicode)
+    assert isinstance(i18n.get_language_alias("de"), six.text_type)
     assert i18n.get_language_alias("de") == "German"
 
 
 def test_get_language_local_alias(local_translation):
-    assert isinstance(i18n.get_language_alias("de"), unicode)
+    assert isinstance(i18n.get_language_alias("de"), six.text_type)
     assert i18n.get_language_alias("de") == u"Äxtended German"
 
 

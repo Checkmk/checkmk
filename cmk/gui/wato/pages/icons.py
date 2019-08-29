@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import six
 
 import cmk.utils.paths
 import cmk.utils.store
@@ -130,7 +131,7 @@ class ModeIcons(WatoMode):
         im.info['Comment'] = icon_info['category']
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.iteritems():
-            if isinstance(v, (str, unicode)):
+            if isinstance(v, (six.binary_type, six.text_type)):
                 meta.add_text(k, v, 0)
 
         # and finally save the image

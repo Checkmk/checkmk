@@ -26,6 +26,7 @@
 import json
 import re
 import functools
+import six
 
 
 class DeprecatedDict(dict):
@@ -402,7 +403,9 @@ def parse_legacy_docker_node_images(subsections):
                 image["amount_containers"] += 1
 
         labels = cont.get("Labels")
-        if isinstance(labels, (str, unicode)):
+        if isinstance(
+                labels,
+            (six.binary_type, six.text_type)):  # TODO: Check if six.binary_type is necessary
             cont["Labels"] = parse_legacy_docker_messed_up_labels(labels)
 
     return DeprecatedDict((("images", images), ("containers", containers)))

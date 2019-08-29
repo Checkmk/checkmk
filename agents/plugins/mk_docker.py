@@ -31,13 +31,13 @@ At 'agents/cfg_examples/mk_docker.cfg' (relative to the check_mk
 source code directory ) you should find some example configuration
 files. For more information on possible configurations refer to the
 file docker.cfg in said directory.
-The docker-py library must be installed on the system executing the
+The docker library must be installed on the system executing the
 plugin ("pip install docker").
 
 This plugin it will be called by the agent without any arguments.
 """
 # N O T E:
-# docker-py is available for python verisons from 2.6 / 3.3
+# docker is available for python versions from 2.6 / 3.3
 
 import os
 import sys
@@ -59,6 +59,13 @@ except ImportError:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
                      '{"Critical": "Error: mk_docker requires the docker library.'
+                     ' Please install it on the monitored system (pip install docker)."}\n')
+    sys.exit(1)
+
+if int(docker.__version__.split('.')[0]) < 2:
+    sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
+                     '@docker_version_info|{}\n'
+                     '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
                      ' Please install it on the monitored system (pip install docker)."}\n')
     sys.exit(1)
 

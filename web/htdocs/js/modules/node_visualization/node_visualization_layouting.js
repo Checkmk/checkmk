@@ -749,7 +749,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     fetch_all_layouts() {
         // TODO: Currently disabled
         return
-        d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
+        // d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
     }
 
     update_available_layouts(layouts) {

@@ -5,6 +5,7 @@
 # events to the local event console daemon.
 
 import os, sys, getopt, traceback, time, socket
+import six
 
 opt_debug = False
 opt_verbose = False
@@ -36,7 +37,7 @@ def open_logfile():
 
 
 def log(text):
-    if isinstance(text, unicode):
+    if isinstance(text, six.text_type):
         text = text.encode("utf-8")
     try:
         g_logfile.write('[%.6f] %s\n' % (time.time(), text))

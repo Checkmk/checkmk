@@ -28,9 +28,11 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import six
+
 
 def make_utf8(x):
-    if isinstance(x, unicode):
+    if isinstance(x, six.text_type):
         return x.encode('utf-8')
     return x
 

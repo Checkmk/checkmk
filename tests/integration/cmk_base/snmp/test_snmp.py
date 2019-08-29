@@ -6,6 +6,7 @@ import os
 import pytest  # type: ignore
 from pathlib2 import Path
 from testlib import cmk_path, wait_until
+import six
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
@@ -236,7 +237,7 @@ def test_get_data_types(snmp_config, type_name, oid, expected_response):
                                 use_snmpwalk_cache=False)
 
     assert table[0][0] == expected_response
-    assert isinstance(table[0][0], unicode)
+    assert isinstance(table[0][0], six.text_type)
 
 
 def test_get_single_oid_value(snmp_config):
@@ -334,7 +335,7 @@ def test_get_simple_snmp_table_bulkwalk(snmp_config, bulk):
             u'new system name',
         ],
     ]
-    assert isinstance(table[0][0], unicode)
+    assert isinstance(table[0][0], six.text_type)
 
 
 def test_get_simple_snmp_table(snmp_config):
@@ -354,7 +355,7 @@ def test_get_simple_snmp_table(snmp_config):
             u'new system name',
         ],
     ]
-    assert isinstance(table[0][0], unicode)
+    assert isinstance(table[0][0], six.text_type)
 
 
 def test_get_simple_snmp_table_oid_end(snmp_config):

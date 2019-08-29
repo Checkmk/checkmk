@@ -52,11 +52,17 @@ def main():
             "/api/json?tree=jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
         ),
         Section(
+            name="nodes",
+            key="computer",
+            uri=
+            "/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,offline,offlineCause,offlineCause,temporarilyOffline,monitorData[*]]"
+        ),
+        Section(
             name="queue",
             key="items",
             uri=
             "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,why,buildableStartMilliseconds,task[name,color]]"
-        )
+        ),
     ]
 
     args = parse_arguments()
@@ -79,8 +85,8 @@ def handle_request(args, sections):
             try:
                 url = url_base + section.uri
                 response = requests.get(url, auth=(args.user, args.password))
-
                 value = response.json()[section.key]
+
                 sys.stdout.write("%s\n" % json.dumps(value))
 
             except requests.exceptions.RequestException:
@@ -109,9 +115,10 @@ def parse_arguments(argv=None):
     parser.add_argument(
         "-m",
         "--modules",
-        default="jobs queue",
+        default="jobs nodes queue",
         type=lambda x: x.split(' '),
-        help="Space-separated list of data to query. Possible values: 'jobs, queue' (default: all)")
+        help=
+        "Space-separated list of data to query. Possible values: 'jobs nodes queue' (default: all)")
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")

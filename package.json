@@ -36,7 +36,7 @@
     "postcss-clean": "^1.1.0",
     "postcss-loader": "^3.0.0",
     "sass-lint": "^1.13.1",
-    "sass-loader": "^7.3.1",
+    "sass-loader": "^8.0.0",
     "script-loader": "^0.7.2",
     "style-loader": "^1.0.0",
     "webpack": "^4.39.3",

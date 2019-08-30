@@ -1,0 +1,12 @@
+Title: ps, docker_container_mem: Fix garbled sections if ps is not available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567419163
+
+On some docker containers the ps command is not available. This lead to
+garbled sections in the 1.6.0 beta versions.

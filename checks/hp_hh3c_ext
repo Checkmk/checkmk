@@ -98,8 +98,8 @@ check_info['hp_hh3c_ext'] = {
                 CACHED_OID(2),  # entPhysicalDescr
             ])
     ],
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(
-        '.1.3.6.1.4.1.25506.11.1.239'),
+    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25506.11.1.239') or
+                                      oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25506.11.1.102'),
     'includes': ['temperature.include'],
     'group': 'temperature',
     'has_perfdata': True,

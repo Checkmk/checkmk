@@ -190,30 +190,8 @@ class PageCrash(ABCCrashReportPage):
 
         html.context_button(_("All crashes"), "view.py?view_name=crash_reports", "crash")
 
-        # TODO: Cleanup different handlings
-        if crash_info["crash_type"] == "check":
-            host = crash_info["host"]
-            service = crash_info["description"]
-
-            host_url = html.makeuri(
-                [
-                    ("view_name", "hoststatus"),
-                    ("host", host),
-                    ("site", self._site_id),
-                ],
-                filename="view.py",
-            )
-            html.context_button(_("Host status"), host_url, "status")
-
-            service_url = html.makeuri(
-                [("view_name", "service"), ("host", host), ("service", service),
-                 (
-                     "site",
-                     self._site_id,
-                 )],
-                filename="view.py",
-            )
-            html.context_button(_("Service status"), service_url, "status")
+        self._crash_type_renderer(crash_info["crash_type"]).context_buttons(
+            crash_info, self._site_id)
 
         download_url = html.makeuri([], filename="download_crash_report.py")
         html.context_button(_("Download"), download_url, "download")
@@ -370,15 +348,157 @@ class PageCrash(ABCCrashReportPage):
         return "".join(traceback.format_list(tb))
 
     def _show_crash_report_details(self, crash_info, row):
-        # TODO: Cleanup different handlings
-        # TODO: Handle new types
-        if crash_info["crash_type"] == "check":
-            _show_crashed_check_details(crash_info)
-            _show_agent_output(row)
-        elif crash_info["crash_type"] == "gui":
-            _show_gui_crash_details(crash_info)
-        else:
-            raise NotImplementedError()
+        self._crash_type_renderer(crash_info["crash_type"]).show_details(crash_info, row)
+
+    def _crash_type_renderer(self, crash_type):
+        return report_renderer_registry.get(crash_type, report_renderer_registry["generic"])()
+
+
+class ABCReportRenderer(six.with_metaclass(abc.ABCMeta, object)):
+    """Render crash type individual GUI elements"""
+
+    # TODO: Can not use this with python 2
+    #@abc.abstractclassmethod
+    @classmethod
+    def type(cls):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def context_buttons(self, crash_info, site_id):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def show_details(self, crash_info, row):
+        raise NotImplementedError()
+
+
+class ReportRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ABCReportRenderer
+
+    def plugin_name(self, plugin_class):
+        return plugin_class.type()
+
+
+report_renderer_registry = ReportRendererRegistry()
+
+
+@report_renderer_registry.register
+class ReportRendererGeneric(ABCReportRenderer):
+    @classmethod
+    def type(cls):
+        return "generic"
+
+    def context_buttons(self, crash_info, site_id):
+        return
+
+    def show_details(self, crash_info, row):
+        if not crash_info["details"]:
+            return
+
+        html.h2(_("Details"))
+        html.p(
+            _("No detail renderer for crash of type '%s' available. Details structure is:") %
+            crash_info["crash_type"])
+        html.pre(pprint.pformat(crash_info["details"]))
+
+
+@report_renderer_registry.register
+class ReportRendererCheck(ABCReportRenderer):
+    @classmethod
+    def type(cls):
+        return "check"
+
+    def context_buttons(self, crash_info, site_id):
+        host = crash_info["host"]
+        service = crash_info["description"]
+
+        host_url = html.makeuri(
+            [
+                ("view_name", "hoststatus"),
+                ("host", host),
+                ("site", site_id),
+            ],
+            filename="view.py",
+        )
+        html.context_button(_("Host status"), host_url, "status")
+
+        service_url = html.makeuri(
+            [("view_name", "service"), ("host", host), ("service", service), (
+                "site",
+                site_id,
+            )],
+            filename="view.py",
+        )
+        html.context_button(_("Service status"), service_url, "status")
+
+    def show_details(self, crash_info, row):
+        self._show_crashed_check_details(crash_info)
+        self._show_agent_output(row)
+
+    def _show_crashed_check_details(self, info):
+        def format_bool(val):
+            return {
+                True: _("Yes"),
+                False: _("No"),
+                None: _("Unknown"),
+            }[val]
+
+        details = info["details"]
+
+        html.h2(_("Details"))
+        html.open_table(class_="data")
+
+        _crash_row(_("Host"), details["host"], odd=False, legend=True)
+        _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
+        _crash_row(_("Check Type"), details["check_type"], odd=False)
+        _crash_row(_("Manual Check"), format_bool(details.get("manual_check")), odd=True, pre=True)
+        _crash_row(_("Uses SNMP"), format_bool(details.get("uses_snmp")), odd=False, pre=True)
+        _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
+        _crash_row(_("Check Item"), details["item"], odd=False)
+        _crash_row(_("Description"), details["description"], odd=True)
+        _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
+
+        html.close_table()
+
+    def _show_agent_output(self, row):
+        agent_output = row.get("agent_output")
+        if agent_output:
+            _show_output_box(_("Agent output"), agent_output)
+
+
+@report_renderer_registry.register
+class ReportRendererGUI(ABCReportRenderer):
+    @classmethod
+    def type(cls):
+        return "gui"
+
+    def context_buttons(self, crash_info, site_id):
+        return
+
+    def show_details(self, crash_info, row):
+        details = crash_info["details"]
+
+        html.h2(_("Details"))
+        html.open_table(class_="data")
+
+        _crash_row(_("Page"), details["page"], odd=False, legend=True)
+        _crash_row(_("Request Method"), details.get("request_method", _("Unknown")))
+        html.open_tr(class_="data even0")
+        html.td(_("HTTP Parameters"), class_="left")
+        html.open_td()
+        html.debug_vars(vars_=details["vars"], hide_with_mouse=False)
+        html.close_td()
+        html.close_tr()
+        _crash_row(_("Referer"), details.get("referer", _("Unknown")))
+        _crash_row(_("Username"), details["username"], odd=False)
+        _crash_row(_("User Agent"), details["user_agent"])
+        _crash_row(_("Mobile GUI"), details["is_mobile"], odd=False)
+        _crash_row(_("SSL"), details["is_ssl_request"])
+        _crash_row(_("Language"), details["language"], odd=False)
+
+        html.close_table()
 
 
 def _get_crash_report_row(crash_id, site_id):
@@ -408,64 +528,8 @@ def format_local_vars(local_vars):
     return base64.b64decode(local_vars)
 
 
-def _show_crashed_check_details(info):
-    def format_bool(val):
-        return {
-            True: _("Yes"),
-            False: _("No"),
-            None: _("Unknown"),
-        }[val]
-
-    details = info["details"]
-
-    html.h2(_("Details"))
-    html.open_table(class_="data")
-
-    _crash_row(_("Host"), details["host"], odd=False, legend=True)
-    _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
-    _crash_row(_("Check Type"), details["check_type"], odd=False)
-    _crash_row(_("Manual Check"), format_bool(details.get("manual_check")), odd=True, pre=True)
-    _crash_row(_("Uses SNMP"), format_bool(details.get("uses_snmp")), odd=False, pre=True)
-    _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
-    _crash_row(_("Check Item"), details["item"], odd=False)
-    _crash_row(_("Description"), details["description"], odd=True)
-    _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
-
-    html.close_table()
-
-
 def format_params(params):
     return pprint.pformat(params)
-
-
-def _show_gui_crash_details(info):
-    details = info["details"]
-
-    html.h2(_("Details"))
-    html.open_table(class_="data")
-
-    _crash_row(_("Page"), details["page"], odd=False, legend=True)
-    _crash_row(_("Request Method"), details.get("request_method", _("Unknown")))
-    html.open_tr(class_="data even0")
-    html.td(_("HTTP Parameters"), class_="left")
-    html.open_td()
-    html.debug_vars(vars_=details["vars"], hide_with_mouse=False)
-    html.close_td()
-    html.close_tr()
-    _crash_row(_("Referer"), details.get("referer", _("Unknown")))
-    _crash_row(_("Username"), details["username"], odd=False)
-    _crash_row(_("User Agent"), details["user_agent"])
-    _crash_row(_("Mobile GUI"), details["is_mobile"], odd=False)
-    _crash_row(_("SSL"), details["is_ssl_request"])
-    _crash_row(_("Language"), details["language"], odd=False)
-
-    html.close_table()
-
-
-def _show_agent_output(row):
-    agent_output = row.get("agent_output")
-    if agent_output:
-        _show_output_box(_("Agent output"), agent_output)
 
 
 def _show_output_box(title, content):

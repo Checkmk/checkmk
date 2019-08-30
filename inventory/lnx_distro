@@ -124,10 +124,19 @@ def inv_lnx_parse_redhat(node, line):
     entry = line[0]
     if entry.startswith("Oracle"):
         inv_lnx_parse_oracle_vm_server(node, line)
-    else:
+    elif entry.count("(") > 0:
         parts = entry.split("(")
         left = parts[0].strip()
         node["code_name"] = parts[1].rstrip(")")
+        name, _release, version = left.rsplit(None, 2)
+        if name.startswith("Red Hat"):
+            node["vendor"] = "Red Hat"
+        node["version"] = version
+        node["name"] = left
+    else:
+        parts = entry.split("(")
+        left = parts[0].strip()
+        node["code_name"] = ""
         name, _release, version = left.rsplit(None, 2)
         if name.startswith("Red Hat"):
             node["vendor"] = "Red Hat"

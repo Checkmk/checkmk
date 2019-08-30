@@ -69,13 +69,15 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            // Hand over build options from webpack to SASS
-                            data: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
+                            prependData: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
                                 + "$MANAGED: " + process.env.MANAGED + ";",
-                            "includePaths": ["node_modules"],
-                            // See https://github.com/sass/node-sass/blob/master/README.md#options
-                            outputStyle: "expanded",
-                            precision: 10
+                            sassOptions: {
+                                // Hand over build options from webpack to SASS
+                                "includePaths": ["node_modules"],
+                                // See https://github.com/sass/node-sass/blob/master/README.md#options
+                                outputStyle: "expanded",
+                                precision: 10
+                            }
                         }
                     }
                 ]
@@ -91,16 +93,16 @@ module.exports = {
 
 if (process.env.NO_BABEL_LOADER == undefined) {
     let babel_loader = {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader",
-                    options: {
-                        presets: ["@babel/preset-env"],
-                    }
-                }
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+            loader: "babel-loader",
+            options: {
+                presets: ["@babel/preset-env"],
             }
-    module.exports.module.rules.unshift(babel_loader)
+        }
+    };
+    module.exports.module.rules.unshift(babel_loader);
 }
 
 

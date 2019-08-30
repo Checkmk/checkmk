@@ -29,7 +29,6 @@ import collections
 from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
 import six
 
-import six
 from cmk.utils.exceptions import MKGeneralException
 
 

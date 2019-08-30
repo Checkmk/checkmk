@@ -24,23 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def dell_compellent_translate(table, entry):
-    sc_status = {
-        "1" : (0, "UP"),
-        "2" : (2, "DOWN"),
-        "3" : (1, "DEGRADED"),
-    }
 
-    health = {
-        "1" : 0,
-        "0" : 2,
-    }
+def dell_compellent_dev_state_map(orig_dev_state):
+    return {
+        "1": (0, "UP"),
+        "2": (2, "DOWN"),
+        "3": (1, "DEGRADED"),
+    }.get(orig_dev_state, (3, 'unknown[%s]' % orig_dev_state))
 
-    if table == "ScStatus":
-        return sc_status[entry]
-    elif table == "health":
-        return health[entry]
 
 def inventory_dell_compellent(info):
     for line in info:
-        yield ( line[0], None )
+        yield (line[0], None)

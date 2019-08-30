@@ -1,0 +1,11 @@
+Title: dell_compellent_controller, dell_compellent_disks, dell_compellent_enclosure: Fixed unknown device state crash
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p22
+Date: 1567080888
+
+

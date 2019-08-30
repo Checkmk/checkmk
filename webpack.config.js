@@ -94,7 +94,6 @@ module.exports = {
 if (process.env.NO_BABEL_LOADER == undefined) {
     let babel_loader = {
         test: /\.js$/,
-        exclude: /node_modules/,
         use: {
             loader: "babel-loader",
             options: {

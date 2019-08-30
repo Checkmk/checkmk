@@ -150,15 +150,15 @@ def parse_arguments(argv=None):
     return parsed_args
 
 
-class LazyFileStats(object):
+class FileStat(object):
     """Wrapper arount os.stat
 
     Only call os.stat once, and not until corresponding attributes
     are actually needed.
     """
     def __init__(self, path):
-        super(LazyFileStats, self).__init__()
-        LOGGER.debug("Creating LazyFileStats(%r)", path)
+        super(FileStat, self).__init__()
+        LOGGER.debug("Creating FileStat(%r)", path)
         if not isinstance(path, unicode):  # pylint: disable=bad-builtin
             path = path.decode('utf8')
         self.path = path
@@ -206,7 +206,7 @@ class LazyFileStats(object):
         return self._age
 
     def __repr__(self):
-        return "LazyFileStats(%r)" % self.path
+        return "FileStat(%r)" % self.path
 
     def dumps(self):
         data = {
@@ -242,21 +242,21 @@ class PatternIterator(object):
     def _iter_files(self, pattern):
         for item in glob.iglob(pattern):
             if os.path.isfile(item):
-                yield LazyFileStats(item)
+                yield FileStat(item)
             # for now, we recurse unconditionally
             else:
-                for lazy_file in self._iter_files(os.path.join(item, '*')):
-                    yield lazy_file
+                for filestat in self._iter_files(os.path.join(item, '*')):
+                    yield filestat
 
     def __iter__(self):
         for pat in self._patterns:
             LOGGER.info("processing pattern: %r", pat)
-            for lazy_file in self._iter_files(pat):
-                yield lazy_file
+            for filestat in self._iter_files(pat):
+                yield filestat
 
 
 def get_file_iterator(config):
-    """get a LazyFileStats iterator"""
+    """get a FileStat iterator"""
     input_specs = [(k[6:], v) for k, v in config.items() if k.startswith('input_')]
     if not input_specs:
         raise ValueError("missing input definition")
@@ -284,7 +284,7 @@ def get_file_iterator(config):
 
 class AbstractFilter(object):
     """Abstract filter interface"""
-    def matches(self, lazy_file):
+    def matches(self, filestat):
         """return a boolean"""
         raise NotImplementedError()
 
@@ -313,30 +313,30 @@ class AbstractNumericFilter(AbstractFilter):
         """decide whether an integer value matches"""
         return self._value.__cmp__(int(other_value)) in self._positive_cmp_results
 
-    def matches(self, lazy_file):
+    def matches(self, filestat):
         raise NotImplementedError()
 
 
 class SizeFilter(AbstractNumericFilter):
-    def matches(self, lazy_file):
+    def matches(self, filestat):
         """apply AbstractNumericFilter ti file size"""
-        size = lazy_file.size
+        size = filestat.size
         if size is not None:
             return self._matches_value(size)
         # Don't return vanished files.
         # Other cases are a problem, and should be included
-        return lazy_file.stat_status != "file vanished"
+        return filestat.stat_status != "file vanished"
 
 
 class AgeFilter(AbstractNumericFilter):
-    def matches(self, lazy_file):
+    def matches(self, filestat):
         """apply AbstractNumericFilter ti file age"""
-        age = lazy_file.age
+        age = filestat.age
         if age is not None:
             return self._matches_value(age)
         # Don't return vanished files.
         # Other cases are a problem, and should be included
-        return lazy_file.stat_status != "file vanished"
+        return filestat.stat_status != "file vanished"
 
 
 class RegexFilter(AbstractFilter):
@@ -347,13 +347,13 @@ class RegexFilter(AbstractFilter):
             regex_pattern = regex_pattern.decode('utf8')
         self._regex = re.compile(regex_pattern, re.UNICODE)
 
-    def matches(self, lazy_file):
-        return bool(self._regex.match(lazy_file.path))
+    def matches(self, filestat):
+        return bool(self._regex.match(filestat.path))
 
 
 class InverseRegexFilter(RegexFilter):
-    def matches(self, lazy_file):
-        return not bool(self._regex.match(lazy_file.path))
+    def matches(self, filestat):
+        return not bool(self._regex.match(filestat.path))
 
 
 def get_file_filters(config):
@@ -378,10 +378,10 @@ def get_file_filters(config):
 
 
 def iter_filtered_files(file_filters, iterator):
-    for lazy_file in iterator:
-        if all(f.matches(lazy_file) for f in file_filters):
-            LOGGER.debug("matched all filters: %r", lazy_file)
-            yield lazy_file
+    for filestat in iterator:
+        if all(f.matches(filestat) for f in file_filters):
+            LOGGER.debug("matched all filters: %r", filestat)
+            yield filestat
 
 
 #.
@@ -424,8 +424,8 @@ def output_aggregator_count_only(group_name, files_iter):
 def output_aggregator_file_stats(group_name, files_iter):
     yield "[[[file_stats %s]]]" % group_name
     count = 0
-    for count, lazy_file in enumerate(files_iter, 1):
-        yield lazy_file.dumps()
+    for count, filestat in enumerate(files_iter, 1):
+        yield filestat.dumps()
     yield repr({"type": "summary", "count": count})
 
 
@@ -433,17 +433,17 @@ def output_aggregator_extremes_only(group_name, files_iter):
     yield "[[[extremes_only %s]]]" % group_name
 
     count = 0
-    for count, lazy_file in enumerate(files_iter, 1):
+    for count, filestat in enumerate(files_iter, 1):
         if count == 1:  # init
-            min_age = max_age = min_size = max_size = lazy_file
-        if lazy_file.age < min_age.age:
-            min_age = lazy_file
-        elif lazy_file.age > max_age.age:
-            max_age = lazy_file
-        if lazy_file.size < min_size.size:
-            min_size = lazy_file
-        elif lazy_file.size > max_size.size:
-            max_size = lazy_file
+            min_age = max_age = min_size = max_size = filestat
+        if filestat.age < min_age.age:
+            min_age = filestat
+        elif filestat.age > max_age.age:
+            max_age = filestat
+        if filestat.size < min_size.size:
+            min_size = filestat
+        elif filestat.size > max_size.size:
+            max_size = filestat
 
     extremes = set((min_age, max_age, min_size, max_size)) if count else ()
     for extreme_file in extremes:

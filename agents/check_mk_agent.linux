@@ -479,16 +479,18 @@ fi
 echo '<<<mounts>>>'
 grep ^/dev </proc/mounts | grep -v " squashfs "
 
-# processes including username, without kernel processes
-echo '<<<ps>>>'
-echo 'dummy section -- refer to section ps_lnx'
-echo '<<<ps_lnx>>>'
-CGROUP=""
-if [ -e /sys/fs/cgroup ]; then
-    CGROUP="cgroup:512,"
+if inpath ps; then
+    # processes including username, without kernel processes
+    echo '<<<ps>>>'
+    echo 'dummy section -- refer to section ps_lnx'
+    echo '<<<ps_lnx>>>'
+    CGROUP=""
+    if [ -e /sys/fs/cgroup ]; then
+        CGROUP="cgroup:512,"
+    fi
+    echo -n '[header] '
+    ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
 fi
-echo -n '[header] '
-ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
 
 # Memory usage
 section_mem

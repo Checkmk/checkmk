@@ -332,6 +332,20 @@ class RulespecActiveChecksIcmp(ABCHostValueRulespec):
                          ("indexed_ipv6address", _("Ping IPv6 address identified by its index"),
                           Integer(default_value=1)),
                      ])),
+                ("min_pings",
+                 Integer(
+                     title=_("Number of positve responses required for OK state"),
+                     help=_(
+                         "When pinging multiple addresses, failure to ping one of the "
+                         "provided addresses will lead to a Crit status of the service. "
+                         "This option allows to specify the minimum number of successful "
+                         "pings which will still classify the service as OK. The smallest "
+                         "number is 1 and the maximum number should be (number of addresses - 1). "
+                         "A number larger than the suggested number will always lead to a "
+                         "Crit Status. One must also select a suitable option from the "
+                         "\"Alternative address to ping\" above."),
+                     minvalue=1,
+                 )),
             ] + check_icmp_params(),
         )
 

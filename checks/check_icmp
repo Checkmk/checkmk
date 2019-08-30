@@ -28,6 +28,10 @@
 def check_icmp_arguments(params):
     args = []
 
+    min_successful_pings = params.get("min_pings", 0)
+    if min_successful_pings:
+        args += ["-m", "%d" % min_successful_pings]
+
     rta = 200, 500
     loss = 80, 100
     for key, value in params.items():

@@ -22,32 +22,33 @@
   "author": "",
   "license": "GPL-2.0",
   "devDependencies": {
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.2.3",
-    "autoprefixer": "^9.4.7",
-    "babel-loader": "^8.0.4",
-    "css-loader": "^2.0.1",
-    "eslint": "^5.10.0",
-    "eslint-plugin-compat": "^2.6.3",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "autoprefixer": "^9.6.1",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.2.0",
+    "eslint": "^6.2.2",
+    "eslint-plugin-compat": "^3.3.0",
     "extract-loader": "^3.1.0",
-    "file-loader": "^3.0.1",
-    "mini-css-extract-plugin": "^0.5.0",
+    "file-loader": "^4.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
     "node-sass": "^4.12.0",
     "postcss-clean": "^1.1.0",
     "postcss-loader": "^3.0.0",
     "sass-lint": "^1.13.1",
-    "sass-loader": "^7.1.0",
+    "sass-loader": "^7.3.1",
     "script-loader": "^0.7.2",
-    "style-loader": "^0.23.1",
-    "webpack": "^4.27.1",
-    "webpack-cli": "^3.1.2",
-    "webpack-fix-style-only-entries": "^0.2.0"
+    "style-loader": "^1.0.0",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7",
+    "webpack-fix-style-only-entries": "^0.3.1"
   },
   "dependencies": {
-    "@yaireo/tagify": "^2.16.0",
+    "@yaireo/tagify": "^2.26.0",
+    "d3": "^5.11.0",
+    "d3-flextree": "^2.1.1",
     "jquery": "^3.4.1",
-    "select2": "^4.0.6-rc.1",
-    "d3": "5",
-    "d3-flextree": "2.0.0"
-  }
+    "select2": "^4.0.10"
+  },
+  "keywords": []
 }

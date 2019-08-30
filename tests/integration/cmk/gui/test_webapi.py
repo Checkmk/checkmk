@@ -1056,7 +1056,7 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'title': u'CPU time in operating system',
                     u'unit': u's'
                 }, {
-                    u'color': u'#00b2ff',
+                    u'color': u'#0093ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
                         None, 1.0

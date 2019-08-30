@@ -205,7 +205,14 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs app
+	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
+      app \
+      htdocs/css \
+      htdocs/images \
+      htdocs/jquery \
+      htdocs/js/{main,mobile,side}_min.js \
+      htdocs/sounds \
+      $(patsubst web/%,%,$(THEME_CSS_FILES))
 
 	tar xzf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )

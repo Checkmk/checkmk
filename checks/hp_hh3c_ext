@@ -26,11 +26,16 @@
 
 
 def parse_hp_hh3c_ext(info):
-    entity_info = dict(info[1])
+    entity_info = {}
+    for index, descr, vendor_type, phy_class, name in info[1]:
+        entity_info[index] = {'name': name,
+                              'descr': descr,
+                              'vendor_type': vendor_type,
+                              'phy_class': int(phy_class)}
     parsed = {}
-    for index, admin_state, oper_state, cpu, \
+    for index, admin_state, oper_state, alarm_light, cpu, \
         mem_usage, temperature, mem_size in info[0]:
-        name = entity_info.get(index, (None, None))
+        phy_info = entity_info.get(index, {'phy_class': None})
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
         # check_memory_multiitem needs values in bytes, not percent
@@ -38,13 +43,15 @@ def parse_hp_hh3c_ext(info):
         mem_used = 0.01 * int(mem_usage) * mem_total
 
         parsed.setdefault(
-            "%s %s" % (name, index), {
+            "%s %s" % (phy_info['name'], index), {
                 'temp': int(temperature),
                 'cpu': int(cpu),
                 'mem_total': mem_total,
                 'mem_used': mem_used,
                 'admin': admin_state,
                 'oper': oper_state,
+                'alarm': alarm_light,
+                'phy_class': phy_info['phy_class'],
             })
     return parsed
 
@@ -64,7 +71,7 @@ def inventory_hp_hh3c_ext(parsed):
         # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
         # does not provide reasonable data or is not a real sensor.
-        if v["temp"] != 65535 and v['mem_total'] > 0:
+        if v["temp"] != 65535 and v['phy_class'] in [3, 6, 8]:
             yield k, {}
 
 
@@ -86,6 +93,7 @@ check_info['hp_hh3c_ext'] = {
                 OID_END,
                 '2',  # hh3cEntityExtAdminStatus
                 '3',  # hh3cEntityExtOperStatus
+                '5',  # hh3cEntityExtAlarmLight
                 '6',  # hh3cEntityExtCpuUsage
                 '8',  # hh3cEntityExtMemUsage
                 '12',  # hh3cEntityExtTemperature
@@ -96,6 +104,9 @@ check_info['hp_hh3c_ext'] = {
             [
                 OID_END,
                 CACHED_OID(2),  # entPhysicalDescr
+                CACHED_OID(3),  # entPhysicalVendorType
+                CACHED_OID(5),  # entPhysicalClass
+                CACHED_OID(7),  # entPhysicalName
             ])
     ],
     'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.25506.11.1.239') or
@@ -118,10 +129,7 @@ check_info['hp_hh3c_ext'] = {
 
 def inventory_hp_hh3c_ext_states(parsed):
     for k, v in parsed.iteritems():
-        if v["mem_total"] > 0:
-            # We assume: if mem_total > 0 then
-            # this module is installed and provides
-            # reasonable data.
+        if v['phy_class'] in [ 6, 7, 8, 9 ]:
             yield k, {}
 
 
@@ -130,16 +138,27 @@ def check_hp_hh3c_ext_states(item, params, parsed):
         return
 
     map_admin_states = {
-        '1': (1, 'not_supported', 'not supported'),
-        '2': (0, 'locked', 'locked'),
+        '1': (0, 'not_supported', 'not supported'),
+        '2': (2, 'locked', 'locked'),
         '3': (2, 'shutting_down', 'shutting down'),
-        '4': (2, 'unlocked', 'unlocked'),
+        '4': (0, 'unlocked', 'unlocked'),
     }
     map_oper_states = {
-        '1': (1, 'not_supported', 'not supported'),
+        '1': (0, 'not_supported', 'not supported'),
         '2': (2, 'disabled', 'disabled'),
         '3': (0, 'enabled', 'enabled'),
         '4': (2, 'dangerous', 'dangerous'),
+    }
+
+    map_alert = {
+        0: (3, 'notSupported'),
+        1: (0, 'underRepair'),
+        2: (2, 'critical'),
+        3: (2, 'major'),
+        4: (1, 'minor'),
+        5: (2, 'alarmOutstanding'),
+        6: (1, 'warning'),
+        7: (3, 'indeterminate'),
     }
 
     attrs = parsed[item]
@@ -151,7 +170,13 @@ def check_hp_hh3c_ext_states(item, params, parsed):
         if params_key in params_state_type:
             state = params_state_type[params_key]
         yield state, "%s: %s" % (title, state_readable)
-
+    if ord(attrs['alarm']):
+        yield 0, 'Alarm set'
+        for bit, (state, text) in map_alert.iteritems():
+            if ord(attrs['alarm']) & 1 << bit:
+                yield state, text
+    else:
+        yield 0, 'No alarm set'
 
 check_info['hp_hh3c_ext.states'] = {
     'inventory_function': inventory_hp_hh3c_ext_states,
@@ -173,7 +198,7 @@ check_info['hp_hh3c_ext.states'] = {
 
 def inventory_hp_hh3c_ext_cpu(parsed):
     for k, v in parsed.iteritems():
-        if v["mem_total"] > 0:
+        if v["phy_class"] in [9 ] and v["mem_total"] > 0:
             # We assume: if mem_total > 0 then
             # this module is installed and provides
             # reasonable data.

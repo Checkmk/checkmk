@@ -528,7 +528,7 @@ def _iter_dicts(keys, data):
     pattern = ".*?".join("<%s>(.*?)</%s>" % (key, key) for key in keys)
     matches = re.finditer(pattern, data, re.DOTALL)
     for match in matches:
-        yield dict(zip(keys, match))
+        yield dict(zip(keys, match.groups()))
 
 
 def eval_sensor_info(_hostname, _current_propname, propset):

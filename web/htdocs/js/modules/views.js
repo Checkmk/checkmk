@@ -33,7 +33,7 @@ export function init_optiondial(id)
 {
     var container = document.getElementById(id);
     make_unselectable(container);
-    utils.add_event_handler(utils.wheel_event_name(), optiondial_wheel, container);
+    utils.add_event_handler("wheel", optiondial_wheel, container);
 }
 
 function make_unselectable(elem)

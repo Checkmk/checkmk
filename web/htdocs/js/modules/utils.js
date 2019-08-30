@@ -522,16 +522,6 @@ export function wheel_event_delta(event)
     return event.deltaY ? event.deltaY : event.detail ? event.detail * (-120) : event.wheelDelta;
 }
 
-export function wheel_event_name()
-{
-    if ("onwheel" in window)
-        return "wheel";
-    else if (browser.is_firefox())
-        return "DOMMouseScroll";
-    else
-        return "mousewheel";
-}
-
 export function count_context_button(oA)
 {
     // Extract view name from id of parent div element

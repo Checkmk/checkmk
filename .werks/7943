@@ -1,0 +1,12 @@
+Title: Fixed graph zooming via mouse wheel.
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1567165935
+Class: fix
+
+The 1.6.0 branch contained a regression which broke the synchronized zooming
+of graphs, you could even see JavaScript exceptions in the browser console
+while zooming. This has been fixed.

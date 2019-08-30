@@ -64,6 +64,7 @@ class RobustJSONEncoder(json.JSONEncoder):
 
 
 class CrashReportStore(object):
+    _keep_num_crashes = 20
     """Caring about the persistance of crash reports in the local site"""
     def save(self, crash):
         # type: (ABCCrashReport) -> None
@@ -74,6 +75,8 @@ class CrashReportStore(object):
             fname = "crash.info" if key == "crash_info" else key
             cmk.utils.store.save_file(str(crash.crash_dir() / fname),
                                       json.dumps(value, cls=RobustJSONEncoder) + "\n")
+
+        self._cleanup_old_crashes(crash.crash_dir().parent)
 
     def _prepare_crash_dump_directory(self, crash):
         # type: (ABCCrashReport) -> None
@@ -86,6 +89,20 @@ class CrashReportStore(object):
                 f.unlink()
             except OSError:
                 pass
+
+    def _cleanup_old_crashes(self, base_dir):
+        # type: (Path) -> None
+        """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
+        for delete_crash_dir in sorted(base_dir.iterdir(), reverse=True)[self._keep_num_crashes:]:
+            # Remove crash report contents
+            for f in delete_crash_dir.iterdir():
+                try:
+                    f.unlink()
+                except OSError:
+                    pass
+
+            # And finally remove the crash report directory
+            delete_crash_dir.rmdir()
 
     def load_from_directory(self, crash_dir):
         # type: (Path) -> ABCCrashReport

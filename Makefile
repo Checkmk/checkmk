@@ -87,6 +87,9 @@ RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool
 
 THEMES             := classic facelift modern-dark
 THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
+THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
+THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
+THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
@@ -174,7 +177,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_CSS_FILES) ChangeLog
+$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -213,7 +216,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
       htdocs/jquery \
       $(patsubst web/%,%,$(JAVASCRIPT_MINI)) \
       htdocs/sounds \
-      $(patsubst web/%,%,$(THEME_CSS_FILES))
+      $(patsubst web/%,%,$(THEME_RESOURCES))
 
 	tar xzf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )

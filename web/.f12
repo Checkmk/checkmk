@@ -5,24 +5,28 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+# HACK: Keep this and the rsync below in sync with top-level Makefile.
+JAVASCRIPT_MINI=$(for jmini in main mobile side; do echo "web/htdocs/js/${jmini}_min.js"; done)
 THEMES="classic facelift modern-dark"
+THEME_CSS_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.css"; done)
+
 export NO_BABEL_LOADER=1
 
 echo "Updating compiled JS/CSS files..."
-make -C .. \
-    web/htdocs/js/main_min.js \
-    web/htdocs/js/mobile_min.js \
-    web/htdocs/js/side_min.js \
-    $(for theme in $THEMES; do echo "web/htdocs/themes/$theme/theme.css"; done)
+make -C .. ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
 
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
-sudo rsync \
-    --exclude "scss" \
-    --exclude "*cmc.py" \
-    --exclude "*.scss" \
-    -arx app htdocs $ROOT/share/check_mk/web/
+sudo rsync -arxR \
+      app \
+      htdocs/css \
+      htdocs/images \
+      htdocs/jquery \
+      $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
+      htdocs/sounds \
+      $(for i in ${THEME_CSS_FILES}; do echo ${i#web/}; done) \
+      $ROOT/share/check_mk/web/
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then

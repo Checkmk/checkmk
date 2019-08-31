@@ -48,6 +48,7 @@ def _edition_short_from_pkg_path(pkg_path):
     ("cma", 237 * 1024 * 1024, 247 * 1024 * 1024),
     ("tar.gz", 378 * 1024 * 1024, 388 * 1024 * 1024),
 ])
+@pytest.mark.skip(reason="Disabled until the dust regarding packaging has settled.")
 def test_package_sizes(version_path, what, min_size, max_size):
     sizes = []
     for pkg in _get_package_paths(version_path, what):

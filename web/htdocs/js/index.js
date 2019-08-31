@@ -55,8 +55,9 @@ import * as dashboard from "dashboard";
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
 import * as node_visualization from "node_visualization";
+import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
-import * as node_visualization_viewport from "node_visualization_viewport";
+import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;
@@ -104,9 +105,10 @@ export default {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
-        node_visualization: node_visualization,
-        node_visualization_viewport: node_visualization_viewport,
+        node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
+        node_visualization_viewport_utils: node_visualization_viewport_utils,
+        node_visualization: node_visualization,
         d3: d3,
         d3_flextree: d3_flextree,
     }

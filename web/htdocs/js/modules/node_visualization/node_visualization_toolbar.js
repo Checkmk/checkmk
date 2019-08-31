@@ -52,22 +52,22 @@ export class Toolbar {
 
         plugin_ids.forEach(plugin_id=>{
             let plugin = this._toolbar_plugins[plugin_id]
-            let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
-            let togglebutton_selection = null
-            if (plugin.has_toggle_button()) {
-                togglebutton_selection = this.plugins_togglebutton_selection.append("div")
-                                                    .classed("togglebutton", true)
-                                                    .classed("noselect", true)
-                                                    .classed("box", true)
-                                                    .classed("on", true)
-                                                    .classed("down", false)
-                                                    .classed("up", true)
-//                                                    .classed("off", true)
-                                                    .on("click", ()=>plugin.toggle_active())
+            if (!plugin.has_content_selection()) {
+                let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
+                let togglebutton_selection = null
+                if (plugin.has_toggle_button()) {
+                    togglebutton_selection = this.plugins_togglebutton_selection.append("div")
+                                                        .classed("togglebutton", true)
+                                                        .classed("noselect", true)
+                                                        .classed("box", true)
+                                                        .classed("on", true)
+                                                        .classed("down", false)
+                                                        .classed("up", true)
+                                                        .on("click", ()=>plugin.toggle_active())
+                }
+                plugin.setup_selections(togglebutton_selection, content_selection)
+                plugin.render_togglebutton()
             }
-
-            plugin.setup_selections(togglebutton_selection, content_selection)
-            plugin.render_togglebutton()
             if (plugin.active)
                 plugin.update_active_state()
         })

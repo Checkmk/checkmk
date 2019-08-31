@@ -80,6 +80,8 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                               $(foreach edir,. enterprise managed, \
                                   $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
 
+JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
+
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
@@ -173,7 +175,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js $(THEME_CSS_FILES) ChangeLog
+$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_CSS_FILES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -210,7 +212,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
       htdocs/css \
       htdocs/images \
       htdocs/jquery \
-      htdocs/js/{main,mobile,side}_min.js \
+      $(patsubst web/%,%,$(JAVASCRIPT_MINI)) \
       htdocs/sounds \
       $(patsubst web/%,%,$(THEME_CSS_FILES))
 

@@ -9,6 +9,9 @@ ROOT=/omd/sites/$SITE
 JAVASCRIPT_MINI=$(for jmini in main mobile side; do echo "web/htdocs/js/${jmini}_min.js"; done)
 THEMES="classic facelift modern-dark"
 THEME_CSS_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.css"; done)
+THEME_JSON_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.json"; done)
+THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/images"; done)
+THEME_RESOURCES="${THEME_CSS_FILES} ${THEME_JSON_FILES} ${THEME_IMAGE_DIRS}"
 
 export NO_BABEL_LOADER=1
 
@@ -25,7 +28,7 @@ sudo rsync -arxR \
       htdocs/jquery \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
       htdocs/sounds \
-      $(for i in ${THEME_CSS_FILES}; do echo ${i#web/}; done) \
+      $(for i in ${THEME_RESOURCES}; do echo ${i#web/}; done) \
       $ROOT/share/check_mk/web/
 
 # Also deploy all other directories of same type

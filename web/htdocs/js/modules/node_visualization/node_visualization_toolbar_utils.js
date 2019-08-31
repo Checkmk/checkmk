@@ -16,6 +16,10 @@ export class ToolbarPluginBase extends Object {
         this.content_selection = content_selection
     }
 
+    has_content_selection() {
+        return this.content_selection != null
+    }
+
     toggle_active() {
         this.active = !this.active
         this.update_active_state()
@@ -24,8 +28,6 @@ export class ToolbarPluginBase extends Object {
     update_active_state() {
         if (!this.active) {
             if (this.togglebutton_selection) {
-    //            this.togglebutton_selection.classed("on", false)
-    //            this.togglebutton_selection.classed("off", true)
                 this.togglebutton_selection.classed("up", true)
                 this.togglebutton_selection.classed("down", false)
             }
@@ -34,8 +36,6 @@ export class ToolbarPluginBase extends Object {
         }
         else {
             if (this.togglebutton_selection) {
-     //           this.togglebutton_selection.classed("on", true)
-     //           this.togglebutton_selection.classed("off", false)
                 this.togglebutton_selection.classed("up", false)
                 this.togglebutton_selection.classed("down", true)
             }

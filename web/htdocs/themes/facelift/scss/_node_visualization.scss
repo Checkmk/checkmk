@@ -64,9 +64,9 @@ div.node_vis {
     box-shadow: $node-vis-box-shadow;
   }
 
-  img.layouting_icon, img.bi_rule_icon {
-    width: 30px;
-    height: 30px;
+  img.layouting_icon, img.node_icon {
+    width: 24px;
+    height: 24px;
   }
 
   img.layouting_icon {
@@ -110,6 +110,13 @@ div.node_vis {
     padding: 8px;
   }
 
+  /* topology depth */
+  div.depth_slider {
+    position: absolute;
+    left: 310px;
+    top: 22px;
+  }
+
   /* datasources */
   div.toolbar_datasources {
     position: absolute;
@@ -142,6 +149,7 @@ div.node_vis {
     padding-top: 0;
     margin: 3px;
     margin-top: 8px;
+    overflow: hidden;
     background-color: $node-vis-menu-bg-color;
   }
 
@@ -224,7 +232,6 @@ div.node_vis {
   }
 
   .node_element circle {
-    filter: drop-shadow(3px 3px 2px rgba(0, 0, 0, .7));
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
 
@@ -264,6 +271,11 @@ div.node_vis {
   // state pending
   .state-1 {
     fill: #888;
+  }
+
+  circle.state_circle {
+    stroke: black;
+    stroke-width: 1;
   }
 
   .togglebox {
@@ -333,6 +345,26 @@ div.node_vis {
     right: 369px;
     width: 200px;
   }
+
+  g.generic_stop_growth text.stop_growth_text {
+      display: unset;
+  }
+
+  g.generic_stop_growth circle {
+    stroke-width: 1;
+    stroke: black;
+  }
+
+  g.generic_growth_possible circle {
+    stroke-width: 2;
+    stroke: orange;
+  }
+
+  img.layouting_icon {
+    width: 30px;
+    height: 30px;
+  }
+
 }
 
 div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
@@ -370,7 +402,7 @@ div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {
 #togglebox_choices {
   position: absolute;
   top: 15px;
-  left: 380px;
+  left: 590px;
 }
 
 .style_overlay {

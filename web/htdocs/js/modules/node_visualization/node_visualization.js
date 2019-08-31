@@ -3,6 +3,7 @@ import * as node_visualization_toolbar from "node_visualization_toolbar"
 import * as node_visualization_datasources from "node_visualization_datasources"
 import * as node_visualization_viewport from "node_visualization_viewport"
 import * as node_visualization_infobox from "node_visualization_infobox"
+import * as utils from "node_visualization_utils"
 import * as d3 from "d3";
 
 //
@@ -66,6 +67,9 @@ export class BIVisualization extends NodeVisualization {
     }
 
     _show_aggregations(list_of_aggregations) {
+        if (list_of_aggregations.length > 0)
+            d3.select("table.header td.heading a").text(list_of_aggregations[0])
+
         let aggr_ds = this.datasource_manager.get_datasource(node_visualization_datasources.AggregationsDatasource.id())
         let fetched_data = aggr_ds.get_data()
 
@@ -82,21 +86,78 @@ export class BIVisualization extends NodeVisualization {
 }
 
 
-export class NetworkTopologyVisualization extends NodeVisualization {
-    show_network_topology(list_of_hosts) {
-        let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.NetworkTopologyDatasource.id())
-        topo_ds.subscribe_new_data(d=>this._show_network_topology(list_of_hosts))
-        topo_ds.fetch_hosts(list_of_hosts)
+export class TopologyVisualization extends NodeVisualization {
+    constructor(div_id, mode) {
+        super(div_id)
+        this._mode = mode
+    }
+    show_topology(list_of_hosts) {
+        let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
+        topo_ds.subscribe_new_data(d=>this._show_topology(list_of_hosts))
+        this._default_depth = 0
+        this.add_depth_slider()
+        topo_ds.fetch_hosts({growth_root_nodes: list_of_hosts, mesh_depth: this._default_depth, mode: this._mode})
     }
 
-    _show_network_topology(list_of_hosts) {
-        let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.NetworkTopologyDatasource.id())
-        let topology_data = topo_ds.get_data()["topology_chunks"]
+    _show_topology(list_of_hosts) {
+        let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
+        let ds_data = topo_ds.get_data()
+
+        if (ds_data["headline"])
+            d3.select("tbody tr td.heading a").text(ds_data["headline"])
+
+        let topology_data = ds_data["topology_chunks"]
 
         let data_to_show = {chunks: []}
         for (let idx in topology_data) {
             data_to_show.chunks.push(topology_data[idx])
         }
-        this.viewport.show_data("network_topology", data_to_show)
+        this.viewport.show_data("topology", data_to_show)
+        this.viewport.current_viewport.layout_manager.enforce_node_drag()
+    }
+
+    add_depth_slider() {
+        let slider = d3.select("#toolbar").selectAll(".depth_slider").data([null])
+        let slider_enter = slider.enter().append("div")
+                            .classed("depth_slider", true)
+                            .style("position", "absolute")
+
+        slider_enter.append("label")
+                    .style("padding-left", "12px")
+                    .text("Number of hops")
+                    .classed("noselect", true)
+        slider_enter.append("input")
+                    .classed("depth_slider", true)
+                    .style("pointer-events", "all")
+                    .attr("type", "range")
+                    .attr("step", 1)
+                    .attr("min", d=>0)
+                    .attr("max", d=>20)
+                    .on("input", ()=>{
+                        let new_range = d3.select("input.depth_slider").property("value")
+                        d3.select("#depth_range_text").text(new_range)
+                        this.update_data()
+                    })
+                    .property("value", this._default_depth)
+        slider_enter.append("label").attr("id", "depth_range_text").text(this._default_depth)
+    }
+
+    update_data() {
+        let growth_root_nodes = []
+        let growth_forbidden_nodes = []
+
+        this.viewport.current_viewport.get_all_nodes().forEach(node=>{
+            if (node.data.growth_root)
+                growth_root_nodes.push(node.data.hostname)
+            if (node.data.growth_forbidden)
+                growth_forbidden_nodes.push(node.data.hostname)
+        })
+
+        let current_depth = +d3.select("input.depth_slider").property("value")
+        let ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
+        ds.fetch_hosts({growth_root_nodes: growth_root_nodes,
+                        mesh_depth: current_depth,
+                        growth_forbidden_nodes: growth_forbidden_nodes,
+                        mode: this._mode});
     }
 }

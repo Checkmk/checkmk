@@ -44,11 +44,12 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
         // Edit tools
         this.edit_layout = false // Indicates whether the layout manager is active
+        this._node_dragging_allowed = false // If the user is able to drag nodes with the mouse
+        this._node_dragging_enforced = false // If the user is able to drag nodes with the mouse
         this.allow_layout_updates = true // Indicates if layout updates are allowed
 
         // Instantiated styles
         this._active_styles = {}
-
     }
 
     create_undo_step() {
@@ -84,6 +85,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     show_layout_options() {
         this.edit_layout = true
+        this.enable_node_dragging()
         this.allow_layout_updates = false
         this._mouse_events_overlay.update_data()
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", true)
@@ -92,11 +94,28 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
     hide_layout_options() {
         this.edit_layout = false
+        this.disable_node_dragging()
         this.allow_layout_updates = true
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", false)
         this.styles_selection.selectAll(".layout_style").selectAll("*").remove()
         this.div_selection.selectAll("img").remove()
         this.update_style_indicators(true)
+    }
+
+    enforce_node_drag() {
+        this._node_dragging_enforced = true
+    }
+
+    enable_node_dragging() {
+        this._node_dragging_allowed = true
+    }
+
+    disable_node_dragging() {
+        this._node_dragging_allowed = false
+    }
+
+    is_node_drag_allowed() {
+        return (this._node_dragging_enforced || this._node_dragging_allowed)
     }
 
     register_toolbar_plugin() {
@@ -532,10 +551,10 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             this.layout_manager._active_styles[idx].generate_overlay()
         }
 
-        this.content_selection.selectAll(".edit_mode_only").style("display", null)
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", null)
+                .style("opacity", 1)
+                .style("display", null)
 
         this.fetch_all_layouts()
     }
@@ -543,15 +562,15 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     disable_actions() {
         this.layout_manager.hide_layout_options()
         this.layout_manager.viewport.update_gui_of_layers()
-        this.content_selection.selectAll(".edit_mode_only").style("display", "none")
 
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", "0px")
+                .style("opacity", 0)
+                .style("display", "none")
     }
 
     remove() {
-//        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
+        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
     }
 
     render_content() {
@@ -568,37 +587,38 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                                     .classed("noselect", true)
                                     .classed("box", true)
                                 .merge(configuration_div_box)
-
-
+    
         let configuration_div = configuration_div_box.selectAll("div#configuration_div").data([null])
         configuration_div = configuration_div.enter().append("div").attr("id", "configuration_div").merge(configuration_div)
+        configuration_div.selectAll("#layout_configuration_headline").data([null]).enter().append("h2")
+                        .attr("id", "layout_configuration_headline").text("Layout Configuration")
+        if (this.layout_manager.viewport.get_current_datasource() == "bi_aggregations") {
+            this._render_aggregation_configuration(configuration_div)
 
-        // Style management box
-        let style_div_box = this.content_selection.selectAll("div#style_management").data([null])
-        style_div_box = style_div_box.enter().append("div").attr("id", "style_management")
-                                    .classed("noselect", true)
-                                    .classed("box", true)
-                                .merge(style_div_box)
+            // Render layout history
+            let history_div_box = this.content_selection.selectAll("div#history_icons").data([null])
+            history_div_box = history_div_box.enter().append("div").attr("id", "history_icons")
+                                        .classed("noselect", true)
+                                    .merge(history_div_box)
+            this._render_layout_history(history_div_box)
 
-
-
-        let history_div_box = this.content_selection.selectAll("div#history_icons").data([null])
-        history_div_box = history_div_box.enter().append("div").attr("id", "history_icons")
-                                    .classed("noselect", true)
-                                .merge(history_div_box)
-        this._render_layout_history(history_div_box)
-
-        //
-        this._render_aggregation_configuration(configuration_div)
+            // Style management box
+            let style_div_box = this.content_selection.selectAll("div#style_management").data([null])
+            style_div_box = style_div_box.enter().append("div").attr("id", "style_management")
+                                        .classed("noselect", true)
+                                        .classed("box", true)
+                                    .merge(style_div_box)
+            this.layout_style_configuration.render_style_config(style_div_box)
+        }
         this._render_layout_configuration(configuration_div)
-        this.layout_style_configuration.render_style_config(style_div_box)
     }
 
     _render_aggregation_configuration(into_selection) {
-        into_selection.selectAll("#layout_configuration_headline").data([null]).enter().append("h2")
-                        .attr("id", "layout_configuration_headline").text("Layout Configuration")
+        let chunks = this.layout_manager.viewport.get_hierarchy_list()
+        if (chunks.length == 0)
+            return
 
-        let chunk = this.layout_manager.viewport.get_hierarchy_list()[0]
+        let chunk = chunks[0]
         let aggr_name = chunk.tree.data.name
 
         let table_selection = into_selection.selectAll("table#layout_settings").data([null])
@@ -780,6 +800,12 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.content_selection.select("#layout_name").property("value", selected_id)
         this.update_content()
         this.update_save_layout_button()
+    }
+
+    set_overlay_options(overlay_id, active, configurable) {
+        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
+        current_overlay_config[overlay_id] = {active: active, configurable: configurable}
+        this.layout_manager.viewport.update_active_overlays()
     }
 
     overlay_options_changed() {
@@ -968,7 +994,7 @@ class LayoutingMouseEventsOverlay {
     }
 
     _dragstarted() {
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
         d3.event.sourceEvent.stopPropagation();
         this._dragged_node = d3.select(d3.event.sourceEvent.target).datum()
@@ -996,7 +1022,7 @@ class LayoutingMouseEventsOverlay {
     }
 
     _dragging() {
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
 
         if (this._dragged_node.data.use_style) {
@@ -1041,7 +1067,7 @@ class LayoutingMouseEventsOverlay {
 
     _dragended() {
         this.layout_manager.dragging = false
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
 
         if (this._dragged_node.data.use_style) {
@@ -1079,9 +1105,11 @@ class LayoutApplier{
     }
 
     get_context_menu_elements(node) {
-        if (node && !(node.data.node_type == "bi_leaf" || node.data.node_type == "bi_aggregator")) {
+        if (node && !(node.data.node_type == "bi_leaf" || node.data.node_type == "bi_aggregator") ||
+            this.viewport.get_current_datasource() != "bi_aggregations") {
             return []
         }
+
 
         let elements = []
         let styles = this.layout_style_factory.get_styles()
@@ -1205,31 +1233,36 @@ class LayoutApplier{
                 node_chunk.layout_instance = new node_visualization_layout.NodeVisualizationLayout(this)
 
                 // Add styles from aggregation rules only during instance creation
-                if (!layout_settings.config.ignore_rule_styles)
-                    node_chunk.nodes.forEach(node=>{
-                        if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
-                            let style_name = node.data.rule_layout_style.style_type;
-                            let style_options = node.data.rule_layout_style.style_config;
-                            let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
-                            new_style.style_config.options = style_options;
+                if (layout_settings.config) {
+                    if (!layout_settings.config.ignore_rule_styles)
+                        node_chunk.nodes.forEach(node=>{
+                            if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
+                                let style_name = node.data.rule_layout_style.style_type;
+                                let style_options = node.data.rule_layout_style.style_config;
+                                let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
+                                new_style.style_config.options = style_options;
     
-                            node_chunk.layout_instance.save_style(new_style.style_config)
-                            nodes_with_style.push({node: node, style: new_style.style_config});
-                        }
-                    });
-
-                // Add generic and explicit styles
-                if (layout_settings.origin_type == "default_template") {
-                    let default_style = this.layout_style_factory.instantiate_style_name(layout_settings.default_id, node_chunk.tree)
-                    default_style.style_config.position = {x: 50, y: 50}
-                    node_chunk.layout_instance.save_style(default_style.style_config)
+                                node_chunk.layout_instance.save_style(new_style.style_config)
+                                nodes_with_style.push({node: node, style: new_style.style_config});
+                            }
+                        });
                 }
-                else {
-                    node_chunk.layout_instance.deserialize(layout_settings.config)
-                    if (node_chunk.template_layout_id)
-                        used_layout_id = node_chunk.template_layout_id
+
+                if (layout_settings.origin_type) {
+                    // Add generic and explicit styles
+                    if (layout_settings.origin_type == "default_template") {
+                        let default_style = this.layout_style_factory.instantiate_style_name(layout_settings.default_id, node_chunk.tree)
+                        default_style.style_config.position = {x: 50, y: 50}
+                        node_chunk.layout_instance.save_style(default_style.style_config)
+                    }
+                    else {
+                        node_chunk.layout_instance.deserialize(layout_settings.config)
+                        if (node_chunk.template_layout_id)
+                            used_layout_id = node_chunk.template_layout_id
+                    }
                 }
             }
+
             nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout_instance, node_matcher));
         });
 
@@ -1437,8 +1470,12 @@ class LayoutApplier{
         let style_configs = []
         let chunk_layout = null
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            chunk_layout = node_chunk.layout_instance.serialize()
+            if (node_chunk.layout_instance)
+                chunk_layout = node_chunk.layout_instance.serialize()
         })
+        if (!chunk_layout)
+            return this.current_layout_group
+
         for (let idx in this.layout_manager._active_styles) {
             style_configs.push(this.layout_manager._active_styles[idx].style_config)
         }

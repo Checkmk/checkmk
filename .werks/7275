@@ -1,0 +1,10 @@
+Title: BI configuration: Now able to create regex based host tag id condition
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1567251985
+Class: feature
+
+

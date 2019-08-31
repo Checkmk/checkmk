@@ -1991,17 +1991,45 @@ def substitute_matches(arg, hostname, hostalias, matchgroups):
     return subst_vars(arg, arginfo)
 
 
-def match_host_tags(have_tags, required_tags):
-    for tag in required_tags:
+def match_host_tags(host_tags, required_tags):
+    regex_tags, exact_tags = _classify_host_tags(required_tags)
+
+    for tag in exact_tags:
         if tag.startswith('!'):
             negate = True
             tag = tag[1:]
         else:
             negate = False
-        has_it = tag in have_tags
+        has_it = tag in host_tags
         if has_it == negate:
             return False
+
+    for negate, regex_tag in regex_tags:
+        matcher = regex(regex_tag)
+        if negate:
+            for host_tag in host_tags:
+                if matcher.match(host_tag):
+                    # One negated match
+                    return False
+        else:
+            for host_tag in host_tags:
+                if matcher.match(host_tag):
+                    break
+            else:
+                # No positive matches
+                return False
+
     return True
+
+
+def _classify_host_tags(required_tags):
+    regex_tags, exact_tags = [], []
+    for tag in required_tags:
+        if isinstance(tag, tuple):
+            regex_tags.append(tag)
+        else:
+            exact_tags.append(tag)
+    return regex_tags, exact_tags
 
 
 def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_site):

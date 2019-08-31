@@ -30,7 +30,7 @@ export class DatasourceManager {
 
     _initialize_datasources() {
         this._register_datasource(AggregationsDatasource)
-        this._register_datasource(NetworkTopologyDatasource)
+        this._register_datasource(TopologyDatasource)
     }
 
     _register_datasource(datasource_class) {
@@ -78,6 +78,9 @@ export class AbstractDatasource {
 
         this._data = null
         this._new_data_subscribers = []
+
+        this._fetch_url = null
+        this._fetch_params = null
     }
 
     subscribe_new_data(func) {
@@ -108,16 +111,26 @@ export class AbstractDatasource {
         this._enabled = false
     }
 
-    fetch(url) {
+    fetch(url, params={}) {
         this._fetch_start = Math.floor(new Date().getTime()/1000)
         this._fetch_url = url
+        this._fetch_params = params
         this._fetch()
     }
 
-    _fetch() {
+    _fetch(params={}) {
         if (!this._fetch_url)
             return
-        d3.json(encodeURI(this._fetch_url), {credentials: "include"}).then(json_data=>this._set_data(json_data))
+        d3.json(encodeURI(this._fetch_url),
+                {
+                    credentials: "include",
+                    method: "POST",
+                    body: this._fetch_params,
+                    headers: {
+                        "Content-type": "application/x-www-form-urlencoded"
+                    }
+                }
+        ).then(json_data=>this._set_data(json_data))
     }
 
     get_data() {
@@ -160,16 +173,17 @@ export class AggregationsDatasource extends AbstractDatasource {
 }
 
 
-export class NetworkTopologyDatasource extends AbstractDatasource {
+export class TopologyDatasource extends AbstractDatasource {
     static id() {
-        return "network_topology"
+        return "topology"
     }
 
     constructor() {
-        super("Network topology")
+        super("Topology")
     }
 
-    fetch_hosts(list_of_hosts) {
-        this.fetch("ajax_fetch_network_topology.py?hostnames=" + JSON.stringify(list_of_hosts))
+    fetch_hosts(topology_config) {
+        let fetch_params = "topology_config=" + JSON.stringify(topology_config)
+        this.fetch("ajax_fetch_topology.py", fetch_params)
     }
 }

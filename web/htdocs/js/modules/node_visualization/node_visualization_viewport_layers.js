@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils"
 import * as node_visualization_utils from "node_visualization_utils"
 import * as node_visualization_layout_styles from "node_visualization_layout_styles"
+import * as node_visualization_datasources from "node_visualization_datasources"
 
 export class LayeredDebugLayer extends node_visualization_viewport_utils.LayeredLayerBase {
     id() {
@@ -133,10 +134,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
     size_changed() {
         if (!this.overlay_active)
             return
-//        this.anchor_info.select("#horizontal").attr("width", this.viewport.width + 50)
-//        this.anchor_info.select("#vertical").attr("height", this.viewport.height + 50)
-//        this.anchor_info.select("#horizontal_text").text(parseInt(this.viewport.width) + "px")
-//        this.anchor_info.select("#vertical_text").text(parseInt(this.viewport.height) + "px")
     }
 
     reset_pan_and_zoom() {
@@ -163,13 +160,13 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
     }
 }
 
-export class LayeredRuleIconOverlay extends node_visualization_viewport_utils.LayeredOverlayBase {
+export class LayeredIconOverlay extends node_visualization_viewport_utils.LayeredOverlayBase {
     id() {
-        return "rule_icon_overlay"
+        return "node_icon_overlay"
     }
 
     name() {
-        return "Rule icons"
+        return "Node icons"
     }
 
     update_gui() {
@@ -184,13 +181,13 @@ export class LayeredRuleIconOverlay extends node_visualization_viewport_utils.La
         icons.exit().remove()
         icons = icons.enter().append("img")
                         .attr("src", d=> {return "images/icons/" + d.data.icon + ".png"})
-                        .classed("bi_rule_icon", true)
+                        .classed("node_icon", true)
                         .style("position", "absolute")
                         .style("pointer-events", "none")
                      .merge(icons)
 
-        icons.style("left", d=>{return this.viewport.translate_to_zoom({x: d.x, y:0}).x + 5 + "px"})
-             .style("top", d=>{return (this.viewport.translate_to_zoom({x: 0, y:d.y}).y - 40) + "px"})
+        icons.style("left", d=>{return (this.viewport.translate_to_zoom({x: d.x, y:0}).x - 24) + "px"})
+             .style("top", d=>{return (this.viewport.translate_to_zoom({x: 0, y:d.y}).y - 24) + "px"})
     }
 }
 
@@ -676,8 +673,6 @@ class AbstractGUINode {
         let outer_circle = node.selection.select("#outer_circle")
         outer_circle.classed("collapsed", collapsed)
 
-        // TODO: refactor/remove
-//        this.viewport.point_spawn_location = [node.x, node.y]
         let nodes = this.viewport.get_all_nodes()
         for (let idx in nodes) {
             nodes[idx].data.transition_info.use_transition = true
@@ -778,12 +773,6 @@ class AbstractGUINode {
     }
 
     render_object() {
-        this.selection.append("circle")
-              .attr("id", "outer_circle")
-              .classed("collapsed", this.node.data.collapsed)
-              .attr("r", this.radius + 1)
-              .attr("fill", "black")
-
         this.selection
               .append("a")
               .attr("xlink:href", this._get_details_url())
@@ -841,24 +830,117 @@ class AbstractGUINode {
     }
 }
 
-class GenericNode extends AbstractGUINode {
+class TopologyNode extends AbstractGUINode {
     constructor(nodes_layer, node) {
         super(nodes_layer, node)
         this.radius = 9
+        this._provides_external_quickinfo_data = true
     }
 
     render_object() {
         AbstractGUINode.prototype.render_object.call(this)
-        if (this.node.data.topology_root)
-            this.selection.select("circle").classed("topology_root", true)
+
+        if (this.node.data.has_no_parents)
+            this.selection.select("circle").classed("has_no_parents", true)
+
     }
 
-    _get_basic_quickinfo() {
-        let quickinfo = []
-        quickinfo.push({name: "Host name", value: this.node.data.hostname})
-        if ("service" in this.node.data)
-            quickinfo.push({name: "Service description", value: this.node.data.service})
-        return quickinfo
+    update_position() {
+        AbstractGUINode.prototype.update_position.call(this);
+
+        // Growth root
+        let growth_root_selection = this.selection.selectAll("circle.growth_root").data([this.node]);
+        if (this.node.data.growth_root) {
+            growth_root_selection.enter().append("circle")
+                    .classed("growth_root", true)
+                    .classed("dashed", true)
+                    .attr("r", this.radius + 4)
+                    .attr("fill", "none")
+                    .attr("stroke", "black")
+                    .attr("stroke-width", 3);
+        }
+        else
+            growth_root_selection.remove();
+
+        // Growth possible
+        let growth_possible_selection = this.selection.selectAll("image.growth_possible").data([this.node]);
+        if (this.node.data.growth_possible) {
+            growth_possible_selection.enter().append("svg:image")
+                .classed("growth_possible", true)
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icons/icons8-hierarchy.svg")
+                .attr("width", 16)
+                .attr("height", 16)
+                .attr("x", -8)
+                .attr("y", 0);
+        }
+        else
+            growth_possible_selection.remove();
+
+
+        // Growth forbidden
+        let growth_forbidden_selection = this.selection.selectAll("image.growth_forbidden").data([this.node]);
+        if (this.node.data.growth_forbidden) {
+            growth_forbidden_selection.enter().append("svg:image")
+                .classed("growth_forbidden", true)
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icons/icons8-no-entry.svg")
+                .attr("width", 16)
+                .attr("height", 16)
+                .attr("x", -28)
+                .attr("y", 0);
+        }
+        else
+            growth_forbidden_selection.remove();
+    }
+
+    _fetch_external_quickinfo() {
+        this._quickinfo_fetch_in_progress = true
+        let view_url = null
+        view_url = "view.py?view_name=topology_hover_host&display_options=I&host=" + encodeURIComponent(this.node.data.hostname)
+        d3.html(view_url ,{credentials: "include"}).then(html=>this._got_quickinfo(html))
+    }
+
+    get_context_menu_elements() {
+        let elements = AbstractGUINode.prototype.get_context_menu_elements.call(this)
+
+        // Toggle root node
+        let root_node_text = "Add root node"
+        if (this.node.data.growth_root)
+            root_node_text = "Remove root node"
+        elements.push({text: root_node_text,
+                on: ()=> this._toggle_root_node()
+        })
+
+        // Use this node as exclusive root node
+        elements.push({text: "Set root node",
+                on: ()=> this._set_root_node()
+        })
+
+        // Forbid further growth
+        let growth_forbidden_text = "Forbid further hops"
+        if (this.node.data.growth_forbidden)
+            growth_forbidden_text = "Allow further hops"
+        elements.push({text:  growth_forbidden_text,
+                on: ()=> this._toggle_stop_growth()
+        })
+        return elements
+    }
+
+    _toggle_stop_growth() {
+        this.node.data.growth_forbidden = !this.node.data.growth_forbidden;
+        this.nodes_layer.viewport.main_instance.update_data();
+    }
+
+    _toggle_root_node() {
+        this.node.data.growth_root = !this.node.data.growth_root;
+        this.nodes_layer.viewport.main_instance.update_data();
+    }
+
+    _set_root_node() {
+        this.nodes_layer.viewport.get_all_nodes().forEach(node=>{
+            node.data.growth_root = false
+        })
+        this.node.data.growth_root = true
+        this.nodes_layer.viewport.main_instance.update_data();
     }
 }
 
@@ -942,7 +1024,6 @@ class BIAggregatorNode extends AbstractGUINode {
 
     get_context_menu_elements() {
         let elements = []
-
         let theme_prefix = this.viewport.main_instance.get_theme_prefix()
 
         // Local actions
@@ -1233,7 +1314,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         else if (node_data.data.node_type == "bi_aggregator")
             new_node = new BIAggregatorNode(this, node_data)
         else
-            new_node = new GenericNode(this, node_data)
+            new_node = new TopologyNode(this, node_data)
         this.node_instances[new_node.id()] = new_node
         new_node.render_into(selection)
     }
@@ -1336,7 +1417,10 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             // Add elements from node
             this._add_elements_to_context_menu(content, "node", node_instance.get_context_menu_elements())
 
-        this._update_position_of_context_menu()
+        if (content.selectAll("li").empty())
+            this.popup_menu_selection.remove();
+        else
+            this._update_position_of_context_menu();
     }
 
     _add_elements_to_context_menu(content, element_source, elements) {
@@ -1397,7 +1481,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
     }
 }
 
-node_visualization_utils.layer_registry.register(LayeredRuleIconOverlay, 10)
+node_visualization_utils.layer_registry.register(LayeredIconOverlay, 10)
 node_visualization_utils.layer_registry.register(LayeredDebugLayer, 20)
 //node_visualization_utils.layer_registry.register(LayeredCustomOverlay, 30)
 node_visualization_utils.layer_registry.register(LayeredNodesLayer, 50)

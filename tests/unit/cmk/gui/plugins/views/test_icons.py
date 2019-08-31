@@ -24,6 +24,7 @@ def test_builtin_icons_and_actions():
         'logwatch',
         'mkeventd',
         'notes',
+        'parent_child_topology',
         'perfgraph',
         'prediction',
         'reschedule',

@@ -18,13 +18,13 @@ export class SearchAggregationsPlugin extends node_visualization_toolbar_utils.T
     }
 
     render_content() {
-        this.content_selection.append("div")
+        this.content_selection.selectAll(".toolbar_search").data([null]).enter().append("div")
                 .classed("box", true)
                 .classed("toolbar_search", true)
                 .append("input").on("input", () => this.updated_search_node_text())
                       .classed("search_node", true)
                       .attr("placeholder", "Search node")
-                      .attr("value", this.search_node_text)
+                      .attr("value", this.search_node_text);
     }
 
     updated_search_node_text() {

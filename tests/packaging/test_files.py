@@ -44,12 +44,11 @@ def _edition_short_from_pkg_path(pkg_path):
 
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 175112192, 249746652),
-    ("deb", 139460608, 175952428),
-    ("cma", 251658240, 330258378),
-    ("tar.gz", 402653184, 462422016),
+    ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
+    ("deb", 150 * 1024 * 1024, 165 * 1024 * 1024),
+    ("cma", 292 * 1024 * 1024, 302 * 1024 * 1024),
+    ("tar.gz", 397 * 1024 * 1024, 407 * 1024 * 1024),
 ])
-@pytest.mark.skip(reason="Disabled until the dust regarding packaging has settled.")
 def test_package_sizes(version_path, what, min_size, max_size):
     sizes = []
     for pkg in _get_package_paths(version_path, what):

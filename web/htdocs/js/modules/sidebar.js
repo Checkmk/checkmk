@@ -517,8 +517,6 @@ function scrollWheel(event){
     // position. So call the store function manually here.
     if (utils.browser.is_opera())
         store_scroll_position();
-
-    event.preventDefault();
 }
 
 

@@ -12,15 +12,15 @@ if not exist %REMOTE_MACHINE%\watest mkdir %REMOTE_MACHINE%\watest
 :unpack_all
 set first=1
 :recheck
-if not exist ..\..\extlibs goto install
-if not exist ..\..\extlibs\googletest goto install
-if not exist ..\..\extlibs\simpleini goto install
-if not exist ..\..\extlibs\asio goto install
-if not exist ..\..\extlibs\catch2 goto install
-if not exist ..\..\extlibs\fmt goto install
-if not exist ..\..\extlibs\json goto install
-if not exist ..\..\extlibs\yaml-cpp goto install
-if not exist ..\..\extlibs\asio\include\asio.hpp goto install
+if not exist ..\..\extlibs echo "no extlibs" && goto install
+if not exist ..\..\extlibs\googletest echo "no googletest" &&  goto install
+if not exist ..\..\extlibs\simpleini echo "no simpleini" && goto install
+if not exist ..\..\extlibs\asio echo "no asio" && goto install
+if not exist ..\..\extlibs\catch2 echo "no catch2" && goto install
+if not exist ..\..\extlibs\fmt echo "no fmt" && goto install
+if not exist ..\..\extlibs\json echo "no json" && goto install
+if not exist ..\..\extlibs\yaml-cpp echo "no yaml-cpp" && goto install
+if not exist ..\..\extlibs\asio\include\asio.hpp "no asio.hpp" && goto install
 echo package check success
 goto end
 :install
@@ -31,6 +31,7 @@ set first=0
 goto recheck
 ) else (
 echo failed to unpack, check your repo 
+dir ..\..\extlibs
  exit /b 1
 )
 :end

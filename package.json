@@ -44,7 +44,7 @@
     "webpack-fix-style-only-entries": "^0.3.1"
   },
   "dependencies": {
-    "@yaireo/tagify": "^2.26.0",
+    "@yaireo/tagify": "2.16.0",
     "d3": "^5.11.0",
     "d3-flextree": "^2.1.1",
     "jquery": "^3.4.1",

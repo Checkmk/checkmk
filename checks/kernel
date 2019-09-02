@@ -46,45 +46,64 @@ kernel_counter_names = {
 }
 
 
-def inventory_kernel(info):
-    inventory = []
-    for counter in inventory_kernel_counters:
-        hits = [line[0] for line in info[1:] if line[0] == counter]
-        if len(hits) == 1:
-            countername = kernel_counter_names.get(counter, counter)
-            inventory.append((countername, "kernel_default_levels"))
-    return inventory
+def inventory_kernel(parsed):
+    _, items = parsed
+    return [(counter_name, "kernel_default_levels")
+            for counter_name in items
+            if len(items[counter_name]) == 1 and counter_name in kernel_counter_names.values()]
+
+
+def parse_kernel(info):
+    try:
+        timestamp = int(info[0][0])
+    except (IndexError, ValueError):
+        timestamp = None
+
+    parsed = {}
+    for line in info[1:]:
+        if line[0] in kernel_counter_names.keys():
+            try:
+                parsed.setdefault(kernel_counter_names[line[0]], []).append((line[0], int(line[1])))
+            except (IndexError, ValueError):
+                continue
+
+        if line[0].startswith('cpu'):
+            try:
+                parsed.setdefault('Cpu Load', []).append((line[0], line[1:]))
+            except (IndexError, ValueError):
+                continue
+    return timestamp, parsed
 
 
 # item is one of the keys in /proc/stat or /proc/vmstat
-def check_kernel(item, params, info):
-    if not info:
+def check_kernel(item, params, parsed):
+    timestamp, items = parsed
+
+    if timestamp is None:
         return
 
-    this_time = int(info[0][0])
-    hits = [(line[0], line[1])
-            for line in info[1:]
-            if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item]
-    if len(hits) == 0:
-        return (3, "item '%s' not found in agent output" % item)
-    elif len(hits) > 1:
-        return (3, "item '%s' not unique (found %d times)" % (item, len(hits)))
+    item_values = items.get(item)
 
-    counter = hits[0][0]
-    this_val = int(hits[0][1])
-    per_sec = get_rate(None, this_time, this_val)
+    if item_values is None:
+        return
 
-    return check_levels(per_sec, counter, params, unit="/s", infoname=kernel_counter_names[counter])
+    if len(item_values) > 1:
+        return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))
+
+    counter, value = item_values[0]
+    per_sec = get_rate(None, timestamp, value)
+    return check_levels(per_sec, counter, params, unit="/s")
 
 
 check_info["kernel"] = {
-    'check_function': check_kernel,
+    'parse_function': parse_kernel,
     'inventory_function': inventory_kernel,
+    'check_function': check_kernel,
     'service_description': 'Kernel %s',
     'has_perfdata': True,
     'group': 'vm_counter',
 }
-
+#.
 #   .--kernel.util--CPU Utilization----------------------------------------.
 #   |             _   _ _   _ _ _          _   _                           |
 #   |            | | | | |_(_) (_)______ _| |_(_) ___  _ __                |
@@ -97,10 +116,11 @@ check_info["kernel"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_cpu_utilization(info):
-    for x in info:
-        if len(x) > 0 and x[0] == 'cpu':
-            return [(None, {})]
+def inventory_cpu_utilization(parsed):
+    _, items = parsed
+    data = items.get('Cpu Load')
+    if data is not None and len(data) > 0:
+        return [(None, {})]
 
 
 # Columns of cpu usage /proc/stat:
@@ -118,16 +138,21 @@ def inventory_cpu_utilization(info):
 # - guest_nice: Time spent running a niced guest (since Linux 2.6.33)
 
 
-def kernel_check_cpu_utilization(item, params, info):
+def kernel_check_cpu_utilization(item, params, parsed):
     params = transform_cpu_iowait(params)
+    _, items = parsed
+    total, cores = [], []
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
-    total = [cpu_info(line) for line in info if line[0] == "cpu"]
+    for cpu in items.get('Cpu Load', []):
+        if cpu[0] == 'cpu':
+            total.append(cpu_info([cpu[0]] + cpu[1]))
+        elif cpu[0].startswith('cpu'):
+            cores.append(cpu_info([cpu[0]] + cpu[1]))
 
     if len(total) != 1:
         return 3, "More than one line with CPU info found. This check is not cluster-enabled."
 
-    cores = [cpu_info(line) for line in info if line[0].startswith("cpu") and len(line[0]) > 3]
     # total contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int

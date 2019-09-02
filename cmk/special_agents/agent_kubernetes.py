@@ -452,6 +452,49 @@ class Pod(Metadata):
         }
 
 
+class DaemonSet(Metadata):
+    def __init__(self, daemon_set):
+        super(DaemonSet, self).__init__(daemon_set.metadata)
+        status = daemon_set.status
+        if status:
+            self.collision_count = status.collision_count
+            self.conditions = status.conditions
+            self.desired_number_scheduled = status.desired_number_scheduled
+            self.current_number_scheduled = status.current_number_scheduled
+            self.number_misscheduled = status.number_misscheduled
+            self.number_ready = status.number_ready
+            self.number_available = status.number_available
+            self.number_unavailable = status.number_unavailable
+            self.observed_generation = status.observed_generation
+            self.updated_number_scheduled = status.updated_number_scheduled
+        else:
+            self.collision_count = None
+            self.conditions = None
+            self.current_number_scheduled = None
+            self.desired_number_scheduled = None
+            self.number_available = None
+            self.number_misscheduled = None
+            self.number_ready = None
+            self.number_unavailable = None
+            self.observed_generation = None
+            self.updated_number_scheduled = None
+
+    @property
+    def info(self):
+        return {
+            'collision_count': self.collision_count,
+            'conditions': self.conditions,
+            'current_number_scheduled': self.current_number_scheduled,
+            'desired_number_scheduled': self.desired_number_scheduled,
+            'number_available': self.number_available,
+            'number_misscheduled': self.number_misscheduled,
+            'number_ready': self.number_ready,
+            'number_unavailable': self.number_unavailable,
+            'observed_generation': self.observed_generation,
+            'updated_number_scheduled': self.updated_number_scheduled,
+        }
+
+
 class Namespace(Metadata):
     # TODO: namespaces may have resource quotas and limits
     # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
@@ -631,6 +674,11 @@ class ServiceList(K8sList[Service]):
 class DeploymentList(K8sList[Deployment]):
     def replicas(self):
         return {deployment.name: deployment.replicas for deployment in self}
+
+
+class DaemonSetList(K8sList[DaemonSet]):
+    def info(self):
+        return {daemon_set.name: daemon_set.info for daemon_set in self}
 
 
 class PodList(K8sList[Pod]):
@@ -894,6 +942,7 @@ class ApiData(object):
         pods = core_api.list_pod_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
         deployments = apps_api.list_deployment_for_all_namespaces()
+        daemon_sets = apps_api.list_daemon_set_for_all_namespaces()
 
         logging.debug('Assigning collected data')
         self.storage_classes = StorageClassList(map(StorageClass, storage_classes.items))
@@ -909,6 +958,7 @@ class ApiData(object):
         self.pods = PodList(map(Pod, pods.items))
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
+        self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
 
         pods_custom_metrics = {
             "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
@@ -1032,6 +1082,13 @@ class ApiData(object):
         g.join('k8s_replicas', self.deployments.replicas())
         return '\n'.join(g.output(piggyback_prefix="deployment_"))
 
+    def daemon_set_sections(self):
+        logging.info('Daemon set sections')
+        g = PiggybackGroup()
+        g.join('labels', self.daemon_sets.labels())
+        g.join('k8s_daemon_pods', self.daemon_sets.info())
+        return '\n'.join(g.output(piggyback_prefix="daemon_set_"))
+
 
 def get_api_client(arguments):
     # type: (argparse.Namespace) -> client.ApiClient
@@ -1081,6 +1138,8 @@ def main(args=None):
                 print(api_data.deployment_sections())
             if 'services' in arguments.infos:
                 print(api_data.service_sections())
+            if 'daemon_sets' in arguments.infos:
+                print(api_data.daemon_set_sections())
     except Exception as e:
         if arguments.debug:
             raise

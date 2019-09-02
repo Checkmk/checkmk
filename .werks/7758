@@ -1,0 +1,12 @@
+Title: mk_jolokia: Fixed cfg creation of agent bakery
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1567416414
+
+The agent bakery rule "JMX monitoring of Java JVMs using Jolokia" created a cfg file with missing comma.
+This has beend fixed. Please bake the affected agents again to create a valid cfg file.

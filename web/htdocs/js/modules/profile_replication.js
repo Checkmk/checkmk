@@ -56,7 +56,7 @@ export function start(siteid, est, progress_text) {
     });
 
     profile_replication_progress[siteid] = 20; // 10 of 10 10ths
-    setTimeout("cmk.profile_replication.step('"+siteid+"', "+est+", '"+progress_text+"');", est/20);
+    setTimeout(function() { step(siteid, est, progress_text); }, est/20);
 }
 
 function set_status(siteid, image, text) {
@@ -65,7 +65,7 @@ function set_status(siteid, image, text) {
     icon.className = "icon repl_status " + image;
 }
 
-export function step(siteid, est, progress_text) {
+function step(siteid, est, progress_text) {
     if (profile_replication_progress[siteid] > 0) {
         profile_replication_progress[siteid]--;
         var perc = (20.0 - profile_replication_progress[siteid]) * 100 / 20;
@@ -79,7 +79,7 @@ export function step(siteid, est, progress_text) {
         else
             img = "repl_pending";
         set_status(siteid, img, progress_text);
-        setTimeout("cmk.profile_replication.step('"+siteid+"',"+est+", '"+progress_text+"');", est/20);
+        setTimeout(function() { step(siteid, est, progress_text); }, est/20);
     }
 }
 

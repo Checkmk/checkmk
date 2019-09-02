@@ -374,12 +374,10 @@ export function set_sidebar_size() {
 
 var scrolling = true;
 
-export function scroll_window(speed){
-    var c = document.getElementById("side_content");
-
+function scroll_window(speed){
     if (scrolling) {
-        c.scrollTop += speed;
-        setTimeout("cmk.sidebar.scroll_window("+speed+")", 10);
+        document.getElementById("side_content").scrollTop += speed;
+        setTimeout(function() { scroll_window(speed); }, 10);
     }
 }
 

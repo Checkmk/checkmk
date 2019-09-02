@@ -1,0 +1,10 @@
+Title: Fix wrong graph font color in reports (1.6.0b7 regression)
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.6.0b8
+Date: 1567416592
+Class: fix
+
+

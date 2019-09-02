@@ -96,8 +96,7 @@ export function snapin_start_drag(event) {
     if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
         return true;
 
-    if (event.stopPropagation)
-        event.stopPropagation();
+    event.stopPropagation();
     event.cancelBubble = true;
 
     snapinDragging = target.parentNode;
@@ -109,10 +108,7 @@ export function snapin_start_drag(event) {
     snapinScrollTop = document.getElementById("side_content").scrollTop;
 
     // Disable the default events for all the different browsers
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
+    event.preventDefault();
     return false;
 }
 
@@ -175,11 +171,8 @@ function snapinDrop(event, targetpos) {
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
     if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
-        if (event.preventDefault)
-            event.preventDefault();
-        if (event.stopPropagation)
-            event.stopPropagation();
-        event.returnValue = false;
+        event.preventDefault();
+        event.stopPropagation();
         return false;
     }
 
@@ -446,12 +439,8 @@ function dragScroll(event) {
     if (dragging === false)
         return true;
 
-    if (event.preventDefault)
-        event.preventDefault();
-    event.returnValue = false;
-
-    if (event.stopPropagation)
-        event.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     event.cancelBubble = true;
 
     var inhalt = document.getElementById("side_content");
@@ -532,10 +521,7 @@ function scrollWheel(event){
     if (utils.browser.is_opera())
         store_scroll_position();
 
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
+    event.preventDefault();
     return false;
 }
 

@@ -59,7 +59,7 @@ def check_quanta_voltage(item, params, entry):
     yield check_levels(
         entry.value,
         'voltage',
-        params.get('upper', entry.upper_levels) + params.get('lower', entry.lower_levels),
+        params.get('levels', entry.upper_levels) + params.get('levels_lower', entry.lower_levels),
         unit='V',
     )
 

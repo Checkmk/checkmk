@@ -30,35 +30,14 @@ var g_content_loc   = null;
 var g_sidebar_folded = false;
 
 export function register_event_handlers() {
-    // First firefox and then IE
-    if (window.addEventListener) {
-        window.addEventListener("mousemove", function(e) {
-            snapinDrag(e);
-            dragScroll(e);
-            return false;
-        }, false);
-        window.addEventListener("mousedown", startDragScroll, false);
-        window.addEventListener("mouseup", stopDragScroll,  false);
-        if (utils.browser.is_firefox()) {
-            window.addEventListener("DOMMouseScroll", scrollWheel,     false);
-        } else {
-            window.addEventListener("mousewheel",     scrollWheel,     false);
-        }
-    }
-    else {
-        document.documentElement.onmousemove = function(e) {
-            // snapin drag 'n drop
-            snapinDrag(e);
-            // drag/drop scrolling
-            dragScroll(e);
-            return false;
-        };
-        // drag/drop scrolling
-        document.documentElement.onmousedown  = startDragScroll;
-        document.documentElement.onmouseup    = stopDragScroll;
-        // mousewheel scrolling
-        document.documentElement.onmousewheel = scrollWheel;
-    }
+    window.addEventListener("mousemove", function(e) {
+        snapinDrag(e);
+        dragScroll(e);
+        return false;
+    }, false);
+    window.addEventListener("mousedown", startDragScroll, false);
+    window.addEventListener("mouseup", stopDragScroll,  false);
+    window.addEventListener("wheel", scrollWheel, false);
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -533,31 +512,20 @@ function unfold_sidebar()
  *************************************************/
 
 function handle_scroll(delta) {
-    if (delta < 0) {
-        scrolling = true;
-        scroll_window(-delta*20);
-        scrolling = false;
-    } else {
-        scrolling = true;
-        scroll_window(-delta*20);
-        scrolling = false;
-    }
+    scrolling = true;
+    scroll_window(-delta*20);
+    scrolling = false;
 }
 
 /** Event handler for mouse wheel event.
  */
 function scrollWheel(event){
-    var delta = 0;
     if (!event)
         event = window.event;
 
-    if (event.wheelDelta)
-        delta = event.wheelDelta / 120;
-    else if (event.detail)
-        delta = -event.detail / 3;
-
-    if (delta)
-        handle_scroll(delta);
+    // TODO: It's not reliable to detect the scrolling direction with wheel events:
+    // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
+    handle_scroll(event.deltaY < 0 ? 1: -1);
 
     // Opera does not fire onunload event which is used to store the scroll
     // position. So call the store function manually here.

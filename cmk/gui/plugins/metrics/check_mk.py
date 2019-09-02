@@ -4752,6 +4752,42 @@ metric_info["k8s_roles"] = {
     "color": "21/b",
 }
 
+metric_info["k8s_daemon_pods_ready"] = {
+    "title": _("Number of nodes ready"),
+    "unit": "",
+    "color": "23/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_desired"] = {
+    "title": _("Desired number of nodes scheduled"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_current"] = {
+    "title": _("Current number of nodes scheduled"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_updated"] = {
+    "title": _("Number of nodes scheduled with up-to-date pods"),
+    "unit": "",
+    "color": "22/a",
+}
+
+metric_info["k8s_daemon_pods_available"] = {
+    "title": _("Number of nodes scheduled with available pods"),
+    "unit": "",
+    "color": "35/a",
+}
+
+metric_info["k8s_daemon_pods_unavailable"] = {
+    "title": _("Number of nodes scheduled with unavailable pods"),
+    "unit": "",
+    "color": "14/a",
+}
+
 metric_info["ready_replicas"] = {
     "title": _("Ready replicas"),
     "unit": "",

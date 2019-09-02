@@ -166,6 +166,7 @@ class RulespecSpecialAgentsKubernetes(HostRulespec):
                          ("services", _("Services")),
                          ("deployments", _("Deployments")),
                          ("pods", _("Pods")),
+                         ("daemon_sets", _("Daemon sets")),
                      ],
                                 default_value=[
                                     "nodes",

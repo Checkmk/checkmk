@@ -1,0 +1,12 @@
+Title: Kubernetes checks for daemon pods
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b9
+Date: 1567424166
+
+The special agent now delivers information for the daemon pods.
+The check provides status information.

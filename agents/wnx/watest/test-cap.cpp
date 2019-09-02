@@ -77,14 +77,16 @@ TEST(CapTest, InstallFileAsCopy) {
     // absent source and target
     {
         bool res = true;
-        EXPECT_NO_THROW(res = InstallFileAsCopy(L"", L"", L""));  //
+        EXPECT_NO_THROW(res =
+                            InstallFileAsCopy(L"", L"", L"", Mode::normal));  //
         EXPECT_FALSE(res);
 
-        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\"));  //
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\",
+                                                Mode::normal));  //
         EXPECT_TRUE(res);
 
-        EXPECT_NO_THROW(
-            res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss", L"scc"));  //
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss",
+                                                L"scc", Mode::normal));  //
         EXPECT_FALSE(res);
     }
 
@@ -92,7 +94,7 @@ TEST(CapTest, InstallFileAsCopy) {
     {
         tst::ConstructFile(target_file, "1");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
-                                      source.wstring()));  //
+                                      source.wstring(), Mode::normal));  //
         ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
     }
 
@@ -100,7 +102,7 @@ TEST(CapTest, InstallFileAsCopy) {
     {
         tst::ConstructFile(source_file, "2");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
-                                      source.wstring()));  //
+                                      source.wstring(), Mode::normal));  //
         EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
     }
 }
@@ -108,7 +110,7 @@ TEST(CapTest, InstallFileAsCopy) {
 TEST(CapTest, PackagedAgent) {
     namespace fs = std::filesystem;
 
-    // check we have code compatible with instlalation
+    // check we have code compatible with installation
     auto ini_path = fs::current_path();
     ini_path /= "check_mk.ini";
     std::error_code ec;

@@ -50,7 +50,7 @@ void SetTestInstallationType(InstallationType installation_type) {
 InstallationType DetermineInstallationType() noexcept {
     if (cma::IsTest()) return G_TestInstallationType;
 
-    std::filesystem::path source_ini = cma::cfg::GetFileInstallDir();
+    std::filesystem::path source_ini = cma::cfg::GetRootInstallDir();
     source_ini /= files::kIniFile;
     return IsIniFileFromInstaller(source_ini) ? InstallationType::packaged
                                               : InstallationType::wato;
@@ -320,7 +320,7 @@ std::wstring GetRootDir() noexcept {
     return details::G_ConfigInfo.getRootDir();
 }
 
-std::wstring GetFileInstallDir() noexcept {
+std::wstring GetRootInstallDir() noexcept {
     auto root = details::G_ConfigInfo.getRootDir();
     return root / dirs::kFileInstallDir;
 }

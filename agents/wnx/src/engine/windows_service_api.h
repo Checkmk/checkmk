@@ -27,6 +27,7 @@ int TestIo();                              // on check -io
 int TestMt();                              // on check -mt
 int TestMainServiceSelf(int Interval);     // on check self
 int TestLegacy();                          // on test
+int RestoreWATOConfig();                   // on restore
 int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy

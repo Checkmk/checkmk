@@ -17,23 +17,29 @@
 
 namespace cma::cfg::cap {
 
+enum class Mode { normal, forced };
+
 // main API
-void Install();
+void Install();    // normal installation of all files from the MSI
+void ReInstall();  // forced installation of all files from the MSI
 
 // support
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
-                       std::wstring_view source_dir)  // @root/install
-    noexcept;
+                       std::wstring_view source_dir,  // @root/install
+                       Mode mode) noexcept;
 
-bool NeedReinstall(const std::filesystem::path Target,
-                   const std::filesystem::path Src);
+bool NeedReinstall(const std::filesystem::path &Target,
+                   const std::filesystem::path &Src);
 
-bool ReinstallCaps(const std::filesystem::path TargetCap,
-                   const std::filesystem::path SrcCap);
+using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
+                          const std::filesystem::path &SrcCap);
 
-bool ReinstallIni(const std::filesystem::path TargetIni,
-                  const std::filesystem::path SrcIni);
+bool ReinstallCaps(const std::filesystem::path &TargetCap,
+                   const std::filesystem::path &SrcCap);
+
+bool ReinstallIni(const std::filesystem::path &TargetIni,
+                  const std::filesystem::path &SrcIni);
 
 // data structures to use
 enum class ProcMode { install, remove, list };

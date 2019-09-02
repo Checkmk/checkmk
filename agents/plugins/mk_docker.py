@@ -181,6 +181,7 @@ class MKDockerClient(docker.DockerClient):
         else:
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self._env = {"REMOTE": os.getenv("REMOTE", "")}
+        self._container_stats = {}
         self.node_info = self.info()
 
     @staticmethod
@@ -215,6 +216,20 @@ class MKDockerClient(docker.DockerClient):
         '''run checkmk agent in container'''
         result = container.exec_run(['check_mk_agent'], environment=self._env, socket=True)
         return self.get_stdout(result)
+
+    def get_container_stats(self, container_key):
+        '''return cached container stats'''
+        try:
+            return self._container_stats[container_key]
+        except KeyError:
+            pass
+
+        container = self.all_containers[container_key]
+        if not container.status == "running":
+            return self._container_stats.setdefault(container_key, None)
+
+        stats = container.stats(stream=False)
+        return self._container_stats.setdefault(container_key, stats)
 
 
 def time_it(func):
@@ -384,12 +399,23 @@ def section_container_network(client, container_id):
 def section_container_agent(client, container_id):
     container = client.all_containers[container_id]
     if container.status != "running":
-        return
+        return True
     result = client.run_agent(container)
-    status = 'ok' if '<<<check_mk>>>' in result else 'failed'
-    LOGGER.debug("running containers check_mk_agent: %s", status)
+    success = '<<<check_mk>>>' in result
+    LOGGER.debug("running containers check_mk_agent: %s", 'ok' if success else 'failed')
     section = Section(piggytarget=container_id)
     section.append(result)
+    section.write()
+    return success
+
+
+def section_container_mem(client, container_id):
+    stats = client.get_container_stats(container_id)
+    if stats is None:  # container not running
+        return
+    container_mem = stats["memory_stats"]
+    section = Section('container_mem', piggytarget=container_id)
+    section.append(json.dumps(container_mem))
     section.write()
 
 
@@ -406,6 +432,8 @@ CONTAINER_API_SECTIONS = (
     ('docker_container_labels', section_container_labels),
     ('docker_container_network', section_container_network),
 )
+
+CONTAINER_API_SECTIONS_NO_AGENT = (('docker_container_mem', section_container_mem),)
 
 
 def call_node_sections(client, config):
@@ -428,11 +456,23 @@ def call_container_sections(client, config):
                 section(client, container_id)
             except () if DEBUG else Exception as exc:
                 report_exception_to_server(exc, section.func_name)
+
+        agent_success = False
         if not is_disabled_section(config, 'docker_container_agent'):
             try:
-                section_container_agent(client, container_id)
+                agent_success = section_container_agent(client, container_id)
             except () if DEBUG else Exception as exc:
                 report_exception_to_server(exc, "section_container_agent")
+        if agent_success:
+            continue
+
+        for name, section in CONTAINER_API_SECTIONS_NO_AGENT:
+            if is_disabled_section(config, name):
+                continue
+            try:
+                section(client, container_id)
+            except () if DEBUG else Exception as exc:
+                report_exception_to_server(exc, section.func_name)
 
 
 #.

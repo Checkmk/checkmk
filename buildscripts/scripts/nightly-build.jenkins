@@ -278,6 +278,12 @@ try {
                         cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c*e.tar.gz . || true
                     """
                 }
+                stage('Cleanup source archives') {
+                    sh """
+                        cd ${ARCHIVE_DIR}
+                        ${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh check-mk-*.c?e.tar.gz
+                    """
+                }
                 stage('Sign artifacts') {
                     withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                         sh """

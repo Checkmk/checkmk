@@ -1,0 +1,11 @@
+Title: Fix report PDF opening since #7990 (1.6.0b5) in chrome
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567413793
+
+

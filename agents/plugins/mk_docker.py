@@ -350,12 +350,17 @@ def section_container_node_name(client, container_id):
 def section_container_status(client, container_id):
     container = client.all_containers[container_id]
     status = container.attrs.get("State", {})
+
     healthcheck = container.attrs.get("Config", {}).get("Healthcheck")
     if healthcheck:
         status["Healthcheck"] = healthcheck
     restart_policy = container.attrs.get("HostConfig", {}).get("RestartPolicy")
     if restart_policy:
         status["RestartPolicy"] = restart_policy
+
+    status["ImageTags"] = container.image.tags
+    status["NodeName"] = client.node_info.get("Name")
+
     section = Section('container_status', piggytarget=container_id)
     section.append(json.dumps(status))
     section.write()

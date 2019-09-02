@@ -19,7 +19,7 @@ discovery = {
 checks = {
     '': [
         (None, {}, [
-            (0, u'Status: running', []),
+            (0, u'Container running', []),
         ]),
     ],
     'health': [

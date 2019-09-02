@@ -103,6 +103,10 @@ def _parse_perfentry(entry):
         if len(crit) > 1:
             levels[3] = _try_convert_to_float(crit[0])
 
+    # only the critical level can be set, in this case warning will be equal to critical
+    if levels[0] is None and levels[1] is not None:
+        levels[0] = levels[1]
+
     # create valid perfdata 6-tuple
     min_ = float(raw[3]) if len(raw) >= 4 else None
     max_ = float(raw[4]) if len(raw) >= 5 else None

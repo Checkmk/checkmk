@@ -329,6 +329,21 @@ int TestLegacy() {
     return 0;
 }
 
+int RestoreWATOConfig() {
+    using namespace std::chrono;
+
+    try {
+        // test for main thread. will be disabled in production
+        // to find file, read and start update POC.
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::setup::DuplicateOnStdio(true);
+        cma::cfg::cap::ReInstall();
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally

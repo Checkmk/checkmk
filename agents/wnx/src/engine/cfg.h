@@ -124,7 +124,7 @@ std::string GetPathOfLoadedConfigAsString() noexcept;
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
-std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
+std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;

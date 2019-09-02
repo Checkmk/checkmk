@@ -126,8 +126,28 @@ check_info["docker_container_status.health"] = {
 #   '----------------------------------------------------------------------'
 
 
+def _docker_container_host_labels(parsed):
+    yield (u"cmk/docker_object", u"container")
+
+    image_tags = parsed.get("ImageTags")
+    if not image_tags:
+        return
+
+    image = image_tags[-1]
+    yield (u"cmk/docker_image", u"%s" % image)
+    if '/' in image:
+        __, image = image.rsplit('/', 1)
+    if ':' in image:
+        image_name, image_version = image.rsplit(':', 1)
+        yield (u"cmk/docker_image_name", u"%s" % image_name)
+        yield (u"cmk/docker_image_version", u"%s" % image_version)
+    else:
+        yield (u"cmk/docker_image_name", u"%s" % image)
+
+
 def discover_docker_container_status(parsed):
-    yield HostLabel(u"cmk/docker_object", u"container")
+    for label, value in _docker_container_host_labels(parsed):
+        yield HostLabel(label, value)
     if _is_active_container(parsed):
         yield None, {}
 
@@ -137,7 +157,12 @@ def check_docker_container_status(_no_item, _no_params, parsed):
     status = parsed.get("Status", "unknown")
     state = {"running": 0, "unknown": 3}.get(status, 2)
 
-    yield state, "Status: %s" % status
+    info = "Container %s" % status
+    node_name = parsed.get("NodeName")
+    if node_name:
+        info += " on node %s" % node_name
+
+    yield state, info
 
     if parsed.get("Error"):
         yield 2, "Error: %s" % parsed["Error"]

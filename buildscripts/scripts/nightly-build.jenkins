@@ -281,7 +281,7 @@ try {
                 stage('Cleanup source archives') {
                     sh """
                         cd ${ARCHIVE_DIR}
-                        ${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh check-mk-*.{cme,cre,cee}.tar.gz
+                        ${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh check-mk-*.c?e.tar.gz
                     """
                 }
                 stage('Sign artifacts') {

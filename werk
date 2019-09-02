@@ -802,6 +802,12 @@ def main_fetch_ids(args):
         first_free = 7680
         new_first_free = first_free + num
 
+    # cma werks are between 9000 and 9999. Skip over this area for new
+    # reserved werk ids
+    if 9000 <= first_free < 10000 or 9000 <= new_first_free < 10000:
+        first_free = 10000
+        new_first_free = first_free + num
+
     # Store the werk_ids to reserve
     my_ids = get_werk_ids() + range(first_free, new_first_free)
     store_werk_ids(my_ids)

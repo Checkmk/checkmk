@@ -58,8 +58,8 @@ node {
                             --exclude '*dbgsym*.deb' \
                             -e "ssh -o StrictHostKeyChecking=no \
                             -i ${RELEASE_KEY_DIR}" \
-	                    ${PACKAGE_DIR}/${CMK_VERS} \
-	                    bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                            ${PACKAGE_DIR}/${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}
                     """
                 }
             }

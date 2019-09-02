@@ -302,6 +302,9 @@ class DiscoveryResult(object):
     def __repr__(self):
         return "DiscoveryResult(%r)" % map(repr, self)
 
+    def __str__(self):
+        return "%s" % map(tuple, self)
+
 
 def assertDiscoveryResultsEqual(check, actual, expected):
     """
@@ -314,7 +317,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     assert isinstance(expected, DiscoveryResult), \
            "%r is not a DiscoveryResult instance" % expected
     assert len(actual.entries) == len(expected.entries), \
-           "DiscoveryResults are not of equal length"
+           "DiscoveryResults are not of equal length: %s != %s" % (actual, expected)
     for enta, ente in zip(actual, expected):
         item_a, default_params_a = enta
         if isinstance(default_params_a, str):

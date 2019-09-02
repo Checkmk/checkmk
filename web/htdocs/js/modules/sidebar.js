@@ -509,9 +509,6 @@ function handle_scroll(delta) {
 /** Event handler for mouse wheel event.
  */
 function scrollWheel(event){
-    if (!event)
-        event = window.event;
-
     // TODO: It's not reliable to detect the scrolling direction with wheel events:
     // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
     handle_scroll(event.deltaY < 0 ? 1: -1);
@@ -522,7 +519,6 @@ function scrollWheel(event){
         store_scroll_position();
 
     event.preventDefault();
-    return false;
 }
 
 

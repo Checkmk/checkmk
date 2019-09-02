@@ -12,6 +12,8 @@ namespace cma::cmdline {
 
 constexpr int kParamShift = 10;
 
+constexpr std::string_view kRestoreParam = "restore";
+
 constexpr std::string_view kInstallParam = "install";
 constexpr std::string_view kRemoveParam = "remove";
 constexpr std::string_view kLegacyTestParam = "test";

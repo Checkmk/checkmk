@@ -305,7 +305,7 @@ TEST(CmaCfg, InstallationTypeCheck) {
 
     cma::details::G_Test = false;
 
-    fs::path install_ini = cma::cfg::GetFileInstallDir();
+    fs::path install_ini = cma::cfg::GetRootInstallDir();
     std::error_code ec;
     fs::create_directories(install_ini, ec);
     install_ini /= files::kIniFile;

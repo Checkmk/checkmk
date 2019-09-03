@@ -59,7 +59,7 @@ node {
                             -e "ssh -o StrictHostKeyChecking=no \
                             -i ${RELEASE_KEY_DIR}" \
                             ${PACKAGE_DIR}/${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/${CMK_VERS}/
                     """
                 }
             }

@@ -389,4 +389,92 @@ TEST(CapTest, CheckInValid) {
     }
 }
 
+TEST(CapTest, ReInstallRestore) {
+    using namespace cma::tools;
+    cma::OnStartTest();
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [r, u] = tst::CreateInOut();
+    auto root = r.wstring();
+    auto user = u.wstring();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    auto old_user = cma::cfg::GetUserDir();
+
+    fs::path ini_base = old_user;
+    ini_base /= "check_mk.ps.test.ini";
+    fs::path cap_base = old_user;
+    cap_base /= "plugins.test.cap";
+    fs::path cap_null = old_user;
+    cap_null /= "plugins_null.test.cap";
+
+    std::error_code ec;
+    try {
+        fs::create_directory(r / dirs::kInstall);
+        fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
+        fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
+        tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
+    } catch (const std::exception& e) {
+        ASSERT_TRUE(false) << "can't create file data exception is "
+                           << e.what();
+    }
+
+    GetCfg().pushFolders(r, u);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+
+    auto user_gen = [u](const std::wstring_view name) -> auto {
+        return (u / dirs::kInstall / name).wstring();
+    };
+
+    auto root_gen = [r](const std::wstring_view name) -> auto {
+        return (r / dirs::kInstall / name).wstring();
+    };
+
+    cma::cfg::cap::ReInstall();
+    auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+    auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
+    auto bakery = cma::tools::ReadFileInString(
+        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+    auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+    auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
+    auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+    auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
+    ASSERT_TRUE(user_ini);
+    ASSERT_EQ(user_cap_size, root_cap_size);
+    ASSERT_TRUE(user_dat);
+    ASSERT_TRUE(bakery);
+    EXPECT_TRUE(user_dat == root_dat);
+    EXPECT_TRUE(user_ini == root_ini);
+    auto table = SplitString(bakery.value(), "\n");
+    EXPECT_EQ(table[3], "ps:");
+
+    // now damage files
+    auto destroy_file = [](fs::path f) {
+        std::ofstream ofs(f, std::ios::binary);
+
+        if (ofs) {
+            ofs << "";
+        }
+    };
+
+    destroy_file(user_gen(L"check_mk.ini"));
+    destroy_file(user_gen(L"plugins.cap"));
+    destroy_file(user_gen(L"checkmk.dat"));
+    destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
+    cma::cfg::cap::ReInstall();
+
+    user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+    bakery = cma::tools::ReadFileInString(
+        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+    user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+    user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+    ASSERT_TRUE(user_ini);
+    ASSERT_EQ(user_cap_size, root_cap_size);
+    ASSERT_TRUE(user_dat);
+    EXPECT_TRUE(user_dat == root_dat);
+    EXPECT_TRUE(user_ini == root_ini);
+    table = SplitString(bakery.value(), "\n");
+    EXPECT_EQ(table[3], "ps:");
+}
+
 }  // namespace cma::cfg::cap

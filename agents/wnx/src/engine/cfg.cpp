@@ -243,35 +243,28 @@ uint64_t GetPerformanceFrequency() noexcept {
     return details::RegisteredPerformanceFreq;
 }
 
-YAML::Node GetLoadedConfig() noexcept {
-    return details::G_ConfigInfo.getConfig();
-}
+YAML::Node GetLoadedConfig() noexcept { return GetCfg().getConfig(); }
 
 std::wstring GetPathOfRootConfig() noexcept {
-    return details::G_ConfigInfo.getRootYamlPath();
+    return GetCfg().getRootYamlPath();
 }
 std::wstring GetPathOfBakeryConfig() noexcept {
-    return details::G_ConfigInfo.getBakeryYamlPath();
+    return GetCfg().getBakeryYamlPath();
 }
 std::wstring GetPathOfUserConfig() noexcept {
-    return details::G_ConfigInfo.getUserYamlPath();
+    return GetCfg().getUserYamlPath();
 }
 
-int GetBackupLogMaxCount() noexcept {
-    return details::G_ConfigInfo.getBackupLogMaxCount();
-}
+int GetBackupLogMaxCount() noexcept { return GetCfg().getBackupLogMaxCount(); }
 
-size_t GetBackupLogMaxSize() noexcept {
-    return details::G_ConfigInfo.getBackupLogMaxSize();
-}
+size_t GetBackupLogMaxSize() noexcept { return GetCfg().getBackupLogMaxSize(); }
 
 std::wstring GetPathOfLoadedConfig() noexcept {
     using namespace wtools;
 
     std::wstring wstr = fmt::format(
-        L"'{}','{}','{}'", details::G_ConfigInfo.getRootYamlPath().c_str(),
-        details::G_ConfigInfo.getBakeryDir().c_str(),
-        details::G_ConfigInfo.getUserYamlPath().c_str());
+        L"'{}','{}','{}'", GetCfg().getRootYamlPath().c_str(),
+        GetCfg().getBakeryDir().c_str(), GetCfg().getUserYamlPath().c_str());
     return wstr;
 }
 
@@ -280,102 +273,78 @@ std::string GetPathOfLoadedConfigAsString() noexcept {
 }
 
 std::wstring GetPathOfLoadedUserConfig() noexcept {
-    return details::G_ConfigInfo.getUserYamlPath();
+    return GetCfg().getUserYamlPath();
 }
 
 std::wstring GetUserPluginsDir() noexcept {
-    return details::G_ConfigInfo.getUserPluginsDir();
+    return GetCfg().getUserPluginsDir();
 }
 
 std::wstring GetSystemPluginsDir() noexcept {
-    return details::G_ConfigInfo.getSystemPluginsDir();
+    return GetCfg().getSystemPluginsDir();
 }
 
-std::wstring GetUserDir() noexcept {
-    return details::G_ConfigInfo.getUserDir();
-}
+std::wstring GetUserDir() noexcept { return GetCfg().getUserDir(); }
 
 std::wstring GetUpgradeProtocolDir() noexcept {
-    auto dir = details::G_ConfigInfo.getUserDir() / dirs::kPluginConfig;
+    auto dir = GetCfg().getUserDir() / dirs::kPluginConfig;
     return dir;
 }
 
-std::wstring GetBakeryDir() noexcept {
-    return details::G_ConfigInfo.getBakeryDir();
-}
+std::wstring GetBakeryDir() noexcept { return GetCfg().getBakeryDir(); }
 
 std::filesystem::path GetBakeryFile() noexcept {
-    auto bakery = details::G_ConfigInfo.getBakeryDir();
+    auto bakery = GetCfg().getBakeryDir();
     bakery /= files::kDefaultMainConfig;
     bakery.replace_extension(files::kDefaultBakeryExt);
     return bakery;
 }
 
 std::wstring GetUserInstallDir() noexcept {
-    auto data_dir = details::G_ConfigInfo.getUserDir();
+    auto data_dir = GetCfg().getUserDir();
     return data_dir / dirs::kUserInstallDir;
 }
 
-std::wstring GetRootDir() noexcept {
-    return details::G_ConfigInfo.getRootDir();
-}
+std::wstring GetRootDir() noexcept { return GetCfg().getRootDir(); }
 
 std::wstring GetRootInstallDir() noexcept {
-    auto root = details::G_ConfigInfo.getRootDir();
+    auto root = GetCfg().getRootDir();
     return root / dirs::kFileInstallDir;
 }
 
-std::wstring GetLocalDir() noexcept {
-    return details::G_ConfigInfo.getLocalDir();
-}
+std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
 
-std::wstring GetStateDir() noexcept {
-    return details::G_ConfigInfo.getStateDir();
-}
+std::wstring GetStateDir() noexcept { return GetCfg().getStateDir(); }
 
-std::wstring GetAuStateDir() noexcept {
-    return details::G_ConfigInfo.getAuStateDir();
-}
+std::wstring GetAuStateDir() noexcept { return GetCfg().getAuStateDir(); }
 
 std::wstring GetPluginConfigDir() noexcept {
-    return details::G_ConfigInfo.getPluginConfigDir();
+    return GetCfg().getPluginConfigDir();
 }
 
-std::wstring GetUpdateDir() noexcept {
-    return details::G_ConfigInfo.getUpdateDir();
-}
+std::wstring GetUpdateDir() noexcept { return GetCfg().getUpdateDir(); }
 
-std::wstring GetSpoolDir() noexcept {
-    return details::G_ConfigInfo.getSpoolDir();
-}
+std::wstring GetSpoolDir() noexcept { return GetCfg().getSpoolDir(); }
 
-std::wstring GetTempDir() noexcept {
-    return details::G_ConfigInfo.getTempDir();
-}
+std::wstring GetTempDir() noexcept { return GetCfg().getTempDir(); }
 
-std::string GetHostName() noexcept {
-    return details::G_ConfigInfo.getHostName();
-}
+std::string GetHostName() noexcept { return GetCfg().getHostName(); }
 
-std::wstring GetLogDir() noexcept {
-    return details::G_ConfigInfo.getLogFileDir();
-}
+std::wstring GetLogDir() noexcept { return GetCfg().getLogFileDir(); }
 
-std::wstring GetWorkingDir() noexcept { return details::G_ConfigInfo.getCwd(); }
+std::wstring GetWorkingDir() noexcept { return GetCfg().getCwd(); }
 
-std::wstring GetMsiExecPath() noexcept {
-    return details::G_ConfigInfo.getMsiExecPath();
-}
+std::wstring GetMsiExecPath() noexcept { return GetCfg().getMsiExecPath(); }
 
 // #TODO gtest
-bool IsLoadedConfigOk() noexcept { return details::G_ConfigInfo.isOk(); }
+bool IsLoadedConfigOk() noexcept { return GetCfg().isOk(); }
 
 bool StoreUserYamlToCache() noexcept {
     namespace fs = std::filesystem;
     auto loaded = GetLoadedConfig();
     if (loaded.IsNull() || !loaded.IsMap()) return false;
 
-    auto user_file = cma::cfg::details::G_ConfigInfo.getUserYamlPath();
+    auto user_file = cma::cfg::GetCfg().getUserYamlPath();
 
     StoreFileToCache(user_file);
     return true;
@@ -391,7 +360,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
         return {};
     }
 
-    auto cache_path = details::G_ConfigInfo.getCacheDir();
+    auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
         XLOG::l(XLOG_FLINE + "Can't create folder {}", cache_path.u8string());
         return {};
@@ -426,7 +395,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
 // gtest [+]
 // returns address where we could found cached config file
 std::wstring GetYamlFromCache() noexcept {
-    auto cache_path = details::G_ConfigInfo.getCacheDir();
+    auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
         XLOG::l(XLOG_FLINE + "Can\'t create folder %s", cache_path.u8string());
         return {};
@@ -448,7 +417,7 @@ void LoadGlobal() {
 }
 
 // test and reset function
-void KillDefaultConfig() { details::G_ConfigInfo.cleanConfig(); }
+void KillDefaultConfig() { GetCfg().cleanConfig(); }
 
 //
 // creates predefined list of folders where we are going to search for a files
@@ -656,10 +625,12 @@ bool Folders::setRootEx(
     return true;
 }  // namespace cma::cfg::details
 
-void Folders::createDataFolderStructure(const std::wstring& proposed_folder) {
+void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
+                                        CreateMode mode) {
     try {
         std::filesystem::path folder = proposed_folder;
-        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring());
+        data_ =
+            makeDefaultDataFolder(folder.lexically_normal().wstring(), mode);
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
                    e.what());
@@ -712,13 +683,15 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // 1. ProgramData/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view AgentDataFolder) {
+    std::wstring_view AgentDataFolder, CreateMode mode) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
-    auto draw_folder = [](std::wstring_view DataFolder) -> auto {
+    auto draw_folder = [mode](std::wstring_view DataFolder) -> auto {
         fs::path app_data = DataFolder;
-        app_data /= cma::cfg::kAppDataCompanyName;
-        app_data /= cma::cfg::kAppDataAppName;
+        if (mode == CreateMode::with_path) {
+            app_data /= cma::cfg::kAppDataCompanyName;
+            app_data /= cma::cfg::kAppDataAppName;
+        }
         return app_data;
     };
 
@@ -769,7 +742,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
             XLOG::l.i(
                 "Loading {} direct. User and Bakery files will be IGNORED",
                 wtools::ConvertToUTF8(name));
-            auto loaded = details::G_ConfigInfo.loadDirect(name);
+            auto loaded = GetCfg().loadDirect(name);
             if (!loaded) continue;
 
             // file is loaded, write info in config file
@@ -789,13 +762,13 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
         break;
     }
 
-    auto code = details::G_ConfigInfo.loadAggregated(usable_name, cache_op);
+    auto code = GetCfg().loadAggregated(usable_name, cache_op);
 
     if (code >= 0) return true;
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
               wtools::ConvertToUTF8(usable_name),
-              details::G_ConfigInfo.getRootDir().u8string(), code);
+              GetCfg().getRootDir().u8string(), code);
 
     return false;
 }
@@ -826,7 +799,7 @@ bool ReloadConfigAutomatically() { return false; }
 // for execution
 const std::wstring FindExeFileOnPath(const std::wstring& File) {
     using namespace std::filesystem;
-    auto paths = details::G_ConfigInfo.getExePaths();
+    auto paths = GetCfg().getExePaths();
     for (const auto& dir : paths) {
         auto file_path = dir / File;
         if (exists(file_path)) {
@@ -837,7 +810,7 @@ const std::wstring FindExeFileOnPath(const std::wstring& File) {
 }
 
 std::vector<std::filesystem::path> GetExePaths() {
-    return details::G_ConfigInfo.getExePaths();
+    return GetCfg().getExePaths();
 }
 
 // Find cfg file, usually YAML on one of the our paths for config
@@ -1182,7 +1155,8 @@ void ConfigInfo::initFolders(
     const std::wstring& AgentDataFolder)   // look in dis
 {
     cleanFolders();
-    folders_.createDataFolderStructure(AgentDataFolder);
+    folders_.createDataFolderStructure(AgentDataFolder,
+                                       Folders::CreateMode::with_path);
 
     // This is not very good idea, but we want
     // to start logging as early as possible
@@ -1232,6 +1206,33 @@ void ConfigInfo::cleanConfig() {
     ok_ = false;
 }
 
+bool ConfigInfo::pushFolders(const std::filesystem::path& root,
+                             const std::filesystem::path& data) {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.size() >= kMaxFoldersStackSize) {
+        XLOG::l("Folders Stack is overflown, max size is [{}]",
+                kMaxFoldersStackSize);
+        return false;
+    }
+    folders_stack_.push(folders_);
+    folders_.setRoot({}, root.wstring());
+    folders_.createDataFolderStructure(data, Folders::CreateMode::direct);
+
+    return true;
+}
+
+bool ConfigInfo::popFolders() {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.empty()) {
+        XLOG::l("Imbalanced pop call for folders stack");
+        return false;
+    }
+
+    folders_ = folders_stack_.top();
+    folders_stack_.pop();
+    return true;
+}
+
 std::wstring FindMsiExec() noexcept {
     std::filesystem::path p = cma::tools::win::GetSystem32Folder();
     p /= "msiexec.exe";
@@ -1272,7 +1273,7 @@ static void PrepareEnvironment() {
 
     namespace fs = std::filesystem;
 
-    auto fs_state_path = details::G_ConfigInfo.getStateDir();
+    auto fs_state_path = GetCfg().getStateDir();
     auto state_path = fs_state_path.u8string();
 
     // delete all files in folder - this is DEBUG ONLY
@@ -1927,5 +1928,7 @@ bool UninstallProduct(std::string_view name) {
 
     return false;
 }
+
+details::ConfigInfo& GetCfg() { return details::G_ConfigInfo; }
 
 }  // namespace cma::cfg

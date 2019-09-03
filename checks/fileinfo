@@ -268,8 +268,8 @@ def fileinfo_groups_precompile(hostname, item, params):
             if group_name_pattern == item:
                 patterns.append(pattern)
 
-    from cmk_base.checking import determine_check_params
-    precomped = determine_check_params(params).copy()
+    import cmk_base.checking
+    precomped = cmk_base.checking.determine_check_params(params).copy()
     precomped['precompiled_patterns'] = patterns
     return precomped
 

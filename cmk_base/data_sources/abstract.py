@@ -737,17 +737,17 @@ class CheckMKAgentDataSource(DataSource):
         allowed_nets = set(_normalize_ip_addresses(agent_only_from))
         expected_nets = set(_normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
+            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
         if exceeding:
-            infotexts.append("agent allows extra: %s" % " ".join(sorted(exceeding)))
+            infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
         missing = expected_nets - allowed_nets
         if missing:
-            infotexts.append("agent blocks: %s" % " ".join(sorted(missing)))
+            infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        return 1, "invalid access configuration: %s%s" % (", ".join(infotexts), state_markers[1])
+        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts), state_markers[1])
 
     def _is_expected_agent_version(self, agent_version, expected_version):
         try:

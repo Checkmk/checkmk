@@ -425,6 +425,11 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         })
 
+        content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
+        content += 'df_use_fs_used_as_metric_name = True\n'
+        store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
+                        content)
+
         # A contact group for all hosts and services
         groups = {
             "contact": {

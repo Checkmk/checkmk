@@ -17,12 +17,12 @@ for SRC_PATH in $SRC_PATHS; do
     REMOVE_DIRS=""
     echo "=> $SRC_PATH"
 
-    if tar tvzf "$SRC_PATH" | grep "$DIRNAME/managed" >/dev/null; then
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/managed/.*" >/dev/null; then
         echo "Found CME specific components..."
         REMOVE_DIRS+=" $DIRNAME/managed/*"
     fi
 
-    if tar tvzf "$SRC_PATH" | grep "$DIRNAME/enterprise" >/dev/null; then
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/enterprise/.*" >/dev/null; then
         echo "Found CEE specific components..."
         REMOVE_DIRS+=" $DIRNAME/enterprise/*"
     fi

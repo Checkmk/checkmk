@@ -52,11 +52,8 @@ export function merge_args(defaults, args = {})
 }
 
 export function prevent_default_events(event) {
-    if (event.preventDefault)
-        event.preventDefault();
-    if (event.stopPropagation)
-        event.stopPropagation();
-    event.returnValue = false;
+    event.preventDefault();
+    event.stopPropagation();
     return false;
 }
 
@@ -133,20 +130,10 @@ export function change_class(o, a, b) {
 }
 
 // Adds document/window global event handlers
+// TODO: Move the window fallback to the call sites (when necessary) and nuke this function
 export function add_event_handler(type, func, obj) {
     obj = (typeof(obj) === "undefined") ? window : obj;
-
-    if (obj.addEventListener) {
-        // W3 standard browsers
-        obj.addEventListener(type, func, false);
-    }
-    else if (obj.attachEvent) {
-        // IE<9
-        obj.attachEvent("on" + type, func);
-    }
-    else {
-        obj["on" + type] = func;
-    }
+    obj.addEventListener(type, func, false);
 }
 
 

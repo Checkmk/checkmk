@@ -1,0 +1,11 @@
+Title: check_icmp: minimum number of successful pings for OK status consideration
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b9
+Date: 1567168457
+
+In the previous version, failure to ping one IP address amongst multiples addresses led to a Crit status of the icmp service. This new feature allows to specify the minimum number of successful pings in order to deem the service as OK. This signifies that pinging one address successfully can be sufficient regardless of the number of failures for the other remanining addresses.

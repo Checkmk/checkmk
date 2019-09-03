@@ -5739,13 +5739,13 @@ check_metrics["check_mk_active-icmp"] = {
 # This metric is not for an official Check_MK check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
-    "rta": {
+    "~.*rta": {
         "scale": m
     },
-    "rtmax": {
+    "~.*rtmax": {
         "scale": m
     },
-    "rtmin": {
+    "~.*rtmin": {
         "scale": m
     },
 }

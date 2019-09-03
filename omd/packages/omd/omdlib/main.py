@@ -3343,7 +3343,10 @@ def initialize_livestatus_tcp_tls_after_update(site):
     encryption for compatibility. Only enable it for new sites (by the
     default setting)."""
     if site.conf["LIVESTATUS_TCP"] != "on":
-        return
+        return  # Livestatus TCP not enabled, no need to set this option
+
+    if "LIVESTATUS_TCP_TLS" in site.read_site_config():
+        return  # Is already set in this site
 
     config_set_value(site, {}, "LIVESTATUS_TCP_TLS", value="off", save=True)
 
@@ -4130,7 +4133,7 @@ class SiteContext(AbstractSiteContext):
 
         Puts these variables into the config dict without the CONFIG_. Also
         puts the variables into the process environment."""
-        self._config = self._read_site_config()
+        self._config = self.read_site_config()
 
         # Get the default values of all config hooks that are not contained
         # in the site configuration. This can happen if there are new hooks
@@ -4144,7 +4147,7 @@ class SiteContext(AbstractSiteContext):
 
         self._config_loaded = True
 
-    def _read_site_config(self):
+    def read_site_config(self):
         """Read and parse the file site.conf of a site into a dictionary and returns it"""
         config = {}
         confpath = "%s/etc/omd/site.conf" % (self.dir)

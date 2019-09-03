@@ -419,6 +419,16 @@ def section_container_mem(client, container_id):
     section.write()
 
 
+def section_container_cpu(client, container_id):
+    stats = client.get_container_stats(container_id)
+    if stats is None:  # container not running
+        return
+    container_cpu = stats["cpu_stats"]
+    section = Section('container_cpu', piggytarget=container_id)
+    section.append(json.dumps(container_cpu))
+    section.write()
+
+
 NODE_SECTIONS = (
     ('docker_node_info', section_node_info),
     ('docker_node_disk_usage', section_node_disk_usage),
@@ -433,7 +443,10 @@ CONTAINER_API_SECTIONS = (
     ('docker_container_network', section_container_network),
 )
 
-CONTAINER_API_SECTIONS_NO_AGENT = (('docker_container_mem', section_container_mem),)
+CONTAINER_API_SECTIONS_NO_AGENT = (
+    ('docker_container_mem', section_container_mem),
+    ('docker_container_cpu', section_container_cpu),
+)
 
 
 def call_node_sections(client, config):

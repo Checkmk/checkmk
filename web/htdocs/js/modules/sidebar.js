@@ -96,7 +96,6 @@ export function snapin_start_drag(event) {
     if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
         return true;
 
-    event.stopPropagation();
     event.cancelBubble = true;
 
     snapinDragging = target.parentNode;
@@ -108,8 +107,7 @@ export function snapin_start_drag(event) {
     snapinScrollTop = document.getElementById("side_content").scrollTop;
 
     // Disable the default events for all the different browsers
-    event.preventDefault();
-    return false;
+    return utils.prevent_default_events(event);
 }
 
 function snapinDrag(event) {
@@ -171,9 +169,7 @@ function snapinDrop(event, targetpos) {
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
     if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
+        return utils.prevent_default_events(event);
     }
 
     var par = snapinDragging.parentNode;
@@ -439,8 +435,6 @@ function dragScroll(event) {
     if (dragging === false)
         return true;
 
-    event.preventDefault();
-    event.stopPropagation();
     event.cancelBubble = true;
 
     var inhalt = document.getElementById("side_content");
@@ -456,7 +450,7 @@ function dragScroll(event) {
     startY = event.clientY;
 
     dragging = event;
-    return false;
+    return utils.prevent_default_events(event);
 }
 
 function sidebar_width()

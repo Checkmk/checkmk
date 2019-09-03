@@ -388,7 +388,7 @@ $nform-table-hr-color:			    #e5e5e5;
 $iconbutton-filter:			    invert(0%);
 
 $multiple-select-bg-color:		    $white;
-$popup-menu-select-bg-color:		    $grey-5;
+$popup-menu-select-bg-color:		    $white;
 
 $tree-collapse-img-filter:		    null;
 
@@ -413,6 +413,31 @@ $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color:		    $theme-color-table-border;
 
+$availability-data-table-border:		        $wato-data-table-border;
+$availability-data-th-bg-color:		            $wato-data-th-bg-color;
+$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$data-table-td-count-state-border-color:        null;
+
+$timelineevents-data-table-border:		        $wato-data-table-border;
+$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
+$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$table-cell-last-child-border-radius: $last-child-border-radius;
+
+$duallist-control-a-hover-bg-color:             $wato-a-hover-bg-color;
+
+$side-content-top:                              66px;
+$snapin-margin:                                 8px 0;
+
+$main-body-padding:                             68px 16px 60px;
+
+$snapin-cmc-table-width:                        228px;
+$snapin-list-color:                             $white;
+
+$performance-table-shared-padding:              8px;
+
+
 // Node visualization
 
 $node-vis-darkgrey:			    rgb(169, 169, 169);
@@ -429,21 +454,3 @@ $node-vis-menu-bg-color:		    null;
 $node-vis-history-bg-color:		    null;
 $node-vis-history-border-color:		    null;
 $node-vis-history-filter:		    null;
-
-
-// Added by Baris - Review with Kenneth
-$availability-data-table-border:		        $wato-data-table-border;
-$availability-data-th-bg-color:		            $wato-data-th-bg-color;
-$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
-
-$data-table-td-count-state-border-color:        null;
-
-$timelineevents-data-table-border:		        $wato-data-table-border;
-$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
-$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
-
-$table-cell-last-child-border-radius: $last-child-border-radius;
-
-::-webkit-resizer {
-  display: none;
-}

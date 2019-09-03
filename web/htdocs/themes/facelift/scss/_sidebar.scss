@@ -53,7 +53,7 @@ body.side {
   .link {
     color: $theme-color-lightgrey;
   }
-  
+
   .title {
     color: $side-title-color;
   }
@@ -176,7 +176,7 @@ body.main .popup_menu #side_header > span {
 
 /* Only put in a top offset when on the sidebar - not for dashlets */
 #side_header + #side_content {
-  top: 66px;
+  top: $side-content-top;
 }
 
 /* The footer of the sidebar */
@@ -251,7 +251,7 @@ span#msg_label {
 body.side div.snapin, div.add_snapin div.snapin  {
   width: 100%;
   padding: 0;
-  margin: 8px 0;
+  margin: $snapin-margin;
   overflow: hidden;
   background: $theme-color-sidebar-background;
   border: $snapin-border;
@@ -260,6 +260,7 @@ body.side div.snapin, div.add_snapin div.snapin  {
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
+
   &:first-child {
     margin-top: 6px;
   }
@@ -280,6 +281,8 @@ div.snapin {
     }
 
     b.heading {
+      display: inline-block;
+      width: calc(100% - 25px);
       font-size: $theme-font-size-main;
       font-weight: 500;
       letter-spacing: $theme-letter-spacing-table;
@@ -383,7 +386,7 @@ div.snapin {
 
   li {
     padding-left: 1px;
-    color: #478;
+    color: $snapin-list-color;
 
     &.sidebar {
       margin-left: 0;

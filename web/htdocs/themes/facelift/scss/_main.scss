@@ -90,7 +90,7 @@ select:not([multiple]) {
 }
 
 div.popup_menu select:not([multiple]) {
-  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px no-repeat;
 }
 
 select::-ms-expand {
@@ -687,6 +687,11 @@ table.vs_duallist {
     width: 14px;
     text-align: center;
     text-decoration: none;
+
+    &:hover {
+      text-decoration: none;
+      background-color: $duallist-control-a-hover-bg-color;
+    }
 
     &.add {
       float: right;

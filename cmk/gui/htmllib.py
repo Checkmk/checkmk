@@ -2230,7 +2230,7 @@ class html(HTMLGenerator):
             attrs = {}
 
         # Model
-        value = self.request.var(varname, deflt)
+        value = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
 
         self.form_vars.append(varname)

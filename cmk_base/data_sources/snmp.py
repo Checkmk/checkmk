@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import ast
 import time
 
@@ -49,7 +50,19 @@ from .host_sections import HostSections
 #   '----------------------------------------------------------------------'
 
 
-class SNMPDataSource(DataSource):
+# TODO: Move common functionality of SNMPManagementBoardDataSource and
+# SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
+# inherit from ABCSNMPDataSource instead of SNMPDataSource
+class ABCSNMPDataSource(DataSource):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def _snmp_config(self):
+        # type: () -> snmp_utils.SNMPHostConfig
+        raise NotImplementedError()
+
+
+class SNMPDataSource(ABCSNMPDataSource):
     _for_mgmt_board = False
 
     def __init__(self, hostname, ipaddress):
@@ -71,8 +84,13 @@ class SNMPDataSource(DataSource):
     def _cpu_tracking_id(self):
         return "snmp"
 
+    @property
+    def _snmp_config(self):
+        # type: () -> snmp_utils.SNMPHostConfig
+        return self._host_config.snmp_config(self._ipaddress)
+
     def describe(self):
-        snmp_config = self._host_config.snmp_config(self._ipaddress)
+        snmp_config = self._snmp_config
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
@@ -144,7 +162,7 @@ class SNMPDataSource(DataSource):
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
             check_plugin_names = self._check_plugin_name_filter_func(
-                self._host_config.snmp_config(self._ipaddress),
+                self._snmp_config,
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,
                 for_mgmt_board=self._for_mgmt_board)
@@ -158,7 +176,7 @@ class SNMPDataSource(DataSource):
 
         check_plugin_names = self.get_check_plugin_names()
 
-        snmp_config = self._host_config.snmp_config(self._ipaddress)
+        snmp_config = self._snmp_config
         info = {}
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
@@ -281,3 +299,8 @@ class SNMPManagementBoardDataSource(ManagementBoardDataSource, SNMPDataSource):
 
     def title(self):
         return "Management board - SNMP"
+
+    @property
+    def _snmp_config(self):
+        # type: () -> snmp_utils.SNMPHostConfig
+        return self._host_config.management_snmp_config

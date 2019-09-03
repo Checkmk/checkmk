@@ -2556,6 +2556,35 @@ class HostConfig(object):
         return default_value
 
     @property
+    def management_snmp_config(self):
+        # type: () -> cmk_base.snmp_utils.SNMPHostConfig
+        if self.management_protocol != "snmp":
+            raise MKGeneralException("Management board is not configured to be contacted via SNMP")
+
+        address = self.management_address
+        if address is None:
+            raise MKGeneralException("Management board address is not configured")
+
+        return cmk_base.snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=self.is_ipv6_primary,
+            hostname=self.hostname,
+            ipaddress=address,
+            credentials=self.management_credentials,
+            port=self._snmp_port(),
+            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
+            is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
+                self.hostname, snmpv2c_hosts),
+            bulk_walk_size_of=self._bulk_walk_size(),
+            timing=self._snmp_timing(),
+            oid_range_limits=self._config_cache.host_extra_conf(self.hostname,
+                                                                snmp_limit_oid_range),
+            snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
+            character_encoding=self._snmp_character_encoding(),
+            is_usewalk_host=self.is_usewalk_host,
+            is_inline_snmp_host=self._is_inline_snmp_host(),
+        )
+
+    @property
     def additional_ipaddresses(self):
         # type: () -> Tuple[List[str], List[str]]
         #TODO Regarding the following configuration variables from WATO

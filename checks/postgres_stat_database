@@ -69,7 +69,7 @@ def inventory_postgres_stat_database(parsed):
 
 def check_postgres_stat_database(item, params, parsed):
     if item not in parsed:
-        return (3, "Database not found")
+        raise MKCounterWrapped("Cluster not runnint or database data missing")
 
     stats = parsed[item]
     status = 0

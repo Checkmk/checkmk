@@ -46,7 +46,7 @@ def _edition_short_from_pkg_path(pkg_path):
 @pytest.mark.parametrize("what,min_size,max_size", [
     ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
     ("deb", 150 * 1024 * 1024, 165 * 1024 * 1024),
-    ("cma", 292 * 1024 * 1024, 302 * 1024 * 1024),
+    ("cma", 290 * 1024 * 1024, 302 * 1024 * 1024),
     ("tar.gz", 350 * 1024 * 1024, 380 * 1024 * 1024),
 ])
 def test_package_sizes(version_path, what, min_size, max_size):

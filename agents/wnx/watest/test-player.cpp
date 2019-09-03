@@ -326,10 +326,10 @@ TEST(PlayerTest, RealLifeInventory_Long) {
 
     error_code ec;
     vector<wstring> exe;
-    auto plugin_path = details::G_ConfigInfo.getSystemPluginsDir();
+    auto plugin_path = GetCfg().getSystemPluginsDir();
     ASSERT_TRUE(fs::exists(plugin_path, ec));
 
-    auto data_path = details::G_ConfigInfo.getDataDir();
+    auto data_path = GetCfg().getDataDir();
     ASSERT_TRUE(fs::exists(data_path, ec));
 
     exe.push_back((plugin_path.lexically_normal() / plugin).wstring());
@@ -342,7 +342,7 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     }
 
     // folder prepare
-    auto fs_state_path = details::G_ConfigInfo.getStateDir();
+    auto fs_state_path = GetCfg().getStateDir();
     auto state_path = fs_state_path.u8string();
     ASSERT_TRUE(!state_path.empty());
 

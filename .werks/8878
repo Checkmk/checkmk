@@ -1,0 +1,10 @@
+Title: Do hardware/software inventory: Host labels can now be used as rule conditions for this ruleset
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567522629
+Class: fix
+
+

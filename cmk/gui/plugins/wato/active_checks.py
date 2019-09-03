@@ -314,9 +314,14 @@ class RulespecActiveChecksIcmp(ABCHostValueRulespec):
                 ("address",
                  CascadingDropdown(
                      title=_("Alternative address to ping"),
-                     help=_("If you omit this setting then the configured IP address of that host "
-                            "will be pinged. You can set an alternative address here (e.g. when "
-                            "you want to check a secondary IP address of the host in question)."),
+                     help=_(
+                         "If you omit this setting then the configured IP address of that host "
+                         "will be pinged. In the host configuration you can provide additional "
+                         "addresses besides the main IP address (additional IP addresses section). "
+                         "In this option you can select which set of addresses you want to include "
+                         "for this check. \"Ping additional IP addresses\" will omit the host "
+                         "configured main address while the \"Ping all addresses\" option will "
+                         "include both the main and additional addresses."),
                      orientation="horizontal",
                      choices=[
                          ("address", _("Ping the normal IP address")),

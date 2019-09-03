@@ -58,6 +58,34 @@ def parse_docker_container_diskstat(info):
 
 
 def _parse_sub_sections(node, node_info):
+    version = docker_get_version(node_info)  # pylint: disable=undefined-variable
+    if version is None:
+        return _parse_sub_sections_agent_section(node, node_info)
+    return _parse_sub_sections_plugin_section(node, node_info)
+
+
+def _parse_sub_sections_plugin_section(node, node_info):
+    raw = docker_json_get_obj(node_info[1])
+    sections = {"time": raw["time"]}
+    devices = sections.setdefault("devices", {})
+
+    for entry in raw["io_service_bytes_recursive"]:
+        device_id = node, entry["major"], entry["minor"]
+        device = devices.setdefault(device_id, {})
+        device.setdefault("bytes", {})[entry["op"]] = entry["value"]
+
+    for entry in raw["io_serviced_recursive"]:
+        device_id = node, entry["major"], entry["minor"]
+        device = devices.setdefault(device_id, {})
+        device.setdefault("ios", {})[entry["op"]] = entry["value"]
+
+    for (_node, major, minor), device in devices.iteritems():
+        device["name"] = raw["names"]["%s:%s" % (major, minor)]
+
+    return sections
+
+
+def _parse_sub_sections_agent_section(node, node_info):
     sections = {}
 
     for line in node_info:
@@ -149,5 +177,5 @@ check_info["docker_container_diskstat"] = {
     "has_perfdata": True,
     "group": "diskstat",
     "node_info": True,  # add first column with actual host name
-    "includes": ["diskstat.include"],
+    "includes": ["docker.include", "diskstat.include"],
 }

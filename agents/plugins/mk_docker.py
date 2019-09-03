@@ -252,6 +252,18 @@ def set_version_info(client):
     Section.version_info['ApiVersion'] = data.get('ApiVersion')
 
 
+def _get_device_map():
+    if hasattr(_get_device_map, 'cache'):
+        return _get_device_map.cache
+    _get_device_map.cache = {}
+
+    for device in os.listdir('/sys/block'):
+        with open('/sys/block/%s/dev' % device) as handle:
+            _get_device_map.cache[handle.read().strip()] = device
+
+    return _get_device_map.cache
+
+
 #.
 #   .--Sections------------------------------------------------------------.
 #   |                  ____            _   _                               |
@@ -429,6 +441,18 @@ def section_container_cpu(client, container_id):
     section.write()
 
 
+def section_container_diskstat(client, container_id):
+    stats = client.get_container_stats(container_id)
+    if stats is None:  # container not running
+        return
+    container_blkio = stats["blkio_stats"]
+    container_blkio["time"] = time.time()
+    container_blkio["names"] = _get_device_map()
+    section = Section('container_diskstat', piggytarget=container_id)
+    section.append(json.dumps(container_blkio))
+    section.write()
+
+
 NODE_SECTIONS = (
     ('docker_node_info', section_node_info),
     ('docker_node_disk_usage', section_node_disk_usage),
@@ -446,6 +470,7 @@ CONTAINER_API_SECTIONS = (
 CONTAINER_API_SECTIONS_NO_AGENT = (
     ('docker_container_mem', section_container_mem),
     ('docker_container_cpu', section_container_cpu),
+    ('docker_container_diskstat', section_container_diskstat),
 )
 
 

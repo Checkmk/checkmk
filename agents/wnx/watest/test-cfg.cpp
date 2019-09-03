@@ -159,9 +159,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty data to user/public
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
         fs::path dflt = details::GetDefaultLogPath();
         EXPECT_TRUE(!dflt.empty());
@@ -177,9 +177,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty without user gives us default to the public/user
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
 
         fs::path dflt = details::ConvertLocationToLogPath("");
@@ -364,6 +364,42 @@ TEST(Cma, OnStart) {
         EXPECT_EQ(d,
                   cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
     }
+}
+
+TEST(Cma, PushPop) {
+    cma::OnStartTest();
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [r, u] = tst::CreateInOut();
+    auto root = r.wstring();
+    auto user = u.wstring();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    std::error_code ec;
+
+    auto old_root = GetRootDir();
+    auto old_user = GetUserDir();
+
+    ASSERT_TRUE(GetCfg().pushFolders(root, user));
+    EXPECT_EQ(root, GetRootDir());
+    EXPECT_EQ(user, GetUserDir());
+
+    GetCfg().popFolders();
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().pushFolders(root, user));
+        EXPECT_EQ(root, GetRootDir());
+        EXPECT_EQ(user, GetUserDir());
+    }
+    EXPECT_FALSE(GetCfg().pushFolders(root, user));
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().popFolders());
+    }
+    EXPECT_FALSE(GetCfg().popFolders());
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
 }
 
 }  // namespace cma::cfg

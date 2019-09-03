@@ -187,7 +187,7 @@ void Global::setupLogEnvironment() {
     using namespace XLOG;
 
     setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);
-    details::G_ConfigInfo.setLogFileDir(logfile_dir_.wstring());
+    GetCfg().setLogFileDir(logfile_dir_.wstring());
 }
 
 // loader
@@ -361,8 +361,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     // case when there is NO folder in array
     const auto default_folder_mark =
         wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
-    auto default_plugins_folder =
-        cma::cfg::details::G_ConfigInfo.getSystemPluginsDir();
+    auto default_plugins_folder = cma::cfg::GetCfg().getSystemPluginsDir();
     if (folders.size() == 0) folders.emplace_back(default_folder_mark);
 
     Plugins::CmdLineInfo cli;

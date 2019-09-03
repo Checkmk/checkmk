@@ -463,21 +463,18 @@ void ReInstall() {
     fs::path root_dir = GetRootInstallDir();
     fs::path user_dir = GetUserInstallDir();
 
-    ProcFunc funcs[] = {ReinstallCaps, ReinstallIni};
-    std::wstring_view names[] = {files::kCapFile, files::kIniFile};
-    static_assert(
-        sizeof(funcs) / sizeof(funcs[0]) == sizeof(names) / sizeof(names[0]),
-        "Those arrays should have same size");
+    std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
+        {files::kCapFile, ReinstallCaps},
+        {files::kIniFile, ReinstallIni},
+    };
 
-    auto n = names;
-    for (const auto &f : funcs) {
-        auto target = user_dir / *n;
-        auto source = root_dir / *n;
-        n++;
+    for (const auto [name, func] : data_vector) {
+        auto target = user_dir / name;
+        auto source = root_dir / name;
 
         XLOG::l.i("Forced Reinstalling '{}' with '{}'", target.u8string(),
                   source.u8string());
-        f(target, source);
+        func(target, source);
     }
 
     auto source = GetRootInstallDir();

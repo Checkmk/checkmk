@@ -25,7 +25,7 @@ AppType AppDefaultType() { return AppType::test; }
 namespace cma::cfg::details {
 TEST(StartTest, CheckStatus) {
     OnStart(cma::AppType::test);
-    auto& info = details::G_ConfigInfo;
+    auto& info = GetCfg();
     ASSERT_TRUE(!info.exe_command_paths_.empty());
     ASSERT_TRUE(!info.config_dirs_.empty());
     ASSERT_TRUE(!info.getDataDir().empty());

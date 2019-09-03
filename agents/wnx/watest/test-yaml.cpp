@@ -71,13 +71,12 @@ TEST(AgentConfig, Folders) {
     ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
     cma::tools::win::SetEnv(std::wstring(kTemporaryRoot), std::wstring(L"."));
     cma::OnStart(AppType::exe);
-    EXPECT_EQ(G_ConfigInfo.getRootDir().u8string(), ".");
-    EXPECT_EQ(G_ConfigInfo.getUserDir().u8string(),
-              "ProgramData\\checkmk\\agent");
+    EXPECT_EQ(GetCfg().getRootDir().u8string(), ".");
+    EXPECT_EQ(GetCfg().getUserDir().u8string(), "ProgramData\\checkmk\\agent");
 }
 
 TEST(AgentConfig, MainYaml) {
-    auto root_dir = details::G_ConfigInfo.getRootDir();
+    auto root_dir = GetCfg().getRootDir();
     root_dir /= files::kDefaultMainConfig;
     auto load = YAML::LoadFile(root_dir.u8string());
     EXPECT_TRUE(load.IsMap());
@@ -278,9 +277,9 @@ TEST(AgentConfig, SmartMerge) {
     namespace fs = std::filesystem;
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
-    fs::path cfgs[] = {details::G_ConfigInfo.getRootDir() / temporary_name,
-                       details::G_ConfigInfo.getBakeryDir() / temporary_name,
-                       details::G_ConfigInfo.getUserDir() / temporary_name};
+    fs::path cfgs[] = {GetCfg().getRootDir() / temporary_name,
+                       GetCfg().getBakeryDir() / temporary_name,
+                       GetCfg().getUserDir() / temporary_name};
     cfgs[1].replace_extension("bakery.yml");
     cfgs[2].replace_extension("user.yml");
 
@@ -289,14 +288,13 @@ TEST(AgentConfig, SmartMerge) {
     ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
     for (auto& f : cfgs) fs::remove(f, ec);
-    auto root_file = fs::path(details::G_ConfigInfo.getRootYamlPath());
-    auto ret =
-        G_ConfigInfo.loadAggregated(temporary_name, YamlCacheOp::nothing);
+    auto root_file = fs::path(GetCfg().getRootYamlPath());
+    auto ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kAllFailed);
     // previous state must be preserved
-    EXPECT_FALSE(G_ConfigInfo.isBakeryLoaded());
-    EXPECT_TRUE(G_ConfigInfo.isUserLoaded() ==
-                fs::exists(details::G_ConfigInfo.getUserYamlPath(), ec));
+    EXPECT_FALSE(GetCfg().isBakeryLoaded());
+    EXPECT_TRUE(GetCfg().isUserLoaded() ==
+                fs::exists(GetCfg().getUserYamlPath(), ec));
 
     fs::copy_file(root_file, cfgs[0], ec);
     ASSERT_EQ(ec.value(), 0);
@@ -385,9 +383,9 @@ TEST(AgentConfig, Aggregate) {
     namespace fs = std::filesystem;
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
-    fs::path cfgs[] = {details::G_ConfigInfo.getRootDir() / temporary_name,
-                       details::G_ConfigInfo.getBakeryDir() / temporary_name,
-                       details::G_ConfigInfo.getUserDir() / temporary_name};
+    fs::path cfgs[] = {GetCfg().getRootDir() / temporary_name,
+                       GetCfg().getBakeryDir() / temporary_name,
+                       GetCfg().getUserDir() / temporary_name};
     cfgs[1].replace_extension("bakery.yml");
     cfgs[2].replace_extension("user.yml");
 
@@ -396,14 +394,13 @@ TEST(AgentConfig, Aggregate) {
     ON_OUT_OF_SCOPE(cma::OnStart(cma::AppType::test));
 
     for (auto& f : cfgs) fs::remove(f, ec);
-    auto root_file = fs::path(details::G_ConfigInfo.getRootYamlPath());
-    auto ret =
-        G_ConfigInfo.loadAggregated(temporary_name, YamlCacheOp::nothing);
+    auto root_file = fs::path(GetCfg().getRootYamlPath());
+    auto ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kAllFailed);
     // previous state must be preserved
-    EXPECT_FALSE(G_ConfigInfo.isBakeryLoaded());
-    EXPECT_TRUE(G_ConfigInfo.isUserLoaded() ==
-                fs::exists(details::G_ConfigInfo.getUserYamlPath(), ec));
+    EXPECT_FALSE(GetCfg().isBakeryLoaded());
+    EXPECT_TRUE(GetCfg().isUserLoaded() ==
+                fs::exists(GetCfg().getUserYamlPath(), ec));
 
     fs::copy_file(root_file, cfgs[0], ec);
     ASSERT_EQ(ec.value(), 0);
@@ -474,11 +471,11 @@ TEST(AgentConfig, Aggregate) {
         }
     }
 
-    ret = G_ConfigInfo.loadAggregated(temporary_name, YamlCacheOp::nothing);
+    ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kFileLoaded);
     auto yaml = cma::cfg::GetLoadedConfig();
-    EXPECT_TRUE(G_ConfigInfo.isBakeryLoaded());
-    EXPECT_FALSE(G_ConfigInfo.isUserLoaded());
+    EXPECT_TRUE(GetCfg().isBakeryLoaded());
+    EXPECT_FALSE(GetCfg().isUserLoaded());
 
     ASSERT_EQ(yaml["bakery"]["status"].as<std::string>(), "loaded");
     auto x = yaml["global"]["enabled"].as<bool>();
@@ -490,7 +487,7 @@ TEST(AgentConfig, Aggregate) {
 
     CreateTestFile(cfgs[2], "user:\n  status: 'loaded'\nglobal:\n  port: 111");
 
-    ret = G_ConfigInfo.loadAggregated(temporary_name, YamlCacheOp::nothing);
+    ret = GetCfg().loadAggregated(temporary_name, YamlCacheOp::nothing);
     EXPECT_EQ(ret, LoadCfgStatus::kFileLoaded);
     yaml = cma::cfg::GetLoadedConfig();
     ASSERT_EQ(yaml["bakery"]["status"].as<std::string>(), "loaded");
@@ -501,8 +498,8 @@ TEST(AgentConfig, Aggregate) {
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsFolders].size(), 3);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 4);
-    EXPECT_TRUE(G_ConfigInfo.isBakeryLoaded());
-    EXPECT_TRUE(G_ConfigInfo.isUserLoaded());
+    EXPECT_TRUE(GetCfg().isBakeryLoaded());
+    EXPECT_TRUE(GetCfg().isUserLoaded());
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
@@ -518,8 +515,8 @@ TEST(AgentConfig, ReloadWithTimestamp) {
         ON_OUT_OF_SCOPE(fs::remove(path, ec));
 
         // load
-        auto ret = G_ConfigInfo.loadDirect(path);
-        auto yaml = G_ConfigInfo.getConfig();
+        auto ret = GetCfg().loadDirect(path);
+        auto yaml = GetCfg().getConfig();
         ASSERT_TRUE(yaml.IsMap());
         auto x = yaml["global"];
         ASSERT_NO_THROW(x["ena"].as<bool>(););
@@ -528,14 +525,14 @@ TEST(AgentConfig, ReloadWithTimestamp) {
 
         yaml["global"]["ena"] = false;
 
-        yaml = G_ConfigInfo.getConfig();
+        yaml = GetCfg().getConfig();
         val = yaml["global"]["ena"].as<bool>();
         EXPECT_EQ(val, false);
 
         // file NOT changed, No Load, no changes in the yaml
-        ret = G_ConfigInfo.loadDirect(path);
+        ret = GetCfg().loadDirect(path);
         EXPECT_TRUE(ret);
-        yaml = G_ConfigInfo.getConfig();
+        yaml = GetCfg().getConfig();
         val = yaml["global"]["ena"].as<bool>();
         EXPECT_EQ(val, false);
 
@@ -544,9 +541,9 @@ TEST(AgentConfig, ReloadWithTimestamp) {
         fs::last_write_time(path, ftime + 1s);
 
         // file NOT changed, But RELOADED Load, Yaml changed too
-        ret = G_ConfigInfo.loadDirect(path);
+        ret = GetCfg().loadDirect(path);
         EXPECT_TRUE(ret);
-        yaml = G_ConfigInfo.getConfig();
+        yaml = GetCfg().getConfig();
         val = yaml["global"]["ena"].as<bool>();
         EXPECT_EQ(val, true);
     }
@@ -577,15 +574,17 @@ TEST(AgentConfig, FoldersTest) {
 
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        folders.createDataFolderStructure(L"");
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
         EXPECT_TRUE(fs::exists(folders.getData()));
-        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(L""));
+        EXPECT_TRUE(
+            folders.getData() ==
+            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
     }  // namespace fs=std::filesystem;
 
     {
         Folders folders;
         auto ret = folders.setRoot(L"WinDefend", L"");  // good to test
-        folders.createDataFolderStructure(L"");
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -594,7 +593,7 @@ TEST(AgentConfig, FoldersTest) {
     {
         Folders folders;
         auto ret = folders.setRoot(L"", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"");
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -604,11 +603,13 @@ TEST(AgentConfig, FoldersTest) {
         Folders folders;
         auto ret =
             folders.setRoot(L"WinDefend", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"");
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(L""));
+        EXPECT_TRUE(
+            folders.getData() ==
+            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
     }
 }
 }  // namespace cma::cfg::details
@@ -964,13 +965,12 @@ TEST(AgentConfig, CacheApi) {
     namespace fs = std::filesystem;
     auto name = StoreFileToCache("i am not a file");
     EXPECT_TRUE(name.empty());
-    auto source_name = details::G_ConfigInfo.getTempDir() / "test";
+    auto source_name = GetCfg().getTempDir() / "test";
     const std::string src("abc");
     auto res = details::CreateTestFile(source_name, src);
     std::error_code ec;
     ON_OUT_OF_SCOPE(fs::remove(res, ec););
-    auto expected_name =
-        details::G_ConfigInfo.getCacheDir() / source_name.filename();
+    auto expected_name = GetCfg().getCacheDir() / source_name.filename();
     fs::remove(expected_name, ec);
     ASSERT_EQ(res.u8string(), source_name.u8string());
     EXPECT_TRUE(fs::exists(res, ec));
@@ -1019,13 +1019,13 @@ TEST(AgentConfig, FunctionalityCheck) {
     EXPECT_FALSE(global.realtimeEnabled());
 
     // caching USER
-    fs::path source_name = details::G_ConfigInfo.getUserYamlPath();
+    fs::path source_name = GetCfg().getUserYamlPath();
     fs::path file_to_delete;
     bool delete_required = false;
-    if (source_name.empty() ||                    // should not happen
-        !details::G_ConfigInfo.isUserLoaded()) {  // bad user file
+    if (source_name.empty() ||       // should not happen
+        !GetCfg().isUserLoaded()) {  // bad user file
         XLOG::stdio("\nI am generating user yml!\n");
-        fs::path user_f = details::G_ConfigInfo.getUserDir();
+        fs::path user_f = GetCfg().getUserDir();
         user_f /= files::kDefaultMainConfig;
         user_f.replace_extension(files::kDefaultUserExt);
         details::CreateTestFile(
@@ -1034,8 +1034,7 @@ TEST(AgentConfig, FunctionalityCheck) {
         file_to_delete = user_f;
     }
     OnStart(AppType::test);
-    auto expected_name =
-        details::G_ConfigInfo.getCacheDir() / source_name.filename();
+    auto expected_name = GetCfg().getCacheDir() / source_name.filename();
     std::error_code ec;
 
     {

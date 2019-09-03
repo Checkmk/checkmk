@@ -55,7 +55,7 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: # 127.0.0.1 192.168.56.0/24 ::1
+    _only_from: # 127.0.0.1 192.168.56.0/24 ::1
 
     # Change port where the agent is listening ( default 6556 )
     # port: 6556

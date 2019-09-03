@@ -1470,7 +1470,6 @@ class VSExplicitConditions(Transform):
         return self._rulespec.name not in [
             "host_label_rules",
             "service_label_rules",
-            "active_checks:cmk_inv",
         ]
 
     def _service_elements(self):

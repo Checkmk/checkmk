@@ -1,0 +1,11 @@
+Title: kubernetes agent should not crash with trailing / in URL prefix
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567501120
+Class: fix
+
+This fixes an issue where the kubernetes special agent crashes
+when the custom URL prefix contained a trailing "/".

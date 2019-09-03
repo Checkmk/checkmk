@@ -1039,7 +1039,8 @@ def get_api_client(arguments):
 
     config = client.Configuration()
     if arguments.url_prefix:
-        config.host = '%s:%s%s' % (arguments.url_prefix, arguments.port, arguments.path_prefix)
+        config.host = '%s:%s%s' % (arguments.url_prefix.rstrip("/"), arguments.port,
+                                   arguments.path_prefix)
     else:
         config.host = 'https://%s:%s%s' % (arguments.host, arguments.port, arguments.path_prefix)
 

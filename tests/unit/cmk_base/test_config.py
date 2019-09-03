@@ -369,6 +369,7 @@ def _management_config_ruleset():
 def test_host_config_management_credentials(monkeypatch, protocol, credentials, expected_result,
                                             ruleset):
     ts = Scenario().add_host("hostname")
+    ts.set_option("host_attributes", {"hostname": {"management_address": "127.0.0.1"}})
     ts.set_option("management_protocol", {"hostname": protocol})
 
     if credentials is not None:
@@ -381,7 +382,13 @@ def test_host_config_management_credentials(monkeypatch, protocol, credentials, 
 
     ts.set_ruleset("management_board_config", ruleset)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config("hostname").management_credentials == expected_result
+    host_config = config_cache.get_host_config("hostname")
+
+    assert host_config.management_credentials == expected_result
+
+    # Test management_snmp_config on the way...
+    if protocol == "snmp":
+        assert host_config.management_snmp_config.credentials == expected_result
 
 
 @pytest.mark.parametrize("attrs,result", [

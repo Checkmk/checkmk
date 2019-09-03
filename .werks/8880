@@ -1,0 +1,13 @@
+Title: Fix SNMP management board credentials
+Level: 2
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567533753
+
+Monitoring of SNMP management boards did not work in the previous
+1.6.0 releases when the management board credentials were different
+from the host SNMP credentials.

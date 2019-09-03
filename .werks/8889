@@ -1,0 +1,10 @@
+Title: SLES15: Fix building MSI packages
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0b9
+Date: 1567519356
+Class: fix
+
+The MSI utilities, which should be shipped with Checkmk, were missing in previous 1.6 packages.

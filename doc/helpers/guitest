@@ -34,6 +34,7 @@ def run_guitests(args):
                      (len(args), opt_repair and " in repair mode" or ""))
 
     num_successfull = 0
+    succeeded = False
     for test_name in args:
         if opt_repair:
             set_recording_symlink(test_name)

@@ -29,7 +29,7 @@ import os
 import collections
 import io
 
-from pathlib2 import Path
+import pathlib2
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -553,7 +553,7 @@ class LogwatchBlockCollector(object):
 
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
-    logmsg_dir = Path(logwatch_dir, host_name())
+    logmsg_dir = pathlib2.Path(logwatch_dir, host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
 

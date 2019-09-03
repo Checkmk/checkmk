@@ -41,30 +41,30 @@ def test_load_checks():
 
 def test_is_tcp_check():
     config.load_all_checks(check_api.get_check_api_context)
-    assert cmk_base.check_utils.is_tcp_check("xxx") == False
-    assert cmk_base.check_utils.is_tcp_check("uptime") == True
-    assert cmk_base.check_utils.is_tcp_check("uptime") == True
-    assert cmk_base.check_utils.is_tcp_check("snmp_uptime") == False
-    assert cmk_base.check_utils.is_tcp_check("mem") == True
-    assert cmk_base.check_utils.is_tcp_check("mem.linux") == True
-    assert cmk_base.check_utils.is_tcp_check("mem.ding") == True
-    assert cmk_base.check_utils.is_tcp_check("apc_humidity") == False
+    assert cmk_base.check_utils.is_tcp_check("xxx") is False
+    assert cmk_base.check_utils.is_tcp_check("uptime") is True
+    assert cmk_base.check_utils.is_tcp_check("uptime") is True
+    assert cmk_base.check_utils.is_tcp_check("snmp_uptime") is False
+    assert cmk_base.check_utils.is_tcp_check("mem") is True
+    assert cmk_base.check_utils.is_tcp_check("mem.linux") is True
+    assert cmk_base.check_utils.is_tcp_check("mem.ding") is True
+    assert cmk_base.check_utils.is_tcp_check("apc_humidity") is False
 
 
 def test_is_snmp_check():
     config.load_all_checks(check_api.get_check_api_context)
-    assert cmk_base.check_utils.is_snmp_check("xxx") == False
-    assert cmk_base.check_utils.is_snmp_check("uptime") == False
-    assert cmk_base.check_utils.is_snmp_check("uptime") == False
-    assert cmk_base.check_utils.is_snmp_check("snmp_uptime") == True
-    assert cmk_base.check_utils.is_snmp_check("mem") == False
-    assert cmk_base.check_utils.is_snmp_check("mem.linux") == False
-    assert cmk_base.check_utils.is_snmp_check("mem.ding") == False
-    assert cmk_base.check_utils.is_snmp_check("apc_humidity") == True
-    assert cmk_base.check_utils.is_snmp_check("brocade.power") == True
-    assert cmk_base.check_utils.is_snmp_check("brocade.fan") == True
-    assert cmk_base.check_utils.is_snmp_check("brocade.xy") == True
-    assert cmk_base.check_utils.is_snmp_check("brocade") == True
+    assert cmk_base.check_utils.is_snmp_check("xxx") is False
+    assert cmk_base.check_utils.is_snmp_check("uptime") is False
+    assert cmk_base.check_utils.is_snmp_check("uptime") is False
+    assert cmk_base.check_utils.is_snmp_check("snmp_uptime") is True
+    assert cmk_base.check_utils.is_snmp_check("mem") is False
+    assert cmk_base.check_utils.is_snmp_check("mem.linux") is False
+    assert cmk_base.check_utils.is_snmp_check("mem.ding") is False
+    assert cmk_base.check_utils.is_snmp_check("apc_humidity") is True
+    assert cmk_base.check_utils.is_snmp_check("brocade.power") is True
+    assert cmk_base.check_utils.is_snmp_check("brocade.fan") is True
+    assert cmk_base.check_utils.is_snmp_check("brocade.xy") is True
+    assert cmk_base.check_utils.is_snmp_check("brocade") is True
 
 
 def test_discoverable_tcp_checks():

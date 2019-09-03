@@ -19,12 +19,12 @@ for SRC_PATH in $SRC_PATHS; do
 
     if tar tvzf $SRC_PATH | grep "$DIRNAME/managed" >/dev/null; then
         echo "Found CME specific components..."
-        REMOVE_DIRS+=" $DIRNAME/managed"
+        REMOVE_DIRS+=" $DIRNAME/managed/*"
     fi
 
     if tar tvzf $SRC_PATH | grep "$DIRNAME/enterprise" >/dev/null; then
         echo "Found CEE specific components..."
-        REMOVE_DIRS+=" $DIRNAME/enterprise"
+        REMOVE_DIRS+=" $DIRNAME/enterprise/*"
     fi
 
     if [ -z "$REMOVE_DIRS" ]; then
@@ -33,7 +33,7 @@ for SRC_PATH in $SRC_PATHS; do
     fi
 
     echo "Removing$REMOVE_DIRS..."
-    gunzip -c "$SRC_PATH" | tar -v --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
+    gunzip -c "$SRC_PATH" | tar -v --wildcards --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
     mv "$SRC_PATH.new" "$SRC_PATH"
 
     echo "Checking for remaining CEE/CME files..."

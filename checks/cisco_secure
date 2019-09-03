@@ -31,10 +31,8 @@ def _sanitize_mac(string):
 
 
 def parse_cisco_secure(info):
-
     parsed = []
-    # l[1] = Name, l[2] = Portstate
-    names = {l[0]: (l[1], l[2]) for l in info[0]}
+    names = {num: (name, portstate) for num, name, portstate in info[0]}
     for num, is_enabled, status, violation_count, lastmac in info[1]:
         mac = _sanitize_mac(lastmac)
         enabled_txt = {'1': 'yes', '2': 'no'}.get(is_enabled)
@@ -42,10 +40,22 @@ def parse_cisco_secure(info):
             status_int = int(status)
         except ValueError:
             status_int = None
+
+        name, portstate = names.get(num, (num, None))
+        try:
+            portstate = int(portstate)
+        except (TypeError, ValueError):
+            pass
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
-        parsed.append((names[num][0], int(names[num][1]), enabled_txt, status_int,
-                       saveint(violation_count), mac))
+        parsed.append((
+            name,
+            portstate,
+            enabled_txt,
+            status_int,
+            saveint(violation_count),
+            mac,
+        ))
     return parsed
 
 

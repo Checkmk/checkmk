@@ -1,0 +1,10 @@
+Title: cisco_secure: don't crash if the interface name cannot be resolved
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567520838
+Class: fix
+
+

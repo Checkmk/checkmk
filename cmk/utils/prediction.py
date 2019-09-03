@@ -116,7 +116,7 @@ class TimeSeries(object):
         return list(zip(rrd_timestamps(self.twindow), self.values))
 
     def __repr__(self):
-        return str(list(self.twindow) + self.values)
+        return "TimeSeries(%s, timewindow=%s)" % (self.values, self.twindow)
 
     def __eq__(self, other):
         if not isinstance(other, TimeSeries):

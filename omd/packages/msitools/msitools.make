@@ -17,13 +17,19 @@ MSITOOLS_PATCHING := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-patching
 # packages. People need to upgrade to a more modern platform
 # for that.
 
+ifneq ($(filter $(DISTRO_CODE),sles15),)
+GSF_CONFIGURE_VARS := GSF_LIBS="$(PACKAGE_LIBGSF_LDFLAGS)" GSF_CFLAGS="$(PACKAGE_LIBGSF_CFLAGS)"
+else
+GSF_CONFIGURE_VARS :=
+endif
+
 $(MSITOOLS): $(MSITOOLS_BUILD)
 
-$(MSITOOLS)-install: $(MSITOOLS_INSTALL) 
+$(MSITOOLS)-install: $(MSITOOLS_INSTALL)
 
-$(MSITOOLS_BUILD): $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
+$(MSITOOLS_BUILD): $(LIBGSF_BUILD) $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
 	# Do not try to compile on lenny. Compiler is too old
-	if [ "$$($(GCC_SYSTEM) --version | $(SED) -n '1s/.* //p' )" != 4.3.2 ] && cd $(MSITOOLS_DIR) && ./configure --prefix=$(OMD_ROOT) ; then \
+	if [ "$$($(GCC_SYSTEM) --version | $(SED) -n '1s/.* //p' )" != 4.3.2 ] && cd $(MSITOOLS_DIR) && $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT) ; then \
 	  $(MAKE) -C libmsi ; \
 	  $(MAKE) msibuild ; \
 	  $(MAKE) msiinfo ; \

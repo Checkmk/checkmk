@@ -1,0 +1,11 @@
+Title: Fix disabling Encrypted Livestatus TCP when updating from 1.6 to 1.6
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1567502612
+Class: fix
+
+The setting LIVESTATUS_TCP_TLS was reset when updating from one 1.6.0 release
+to another release.

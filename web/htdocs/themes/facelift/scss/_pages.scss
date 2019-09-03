@@ -82,7 +82,7 @@ body {
   }
 
   &.main {
-    padding: 68px 16px 60px;
+    padding: $main-body-padding;
     margin: 0;
     font-family: $theme-font;
     font-size: $theme-font-size-main;
@@ -480,6 +480,7 @@ div.togglebutton {
 '-------------------------------------------------------------------------*/
 
 #data_container {
+  min-width: min-content;
   padding: 10px;
   background: $data-container-bg-color;
   border: $data-container-border;
@@ -1720,6 +1721,10 @@ div.popup_trigger {
     padding: 0;
     filter: $iconbutton-filter;
   }
+
+  &[id*="popup_trigger_move"] img.iconbutton {
+    filter: none;
+  }
 }
 
 div.pnp_graph a.popup_trigger {
@@ -1892,21 +1897,13 @@ table.data.job_table {
       animation: none;
     }
 
-    &.explicit > div::before {
+    &.explicit > div::before ,
+    &.discovered > div::before {
       background: #774898;
     }
 
     &.ruleset > div::before {
       background: #de4383;
-    }
-
-    &.discovered > div::before {
-      background: #f3ae4b;
-      opacity: $tag-discovered-opacity;
-    }
-
-    &.discovered:hover > div::before {
-      opacity: $tag-hover-opacity;
     }
   }
 

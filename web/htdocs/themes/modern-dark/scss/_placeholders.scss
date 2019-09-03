@@ -1,0 +1,34 @@
+// TODO: Rethink this tactic
+@mixin table-single-state-background() {
+  &.odd0,
+  &.even0 {
+    .state,
+    .svcstate:not(.statex),
+    .badflag {
+      position: relative;
+      padding-left: 32px;
+
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 16px;
+        height: 100%;
+        background-color: $grey-7;
+        border-bottom: 1px solid $grey-7;
+        content: "";
+      }
+    }
+  }
+
+  &.even0 {
+    .state,
+    .svcstate:not(.statex),
+    .badflag {
+      &:before {
+        background-color: $grey-5 !important;
+        border-color: $grey-5;
+      }
+    }
+  }
+}

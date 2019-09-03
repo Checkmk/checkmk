@@ -132,7 +132,7 @@ $theme-color-table-border:                  $grey-7; // grey
 $theme-color-table-background:              $grey-6; // light grey
 
 $theme-color-table-border-dark:             $grey-7; // dark grey
-$theme-color-table-background-dark:         #1c2528; // dark grey
+$theme-color-table-background-dark:         $grey-7; // dark grey
 
 $theme-color-table-border-dark-2:           #313638; // dark grey
 
@@ -147,7 +147,7 @@ $theme-color-table-header-text:             #2a2a2a80; // half transparent
 $theme-color-sidebar-background:            $grey-7; // dark grey
 $theme-color-sidebar-border:                $grey-5;
 
-$theme-snapin-width:                        230px;
+$theme-snapin-width:                        262px;
 
 
 // Nuances (Colors only used once)
@@ -413,6 +413,32 @@ $lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color:		    rgb(60, 60, 60);
 
+// Added by Baris - Review with Kenneth
+$availability-data-table-border:	    $wato-data-table-border;
+$availability-data-th-bg-color:		    $wato-data-th-bg-color;
+$availability-data-table-box-shadow:	    $wato-data-table-box-shadow;
+
+$data-table-td-count-state-border-color:    $grey-7 !important;
+
+$timelineevents-data-table-border:	    $wato-data-table-border;
+$timelineevents-data-th-bg-color:	    $wato-data-th-bg-color;
+$timelineevents-data-table-box-shadow:	    $wato-data-table-box-shadow;
+
+$table-cell-last-child-border-radius:	    0;
+
+$duallist-control-a-hover-bg-color:	    $wato-a-hover-bg-color;
+
+$side-content-top:                          66px;
+$snapin-margin:				    8px 0;  // Set back to 8 untill we can change the dashboard positioning on a per theme basis
+
+$main-body-padding:			    64px 12px 60px;
+
+$snapin-cmc-table-width:                    null;
+$snapin-list-color:			    $white;
+
+$performance-table-shared-padding:          8px 0;
+
+
 // Node visualization
 
 $node-vis-darkgrey:			    rgb(169, 169, 169);
@@ -429,16 +455,3 @@ $node-vis-menu-bg-color:		    $grey-5;
 $node-vis-history-bg-color:		    $grey-1;
 $node-vis-history-border-color:		    $grey-1;
 $node-vis-history-filter:		    invert(70%);
-
-// Added by Baris - Review with Kenneth
-$availability-data-table-border:		        $wato-data-table-border;
-$availability-data-th-bg-color:		            $wato-data-th-bg-color;
-$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
-
-$data-table-td-count-state-border-color:        $grey-7!important;
-
-$timelineevents-data-table-border:		        $wato-data-table-border;
-$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
-$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
-
-$table-cell-last-child-border-radius:           0;

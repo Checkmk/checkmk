@@ -1003,10 +1003,10 @@ def get_sections_clusters(connection, vm_esx_host):
                 response)
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
+            cluster_vms = (convert_hostname(cvm, opt) for cvm in cluster_vms)
             section_lines += [
                 "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)),
-                "%s\tvms\t%s\t%s" %
-                (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))),
+                "%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(cluster_vms)),
             ]
 
     return section_lines

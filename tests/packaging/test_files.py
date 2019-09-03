@@ -46,7 +46,7 @@ def _edition_short_from_pkg_path(pkg_path):
     ("rpm", 166 * 1024 * 1024, 201 * 1024 * 1024),
     ("deb", 132 * 1024 * 1024, 145 * 1024 * 1024),
     ("cma", 240 * 1024 * 1024, 250 * 1024 * 1024),
-    ("tar.gz", 380 * 1024 * 1024, 390 * 1024 * 1024),
+    ("tar.gz", 330 * 1024 * 1024, 370 * 1024 * 1024),
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     sizes = []

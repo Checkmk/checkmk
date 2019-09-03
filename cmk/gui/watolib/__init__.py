@@ -498,6 +498,21 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
+            # Enable HW/SW inventory + status data inventory for docker containers by default to
+            # simplify the setup procedure of docker monitoring
+            'active_checks': {
+                'cmk_inv': [{
+                    'condition': {
+                        'host_labels': {
+                            u'cmk/docker_object': u'node'
+                        }
+                    },
+                    'value': {
+                        'status_data_inventory': True
+                    },
+                },]
+            },
+
             # Interval for HW/SW-Inventory check
             'extra_service_conf': {
                 'check_interval': [{

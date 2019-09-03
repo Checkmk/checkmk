@@ -1,0 +1,16 @@
+Title: Docker: Enable status data inventory for nodes by default
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567524432
+Class: feature
+
+The factory settings (which are applied only for new sites) are now creating
+a rule in the "Do hardware/software inventory" ruleset which enables the status
+data inventory for all docker containers (hosts with label "cmk/docker_object:node").
+
+This simplifies the initial docker monitoring setup.
+
+Users which update existing sites need to create this rule on their own.

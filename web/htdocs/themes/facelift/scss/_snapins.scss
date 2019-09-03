@@ -149,7 +149,7 @@ div.snapin table.master_control {
 
 /* Styles shared/inherited by different performance tables */
 %performance-table-shared {
-  padding: 8px;
+  padding: $performance-table-shared-padding;
   background-color: $theme-color-table-background-dark;
   border: 1px solid $theme-color-table-border-dark;
   border-spacing: 4px;
@@ -622,7 +622,7 @@ div.spacertop {
 }
 
 table.cmc_stats {
-  width: 228px;
+  width: $snapin-cmc-table-width;
   border-radius: 2px;
 
   td {

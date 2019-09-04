@@ -145,7 +145,12 @@ def parse_freeipmi(info):
             })
 
         if len(stripped_line) == 4:
-            current, levels = stripped_line[2].split("(")
+            if "(" in stripped_line[2]:
+                # 339 Voltage_3.3VCC 3.33_V_(NA/NA) [OK]
+                current, levels = stripped_line[2].split("(")
+            else:
+                # 59 M2_Temp0(PCIe1)_(Temperature) NA/79.00_41.00_C [OK]
+                levels, current = stripped_line[2].split("_",1)
             cparts = current.split("_")
             unit = "NA"
             if len(cparts) > 1:

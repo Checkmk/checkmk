@@ -1,0 +1,15 @@
+Title: ipmi_sensors: Fix crash in the parse function
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p22
+Date: 1567584409
+Class: fix
+
+Some IPMI sensors output sensor information in the form:
+
+59 M2_Temp0(PCIe1)_(Temperature) NA/79.00_41.00_C [OK]
+
+This case is now correctly handled by the parse function
+of the check.

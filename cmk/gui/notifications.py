@@ -169,12 +169,13 @@ def render_notification_table(failed_notifications):
 
         for row in failed_notifications:
             table.row()
-            table.cell(_("Time"), cmk.utils.render.approx_age(time.time() - row[header['time']]))
-            table.cell(_("Contact"), row[header['contact_name']])
-            table.cell(_("Plugin"), row[header['type']])
-            table.cell(_("Host"), row[header['host_name']])
-            table.cell(_("Service"), row[header['service_description']])
-            table.cell(_("Output"), row[header['comment']])
+            table.text_cell(_("Time"),
+                            cmk.utils.render.approx_age(time.time() - row[header['time']]))
+            table.text_cell(_("Contact"), row[header['contact_name']])
+            table.text_cell(_("Plugin"), row[header['type']])
+            table.text_cell(_("Host"), row[header['host_name']])
+            table.text_cell(_("Service"), row[header['service_description']])
+            table.text_cell(_("Output"), row[header['comment']])
 
 
 # TODO: We should really recode this to use the view and a normal view command / action

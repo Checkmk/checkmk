@@ -664,9 +664,8 @@ def _submit_via_command_pipe(host, service, state, output):
     _open_command_pipe()
     if _nagios_command_pipe:
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write(("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                                    (int(time.time()), host, cmk.utils.make_utf8(service), state,
-                                     cmk.utils.make_utf8(output))).decode('utf8'))
+        _nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (int(
+            time.time()), host, cmk.utils.make_utf8(service), state, cmk.utils.make_utf8(output)))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()

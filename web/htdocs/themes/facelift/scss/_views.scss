@@ -621,6 +621,24 @@ table.data.single {
       white-space: nowrap;
     }
 
+    td.invtree table {
+      margin: 8px 0 12px;
+      border: 1px solid $theme-color-table-border;
+      box-shadow: none;
+
+      th, td {
+	height: 14px;
+	padding: 2px 6px;
+	background-color: $invtree-td-bg-color;
+	border: 1px solid $theme-color-table-border;
+      }
+
+      th {
+	color: $theme-color-text;
+	background-color: $invtree-th-bg-color;
+      }
+    }
+
     @include table-single-state-background();
   }
 
@@ -636,6 +654,10 @@ table.data.single {
       border-right: $td-single-left-border-right;
       transition: .15s ease-in-out;
     }
+
+    &.perfometer {
+      padding-right: 0;
+    }
   }
 
   td {
@@ -647,6 +669,12 @@ table.data.single {
 
     &.perfometer div.glass {
       width: 100%;
+    }
+
+    /* Make td class of invtree more specific, when shown in single dataset mode */
+    /* td.data.single td.invtree td.number { */
+    &.invtree td.number {
+      text-align: right;
     }
   }
 }
@@ -1115,32 +1143,6 @@ td.invtree span.invold, span.invold table.data {
 /* TODO: Reproduce this html element */
 td.invtree span.invnew, span.invnew table.data {
   color: #00bf00;
-}
-
-table.data.single {
-  tr.data td.invtree table {
-    margin: 8px 0 12px;
-    border: 1px solid $theme-color-table-border;
-    box-shadow: none;
-
-    th, td {
-      height: 14px;
-      padding: 2px 6px;
-      background-color: $invtree-td-bg-color;
-      border: 1px solid $theme-color-table-border;
-    }
-
-    th {
-      color: $theme-color-text;
-      background-color: $invtree-th-bg-color;
-    }
-  }
-
-  /* Make td class of invtree more specific, when shown in single dataset mode */
-  /* td.data.single td.invtree td.number { */
-  td.invtree td.number {
-    text-align: right;
-  }
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */

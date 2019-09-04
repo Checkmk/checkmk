@@ -31,7 +31,6 @@ import tempfile
 import time
 import copy
 from typing import List, Tuple, Optional  # pylint: disable=unused-import
-from io import open
 
 import six
 
@@ -656,7 +655,7 @@ def _close_checkresult_file():
     global _checkresult_file_fd
     if _checkresult_file_fd is not None:
         os.close(_checkresult_file_fd)
-        open(_checkresult_file_path + ".ok", "w", encoding="utf-8")
+        file(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
 
 
@@ -684,9 +683,7 @@ def _open_command_pipe():
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
                 signal.alarm(3)  # three seconds to open pipe
-                _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path,
-                                            'w',
-                                            encoding="utf-8")
+                _nagios_command_pipe = file(cmk.utils.paths.nagios_command_pipe_path, 'w')
                 signal.alarm(0)  # cancel alarm
             except Exception as e:
                 _nagios_command_pipe = False

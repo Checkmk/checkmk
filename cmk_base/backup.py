@@ -31,7 +31,6 @@ import os
 import shutil
 import tarfile
 import time
-from io import open
 import cStringIO as StringIO
 
 import cmk.utils.paths
@@ -73,7 +72,7 @@ def do_backup(tarname):
                 subdata = subfile.getvalue()
             else:
                 subtarname = canonical_name
-                subdata = open(absdir, encoding="utf-8").read()
+                subdata = file(absdir).read()
 
             info = tarfile.TarInfo(subtarname)
             info.mtime = time.time()

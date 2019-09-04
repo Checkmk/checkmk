@@ -77,7 +77,7 @@ def check_icmp_arguments(params):
         args.append("$HOST_ADDRESS_6_%s$" % target[1])
 
     else:  # custom
-        args.append(quote_shell_string(target[1]))
+        args.append(target[1])
 
     return args
 

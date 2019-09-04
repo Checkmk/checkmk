@@ -32,7 +32,7 @@ import sys
 import struct
 import termios
 import io
-import six
+import cmk.utils
 
 if sys.stdout.isatty():
     red = '\033[31m'
@@ -107,9 +107,8 @@ def print_table(headers, colors, rows, indent=""):
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows, num_columns)
     fmt = _row_template(lengths, colors, indent)
-
     for index, row in enumerate([headers] + rows):
-        sys.stdout.write(fmt % tuple(_make_utf8(c) for c in row[:num_columns]))
+        sys.stdout.write(fmt % tuple(cmk.utils.make_utf8(c) for c in row[:num_columns]))
         if index == 0:
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
@@ -118,7 +117,7 @@ def _column_lengths(headers, rows, num_columns):
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
-            lengths[index] = max(len(_make_utf8(column)), lengths[index])
+            lengths[index] = max(len(cmk.utils.make_utf8(column)), lengths[index])
     return lengths
 
 
@@ -130,9 +129,3 @@ def _row_template(lengths, colors, indent):
         sep = " "
     fmt += "\n"
     return fmt
-
-
-def _make_utf8(x):
-    if isinstance(x, six.text_type):
-        return x.encode('utf-8')
-    return str(x)

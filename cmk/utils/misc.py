@@ -34,7 +34,7 @@ import six
 def make_utf8(x):
     if isinstance(x, six.text_type):
         return x.encode('utf-8')
-    return x
+    return str(x)
 
 
 def quote_shell_string(s):

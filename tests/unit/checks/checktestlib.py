@@ -550,7 +550,7 @@ def assertEqual(first, second, descr=''):
             assert k in second, "%sadditional key %r in %r" \
                 % (descr, k, first)
             remainder.remove(k)
-            assertEqual(first[k], second[k], descr + " [%r]" % k)
+            assertEqual(first[k], second[k], descr + " [%s]" % repr(k))
         assert not remainder, "%smissing keys %r in %r" \
             % (descr, list(remainder), first)
 

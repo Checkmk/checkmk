@@ -1047,7 +1047,7 @@ def prepare_check_command(command_spec, hostname, description):
             formated.append("%s" % arg)
 
         elif arg_type in [str, unicode]:
-            formated.append(cmk_base.utils.quote_shell_string(arg))
+            formated.append(cmk.utils.quote_shell_string(arg))
 
         elif arg_type == tuple and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
@@ -1066,8 +1066,7 @@ def prepare_check_command(command_spec, hostname, description):
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
-            formated.append(
-                cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
             passwords.append((str(len(formated)), pw_start_index, pw_ident))
 
         else:

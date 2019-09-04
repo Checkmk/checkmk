@@ -122,6 +122,7 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
+import cmk.utils as _cmk_utils
 import cmk_base.utils as _utils
 import cmk_base.config as _config
 import cmk_base.console as _console  # pylint: disable=unused-import
@@ -275,7 +276,7 @@ get_age_human_readable = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
 get_percent_human_readable = render.percent
 get_number_with_precision = render.fmt_number_with_precision
-quote_shell_string = _utils.quote_shell_string
+quote_shell_string = _cmk_utils.quote_shell_string
 
 
 def get_checkgroup_parameters(group, deflt=None):

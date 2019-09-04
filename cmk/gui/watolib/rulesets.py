@@ -864,10 +864,16 @@ class Rule(object):
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
         if self.ruleset.rulespec.is_for_services:
-            if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
+            if list(
+                    matcher.get_service_ruleset_values(
+                        match_object, [rule_dict],
+                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
         else:
-            if matcher.is_matching_host_ruleset(match_object, [rule_dict]):
+            if list(
+                    matcher.get_host_ruleset_values(
+                        match_object, [rule_dict],
+                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
 
         yield _("The rule does not match")

@@ -1,0 +1,14 @@
+Title: Fix invalid rule match analyzation in WATO
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567610373
+Class: fix
+
+The "Parameters of host/service" page and ruleset lists showed an invalid match
+result for rules which value evaluates to None.  For binary rulesets (the ones
+that only have yes/no as value) the result was also not displayed correctly.
+
+The ruleset matching of Checkmk during checking was not affected by this issue.

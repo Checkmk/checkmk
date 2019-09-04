@@ -48,6 +48,9 @@ VERSION            := 1.6.0b9
 # Will be set to ".demo" by cmk build system when building a demo package
 DEMO_SUFFIX        :=
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+# Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
+# But keep the ".demo" suffix. Somehow inconsistent, but this is our scheme.
+PKG_VERSION        := $(VERSION)$(DEMO_SUFFIX)
 
 SHELL              := /bin/bash
 # TODO: Be more strict - Add this:

@@ -27,6 +27,7 @@
 import abc
 import ast
 import time
+import six
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -53,9 +54,7 @@ from .host_sections import HostSections
 # TODO: Move common functionality of SNMPManagementBoardDataSource and
 # SNMPDataSource to ABCSNMPDataSource and make SNMPManagementBoardDataSource
 # inherit from ABCSNMPDataSource instead of SNMPDataSource
-class ABCSNMPDataSource(DataSource):
-    __metaclass__ = abc.ABCMeta
-
+class ABCSNMPDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     @abc.abstractproperty
     def _snmp_config(self):
         # type: () -> snmp_utils.SNMPHostConfig

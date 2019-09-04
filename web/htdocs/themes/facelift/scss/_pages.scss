@@ -1319,12 +1319,16 @@ div.really, div.success, div.error, div.message, div.warning {
   }
 }
 
-// TODO: Check whether this must be $primary-font-color as is for .really and .success
+// TODO: Check whether this must be $primary-font-color as is for .success
 div.message {
   color: #000;
 }
 
-div.really, div.success {
+div.really {
+  color: $black;
+}
+
+div.success {
   color: $primary-font-color;
 }
 

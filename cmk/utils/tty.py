@@ -108,7 +108,7 @@ def print_table(headers, colors, rows, indent=""):
     lengths = _column_lengths(headers, rows, num_columns)
     fmt = _row_template(lengths, colors, indent)
     for index, row in enumerate([headers] + rows):
-        sys.stdout.write(fmt % tuple(cmk.utils.make_utf8(c) for c in row[:num_columns]))
+        sys.stdout.write(fmt % tuple(str(cmk.utils.make_utf8(c)) for c in row[:num_columns]))
         if index == 0:
             sys.stdout.write(fmt % tuple("-" * l for l in lengths))
 
@@ -117,7 +117,7 @@ def _column_lengths(headers, rows, num_columns):
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
-            lengths[index] = max(len(cmk.utils.make_utf8(column)), lengths[index])
+            lengths[index] = max(len(str(cmk.utils.make_utf8(column))), lengths[index])
     return lengths
 
 

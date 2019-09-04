@@ -38,7 +38,6 @@ OS_PACKAGES    += freeradius-client-libs
 OS_PACKAGES    += binutils # Needed by Check_MK Agent Bakery
 OS_PACKAGES    += rpm-build # Needed by Check_MK Agent Bakery
 OS_PACKAGES    += libgio-2_0-0 # needed by msitools/Agent Bakery
-OS_PACKAGES    += libgsf-1-114 # needed by msitools/Agent Bakery
 OS_PACKAGES    += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES    += poppler-tools # needed for preview of PDF in reporting
 OS_PACKAGES    += libpcap1 # needed for ICMP of CMC

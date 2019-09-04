@@ -21,7 +21,6 @@ RUN apt-get update \
     libgd2-xpm-dev \
     libglib2.0-dev \
     libgnutls-dev \
-    libgsf-1-dev \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \

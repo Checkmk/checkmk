@@ -21,7 +21,6 @@ RUN yum -y makecache \
     libdbi-devel \
     libevent-devel \
     libffi-devel \
-    libgsf-devel \
     libjpeg-devel \
     libmcrypt-devel \
     libpcap-devel \

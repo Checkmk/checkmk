@@ -29,7 +29,6 @@ OS_PACKAGES      += radiusclient-ng
 OS_PACKAGES      += libpcap # needed for ICMP of CMC
 OS_PACKAGES      += glib2 # needed by msitools/Agent Bakery
 OS_PACKAGES      += poppler-utils # needed for preview of PDF in reporting
-OS_PACKAGES      += libgsf # needed by msitools/Agent Bakery
 OS_PACKAGES      += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES      += bind-utils # needed for check_dns
 #OS_PACKAGES      += pyOpenSSL # needed for Agent Bakery (deployment)

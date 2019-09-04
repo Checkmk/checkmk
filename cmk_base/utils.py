@@ -36,8 +36,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 # TODO: Clean up the call sites
 from cmk.utils import (  # pylint: disable=unused-import
-    make_utf8, quote_shell_string,
-)
+    quote_shell_string,)
 
 # TODO: Try to find a better place for them.
 

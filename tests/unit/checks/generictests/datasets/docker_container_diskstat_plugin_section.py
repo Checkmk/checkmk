@@ -66,22 +66,6 @@ info = [
 ]
 
 
-# TODO: can be removed after refactoring + plugin section feature
-parsed = {('node-1', 'sda'): (1567584783.596914,
-                       {'bytes': {'Async': 0,
-                                  'Read': 12288,
-                                  'Sync': 12288,
-                                  'Total': 12288,
-                                  'Write': 0},
-                        'ios': {'Async': 0,
-                                'Read': 2,
-                                'Sync': 2,
-                                'Total': 2,
-                                'Write': 0},
-                        'name': u'sda'}),
-}
-
-
 discovery = {'': [('SUMMARY', 'diskstat_default_levels')]}
 
 

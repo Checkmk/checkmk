@@ -43,6 +43,7 @@ from cmk.utils.regex import regex
 import cmk.utils.debug
 
 import cmk_base.utils
+import cmk_base.core
 import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config

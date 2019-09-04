@@ -25,8 +25,19 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _split_docker_container_diskstat_by_node(info):
+    nodes_info = {}
+    for line in info:
+        if len(line) > 1:
+            nodes_info.setdefault(line[0], []).append(line[1:])
+    return nodes_info
+
+
 def parse_docker_container_diskstat(info):
-    node_sections = _parse_sub_sections(info)
+    nodes_info = _split_docker_container_diskstat_by_node(info)
+    node_sections = {
+        node: _parse_sub_sections(node, node_info) for node, node_info in nodes_info.iteritems()
+    }
 
     disks = {}
     for node_name, node_info in node_sections.items():
@@ -46,48 +57,44 @@ def parse_docker_container_diskstat(info):
     return disks
 
 
-def _parse_sub_sections(info):
-    node_sections = {}
+def _parse_sub_sections(node, node_info):
+    sections = {}
 
-    node = None
-    for line in info:
-        node = line[0]
+    for line in node_info:
 
-        if line[1] == "[io_service_bytes]":
+        if line[0] == "[io_service_bytes]":
             phase = "bytes"
-        elif line[1] == "[io_serviced]":
+        elif line[0] == "[io_serviced]":
             phase = "ios"
-        elif line[1] == '[names]':
+        elif line[0] == '[names]':
             phase = "names"
-        elif line[1] == '[time]':
+        elif line[0] == '[time]':
             phase = "time"
         else:
-            if line[1] == "Total":
+            if line[0] == "Total":
                 continue
 
-            sections = node_sections.setdefault(node, {})
-
             if phase == "time":
-                sections["time"] = int(line[1])
+                sections["time"] = int(line[0])
                 continue
 
             devices = sections.setdefault("devices", {})
 
             if phase == "names":
-                major, minor = map(int, line[2].split(":"))
-            else:
                 major, minor = map(int, line[1].split(":"))
+            else:
+                major, minor = map(int, line[0].split(":"))
 
             device_id = node, major, minor
             device = devices.setdefault(device_id, {})
 
             if phase == "names":
-                device["name"] = line[1]
+                device["name"] = line[0]
             else:
                 device_phase = device.setdefault(phase, {})
-                device_phase[line[2]] = int(line[3])
+                device_phase[line[1]] = int(line[2])
 
-    return node_sections
+    return sections
 
 
 def inventory_docker_container_diskstat(parsed):

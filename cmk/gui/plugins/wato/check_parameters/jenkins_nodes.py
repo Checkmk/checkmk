@@ -63,9 +63,17 @@ class RulespecCheckgroupParametersJenkinsNodes(CheckParameterRulespecWithItem):
     def parameter_valuespec(self):
         return Dictionary(elements=[
             ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
+            ('jenkins_numexecutors',
+             Tuple(
+                 title=_("Lower level for number of executors of this node"),
+                 elements=[
+                     Integer(title=_("Warning below")),
+                     Integer(title=_("Critical below")),
+                 ],
+             )),
             ('jenkins_response',
              Tuple(
-                 title=_("Average round-trip response time to this node."),
+                 title=_("Average round-trip response time to this node"),
                  elements=[
                      Age(title=_("Warning at")),
                      Age(title=_("Critical at")),

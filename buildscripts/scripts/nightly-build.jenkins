@@ -17,7 +17,7 @@ properties([
 ])
 
 def PACKAGE_BUILDS = [:]
-def AGENT_LIST = ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
+def AGENT_LIST = get_agent_list(EDITION)
 def AGENT_BUILDS= [:]
 
 DISTRO_LIST = DISTROS.split(' ');
@@ -58,6 +58,14 @@ def get_cmk_version(BRANCH, VERSION) {
     }
 }
 
+def get_agent_list(EDITION) {
+    if (EDITION == "raw") {
+        return ["windows", "windows-legacy"]
+    } else {
+        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
+    }
+}
+
 def mount_overlay(LOWER_DIR, UPPER_DIR) {
     sh """
         mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
@@ -95,7 +103,6 @@ node {
                     THEME_LIST = ["classic", "facelift", "modern-dark"]
                     switch(EDITION) {
                         case 'raw':
-                            AGENT_LIST = ["windows", "windows-legacy"]
                             sh 'rm -rf enterprise managed'
                             // Workaround since scss does not support conditional includes
                             THEME_LIST.each { THEME ->

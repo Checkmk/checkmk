@@ -5986,6 +5986,12 @@ metric_info["jenkins_build_duration"] = {
     "color": "31/a",
 }
 
+metric_info["jenkins_numexecutors"] = {
+    "title": _("Number of executers"),
+    "unit": "count",
+    "color": "31/a",
+}
+
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
         ("total", "Total", "11/a"),

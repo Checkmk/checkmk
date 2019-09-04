@@ -108,12 +108,24 @@ def check_jenkins_nodes(item, params, item_data):
 
         for key, infotext in [
             ("description", "Description"),
-            ("numExecutors", "Number of executers"),
             ("jnlpAgent", "JNLPAgent"),
             ("idle", "Idle"),
         ]:
+            data = node.get(key)
 
-            yield 0, "%s: %s" % (infotext, node.get(key, "N/A"))
+            if data is not None:
+                yield 0, "%s: %s" % (infotext, data)
+
+        exec_key = "numExecutors"
+        exec_data = node.get(exec_key)
+
+        if exec_data is not None:
+            exec_name = "jenkins_%s" % exec_key.lower()
+
+            yield check_levels(exec_data,
+                               exec_name, (None, None) + params.get(exec_name, (None, None)),
+                               human_readable_func=int,
+                               infoname="Number of executers")
 
         state = 0
         offline_state = node.get("offline")

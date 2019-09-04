@@ -28,7 +28,13 @@ def _get_package_paths(version_path, what):
 def _get_omd_version(cmk_version, pkg_path):
     # Extract the files edition
     edition_short = _edition_short_from_pkg_path(pkg_path)
-    return "%s.%s" % (cmk_version, edition_short)
+    demo_suffix = ".demo" if _is_demo(pkg_path) else ""
+    return "%s.%s%s" % (cmk_version, edition_short, demo_suffix)
+
+
+def _is_demo(pkg_path):
+    # Is this a demo package?
+    return ".demo" in os.path.basename(pkg_path)
 
 
 def _edition_short_from_pkg_path(pkg_path):
@@ -122,6 +128,8 @@ def test_files_not_in_version_path(version_path, cmk_version, what):
             paths = []
             for line in subprocess.check_output(["dpkg", "-c", pkg]).splitlines():
                 paths.append(line.split()[5].lstrip("."))
+        else:
+            raise NotImplementedError()
 
         omd_version = _get_omd_version(cmk_version, pkg)
         print("Checking OMD version: %s" % omd_version)
@@ -153,6 +161,12 @@ def test_cma_specific_files(version_path, cmk_version):
         assert "%s/cma.info" % omd_version in files
         assert "%s/skel/etc/apache/conf.d/cma.conf" % omd_version in files
         assert "%s/lib/cma/post-install" % omd_version in files
+
+        cma_info = subprocess.check_output(["tar", "xOvzf", pkg, "%s/cma.info" % omd_version])
+        if _is_demo(pkg):
+            assert "DEMO=1" in cma_info
+        else:
+            assert "DEMO=1" not in cma_info
 
 
 def test_src_only_contains_relative_version_paths(version_path):

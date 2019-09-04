@@ -240,7 +240,6 @@ $(BIN_TGZ): $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
 rpm:
-	PKG_VERSION=$(OMD_VERSION) ; \
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
@@ -277,11 +276,7 @@ debian/changelog:
 	fi
 	# this is a hack!
 	rm -f debian/changelog
-	PKG_VERSION=$(OMD_VERSION) ; \
-	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
-	dch --create --package check-mk-$(EDITION)-$$PKG_VERSION \
+	dch --create --package check-mk-$(EDITION)-$(PKG_VERSION) \
 	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
@@ -340,7 +335,7 @@ $(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(
 	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
-	@if [ -f packages/nagios/patches/9999-demo-version.dif ]; then \
+	@if [ -n "$(DEMO_SUFFIX)" ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 

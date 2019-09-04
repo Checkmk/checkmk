@@ -26,7 +26,6 @@ RUN zypper addrepo -G http://10.9.1.101:8081/repository/sles12sp3 sles12sp3 \
     libexpat-devel \
     libffi-devel \
     libgnutls-devel \
-    libgsf-devel \
     libjpeg62-devel \
     libltdl7 \
     libmysqlclient-devel \

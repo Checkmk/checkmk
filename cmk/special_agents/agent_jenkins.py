@@ -45,6 +45,9 @@ def main():
 
     # Add new queries here
     sections = [
+        Section(name="instance",
+                key=None,
+                uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown"),
         Section(
             name="jobs",
             key="jobs",
@@ -85,7 +88,11 @@ def handle_request(args, sections):
             try:
                 url = url_base + section.uri
                 response = requests.get(url, auth=(args.user, args.password))
-                value = response.json()[section.key]
+
+                if section.name == "instance":
+                    value = response.json()
+                else:
+                    value = response.json()[section.key]
 
                 sys.stdout.write("%s\n" % json.dumps(value))
 

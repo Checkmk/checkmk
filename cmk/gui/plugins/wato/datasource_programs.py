@@ -2305,15 +2305,16 @@ class RulespecSpecialAgentsJenkins(ABCHostValueRulespec):
                 ("infos",
                  ListChoice(
                      title=_("Informations to query"),
-                     help=_("Defines what information to query. "
-                            "For now you can choose to query "
-                            "job states."),
+                     help=_("Defines what information to query. You can choose "
+                            "between the instance state, job states, node states "
+                            "and the job queue."),
                      choices=[
+                         ("instance", _("Instance state")),
                          ("jobs", _("Job state")),
                          ("nodes", _("Node state")),
-                         ("queue", _("Queue Info")),
+                         ("queue", _("Queue info")),
                      ],
-                     default_value=["jobs", "nodes", "queue"],
+                     default_value=["instance", "jobs", "nodes", "queue"],
                      allow_empty=False,
                  )),
             ],

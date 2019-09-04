@@ -1,0 +1,14 @@
+Title: Fix possible XSS issue on "confirm failed notifications" page
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567583086
+Class: security
+
+Using a manipulated notification script or notification destination system it
+was possible to inject javascript code into the "confirm failed notifications" page.
+
+To prevent users from this potential issue, you could remove the permission for
+viewing the failed notifications from the users roles.

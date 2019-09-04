@@ -68,7 +68,6 @@ from cmk.gui.valuespec import (
     Optional,
     ID,
     DropdownChoice,
-    RegExp,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -517,44 +516,6 @@ class BIManagement(object):
                 return subnode[1][0], _("Called for each service...")
 
 
-class BIHostTagCondition(HostTagCondition):
-    def render_input(self, varprefix, value):
-        tag_specs = []
-        regex_tag_specs = []
-        for spec in value:
-            if isinstance(spec, tuple):
-                regex_tag_specs.append(spec)
-            else:
-                tag_specs.append(spec)
-
-        super(BIHostTagCondition, self).render_input(varprefix, tag_specs)
-        self._get_hosttag_regex_vs().render_input(varprefix, regex_tag_specs)
-
-    def from_html_vars(self, varprefix):
-        tag_list = super(BIHostTagCondition, self).from_html_vars(varprefix)
-        tag_list.extend(self._get_hosttag_regex_vs().from_html_vars(varprefix))
-        return tag_list
-
-    def _get_hosttag_regex_vs(self):
-        return ListOf(
-            Tuple(elements=[
-                DropdownChoice(choices=[
-                    (False, _("Regex pattern matches tag ID")),
-                    (True, _("Regex pattern does not match tag ID")),
-                ]),
-                RegExp(
-                    mode=RegExp.prefix,
-                    help=
-                    _("A regex which matches the host tag ID. You can also add rule parameters here, for example $MY_CUSTOM_PARAM$."
-                     ),
-                ),
-            ],
-                  orientation="horizontal"),
-            add_label=_("Add tag matching by regex"),
-            movable=False,
-        )
-
-
 # TODO: Rename to BIMode
 class ModeBI(WatoMode, BIManagement):
 
@@ -725,7 +686,7 @@ class ModeBI(WatoMode, BIManagement):
                          ('child', _("The found hosts' childs")),
                          ('child_with', _("The found hosts' childs (with child filtering)"),
                           Tuple(elements=[
-                              BIHostTagCondition(title=_("Child Host Tags:")),
+                              HostTagCondition(title=_("Child Host Tags:")),
                               self._host_valuespec(_("Child host name:")),
                           ])),
                          ('parent', _("The found hosts' parents")),
@@ -742,7 +703,7 @@ class ModeBI(WatoMode, BIManagement):
                          'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
                          'host and <tt>$2$</tt> the name of the parent host.'),
                  ),
-                 BIHostTagCondition(title=_("Host Tags:")),
+                 HostTagCondition(title=_("Host Tags:")),
                  self._host_valuespec(_("Host name:")),
                  CascadingDropdown(
                      title=_("Nodes to create:"),
@@ -756,7 +717,7 @@ class ModeBI(WatoMode, BIManagement):
              ])),
             ("foreach_service", _("Create nodes based on a service search"),
              Tuple(elements=[
-                 BIHostTagCondition(title=_("Host Tags:")),
+                 HostTagCondition(title=_("Host Tags:")),
                  self._host_valuespec(_("Host name:")),
                  TextAscii(
                      title=_("Service Regex:"),

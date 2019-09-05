@@ -31,7 +31,7 @@
 # iscsi_lif:vserver        iscsi_read_ops 4071295661        avg_write_latency 3429809602514        ..
 
 
-def inventory_netapp_api_vs_traffic(parsed, what):
+def inventory_netapp_api_vs_traffic(parsed):
     vservers = {x.split(".", 1)[1] for x in parsed.keys()}
     for vserver in vservers:
         yield vserver, {}
@@ -122,7 +122,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 check_info["netapp_api_vs_traffic"] = {
     'parse_function': lambda info: netapp_api_parse_lines(
         info, custom_keys=["protocol", "instance_name"]),
-    'inventory_function': lambda parsed: inventory_netapp_api_vs_traffic(parsed, "lif:vserver"),
+    'inventory_function': inventory_netapp_api_vs_traffic,
     'check_function': check_netapp_api_vs_traffic,
     'service_description': 'Traffic vServer %s',
     'has_perfdata': True,

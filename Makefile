@@ -215,6 +215,7 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
       htdocs/images \
       htdocs/jquery \
       $(patsubst web/%,%,$(JAVASCRIPT_MINI)) \
+      $(patsubst web/%,%.map,$(JAVASCRIPT_MINI)) \
       htdocs/sounds \
       $(patsubst web/%,%,$(THEME_RESOURCES))
 

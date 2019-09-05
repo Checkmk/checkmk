@@ -1359,7 +1359,10 @@ TEST(AgentConfig, PluginsExecutionParams) {
         EXPECT_EQ(exe_units[0].pattern(), "a_1");
         EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
         EXPECT_EQ(exe_units[0].async(), true);
-        for (auto e : exe_units) EXPECT_TRUE(e.source().IsMap());
+        for (auto e : exe_units) {
+            EXPECT_TRUE(e.source().IsMap());
+            EXPECT_TRUE(e.sourceText().empty());
+        }
 
         EXPECT_EQ(exe_units[1].pattern(), "a_0");
         EXPECT_EQ(exe_units[1].cacheAge(), 0);

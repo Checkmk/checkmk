@@ -363,8 +363,9 @@ $wato-subtitle-color:			    $grey-2;
 
 $footnote-link-color:			    $grey-1;
 
-$table-data-single-padding:		    2px 16px;
+$table-data-single-padding:		    2px 0;
 $td-single-left-border-right:		    null;
+$td-single-left-padding:		    2px 36px 2px 16px;
 
 $host-diag-success-bg-color:		    rgb(50, 54, 50);
 $host-diag-failed-bg-color:		    $theme-color-nuance-15;

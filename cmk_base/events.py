@@ -39,6 +39,7 @@ import urllib
 
 import livestatus
 import cmk
+import cmk.debug
 from cmk.notification_plugins.utils import format_plugin_output
 from cmk.regex import regex
 import cmk.daemon

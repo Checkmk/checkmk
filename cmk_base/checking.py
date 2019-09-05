@@ -33,6 +33,7 @@ import time
 import copy
 
 import cmk
+import cmk.debug
 import cmk.defines as defines
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking

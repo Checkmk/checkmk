@@ -34,6 +34,7 @@ import subprocess
 import json
 from cStringIO import StringIO
 
+import cmk.debug
 import cmk.tty as tty
 import cmk.paths
 import cmk.ec.export

@@ -27,6 +27,7 @@
 import os
 import sys
 
+import cmk.debug
 import cmk.paths
 import cmk.tty as tty
 import cmk.store as store

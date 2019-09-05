@@ -29,6 +29,7 @@ import sys
 import copy
 import marshal
 
+import cmk.debug
 import cmk.paths
 import cmk.translations
 import cmk.store as store

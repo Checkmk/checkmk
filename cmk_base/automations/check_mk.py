@@ -31,6 +31,7 @@ import subprocess
 import sys
 import time
 
+import cmk.debug
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 

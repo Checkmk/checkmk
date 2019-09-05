@@ -30,6 +30,7 @@ import time
 import livestatus
 from livestatus import MKLivestatusNotFoundError
 
+import cmk.debug
 from cmk.exceptions import MKGeneralException
 import cmk.log
 import cmk.paths

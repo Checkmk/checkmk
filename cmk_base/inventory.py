@@ -37,6 +37,7 @@ import re
 import sys
 
 import cmk
+import cmk.debug
 import cmk.paths
 import cmk.store
 import cmk.tty as tty

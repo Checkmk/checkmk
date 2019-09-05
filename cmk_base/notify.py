@@ -46,6 +46,7 @@ import sys
 import time
 
 import livestatus
+import cmk.debug
 from cmk.defines import core_state_names
 from cmk.regex import regex
 import cmk.paths

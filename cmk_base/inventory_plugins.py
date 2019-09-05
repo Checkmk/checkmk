@@ -26,6 +26,7 @@
 
 import os
 
+import cmk.debug
 import cmk.paths
 from cmk.exceptions import MKGeneralException
 

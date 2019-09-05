@@ -32,6 +32,7 @@ import inspect
 import signal
 import pathlib2 as pathlib
 
+import cmk.debug
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths

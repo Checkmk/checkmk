@@ -31,6 +31,7 @@
 
 from cmk.exceptions import MKBailOut
 
+import cmk.debug
 import cmk.log
 logger = cmk.log.get_logger(__name__)
 

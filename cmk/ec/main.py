@@ -66,6 +66,7 @@ from pyasn1.error import ValueConstraintError
 
 import cmk
 import cmk.daemon
+import cmk.debug
 import cmk.defines as defines
 import cmk.ec.export
 import cmk.ec.settings

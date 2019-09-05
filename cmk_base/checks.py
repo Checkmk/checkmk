@@ -33,6 +33,7 @@ import py_compile
 import struct
 from collections import OrderedDict
 
+import cmk.debug
 import cmk.paths
 import cmk.store as store
 from cmk.exceptions import MKGeneralException, MKTerminate

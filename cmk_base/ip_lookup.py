@@ -28,6 +28,7 @@ import socket
 import errno
 import os
 
+import cmk.debug
 import cmk.paths
 import cmk.store as store
 

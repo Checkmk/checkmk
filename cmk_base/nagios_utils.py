@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import subprocess
-import sys
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -38,12 +37,13 @@ def do_check_nagiosconfig():
     cmk_base.console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     cmk_base.console.output("Validating Nagios configuration...")
 
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-    exit_status = p.wait()
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+    (stdout, stderr) = p.communicate()
+    exit_status = p.returncode
     if not exit_status:
         cmk_base.console.output(tty.ok + "\n")
         return True
 
     cmk_base.console.output("ERROR:\n")
-    cmk_base.console.output(p.stdout.read(), stream=sys.stderr)
+    cmk_base.console.output(stdout, stderr)
     return False

@@ -331,7 +331,7 @@ def test_container_agent(request, client):
     assert c.exec_run(["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert ":::6556" in c.exec_run(["netstat", "-tln"])[-1]
+    assert "0.0.0.0:6556" in c.exec_run(["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):

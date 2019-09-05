@@ -66,7 +66,7 @@ def parse_kernel(info):
 
         if line[0].startswith('cpu'):
             try:
-                parsed.setdefault('Cpu Load', []).append((line[0], line[1:]))
+                parsed.setdefault('Cpu Utilization', []).append((line[0], line[1:]))
             except (IndexError, ValueError):
                 continue
     return timestamp, parsed
@@ -168,7 +168,7 @@ check_info['kernel.performance'] = {
 
 def inventory_cpu_utilization(parsed):
     _, items = parsed
-    data = items.get('Cpu Load')
+    data = items.get('Cpu Utilization')
     if data is not None and len(data) > 0:
         return [(None, {})]
 
@@ -194,7 +194,7 @@ def kernel_check_cpu_utilization(item, params, parsed):
     total, cores = [], []
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
-    for cpu in items.get('Cpu Load', []):
+    for cpu in items.get('Cpu Utilization', []):
         if cpu[0] == 'cpu':
             total.append(cpu_info([cpu[0]] + cpu[1]))
         elif cpu[0].startswith('cpu'):

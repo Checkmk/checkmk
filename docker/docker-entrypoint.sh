@@ -104,6 +104,9 @@ if [ -n "$1" ]; then
     exec "$@"
 fi
 
+echo "### STARTING XINETD"
+service xinetd start
+
 echo "### STARTING SITE"
 exec_hook pre-start
 omd start "$CMK_SITE_ID"

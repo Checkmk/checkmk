@@ -45,6 +45,7 @@ RUN set -e \
         openssh-client \
         iputils-ping \
         dpkg-sig \
+        net-tools \
         $(cat needed-packages) \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
@@ -79,6 +80,7 @@ RUN set -e \
        fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
+    && dpkg -i "/omd/versions/default/share/check_mk/agents/check-mk-agent_${CMK_VERSION}-1_all.deb" \
     && rm -f -- *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \

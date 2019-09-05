@@ -23,6 +23,7 @@ RUN apt-get update \
     libgd-dev \
     libglib2.0-dev \
     libgnutls28-dev \
+    libgsf-1-dev \
     libkrb5-dev \
     libldap2-dev \
     libltdl-dev \

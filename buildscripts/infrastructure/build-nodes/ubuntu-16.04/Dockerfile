@@ -23,6 +23,7 @@ RUN apt-get update \
     libgd-dev \
     libglib2.0-dev \
     libgnutls-dev \
+    libgsf-1-dev \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \

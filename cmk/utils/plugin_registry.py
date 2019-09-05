@@ -35,7 +35,7 @@ import abc
 # (https://docs.python.org/2/library/collections.html) and cleanup
 
 
-class ClassRegistry(object):
+class ABCRegistry(object):
     """The management object for all available plugins of a component.
 
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
@@ -47,7 +47,7 @@ class ClassRegistry(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
-        super(ClassRegistry, self).__init__()
+        super(ABCRegistry, self).__init__()
         self._entries = {}
 
     # TODO: Make staticmethod (But abc.abstractstaticmethod not available. How to make this possible?)
@@ -62,14 +62,9 @@ class ClassRegistry(object):
     def registration_hook(self, plugin_class):
         pass
 
+    @abc.abstractmethod
     def register(self, plugin_class):
-        """Register a class with the registry, can be used as a decorator"""
-        if not issubclass(plugin_class, self.plugin_base_class()):
-            raise TypeError('%s is not a subclass of %s' %
-                            (plugin_class.__name__, self.plugin_base_class().__name__))
-        self.registration_hook(plugin_class)
-        self._entries[self.plugin_name(plugin_class)] = plugin_class
-        return plugin_class
+        raise NotImplementedError()
 
     def __contains__(self, text):
         return text in self._entries
@@ -94,3 +89,24 @@ class ClassRegistry(object):
 
     def get(self, key, deflt=None):
         return self._entries.get(key, deflt)
+
+
+class ClassRegistry(ABCRegistry):
+    def register(self, plugin_class):
+        """Register a class with the registry, can be used as a decorator"""
+        if not issubclass(plugin_class, self.plugin_base_class()):
+            raise TypeError('%s is not a subclass of %s' %
+                            (plugin_class.__name__, self.plugin_base_class().__name__))
+        self.registration_hook(plugin_class)
+        self._entries[self.plugin_name(plugin_class)] = plugin_class
+        return plugin_class
+
+
+class InstanceRegistry(ABCRegistry):
+    def register(self, instance):  # pylint: disable=arguments-differ
+        self.registration_hook(instance)
+        self._entries[self.plugin_name(instance)] = instance
+        return instance
+
+    def plugin_name(self, instance):  # pylint: disable=arguments-differ
+        return instance.name

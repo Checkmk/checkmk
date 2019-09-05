@@ -500,7 +500,7 @@ class ModeEditRuleset(WatoMode):
                 self._name = "active_checks:" + check_command
 
         try:
-            self._rulespec = rulespec_registry[self._name]()
+            self._rulespec = rulespec_registry[self._name]
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
@@ -1118,7 +1118,7 @@ class EditRuleMode(WatoMode):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
         try:
-            self._rulespec = rulespec_registry[self._name]()
+            self._rulespec = rulespec_registry[self._name]
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 

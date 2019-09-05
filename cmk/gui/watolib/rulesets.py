@@ -428,7 +428,7 @@ class Ruleset(object):
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
-        self.rulespec = rulespec_registry[name]()
+        self.rulespec = rulespec_registry[name]
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
 

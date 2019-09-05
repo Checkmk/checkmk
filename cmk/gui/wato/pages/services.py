@@ -1382,7 +1382,7 @@ class DiscoveryPageRenderer(object):
         if not varname or varname not in rulespec_registry:
             return
 
-        rulespec = rulespec_registry[varname]()
+        rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text(

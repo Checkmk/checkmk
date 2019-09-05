@@ -434,7 +434,7 @@ class ModeCheckManPage(WatoMode):
         if varname not in rulespec_registry:
             return
 
-        rulespec = rulespec_registry[varname]()
+        rulespec = rulespec_registry[varname]
         url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
         param_ruleset = html.render_a(rulespec.title, url)
         html.open_tr()

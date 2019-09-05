@@ -264,7 +264,7 @@ try:
     for line in lines_property_idt[3:]:
         tokens = line.split("\t")
         if tokens[0] == "ProductName":
-            tokens[1] = "Check MK Service\r\n"
+            tokens[1] = "Check MK Agent 1.6\r\n"
         # The upgrade code defines the product family. Do not change it!
         #    elif tokens[0] == "UpgradeCode":
         #        tokens[1] = upgrade_code

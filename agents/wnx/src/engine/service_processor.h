@@ -355,14 +355,14 @@ private:
         // check time
         auto allowed_by_time = engine.isAllowedByTime();
         if (!allowed_by_time) {
-            XLOG::t("Skipping '{}' by time", engine.getUniqName());
+            XLOG::d.t("Skipping '{}' by time", engine.getUniqName());
             return false;
         }
 
         // check config
         auto allowed = engine.isAllowedByCurrentConfig();
         if (!allowed) {
-            XLOG::t("Skipping '{}' by config", engine.getUniqName());
+            XLOG::d.t("Skipping '{}' by config", engine.getUniqName());
             return false;
         }
 

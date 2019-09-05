@@ -210,8 +210,25 @@ void ServiceProcessor::preLoadConfig() {
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
 }
 
+static void OptionallyReloadConfig() {
+    // service may install cap, install ini or upgrade installation and
+    // continue to work, config must be reloaded
+    auto app_type = AppDefaultType();
+    if (app_type == AppType::srv) {
+        XLOG::l.i("Reloading config for SERVICE is required");
+        cma::ReloadConfig();
+        return;
+    }
+
+    XLOG::l.i("Reloading config for application type [{}] is NOT required",
+              static_cast<int>(app_type));
+}
+
 void ServiceProcessor::preStart() {
     XLOG::l.i("Pre Start actions");
+
+    OptionallyReloadConfig();
+    //
     cma::cfg::SetupPluginEnvironment();
     ohm_started_ = conditionallyStartOhm();
 

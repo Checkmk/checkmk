@@ -27,7 +27,9 @@
 import errno
 import os
 import tempfile
-from typing import Optional, Dict, Set, Iterator, List, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Optional, Dict, Set, Iterator, List, Tuple, NamedTuple,
+)
 
 import cmk.utils.paths
 import cmk.utils.translations
@@ -37,9 +39,24 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk_base.utils
 import cmk_base.console as console
 
+PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
+    ('source_hostname', str),
+    ('file_path', str),
+    ('successfully_processed', bool),
+    ('reason', str),
+])
+
+PiggybackRawDataInfo = NamedTuple('PiggybackRawData', [
+    ('source_hostname', str),
+    ('file_path', str),
+    ('successfully_processed', bool),
+    ('reason', str),
+    ('raw_data', str),
+])
+
 
 def get_piggyback_raw_data(hostname, piggyback_max_cachefile_age):
-    # type: (str, int) -> List[Tuple[str, str]]
+    # type: (str, int) -> List[PiggybackRawDataInfo]
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -49,18 +66,38 @@ def get_piggyback_raw_data(hostname, piggyback_max_cachefile_age):
     if not hostname:
         return []
 
+    piggyback_file_infos = _get_piggyback_processed_file_infos(hostname,
+                                                               piggyback_max_cachefile_age)
+    if not piggyback_file_infos:
+        console.verbose("No piggyback files for '%s'. Skip processing.\n" % hostname)
+        return []
+
     piggyback_data = []
-    for source_host, piggyback_file_path in _get_piggyback_files(hostname,
-                                                                 piggyback_max_cachefile_age):
+    for file_info in piggyback_file_infos:
         try:
-            raw_data = file(piggyback_file_path).read()
+            raw_data = file(file_info.file_path).read()
+
         except IOError as e:
-            console.verbose("Cannot read piggyback raw data from host %s: %s\n" % (source_host, e))
-            continue
+            reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
+            piggyback_raw_data = PiggybackRawDataInfo(source_hostname=file_info.source_hostname,
+                                                      file_path=file_info.file_path,
+                                                      successfully_processed=False,
+                                                      reason=reason,
+                                                      raw_data='')
+            console.verbose("Piggyback file '%s': %s, %s\n" % (file_info.file_path, reason, e))
 
-        console.verbose("Using piggyback raw data from host %s.\n" % source_host)
-        piggyback_data.append((source_host, raw_data))
-
+        else:
+            piggyback_raw_data = PiggybackRawDataInfo(file_info.source_hostname,
+                                                      file_info.file_path,
+                                                      file_info.successfully_processed,
+                                                      file_info.reason, raw_data)
+            if file_info.successfully_processed:
+                console.verbose("Piggyback file '%s': %s.\n" %
+                                (file_info.file_path, file_info.reason))
+            else:
+                console.verbose("Piggyback file '%s' is outdated (%s). Skip processing.\n" %
+                                (file_info.file_path, file_info.reason))
+        piggyback_data.append(piggyback_raw_data)
     return piggyback_data
 
 
@@ -69,75 +106,79 @@ def get_source_and_piggyback_hosts(piggyback_max_cachefile_age):
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggyback_dir in cmk.utils.paths.piggyback_dir.glob("*"):  # pylint: disable=no-member
-        piggybacked_host = piggyback_dir.name
-        for source_host, _piggyback_file_path in _get_piggyback_files(piggybacked_host,
-                                                                      piggyback_max_cachefile_age):
-            yield source_host, piggybacked_host
+        piggybacked_hostname = piggyback_dir.name
+        for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname,
+                                                             piggyback_max_cachefile_age):
+            if not file_info.successfully_processed:
+                continue
+            yield file_info.source_hostname, piggybacked_hostname
 
 
 def has_piggyback_raw_data(hostname, piggyback_max_cachefile_age):
     # type: (str, int) -> bool
-    return _get_piggyback_files(hostname, piggyback_max_cachefile_age) != []
+    return any([
+        file_info.successfully_processed
+        for file_info in _get_piggyback_processed_file_infos(hostname, piggyback_max_cachefile_age)
+    ])
 
 
-def _get_piggyback_files(hostname, piggyback_max_cachefile_age):
-    # type: (str, int) -> List[Tuple[str, str]]
+def _get_piggyback_processed_file_infos(hostname, piggyback_max_cachefile_age):
+    # type: (str, int) -> List[PiggybackFileInfo]
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
-    _get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
+    _get_piggyback_processed_file_infos(), store_piggyback_raw_data() or cleanup_piggyback_files()
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
-    files = []  # type: List[Tuple[str, str]]
-    host_piggyback_dir = cmk.utils.paths.piggyback_dir / hostname
+    piggybacked_host_dir = cmk.utils.paths.piggyback_dir / hostname
 
     # cleanup_piggyback_files() may remove stale piggyback files of one source
     # host and also the directory "hostname" when the last piggyback file for the
     # current host was removed. This may cause the os.listdir() to fail. We treat
     # this as regular case: No piggyback files for the current host.
     try:
-        source_host_names = [e.name for e in host_piggyback_dir.iterdir()]
+        source_hostnames = [e.name for e in piggybacked_host_dir.iterdir()]
     except OSError as e:
         if e.errno == errno.ENOENT:
-            return files
+            return []
         else:
             raise
 
-    for source_host in source_host_names:
-        if source_host.startswith("."):
+    file_infos = []  # type: List[PiggybackFileInfo]
+    for source_hostname in source_hostnames:
+        if source_hostname.startswith("."):
             continue
 
-        piggyback_file_path = host_piggyback_dir / source_host
+        piggyback_file_path = str(piggybacked_host_dir / source_hostname)
+        successfully_processed, reason =\
+            _get_piggyback_processed_file_info(source_hostname, piggyback_file_path, piggyback_max_cachefile_age)
 
-        try:
-            file_age = cmk_base.utils.cachefile_age(str(piggyback_file_path))
-        except MKGeneralException:
-            continue  # File might've been deleted. That's ok.
+        piggyback_file_info = PiggybackFileInfo(source_hostname, piggyback_file_path,
+                                                successfully_processed, reason)
+        file_infos.append(piggyback_file_info)
+    return file_infos
 
-        # Skip piggyback files that are outdated at all
-        if file_age > piggyback_max_cachefile_age:
-            console.verbose(
-                "Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
-                (piggyback_file_path, file_age - piggyback_max_cachefile_age))
-            continue
 
-        status_file_path = _piggyback_source_status_path(source_host)
-        if not os.path.exists(status_file_path):
-            console.verbose(
-                "Piggyback file %s is outdated (Source not sending piggyback). Skip processing.\n" %
-                piggyback_file_path)
-            continue
+def _get_piggyback_processed_file_info(source_hostname, piggyback_file_path,
+                                       piggyback_max_cachefile_age):
+    # type: (str, str, int) -> Tuple[bool, str]
+    try:
+        file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
+    except MKGeneralException:
+        return False, "Piggyback file might have been deleted"
 
-        if _is_piggyback_file_outdated(status_file_path, str(piggyback_file_path)):
-            console.verbose(
-                "Piggyback file %s is outdated (Not updated by source). Skip processing.\n" %
-                piggyback_file_path)
-            continue
+    status_file_path = _piggyback_source_status_path(source_hostname)
+    if file_age > piggyback_max_cachefile_age:
+        return False, "Piggyback file too old: %s sec" % (file_age - piggyback_max_cachefile_age)
 
-        files.append((source_host, str(piggyback_file_path)))
+    elif not os.path.exists(status_file_path):
+        return False, "Source '%s' not sending piggyback data" % source_hostname
 
-    return files
+    elif _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
+        return False, "Piggyback file not updated by source '%s'" % source_hostname
+
+    return True, "Successfully processed from source '%s'" % source_hostname
 
 
 def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
@@ -154,9 +195,9 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
             raise
 
 
-def _piggyback_source_status_path(source_host):
+def _piggyback_source_status_path(source_hostname):
     # type: (str) -> str
-    return str(cmk.utils.paths.piggyback_source_dir / source_host)
+    return str(cmk.utils.paths.piggyback_source_dir / source_hostname)
 
 
 def _remove_piggyback_file(piggyback_file_path):
@@ -171,20 +212,21 @@ def _remove_piggyback_file(piggyback_file_path):
             raise
 
 
-def remove_source_status_file(source_host):
+def remove_source_status_file(source_hostname):
     # type: (str) -> bool
     """Remove the source_status_file of this piggyback host which will
     mark the piggyback data from this source as outdated."""
-    source_status_path = _piggyback_source_status_path(source_host)
+    source_status_path = _piggyback_source_status_path(source_hostname)
     return _remove_piggyback_file(source_status_path)
 
 
-def store_piggyback_raw_data(source_host, piggybacked_raw_data):
+def store_piggyback_raw_data(source_hostname, piggybacked_raw_data):
     # type: (str, Dict[str, str]) -> None
     piggyback_file_paths = []
-    for piggybacked_host, lines in piggybacked_raw_data.items():
-        piggyback_file_path = str(cmk.utils.paths.piggyback_dir / piggybacked_host / source_host)
-        console.verbose("Storing piggyback data for: %s\n" % piggybacked_host)
+    for piggybacked_hostname, lines in piggybacked_raw_data.items():
+        piggyback_file_path = str(cmk.utils.paths.piggyback_dir / piggybacked_hostname /
+                                  source_hostname)
+        console.verbose("Storing piggyback data for: %s\n" % piggybacked_hostname)
         content = "\n".join(lines) + "\n"
         store.save_file(piggyback_file_path, content)
         piggyback_file_paths.append(piggyback_file_path)
@@ -194,10 +236,10 @@ def store_piggyback_raw_data(source_host, piggybacked_raw_data):
     # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
     # piggyback data was sent this turn.
     if piggybacked_raw_data:
-        status_file_path = _piggyback_source_status_path(source_host)
+        status_file_path = _piggyback_source_status_path(source_hostname)
         _store_status_file_of(status_file_path, piggyback_file_paths)
     else:
-        remove_source_status_file(source_host)
+        remove_source_status_file(source_hostname)
 
 
 def _store_status_file_of(status_file_path, piggyback_file_paths):
@@ -224,6 +266,16 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
     os.rename(tmp_path, status_file_path)
 
 
+#   .--clean up------------------------------------------------------------.
+#   |                     _                                                |
+#   |                 ___| | ___  __ _ _ __    _   _ _ __                  |
+#   |                / __| |/ _ \/ _` | '_ \  | | | | '_ \                 |
+#   |               | (__| |  __/ (_| | | | | | |_| | |_) |                |
+#   |                \___|_|\___|\__,_|_| |_|  \__,_| .__/                 |
+#   |                                               |_|                    |
+#   '----------------------------------------------------------------------'
+
+
 def cleanup_piggyback_files(piggyback_max_cachefile_age):
     # type: (int) -> None
     """This is a housekeeping job to clean up different old files from the
@@ -238,7 +290,7 @@ def cleanup_piggyback_files(piggyback_max_cachefile_age):
     # Cleanup empty backed host directories below "piggyback"
 
     Please note that there may be multiple parallel calls executing the
-    _get_piggyback_files(), store_piggyback_raw_data() or cleanup_piggyback_files()
+    _get_piggyback_processed_file_infos(), store_piggyback_raw_data() or cleanup_piggyback_files()
     functions. Therefor all these functions needs to deal with suddenly vanishing or
     updated files/directories.
     """
@@ -270,7 +322,7 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
     # type: (int) -> None
     """Remove piggyback data that is not needed anymore
 
-    The monitoring (_get_piggyback_files()) is already skipping these files,
+    The monitoring (_get_piggyback_processed_file_infos()) is already skipping these files,
     but we need some cleanup mechanism.
 
     - Remove all piggyback files created by sources without status file

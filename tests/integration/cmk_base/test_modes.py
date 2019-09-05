@@ -65,6 +65,8 @@ def test_cfg(web, site):
     web.delete_host("modes-test-host3")
     web.delete_host("modes-test-host4")
 
+    web.activate_changes()
+
 
 #.
 #   .--General options-----------------------------------------------------.

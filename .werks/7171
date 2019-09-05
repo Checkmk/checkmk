@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Improved error handling
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p22
+Date: 1567684715
+
+Previously, the agent updater might crash with a meaningless error
+like <pre>ERROR compile() expected string without null bytes</pre>
+when it tries to read from a corrupt config or state file.
+
+This is now mitigated by showing a meaningful error that refers to
+the file that caused the problem.
+

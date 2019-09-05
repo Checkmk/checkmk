@@ -1,0 +1,23 @@
+Title: Piggybacked hosts: 'Check_MK' service shows more detailed information
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b10
+Date: 1568098675
+
+Piggybacked hosts get their data from source hosts. The source hosts save the
+piggyback data to files. There's also a status file written by the source
+in order to know whether the source host has sent piggyback data at all.
+There may be several situations such that the piggybacked hosts cannot processed
+their data:
+<ul>
+<li>Piggyback file is too old</li>
+<li>Source is not sending piggyback data</li>
+<li>Piggyback data file is not updated by source</li>
+<li>Piggyback file age cannot be determined</li>
+</ul>
+
+Now the 'Check_MK' service of piggybacked hosts show these messages.

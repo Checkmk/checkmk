@@ -42,7 +42,7 @@ def _raw_data(hostname):
 class PiggyBackDataSource(CheckMKAgentDataSource):
     def __init__(self, hostname, ipaddress):
         super(PiggyBackDataSource, self).__init__(hostname, ipaddress)
-        self._source_hostnames = set()
+        self._processed_file_reasons = set()
 
     def id(self):
         return "piggyback"
@@ -52,14 +52,16 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return "Process piggyback data from %s" % path
 
     def _execute(self):
-        entries = _raw_data(self._hostname) + _raw_data(self._ipaddress)
+        raw_data_from_sources = _raw_data(self._hostname) + _raw_data(self._ipaddress)
 
         raw_data = ""
-        for source_hostname, source_raw_data in entries:
-            self._source_hostnames.add(source_hostname)
-            raw_data += source_raw_data
+        for source_raw_data in raw_data_from_sources:
+            self._processed_file_reasons.add(source_raw_data.reason)
+            if source_raw_data.successfully_processed:
+                raw_data += source_raw_data.raw_data
 
-        return raw_data + self._get_source_labels_section(self._source_hostnames)
+        return raw_data + self._get_source_labels_section(
+            [source_raw_data.source_hostname for source_raw_data in raw_data_from_sources])
 
     def _get_source_labels_section(self, source_hostnames):
         """Return a <<<labels>>> agent section which adds the piggyback sources
@@ -83,9 +85,4 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Return only summary information in case there is piggyback data"""
 
-        if self._host_sections and self._host_sections.sections:
-            output = "Processed from: %s" % ", ".join(self._source_hostnames)
-        else:
-            output = ""
-
-        return 0, output, []
+        return 0, ", ".join(self._processed_file_reasons), []

@@ -30,6 +30,9 @@
 # cifs:vserver        session_timed_out 17731        sd_max_ace_size         cifs_latency 9403817108427        ..
 # iscsi_lif:vserver        iscsi_read_ops 4071295661        avg_write_latency 3429809602514        ..
 
+# A list of counter name is available at
+# https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
+
 
 def inventory_netapp_api_vs_traffic(parsed, what):
     vservers = set(map(lambda x: x.split(".", 1)[1], parsed.keys()))
@@ -96,7 +99,20 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             if what not in data:
                 continue
 
-            rate = get_rate('%s.%s' % (protocol, what), now, int(data[what]) * scale)
+            # According to "NetApp® Unified Storage Performance Management",
+            # latency calculation is a function of the number of ops.
+            if what == "cifs_read_latency":
+                ref = int(data["cifs_read_ops"])
+            elif what == "cifs_write_latency":
+                ref = int(data["cifs_write_ops"])
+            elif what == "avg_read_latency":
+                ref = int(data["read_ops"])
+            elif what == "avg_write_latency":
+                ref = int(data["write_ops"])
+            else:
+                ref = now
+
+            rate = get_rate('%s.%s' % (protocol, what), ref, int(data[what]) * scale)
             yield 0, "%s %s: %s" % (protoname, perftext, format_func(rate)), [(perfname, rate)]
 
 

@@ -44,40 +44,9 @@ if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9
     OMD_MAKE_VARS = 'PYTHON_ENABLE_OPTIMIZATIONS=""'
 }
 
-// Duplicate code with nightly-cmk-container.jenkins
-def get_cmk_version(BRANCH, VERSION) {
-    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
-    def DATE = new Date()
-
-    if(BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE)
-    } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE)
-    } else {
-        return VERSION
-    }
-}
-
-def get_agent_list(EDITION) {
-    if (EDITION == "raw") {
-        return ["windows", "windows-legacy"]
-    } else {
-        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
-    }
-}
-
-def mount_overlay(LOWER_DIR, UPPER_DIR) {
-    sh """
-        mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
-        mount -t overlay overlay -o \
-        lowerdir=${LOWER_DIR},upperdir=${UPPER_DIR},workdir=${UPPER_DIR}-work \
-        ${UPPER_DIR}
-   """
-}
-
-def unmount_overlay(UPPER_DIR) {
-    sh "until umount ${WORKSPACE}/${UPPER_DIR}; do sleep 1; done"
-}
+//
+// MAIN
+//
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -336,4 +305,43 @@ try {
             }
         }
     }
+}
+
+//
+// FUNCTIONS
+//
+
+// Duplicate code with nightly-cmk-container.jenkins
+def get_cmk_version(BRANCH, VERSION) {
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if(BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
+    }
+}
+
+def get_agent_list(EDITION) {
+    if (EDITION == "raw") {
+        return ["windows", "windows-legacy"]
+    } else {
+        return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
+    }
+}
+
+def mount_overlay(LOWER_DIR, UPPER_DIR) {
+    sh """
+        mkdir -p ${UPPER_DIR} ${UPPER_DIR}-work
+        mount -t overlay overlay -o \
+        lowerdir=${LOWER_DIR},upperdir=${UPPER_DIR},workdir=${UPPER_DIR}-work \
+        ${UPPER_DIR}
+   """
+}
+
+def unmount_overlay(UPPER_DIR) {
+    sh "until umount ${WORKSPACE}/${UPPER_DIR}; do sleep 1; done"
 }

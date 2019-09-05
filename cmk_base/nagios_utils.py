@@ -39,11 +39,12 @@ def do_check_nagiosconfig():
     cmk_base.console.output("Validating Nagios configuration...")
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-    exit_status = p.wait()
+    (stdout, stderr) = p.communicate()
+    exit_status = p.returncode
     if not exit_status:
         cmk_base.console.output(tty.ok + "\n")
         return True
 
     cmk_base.console.output("ERROR:\n")
-    cmk_base.console.output(p.stdout.read(), stream=sys.stderr)
+    cmk_base.console.output(stdout, stderr)
     return False

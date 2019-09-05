@@ -2961,7 +2961,7 @@ class TimeHelper(object):
             time_s[1] += months
             if time_s[1] <= 0:
                 time_s[0] -= 1
-                time_s[1] = 12 - time_s[1]
+                time_s[1] = 12 + time_s[1]
             time_s[8] = -1
             return time.mktime(time_s)
         elif unit == 'y':
@@ -2974,7 +2974,7 @@ class TimeHelper(object):
 
 class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
-        self._title = _('Time range')
+        self._title = kwargs.get('title', _('Time range'))
         self._allow_empty = kwargs.get("allow_empty", False)
         self._include_time = kwargs.get("include_time", False)
         self._fixed_choices = kwargs.get("choices", [])
@@ -3058,6 +3058,13 @@ class Timerange(CascadingDropdown):
             until_time = now
             title = _("The last ") + Age().value_to_text(rangespec[1])
             return (from_time, until_time), title
+        elif rangespec[0] == 'next':
+            from_time = now
+            until_time = now + rangespec[1]
+            title = _("The next ") + Age().value_to_text(rangespec[1])
+            return (from_time, until_time), title
+        elif rangespec[0] == 'until':
+            return (now, rangespec[1]), AbsoluteDate().value_to_text(rangespec[1])
 
         elif rangespec[0] in ['date', 'time']:
             from_time, until_time = rangespec[1]
@@ -3088,21 +3095,31 @@ class Timerange(CascadingDropdown):
             titles = {
                 'd': (_("Today"), _("Yesterday")),
                 'w': (_("This week"), _("Last week")),
-                'y': (str(year), str(year - 1)),
-                'm':
-                    ("%s %d" % (defines.month_name(month - 1), year), "%s %d" % (defines.month_name(
-                        (month + 10) % 12), year - int(month == 1))),
+                'y': (str(year), None),
+                'm': ("%s %d" % (defines.month_name(month - 1), year), None),
             }[rangespec[0]]
 
             if rangespec[1] == '0':
                 return (from_time, now), titles[0]
 
             # last (previous)
-            prev_time = TimeHelper.add(from_time, -1, rangespec[0])
+            prev_time = TimeHelper.add(from_time, -1 * int(rangespec[1:]), rangespec[0])
             # add one hour to the calculated time so that if dst started in that period,
             # we don't round down a whole day
             prev_time = TimeHelper.round(prev_time + 3600, 'd')
-            return (prev_time, from_time), titles[1]
+
+            # This only works for Months, but those are the only defaults in Forecast Graphs
+            # Language localization to system language not CMK GUI language
+            if prev_time > from_time:
+                from_time, prev_time = prev_time, from_time
+            prev_time_str = time.strftime("%B %Y", time.localtime(prev_time))
+            end_time_str = time.strftime("%B %Y", time.localtime(from_time - 1))
+            if prev_time_str != end_time_str:
+                prev_time_str += " - " + end_time_str
+            if rangespec[0] == "y":
+                prev_time_str = time.strftime("%Y", time.localtime(prev_time))
+
+            return (prev_time, from_time), titles[1] or prev_time_str
 
 
 # A selection of various date formats

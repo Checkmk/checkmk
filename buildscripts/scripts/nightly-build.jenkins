@@ -35,7 +35,7 @@ def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
 
 def ARCHIVE_DIR = ''
 def OMD_MAKE_VARS = ''
-if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
+if (shall_publish_package()) {
     DAILY_DATA = '/var/jenkins_home/daily-data/' + BRANCH + '/' + CMK_VERS
     ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
 } else {
@@ -286,7 +286,7 @@ try {
                 }
                 stage('Upload artifacts') {
                     // Only 'official' builds should end up on the Website
-                    if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized') {
+                    if (shall_publish_package()) {
                         sh """
                             cd ${ARCHIVE_DIR}
                             rsync -av \
@@ -331,6 +331,10 @@ def get_agent_list(EDITION) {
     } else {
         return ["linux-64bit", "linux-32bit", "windows", "windows-legacy" ]
     }
+}
+
+def shall_publish_package() {
+    return (scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9]+\\.[0-9]+') && JOB_BASE_NAME == 'nightly_build_containerized'
 }
 
 def mount_overlay(LOWER_DIR, UPPER_DIR) {

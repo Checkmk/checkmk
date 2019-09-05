@@ -38,13 +38,13 @@
 
 
 def parse_winperf_tcp_conn(info):
-    map_counter_keys = {
+    counter_keys = {
         "2": "ESTABLISHED",
     }
 
     parsed = {}
     for line in info:
-        tcp_state = map_counter_keys.get(line[0])
+        tcp_state = counter_keys.get(line[0])
         if tcp_state is None:
             continue
         try:

@@ -10806,6 +10806,7 @@ graph_info["tcp_connection_states"] = {
         ("tcp_idle", "stack"),
     ],
     "omit_zero_metrics": True,
+    "optional_metrics": ["tcp_bound", "tcp_idle"]
 }
 
 graph_info["cluster_hosts"] = {

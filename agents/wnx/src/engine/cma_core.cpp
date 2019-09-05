@@ -381,7 +381,9 @@ void ApplyEverythingToPluginMap(
             }
 
             if (exe) {
-                exe->apply(it->source());
+                XLOG::d.t("To plugin '{}' to be applied rule '{}'",
+                          it->sourceText(), f.u8string());
+                exe->apply(f.u8string(), it->source());
             }
 
             ApplyEverythingLogResult(fmt_string, entry_full_name, local);

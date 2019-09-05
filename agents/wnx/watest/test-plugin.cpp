@@ -971,6 +971,12 @@ static const cma::PathVector many_files = {
     "c:\\z\\core\\3.exe"     //
 };
 
+TEST(PluginTest, CtorWithSource) {
+    for (const auto& e : many_exe_units) {
+        EXPECT_TRUE(e.source().IsMap());
+        EXPECT_FALSE(e.sourceText().empty());
+    }
+}
 TEST(PluginTest, ApplyEverything) {
     {
         PluginMap pm;
@@ -1011,6 +1017,7 @@ TEST(PluginTest, ApplyEverything) {
                 EXPECT_EQ(entry.second.retry(), 5);
                 EXPECT_EQ(entry.second.async(), false);
                 EXPECT_EQ(entry.second.timeout(), 11);
+                EXPECT_EQ(entry.second.defined(), true);
             }
         }
 
@@ -1037,21 +1044,25 @@ TEST(PluginTest, ApplyEverything) {
         RemoveDuplicatedPlugins(pm, false);
         EXPECT_EQ(pm.size(), 0);
 
-        ApplyEverythingToPluginMap(pm, many_exe_units, many_files, false);
-        EXPECT_EQ(pm.size(), 4);
-        RemoveDuplicatedPlugins(pm, false);
         {
-            int valid_entries[] = {0, 1, 3, 6};
-            int index = 0;
-            for (auto& [name, unit] : pm) {
-                auto expected_index = valid_entries[index++];
-                auto end_path = unit.path();
-                auto expected_path = many_files[expected_index];
-                EXPECT_EQ(end_path.u8string(), expected_path.u8string());
-                EXPECT_EQ(unit.cacheAge(), 0);
-                EXPECT_EQ(unit.retry(), 1);
-                EXPECT_EQ(unit.async(), false);
-                EXPECT_EQ(unit.timeout(), 1);
+            PluginMap pm;
+            ApplyEverythingToPluginMap(pm, many_exe_units, many_files, false);
+            EXPECT_EQ(pm.size(), 4);
+            RemoveDuplicatedPlugins(pm, false);
+            {
+                int valid_entries[] = {0, 1, 3, 6};
+                int index = 0;
+                for (auto& [name, unit] : pm) {
+                    auto expected_index = valid_entries[index++];
+                    auto end_path = unit.path();
+                    auto expected_path = many_files[expected_index];
+                    EXPECT_EQ(end_path.u8string(), expected_path.u8string());
+                    EXPECT_EQ(unit.cacheAge(), 0);
+                    EXPECT_EQ(unit.retry(), 1);
+                    EXPECT_EQ(unit.async(), false);
+                    EXPECT_EQ(unit.timeout(), 1);
+                    EXPECT_EQ(unit.defined(), true);
+                }
             }
         }
     }
@@ -1725,16 +1736,18 @@ static const int LocalUnitCacheAge = cma::cfg::kMinimumCacheAge;
 std::vector<cma::cfg::Plugins::ExeUnit> local_units_async = {
     //       Async  Timeout CacheAge              Retry  Run
     // clang-format off
-    {"*.cmd", true, 10,     LocalUnitCacheAge, 3,     true},
-    {"*",     true, 10,     LocalUnitCacheAge, 3,     false},
+    {"*.cmd",
+     "async: yes\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\n"},
+    {"*",     "run: no"},
     // clang-format on
 };
 
 std::vector<cma::cfg::Plugins::ExeUnit> local_units_sync = {
     //       Async  Timeout CacheAge              Retry  Run
     // clang-format off
-    {"*.cmd", false, 10,     0, 3,     true},
-    {"*",     false, 10,     0, 3,     false},
+    {"*.cmd",
+     "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\n"},
+    {"*",     "run: no"},
     // clang-format on
 };
 

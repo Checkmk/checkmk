@@ -373,8 +373,9 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
 
     if (max_timeout_ <= 0) {
         max_timeout_ = cma::cfg::kDefaultAgentMinWait;
-        XLOG::l.i("Max Timeout set to valid value {}", max_timeout_);
-    }
+        XLOG::l.i("Max Timeout set to valid value [{}]", max_timeout_);
+    } else
+        XLOG::l.i("Max Timeout is [{}]", max_timeout_);
 
     return static_cast<int>(vf_.size());
 }

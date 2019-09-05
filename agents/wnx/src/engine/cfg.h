@@ -944,12 +944,14 @@ public:
     struct ExeUnit : public cma::cfg::PluginInfo {
         ExeUnit() = default;
 
+        // deprecated
         // Sync
         ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
             : PluginInfo(Timeout, Retry)  //
             , pattern_(Pattern)           //
             , run_(Run) {}
 
+        // deprecated
         // Async
         ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
                 bool Run)
@@ -963,6 +965,7 @@ public:
         ExeUnit(std::string_view pattern, const std::string& entry)
             : pattern_(pattern)  //
         {
+            source_text_ = entry;
             assign(YAML::Load(entry));
         }
 
@@ -985,8 +988,9 @@ public:
         auto pattern() const noexcept { return pattern_; }
         auto run() const noexcept { return run_; }
         void assign(const YAML::Node& node) noexcept;
-        void apply(const YAML::Node& node) noexcept;
+        void apply(std::string_view filename, const YAML::Node& node) noexcept;
         const YAML::Node source() const noexcept { return source_; }
+        const std::string sourceText() const noexcept { return source_text_; }
 
         void resetConfig() {
             async_ = false;
@@ -1010,6 +1014,7 @@ public:
         }
 
         std::string pattern_;
+        std::string source_text_;
         bool run_ = true;
         YAML::Node source_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)

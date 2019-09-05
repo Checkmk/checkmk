@@ -45,6 +45,7 @@ import time
 import socket
 import binascii
 import platform
+import locale
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
@@ -422,7 +423,7 @@ class LogLinesIter(object):
             if self._buffer.startswith(bom):
                 self._buffer = self._buffer[len(bom):]
                 return encoding
-        return 'utf_8'
+        return locale.getpreferredencoding() or 'utf_8'
 
     def _update_lines(self):
         """

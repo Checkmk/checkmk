@@ -1,0 +1,12 @@
+Title: mk_logwatch: Use preferred locale encoding when guessing the encoding of a log file
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b9
+Date: 1567067846
+
+From version 1.6.0b1 to 1.6.0b9 mk_logwatch assumed UTF-8 encoding if no byte order mark was found in the logfile.
+It now uses the systems preferred enconding, which is the same behavior as in earlier versions.

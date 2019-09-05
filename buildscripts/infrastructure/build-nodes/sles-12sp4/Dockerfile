@@ -27,6 +27,7 @@ RUN zypper addrepo -G http://nexus:8081/repository/sles12sp4 sles12sp4 \
     libexpat-devel \
     libffi-devel \
     libgnutls-devel \
+    libgsf-devel \
     libjpeg62-devel \
     libltdl7 \
     libmysqlclient-devel \

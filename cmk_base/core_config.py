@@ -30,6 +30,7 @@ import os
 import sys
 from typing import Text, Optional, Any, List, Dict  # pylint: disable=unused-import
 
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store

@@ -26,6 +26,7 @@
 
 from typing import NamedTuple, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
 
+import cmk.utils.debug
 from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

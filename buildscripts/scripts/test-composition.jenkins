@@ -33,7 +33,7 @@ if(BRANCH == 'master') {
     CMK_VERSION = VERSION
 }
 
-def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
+def TEST_DATA = '/var/jenkins_home/composition-test-data/' + CMK_VERSION
 def OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {

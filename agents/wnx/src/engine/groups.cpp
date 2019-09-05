@@ -277,7 +277,8 @@ void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
     }
 }
 
-void Plugins::ExeUnit::apply(const YAML::Node& entry) noexcept {
+void Plugins::ExeUnit::apply(std::string_view filename,
+                             const YAML::Node& entry) noexcept {
     try {
         if (entry.IsMap()) {
             ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
@@ -288,7 +289,7 @@ void Plugins::ExeUnit::apply(const YAML::Node& entry) noexcept {
             if (cache_age_ && !async_) {
                 XLOG::d.t(
                     "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
-                    pattern_, cache_age_);
+                    filename, cache_age_);
                 async_ = true;
             }
         }

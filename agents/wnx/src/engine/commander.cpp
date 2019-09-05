@@ -20,7 +20,7 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
 
     if (cma::tools::IsEqual(cmd, kReload)) {
         XLOG::l.t("Commander: Reload");
-        cma::ReloadConfig();
+        cma::ReloadConfig();  // command line
         return true;
     }
 

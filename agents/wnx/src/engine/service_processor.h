@@ -239,6 +239,7 @@ private:
         noexcept;
 
     // used to start OpenHardwareMonitor if conditions are ok
+    bool stopRunningOhmProcess() noexcept;
     [[nodiscard]] bool conditionallyStartOhm() noexcept;
     void mainThread(world::ExternalPort* Port) noexcept;
 
@@ -275,6 +276,8 @@ private:
         return stop_requested;
     }
 
+    bool restartBinariesIfCfgChanged(uint64_t& last_cfg_id);
+
     // type of breaks in mainWaitLoop
     enum class Signal { restart, quit };
 
@@ -285,6 +288,7 @@ private:
         // memorize vars to check for changes in loop below
         auto ipv6 = groups::global.ipv6();
         auto port = groups::global.port();
+        auto uniq_cfg_id = GetCfg().uniqId();
         while (1) {
             using namespace std::chrono;
 
@@ -309,6 +313,7 @@ private:
                 XLOG::l.t("Stop request is set");
                 break;  // signaled stop
             }
+            restartBinariesIfCfgChanged(uniq_cfg_id);
         }
         XLOG::l.t("main Wait Loop END");
         return Signal::quit;
@@ -341,13 +346,13 @@ private:
     int startProviders(AnswerId Tp, std::string Ip);
 
     // all pre operation required for normal functionality
-    void preStart();
+    void preStartBinaries();
     void detachedPluginsStart();
 
 private:
     void preLoadConfig();
     TheMiniProcess ohm_process_;
-    int max_timeout_;  // this is waiting time for all section to run
+    int max_wait_time_;  // this is waiting time for all section to run
     template <typename T>
     bool tryToKick(T& SecProv, AnswerId Tp, const std::string& Ip) {
         const auto& engine = SecProv.getEngine();
@@ -370,8 +375,9 @@ private:
         vf_.emplace_back(SecProv.kick(true, Ip, Tp, this));
         auto expected_timeout = SecProv.expectedTimeout();
         if (expected_timeout > 0) {
-            max_timeout_ = std::max(expected_timeout, max_timeout_);
-            XLOG::t.i("Max Timeout set to '{}'", max_timeout_);
+            max_wait_time_ = std::max(expected_timeout, max_wait_time_);
+            XLOG::t.i("Max Wait Time for Answer is set to [{}]",
+                      max_wait_time_);
         }
 
         return true;
@@ -465,7 +471,7 @@ private:
         answer_.exeKickedCount(count);
 
         // now wait for answers
-        auto success = answer_.waitAnswer(seconds(max_timeout_));
+        auto success = answer_.waitAnswer(seconds(max_wait_time_));
         logAnswerProcessing(success);
 
         auto result = std::move(answer_.getDataAndClear());
@@ -634,6 +640,9 @@ private:
 
     friend class SectionProviderOhm;
     FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhm);
+
+    friend class CmaCfg;
+    FRIEND_TEST(CmaCfg, RestartBinaries);
 #endif
 };
 

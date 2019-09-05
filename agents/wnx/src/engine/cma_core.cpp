@@ -381,8 +381,8 @@ void ApplyEverythingToPluginMap(
             }
 
             if (exe) {
-                XLOG::d.t("To plugin '{}' to be applied rule '{}'",
-                          it->sourceText(), f.u8string());
+                XLOG::t("To plugin '{}' to be applied rule '{}'", f.u8string(),
+                        it->sourceText());
                 exe->apply(f.u8string(), it->source());
             }
 
@@ -1147,14 +1147,6 @@ std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout) {
     return out;
 }
 
-// this mode is obsolete
-bool IsDetachedPlugin(const std::filesystem::path& filepath) {
-    auto fname = filepath.filename();
-    auto filename = fname.u8string();
-    cma::tools::StringLower(filename);
-    return false;  // filename == cma::cfg::files::kAgentUpdater;
-}
-
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
     using namespace std;
     using DataBlock = vector<char>;
@@ -1170,12 +1162,6 @@ void RunDetachedPlugins(PluginMap& plugins_map, int& start_count) {
         auto& entry = entry_pair.second;
 
         if (!entry.async()) continue;
-
-        if (IsDetachedPlugin(entry.path())) {
-            entry.restartIfRequired();
-            ++count;
-            continue;
-        };
     }
     XLOG::t.i("Detached started: [{}]", count);
     start_count = count;
@@ -1234,8 +1220,6 @@ std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
 
         auto run_async = cma::provider::config::IsRunAsync(entry);
         if (!run_async) continue;
-
-        if (IsDetachedPlugin(entry.path())) continue;
 
         auto ret = entry.getResultsAsync(StartImmediately);
         if (ret.size()) ++count;

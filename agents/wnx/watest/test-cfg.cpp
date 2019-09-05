@@ -366,6 +366,15 @@ TEST(Cma, OnStart) {
     }
 }
 
+TEST(CmaCfg, ReloadCfg) {
+    cma::OnStartTest();
+    auto id = GetCfg().uniqId();
+    EXPECT_TRUE(id > 0);
+    cma::LoadConfig(AppType::test, {});
+    auto id2 = GetCfg().uniqId();
+    EXPECT_TRUE(id2 > id);
+}
+
 TEST(Cma, PushPop) {
     cma::OnStartTest();
     namespace fs = std::filesystem;
@@ -403,3 +412,17 @@ TEST(Cma, PushPop) {
 }
 
 }  // namespace cma::cfg
+
+namespace cma::srv {
+TEST(CmaCfg, RestartBinaries) {
+    cma::srv::ServiceProcessor sp;
+    uint64_t id = cma::cfg::GetCfg().uniqId();
+    auto old_id = id;
+    EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_EQ(old_id, id);
+    ReloadConfig();
+    EXPECT_TRUE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_NE(old_id, id);
+}
+
+}  // namespace cma::srv

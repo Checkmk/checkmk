@@ -370,6 +370,8 @@ public:
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& FullPath);
 
+    uint64_t uniqId() const noexcept { return uniq_id_; }
+
 private:
     void fillExePaths(std::filesystem::path root);
     void fillConfigDirs();
@@ -413,6 +415,8 @@ private:
 
     std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
     std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
+
+    static std::atomic<uint64_t> uniq_id_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;

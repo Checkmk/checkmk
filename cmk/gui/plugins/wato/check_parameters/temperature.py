@@ -69,18 +69,27 @@ class RulespecCheckgroupParametersTemperature(CheckParameterRulespecWithItem):
     def parameter_valuespec(self):
         return Transform(
             Dictionary(elements=[
-                ("levels",
-                 Tuple(title=_("Upper Temperature Levels"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=u"°C", default_value=26),
-                           Float(title=_("Critical at"), unit=u"°C", default_value=30),
-                       ])),
-                ("levels_lower",
-                 Tuple(title=_("Lower Temperature Levels"),
-                       elements=[
-                           Float(title=_("Warning below"), unit=u"°C", default_value=0),
-                           Float(title=_("Critical below"), unit=u"°C", default_value=-10),
-                       ])),
+                (
+                    "levels",
+                    Transform(Tuple(title=_("Upper Temperature Levels"),
+                                    elements=[
+                                        Float(title=_("Warning at"), unit=u"°C", default_value=26),
+                                        Float(title=_("Critical at"), unit=u"°C", default_value=30),
+                                    ]),
+                              forth=lambda elems: (float(elems[0]), float(elems[1]))),
+                ),
+                (
+                    "levels_lower",
+                    Transform(Tuple(title=_("Lower Temperature Levels"),
+                                    elements=[
+                                        Float(title=_("Warning below"), unit=u"°C",
+                                              default_value=0),
+                                        Float(title=_("Critical below"),
+                                              unit=u"°C",
+                                              default_value=-10),
+                                    ]),
+                              forth=lambda elems: (float(elems[0]), float(elems[1]))),
+                ),
                 ("output_unit",
                  DropdownChoice(title=_("Display values in "),
                                 choices=[

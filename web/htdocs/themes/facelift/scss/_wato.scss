@@ -237,6 +237,22 @@ table.validationerror  {
   }
 }
 
+div#service_container div.action_buttons {
+  div.left {
+    float: left;
+  }
+
+  div.right {
+    float: right;
+  }
+
+  span.button_spacer {
+    display: inline-block;
+    width: 12px;
+  }
+}
+
+
 table.data tr.data > td.bulkactions {
   background: transparent;
   border: none;

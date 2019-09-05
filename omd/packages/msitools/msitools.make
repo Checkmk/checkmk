@@ -10,6 +10,13 @@ MSITOOLS_INSTALL := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-install
 MSITOOLS_PATCHING := $(BUILD_HELPER_DIR)/$(MSITOOLS_DIR)-patching
 .PHONY: skel
 
+# Problem here is: msitools is not compilable on older distros
+# like Debian 5 or RedHat 5.X. So here we rather ignore
+# compile problems and msi{build,info} will be missing. Check_MK
+# then knows this and the agent bakery cannot create MSI
+# packages. People need to upgrade to a more modern platform
+# for that.
+
 ifneq ($(filter $(DISTRO_CODE),sles15),)
 GSF_CONFIGURE_VARS := GSF_LIBS="$(PACKAGE_LIBGSF_LDFLAGS)" GSF_CFLAGS="$(PACKAGE_LIBGSF_CFLAGS)"
 else
@@ -21,20 +28,25 @@ $(MSITOOLS): $(MSITOOLS_BUILD)
 $(MSITOOLS)-install: $(MSITOOLS_INSTALL)
 
 $(MSITOOLS_BUILD): $(LIBGSF_BUILD) $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
-	cd $(MSITOOLS_DIR) && $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT)
-	$(MAKE) -C $(MSITOOLS_DIR)/libmsi
-	$(MAKE) -C $(MSITOOLS_DIR) msibuild msiinfo
+	# Do not try to compile on lenny. Compiler is too old
+	if [ "$$($(GCC_SYSTEM) --version | $(SED) -n '1s/.* //p' )" != 4.3.2 ] && cd $(MSITOOLS_DIR) && $(GSF_CONFIGURE_VARS) ./configure --prefix=$(OMD_ROOT) ; then \
+	  $(MAKE) -C libmsi ; \
+	  $(MAKE) msibuild ; \
+	  $(MAKE) msiinfo ; \
+	fi
 	cd $(LCAB_DIR) && ./configure && $(MAKE)
 	$(TOUCH) $@
 
 $(MSITOOLS_INSTALL): $(MSITOOLS_BUILD)
 	echo $(DESTDIR)
-	install -m 755 $(MSITOOLS_DIR)/.libs/msiinfo $(DESTDIR)$(OMD_ROOT)/bin ; \
-	install -m 755 $(MSITOOLS_DIR)/.libs/msibuild $(DESTDIR)$(OMD_ROOT)/bin ; \
-	install -m 755 $(LCAB_DIR)/lcab $(DESTDIR)$(OMD_ROOT)/bin ; \
-	install -m 755 $(MSITOOLS_DIR)/libmsi/.libs/libmsi.so* $(DESTDIR)$(OMD_ROOT)/lib ; \
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
-	install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
+	if [ -f $(MSITOOLS_DIR)/.libs/msiinfo ] ; then \
+	    install -m 755 $(MSITOOLS_DIR)/.libs/msiinfo $(DESTDIR)$(OMD_ROOT)/bin ; \
+	    install -m 755 $(MSITOOLS_DIR)/.libs/msibuild $(DESTDIR)$(OMD_ROOT)/bin ; \
+	    install -m 755 $(LCAB_DIR)/lcab $(DESTDIR)$(OMD_ROOT)/bin ; \
+	    install -m 755 $(MSITOOLS_DIR)/libmsi/.libs/libmsi.so* $(DESTDIR)$(OMD_ROOT)/lib ; \
+	    $(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
+	    install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
+	fi
 	$(TOUCH) $@
 
 $(MSITOOLS)-skel:

@@ -1323,7 +1323,7 @@ std::string GetNewHash(const std::filesystem::path& dat) noexcept {
     try {
         auto yml = YAML::LoadFile(dat.u8string());
         auto hash = GetVal(yml, kHashName.data(), std::string());
-        if (hash == cma::cfg::kBuidlHashValue) {
+        if (hash == cma::cfg::kBuildHashValue) {
             XLOG::l.t("Hash is from packaged agent, ignoring");
             return {};
         }

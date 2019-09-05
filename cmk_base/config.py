@@ -1962,6 +1962,9 @@ def filter_by_management_board(hostname,
 
 
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
+    # Local import needed to prevent import cycle. Sorry for this hack :-/
+    import cmk_base.inventory_plugins  # pylint: disable=redefined-outer-name
+
     if for_inventory:
         is_snmp_check_f = cmk_base.inventory_plugins.is_snmp_plugin
         plugins_info = cmk_base.inventory_plugins.inv_info

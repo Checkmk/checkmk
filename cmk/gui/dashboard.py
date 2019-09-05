@@ -829,7 +829,11 @@ def dashboard_edit_controls(name, board):
         # The dashlet types which can be added to the view
         html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        class ExistingView(dashlet_registry['view']):
+        # TODO: Why is this done like this? Looks like a dirty hack.
+        # - Mypy does not understand this. We could probably use type(..., ..., ...) here instead.
+        # - Or event better: Just produce a new menu entry below without registering something new
+        #   to the dashlet registry.
+        class ExistingView(dashlet_registry['view']):  # type: ignore
             @classmethod
             def title(cls):
                 return _('Existing View')

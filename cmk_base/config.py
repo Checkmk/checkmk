@@ -1339,7 +1339,8 @@ def load_checks(get_check_api_context, filelist):
             if varname.startswith("_"):
                 continue
 
-            if inspect.isfunction(value) or inspect.ismodule(value):
+            # NOTE: Classes and builtin functions are callable, too!
+            if callable(value) or inspect.ismodule(value):
                 continue
 
             _check_variable_defaults[varname] = value

@@ -1625,6 +1625,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     user_yaml_path_ = Yd[2].path_;
 
     aggregated_ = true;
+    uniq_id_++;
     ok_ = true;
 }
 
@@ -1739,6 +1740,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
     user_yaml_time_ = user_yaml_time_;
     aggregated_ = false;
     ok_ = true;
+    uniq_id_++;
     return true;
 }
 
@@ -1930,5 +1932,6 @@ bool UninstallProduct(std::string_view name) {
 }
 
 details::ConfigInfo& GetCfg() { return details::G_ConfigInfo; }
+std::atomic<uint64_t> details::ConfigInfo::uniq_id_ = 1;
 
 }  // namespace cma::cfg

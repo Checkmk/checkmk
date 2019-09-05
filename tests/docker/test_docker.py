@@ -67,6 +67,7 @@ def _prepare_build():
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
+    print "Building docker image: %s" % _image_name(version)
     try:
         image, build_logs = client.images.build(path=build_path,
                                                 tag=_image_name(version),
@@ -138,6 +139,7 @@ def _pull(client, version):
     if version.edition() != "raw":
         raise Exception("Can only fetch raw edition at the moment")
 
+    print "Downloading docker image: checkmk/check-mk-raw:%s" % version.version
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 

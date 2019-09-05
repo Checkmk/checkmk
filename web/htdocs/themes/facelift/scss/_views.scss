@@ -617,7 +617,7 @@ table.data.single {
 
     td.left {
       width: 10%;
-      padding-right: 20px;
+      padding: $td-single-left-padding;
       white-space: nowrap;
     }
 
@@ -639,7 +639,11 @@ table.data.single {
       }
     }
 
-    @include table-single-state-background();
+    &.odd0, &.even0 {
+      .state, .svcstate:not(.statex), .badflag {
+	padding-left: 16px;
+      }
+    }
   }
 
   > tbody > tr > td,

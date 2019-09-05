@@ -772,8 +772,13 @@ class AbstractGUINode {
                 .append("tbody")
                 .merge(table_selection)
 
+        let even = "even";
         let quickinfo = this._get_basic_quickinfo()
-        let rows = table.selectAll("tr").data(quickinfo).enter().append("tr").classed("data", true).classed("even0", true)
+        let rows = table.selectAll("tr").data(quickinfo).enter().append("tr");
+        rows.each(function() {
+            this.setAttribute("class", even.concat("0 data"));
+            even = (even == "even") ? "odd" : "even";
+        });
         rows.append("td").classed("left", true).text(d=>d.name)
         rows.append("td").text(d=>d.value).each((d, idx, tds)=>{
                 let td = d3.select(tds[idx])
@@ -848,7 +853,7 @@ class AbstractGUINode {
                 }
             }).attr("in_transit", 0)
             .on("interrupt", ()=>{
-               node_visualization_utils.log(7, "node update position interrupt") 
+               node_visualization_utils.log(7, "node update position interrupt")
                 this.selection.attr("in_transit", 0)
             }).attr("in_transit", 0)
     }
@@ -1210,7 +1215,7 @@ class NodeLink {
         return node_visualization_utils.DefaultTransition.add_transition(selection.attr("in_transit", 100))
             .on("end", d=>{}).attr("in_transit", 0)
             .on("interrupt", ()=>{
-               node_visualization_utils.log(7, "link update position interrupt") 
+               node_visualization_utils.log(7, "link update position interrupt")
                this.selection.attr("in_transit", 0)
             }).attr("in_transit", 0);
     }

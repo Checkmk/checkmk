@@ -1,0 +1,11 @@
+Title: Install Checkmk agent in Checkmk docker containern
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567682823
+Class: feature
+
+To be able to monitor Checkmk containers properly we now install the agent
+by default.

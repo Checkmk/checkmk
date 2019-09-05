@@ -84,6 +84,9 @@ if [ -n "$1" ]; then
     exec "$@"
 fi
 
+echo "### STARTING XINETD"
+service xinetd start
+
 echo "### STARTING SITE"
 omd start "$CMK_SITE_ID"
 

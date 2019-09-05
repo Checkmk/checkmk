@@ -27,6 +27,7 @@ sudo rsync -arxR \
       htdocs/images \
       htdocs/jquery \
       $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}; done) \
+      $(for i in ${JAVASCRIPT_MINI}; do echo ${i#web/}.map; done) \
       htdocs/sounds \
       $(for i in ${THEME_RESOURCES}; do echo ${i#web/}; done) \
       $ROOT/share/check_mk/web/

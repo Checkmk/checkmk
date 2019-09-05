@@ -248,29 +248,16 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
         yield state, infotext, []
 
 
-def check_cpu_util_linux_container(_no_item, params, info):
-    if not params:
-        params = {}
+def check_cpu_util_linux_container(_no_item, params, parsed):
+    con_ticks = parsed.get("container_ticks")
+    sys_ticks = parsed.get("system_ticks")
+    num_cpus = parsed.get("num_cpus")
+    if None in (con_ticks, sys_ticks, num_cpus):
+        return
 
-    ticks = {}
-    for line in info:
-        if line[0] == "cpu":
-            ticks["total"] = sum(map(int, line[1:]))
-        else:
-            ticks[line[0]] = int(line[1])
+    cpu_tick_rate = get_rate("container_ticks", sys_ticks, con_ticks)
 
-    this_time = time.time()
-    node_delta = get_rate("node_total", this_time, ticks["total"])
-    user = ticks.get("user")
-    system = ticks.get("system")
-    container_delta = None
-    if user is not None and system is not None:
-        container_delta = get_rate("container", this_time, user + system)
-
-    if not node_delta or not container_delta:
-        raise MKCounterWrapped("Too short time difference since last check")
-
-    cpu_usage = (container_delta / node_delta) * ticks["num_cpus"] * 100.0  # fixed: true-division
+    cpu_usage = cpu_tick_rate * num_cpus * 100.0
 
     return check_cpu_util(cpu_usage, params)
 

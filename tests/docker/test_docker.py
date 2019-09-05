@@ -31,7 +31,7 @@ import sys
 import os
 import subprocess
 import pytest  # type: ignore
-import docker
+import docker  # type: ignore
 
 import testlib
 
@@ -321,6 +321,15 @@ def test_http_access(request, client):
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
     assert "name=\"_login\"" in c.exec_run(
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
+
+
+def test_container_agent(request, client):
+    c = _start(request, client)
+    # Is the agent installed and executable?
+    assert c.exec_run(["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
+
+    # Check whether or not the agent port is opened
+    assert ":::6556" in c.exec_run(["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):

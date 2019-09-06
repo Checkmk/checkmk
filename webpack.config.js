@@ -91,7 +91,10 @@ module.exports = {
 };
 
 
-if (process.env.NO_BABEL_LOADER == undefined) {
+if (process.env.WEBPACK_MODE === "quick") {
+    console.log("not using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "', let's hope you know what your're doing...");
+} else {
+    console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
     let babel_loader = {
         test: /\.js$/,
         use: {

@@ -1,0 +1,17 @@
+Title: New command line option 'restore' for Windows Agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567768989
+Class: feature
+
+This command line option restores original bakery configuration, 
+which consists from the next elements: check_mk.bakery.yml, 
+bakery plugins and checkmk.dat.
+
+If installed Windows Agent has no bakery configuration, for example, 
+packaged agent, then nothing happens.
+
+

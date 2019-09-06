@@ -13,10 +13,8 @@ THEME_JSON_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/the
 THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/images"; done)
 THEME_RESOURCES="${THEME_CSS_FILES} ${THEME_JSON_FILES} ${THEME_IMAGE_DIRS}"
 
-export NO_BABEL_LOADER=1
-
 echo "Updating compiled JS/CSS files..."
-make -C .. ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
+make -C .. WEBPACK_MODE=${WEBPACK_MODE:-development} ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
 
 echo "Update site $SITE..."
 

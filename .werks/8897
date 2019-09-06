@@ -1,0 +1,15 @@
+Title: Plug-in configuration is correctly processed by the agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1567766273
+Class: fix
+
+Previously, Windows Agent processed the plugin configuration 
+using the approach: the first rule wins. 
+Thus, each plugin can only use one rule for its configuration.
+
+From now on, the Windows Agent agent applies all the rules to each plugin, 
+provided that the rule file name pattern matches with the plugin name. 

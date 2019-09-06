@@ -129,8 +129,8 @@ class HTMLObjectParser(HTMLParser):
 
 
 class HPMSAConnection(object):
-    def __init__(self, host_address, opt_timeout, debug):
-        self._host = host_address
+    def __init__(self, hostaddress, opt_timeout, debug):
+        self._host = hostaddress
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
         self._session = requests.Session()
@@ -179,7 +179,7 @@ def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
     opt_timeout = 10
 
-    connection = HPMSAConnection(args.host_address, opt_timeout, args.debug)
+    connection = HPMSAConnection(args.hostaddress, opt_timeout, args.debug)
     connection.login(args.username, args.password)
     parser = HTMLObjectParser()
 

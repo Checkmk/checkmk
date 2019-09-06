@@ -51,18 +51,18 @@ MAP_JOB_STATES = {
     "notbuilt": 0,
     "notbuilt_anime": 0,
     "red": 2,
-    "red_anime": 1,
+    "red_anime": 0,
     "yellow": 1,
-    "yellow_anime": 1,
+    "yellow_anime": 0,
 }
 
 MAP_BUILD_STATES = {
-    "SUCCESS": 0,  # no errors
-    "UNSTABLE": 1,  # some errors but not fatal
-    "FAILURE": 2,  # fatal error
-    "ABORTED": 0,  # manually aborted
+    "success": 0,  # no errors
+    "unstable": 1,  # some errors but not fatal
+    "failure": 2,  # fatal error
+    "aborted": 0,  # manually aborted
     "null": 1,  # module was not built
-    "None": 0,  # running
+    "none": 0,  # running
 }
 
 
@@ -79,7 +79,9 @@ def parse_jenkins_jobs(info):
 
 @get_parsed_item_data
 def check_jenkins_jobs(item, params, item_data):
-    yield MAP_JOB_STATES[item_data[0].state], "State: %s" % item_data[0].state.title()
+    job_state = item_data[0].state
+    yield params.get("job_state",
+                     {}).get(job_state, MAP_JOB_STATES[job_state]), "State: %s" % job_state.title()
 
     time_since_last_suc = None
     if item_data[0].last_suc_build:
@@ -110,14 +112,13 @@ def check_jenkins_jobs(item, params, item_data):
                                param_checking,
                                human_readable_func=hr_func,
                                infoname=infotext)
-        else:
-            yield 0, "%s: N/A" % infotext
 
-    if item_data[0].build_result:
-        yield MAP_BUILD_STATES[
-            item_data[0].build_result], "Build result: %s" % item_data[0].build_result.title()
-    else:
-        yield 0, "Build reult: N/A"
+    build_result_data = item_data[0].build_result
+    if build_result_data:
+        build_result = build_result_data.lower()
+        yield params.get("build_result", {}).get(
+            build_result,
+            MAP_BUILD_STATES[build_result]), "Build result: %s" % build_result.title()
 
 
 def handle_single_job(job):

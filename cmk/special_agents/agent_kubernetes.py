@@ -509,6 +509,39 @@ class DaemonSet(Metadata):
         }
 
 
+class StatefulSet(Metadata):
+    def __init__(self, stateful_set):
+        super(StatefulSet, self).__init__(stateful_set.metadata)
+        spec = stateful_set.spec
+        strategy = spec.update_strategy
+        if strategy:
+            self._strategy_type = strategy.type
+            rolling_update = strategy.rolling_update
+            if rolling_update:
+                self._partition = rolling_update.partition
+            else:
+                self._partition = None
+        else:
+            self._strategy_type = None
+            self._partition = None
+        status = stateful_set.status
+        if status:
+            self._ready_replicas = status.ready_replicas
+            self._replicas = status.replicas
+        else:
+            self._ready_replicas = None
+            self._replicas = None
+
+    @property
+    def replicas(self):
+        return {
+            'ready_replicas': self._ready_replicas,
+            'replicas': self._ready_replicas,
+            'strategy_type': self._strategy_type,
+            'partition': self._partition,
+        }
+
+
 class Namespace(Metadata):
     # TODO: namespaces may have resource quotas and limits
     # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
@@ -696,6 +729,11 @@ class DaemonSetList(K8sList[DaemonSet]):
 
     def containers(self):
         return {daemon_set.name: daemon_set.containers for daemon_set in self}
+
+
+class StatefulSetList(K8sList[StatefulSet]):
+    def replicas(self):
+        return {stateful_set.name: stateful_set.replicas for stateful_set in self}
 
 
 class PodList(K8sList[Pod]):
@@ -937,7 +975,8 @@ class ApiData(object):
         core_api = client.CoreV1Api(api_client)
         storage_api = client.StorageV1Api(api_client)
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
-        apps_api = client.ExtensionsV1beta1Api(api_client)
+        ext_api = client.ExtensionsV1beta1Api(api_client)
+        apps_api = client.AppsV1beta1Api(api_client)
 
         self.custom_api = client.CustomObjectsApi(api_client)
 
@@ -958,8 +997,9 @@ class ApiData(object):
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
-        deployments = apps_api.list_deployment_for_all_namespaces()
-        daemon_sets = apps_api.list_daemon_set_for_all_namespaces()
+        deployments = ext_api.list_deployment_for_all_namespaces()
+        daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
+        stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
         logging.debug('Assigning collected data')
         self.storage_classes = StorageClassList(map(StorageClass, storage_classes.items))
@@ -976,6 +1016,7 @@ class ApiData(object):
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
         self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
+        self.stateful_sets = StatefulSetList(map(StatefulSet, stateful_sets.items))
 
         pods_custom_metrics = {
             "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
@@ -1107,6 +1148,13 @@ class ApiData(object):
         g.join('k8s_daemon_pod_containers', self.daemon_sets.containers())
         return '\n'.join(g.output(piggyback_prefix="daemon_set_"))
 
+    def stateful_set_sections(self):
+        logging.info('Stateful set sections')
+        g = PiggybackGroup()
+        g.join('labels', self.stateful_sets.labels())
+        g.join('k8s_stateful_set_replicas', self.stateful_sets.replicas())
+        return '\n'.join(g.output(piggyback_prefix="stateful_set_"))
+
 
 def get_api_client(arguments):
     # type: (argparse.Namespace) -> client.ApiClient
@@ -1158,6 +1206,8 @@ def main(args=None):
                 print(api_data.service_sections())
             if 'daemon_sets' in arguments.infos:
                 print(api_data.daemon_set_sections())
+            if 'stateful_sets' in arguments.infos:
+                print(api_data.stateful_set_sections())
     except Exception as e:
         if arguments.debug:
             raise

@@ -1,0 +1,15 @@
+Title: Windows Agent only_from parameter works now correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567769514
+Class: fix
+
+Previously in check_mk.user.yml, installed from the Windows Agent MSI, 
+the parameter 'only_from' was incorrectly initialized with an empty value. 
+This effectively prevented the setting of 'only_from' using Bakery, 
+because the user configuration is more prioritized than the bakery one.
+
+Now the 'only_from' parameter is removed from check_mk.user.yml.

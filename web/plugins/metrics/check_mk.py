@@ -4866,7 +4866,7 @@ check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
 ram_used_swap_translation = {
     "ramused"  : { "name" : "mem_used",  "scale" : MB },
     "swapused" : { "name" : "swap_used", "scale" : MB },
-    "memused"  : { "name" : "total_used", "auto_graph" : False, "scale" : MB },
+    "memused"  : { "name" : "mem_lnx_total_used", "auto_graph" : False, "scale" : MB },
 }
 
 check_metrics["check_mk-statgrab_mem"] = ram_used_swap_translation
@@ -8040,6 +8040,7 @@ graph_info["ram_used"] = {
     "metrics" : [
         ("mem_used", "area"),
     ],
+    "conflicting_metrics": ["swap_used"],
     "scalars" : [
         ("mem_used:max#000000", "Maximum"),
         ("mem_used:warn", "Warning"),

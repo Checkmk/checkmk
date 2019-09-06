@@ -363,7 +363,7 @@ def package_pack(args):
             raise PackageException(
                 "You are in %s!\n"
                 "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % p)
+                "a packet file. Foreign files lying around here will mix up things." % abs_curdir)
 
     pacname = args[0]
     package = read_package_info(pacname)
@@ -380,7 +380,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
 
     def create_tar_info(filename, size):
         info = tarfile.TarInfo()
-        info.mtime = time.time()
+        info.mtime = int(time.time())
         info.uid = 0
         info.gid = 0
         info.size = size

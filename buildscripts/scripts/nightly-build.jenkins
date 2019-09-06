@@ -102,7 +102,10 @@ node {
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
 
-                    stash name: 'WinDep', include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
+                    stash(
+                        name: 'WinDep',
+                        include: 'agents/wnx/**/*, agents/windows/dependencies/**/*, agents/windows/plugins/**/*, omd/packages/googletest/*, omd/packages/simpleini/*'
+                    )
                 }
             }
         }
@@ -114,10 +117,13 @@ AGENT_LIST.each { AGENT ->
         if (AGENT == 'windows') {
             node('windows') {
                 bat 'powershell Remove-Item .\\* -Recurse -Force'
-                unstash name: 'WinDep'
+                unstash(name: 'WinDep')
                 bat 'cd agents\\wnx && call build_release.cmd'
                 dir('artefacts') {
-                    stash name: 'WinMSI', includes: 'check_mk_agent*,check_mk.user.yml'
+                    stash(
+                        name: 'WinMSI',
+                        includes: 'check_mk_agent*,check_mk.user.yml'
+                    )
                 }
             }
         }

@@ -51,6 +51,10 @@ class RulespecCheckgroupParametersVmCounter(CheckParameterRulespecWithItem):
         return _("Number of kernel events per second")
 
     @property
+    def is_deprecated(self):
+        return True
+
+    @property
     def parameter_valuespec(self):
         return Levels(
             help=_("This ruleset applies to several similar checks measing various kernel "

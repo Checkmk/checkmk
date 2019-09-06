@@ -1,0 +1,13 @@
+Title: NagVis maps snapin: Improve error handling
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567751935
+
+The maps snapin showed a crash in case NagVis reported a
+an error while producing the map list. The error message
+from NagVis is now displayed instead.

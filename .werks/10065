@@ -1,0 +1,11 @@
+Title: apc_ats_output: Fixed scan function for devices where services were missing
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p22
+Date: 1567775885
+Class: fix
+
+On some devices the service was not discovered any more. This has been fixed.
+If the service is missing you have to do a rediscovery.

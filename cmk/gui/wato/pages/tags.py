@@ -219,8 +219,28 @@ class ModeTags(ABCTagMode):
             ]).show()
             return
 
+        self._show_customized_builtin_warning()
+
         self._render_tag_group_list()
         self._render_aux_tag_list()
+
+    def _show_customized_builtin_warning(self):
+        customized = [
+            tg.id
+            for tg in self._effective_config.tag_groups
+            if self._builtin_config.tag_group_exists(tg.id) and
+            self._tag_config.tag_group_exists(tg.id)
+        ]
+
+        if not customized:
+            return
+
+        html.show_warning(
+            _("You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
+              "In current Checkmk versions these are <i>builtin</i> tag groups which "
+              "can not be customized anymore. Your customized tag group will work for "
+              "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
+              "anymore." % ", ".join(customized)))
 
     def _render_tag_group_list(self):
         with table_element("tags",
@@ -250,7 +270,12 @@ class ModeTags(ABCTagMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_group, nr):
-        if self._builtin_config.tag_group_exists(tag_group.id):
+        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # these groups.  These users now have the modified tag groups in their
+        # user configuration and should be able to cleanup this using the GUI
+        # for the moment. Make the buttons available to the users.
+        if self._builtin_config.tag_group_exists(
+                tag_group.id) and not self._tag_config.tag_group_exists(tag_group.id):
             html.i("(%s)" % _("builtin"))
             return
 

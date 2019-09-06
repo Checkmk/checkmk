@@ -1371,8 +1371,24 @@ class EditRuleMode(WatoMode):
                         _("You can create predefined conditions <a href=\"%s\">here</a>.") % url))
 
     def _show_explicit_conditions(self):
-        self._vs_explicit_conditions(render="form_part").render_input(
-            "explicit_conditions", self._rule.get_rule_conditions())
+        vs = self._vs_explicit_conditions(render="form_part")
+        value = self._rule.get_rule_conditions()
+
+        try:
+            vs.validate_datatype(value, "explicit_conditions")
+            vs.render_input("explicit_conditions", value)
+        except Exception as e:
+            forms.section("", css="condition explicit")
+            html.show_warning(
+                _('Unable to read current conditions of this rule. Falling back to '
+                  'default values. When saving this rule now, your previous settings '
+                  'will be overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>'
+                  'Such an issue may be caused by an inconsistent configuration, e.g. when '
+                  'rules refer to tag groups or tags that do not exist anymore.') %
+                (e, value.to_config_with_folder()))
+
+            # In case of validation problems render the input with default values
+            vs.render_input("explicit_conditions", RuleConditions(host_folder=self._folder.path()))
 
     def _vs_explicit_conditions(self, **kwargs):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
@@ -1766,9 +1782,9 @@ class RuleConditionRenderer(object):
             return HTML(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            return HTML(_("Host has <b>not</b> the tag <tt>%s</tt>")) % tag_id
+            return HTML(_("Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>") % tag_id)
 
-        return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
+        return HTML(_("Unknown tag: Host has the tag <tt>%s</tt>") % tag_id)
 
     def _host_label_conditions(self, conditions):
         # type: (RuleConditions) -> Generator

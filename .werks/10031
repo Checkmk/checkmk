@@ -1,0 +1,17 @@
+Title: Warn about editing rules which conditions are not valid anymore
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567791314
+Class: fix
+
+When a rule is opened for editing and an the rule edit dialog detected
+an invalid previous value, it prints a warning message about this to
+the user.
+
+The same is now done for the rule conditions. In case e.g. a rule refers
+to a tag group or tag that does not exist (anymore) in the current WATO
+configuration, the dialog shows a warning message instead of silently
+dropping the invalid option as it was done before.

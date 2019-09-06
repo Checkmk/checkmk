@@ -46,6 +46,7 @@ import json
 import struct
 import argparse
 import functools
+import multiprocessing
 import logging
 
 try:
@@ -135,6 +136,8 @@ def get_config(cfg_file):
 
 class Section(list):
     '''a very basic agent section class'''
+    _OUTPUT_LOCK = multiprocessing.Lock()
+
     version_info = {
         'PluginVersion': VERSION,
         'DockerPyVersion': docker.version,
@@ -155,9 +158,10 @@ class Section(list):
     def write(self):
         if self[0].startswith('<<<<'):
             self.append('<<<<>>>>')
-        for line in self:
-            sys.stdout.write("%s\n" % line)
-        sys.stdout.flush()
+        with self._OUTPUT_LOCK:
+            for line in self:
+                sys.stdout.write("%s\n" % line)
+            sys.stdout.flush()
 
 
 def report_exception_to_server(exc, location):
@@ -171,6 +175,7 @@ def report_exception_to_server(exc, location):
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
     API_VERSION = "auto"
+    _DEVICE_MAP_LOCK = multiprocessing.Lock()
 
     def __init__(self, config):
         super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
@@ -188,13 +193,14 @@ class MKDockerClient(docker.DockerClient):
 
     @property
     def device_map(self):
-        if self._device_map is not None:
-            return self._device_map
+        with self._DEVIVE_MAP_LOCK:
+            if self._device_map is not None:
+                return self._device_map
 
-        self._device_map = {}
-        for device in os.listdir('/sys/block'):
-            with open('/sys/block/%s/dev' % device) as handle:
-                self._device_map[handle.read().strip()] = device
+            self._device_map = {}
+            for device in os.listdir('/sys/block'):
+                with open('/sys/block/%s/dev' % device) as handle:
+                    self._device_map[handle.read().strip()] = device
 
         return self._device_map
 
@@ -487,8 +493,15 @@ def call_node_sections(client, config):
 
 
 def call_container_sections(client, config):
+    jobs = []
     for container_id in client.all_containers:
-        _call_single_containers_sections(client, config, container_id)
+        job = multiprocessing.Process(target=_call_single_containers_sections,
+                                      args=(client, config, container_id))
+        job.start()
+        jobs.append(job)
+
+    for job in jobs:
+        job.join()
 
 
 def _call_single_containers_sections(client, config, container_id):

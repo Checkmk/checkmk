@@ -1,0 +1,16 @@
+Title: Windows Agent supports async local plugins with cache_age
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b7
+Date: 1567764547
+Class: feature
+
+Now Windows Agent adds to the output from the local plugin the string
+with cache information if the local plugin has cache_age property set
+in configuration file. 
+
+Thus, the Windows Agent now fully supports the improvements made in the 
+werk 7402 also for local plugins running asynchronously.
+

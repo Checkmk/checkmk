@@ -27,7 +27,7 @@
 
 import abc
 import re
-from typing import Text, List, Type, Optional, Any  # pylint: disable=unused-import
+from typing import Text, Dict, List, Type, Optional, Any  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -141,7 +141,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
         super(RulespecGroupRegistry, self).__init__()
         self._main_groups = []  # type: List[Type[RulespecGroup]]
         self._sub_groups_by_main_group = {
-        }  # type: Dict[Type[RulespecGroup], Type[RulespecSubGroup]]
+        }  # type: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]]
 
     def plugin_base_class(self):
         return RulespecBaseGroup

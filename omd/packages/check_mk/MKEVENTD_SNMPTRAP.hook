@@ -4,7 +4,7 @@
 # Menu: Addons
 # Description:
 #  If this option is enabled then mkeventd starts a builtin snmptrap
-#  server that receives snmptrap messages via TCP port 162.
+#  server that receives snmptrap messages via UDP port 162.
 #  Enabling this option makes the mkeventd started via a SUID helper
 #  that first opens the (priviledged) port 162 and then starting the
 #  actual event daemon.

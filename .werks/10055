@@ -1,0 +1,19 @@
+Title: The Windows Agent service loads correct configuration
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567774923
+Class: fix
+
+Previously, after installation from MSI, the Windows Agent service loaded 
+its own configuration too early, thus loading the default(fabric) configuration, 
+ignoring bakery configuration.
+
+To use the configuration provided by bakery, you should restart the service 
+manually.
+
+Since now Windows Agent loads the configuration only after updating the 
+Legacy Agent configuration and after installing the Bakery configuration.
+

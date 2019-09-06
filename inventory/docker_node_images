@@ -68,9 +68,11 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     status_node = status_data_tree.get_list(path)
 
     for image_id, image in sorted(images.iteritems()):
+        repodigests = ", ".join(image.get("RepoDigests", []))
+        fallback_repotag = repodigests.split('@', 1)[:1] if '@' in repodigests else []
         inv_node.append({
-            "repotags": ", ".join(image.get("RepoTags", [])),
-            "repodigests": ", ".join(image.get("RepoDigests", [])),
+            "repotags": ", ".join(image.get("RepoTags", fallback_repotag)),
+            "repodigests": repodigests,
             "id": docker_get_short_id(image_id),  # pylint: disable=undefined-variable
             "creation": image["Created"],
             "size": image["VirtualSize"],

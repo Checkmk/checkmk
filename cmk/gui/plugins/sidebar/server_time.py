@@ -45,5 +45,9 @@ class CurrentTime(SidebarSnapin):
     def description(cls):
         return _("A large clock showing the current time of the web server")
 
+    @classmethod
+    def refresh_regularly(cls):
+        return True
+
     def show(self):
         html.div(time.strftime("%H:%M"), class_="time")

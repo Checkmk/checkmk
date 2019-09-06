@@ -1,0 +1,10 @@
+Title: Sidebar snapin "Server time" did not refresh as expected
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567755557
+Class: fix
+
+

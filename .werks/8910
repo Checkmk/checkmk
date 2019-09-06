@@ -1,0 +1,12 @@
+Title: Kubernetes checks for stateful sets
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b10
+Date: 1568029137
+
+The special agent now delivers information on stateful sets.
+The check returns the status of the replicas.

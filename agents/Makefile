@@ -25,6 +25,7 @@
 include ../defines.make
 
 RPM_VERSION := $(subst -,_,$(VERSION))
+NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
 DISTNAME := $(NAME)-$(VERSION)
 RPM_TOPDIR := $$(pwd)/.rpm.topdir

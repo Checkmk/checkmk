@@ -32,6 +32,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:' + PACKAGE_DIR
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
 def ARCHIVE_DIR = ''
@@ -125,6 +126,7 @@ try {
                         sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
                         test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
                         copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                        upload_package(PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
                     }
                 }
             }
@@ -137,8 +139,8 @@ try {
             docker.image(BUILD_IMAGE).pull()
             docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
                 cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH)
-                test_package(SOURCE_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
-                upload_artifacts(ARCHIVE_DIR, RELEASE_KEY_DIR, PACKAGE_DIR, CMK_VERS)
+                test_package(SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
+                upload_package(SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
             }
         }
     }
@@ -428,36 +430,36 @@ def sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA) {
     }
 }
 
-def test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS) {
-    stage(DISTRO + ' test package') {
+def test_package(PACKAGE_PATH, NAME, DAILY_DATA, CMK_VERS) {
+    stage(NAME + ' test package') {
         try {
             dir("${DAILY_DATA}/git/tests") {
-                withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${DISTRO}.xml'"]) {
+                withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${NAME}.xml'"]) {
                     sh "make VERSION=${CMK_VERS} test-packaging"
                 }
             }
         } finally {
-            step([$class: 'JUnitResultArchiver', testResults: 'junit-${DISTRO}.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: 'junit-' + NAME + '.xml'])
         }
     }
 }
 
-def upload_artifacts(ARCHIVE_DIR, RELEASE_KEY_DIR, PACKAGE_DIR, CMK_VERS) {
-    stage('Upload artifacts') {
+def upload_package(FILE_PATH, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST) {
+    stage(NAME + ' upload package') {
         // Only 'official' builds should end up on the Website
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
             sh """
-                cd ${ARCHIVE_DIR}
                 rsync -av \
-                    --exclude '*dbgsym*.deb' \
-                    -e "ssh -o StrictHostKeyChecking=no \
-                    -i ${RELEASE_KEY_DIR}" \
-                    ${PACKAGE_DIR}/${CMK_VERS} \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                    ${FILE_PATH} \
                     bauwelt@mathias-kettner.de:${PACKAGE_DIR}
             """
         } else {
-            dir(ARCHIVE_DIR) {
-                archiveArtifacts "*"
+            def FILE_BASE = sh(script: "dirname " + FILE_PATH, returnStdout: true).toString().trim()
+            dir(FILE_BASE) {
+                // Multiple subsequent calls overwrite the previous artifacts. For this reason
+                // we always archive all available files
+                archiveArtifacts("*")
             }
         }
     }

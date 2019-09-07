@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(cmk_path(), 'agents', 'plugins'))
 import mk_docker  # pylint: disable=import-error,wrong-import-position
 
 PLUGIN_CHECKSUMS = {
-    '0.1': '1004391f5d510cab3c0a3f90e477b783',
+    '0.1': 'e49d015902e40b32f792c5665533c643',
 }
 
 

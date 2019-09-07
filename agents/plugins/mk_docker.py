@@ -157,6 +157,7 @@ class Section(list):
             self.append('<<<<>>>>')
         for line in self:
             sys.stdout.write("%s\n" % line)
+        sys.stdout.flush()
 
 
 def report_exception_to_server(exc, location):
@@ -182,7 +183,20 @@ class MKDockerClient(docker.DockerClient):
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self._env = {"REMOTE": os.getenv("REMOTE", "")}
         self._container_stats = {}
+        self._device_map = None
         self.node_info = self.info()
+
+    @property
+    def device_map(self):
+        if self._device_map is not None:
+            return self._device_map
+
+        self._device_map = {}
+        for device in os.listdir('/sys/block'):
+            with open('/sys/block/%s/dev' % device) as handle:
+                self._device_map[handle.read().strip()] = device
+
+        return self._device_map
 
     @staticmethod
     def iter_socket(sock, descriptor):
@@ -250,18 +264,6 @@ def set_version_info(client):
     data = client.version()
     LOGGER.debug(data)
     Section.version_info['ApiVersion'] = data.get('ApiVersion')
-
-
-def _get_device_map():
-    if hasattr(_get_device_map, 'cache'):
-        return _get_device_map.cache
-    _get_device_map.cache = {}
-
-    for device in os.listdir('/sys/block'):
-        with open('/sys/block/%s/dev' % device) as handle:
-            _get_device_map.cache[handle.read().strip()] = device
-
-    return _get_device_map.cache
 
 
 #.
@@ -447,7 +449,7 @@ def section_container_diskstat(client, container_id):
         return
     container_blkio = stats["blkio_stats"]
     container_blkio["time"] = time.time()
-    container_blkio["names"] = _get_device_map()
+    container_blkio["names"] = client.device_map
     section = Section('container_diskstat', piggytarget=container_id)
     section.append(json.dumps(container_blkio))
     section.write()
@@ -486,31 +488,35 @@ def call_node_sections(client, config):
 
 def call_container_sections(client, config):
     for container_id in client.all_containers:
-        LOGGER.info("container id: %s", container_id)
-        for name, section in CONTAINER_API_SECTIONS:
-            if is_disabled_section(config, name):
-                continue
-            try:
-                section(client, container_id)
-            except () if DEBUG else Exception as exc:
-                report_exception_to_server(exc, section.func_name)
+        _call_single_containers_sections(client, config, container_id)
 
-        agent_success = False
-        if not is_disabled_section(config, 'docker_container_agent'):
-            try:
-                agent_success = section_container_agent(client, container_id)
-            except () if DEBUG else Exception as exc:
-                report_exception_to_server(exc, "section_container_agent")
-        if agent_success:
+
+def _call_single_containers_sections(client, config, container_id):
+    LOGGER.info("container id: %s", container_id)
+    for name, section in CONTAINER_API_SECTIONS:
+        if is_disabled_section(config, name):
             continue
+        try:
+            section(client, container_id)
+        except () if DEBUG else Exception as exc:
+            report_exception_to_server(exc, section.func_name)
 
-        for name, section in CONTAINER_API_SECTIONS_NO_AGENT:
-            if is_disabled_section(config, name):
-                continue
-            try:
-                section(client, container_id)
-            except () if DEBUG else Exception as exc:
-                report_exception_to_server(exc, section.func_name)
+    agent_success = False
+    if not is_disabled_section(config, 'docker_container_agent'):
+        try:
+            agent_success = section_container_agent(client, container_id)
+        except () if DEBUG else Exception as exc:
+            report_exception_to_server(exc, "section_container_agent")
+    if agent_success:
+        return
+
+    for name, section in CONTAINER_API_SECTIONS_NO_AGENT:
+        if is_disabled_section(config, name):
+            continue
+        try:
+            section(client, container_id)
+        except () if DEBUG else Exception as exc:
+            report_exception_to_server(exc, section.func_name)
 
 
 #.

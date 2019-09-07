@@ -29,10 +29,9 @@ def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
-def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:' + PACKAGE_DIR
+def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download'
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
 def ARCHIVE_DIR = ''
@@ -99,52 +98,47 @@ parallel AGENT_BUILDS
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image(BUILD_IMAGE).pull()
-        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS) {
+        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
+            prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(DAILY_DATA)
-            def SOURCE_PACKAGE_PATH = get_source_package_path(DAILY_DATA, EDITION, CMK_VERS)
-            copy_source_package(SOURCE_PACKAGE_PATH, ARCHIVE_DIR, CMK_VERS)
+
+            def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
+            def SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
+
+            copy_source_package(DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME, SOURCE_PACKAGE_PATH)
+
+            cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH)
+            test_package(SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
+            upload_package(SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
         }
     }
 }
 
-try {
-    DISTRO_LIST.each { DISTRO ->
-        PACKAGE_BUILDS[DISTRO] = {
-            node {
-                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(DISTRO).pull()
-                    docker.image(DISTRO).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
-                        build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS)
-                    }
-                }
-            }
-            node {
-                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image(BUILD_IMAGE).pull()
-                    docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                        def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
-                        sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
-                        test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
-                        copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                        upload_package(PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
-                    }
+DISTRO_LIST.each { DISTRO ->
+    PACKAGE_BUILDS[DISTRO] = {
+        node {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image(DISTRO).pull()
+                docker.image(DISTRO).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                    build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS)
                 }
             }
         }
-    }
-    parallel PACKAGE_BUILDS
-} finally {
-    node {
-        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE).pull()
-            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
-                cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH)
-                test_package(SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-                upload_package(SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+        node {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image(BUILD_IMAGE).pull()
+                docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                    def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
+                    sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
+                    test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
+                    copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                    upload_package(PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+                }
             }
         }
     }
 }
+parallel PACKAGE_BUILDS
 
 //
 // FUNCTIONS
@@ -321,6 +315,13 @@ def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
     }
 }
 
+def prepare_archive_dir(ARCHIVE_DIR, CMK_VERS) {
+    sh("""
+        mkdir -p ${ARCHIVE_DIR}
+        echo "${CMK_VERS}" > ${ARCHIVE_DIR}/VERSION.cmk
+    """)
+}
+
 def create_source_package(DAILY_DATA) {
     stage('Create source package') {
        sh 'rm -rf *'
@@ -341,8 +342,11 @@ def create_source_package(DAILY_DATA) {
     }
 }
 
-def get_source_package_path(DAILY_DATA, EDITION, CMK_VERS) {
-    def PACKAGE_PATH = sh(script: "ls -1 ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz", returnStdout: true).toString().trim()
+def get_source_package_name(DAILY_DATA, EDITION, CMK_VERS) {
+    def PACKAGE_PATH = ""
+    dir(DAILY_DATA + "/git") {
+        PACKAGE_PATH = sh(script: "ls check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz", returnStdout: true).toString().trim()
+    }
     if (PACKAGE_PATH == "") {
         throw new Exception("Found no source package path matching ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz")
     }
@@ -355,13 +359,9 @@ def cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH) {
     }
 }
 
-def copy_source_package(PACKAGE_PATH, ARCHIVE_DIR, CMK_VERS) {
+def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
     stage('Copy source package') {
-        sh("""
-            mkdir -p ${ARCHIVE_DIR}
-            echo "${CMK_VERS}" > ${ARCHIVE_DIR}/VERSION.cmk
-        """)
-        sh "cp ${PACKAGE_PATH} ${ARCHIVE_DIR}/"
+        sh "cp ${PACKAGE_PATH} ${ARCHIVE_PATH}"
     }
 }
 

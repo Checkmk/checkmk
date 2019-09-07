@@ -100,7 +100,8 @@ node {
         docker.image(BUILD_IMAGE).pull()
         docker.image(BUILD_IMAGE).inside(DOCKER_ARGS) {
             create_source_package(DAILY_DATA)
-            copy_source_package(DAILY_DATA, ARCHIVE_DIR, EDITION, CMK_VERS)
+            def SOURCE_PACKAGE_PATH = get_source_package_path(DAILY_DATA, EDITION, CMK_VERS)
+            copy_source_package(SOURCE_PACKAGE_PATH, ARCHIVE_DIR, CMK_VERS)
         }
     }
 }
@@ -122,6 +123,7 @@ try {
                     docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                         def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
                         sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
+                        test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
                         copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
                     }
                 }
@@ -134,8 +136,8 @@ try {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image(BUILD_IMAGE).pull()
             docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
-                cleanup_source_archives(ARCHIVE_DIR, DAILY_DATA)
-                packaging_tests(DAILY_DATA, ARCHIVE_DIR, WORKSPACE, CMK_VERS)
+                cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH)
+                test_package(SOURCE_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
                 upload_artifacts(ARCHIVE_DIR, RELEASE_KEY_DIR, PACKAGE_DIR, CMK_VERS)
             }
         }
@@ -337,13 +339,27 @@ def create_source_package(DAILY_DATA) {
     }
 }
 
-def copy_source_package(DAILY_DATA, ARCHIVE_DIR, EDITION, CMK_VERS) {
+def get_source_package_path(DAILY_DATA, EDITION, CMK_VERS) {
+    def PACKAGE_PATH = sh(script: "ls -1 ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz", returnStdout: true).toString().trim()
+    if (PACKAGE_PATH == "") {
+        throw new Exception("Found no source package path matching ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c?e.tar.gz")
+    }
+    return PACKAGE_PATH
+}
+
+def cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH) {
+    stage('Cleanup source package') {
+        sh "${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh ${SOURCE_PACKAGE_PATH}"
+    }
+}
+
+def copy_source_package(PACKAGE_PATH, ARCHIVE_DIR, CMK_VERS) {
     stage('Copy source package') {
         sh("""
             mkdir -p ${ARCHIVE_DIR}
             echo "${CMK_VERS}" > ${ARCHIVE_DIR}/VERSION.cmk
         """)
-        sh "cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c*e.tar.gz ${ARCHIVE_DIR}/"
+        sh "cp ${PACKAGE_PATH} ${ARCHIVE_DIR}/"
     }
 }
 
@@ -404,15 +420,6 @@ def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {
     }
 }
 
-def cleanup_source_archives(ARCHIVE_DIR, DAILY_DATA) {
-    stage('Cleanup source archives') {
-        sh """
-            cd ${ARCHIVE_DIR}
-            ${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh check-mk-*.c?e.tar.gz
-        """
-    }
-}
-
 def sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA) {
     stage(DISTRO + ' sign package') {
         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
@@ -421,16 +428,16 @@ def sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA) {
     }
 }
 
-def packaging_tests(DAILY_DATA, ARCHIVE_DIR, WORKSPACE, CMK_VERS) {
-    stage('Packaging tests') {
+def test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS) {
+    stage(DISTRO + ' test package') {
         try {
             dir("${DAILY_DATA}/git/tests") {
-                withEnv(["VERSION_PATH=${ARCHIVE_DIR}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit.xml'"]) {
+                withEnv(["PACKAGE_PATH=${PACKAGE_PATH}", "PYTEST_ADDOPTS='--junitxml=${WORKSPACE}/junit-${DISTRO}.xml'"]) {
                     sh "make VERSION=${CMK_VERS} test-packaging"
                 }
             }
         } finally {
-            step([$class: 'JUnitResultArchiver', testResults: 'junit.xml'])
+            step([$class: 'JUnitResultArchiver', testResults: 'junit-${DISTRO}.xml'])
         }
     }
 }

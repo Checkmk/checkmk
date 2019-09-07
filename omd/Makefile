@@ -263,7 +263,6 @@ rpm:
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
-	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
 # create a debian/changelog to build the package

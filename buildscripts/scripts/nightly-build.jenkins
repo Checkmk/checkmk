@@ -116,6 +116,16 @@ try {
                     }
                 }
             }
+            node {
+                docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                    docker.image(BUILD_IMAGE).pull()
+                    docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                        def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
+                        sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
+                        copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                    }
+                }
+            }
         }
     }
     parallel PACKAGE_BUILDS
@@ -123,10 +133,8 @@ try {
     node {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image(BUILD_IMAGE).pull()
-            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
-                copy_artifacts(ARCHIVE_DIR, CMK_VERS, DAILY_DATA, EDITION)
+            docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${PACKAGE_DIR}:${PACKAGE_DIR} -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
                 cleanup_source_archives(ARCHIVE_DIR, DAILY_DATA)
-                sign_artifacts(ARCHIVE_DIR, DAILY_DATA, CMK_VERS)
                 packaging_tests(DAILY_DATA, ARCHIVE_DIR, WORKSPACE, CMK_VERS)
                 upload_artifacts(ARCHIVE_DIR, RELEASE_KEY_DIR, PACKAGE_DIR, CMK_VERS)
             }
@@ -331,13 +339,16 @@ def create_source_package(DAILY_DATA) {
 
 def copy_source_package(DAILY_DATA, ARCHIVE_DIR, EDITION, CMK_VERS) {
     stage('Copy source package') {
-        sh "mkdir -p ${ARCHIVE_DIR}"
+        sh("""
+            mkdir -p ${ARCHIVE_DIR}
+            echo "${CMK_VERS}" > ${ARCHIVE_DIR}/VERSION.cmk
+        """)
         sh "cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c*e.tar.gz ${ARCHIVE_DIR}/"
     }
 }
 
 def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
-    stage('Build' + DISTRO + ' package') {
+    stage(DISTRO + ' build package') {
         sh 'rm -rf *'
         sh 'mkdir work dest'
         mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
@@ -364,17 +375,32 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
     }
 }
 
-def copy_artifacts(ARCHIVE_DIR, CMK_VERS, DAILY_DATA, EDITION) {
-    stage('Copy artifacts') {
-        sh """
-            mkdir -p ${ARCHIVE_DIR}
-            cd ${ARCHIVE_DIR}
-            echo "${CMK_VERS}" > VERSION.cmk
-            cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*_amd64.deb . || true
-            cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*.x86_64.rpm . || true
-            cp ${DAILY_DATA}/*-dest/check-mk-${EDITION}-*x86_64.cma . || true
-            cp ${DAILY_DATA}/git/check-mk-${EDITION}-${CMK_VERS}.c*e.tar.gz . || true
-        """
+def get_package_path(DAILY_DATA, DISTRO, CMK_VERS) {
+    def PACKAGE_PATH = sh(script: """
+        case ${DISTRO} in
+            centos*|rh*|sles*|opensuse*)
+                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}-*.rpm
+                ;;
+            cma*)
+                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}-*.cma
+                ;;
+            *)
+                RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}_*.deb
+                ;;
+        esac
+        ls -1 ${DAILY_DATA}/${DISTRO}-dest/\$RESULT_FILE_PATTERN
+    """, returnStdout: true).toString().trim()
+
+    if (PACKAGE_PATH == "") {
+        throw new Exception("Found no package in ${DAILY_DATA}/${DISTRO}-dest")
+    }
+
+    return PACKAGE_PATH
+}
+
+def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {
+    stage(DISTRO + ' copy package') {
+        sh "cp '${PACKAGE_PATH}' '${ARCHIVE_DIR}'"
     }
 }
 
@@ -387,13 +413,10 @@ def cleanup_source_archives(ARCHIVE_DIR, DAILY_DATA) {
     }
 }
 
-def sign_artifacts(ARCHIVE_DIR, DAILY_DATA, CMK_VERS) {
-    stage('Sign artifacts') {
+def sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA) {
+    stage(DISTRO + ' sign package') {
         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
-            sh """
-                cd ${ARCHIVE_DIR}
-                ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
-            """
+            sh "${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${PACKAGE_PATH}"
         }
     }
 }

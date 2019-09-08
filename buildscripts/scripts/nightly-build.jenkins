@@ -175,7 +175,7 @@ def mount_overlay(LOWER_DIR, UPPER_DIR) {
 }
 
 def unmount_overlay(UPPER_DIR) {
-    sh "until umount ${WORKSPACE}/${UPPER_DIR}; do sleep 1; done"
+    sh "until umount ${UPPER_DIR}; do sleep 1; done"
 }
 
 def cleanup_work_directories(DAILY_DATA) {
@@ -306,7 +306,7 @@ def build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION) {
                 cp agent${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agents
             """
         }
-        unmount_overlay("agent${AGENT}-dest")
+        unmount_overlay("${WORKSPACE}/agent${AGENT}-dest")
     }
 }
 
@@ -363,7 +363,7 @@ def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
 def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
     stage(DISTRO + ' build package') {
         sh 'rm -rf *'
-        sh 'mkdir work dest'
+        sh 'mkdir dest'
         mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
         dir('dest') {
             sh """
@@ -380,7 +380,7 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
                 esac
             """
         }
-        unmount_overlay('dest')
+        unmount_overlay('${WORKSPACE}/dest')
         sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,dest-work}"
         sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
         sh "mv dest-work ${DAILY_DATA}/${DISTRO}-dest-work"

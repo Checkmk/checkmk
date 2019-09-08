@@ -362,9 +362,13 @@ def copy_source_package(PACKAGE_PATH, ARCHIVE_PATH) {
 
 def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
     stage(DISTRO + ' build package') {
-        sh 'rm -rf *'
-        sh 'mkdir dest'
-        mount_overlay("${DAILY_DATA}/git", "${WORKSPACE}/dest")
+        def DEST_DIR = "${WORKSPACE}/dest"
+
+        sh 'rm -rf ${WORKSPACE}/*'
+
+        // Overlay mount git directory
+        mount_overlay("${DAILY_DATA}/git", DEST_DIR)
+
         dir('dest') {
             sh """
                 case $DISTRO in
@@ -380,11 +384,14 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
                 esac
             """
         }
-        unmount_overlay('${WORKSPACE}/dest')
-        sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,dest-work}"
-        sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
-        sh "mv dest-work ${DAILY_DATA}/${DISTRO}-dest-work"
-        sh "ls -lah ${DAILY_DATA}"
+
+        // Cleanup overlay stuff
+        unmount_overlay(DEST_DIR)
+        sh "rm -rf ${DEST_DIR}-work"
+
+        // Copy results to target directory
+        sh "rm -rf ${DAILY_DATA}/${DISTRO}-dest"
+        sh "mv ${DEST_DIR} ${DAILY_DATA}/${DISTRO}-dest"
     }
 }
 

@@ -54,7 +54,6 @@ def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA}"
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).pull()
         docker.image(BUILD_IMAGE).inside(DOCKER_BASE_ARGS + " -v ${DAILY_DATA_BASE_DIR}:${DAILY_DATA_BASE_DIR}") {
             stage('Checkout sources') {
                 cleanup_work_directories(DAILY_DATA)
@@ -84,7 +83,6 @@ AGENT_LIST.each { AGENT ->
         else {
             node {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                    docker.image('agent-builder-' + AGENT).pull()
                     docker.image('agent-builder-' + AGENT).inside(DOCKER_ARGS + " --privileged") {
                         build_agent_related_artifact(DAILY_DATA, WORKSPACE, AGENT, EDITION)
                     }
@@ -97,7 +95,6 @@ parallel AGENT_BUILDS
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).pull()
         docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(DAILY_DATA)
@@ -118,7 +115,6 @@ DISTRO_LIST.each { DISTRO ->
     PACKAGE_BUILDS[DISTRO] = {
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(DISTRO).pull()
                 docker.image(DISTRO).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
                     build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS)
                 }
@@ -126,7 +122,6 @@ DISTRO_LIST.each { DISTRO ->
         }
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE).pull()
                 docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                     def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
                     sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)

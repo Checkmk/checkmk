@@ -100,13 +100,14 @@ node {
             create_source_package(DAILY_DATA)
 
             def SOURCE_PACKAGE_NAME = get_source_package_name(DAILY_DATA, EDITION, CMK_VERS)
-            def SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
+            def BUILD_SOURCE_PACKAGE_PATH = DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME
+            def FINAL_SOURCE_PACKAGE_PATH = ARCHIVE_DIR + "/" + SOURCE_PACKAGE_NAME
 
-            copy_source_package(DAILY_DATA + "/git/" + SOURCE_PACKAGE_NAME, SOURCE_PACKAGE_PATH)
+            copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
 
-            cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH)
-            test_package(SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-            upload_package(SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+            cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
+            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
+            upload_package(FINAL_SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
         }
     }
 }
@@ -123,11 +124,14 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                    def PACKAGE_PATH = get_package_path(DAILY_DATA, DISTRO, CMK_VERS)
-                    sign_package(PACKAGE_PATH, DISTRO, DAILY_DATA)
-                    test_package(PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
-                    copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                    upload_package(PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+                    def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
+                    def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
+                    def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
+
+                    sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
+                    test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
+                    copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
+                    upload_package(FINAL_PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
                 }
             }
         }
@@ -348,9 +352,9 @@ def get_source_package_name(DAILY_DATA, EDITION, CMK_VERS) {
     return PACKAGE_PATH
 }
 
-def cleanup_source_package(DAILY_DATA, SOURCE_PACKAGE_PATH) {
+def cleanup_source_package(DAILY_DATA, PACKAGE_PATH) {
     stage('Cleanup source package') {
-        sh "${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh ${SOURCE_PACKAGE_PATH}"
+        sh "${DAILY_DATA}/git/buildscripts/scripts/cleanup-source-archives.sh ${PACKAGE_PATH}"
     }
 }
 
@@ -395,8 +399,9 @@ def build_package(DAILY_DATA, WORKSPACE, DISTRO, OMD_MAKE_VARS) {
     }
 }
 
-def get_package_path(DAILY_DATA, DISTRO, CMK_VERS) {
-    def PACKAGE_PATH = sh(script: """
+def get_package_name(DAILY_DATA, DISTRO, CMK_VERS) {
+    def BASE_DIR = DAILY_DATA + "/" + DISTRO + "-dest"
+    def PACKAGE_NAME = sh(script: """
         case ${DISTRO} in
             centos*|rh*|sles*|opensuse*)
                 RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}-*.rpm
@@ -408,14 +413,15 @@ def get_package_path(DAILY_DATA, DISTRO, CMK_VERS) {
                 RESULT_FILE_PATTERN=check-mk-$EDITION-${CMK_VERS}_*.deb
                 ;;
         esac
-        ls -1 ${DAILY_DATA}/${DISTRO}-dest/\$RESULT_FILE_PATTERN
+        cd ${BASE_DIR}
+        ls \$RESULT_FILE_PATTERN
     """, returnStdout: true).toString().trim()
 
-    if (PACKAGE_PATH == "") {
-        throw new Exception("Found no package in ${DAILY_DATA}/${DISTRO}-dest")
+    if (PACKAGE_NAME == "") {
+        throw new Exception("Found no package matching ${RESULT_FILE_PATTERN} in ${BASE_DIR}")
     }
 
-    return PACKAGE_PATH
+    return PACKAGE_NAME
 }
 
 def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {

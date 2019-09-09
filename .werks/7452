@@ -1,0 +1,12 @@
+Title: Fix graphs vertical grid on top of vertial axis labels
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1568033873
+Class: fix
+
+When visualizing time ranges of few months time axis label resolution is
+weeks. Grid vertical auxiliary lines would start before the data/graph
+itself and thus obstruct the labels of the vertical axis.

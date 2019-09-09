@@ -88,3 +88,8 @@ def test_python_modules(site, module_name):
     import importlib
     module = importlib.import_module(module_name)
     assert module.__file__.startswith(site.root)
+
+
+def test_python_preferred_encoding():
+    import locale
+    assert locale.getpreferredencoding() == "UTF-8"

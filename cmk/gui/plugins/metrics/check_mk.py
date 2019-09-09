@@ -1174,6 +1174,18 @@ metric_info["major_page_faults"] = {
     "color": "#20ff80",
 }
 
+metric_info["page_swap_in"] = {
+    "title": _("Page Swap In"),
+    "unit": "1/s",
+    "color": "33/a",
+}
+
+metric_info["page_swap_out"] = {
+    "title": _("Page Swap Out"),
+    "unit": "1/s",
+    "color": "36/a",
+}
+
 metric_info["process_creations"] = {
     "title": _("Process creations"),
     "unit": "1/s",

@@ -1764,9 +1764,9 @@ class DictHostTagCondition(Transform):
     def _get_cached_tag_group_choices(self):
         # In case one has configured a lot of tag groups / id recomputing this for
         # every DictHostTagCondition instance takes a lot of time
-        if "tag_group_choices" not in current_app.g:
-            current_app.g["tag_group_choices"] = self._get_tag_group_choices()
-        return current_app.g["tag_group_choices"]
+        if "tag_group_choices" not in g:
+            g.tag_group_choices = self._get_tag_group_choices()
+        return g.tag_group_choices
 
     def _get_tag_group_choices(self):
         choices = []

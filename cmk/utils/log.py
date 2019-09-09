@@ -26,7 +26,7 @@
 
 import sys
 import logging
-from typing import Any  # pylint: disable=unused-import
+from typing import IO, Any  # pylint: disable=unused-import
 
 # Just for reference, the predefined logging levels:
 #
@@ -71,6 +71,7 @@ logger.setLevel(logging.INFO)
 
 
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
+    # type: (str) -> logging.Formatter
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
@@ -78,6 +79,7 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
 
 
 def setup_console_logging():
+    # type: () -> None
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -88,12 +90,14 @@ def setup_console_logging():
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
+# TODO: Cleanup IO[Any] to IO[Text]
 def open_log(log_file_path):
+    # type: (str) -> IO[Any]
     """Open logfile and fall back to stderr if this is not successfull
-    The opened file() object is returned.
+    The opened file-like object is returned.
     """
     try:
-        logfile = file(log_file_path, "a")
+        logfile = open(log_file_path, "a")  # type: IO[Any]
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -103,6 +107,7 @@ def open_log(log_file_path):
 
 
 def setup_logging_handler(stream, formatter=None):
+    # type: (IO[Any], logging.Formatter) -> None
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.
@@ -118,6 +123,7 @@ def setup_logging_handler(stream, formatter=None):
 
 
 def verbosity_to_log_level(verbosity):
+    # type: (int) -> int
     """Values for "verbosity":
 
       0: enables INFO and above

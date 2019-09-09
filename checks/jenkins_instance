@@ -70,7 +70,6 @@ def check_jenkins_instance(no_item, params, parsed):
         if parsed_data is not None and parsed_data != value:
             state = 1
         elif parsed_data is None:
-            #            parsed_data = "N/A"
             state = 3
 
         yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])

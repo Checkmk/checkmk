@@ -505,6 +505,8 @@ class ModeEditRuleset(WatoMode):
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
+        self._valuespec = self._rulespec.valuespec
+
         if not self._item:
             self._item = None
             if html.request.has_var("item"):
@@ -815,7 +817,6 @@ class ModeEditRuleset(WatoMode):
 
     # TODO: Refactor this whole method
     def _rule_cells(self, table, rule):
-        rulespec = rule.ruleset.rulespec
         value = rule.value
         rule_options = rule.rule_options
 
@@ -826,11 +827,11 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = rulespec.valuespec.value_to_text(value)
+            value_html = self._valuespec.value_to_text(value)
         except Exception as e:
             try:
                 reason = "%s" % e
-                rulespec.valuespec.validate_datatype(value, "")
+                self._valuespec.validate_datatype(value, "")
             except Exception as e:
                 reason = "%s" % e
 
@@ -852,8 +853,7 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
         html.write(
-            VSExplicitConditions(rulespec=rule.ruleset.rulespec).value_to_text(
-                rule.get_rule_conditions()))
+            VSExplicitConditions(rulespec=self._rulespec).value_to_text(rule.get_rule_conditions()))
 
     def _predefined_condition_info(self, rule):
         condition_id = rule.predefined_condition_id()

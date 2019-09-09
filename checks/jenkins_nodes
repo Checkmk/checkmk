@@ -81,6 +81,11 @@
 
 import json
 
+MAP_NODE_STATES = {
+    True: "yes",
+    False: "no",
+}
+
 
 def parse_jenkins_nodes(info):
     parsed = {}
@@ -108,12 +113,16 @@ def check_jenkins_nodes(item, params, item_data):
 
         for key, infotext in [
             ("description", "Description"),
-            ("jnlpAgent", "JNLPAgent"),
-            ("idle", "Idle"),
+            ("jnlpAgent", "Is JNLP agent"),
+            ("idle", "Is idle"),
         ]:
             data = node.get(key)
 
-            if data is not None:
+            # description can be an empty string
+            if data is not None and data != "":
+                if key != "description":
+                    data = MAP_NODE_STATES[data]
+
                 yield 0, "%s: %s" % (infotext, data)
 
         exec_key = "numExecutors"
@@ -133,7 +142,7 @@ def check_jenkins_nodes(item, params, item_data):
         if offline_state:
             state = params["jenkins_offline"]
 
-        yield state, "Offline: %s" % offline_state
+        yield state, "Offline: %s" % MAP_NODE_STATES[offline_state]
 
         for key, column, value, info, ds_key, hr_func in [
             ("monitorData", "hudson.node_monitors.ResponseTimeMonitor", "average",

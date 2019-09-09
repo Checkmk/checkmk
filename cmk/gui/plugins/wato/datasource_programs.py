@@ -168,6 +168,7 @@ class RulespecSpecialAgentsKubernetes(ABCHostValueRulespec):
                          ("pods", _("Pods")),
                          ("daemon_sets", _("Daemon sets")),
                          ("stateful_sets", _("Stateful sets")),
+                         ("jobs", _("Job")),
                      ],
                                 default_value=[
                                     "nodes",

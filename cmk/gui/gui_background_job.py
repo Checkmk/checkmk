@@ -200,7 +200,7 @@ class PermissionBackgroundJobsDeleteForeignJobs(Permission):
 class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background_process")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 

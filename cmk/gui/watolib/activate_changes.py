@@ -867,7 +867,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     raise
 
         # Reinitialize logging targets
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
 
         try:
             self._do_run()

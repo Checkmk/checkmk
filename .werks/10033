@@ -1,0 +1,12 @@
+Title: Flap detection settings for services: Could not be defined per service
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1568040125
+Class: fix
+
+The ruleset "Flap detection settings for services" could not be used to define
+service specific flap detection settings as it was intended. The rules could
+only be configured per host.

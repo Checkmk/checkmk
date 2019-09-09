@@ -73,7 +73,7 @@ def page_run_cron():
         last_run = os.stat(lock_file).st_mtime
         if time.time() - last_run < 59:
             raise MKGeneralException("Cron called too early. Skipping.")
-    file(lock_file, "w")  # touches the file
+    open(lock_file, "w")  # touches the file
     store.aquire_lock(lock_file)
 
     # The cron page is accessed unauthenticated. After leaving the page_run_cron area

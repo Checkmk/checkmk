@@ -102,17 +102,17 @@ def create_crash_info(crash_type, details=None, version=None):
 
 def get_os_info():
     if "OMD_ROOT" in os.environ:
-        return file(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
+        return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
             "=", 1)[1].strip()
     elif os.path.exists("/etc/redhat-release"):
-        return file("/etc/redhat-release").readline().strip()
+        return open("/etc/redhat-release").readline().strip()
     elif os.path.exists("/etc/SuSE-release"):
-        return file("/etc/SuSE-release").readline().strip()
+        return open("/etc/SuSE-release").readline().strip()
 
     info = {}
     for f in ["/etc/os-release", "/etc/lsb-release"]:
         if os.path.exists(f):
-            for line in file(f).readlines():
+            for line in open(f).readlines():
                 if "=" in line:
                     k, v = line.split("=", 1)
                     info[k.strip()] = v.strip().strip("\"")

@@ -23,10 +23,10 @@ def cfg_setup(request, web, site):
     site.makedirs("var/check_mk/rrd/test-prediction")
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.rrd",
-        file("%s/tests/integration/cmk_base/test-files/CPU_load.rrd" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/CPU_load.rrd" % repo_path()).read())
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        file("%s/tests/integration/cmk_base/test-files/CPU_load.info" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/CPU_load.info" % repo_path()).read())
 
     site.restart_core()
 

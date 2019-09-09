@@ -151,7 +151,7 @@ class ModeDownloadAgents(WatoMode):
         windows_bom = "\xef\xbb\xbf"
         file_titles = {}
         for path in file_paths:
-            first_bytes = file(path).read(500)
+            first_bytes = open(path).read(500)
             if first_bytes.startswith(windows_bom):
                 first_bytes = first_bytes[len(windows_bom):]
             first_lines = first_bytes.splitlines()
@@ -167,7 +167,7 @@ class ModeDownloadAgents(WatoMode):
 
     def _read_agent_contents_file(self, root):
         file_titles = {}
-        for line in file(root + "/CONTENTS"):
+        for line in open(root + "/CONTENTS"):
             line = line.strip()
             if line and not line.startswith("#"):
                 file_name, title = line.split(None, 1)

@@ -363,7 +363,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
             lines = _g_walk_cache[snmp_config.hostname]
         else:
             try:
-                lines = file(path).readlines()
+                lines = open(path).readlines()
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
             _g_walk_cache[snmp_config.hostname] = lines
@@ -774,7 +774,7 @@ def do_snmptranslate(walk_filename):
     entries_per_cycle = 500
     translated_lines = []
 
-    walk_lines = file(walk_path).readlines()
+    walk_lines = open(walk_path).readlines()
     console.error("Processing %d lines.\n" % len(walk_lines))
 
     i = 0

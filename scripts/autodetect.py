@@ -124,7 +124,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         if apache_conffile[0] != '/':
             apache_conffile = httpd_root + "/" + apache_conffile
         confdirs = []
-        for line in file(apache_conffile):
+        for line in open(apache_conffile):
             parts = line.strip().split()
             if len(parts) == 2 and parts[0].lower() == "include":
                 if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
@@ -189,7 +189,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                 for confdir in confdirs:
                     for fn in os.listdir(confdir):
                         file_good = False
-                        conffile = file(confdir + "/" + fn)
+                        conffile = open(confdir + "/" + fn)
                         try:
                             new_auth_names = []
                             new_auth_files = []
@@ -261,7 +261,7 @@ def process_environment(pid):
     # aber der folgende Code ist einfach cool, oder?
     try:
         env = {}
-        for line in file("/proc/%d/environ" % pid).read().split("\0"):
+        for line in open("/proc/%d/environ" % pid).read().split("\0"):
             if '=' in line:
                 var, value = entry.split('=', 1)
                 env[var] = value
@@ -301,7 +301,7 @@ def find_pipes(filenames):
 
 def parse_nagios_config(configfile):
     conf = []
-    for line in file(configfile):
+    for line in open(configfile):
         line = line.strip()
         if line == "" or line[0] == '#':
             continue
@@ -342,7 +342,7 @@ def detect_pnp():
     try:
         pnppath = os.path.dirname(result['pnptemplates'])
         index_php = pnppath + "/index.php"
-        for line in file(index_php):
+        for line in open(index_php):
             line = line.strip()
             #  $config = "/usr/local/nagios/etc/pnp/config";
             if line.startswith('$config =') and line.endswith('";'):
@@ -358,7 +358,7 @@ def detect_pnp():
         if 'pnpconffile' not in result:
             kohanaconf = result['pnphtdocsdir'] + "/application/config/config.php"
             if os.path.exists(kohanaconf):
-                for line in file(kohanaconf):
+                for line in open(kohanaconf):
                     line = line.strip()
                     if not line.startswith("#") and "pnp_etc_path" in line:
                         last = line.split('=')[-1].strip()
@@ -371,7 +371,7 @@ def detect_pnp():
         pass
 
     try:
-        for line in file(result['pnpconffile']):
+        for line in open(result['pnpconffile']):
             line = line.strip()
             if line.startswith("$conf['rrdbase']") and line.endswith('";'):
                 rrddir = line.split('"')[1]
@@ -524,7 +524,7 @@ try:
         # auftauchen koennen.
         uservars = {}
         try:
-            for line in file(nagconf_dict['resource_file']):
+            for line in open(nagconf_dict['resource_file']):
                 line = line.strip()
                 if line.startswith('$') and '=' in line:
                     varname, value = line.split('=', 1)
@@ -536,7 +536,7 @@ try:
         # Moduls. Er darf auch auskommentiert sein. Dann lassen
         # wir den Benutzer damit in Ruhe
         found = False
-        for line in file(configfile):
+        for line in open(configfile):
             if "broker_module=" in line and "/livestatus.o" in line:
                 found = True
                 break
@@ -561,7 +561,7 @@ try:
                 if name.endswith(".cfg"):
                     path = dirname + "/" + name
                     try:
-                        for line in file(path):
+                        for line in open(path):
                             if line.strip() == '':
                                 continue
                             parts = line.strip().split()

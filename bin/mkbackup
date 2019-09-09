@@ -169,7 +169,7 @@ def acquire_backup_lock():
         except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
-        g_backup_lock_f = file(lock_file_path, "a")
+        g_backup_lock_f = open(lock_file_path, "a")
 
     try:
         fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -260,7 +260,7 @@ def makedir(path, user=None, group=None, mode=None):
 # - Site-Konfiguration laden
 def load_config():
     def load_file(path):
-        return ast.literal_eval(file(path).read())
+        return ast.literal_eval(open(path).read())
 
     if is_root():
         config = load_file(system_config_path())
@@ -285,7 +285,7 @@ def load_config():
 
 # TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path):
-    info = json.load(file(path))
+    info = json.load(open(path))
 
     # Load the backup_id from the second right path component. This is the
     # base directory of the mkbackup.info file. The user might have moved
@@ -1167,7 +1167,7 @@ def do_system_rw_backup(opts):
 
 
 def do_system_data_backup(opts):
-    with file(system_data_backup_archive_path(), "w") as backup_file:
+    with open(system_data_backup_archive_path(), "w") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
         pipein = os.fdopen(pipein_fd)
 
@@ -1346,7 +1346,7 @@ g_state = None
 def load_state():
     global g_state
     if g_state is None:
-        g_state = json.load(file(state_path()))
+        g_state = json.load(open(state_path()))
 
     return g_state
 

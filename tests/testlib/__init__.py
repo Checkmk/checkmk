@@ -79,7 +79,7 @@ def current_branch_name():
 def get_cmk_download_credentials():
     cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(file(cred).read().strip().split(":"))
+        return tuple(open(cred).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
@@ -324,7 +324,7 @@ class CMKVersion(object):
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
-        file(temp_package_path, "w").write(response.content)
+        open(temp_package_path, "w").write(response.content)
         return temp_package_path
 
     def _install_package(self, package_path):
@@ -2192,7 +2192,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.

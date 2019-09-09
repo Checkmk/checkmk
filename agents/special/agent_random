@@ -45,7 +45,7 @@ if not os.path.exists(state_dir):
     os.makedirs(state_dir)
 state_file = state_dir + hostname
 try:
-    history = ast.literal_eval(file(state_file).read())
+    history = ast.literal_eval(open(state_file).read())
 except (OSError, SyntaxError, IOError):
     history = {}
 

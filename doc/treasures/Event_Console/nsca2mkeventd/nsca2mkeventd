@@ -33,7 +33,7 @@ def bail_out(reason):
 
 def open_logfile():
     global g_logfile
-    g_logfile = file(g_logfile_path, "a")
+    g_logfile = open(g_logfile_path, "a")
 
 
 def log(text):
@@ -216,7 +216,7 @@ def main():
 
     while True:
         try:
-            for line in file(g_pipe_path):
+            for line in open(g_pipe_path):
                 try:
                     verbose('<= %r' % line.rstrip())
                     parsed = parse_line(line.rstrip())

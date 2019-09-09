@@ -40,7 +40,7 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
     yield
@@ -504,8 +504,8 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
-        file(dummy_map_filepath1, "w")
-        file(dummy_map_filepath2, "w")
+        open(dummy_map_filepath1, "w")
+        open(dummy_map_filepath2, "w")
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -732,7 +732,7 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
         web.discover_services("test-host-get-graph")

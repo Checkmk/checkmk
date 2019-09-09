@@ -29,7 +29,7 @@ sys.stdout.write("# ------------------------------------------------------------
 for fn in sys.argv[1:]:
     lineno = 0
     sys.stdout.write("# %s\n" % (fn))
-    for line in file(fn):
+    for line in open(fn):
         lineno += 1
         ls = line.strip()
         sys.stdout.write(line)

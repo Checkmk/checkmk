@@ -478,7 +478,7 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            file(cmk.utils.paths.var_dir + "/core/renamed_hosts",
+            open(cmk.utils.paths.var_dir + "/core/renamed_hosts",
                  "w").write("%s\n%s\n" % (oldname, newname))
             actions.append("retention")
 
@@ -860,8 +860,8 @@ class AutomationRestart(Automation):
                 cmk_base.core.do_core_action(self._mode())
             else:
                 broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-                file(broken_config_path,
-                     "w").write(file(cmk.utils.paths.nagios_objects_file).read())
+                open(broken_config_path,
+                     "w").write(open(cmk.utils.paths.nagios_objects_file).read())
 
                 if backup_path:
                     os.rename(backup_path, objects_file)
@@ -973,7 +973,7 @@ class AutomationGetCheckInformation(Automation):
                 manfile = manuals.get(check_plugin_name)
                 # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 if manfile:
-                    title = file(manfile).readline().strip().split(":", 1)[1].strip()
+                    title = open(manfile).readline().strip().split(":", 1)[1].strip()
                 else:
                     title = check_plugin_name
                 check_infos[check_plugin_name] = {"title": title.decode("utf-8")}
@@ -1010,7 +1010,7 @@ class AutomationGetRealTimeChecks(Automation):
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
-                        title = file(manfile).readline().strip().split(":", 1)[1].strip()
+                        title = open(manfile).readline().strip().split(":", 1)[1].strip()
                 except Exception:
                     if cmk.utils.debug.enabled():
                         raise
@@ -1319,7 +1319,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros):
         try:
-            for line in file(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
+            for line in open(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
                 line = line.strip()
                 if not line or line[0] == '#':
                     continue

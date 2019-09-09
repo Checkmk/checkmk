@@ -1597,7 +1597,7 @@ def paint_custom_notes(what, row):
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
 
     for f in files:
-        contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
+        contents.append(replace_tags(unicode(open(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)
 
 

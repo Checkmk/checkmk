@@ -128,8 +128,8 @@ try:
     # HACK: the 64 bit agent is msi internally handled as check_mk_agent64.exe
     os.rename(source_dir + "/check_mk_agent-64.exe", source_dir + "/check_mk_agent64.exe")
 
-    lines_file_idt = file(work_dir + "/File.idt").readlines()
-    file_idt_new = file(work_dir + "/File.idt.new", "w")
+    lines_file_idt = open(work_dir + "/File.idt").readlines()
+    file_idt_new = open(work_dir + "/File.idt.new", "w")
     file_idt_new.write("".join(lines_file_idt[:3]))
 
     cabinet_files = []
@@ -149,8 +149,8 @@ try:
 
     # ==============================================
     # Modify Component.idt
-    lines_component_idt = file(work_dir + "/Component.idt").readlines()
-    component_idt_new = file(work_dir + "/Component.idt.new", "w")
+    lines_component_idt = open(work_dir + "/Component.idt").readlines()
+    component_idt_new = open(work_dir + "/Component.idt.new", "w")
     component_idt_new.write("".join(lines_component_idt[:3]))
 
     for line in lines_component_idt[3:]:
@@ -168,8 +168,8 @@ try:
     # ==============================================
     # Modify Property.idt
     product_code = ("{%s}\r\n" % uuid.uuid1()).upper()
-    lines_property_idt = file(work_dir + "/Property.idt").readlines()
-    property_idt_new = file(work_dir + "/Property.idt.new", "w")
+    lines_property_idt = open(work_dir + "/Property.idt").readlines()
+    property_idt_new = open(work_dir + "/Property.idt.new", "w")
     property_idt_new.write("".join(lines_property_idt[:3]))
 
     for line in lines_property_idt[3:]:

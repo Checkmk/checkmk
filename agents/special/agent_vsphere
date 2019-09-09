@@ -1112,7 +1112,7 @@ def main(argv=None):
     if opt.tracefile:
         tracefile_dir = os.path.dirname(opt.tracefile) or "."
         if os.path.exists(tracefile_dir):
-            opt.tracefile = file(opt.tracefile, "w")
+            opt.tracefile = open(opt.tracefile, "w")
         elif opt.debug:
             sys.stderr.write("Path for tracefile %s does not exist" % opt.tracefile)
             sys.stderr.flush()

@@ -342,7 +342,7 @@ def mode_list_checks():
                 ty_color = tty.yellow
 
             if man_filename:
-                title = file(man_filename).readlines()[0].split(":", 1)[1].strip()
+                title = open(man_filename).readlines()[0].split(":", 1)[1].strip()
             else:
                 title = "(no man page present)"
 

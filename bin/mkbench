@@ -1053,7 +1053,7 @@ class Measurement(object):
 
     def _get_site_state(self):
         self.site_state = subprocess.call(["omd", "status", "--bare"],
-                                          stdout=file(os.devnull, "w"),
+                                          stdout=open(os.devnull, "w"),
                                           close_fds=True)
 
     def _get_site_stats(self):
@@ -3267,7 +3267,7 @@ def verify_is_site():
 
 def verify_site_is_running():
     site_state = subprocess.call(["omd", "status", "--bare"],
-                                 stdout=file(os.devnull, "w"),
+                                 stdout=open(os.devnull, "w"),
                                  close_fds=True)
     if site_state != 0:
         raise MKGeneralException("Site needs to be running")

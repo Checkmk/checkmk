@@ -34,7 +34,7 @@ def add_file(f, path):
     f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")
     f.write("\n")
-    f.write(file(path).read())
+    f.write(open(path).read())
 
 
 def run_pylint(base_path, check_files=None):  #, cleanup_test_dir=False):
@@ -111,7 +111,7 @@ def is_python_file(path):
         return True
 
     # Only add python files
-    shebang = file(path, "r").readline()
+    shebang = open(path, "r").readline()
     if shebang.startswith("#!") and shebang.endswith("python"):
         return True
 
@@ -143,7 +143,7 @@ class CMKFixFileMixin(object):
         return os.path.relpath(msg.abspath, cmk_path())
 
     def _orig_location_from_compiled_file(self, msg):
-        lines = file(msg.abspath).readlines()
+        lines = open(msg.abspath).readlines()
         line_nr = msg.line
         orig_file, went_back = None, -3
         while line_nr > 0:

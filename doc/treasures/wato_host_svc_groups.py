@@ -45,7 +45,7 @@ next_ = False
 
 servicegroups = {}
 hostgroups = {}
-for line in file(path).readlines():
+for line in open(path).readlines():
     line = line.strip()
     if line != "" and line[0] != '#' and line != '}' and not line.startswith('define'):
         try:

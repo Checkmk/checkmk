@@ -4031,7 +4031,7 @@ def mkeventd_update_notifiation_configuration(hosts):
     if not contactgroup and os.path.exists(path):
         os.remove(path)
     elif contactgroup:
-        file(path, "w").write(
+        open(path, "w").write(
             """# Created by Check_MK Event Console
 # This configuration will send notifications about hosts and
 # services in the contact group '%(group)s' to the Event Console.

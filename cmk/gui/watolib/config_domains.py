@@ -121,7 +121,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         try:
             pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
             try:
-                pid = int(file(pidfile).read().strip())
+                pid = int(open(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
                 # No liveproxyd running: No reload needed.
@@ -384,7 +384,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             return {}
 
         try:
-            for line in file(path):
+            for line in open(path):
                 line = line.strip()
 
                 if line == "" or line.startswith("#"):

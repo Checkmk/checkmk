@@ -144,7 +144,7 @@ def pack(install_basedir):
 
 def _cap_entry(relpath):
     entry = chr(len(relpath)) + relpath
-    content = file(relpath).read()
+    content = open(relpath).read()
     entry += _cap_filesize(len(content)) + content
     return entry
 

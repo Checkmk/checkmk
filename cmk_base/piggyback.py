@@ -78,7 +78,7 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
     piggyback_data = []
     for file_info in piggyback_file_infos:
         try:
-            raw_data = file(file_info.file_path).read()
+            raw_data = open(file_info.file_path).read()
 
         except IOError as e:
             reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname

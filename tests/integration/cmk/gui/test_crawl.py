@@ -330,7 +330,7 @@ class TestCrawler(object):
 
     def load_stats(self):
         try:
-            self.stats = eval(file(self.stats_file()).read())
+            self.stats = eval(open(self.stats_file()).read())
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existing files are OK
@@ -338,7 +338,7 @@ class TestCrawler(object):
                 raise
 
     def save_stats(self):
-        file(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
+        open(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
         os.rename(self.stats_file() + ".tmp", self.stats_file())
 
     def update_total_stats(self, finished):
@@ -363,7 +363,7 @@ class TestCrawler(object):
             stats["last_finished_errors"] = stats["last_errors"]
 
     def report(self):
-        with file(self.report_file() + ".tmp", "w") as f:
+        with open(self.report_file() + ".tmp", "w") as f:
             f.write("Skipped URLs:\n")
             for skipped_url in sorted(self.skipped):
                 f.write("  %s\n" % skipped_url)

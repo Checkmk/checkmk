@@ -13,6 +13,6 @@ discovery = {'': [(None, {})]}
 
 checks = {'': [(None,
                 {'mode': 'NORMAL'},
-                [(0, 'Mode: Normal', []),
-                 (0, 'Quieting Down: False', []),
-                 (0, 'Security used: True', [])])]}
+                [(0, 'Mode: normal', []),
+                 (0, 'Quieting Down: no', []),
+                 (0, 'Security used: yes', [])])]}

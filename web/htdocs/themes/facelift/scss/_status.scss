@@ -226,8 +226,8 @@ img.pluginurl {
   background-position: center center;
   background-repeat: repeat;
 
-  a {
-    color: #000;
+  body.main & a, body.main & a:link {
+    color: $grey-7;
   }
 }
 
@@ -426,6 +426,10 @@ td.statex {  /* zero count */
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
+
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
+  }
 }
 
 tr[class*="even"] {
@@ -433,6 +437,10 @@ tr[class*="even"] {
 
   &:last-child {
     border-bottom: none;
+  }
+
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
   }
 }
 
@@ -590,4 +598,8 @@ table.data.availability tr.even0 td {
   &.state3 {
     background-color: $lightened-state3-bg-color !important;
   }
+}
+
+div.tile td.hstate0 {
+  color: $dark-font-color;
 }

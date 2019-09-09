@@ -365,9 +365,10 @@ img.treeangle {
   margin-right: 3px;
   vertical-align: middle;
   cursor: pointer;
+  filter: invert(20%);
+  transition: transform .2s ease-in-out;
   -webkit-transition: -webkit-transform .2s ease-in-out;
   -moz-transition: -moz-transform .2s ease-in-out;
-  transition: transform .2s ease-in-out;
 
   &.open {
     -webkit-transform: rotate(90deg);

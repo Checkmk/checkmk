@@ -36,7 +36,7 @@ import os
 import pprint
 import tempfile
 import time
-from typing import Dict, List  # pylint: disable=unused-import
+from typing import Callable, Any, Union, Dict, Iterator, List  # pylint: disable=unused-import
 
 try:
     from pathlib import Path  # type: ignore
@@ -66,11 +66,13 @@ logger = logging.getLogger("cmk.store")
 
 
 def configuration_lockfile():
+    # type: () -> str
     return default_config_dir + "/multisite.mk"
 
 
 @contextmanager
 def lock_checkmk_configuration():
+    # type: () -> Iterator[None]
     path = configuration_lockfile()
     aquire_lock(path)
     try:
@@ -81,6 +83,7 @@ def lock_checkmk_configuration():
 
 # TODO: Use lock_checkmk_configuration() and nuke this!
 def lock_exclusive():
+    # type: () -> None
     aquire_lock(configuration_lockfile())
 
 
@@ -100,10 +103,12 @@ def lock_exclusive():
 
 
 def mkdir(path, mode=0o770):
+    # type: (str, int) -> None
     Path(path).mkdir(mode=mode, exist_ok=True)
 
 
 def makedirs(path, mode=0o770):
+    # type: (Union[Path, str], int) -> None
     if not isinstance(path, Path):
         path = Path(path)
     path.mkdir(mode=mode, exist_ok=True, parents=True)
@@ -130,6 +135,7 @@ def makedirs(path, mode=0o770):
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
 def load_mk_file(path, default=None, lock=False):
+    # type: (str, Any, bool) -> Any
     if default is None:
         raise MKGeneralException(
             _("You need to provide a config dictionary to merge with the "
@@ -155,11 +161,13 @@ def load_mk_file(path, default=None, lock=False):
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
-def load_from_mk_file(path, key, default, **kwargs):
-    return load_mk_file(path, {key: default}, **kwargs)[key]
+def load_from_mk_file(path, key, default, lock=False):
+    # type: (str, str, Any, bool) -> Any
+    return load_mk_file(path, {key: default}, lock=False)[key]
 
 
 def save_mk_file(path, mk_content, add_header=True):
+    # type: (str, str, bool) -> None
     content = ""
 
     if add_header:
@@ -175,6 +183,7 @@ def save_mk_file(path, mk_content, add_header=True):
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
 def load_data_from_file(path, default=None, lock=False):
+    # type: (str, Any, bool) -> Any
     if lock:
         aquire_lock(path)
 
@@ -207,6 +216,7 @@ def load_data_from_file(path, default=None, lock=False):
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
 def save_data_to_file(path, data, pretty=True):
+    # type: (str, Any, bool) -> None
     if pretty:
         try:
             formated_data = pprint.pformat(data)
@@ -226,6 +236,7 @@ def save_data_to_file(path, data, pretty=True):
 # Saving assumes a locked destination file (usually done by loading code)
 # Then the new file is written to a temporary file and moved to the target path
 def save_file(path, content, mode=0o660):
+    # type: (str, str, int) -> None
     tmp_path = None
     try:
         # Normally the file is already locked (when data has been loaded before with lock=True),
@@ -289,8 +300,12 @@ def save_file(path, content, mode=0o660):
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
 def save_to_mk_file(path, key, value, pprint_value=False):
-    format_func = pprint.pformat if pprint_value else repr
+    # type: (str, str, Any, bool) -> None
+    format_func = repr
+    if pprint_value:
+        format_func = pprint.pformat
 
+    # mypy complains: "[mypy:] Cannot call function of unknown type"
     if isinstance(value, dict):
         formated = "%s.update(%s)" % (key, format_func(value))
     else:
@@ -317,8 +332,9 @@ _acquired_locks = {}  # type: Dict[str, int]
 
 
 def aquire_lock(path, blocking=True):
+    # type: (str, bool) -> None
     if have_lock(path):
-        return True  # No recursive locking
+        return  # No recursive locking
 
     logger.debug("Try aquire lock on %s", path.decode("utf-8"))
 
@@ -348,6 +364,7 @@ def aquire_lock(path, blocking=True):
 
 
 def try_aquire_lock(path):
+    # type: (str) -> bool
     try:
         aquire_lock(path, blocking=False)
         return True
@@ -358,6 +375,7 @@ def try_aquire_lock(path):
 
 
 def release_lock(path):
+    # type: (str) -> None
     if not have_lock(path):
         return  # no unlocking needed
     logger.debug("Releasing lock on %s", path.decode("utf-8"))
@@ -374,10 +392,12 @@ def release_lock(path):
 
 
 def have_lock(path):
+    # type: (str) -> bool
     return path in _acquired_locks
 
 
 def release_all_locks():
+    # type: () -> None
     logger.debug("Releasing all locks")
     logger.debug("_acquired_locks: %r", _acquired_locks)
     for path in list(_acquired_locks.iterkeys()):

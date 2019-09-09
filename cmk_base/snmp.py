@@ -754,7 +754,7 @@ def do_snmptranslate(walk_filename):
                 oids_for_command.append(line.split(" ")[0])
 
             command = ["snmptranslate", "-m", "ALL",
-                       "-M+%s" % cmk.utils.paths.local_mibs_dir] + oids_for_command
+                       "-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
             p = subprocess.Popen(command,
                                  stdout=subprocess.PIPE,
                                  stderr=open(os.devnull, "w"),

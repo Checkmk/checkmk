@@ -144,7 +144,10 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-mkeventd_status_file = cmk.utils.paths.omd_root + "/var/mkeventd/status"
+
+def _compiled_mibs_dir():
+    return cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.
@@ -2341,7 +2344,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def action(self):
         if html.request.has_var("_delete"):
             filename = html.request.var("_delete")
-            mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
+            mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
             if filename in mibs:
                 c = wato_confirm(
                     _("Confirm MIB deletion"),
@@ -2421,7 +2424,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        file(cmk.gui.mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+        file(cmk.gui.mkeventd.mib_upload_dir() + "/" + filename, "w").write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
 
@@ -2433,12 +2436,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         defaultMibPackages = PySnmpCodeGen.defaultMibPackages
         baseMibs = PySnmpCodeGen.baseMibs
 
-        store.mkdir(cmk.gui.mkeventd.compiled_mibs_dir)
+        compiled_mibs_dir = _compiled_mibs_dir()
+        store.mkdir(compiled_mibs_dir)
 
         # This object manages the compilation of the uploaded SNMP mib
         # but also resolving dependencies and compiling dependents
         compiler = MibCompiler(SmiV1CompatParser(), PySnmpCodeGen(),
-                               PyFileWriter(cmk.gui.mkeventd.compiled_mibs_dir))
+                               PyFileWriter(compiled_mibs_dir))
 
         # FIXME: This is a temporary local fix that should be removed once
         # handling of file contents uses a uniformly encoded representation
@@ -2452,10 +2456,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs])
+        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
-        compiler.addSearchers(PyFileSearcher(cmk.gui.mkeventd.compiled_mibs_dir))
+        compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
 
         # and also check PySNMP shipped compiled MIBs
         compiler.addSearchers(*[PyPackageSearcher(x) for x in defaultMibPackages])
@@ -2491,7 +2495,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
 
     def _bulk_delete_custom_mibs_after_confirm(self):
-        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
+        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
         selected_custom_mibs = []
         for varname, _value in html.request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
@@ -2515,15 +2519,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
 
         # Delete the uploaded mib file
-        os.remove(cmk.gui.mkeventd.mib_upload_dir + "/" + filename)
+        os.remove(cmk.gui.mkeventd.mib_upload_dir() + "/" + filename)
 
         # Also delete the compiled files
+        compiled_mibs_dir = _compiled_mibs_dir()
         for f in [
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() +
-                ".py", cmk.gui.mkeventd.compiled_mibs_dir + "/" +
-                filename.rsplit('.', 1)[0].upper() + ".pyc"
+                compiled_mibs_dir + "/" + mib_name + ".py",
+                compiled_mibs_dir + "/" + mib_name + ".pyc",
+                compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+                compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc",
         ]:
             if os.path.exists(f):
                 os.remove(f)
@@ -2549,15 +2553,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         html.hidden_fields()
         html.end_form()
 
-        if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir):
-            os.makedirs(cmk.gui.mkeventd.mib_upload_dir
+        if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir()):
+            os.makedirs(cmk.gui.mkeventd.mib_upload_dir()
                        )  # Let exception happen if this fails. Never happens on OMD
 
-        for path, title in cmk.gui.mkeventd.mib_dirs:
+        for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
     def _show_mib_table(self, path, title):
-        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir
+        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:
             html.begin_form("bulk_delete_form", method="POST")

@@ -808,7 +808,7 @@ modes.register(Mode(
     long_help=[
         "Does not contact the host again, but reuses the hosts walk from the "
         "directory %s. You can add further MIBs to the directory %s." % \
-         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mibs_dir)
+         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
     ],
 ))
 

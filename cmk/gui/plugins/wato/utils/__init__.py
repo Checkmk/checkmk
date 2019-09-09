@@ -40,6 +40,7 @@ import six
 
 import cmk.utils.plugin_registry
 import cmk.utils.store
+from cmk.utils.memoize import MemoizeCache
 
 from cmk.gui.globals import g
 import cmk.gui.mkeventd
@@ -1751,7 +1752,7 @@ class DictHostTagCondition(Transform):
             ListOfMultiple(
                 title=title,
                 help=help_txt,
-                choices=self._get_tag_group_choices(),
+                choices=self._get_cached_tag_group_choices(),
                 choice_page_name="ajax_dict_host_tag_condition_get_choice",
                 add_label=_("Add tag condition"),
                 del_label=_("Remove tag condition"),
@@ -1759,6 +1760,13 @@ class DictHostTagCondition(Transform):
             forth=self._to_valuespec,
             back=self._from_valuespec,
         )
+
+    def _get_cached_tag_group_choices(self):
+        # In case one has configured a lot of tag groups / id recomputing this for
+        # every DictHostTagCondition instance takes a lot of time
+        if "tag_group_choices" not in current_app.g:
+            current_app.g["tag_group_choices"] = self._get_tag_group_choices()
+        return current_app.g["tag_group_choices"]
 
     def _get_tag_group_choices(self):
         choices = []

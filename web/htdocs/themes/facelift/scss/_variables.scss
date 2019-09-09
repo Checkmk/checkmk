@@ -257,8 +257,6 @@ $primary-border-radius:			    $theme-border-radius;
 
 $dashboard-stats-bg-color:		    $white;
 $dashboard-tr-border-bottom:		    null;
-$dashboard-tr-hover-bg-color:		    $theme-color-background;
-$dashboard-tr-even-hover-bg-color:	    null;
 
 $checkbox-border-color:			    #73767a;
 $checkbox-shadow:			    #888;
@@ -297,7 +295,7 @@ $data-table-state-border-bottom:	    null;
 
 $input-button-bg-color:			    $success;
 $input-button-hover-bg-color:		    #11bd7b;
-$input-button-color:			    $white;
+$input-button-color:			    $grey-5;
 
 $odd-tr-bg-color:			    null;
 $even-tr-bg-color:			    null;
@@ -488,3 +486,5 @@ $node-vis-history-filter:		    null;
 $host-folder-font-color:		    #bde;
 
 $snapin-link-hover-color:		    #fff;
+
+$if-state-up-font-color:		    null;

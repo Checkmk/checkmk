@@ -256,8 +256,6 @@ $primary-border-radius:			    4px;
 
 $dashboard-stats-bg-color:		    transparent;
 $dashboard-tr-border-bottom:		    2px solid $grey-7;
-$dashboard-tr-hover-bg-color:		    lighten($grey-7, 10%);
-$dashboard-tr-even-hover-bg-color:	    lighten($grey-7, 10%);
 
 $checkbox-border-color:			    $grey-3;
 $checkbox-shadow:			    $grey-3;
@@ -489,3 +487,5 @@ $node-vis-history-filter:		    invert(70%);
 $host-folder-font-color:		    rgb(220, 220, 220);
 
 $snapin-link-hover-color:		    $grey-1;
+
+$if-state-up-font-color:		    $grey-7;

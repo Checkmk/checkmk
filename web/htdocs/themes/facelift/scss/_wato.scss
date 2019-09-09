@@ -473,7 +473,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       left: 0;
       overflow: hidden;
       font-size: $theme-font-size-main;
-      color: #bde;
+      color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
     }

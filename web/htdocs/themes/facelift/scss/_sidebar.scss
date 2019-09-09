@@ -48,14 +48,15 @@ body.side {
   background: $body-side-bg-color;
 
   p {
-    color: $theme-color-darkgrey; }
+    color: $theme-color-darkgrey;
+  }
 
   .link {
     color: $theme-color-lightgrey;
   }
 
   .title {
-    color: $side-title-color;
+    color: $theme-color-lightgrey;
   }
 
   &.screenshotmode {
@@ -70,7 +71,7 @@ body.side {
   left: 0;
   z-index: 10;
   width: 100%;
-  height: $side-header-height;
+  height: 64px;
   margin: 0;
   background: $theme-color-sidebar-background;
   border: none;
@@ -129,7 +130,7 @@ body.main .popup_menu #side_header > span {
   z-index: 54;
   max-width: 150px;
   font-size: 11px;
-  color: #fff;
+  color: $primary-sidebar-font-color;
   text-align: right;
 
   a {
@@ -153,7 +154,7 @@ body.main .popup_menu #side_header > span {
     right: -12px;
     z-index: 15;
     padding: 2px;
-    color: #fff;
+    color: $primary-sidebar-font-color;
     cursor: pointer;
     background-color: #f00;
     border-radius: 10px;
@@ -262,7 +263,7 @@ body.side div.snapin, div.add_snapin div.snapin  {
   box-sizing: border-box;
 
   &:first-child {
-    margin-top: 6px;
+    margin-top: $snapin-first-margin-top;
   }
 }
 
@@ -323,7 +324,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: 8px; /* Invisible spacing around hole snapin content */
-    color: #fff;
+    color: $primary-sidebar-font-color;
     background-color: $theme-color-sidebar-background;
     box-sizing: border-box;
   }
@@ -350,23 +351,23 @@ div.snapin {
   }
 
   td {
-    color: #fff;
+    color: $primary-sidebar-font-color;
   }
 
   h3 {
     margin: 2px 0;
     font-size: 100%;
-    color: #fff;
+    color: $primary-sidebar-font-color;
   }
 
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: #fff;
+    color: $primary-sidebar-font-color;
     text-decoration: none;
 
     &:hover {
-      color: #fff;
+      color: $snapin-link-hover-color;
       text-decoration: underline;
     }
 

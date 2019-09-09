@@ -234,11 +234,13 @@ $tag-dropdown-active-bg-color:		    null;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-$primary-bg-color:			    $theme-color-white;
-$secondary-bg-color:			    $theme-color-white;
+$primary-bg-color:			    $white;
+$secondary-bg-color:			    $white;
 
 $primary-font-color:			    $theme-color-black;
 $secondary-font-color:			    $theme-color-table-text;
+$primary-hover-font-color:		    $theme-color-black;
+$primary-sidebar-font-color:		    $white;
 
 $primary-link-color:			    $theme-color-text;
 $secondary-link-color:			    $theme-color-table-text;
@@ -253,7 +255,7 @@ $primary-td-bg-color:			    $theme-color-table-background;
 $primary-box-shadow:			    0.5px 0.5px 1px #ccc;
 $primary-border-radius:			    $theme-border-radius;
 
-$dashboard-stats-bg-color:		    $theme-color-white;
+$dashboard-stats-bg-color:		    $white;
 $dashboard-tr-border-bottom:		    null;
 $dashboard-tr-hover-bg-color:		    $theme-color-background;
 $dashboard-tr-even-hover-bg-color:	    null;
@@ -284,7 +286,7 @@ $data-container-bg-color:		    null;
 $data-container-border:			    null;
 
 $oddeven-table-bg-color:		    transparent;
-$data-td-bg-color:			    $theme-color-white;
+$data-td-bg-color:			    $white;
 $data-table-border-collapse:		    null;
 $data-table-border-spacing:		    0 2px;
 $data-table-border-topmost:		    $primary-table-border;
@@ -295,7 +297,7 @@ $data-table-state-border-bottom:	    null;
 
 $input-button-bg-color:			    $success;
 $input-button-hover-bg-color:		    #11bd7b;
-$input-button-color:			    $theme-color-white;
+$input-button-color:			    $white;
 
 $odd-tr-bg-color:			    null;
 $even-tr-bg-color:			    null;
@@ -309,7 +311,7 @@ $select2-rendered-color:		    null;
 $select2-selected-bg-color:		    null;
 $select2-highlighted-bg-color:		    null;
 
-$td-single-bg-color:			    $theme-color-white;
+$td-single-bg-color:			    $white;
 $wato-tr-bg-color:			    transparent;
 $wato-a-hover-bg-color:			    $theme-color-table-background;
 
@@ -324,6 +326,7 @@ $dark-font-color:			    null;
 $body-dashlet-bg-color:			    transparent;
 $dashlet-bg-color:			    null;
 
+$tactical-overview-th-font-color:	    $theme-color-nuance-5;
 $tactical-overview-td-bg-color:		    $theme-color-background;
 $tactical-overview-prob-link-color:	    null;
 
@@ -359,7 +362,6 @@ $snapin-border-bottom:			    1px solid $theme-color-table-border-dark-2;
 
 $wato-a-border:				    null;
 
-$side-title-color:			    $theme-color-lightgrey;
 $wato-subtitle-color:			    $theme-color-darkgrey;
 
 $footnote-link-color:			    #13d389;
@@ -406,8 +408,6 @@ $mk-search-results-border:		    1px solid $white;
 $repprogress-msg-color:			    null;
 $repprogress-progress-bg-color:		    $theme-color-state-6-background;
 $repprogress-progress-border-color:	    $theme-color-nuance-17;
-
-$side-header-height:			    64px;
 
 $first-child-border-radius:		    4px 0 0 4px;
 $last-child-border-radius:		    0 4px 4px 0;
@@ -458,6 +458,7 @@ $duallist-control-a-hover-bg-color:             $wato-a-hover-bg-color;
 
 $side-content-top:                              66px;
 $snapin-margin:                                 8px 0;
+$snapin-first-margin-top:			6px;
 
 $main-body-padding:                             68px 16px 60px;
 
@@ -483,3 +484,7 @@ $node-vis-menu-bg-color:		    null;
 $node-vis-history-bg-color:		    null;
 $node-vis-history-border-color:		    null;
 $node-vis-history-filter:		    null;
+
+$host-folder-font-color:		    #bde;
+
+$snapin-link-hover-color:		    #fff;

@@ -8550,21 +8550,7 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "context_switches",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
-    "metric": "process_creations",
     "half_value": 1000.0,
     "exponent": 2.0
 })

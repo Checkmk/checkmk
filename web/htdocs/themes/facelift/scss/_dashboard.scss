@@ -248,13 +248,37 @@ body.main.dashlet {
     tr.data {
       border-bottom: $dashboard-tr-border-bottom;
       transition: .15s ease-in-out;
+    }
+  }
 
-      &:hover {
-        background-color: $dashboard-tr-hover-bg-color;
-        &:nth-child(even) {
-          background-color: $dashboard-tr-even-hover-bg-color;
-        }
+  table.data {
+    border-spacing: 0;
+
+    th:nth-child(1) {
+      padding-bottom: 2px;
+      padding-left: 1px;
+    }
+  }
+
+  /* Adapted styling of views in dashlets */
+  tr.data {
+    > td {
+      padding-top: 2px;
+      padding-bottom: 2px;
+      border-bottom: none;
+
+      &.state {
+        border-top: none;
+	border-top-color: $state-border-top-color;
       }
+    }
+
+    &:last-of-type > td:not(.state):not(.gap) {
+      border-bottom: 1px solid $theme-color-table-border;
+    }
+
+    &:nth-child(2) > td.state {
+      border-top-color: $theme-color-table-border !important;
     }
   }
 }
@@ -704,37 +728,4 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
-}
-
-/* Adapted styling of views in dashlets */
-body.main.dashlet {
-  tr.data {
-    > td {
-      padding-top: 2px;
-      padding-bottom: 2px;
-      border-bottom: none;
-
-      &.state {
-        border-top: none;
-	border-top-color: $state-border-top-color;
-      }
-    }
-
-    &:last-of-type > td:not(.state):not(.gap) {
-      border-bottom: 1px solid $theme-color-table-border;
-    }
-
-    &:nth-child(2) > td.state {
-      border-top-color: $theme-color-table-border !important;
-    }
-  }
-
-  table.data {
-    border-spacing: 0;
-
-    th:nth-child(1) {
-      padding-bottom: 2px;
-      padding-left: 1px;
-    }
-  }
 }

@@ -426,12 +426,26 @@ class Pod(Metadata):
                 'image_pull_policy': container.image_pull_policy,
                 'ready': False,
                 'restart_count': 0,
+                'state': None,
+                'state_reason': None,
+                'state_exit_code': None,
                 'container_id': None,
                 'image_id': None,
             } for container in self._containers
         }
         for container_status in self._container_statuses:
             data = view[container_status.name]
+            state = container_status.state
+            if state:
+                if state.running:
+                    data["state"] = "running"
+                elif state.terminated:
+                    data["state"] = "terminated"
+                    data["state_exit_code"] = state.terminated.exit_code
+                    data["state_reason"] = state.terminated.reason
+                elif state.waiting:
+                    data["state"] = "waiting"
+                    data["state_reason"] = state.waiting.reason
             data['ready'] = container_status.ready
             data['restart_count'] = container_status.restart_count
             data['container_id'] = (container_status.container_id.replace('docker://', '')

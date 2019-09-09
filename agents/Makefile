@@ -97,6 +97,7 @@ deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	mkdir -p deb-unpack ; \
 	cd deb-unpack && \
 	ar x ../$$DEB_PKG && \
+	rm ../$$DEB_PKG && \
 	mkdir ctrl && \
 	tar xf control.tar.* -C ctrl && \
 	sed -i -e '/^Depends:/d' \
@@ -105,7 +106,6 @@ deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	xz --decompress data.tar.xz && \
 	gzip data.tar && \
-	ar d ../$(DEB_PACKAGE) data.tar.xz control.tar.xz && \
 	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.gz
 	rm -rf deb-unpack
 

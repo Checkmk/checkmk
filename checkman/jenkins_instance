@@ -5,7 +5,9 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the state of the queried jenkins instance. It outputs the
- used mode (normal/exclusive), the quieting down state and if security is used.
+ used mode (normal/exclusive), the quieting down state (prevents any new builds
+ from taking place if enabled) and if security is used (as configured within
+ Jenkins "Configure Global Security").
 
 inventory:
  One service {"Jenkins Instance"} will be created

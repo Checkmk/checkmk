@@ -31,6 +31,14 @@
 
 import json
 
+MAP_INSTANCE_STATE = {
+    True: "yes",
+    False: "no",
+    "NORMAL": "normal",
+    "EXCLUSIVE": "exclusive",
+    None: "N/A",
+}
+
 
 def parse_jenkins_instance(info):
     parsed = {}
@@ -62,10 +70,10 @@ def check_jenkins_instance(no_item, params, parsed):
         if parsed_data is not None and parsed_data != value:
             state = 1
         elif parsed_data is None:
-            parsed_data = "N/A"
+            #            parsed_data = "N/A"
             state = 3
 
-        yield state, "%s: %s" % (infotext, str(parsed_data).title())
+        yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])
 
 
 check_info["jenkins_instance"] = {

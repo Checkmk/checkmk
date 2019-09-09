@@ -466,6 +466,78 @@ class Pod(Metadata):
         }
 
 
+class Job(Metadata):
+    def __init__(self, job):
+        super(Job, self).__init__(job.metadata)
+        spec = job.spec
+        if spec:
+            self._pod = spec.template
+            self._pod_spec = self._pod.spec
+        else:
+            self._pod = None
+            self._pod_spec = None
+
+        if self._pod_spec:
+            self._pod_containers = self._pod_spec.containers
+            self._pod_node = self._pod_spec.node_name
+            self._pod_host_network = self._pod_spec.host_network if self._pod_spec.host_network else False
+            self._pod_dns_policy = self._pod_spec.dns_policy
+        else:
+            self._pod_containers = []
+            self._pod_node = None
+            self._pod_host_network = False
+            self._pod_dns_policy = None
+
+        def count(nn):
+            return nn if nn is not None else 0
+
+        status = job.status
+        if status:
+            self._active = count(status.active)
+            self._failed = count(status.failed)
+            self._succeeded = count(status.succeeded)
+        else:
+            self._active = 0
+            self._failed = 0
+            self._succeeded = 0
+
+    @property
+    def infos(self):
+        return {
+            "active": self._active,
+            "failed": self._failed,
+            "succeeded": self._succeeded,
+        }
+
+    @property
+    def pod_infos(self):
+        # Pod handles `spec.template.spec` of type `V1PodSpec`.
+        # According to the official docs: The pod template section "has exactly
+        # the same schame as a pod, except it is nested and does not have an
+        # apiVersion or kind."
+        return {
+            "node": self._pod_node,
+            "host_network": self._pod_host_network,
+            "dns_policy": self._pod_dns_policy,
+            "host_ip": None,
+            "pod_ip": None,
+            "qos_class": None,
+        }
+
+    @property
+    def containers(self):
+        # Pod handles `spec.template.spec` of type `V1PodSpec`.
+        # See also: `pod_info(self)`, `Pod.containers()`.
+        if not self._pod:
+            return {}
+        return {
+            container.name: {
+                'image': container.image,
+                'image_pull_policy': container.image_pull_policy,
+            } for container in self._pod_containers
+        }
+
+
 class DaemonSet(Metadata):
     def __init__(self, daemon_set):
         super(DaemonSet, self).__init__(daemon_set.metadata)
@@ -797,6 +869,17 @@ class PodList(K8sList[Pod]):
         return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
+class JobList(K8sList[Job]):
+    def info(self):
+        return {job.name: job.infos for job in self}
+
+    def pod_infos(self):
+        return {job.name: job.pod_infos for job in self}
+
+    def containers(self):
+        return {job.name: job.containers for job in self}
+
+
 class NamespaceList(K8sList[Namespace]):
     def list_namespaces(self):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[str]]]]
@@ -990,6 +1073,7 @@ class ApiData(object):
         storage_api = client.StorageV1Api(api_client)
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
         ext_api = client.ExtensionsV1beta1Api(api_client)
+        batch_api = client.BatchV1Api(api_client)
         apps_api = client.AppsV1beta1Api(api_client)
 
         self.custom_api = client.CustomObjectsApi(api_client)
@@ -1010,6 +1094,7 @@ class ApiData(object):
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
+        jobs = batch_api.list_job_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
         deployments = ext_api.list_deployment_for_all_namespaces()
         daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
@@ -1027,6 +1112,7 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+        self.jobs = JobList(map(Job, jobs.items))
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
         self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
@@ -1132,6 +1218,15 @@ class ApiData(object):
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output(piggyback_prefix="pod_"))
 
+    def job_sections(self):
+        logging.info('Output job sections')
+        g = PiggybackGroup()
+        g.join('labels', self.jobs.labels())
+        g.join('k8s_job_container', self.jobs.containers())
+        g.join('k8s_pod_info', self.jobs.pod_infos())
+        g.join('k8s_job_info', self.jobs.info())
+        return '\n'.join(g.output(piggyback_prefix="job_"))
+
     def service_sections(self):
         logging.info('Output service sections')
         g = PiggybackGroup()
@@ -1214,6 +1309,8 @@ def main(args=None):
                 print(api_data.node_sections())
             if 'pods' in arguments.infos:
                 print(api_data.pod_sections())
+            if 'jobs' in arguments.infos:
+                print(api_data.job_sections())
             if 'deployments' in arguments.infos:
                 print(api_data.deployment_sections())
             if 'services' in arguments.infos:

@@ -523,7 +523,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $primary-font-color;
+      color: $primary-hover-font-color;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -631,6 +631,10 @@ table.data {
 
       a {
 	color: $secondary-font-color;
+
+	&:hover {
+	  color: $primary-hover-font-color;
+	}
       }
 
       &:not(.gap):not(.last_col) {

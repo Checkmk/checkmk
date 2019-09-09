@@ -31,7 +31,7 @@ div.bookmark {
   width: 230px;
   max-width: 230px;
   overflow: hidden;
-  color: #fff;
+  color: $primary-sidebar-font-color;
   text-overflow: ellipsis;
   -o-text-overflow: ellipsis;
   white-space: nowrap;
@@ -242,7 +242,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $theme-letter-spacing-table;
-  color: $white;
+  color: $primary-sidebar-font-color;
   text-align: center;
   background-color: $theme-color-table-background-dark;
   border: 1px solid $theme-color-table-border-dark;
@@ -317,7 +317,7 @@ table.tacticaloverview {
     font-weight: normal;
     line-height: 9px;
     letter-spacing: 0;
-    color: $theme-color-nuance-5;
+    color: $tactical-overview-th-font-color;
     text-align: center;
     vertical-align: bottom;
   }
@@ -535,7 +535,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: #fff;
+  color: $primary-sidebar-font-color;
 
   p {
     font-weight: normal;
@@ -614,7 +614,7 @@ div.spacertop {
  * Micro Core Stats (CMC) snapin
  */
 #snapin_cmc_stats {
-    color: white;
+    color: $primary-sidebar-font-color;
 
   select {
     margin-bottom: 2px;
@@ -654,7 +654,7 @@ table.cmc_stats {
 
   div.timerange {
     margin-bottom: 10px;
-    color: #fff;
+    color: $primary-sidebar-font-color;
 
     table {
       display: inline-block;

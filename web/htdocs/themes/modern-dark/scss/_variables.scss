@@ -100,15 +100,15 @@ $input__border-color:      $grey-3;
 
 $theme-color-black:                         $black; // black
 $theme-color-white:                         $grey-7; // white
-$theme-color-lightgrey:                     #f8f8f8; // light grey
+$theme-color-lightgrey:                     rgb(220, 220, 220); // light grey
 $theme-color-darkgrey:                      #838383; // dark grey
 
 $theme-color-main:                          #ffd703; // yellow
 
-$theme-color-text:                          $grey-1; // dark
+$theme-color-text:                          $theme-color-lightgrey;
 $theme-color-background:                    $grey-5; // light grey
 
-$theme-color-text-light:                    #e6e6e6; // light grey
+$theme-color-text-light:                    $theme-color-lightgrey; // light grey
 
 $theme-border-radius:                       4px;
 
@@ -233,11 +233,13 @@ $tag-dropdown-active-bg-color:		    $grey-3;
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
 
-$primary-bg-color:			        $grey-3;
+$primary-bg-color:			    $grey-3;
 $secondary-bg-color:			    $grey-6;
 
-$primary-font-color:			    $grey-1;
-$secondary-font-color:			    $grey-1;
+$primary-font-color:			    $theme-color-text;
+$secondary-font-color:			    $theme-color-text;
+$primary-hover-font-color:		    $grey-1;
+$primary-sidebar-font-color:		    $theme-color-text;
 
 $primary-link-color:	  		    $grey-2;
 $secondary-link-color:			    $grey-2;
@@ -294,7 +296,7 @@ $data-table-state-border-bottom:	    $secondary-table-border !important;
 
 $input-button-bg-color:			    $grey-3;
 $input-button-hover-bg-color:		    lighten($grey-3, 10%);
-$input-button-color:			    $grey-1;
+$input-button-color:			    $theme-color-text;
 
 $odd-tr-bg-color:			    $grey-7;
 $even-tr-bg-color:			    $grey-5;
@@ -304,7 +306,7 @@ $tr-data-border-bottom:			    1.8px solid $grey-7;
 $floatfilter-bg-color:			    null;
 
 $select2-border-color:			    $grey-7;
-$select2-rendered-color:		    $grey-1;
+$select2-rendered-color:		    $theme-color-text;
 $select2-selected-bg-color:		    $grey-5;
 $select2-highlighted-bg-color:		    rgb(93, 93, 93);
 
@@ -316,20 +318,21 @@ $td-unused-color:			    $grey-2;
 
 $color-div-box-shadow:			    null;
 
-$graph-legend-color:			    $grey-1 !important;
+$graph-legend-color:			    $theme-color-text !important;
 
 $dark-font-color:			    $grey-7 !important;
 
 $body-dashlet-bg-color:			    $grey-6;
 $dashlet-bg-color:			    $grey-6;
 
+$tactical-overview-th-font-color:	    $theme-color-text;
 $tactical-overview-td-bg-color:		    $grey-3;
 $tactical-overview-prob-link-color:	    $grey-7;
 
 $sidebar-iconbutton-bg-color:		    $grey-5;
 $sidebar-iconbutton-border-color:	    transparent;
 
-$table-header-border-bottom:		    none;
+$table-header-border-bottom:		    1px solid $grey-5;
 
 $state-border-top-color:		    $grey-6;
 
@@ -347,7 +350,7 @@ $tr-even3-bg-color:			    $grey-6;
 
 $graph-bg-color:			    $grey-6 !important;
 $graph-legend-th-border-bottom:		    1px solid $grey-1;
-$graph-time-color:			    $grey-1;
+$graph-time-color:			    $theme-color-text;
 
 $dashlet-stats-border-top-color:	    $grey-6;
 $dashlet-title-border-radius:		    0;
@@ -358,10 +361,9 @@ $snapin-border-bottom:			    null;
 
 $wato-a-border:				    1px solid #212121;
 
-$side-title-color:			    $grey-2;
 $wato-subtitle-color:			    $grey-2;
 
-$footnote-link-color:			    $grey-1;
+$footnote-link-color:			    $theme-color-text;
 
 $table-data-single-padding:		    2px 0;
 $td-single-left-border-right:		    null;
@@ -406,8 +408,6 @@ $mk-search-results-border:		    $primary-border;
 $repprogress-msg-color:			    rgb(100, 100, 100);
 $repprogress-progress-bg-color:		    rgb(105, 156, 170);	// darkened state6 bg color
 $repprogress-progress-border-color:	    rgb(111, 180, 198); // darkened nuance17
-
-$side-header-height:			    65px;
 
 $first-child-border-radius:		    $primary-border-radius;
 $last-child-border-radius:		    $primary-border-radius;
@@ -457,10 +457,11 @@ $table-cell-last-child-border-radius:	    0;
 
 $duallist-control-a-hover-bg-color:	    $wato-a-hover-bg-color;
 
-$side-content-top:                          66px;
-$snapin-margin:				    8px 0;  // Set back to 8 untill we can change the dashboard positioning on a per theme basis
+$side-content-top:                          null;
+$snapin-margin:				    6px 0;
+$snapin-first-margin-top:		    5px;
 
-$main-body-padding:			    64px 12px 60px;
+$main-body-padding:			    65px 12px 60px;
 
 $snapin-cmc-table-width:                    null;
 $snapin-list-color:			    $white;
@@ -484,3 +485,7 @@ $node-vis-menu-bg-color:		    $grey-5;
 $node-vis-history-bg-color:		    $grey-1;
 $node-vis-history-border-color:		    $grey-1;
 $node-vis-history-filter:		    invert(70%);
+
+$host-folder-font-color:		    rgb(220, 220, 220);
+
+$snapin-link-hover-color:		    $grey-1;

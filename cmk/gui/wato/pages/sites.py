@@ -888,7 +888,7 @@ class ReplicationStatusFetcher(object):
             #            raise
 
             # Reinitialize logging targets
-            log.init_logging()
+            log.init_logging()  # NOTE: We run in a subprocess!
 
             result = ReplicationStatus(
                 site_id=site_id,

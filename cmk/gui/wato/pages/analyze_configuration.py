@@ -335,7 +335,7 @@ class ModeAnalyzeConfig(WatoMode):
             #            raise
 
             # Reinitialize logging targets
-            log.init_logging()
+            log.init_logging()  # NOTE: We run in a subprocess!
 
             if config.site_is_local(site_id):
                 automation = AutomationCheckAnalyzeConfig()

@@ -59,7 +59,7 @@ class ESXSession(requests.Session):
 
     def postsoap(self, request):
         soapdata = ESXSession.ENVELOPE % request
-        return super(ESXSession, self).post(self._post_url, data=soapdata)
+        return super(ESXSession, self).post(self._post_url, data=soapdata, verify=self.verify)
 
 
 class SoapTemplates(object):

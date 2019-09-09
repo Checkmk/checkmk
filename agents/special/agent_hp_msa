@@ -156,7 +156,8 @@ class HPMSAConnection(object):
         })
 
     def get(self, url_suffix):
-        return self._session.get(urljoin(self._base_url, url_suffix), timeout=self._timeout)
+        url = urljoin(self._base_url, url_suffix)
+        return self._session.get(url, timeout=self._timeout, verify=self._session.verify)
 
     def _login_v3(self, username, password):
         self._base_url = "https://%s/v3/api/" % self._host

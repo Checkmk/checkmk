@@ -43,6 +43,7 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
 
     # flags
+    parser.add_argument("-v", "--verbose", action="count", help="""Increase verbosity""")
     parser.add_argument("--debug",
                         action="store_true",
                         help="""Debug mode: let Python exceptions come through""")
@@ -53,9 +54,12 @@ def parse_arguments(argv):
 
     args = parser.parse_args(argv)
 
-    if args.debug:
+    if args.verbose >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
+    elif args.verbose:
+        fmt = "%(levelname)s: %(message)s"
+        lvl = logging.INFO
     else:
         fmt = "%(levelname)s: %(message)s"
         lvl = logging.WARNING
@@ -95,9 +99,11 @@ property_to_section = {
 
 
 def store_property(prop):
-    LOGGER.debug("storing property: %s", prop)
     if prop[0] in property_to_section:
+        LOGGER.info("property (stored): %r", (prop,))
         sections.setdefault(property_to_section[prop[0]], []).append(" ".join(prop))
+    else:
+        LOGGER.debug("property (ignored): %r", (prop,))
 
 
 class HTMLObjectParser(HTMLParser):

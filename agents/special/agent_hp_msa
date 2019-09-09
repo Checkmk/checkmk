@@ -157,6 +157,7 @@ class HPMSAConnection(object):
 
     def get(self, url_suffix):
         url = urljoin(self._base_url, url_suffix)
+        LOGGER.debug("GET %r", url)
         return self._session.get(url, timeout=self._timeout, verify=self._session.verify)
 
     def _login_v3(self, username, password):
@@ -165,15 +166,16 @@ class HPMSAConnection(object):
         login_hash.update("%s_%s" % (username, password))
         try:
             response = self.get("login/%s" % login_hash.hexdigest())
-        except requests.exceptions.ConnectionError:
-            raise SystemExit("Connection failed. Please verify host address & login details")
         except Exception as exc:
             if self._debug:
                 raise
-            raise SystemExit(exc)
-        else:
-            session_key = re.match('.*"response">(.*?)<.*', response.text).groups()[0]
-            return session_key
+            if isinstance(exc, requests.exceptions.ConnectionError):
+                raise SystemExit("Connection failed. Please verify host address & login details")
+            else:
+                raise SystemExit(exc)
+
+        session_key = re.match('.*"response">(.*?)<.*', response.text).groups()[0]
+        return session_key
 
 
 def main(argv=None):
@@ -189,7 +191,8 @@ def main(argv=None):
         try:
             parser.feed(response.text)
         except Exception:
-            continue
+            if args.debug:
+                raise
 
     # Output sections
     for section, lines in sections.iteritems():

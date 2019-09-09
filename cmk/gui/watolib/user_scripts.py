@@ -74,7 +74,7 @@ def _load_user_scripts_from(adir):
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}
                 try:
-                    lines = file(path)
+                    lines = open(path)
                     next(lines)
                     line = next(lines).decode("utf-8").strip()
                     if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):

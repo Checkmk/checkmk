@@ -517,7 +517,7 @@ for dirname, content in result_files.items():
         os.makedirs(filepath)
     for filename, text in content.items():
         print("Writing %s... %s" % (filepath, filename))
-        file("%s/%s" % (filepath, filename), "w").write(text)
+        open("%s/%s" % (filepath, filename), "w").write(text)
     print("")
 
 if unconverted_data or partial_unconverted_data:
@@ -526,7 +526,7 @@ if unconverted_data or partial_unconverted_data:
 ##################################################""")
 
     # Write all unconverted data into the file unconverted.info
-    file("unconverted.info", "w").write(unconverted_data + """
+    open("unconverted.info", "w").write(unconverted_data + """
     #############################
     #Partially unconverted data:#
     #############################

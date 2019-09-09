@@ -85,7 +85,7 @@ def load_config():
     global g_last_werk
     exec (open("config").read(), globals(), globals())
     try:
-        g_last_werk = int(file(".last").read())
+        g_last_werk = int(open(".last").read())
     except:
         g_last_werk = None
 
@@ -107,13 +107,13 @@ def load_werks():
 
 def save_last_werkid(id):
     try:
-        file(".last", "w").write("%d\n" % int(id))
+        open(".last", "w").write("%d\n" % int(id))
     except:
         pass
 
 
 def load_current_version():
-    for line in file("../defines.make"):
+    for line in open("../defines.make"):
         if line.startswith("VERSION"):
             version = line.split("=", 1)[1].strip()
             return version
@@ -147,7 +147,7 @@ def load_werk(werkid):
         "edition": "cre",
     }
 
-    f = file(str(werkid))
+    f = open(str(werkid))
     for line in f:
         line = line.strip()
         if line == "":
@@ -165,7 +165,7 @@ def load_werk(werkid):
 
 
 def save_werk(werk):
-    f = file(str(werk["id"]), "w")
+    f = open(str(werk["id"]), "w")
     f.write("Title: %s\n" % werk["title"])
     for key, val in werk.items():
         if key not in ["title", "description", "id"]:
@@ -752,7 +752,7 @@ def werk_cherry_pick(commit_id, no_commit):
 
 def get_werk_ids():
     try:
-        return eval(file('.my_ids', 'r').read())
+        return eval(open('.my_ids', 'r').read())
     except:
         return []
 
@@ -764,7 +764,7 @@ def invalidate_my_werkid(id):
 
 
 def store_werk_ids(l):
-    file('.my_ids', 'w').write(repr(l) + "\n")
+    open('.my_ids', 'w').write(repr(l) + "\n")
 
 
 def current_branch():
@@ -785,7 +785,7 @@ def main_fetch_ids(args):
 
     # Get the start werk_id to reserve
     try:
-        first_free = int(file('first_free').read().strip())
+        first_free = int(open('first_free').read().strip())
     except (IOError, ValueError):
         first_free = 0
 
@@ -813,7 +813,7 @@ def main_fetch_ids(args):
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids
-    file('first_free', 'w').write(str(new_first_free) + "\n")
+    open('first_free', 'w').write(str(new_first_free) + "\n")
 
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                      (num, len(my_ids)))

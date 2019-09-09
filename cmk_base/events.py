@@ -209,7 +209,7 @@ def event_log(logfile_path, message):
     if isinstance(message, str):
         message = message.decode("utf-8")
     formatted = u"%s %s\n" % (time.strftime("%F %T", time.localtime()), message)
-    file(logfile_path, "a").write(formatted.encode("utf-8"))
+    open(logfile_path, "a").write(formatted.encode("utf-8"))
 
 
 def find_host_service_in_context(context):

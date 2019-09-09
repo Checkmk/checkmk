@@ -38,13 +38,13 @@ def test_cfg(web, site):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/modes-test-host",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host2",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host3",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -224,7 +224,7 @@ def test_dump_agent_test(execute):
         p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
         assert p.stderr == ""
-        assert p.stdout == file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+        assert p.stdout == open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                                 repo_path()).read()
 
 

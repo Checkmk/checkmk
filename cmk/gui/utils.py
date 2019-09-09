@@ -133,7 +133,7 @@ def saveint(x):
 def get_random_string(size, from_ascii=48, to_ascii=90):
     """Generate a random string (no cryptographic safety)"""
     secret = ""
-    urandom = file("/dev/urandom")
+    urandom = open("/dev/urandom")
     while len(secret) < size:
         c = urandom.read(1)
         if ord(c) >= from_ascii and ord(c) <= to_ascii:
@@ -144,7 +144,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
 def gen_id():
     """Generates a unique id"""
     try:
-        return file('/proc/sys/kernel/random/uuid').read().strip()
+        return open('/proc/sys/kernel/random/uuid').read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback

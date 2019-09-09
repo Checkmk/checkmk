@@ -540,7 +540,7 @@ class JobStatus(object):
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
             if field_path.exists():  # pylint: disable=no-member
-                data["loginfo"][field_id] = file(str(field_path)).read().splitlines()
+                data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
             else:
                 data["loginfo"][field_id] = []
 

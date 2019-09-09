@@ -775,7 +775,7 @@ class EventServer(ECServerThread):
         ]
 
     def _virtual_memory_size(self):
-        parts = file('/proc/self/stat').read().split()
+        parts = open('/proc/self/stat').read().split()
         return int(parts[22])  # in Bytes
 
     def _add_replication_status(self):
@@ -3189,7 +3189,7 @@ class StatusServer(ECServerThread):
         # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with file(str(self.settings.paths.event_pipe.value), "w") as pipe:
+        with open(str(self.settings.paths.event_pipe.value), "w") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):

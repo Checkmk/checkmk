@@ -22,7 +22,7 @@ content = sys.argv[3]
 
 contacts = {}
 
-eval(file(contacts_mk).read())
+eval(open(contacts_mk).read())
 
 contacts[user_id][field] = content
 

@@ -98,7 +98,7 @@ def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     secret = ''
     if os.path.exists(secret_path):
-        secret = file(secret_path).read().strip()
+        secret = open(secret_path).read().strip()
 
     # Create new secret when this installation has no secret
     #
@@ -108,7 +108,7 @@ def load_secret():
     # renew their login after update.
     if secret == '' or len(secret) == 32:
         secret = generate_secret()
-        file(secret_path, 'w').write(secret)
+        open(secret_path, 'w').write(secret)
 
     return secret
 
@@ -310,7 +310,7 @@ def check_auth_automation():
     html.request.del_var('_secret')
     if secret and user_id and "/" not in user_id:
         path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
-        if os.path.isfile(path) and file(path).read().strip() == secret:
+        if os.path.isfile(path) and open(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.transaction_manager.ignore()
             set_auth_type("automation")

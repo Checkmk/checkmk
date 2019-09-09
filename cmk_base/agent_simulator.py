@@ -31,7 +31,7 @@ import cmk.utils.debug
 
 
 def our_uptime():
-    return float((file("/proc/uptime").read().split()[0]))
+    return float((open("/proc/uptime").read().split()[0]))
 
 
 # replace simulator tags in output

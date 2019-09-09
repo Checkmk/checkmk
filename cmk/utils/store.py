@@ -189,7 +189,7 @@ def load_data_from_file(path, default=None, lock=False):
 
     try:
         try:
-            content = file(path).read().strip()
+            content = open(path).read().strip()
             if not content:
                 # May be created empty during locking
                 return default
@@ -273,7 +273,7 @@ def save_file(path, content, mode=0o660):
             # successful loading of the just written fille the possibly existing copies of this
             # file are deleted.
             # We can archieve this by calling os.link() before the os.rename() below. Then we need
-            # to define in which situations we want to check out the backup file(s) and in which
+            # to define in which situations we want to check out the backup open(s) and in which
             # cases we can savely delete them.
             #tmp.flush()
             #os.fsync(tmp.fileno())

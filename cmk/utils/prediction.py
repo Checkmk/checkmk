@@ -240,7 +240,7 @@ def clean_prediction_files(pred_file, force=False):
 
 def retrieve_data_for_prediction(info_file, timegroup):
     try:
-        return json.loads(file(info_file).read())
+        return json.loads(open(info_file).read())
     except IOError:
         logger.log(VERBOSE, "No previous prediction for group %s available.", timegroup)
     except ValueError:

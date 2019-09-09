@@ -145,7 +145,7 @@ class AutochecksManager(object):
         try:
             cmk_base.console.vverbose("Loading autochecks from %s\n", filepath)
             autochecks_raw = eval(
-                file(filepath).read().decode("utf-8"), check_config,
+                open(filepath).read().decode("utf-8"), check_config,
                 check_config)  # type: List[Dict]
         except SyntaxError as e:
             cmk_base.console.verbose("Syntax error in file %s: %s\n",

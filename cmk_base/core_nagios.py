@@ -919,7 +919,7 @@ def stripped_python_file(filename):
     if filename in g_stripped_file_cache:
         return g_stripped_file_cache[filename]
     a = ""
-    for line in file(filename):
+    for line in open(filename):
         l = line.strip()
         if l == "" or l[0] != '#':
             a += line  # not stripped line because of indentation!
@@ -948,7 +948,7 @@ def _precompile_hostcheck(config_cache, hostname):
         console.verbose("(no Check_MK checks)\n")
         return
 
-    output = file(source_filename + ".new", "w")
+    output = open(source_filename + ".new", "w")
     output.write("#!/usr/bin/env python\n")
     output.write("# encoding: utf-8\n\n")
 
@@ -1077,7 +1077,7 @@ if '-d' in sys.argv:
     # code has not changed. The Python compilation is the most costly
     # operation here.
     if os.path.exists(source_filename):
-        if file(source_filename).read() == file(source_filename + ".new").read():
+        if open(source_filename).read() == open(source_filename + ".new").read():
             console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
             os.remove(source_filename + ".new")
             return

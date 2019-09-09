@@ -138,7 +138,7 @@ def _write_alias(lang, alias):
     if alias == '-':
         os.remove(_alias_file(lang))
     else:
-        file(_alias_file(lang), 'w').write(alias)
+        open(_alias_file(lang), 'w').write(alias)
 
 
 def _check_binaries():
@@ -270,8 +270,8 @@ def _localize_update(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(
-            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        open(po_file, 'w').write(
+            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     _localize_sniff()
@@ -298,8 +298,8 @@ def _localize_compile(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(
-            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        open(po_file, 'w').write(
+            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     if not os.path.exists(po_file):

@@ -12,11 +12,11 @@
 # tmpfs  /opt/omd/sites/heute/tmp tmpfs noauto,user,mode=755,uid=heute,gid=heute 0 0
 
 from __future__ import print_function
-mounted = [l.split()[1] for l in file("/proc/mounts")]
+mounted = [l.split()[1] for l in open("/proc/mounts")]
 
 missing = []
 count = 0
-for line in file("/etc/fstab"):
+for line in open("/etc/fstab"):
     if not line.strip() or line.strip().startswith("#"):
         continue
 

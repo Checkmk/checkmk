@@ -223,7 +223,7 @@ def do_notify(options, args):
         crash_dir = cmk.utils.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
-        file(crash_dir + "/crash.log", "a").write(
+        open(crash_dir + "/crash.log", "a").write(
             "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
@@ -1523,7 +1523,7 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
     bulk_dirname = create_bulk_dirname(bulk_path)
     uuid = fresh_uuid()
     filename = bulk_dirname + "/" + uuid
-    file(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
+    open(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     notify_log("        - stored in %s" % filename)
 
@@ -1934,7 +1934,7 @@ def notify_log_debug(message):
 
 def fresh_uuid():
     try:
-        return file('/proc/sys/kernel/random/uuid').read().strip()
+        return open('/proc/sys/kernel/random/uuid').read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback

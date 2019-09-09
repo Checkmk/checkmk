@@ -715,7 +715,7 @@ def packaged_files_in_dir(part):
 
 def read_package_info(pacname):
     try:
-        package = parse_package_info(file(_pac_dir() + pacname).read())
+        package = parse_package_info(open(_pac_dir() + pacname).read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
@@ -729,7 +729,7 @@ def read_package_info(pacname):
 
 
 def write_package_info(package):
-    file(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
+    open(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
 
 
 def remove_package_info(pacname):

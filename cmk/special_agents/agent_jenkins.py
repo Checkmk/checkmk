@@ -33,8 +33,8 @@ import requests
 Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 JenkinsJobInfo = namedtuple("job_info", [
-    "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
-    "build_timestamp"
+    "displayNameOrNull", "name", "state", "job_score", "last_suc_build", "build_id", "build_result",
+    "build_duration", "build_timestamp"
 ])
 
 
@@ -52,7 +52,7 @@ def main():
             name="jobs",
             key="jobs",
             uri=
-            "/api/json?tree=jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
+            "/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
         ),
         Section(
             name="nodes",

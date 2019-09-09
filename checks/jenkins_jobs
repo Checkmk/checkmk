@@ -35,8 +35,8 @@
 import json
 
 JenkinsJobInfo = collections.namedtuple("job_info", [
-    "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
-    "build_timestamp"
+    "display_name", "name", "state", "job_score", "last_suc_build", "build_id", "build_result",
+    "build_duration", "build_timestamp"
 ])
 
 MAP_JOB_STATES = {
@@ -79,9 +79,15 @@ def parse_jenkins_jobs(info):
 
 @get_parsed_item_data
 def check_jenkins_jobs(item, params, item_data):
+    display_name = item_data[0].display_name
+    if display_name is not None:
+        yield 0, "Display name: %s" % display_name
+
     job_state = item_data[0].state
-    yield params.get("job_state",
-                     {}).get(job_state, MAP_JOB_STATES[job_state]), "State: %s" % job_state.title()
+    if job_state is not None:
+        yield params.get("job_state",
+                         {}).get(job_state,
+                                 MAP_JOB_STATES[job_state]), "State: %s" % job_state.title()
 
     time_since_last_suc = None
     if item_data[0].last_suc_build:
@@ -150,8 +156,8 @@ def handle_single_job(job):
         last_bd = None
         last_bt = None
 
-    return JenkinsJobInfo(job["name"], job["color"], health_rp, last_sb, last_bn, last_br, last_bd,
-                          last_bt)
+    return JenkinsJobInfo(job["displayNameOrNull"], job["name"], job["color"], health_rp, last_sb,
+                          last_bn, last_br, last_bd, last_bt)
 
 
 def handle_job_type(data, new_dict, folder=""):
@@ -161,7 +167,7 @@ def handle_job_type(data, new_dict, folder=""):
                 "com.cloudbees.hudson.plugins.folder.Folder",
                 "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
         ]:
-            item_name += "%s " % job_type["name"]
+            item_name += "%s/" % job_type["name"]
             if job_type.get("jobs") is not None:
                 handle_job_type(job_type["jobs"], new_dict, item_name)
             continue

@@ -1,0 +1,15 @@
+Title: Fix CRIT criterion for k8s_pod_container
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1568041019
+Class: fix
+
+Cleanly terminated containers would erroneously mark the
+check CRIT.  Now, the check is only CRIT when a container
+exited with a non-zero error code, otherwise it remains OK.
+The check now reports more information: the number of
+running containers, the number of waiting containers, and
+the number of terminated containers.

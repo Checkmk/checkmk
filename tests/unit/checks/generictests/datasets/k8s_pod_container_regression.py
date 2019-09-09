@@ -1,16 +1,34 @@
 # yapf: disable
 
+checkname = "k8s_pod_container"
 
-checkname = 'k8s_pod_container'
+parsed = {
+    u"pi": {
+        u"image_pull_policy": u"Always",
+        u"state_reason": u"Completed",
+        u"image": u"perl",
+        u"container_id": u"94d698838e88b72fdaf7b48dd7c227f5d36915c3279af6b1da33d397cef0c276",
+        u"restart_count": 0,
+        u"image_id": u"docker-pullable://perl@sha256:5cada8a3709c245b0256a4d986801e598abf95576eb01767bde94d567e23104e",
+        u"state": u"terminated",
+        u"ready": False,
+        u"state_exit_code": 0,
+    }
+}
 
+discovery = {"": [(None, {})]}
 
-info = [[u'{"nginx": {"image_pull_policy": "IfNotPresent", "image": "nginx:1.7.9", "container_id": "87cc3642854cc8810e24ca49b4c9ce5a03aee5076284d0945524c229289740a2", "restart_count": 1, "image_id": "docker-pullable://nginx@sha256:e3456c851a152494c3e4ff5fcc26f240206abac0c9d794affb40e0714846c451", "ready": true}}']]
-
-
-discovery = {'': [(None, {})]}
-
-
-checks = {'': [(None,
-                {},
-                [(0, 'Ready: 1/1', [('docker_all_containers', 1, None, None, 0, 1),
-                                    ('ready_containers', 1, None, None, 0, 1)])])]}
+checks = {
+    "": [(
+        None,
+        {},
+        [(
+            0,
+            "Ready: 0/1, Running: 0, Waiting: 0, Terminated: 1",
+            [
+                ("docker_all_containers", 1, None, None, 0, 1),
+                ("ready_containers", 0, None, None, 0, 1),
+            ],
+        )],
+    )]
+}

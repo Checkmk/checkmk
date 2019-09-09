@@ -4,9 +4,13 @@ catalog: containerization/kubernetes
 license: GPL
 distribution: check_mk
 description:
- This check monitors the total number and the number of
- ready containers of a pod. A container is ready if it
- passes its readiness probe.
+ This check monitors the number of containers of a pod.
+ If containers terminated with a non-zero exit code, then
+ the check is {CRIT}, otherwise is is OK.
+
+ The check returns the number of ready over total
+ containers, and the number of running, waiting, and
+ terminated containers.
 
  To account for the initial setup of the container or the
  switch of a Pod from one to another the ruleset

@@ -1258,6 +1258,37 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
             seen_titles.append(entry["title"])
 
 
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfiguration(RulespecGroup):
+    @property
+    def name(self):
+        return "monconf"
+
+    @property
+    def title(self):
+        return _("Monitoring Configuration")
+
+    @property
+    def help(self):
+        return _(
+            "Intervals for checking, retries, clustering, configuration for inventory and similar")
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "service_checks"
+
+    @property
+    def title(self):
+        return _("Service Checks")
+
+
 @rulespec_registry.register
 class RulespecCustomServiceAttributes(ServiceRulespec):
     @property
@@ -1386,6 +1417,21 @@ class RulespecServiceLabels(ServiceRulespec):
             title=_("Service labels"),
             help=_("Use this ruleset to assign labels to service of your choice."),
         )
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "host_checks"
+
+    @property
+    def title(self):
+        return _("Host Checks")
 
 
 @rulespec_registry.register
@@ -2873,37 +2919,6 @@ class RulespecServiceContactgroups(ServiceRulespec):
         return ContactGroupSelection(title=_("Assignment of services to contact groups"),)
 
 
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfiguration(RulespecGroup):
-    @property
-    def name(self):
-        return "monconf"
-
-    @property
-    def title(self):
-        return _("Monitoring Configuration")
-
-    @property
-    def help(self):
-        return _(
-            "Intervals for checking, retries, clustering, configuration for inventory and similar")
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "service_checks"
-
-    @property
-    def title(self):
-        return _("Service Checks")
-
-
 @rulespec_registry.register
 class RulespecExtraServiceConfMaxCheckAttempts(ServiceRulespec):
     @property
@@ -3109,21 +3124,6 @@ class RulespecExtraServiceConfActiveChecksEnabled(ServiceRulespec):
                    "active checks for a service."),
             choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
         )
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "host_checks"
-
-    @property
-    def title(self):
-        return _("Host Checks")
 
 
 @rulespec_registry.register

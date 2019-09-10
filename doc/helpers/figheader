@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import sys
 import subprocess
@@ -41,8 +41,10 @@ def create_output(args):
 
     output = [first_line + '-' * (width - len(first_line) - 1) + '.']
     for line in subprocess.Popen(
-        ["figlet", "-c", "-w", "%s" % (width - 7), title], shell=False,
-            stdout=subprocess.PIPE).stdout:
+        ["figlet", "-c", "-w", "%s" % (width - 7), title],
+            shell=False,
+            stdout=subprocess.PIPE,
+            encoding="utf-8").stdout:
         output.append((cont + "|%-" + str(width - len(cont) - 2) + "s|") % line[:-1])
 
     if not args.no_subtitle:

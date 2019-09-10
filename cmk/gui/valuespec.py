@@ -1515,7 +1515,6 @@ class ListOfMultiple(ValueSpec):
 
         html.close_tbody()
         html.close_table()
-        html.br()
 
         choices = [('', '')] + [(ident, vs.title()) for ident, vs in self._choices]
         html.dropdown(varprefix + '_choice',

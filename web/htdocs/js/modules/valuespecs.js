@@ -617,6 +617,10 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 active.value += ";"+ident;
             else
                 active.value = ident;
+
+            // Put in a line break following the table if the added row is the first
+            if (tbody.childNodes.length == 1)
+                table.after(document.createElement("br"));
         }
     });
 }
@@ -624,7 +628,8 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
 export function listofmultiple_del(varprefix, ident) {
     // make the filter invisible
     var row = document.getElementById(varprefix + "_" + ident + "_row");
-    row.parentNode.removeChild(row);
+    var tbody = row.parentNode;
+    tbody.removeChild(row);
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + "_choice");
@@ -647,6 +652,14 @@ export function listofmultiple_del(varprefix, ident) {
         }
     }
     active.value = l.join(";");
+
+    // Remove the line break following the table if the deleted row was the last
+    if (tbody.childNodes.length == 0) {
+        var table = document.getElementById(varprefix + "_table");
+        var br = table.nextSibling;
+        if (br.nodeName == "BR")
+            br.parentNode.removeChild(br);
+    }
 }
 
 export function listofmultiple_init(varprefix) {

@@ -164,8 +164,13 @@ class HPMSAConnection(object):
 
     def get(self, url_suffix):
         url = urljoin(self._base_url, url_suffix)
-        LOGGER.debug("GET %r", url)
-        return self._session.get(url, timeout=self._timeout, verify=self._session.verify)
+        LOGGER.info("GET %r", url)
+        response = self._session.get(url, timeout=self._timeout, verify=self._session.verify)
+        if response.status_code != 200:
+            LOGGER.warning("RESPONSE.status_code, reason: %r",
+                           (response.status_code, response.reason))
+        LOGGER.debug("RESPONSE.text\n%s", response.text)
+        return response
 
     def _login_v3(self, username, password):
         self._base_url = "https://%s/v3/api/" % self._host

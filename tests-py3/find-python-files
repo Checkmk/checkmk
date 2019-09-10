@@ -17,6 +17,7 @@ SEARCH+=" enterprise"
 SEARCH+=" inventory"
 SEARCH+=" livestatus"
 SEARCH+=" managed"
+SEARCH+=" locale"
 SEARCH+=" notifications"
 # Do not search whole omd/ because it may contain unpacked sub-packages
 SEARCH+=" omd/packages/appliance"

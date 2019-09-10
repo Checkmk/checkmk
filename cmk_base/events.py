@@ -705,11 +705,6 @@ def add_context_to_environment(plugin_context, prefix):
         os.putenv(prefix + key, plugin_context[key].encode('utf-8'))
 
 
-def remove_context_from_environment(plugin_context, prefix):
-    for key in plugin_context:
-        os.unsetenv(prefix + key)
-
-
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters
 #  into a flat contextlist for use as environment variables in plugins
 #

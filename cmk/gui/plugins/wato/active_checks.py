@@ -1802,7 +1802,7 @@ class RulespecActiveChecksBiAggr(ABCHostValueRulespec):
     def match_type(self):
         return "all"
 
-    def transform_from_disk(self, value):
+    def _transform_from_disk(self, value):
         if isinstance(value, dict):
             return value
         new_value = {}
@@ -1914,7 +1914,7 @@ class RulespecActiveChecksBiAggr(ABCHostValueRulespec):
                      ])),
             ],
             optional_keys=False),
-                         forth=self.transform_from_disk)
+                         forth=self._transform_from_disk)
 
 
 @rulespec_registry.register

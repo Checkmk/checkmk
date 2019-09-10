@@ -1,0 +1,12 @@
+Title: mk_logwatch: Do not crash upon non-matching optional subgroups and rewrites
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b10
+Date: 1568121673
+
+The agent plugin mk_logwatch crashed in case you had rewrite patterns defined and the
+triggering regular expression contained non-matching optional subgroups.

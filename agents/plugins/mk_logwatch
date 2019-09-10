@@ -621,7 +621,8 @@ def process_logfile(logfile, patterns, opt, status):
                 for replace in replacements:
                     line = replace.replace('\\0', line.rstrip()) + "\n"
                     for num, group in enumerate(matches.groups()):
-                        line = line.replace('\\%d' % (num + 1), group)
+                        if group is not None:
+                            line = line.replace('\\%d' % (num + 1), group)
 
                 break  # matching rule found and executed
 

@@ -1,0 +1,10 @@
+Title: Fix timeperiod iCalendar (ics) import
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568129659
+Class: fix
+
+The import was not possible in previous 1.6 versions.

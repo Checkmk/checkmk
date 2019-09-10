@@ -398,24 +398,37 @@ class ModeTimeperiodImportICal(WatoMode):
                 raise
             raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
 
-        html.request.set_var('alias', data.get('descr', data.get('name', filename)))
+        # TODO: This is kind of a hack that we "fake" a HTTP request structure here.
+        # Find a better way to hand over the whole data structure directly to the
+        # edit_timeperiod code
+
+        html.request.set_var('timeperiod_p_alias', data.get('descr', data.get('name', filename)))
 
         for day in defines.weekday_ids():
             html.request.set_var('%s_0_from' % day, '')
             html.request.set_var('%s_0_until' % day, '')
 
-        html.request.set_var('except_count', "%d" % len(data['events']))
+        # Default to whole day
+        if not ical["times"]:
+            ical["times"] = [((0, 0), (24, 0))]
+
+        html.request.set_var('timeperiod_p_exceptions_count', "%d" % len(data['events']))
         for index, event in enumerate(data['events']):
             index += 1
-            html.request.set_var('except_%d_0' % index, event['date'])
-            html.request.set_var('except_indexof_%d' % index, "%d" % index)
+            html.request.set_var('timeperiod_p_exceptions_%d_0' % index, event['date'])
+            html.request.set_var('timeperiod_p_exceptions_indexof_%d' % index, "%d" % index)
 
-            if ical["times"]:
-                for n, time_spec in enumerate(ical["times"]):
-                    start_time = ":".join("%02d" % x for x in time_spec[0])
-                    end_time = ":".join("%02d" % x for x in time_spec[1])
-                    html.request.set_var('except_%d_1_%d_from' % (index, n), start_time)
-                    html.request.set_var('except_%d_1_%d_until' % (index, n), end_time)
+            html.request.set_var('timeperiod_p_exceptions_%d_1_count' % index,
+                                 "%d" % len(ical["times"]))
+            for n, time_spec in enumerate(ical["times"]):
+                n += 1
+                start_time = ":".join("%02d" % x for x in time_spec[0])
+                end_time = ":".join("%02d" % x for x in time_spec[1])
+                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_from' % (index, n),
+                                     start_time)
+                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_until' % (index, n), end_time)
+                html.request.set_var('timeperiod_p_exceptions_%d_1_indexof_%d' % (index, n),
+                                     "%d" % index)
 
         return "edit_timeperiod"
 

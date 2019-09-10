@@ -43,9 +43,9 @@ cleanup-%:
 	sed -i '/"PO-Revision-Date:/d' $$L/LC_MESSAGES/multisite.po ; \
 	sed -i '/"Last-Translator:/d' $$L/LC_MESSAGES/multisite.po ; \
 
-de:
+de: ../virtual-envs/3.7/.venv
 	$(MAKE) update-$@
-	./add-authors $@
+	$(PIPENV) run ./add-authors $@
 	POEDITOR=$$(which poedit 2>/dev/null || which virtaal 2>/dev/null) ; \
 	if [ -z "$$POEDITOR" ]; then \
 	    echo "ERROR: Unable to find PO file editor (poedit or virtual)" ; \

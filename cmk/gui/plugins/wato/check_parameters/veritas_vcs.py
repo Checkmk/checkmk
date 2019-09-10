@@ -32,14 +32,14 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 
 
 @rulespec_registry.register
-class RulespecCheckgroupParametersVeritasVcs(CheckParameterRulespecWithoutItem):
+class RulespecCheckgroupParametersVeritasVcs(CheckParameterRulespecWithItem):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications

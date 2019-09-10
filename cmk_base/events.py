@@ -717,11 +717,11 @@ def remove_context_from_environment(plugin_context, prefix):
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(plugin_context, prefix, param, log_function):
+def add_to_event_context(plugin_context, prefix, param):
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param):
-            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value, log_function)
+            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
     elif isinstance(param, dict):
         for key, value in param.items():
             varname = "%s_%s" % (prefix, key.upper())
@@ -735,7 +735,7 @@ def add_to_event_context(plugin_context, prefix, param, log_function):
                 if value is None:
                     continue
 
-            add_to_event_context(plugin_context, varname, value, log_function)
+            add_to_event_context(plugin_context, varname, value)
     else:
         plugin_context[prefix] = plugin_param_to_string(param)
 

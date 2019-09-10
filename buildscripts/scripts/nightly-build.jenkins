@@ -460,7 +460,7 @@ def upload_package(FILE_PATH, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_
                 rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
                     ${FILE_PATH} \
-                    bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                    ${UPLOAD_DEST}
             """
         } else {
             def FILE_BASE = sh(script: "dirname " + FILE_PATH, returnStdout: true).toString().trim()

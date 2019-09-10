@@ -119,7 +119,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 @pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
     (
         [
-            u'',
             u'/var/log/messages',
             u' C Fail event detected on md device',
             u' I mdadm.*: Rebuild.*event detected',
@@ -144,7 +143,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'',
             u'/var/log/auth.log',
             u' W sshd.*Corrupted MAC on input',
         ],

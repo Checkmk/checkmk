@@ -207,6 +207,7 @@ class ConfigInfo {
     };
 
 public:
+    using sptr = std::shared_ptr<ConfigInfo>;
     ConfigInfo() {}
     ConfigInfo(const ConfigInfo&) = delete;
     ConfigInfo& operator=(const ConfigInfo&) = delete;
@@ -434,4 +435,12 @@ std::wstring FindMsiExec() noexcept;
 std::string FindHostName() noexcept;
 }  // namespace details
 details::ConfigInfo& GetCfg();
+}  // namespace cma::cfg
+
+namespace cma::cfg {
+using CfgNode = cma::cfg::details::ConfigInfo::sptr;
+
+CfgNode CreateNode(const std::string& name);
+CfgNode GetNode(const std::string& name);
+bool RemoveNode(const std::string& name);
 }  // namespace cma::cfg

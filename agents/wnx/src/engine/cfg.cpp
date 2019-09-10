@@ -15,6 +15,7 @@
 #include "cfg.h"
 #include "cfg_details.h"
 #include "common/cfg_info.h"
+#include "common/object_repo.h"
 #include "common/version.h"
 #include "common/wtools.h"
 #include "logger.h"
@@ -26,7 +27,21 @@
 #include "windows_service_api.h"
 #include "yaml-cpp/yaml.h"
 
+namespace cma::cfg {
+using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;
+extern ConfigRepo cfgs;
+ConfigRepo cfgs;
+
+CfgNode CreateNode(const std::string& name) { return cfgs.createObject(name); }
+
+CfgNode GetNode(const std::string& name) { return cfgs.getObject(name); }
+
+bool RemoveNode(const std::string& name) { return cfgs.removeObject(name); }
+
+}  // namespace cma::cfg
+
 namespace cma {
+
 namespace details {
 
 // internal and hidden global variables

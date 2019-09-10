@@ -140,6 +140,9 @@
     <ClCompile Include="test-health.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-object_repo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\test_files\config\check_mk.old.example.yml">

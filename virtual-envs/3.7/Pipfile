@@ -23,6 +23,7 @@ pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
 yapf = "*"  # used for editor integration and the format-python Makefile target
+polib = "*" # used by locale/add-authors for working with .po files
 
 [packages]
 setuptools_scm = "==3.3.3"  # needed by various setup.py

@@ -39,17 +39,19 @@ def test_config():
 
 
 def test_get_piggyback_raw_data_no_data():
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, "nohost") == []
+    assert piggyback.get_piggyback_raw_data("no-host", piggyback_max_cachefile_age) == []
 
 
 def test_get_piggyback_raw_data():
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age,
-                                            "test-host") == [('source1', '<<<check_mk>>>\nlala\n')]
+    assert piggyback.get_piggyback_raw_data("test-host", piggyback_max_cachefile_age) == [
+        ('source1', '<<<check_mk>>>\nlala\n')
+    ]
 
 
 def test_get_piggyback_raw_data_outdate_old_pigs():
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age,
-                                            "test-host") == [('source1', '<<<check_mk>>>\nlala\n')]
+    assert piggyback.get_piggyback_raw_data("test-host", piggyback_max_cachefile_age) == [
+        ('source1', '<<<check_mk>>>\nlala\n')
+    ]
 
     # Fake age the test-host piggyback file
     os.utime(str(cmk.utils.paths.piggyback_dir / "test-host" / "source1"),
@@ -60,22 +62,23 @@ def test_get_piggyback_raw_data_outdate_old_pigs():
         u"lulu",
     ]})
 
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, "test-host") == []
+    assert piggyback.get_piggyback_raw_data("test-host", piggyback_max_cachefile_age) == []
 
 
 def test_get_piggyback_raw_data_source_not_sending_anymore():
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age,
-                                            "test-host") == [('source1', '<<<check_mk>>>\nlala\n')]
+    assert piggyback.get_piggyback_raw_data("test-host", piggyback_max_cachefile_age) == [
+        ('source1', '<<<check_mk>>>\nlala\n')
+    ]
     piggyback.store_piggyback_raw_data("source1", {})
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, "test-host") == []
+    assert piggyback.get_piggyback_raw_data("test-host", piggyback_max_cachefile_age) == []
 
 
 def test_has_piggyback_raw_data_no_data():
-    assert piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, "nohost") is False
+    assert piggyback.has_piggyback_raw_data("no-host", piggyback_max_cachefile_age) is False
 
 
 def test_has_piggyback_raw_data():
-    assert piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, "test-host") is True
+    assert piggyback.has_piggyback_raw_data("test-host", piggyback_max_cachefile_age) is True
 
 
 def test_remove_source_status_file_not_existing():
@@ -92,7 +95,7 @@ def test_store_piggyback_raw_data_new_host():
         u"lulu",
     ]})
 
-    assert piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, "pig") == [
+    assert piggyback.get_piggyback_raw_data("pig", piggyback_max_cachefile_age) == [
         ('source2', '<<<check_mk>>>\nlulu\n'),
     ]
 
@@ -103,8 +106,8 @@ def test_store_piggyback_raw_data_second_source():
         u"lulu",
     ]})
 
-    assert sorted(piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age,
-                                                   "test-host")) == sorted([
+    assert sorted(piggyback.get_piggyback_raw_data("test-host",
+                                                   piggyback_max_cachefile_age)) == sorted([
                                                        ('source1', '<<<check_mk>>>\nlala\n'),
                                                        ('source2', '<<<check_mk>>>\nlulu\n'),
                                                    ],)

@@ -2102,7 +2102,7 @@ class HostConfig(object):
 
     @property
     def has_piggyback_data(self):
-        if piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname):
+        if piggyback.has_piggyback_raw_data(self.hostname, piggyback_max_cachefile_age):
             return True
 
         from cmk_base.data_sources.abstract import has_persisted_agent_sections

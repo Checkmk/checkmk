@@ -38,8 +38,8 @@ import cmk_base.utils
 import cmk_base.console as console
 
 
-def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
-    # type: (int, str) -> List[Tuple[str, str]]
+def get_piggyback_raw_data(hostname, piggyback_max_cachefile_age):
+    # type: (str, int) -> List[Tuple[str, str]]
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -50,8 +50,8 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
         return []
 
     piggyback_data = []
-    for source_host, piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age,
-                                                                 hostname):
+    for source_host, piggyback_file_path in _get_piggyback_files(hostname,
+                                                                 piggyback_max_cachefile_age):
         try:
             raw_data = file(piggyback_file_path).read()
         except IOError as e:
@@ -70,18 +70,18 @@ def get_source_and_piggyback_hosts(piggyback_max_cachefile_age):
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggyback_dir in cmk.utils.paths.piggyback_dir.glob("*"):  # pylint: disable=no-member
         piggybacked_host = piggyback_dir.name
-        for source_host, _piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age,
-                                                                      piggybacked_host):
+        for source_host, _piggyback_file_path in _get_piggyback_files(piggybacked_host,
+                                                                      piggyback_max_cachefile_age):
             yield source_host, piggybacked_host
 
 
-def has_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
-    # type: (int, str) -> bool
-    return _get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
+def has_piggyback_raw_data(hostname, piggyback_max_cachefile_age):
+    # type: (str, int) -> bool
+    return _get_piggyback_files(hostname, piggyback_max_cachefile_age) != []
 
 
-def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
-    # type: (int, str) -> List[Tuple[str, str]]
+def _get_piggyback_files(hostname, piggyback_max_cachefile_age):
+    # type: (str, int) -> List[Tuple[str, str]]
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the

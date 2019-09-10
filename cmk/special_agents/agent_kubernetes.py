@@ -428,8 +428,8 @@ class Pod(Metadata):
                 'ready': False,
                 'restart_count': 0,
                 'state': None,
-                'state_reason': None,
-                'state_exit_code': None,
+                'state_reason': "",
+                'state_exit_code': 0,
                 'container_id': None,
                 'image_id': None,
             } for container in self._containers

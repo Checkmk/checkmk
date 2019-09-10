@@ -1,0 +1,14 @@
+Title: Fix folding of rule condition containers
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568268161
+Class: fix
+
+Since the explicit / predefined condition toggle was introduced, there were
+some glitches in the foldable container mechanism of the rules conditions.
+
+This problem has now been solved and on the way the toggling mechanism of
+the foldable container has been simplified.

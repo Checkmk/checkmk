@@ -1138,7 +1138,7 @@ table.nform {
     background-image: none;
   }
 
-  tr.closed {
+  tbody.closed {
     display: none;
   }
 
@@ -1180,7 +1180,7 @@ table.nform {
     }
   }
 
-  tr.open td.legend {
+  tr td.legend {
     width: 320px;
     min-width: 320px;
     padding-right: 8px;

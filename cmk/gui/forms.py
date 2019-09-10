@@ -34,7 +34,6 @@ from cmk.gui.exceptions import MKUserError
 
 g_header_open = False
 g_section_open = False
-g_section_isopen = False
 
 
 # A input function with the same call syntax as htmllib.textinput()
@@ -238,20 +237,20 @@ def edit_valuespec(vs,
 
 
 def header(title, isopen=True, table_id="", narrow=False, css=None):
-    global g_header_open, g_section_open, g_section_isopen
+    global g_header_open, g_section_open
     if g_header_open:
         end()
 
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
 
-    g_section_isopen = html.begin_foldable_container(
+    html.begin_foldable_container(
         treename=html.form_name if html.form_name else "nform",
         id_=base64.b64encode(title.encode("utf-8") if isinstance(title, unicode) else title),
         isopen=isopen,
         title=title,
         indent="nform")
-    html.tr(html.render_td('', colspan=2), class_=["top", "open" if g_section_isopen else "closed"])
+    html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
 
@@ -262,7 +261,7 @@ def container():
     if g_section_open:
         html.close_td()
         html.close_tr()
-    html.open_tr(class_="open" if g_section_isopen else "closed")
+    html.open_tr()
     html.open_td(colspan=2, class_=container)
     g_section_open = True
 
@@ -282,9 +281,7 @@ def section(title=None,
     if g_section_open:
         html.close_td()
         html.close_tr()
-    html.open_tr(id_=section_id,
-                 class_=["open" if g_section_isopen else "closed", css],
-                 style="display:none;" if hide else None)
+    html.open_tr(id_=section_id, class_=[css], style="display:none;" if hide else None)
 
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
@@ -316,6 +313,6 @@ def end():
         html.close_td()
         html.close_tr()
     html.end_foldable_container()
-    html.tr(html.render_td('', colspan=2),
-            class_=["bottom", "open" if g_section_isopen else "closed"])
+    html.tr(html.render_td('', colspan=2), class_=["bottom"])
+    html.close_tbody()
     html.close_table()

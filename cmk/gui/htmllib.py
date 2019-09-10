@@ -489,8 +489,8 @@ class HTMLGenerator(OutputFunnel):
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set([
         'html', 'head', 'body', 'header', 'footer', 'a', 'b', 'sup', 'script', 'form', 'button',
-        'p', 'select', 'fieldset', 'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input',
-        'span', 'tags', 'tag'
+        'p', 'select', 'fieldset', 'table', 'tbody', 'thead', 'row', 'ul', 'li', 'br', 'nobr',
+        'input', 'span', 'tags', 'tag'
     ])
 
     # Of course all shortcut tags can be used as well.
@@ -2492,12 +2492,15 @@ class html(HTMLGenerator):
                     % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
 
         img_id = "treeimg.%s.%s" % (treename, id_)
+        container_id = "tree.%s.%s" % (treename, id_)
 
         if indent == "nform":
+            self.open_thead()
             self.open_tr(class_="heading")
             self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
             if icon:
-                self.img(class_=["treeangle", "title"],
+                self.img(id_=img_id,
+                         class_=["treeangle", "title"],
                          src="themes/%s/images/icon_%s.png" % (self._theme, icon))
             else:
                 self.img(id_=img_id,
@@ -2507,11 +2510,13 @@ class html(HTMLGenerator):
             self.write_text(title)
             self.close_td()
             self.close_tr()
+            self.close_thead()
+            self.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
         else:
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(id_="treeimg.%s.%s" % (treename, id_),
+                self.img(id_=img_id,
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
                          align="absbottom",
@@ -2542,7 +2547,7 @@ class html(HTMLGenerator):
                 self.close_tr()
                 self.close_table()
                 indent_style += "margin: 0; "
-            self.open_ul(id_="tree.%s.%s" % (treename, id_),
+            self.open_ul(id_=container_id,
                          class_=["treeangle", "open" if isopen else "closed"],
                          style=indent_style)
 

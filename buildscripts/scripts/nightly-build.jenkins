@@ -31,7 +31,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download'
+def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/' + CMK_VERS
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
 def ARCHIVE_DIR = ''
@@ -46,7 +46,7 @@ if (shall_publish_package(scm, JOB_BASE_NAME)) {
 }
 
 def DOCKER_BASE_ARGS = "-u 0:0 --ulimit nofile=1024:1024 --network ci_local-infra"
-def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA}"
+def DOCKER_ARGS = "${DOCKER_BASE_ARGS} -v ${DAILY_DATA}:${DAILY_DATA} -v ${ARCHIVE_DIR}:${ARCHIVE_DIR}"
 
 //
 // MAIN

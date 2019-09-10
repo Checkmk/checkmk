@@ -65,7 +65,7 @@ def check_tcp_connections(item, params, parsed):
         return
 
     perfdata = []
-    for tcp_state, tcp_count in parsed.iteritems():
+    for tcp_state, tcp_count in sorted(parsed.iteritems()):
         warn, crit = params.get(tcp_state, (None, None))
 
         # We must append all states (regardless of their value --> even if 0) to the perfdata list

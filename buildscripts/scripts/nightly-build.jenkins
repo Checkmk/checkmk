@@ -30,7 +30,7 @@ def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
-def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/' + CMK_VERS
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
@@ -95,7 +95,7 @@ parallel AGENT_BUILDS
 
 node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_DIR}:${RELEASE_KEY_DIR}:ro") {
+        docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(DAILY_DATA)
 
@@ -107,7 +107,7 @@ node {
 
             cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
             test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+            upload_package(FINAL_SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST)
         }
     }
 }
@@ -123,7 +123,7 @@ DISTRO_LIST.each { DISTRO ->
         }
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                docker.image(BUILD_IMAGE).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
                     def PACKAGE_NAME = get_package_name(DAILY_DATA, DISTRO, CMK_VERS)
                     def BUILD_PACKAGE_PATH = DAILY_DATA + "/" + DISTRO + "-dest/" + PACKAGE_NAME
                     def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
@@ -131,7 +131,7 @@ DISTRO_LIST.each { DISTRO ->
                     sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
                     test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
                     copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                    upload_package(FINAL_PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST)
+                    upload_package(FINAL_PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST)
                 }
             }
         }
@@ -452,13 +452,13 @@ def test_package(PACKAGE_PATH, NAME, DAILY_DATA, CMK_VERS) {
     }
 }
 
-def upload_package(FILE_PATH, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_DIR, UPLOAD_DEST) {
+def upload_package(FILE_PATH, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST) {
     stage(NAME + ' upload package') {
         // Only 'official' builds should end up on the Website
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
             sh """
                 rsync -av \
-                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH}" \
                     ${FILE_PATH} \
                     ${UPLOAD_DEST}
             """

@@ -1,5 +1,6 @@
 LANGUAGES = de ro
 SHELL=/bin/bash -e -o pipefail
+PIPENV=pipenv
 
 .PHONY: $(LANGUAGES)
 
@@ -59,5 +60,6 @@ ro:
 	poedit $@/LC_MESSAGES/multisite.po
 	sed -i '/^#:/d' $@/LC_MESSAGES/multisite.po
 
-test-%:
-	@L=$@ ; L=$${L#*-} ; ./blame $$L
+
+test-%: ../virtual-envs/3.7/.venv
+	@L=$@ ; L=$${L#*-} ; $(PIPENV) run ./blame $$L

@@ -238,7 +238,7 @@ def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     }),
 ])
 def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
-    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
+    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
     assert config_cache.get_host_config(hostname).is_piggyback_host == result
 

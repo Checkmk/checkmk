@@ -263,7 +263,7 @@ def iter_config_lines(files):
                 try:
                     decoded = (line.decode('utf-8') for line in fid)
                     for line in decoded:
-                        if not is_comment(line):
+                        if not is_comment(line) and not is_empty(line):
                             yield line.rstrip()
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
@@ -273,31 +273,26 @@ def iter_config_lines(files):
                 raise
 
 
-def consume_cluster_definition(iterator, header_line):
-    cluster_name = header_line[8:].strip()  # e.g.: CLUSTER duck
+def consume_cluster_definition(config_lines):
+    cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
     cluster = ClusterConfig(cluster_name, [])
     LOGGER.debug("new ClusterConfig: %s", cluster_name)
 
-    for line in iterator:
-        if is_empty(line) or not is_indented(line):
-            break
-
-        cluster.ips_or_subnets.append(line.strip())
+    while config_lines and is_indented(config_lines[0]):
+        cluster.ips_or_subnets.append(config_lines.pop(0).strip())
 
     return cluster
 
 
-def consume_logfile_definition(iterator, header_line):
+def consume_logfile_definition(config_lines):
     cont_list = []
     rewrite_list = []
-    filenames = parse_filenames(header_line)
+    filenames = parse_filenames(config_lines.pop(0))
     logfiles = LogfilesConfig(filenames, [])
     LOGGER.debug("new LogfilesConfig: %s", filenames)
 
-    for line in iterator:
-        if is_empty(line) or not is_indented(line):
-            break
-
+    while config_lines and is_indented(config_lines[0]):
+        line = config_lines.pop(0)
         level, raw_pattern = line.split(None, 1)
 
         if level == 'A':
@@ -335,7 +330,7 @@ def read_config(files):
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = iter_config_lines(files)
+    config_lines = list(iter_config_lines(files))
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
@@ -345,19 +340,15 @@ def read_config(files):
     # - cluster ips or subnets (follow cluster lines, begin with whitespace)
     # Needs to consider end of lines to append ips/subnets to clusters as well.
 
-    for line in config_lines:
-        if is_empty(line):
-            # empty lines are still needed to indicate the end
-            # of a logfiles or cluster definition
-            continue
+    while config_lines:
+        first_line = config_lines[0]
+        if is_indented(first_line):
+            raise ValueError("Missing block definition for line %r" % first_line)
 
-        if is_indented(line):
-            raise ValueError("Missing block definition for line %r" % line)
-
-        if line.startswith("CLUSTER "):
-            cluster_configs.append(consume_cluster_definition(config_lines, line))
+        if first_line.startswith("CLUSTER "):
+            cluster_configs.append(consume_cluster_definition(config_lines))
         else:
-            logfiles_configs.append(consume_logfile_definition(config_lines, line))
+            logfiles_configs.append(consume_logfile_definition(config_lines))
 
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)

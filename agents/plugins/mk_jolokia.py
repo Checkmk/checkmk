@@ -339,7 +339,9 @@ class JolokiaInstance(object):
             raw_response = self._session.post(self.base_url,
                                               data=post_data,
                                               verify=self._session.verify)
-        except () if DEBUG else Exception, exc:
+        except () if DEBUG else requests.exceptions.ConnectionError:
+            raise SkipInstance("Cannot connect to server at %s" % self.base_url)
+        except () if DEBUG else Exception as exc:
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
 

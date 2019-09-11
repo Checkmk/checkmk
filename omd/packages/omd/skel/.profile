@@ -24,7 +24,13 @@ export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 # manual testing, the plugins may behave differently depending on the
 # localization of the user's environment variables. This can lead to confusion
 # during tests.
-export LANG=C.UTF-8 LC_ALL=C.UTF-8
+INSTALLED_LOCALES=`locale -a`
+for i in "C.UTF-8" "en_US.utf8" "C"; do
+    if echo $INSTALLED_LOCALES | grep -q -w -F "$i"; then
+        export LANG="$i" LC_ALL="$i"
+        break
+    fi
+done
 
 # Set environment for the monitoring plugins that use state retention (like check_snmp).
 export NAGIOS_PLUGIN_STATE_DIRECTORY="$OMD_ROOT/var/monitoring-plugins"

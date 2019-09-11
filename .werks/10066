@@ -1,0 +1,10 @@
+Title: if: Do not crash if IfIndex is missing
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568204606
+Class: fix
+
+

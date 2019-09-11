@@ -162,6 +162,14 @@ class AutochecksManager(object):
             return result
 
         for entry in autochecks_raw:
+            if isinstance(entry, tuple):
+                raise MKGeneralException(
+                    "Invalid check entry '%r' of host '%s' (%s) found. This "
+                    "entry is in pre Checkmk 1.6 format and needs to be converted. This is "
+                    "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
+                    "execute \"cmk-update-config -v\" for convertig the old configuration." %
+                    (entry, hostname, filepath))
+
             labels = DiscoveredServiceLabels()
             for label_id, label_value in entry["service_labels"].items():
                 labels.add_label(ServiceLabel(label_id, label_value))

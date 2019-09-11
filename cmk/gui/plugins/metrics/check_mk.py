@@ -6051,6 +6051,56 @@ for nimble_op_ty in ["read", "write"]:
             "color": nimble_color,
         }
 
+# DRBD metrics
+metric_info['activity_log_updates'] = {
+    "title": _("Activity log updates"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['bit_map_updates'] = {
+    "title": _("Bit map updates"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info['local_count_requests'] = {
+    "title": _("Local count requests"),
+    "unit": "count",
+    "color": "24/b",
+}
+
+metric_info['pending_requests'] = {
+    "title": _("Pending requests"),
+    "unit": "count",
+    "color": "16/a",
+}
+metric_info['unacknowledged_requests'] = {
+    "title": _("Unacknowledged requests"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info['application_pending_requests'] = {
+    "title": _("Application pending requests"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info['epoch_objects'] = {
+    "title": _("Epoch objects"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+# In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
+# 1024) which means an invalidation of historic values.
+metric_info['kb_out_of_sync'] = {
+    "title": _("KiB out of sync"),  # according to documentation
+    "unit": "count",
+    "color": "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

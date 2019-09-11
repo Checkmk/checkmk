@@ -592,6 +592,7 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr
     dashlet['show_title'] = True
+    dashlet['mustsearch'] = False
 
 
 def save_dashboards(us):

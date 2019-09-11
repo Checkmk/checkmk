@@ -1,0 +1,12 @@
+Title: Some views (must search views) were always empty when added to a dashboard
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568209012
+Class: fix
+
+When viewing a "search only" aka "must search view", like the host and service search
+views and adding it as dashlet to a dashboard, the current search context was taken
+over into the dashlet, but the view always displayed an empty list of hosts or services.

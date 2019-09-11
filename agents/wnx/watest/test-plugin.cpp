@@ -40,6 +40,44 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
         << "@echo " << SecondLine << "\n";
 }
 
+static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
+                                  std::string Name) {
+    std::ofstream ofs(Path.u8string());
+
+    if (!ofs) {
+        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        return;
+    }
+
+    for (int i = 0; i < 100; i++)
+        ofs << "wscript.echo \"123456789 123456789123456789123456789123456789123456"
+               "89 123456789 123456789123456789123456789123451234567891234567891234"
+               "6789123456789123456789 12345678912345678912345678912345678912345678"
+               "  123456789 1234567891234567891234567891234567891234567891234567890"
+               "123456789123456789123456789123456789123456789123456789 123456789123"
+               "45678912345678912345678912345678912345678912345678912345678912345aa\"\n";
+}
+
+static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
+                                          std::string Name) {
+    std::ofstream ofs(Path.u8string());
+
+    if (!ofs) {
+        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        return;
+    }
+
+    ofs << "@echo off\n"
+        << "@echo ^<^<^<" << Name << "^>^>^>\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n"
+        << "@echo " << SecondLine << "\n";
+}
+
 static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
                                std::string Name, std::string_view code,
                                cma::provider::PluginType type) {
@@ -2142,7 +2180,7 @@ TEST(CmaMain, MiniBoxStartMode) {
 
         auto pid = mb.getProcessId();
         std::vector<char> accu;
-        auto success = mb.waitForEnd(std::chrono::seconds(3), true);
+        auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
         mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
@@ -2153,6 +2191,83 @@ TEST(CmaMain, MiniBoxStartMode) {
         });
 
         EXPECT_TRUE(!accu.empty());
+    }
+}
+
+TEST(CmaMain, MiniBoxStartModeDeep) {
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto [source, target] = tst::CreateInOut();
+    auto path = target / "a.bat";
+
+    CreateComplicatedPluginInTemp(path, "aaa");
+    {
+        TheMiniBox mb;
+
+        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        ASSERT_TRUE(started);
+
+        auto pid = mb.getProcessId();
+        std::vector<char> accu;
+        auto success = mb.waitForEnd(std::chrono::seconds(3));
+        ASSERT_TRUE(success);
+        // we have probably data, try to get and and store
+        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                              uint32_t Code, const std::vector<char>& Data) {
+            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+
+            cma::tools::AddVector(accu, data);
+        });
+
+        EXPECT_TRUE(!accu.empty());
+        EXPECT_EQ(accu.size(), 200);  // 200 is from complicated plugin
+    }
+
+    // this code is for testing vbs scripts, not usable
+    if (1) {
+        auto path = target / "a.vbs";
+        CreateVbsPluginInTemp(path, "aaa");
+        TheMiniBox mb;
+
+        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        ASSERT_TRUE(started);
+
+        auto pid = mb.getProcessId();
+        std::vector<char> accu;
+        auto success = mb.waitForEnd(std::chrono::seconds(30));
+        ASSERT_TRUE(success);
+        // we have probably data, try to get and and store
+        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                              uint32_t Code, const std::vector<char>& Data) {
+            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+
+            cma::tools::AddVector(accu, data);
+        });
+
+        EXPECT_TRUE(!accu.empty());
+        EXPECT_TRUE(accu.size() > 38000);  // 38000 is from complicated plugin
+    }
+
+    {
+        TheMiniBox mb;
+
+        auto started = mb.start(L"x", path, TheMiniBox::StartMode::job);
+        ASSERT_TRUE(started);
+
+        auto pid = mb.getProcessId();
+        std::vector<char> accu;
+        auto success = mb.waitForEnd(std::chrono::milliseconds(20));
+        EXPECT_FALSE(success);
+        // we have probably data, try to get and and store
+        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+                              uint32_t Code, const std::vector<char>& Data) {
+            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+
+            cma::tools::AddVector(accu, data);
+        });
+
+        EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
     }
 }
 #if 0

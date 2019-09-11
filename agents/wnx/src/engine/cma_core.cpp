@@ -582,7 +582,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring& Id,
         tout = std::min(timeout(), MaxTimeout);
 
     registerProcess(minibox_.getProcessId());
-    auto success = minibox_.waitForEnd(std::chrono::seconds(tout), true);
+    auto success = minibox_.waitForEnd(std::chrono::seconds(tout));
 
     std::vector<char> accu;
 
@@ -636,55 +636,142 @@ void PluginEntry::joinAndReleaseMainThread() {
     }
 }
 
-bool TheMiniBox::waitForEnd(std::chrono::milliseconds Timeout,
-                            bool KillWhatLeft) {
+namespace {
+struct ProcInfo {
+    uint32_t waiting_processes = 0;
+    std::string proc_name;
+    size_t added = 0;
+    int blocks = 0;
+};
+
+void LogProcessStatus(bool success, uint64_t ustime, ProcInfo& pi) {
+    auto text = fmt::format(
+        "perf:  In [{}] milliseconds process '{}' pid:[{}] {} - generated [{}] bytes of data in [{}] blocks",
+        ustime / 1000, pi.proc_name, pi.waiting_processes,
+        success ? "SUCCEDED" : "FAILED", pi.added, pi.blocks);
+    if (success)
+        XLOG::d.i(text);
+    else
+        XLOG::d(text);
+}
+}  // namespace
+
+bool TheMiniBox::waitForStop(std::chrono::milliseconds interval) {
+    std::unique_lock lk(lock_);
+    auto stop_time = std::chrono::steady_clock::now() + interval;
+    auto stopped = cv_stop_.wait_until(lk, stop_time,
+                                       [this]() -> bool { return stop_set_; });
+
+    return stopped || stop_set_;
+}
+
+// #TODO to be deprecated in 1.7 for Windows
+bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
     using namespace std::chrono;
     if (stop_set_) return false;
     ON_OUT_OF_SCOPE(readWhatLeft());
 
-    constexpr std::chrono::milliseconds kGrane = 250ms;
-    auto waiting_processes = getProcessId();
+    constexpr std::chrono::milliseconds kGraneLong = 50ms;
+    constexpr std::chrono::milliseconds kGraneShort = 20ms;
     auto read_handle = getReadHandle();
-    auto proc_name = wtools::ConvertToUTF8(exec_);
-    for (;;) {
-        auto ready = checkProcessExit(waiting_processes);
+    ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
 
+    for (;;) {
+        auto grane = kGraneLong;
+        auto ready = checkProcessExit(pi.waiting_processes);
         auto buf = readFromHandle<std::vector<char>>(read_handle);
-        if (buf.size()) appendResult(read_handle, buf);
+        if (!buf.empty()) {
+            pi.added += buf.size();
+            pi.blocks++;
+            appendResult(read_handle, buf);
+            grane = kGraneShort;  // using short time period to poll
+        }
 
         if (ready) {
             auto us_time = sw_.stop();
-            XLOG::d.i(
-                "perf: In [{}] milliseconds process  '{}'  generated [{}] bytes of data",
-                us_time / 1000, proc_name, buf.size());
+            LogProcessStatus(true, us_time, pi);
             return true;
         }
 
-        if (Timeout >= kGrane) {
-            std::unique_lock lk(lock_);
-            auto stop_time = std::chrono::steady_clock::now() + kGrane;
-            auto stopped = cv_stop_.wait_until(
-                lk, stop_time, [this]() -> bool { return stop_set_; });
-
-            if (stopped || stop_set_) {
+        if (timeout >= grane) {
+            timeout -= grane;
+            if (waitForStop(grane)) {
+                // stopped outside
                 XLOG::d(
-                    "Process '{}' signaled to be stopped [{}] [{}] left timeout [{}ms]!",
-                    proc_name, stopped, stop_set_, Timeout.count());
-            } else {
-                Timeout -= kGrane;
+                    "Process '{}' to be stopped outside, left timeout [{}ms]!",
+                    pi.proc_name, timeout.count());
+            } else
                 continue;
+        } else
+            failed_ = true;
+
+        // not normal situation
+        auto us_time = sw_.stop();  // get time asap
+        LogProcessStatus(false, us_time, pi);
+
+        process_->kill(true);
+        return false;
+    }
+
+    // never here
+}
+
+// #TODO 1.7 new function to speed up handles processing in windows
+bool TheMiniBox::waitForEndWindows(std::chrono::milliseconds Timeout) {
+    using namespace std::chrono;
+    if (stop_set_) return false;
+    ON_OUT_OF_SCOPE(readWhatLeft());
+
+    auto read_handle = getReadHandle();
+    ProcInfo pi = {getProcessId(), wtools::ConvertToUTF8(exec_), 0, 0};
+    constexpr std::chrono::milliseconds kGraneWindows = 250ms;
+
+    for (;;) {
+        auto ready = checkProcessExit(pi.waiting_processes);
+        HANDLE handles[] = {read_handle, stop_event_};
+        auto ret = ::WaitForMultipleObjects(
+            2, handles, FALSE, static_cast<DWORD>(kGraneWindows.count()));
+
+        if (ret == WAIT_OBJECT_0) {
+            auto buf = readFromHandle<std::vector<char>>(read_handle);
+            if (!buf.empty()) {
+                pi.added += buf.size();
+                pi.blocks++;
+                appendResult(read_handle, buf);
             }
         }
-        auto us_time = sw_.stop();
 
-        if (Timeout < kGrane) failed_ = true;
-
-        if (KillWhatLeft) {
-            process_->kill(true);
-            // not normal situation
-            XLOG::d("perf:  In [{}] milliseconds process '{}' pid:[{}] killed",
-                    us_time / 1000, proc_name, waiting_processes);
+        if (ready) {
+            auto us_time = sw_.stop();
+            LogProcessStatus(true, us_time, pi);
+            return true;
         }
+
+        if (ret == WAIT_OBJECT_0) {
+            ::Sleep(10);
+            continue;
+        }
+
+        if (ret == WAIT_TIMEOUT && Timeout > kGraneWindows) {
+            Timeout -= kGraneWindows;
+            continue;
+        }
+
+        // here we will break always
+
+        // check that we are breaking by timeout
+        if (Timeout < 250ms)
+            failed_ = true;
+        else
+            // stopped outside
+            XLOG::d("Process '{}' signaled to be stopped, left timeout [{}ms]!",
+                    pi.proc_name, Timeout.count());
+
+        // not normal situation
+        auto us_time = sw_.stop();  // get time asap
+        LogProcessStatus(false, us_time, pi);
+
+        process_->kill(true);
 
         return false;
     }
@@ -784,7 +871,7 @@ void PluginEntry::threadCore(const std::wstring& Id) {
     auto success =
         mode == TheMiniBox::StartMode::updater
             ? minibox_.waitForUpdater(std::chrono::seconds(timeout()))
-            : minibox_.waitForEnd(std::chrono::seconds(timeout()), true);
+            : minibox_.waitForEnd(std::chrono::seconds(timeout()));
     if (success) {
         // we have probably data, try to get and and store
         minibox_.processResults([&](const std::wstring CmdLine, uint32_t Pid,

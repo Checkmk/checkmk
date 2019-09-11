@@ -142,7 +142,9 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
 namespace cma {
 class TheMiniBox {
 public:
-    TheMiniBox() : process_(nullptr), stop_set_(false), proc_id_(0) {}
+    TheMiniBox() : process_(nullptr), stop_set_(false), proc_id_(0) {
+        stop_event_ = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    }
     TheMiniBox(const TheMiniBox&) = delete;
     TheMiniBox& operator=(const TheMiniBox&) = delete;
 
@@ -150,7 +152,10 @@ public:
     TheMiniBox(const TheMiniBox&&) = delete;
     TheMiniBox& operator=(const TheMiniBox&&) = delete;
 
-    ~TheMiniBox() { clean(); }
+    ~TheMiniBox() {
+        clean();
+        CloseHandle(stop_event_);
+    }
 
     //
     bool startBlind(const std::string CommandLine, const std::string User) {
@@ -297,7 +302,9 @@ public:
     // With kGrane interval tries to check running processes
     // returns true if all processes ended
     // returns false on timeout or break;
-    bool waitForEnd(std::chrono::milliseconds Timeout, bool KillWhatLeft);
+    bool waitForEnd(std::chrono::milliseconds Timeout);
+
+    bool waitForEndWindows(std::chrono::milliseconds Timeout);
 
     // normally kill process and associated data
     // also removes and resets other resources
@@ -331,6 +338,7 @@ public:
         std::lock_guard lk(lock_);
         stop_set_ = true;
         cv_stop_.notify_one();
+        ::SetEvent(stop_event_);
     }
 
     // get handle to read data from stdio
@@ -343,6 +351,8 @@ public:
     }
 
 private:
+    HANDLE stop_event_;
+    bool waitForStop(std::chrono::milliseconds Timeout);
     wtools::StopWatch sw_;
     // called AFTER process finished!
     void readWhatLeft() {

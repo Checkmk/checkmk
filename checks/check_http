@@ -40,7 +40,12 @@ def _transform_check_http(params):
         proxy = transformed.setdefault("proxy", {"address": proxy_address})
         # ':' outside a IPv6 address indicates port
         if ':' in proxy_address.split(']')[-1]:
-            proxy["address"], proxy["port"] = proxy_address.rsplit(':', 1)
+            addr, port = proxy_address.rsplit(":", 1)
+            try:
+                proxy["port"] = int(port)
+                proxy["address"] = addr
+            except ValueError:
+                pass  # leave address as it is
         if "proxy_auth" in mode:
             proxy["auth"] = mode["proxy_auth"]
 
@@ -206,7 +211,7 @@ def _common_args(host, proxy, params):
 
     specify_port = proxy.port if proxy else host.port
     if specify_port:
-        args += ['-p', specify_port]
+        args += ['-p', '%s' % specify_port]
 
     # last two arguments correspond to -I/-H, respectively
     if proxy:

@@ -30,7 +30,7 @@ def testconfig(request, make_yaml_config):
 
 @pytest.fixture
 def expected_output():
-    re_str = (r'[\(\)\w\.-]+ (unknown|continuing|pausing|paused|running|starting'
+    re_str = (r'[\(\)$\w\.-]+ (unknown|continuing|pausing|paused|running|starting'
               r'|stopping|stopped)/(invalid1|invalid2|invalid3|invalid4|auto'
               r'|boot|demand|disabled|system|other) .+')
     if not Globals.alone:

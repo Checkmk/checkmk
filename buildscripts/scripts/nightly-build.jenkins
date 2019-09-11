@@ -31,7 +31,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
-def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/' + CMK_VERS
+def UPLOAD_DEST = 'bauwelt@mathias-kettner.de:/bauwelt/download/'
 
 def DAILY_DATA_BASE_DIR = '/var/jenkins_home/daily-data'
 def ARCHIVE_DIR = ''
@@ -107,7 +107,7 @@ node {
 
             cleanup_source_package(DAILY_DATA, FINAL_SOURCE_PACKAGE_PATH)
             test_package(FINAL_SOURCE_PACKAGE_PATH, "source", DAILY_DATA, CMK_VERS)
-            upload_package(FINAL_SOURCE_PACKAGE_PATH, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST)
+            upload_package(FINAL_SOURCE_PACKAGE_PATH, SOURCE_PACKAGE_NAME, "source", scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
         }
     }
 }
@@ -131,7 +131,7 @@ DISTRO_LIST.each { DISTRO ->
                     sign_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA)
                     test_package(BUILD_PACKAGE_PATH, DISTRO, DAILY_DATA, CMK_VERS)
                     copy_package(BUILD_PACKAGE_PATH, DISTRO, ARCHIVE_DIR)
-                    upload_package(FINAL_PACKAGE_PATH, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST)
+                    upload_package(FINAL_PACKAGE_PATH, PACKAGE_NAME, DISTRO, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
                 }
             }
         }
@@ -452,18 +452,20 @@ def test_package(PACKAGE_PATH, NAME, DAILY_DATA, CMK_VERS) {
     }
 }
 
-def upload_package(FILE_PATH, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST) {
+def upload_package(FILE_PATH, FILE_NAME, NAME, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
     stage(NAME + ' upload package') {
+        def FILE_BASE = sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
+        def ARCHIVE_BASE = sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
+
         // Only 'official' builds should end up on the Website
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
             sh """
-                rsync -av \
+                rsync -av --relative \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH}" \
-                    ${FILE_PATH} \
+                    ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
                     ${UPLOAD_DEST}
             """
         } else {
-            def FILE_BASE = sh(script: "dirname " + FILE_PATH, returnStdout: true).toString().trim()
             dir(FILE_BASE) {
                 // Multiple subsequent calls overwrite the previous artifacts. For this reason
                 // we always archive all available files

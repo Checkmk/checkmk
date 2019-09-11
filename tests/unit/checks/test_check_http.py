@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
             'www.test123.de',
             '--sni',
             '-p',
-            80,
+            '80',
             'www.test123.de',
         ],
     ),
@@ -110,7 +110,7 @@ pytestmark = pytest.mark.checks
             'disable_sni': True
         },
         [
-            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '-6', '-p', 23,
+            '-C', '10,20', '--ssl', '-j', 'CONNECT', '-H', 'www.test123.com', '-6', '-p', '23',
             '[dead:beef::face]', 'www.test123.com:42'
         ],
     ),

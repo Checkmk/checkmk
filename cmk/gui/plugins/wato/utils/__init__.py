@@ -40,7 +40,6 @@ import six
 
 import cmk.utils.plugin_registry
 import cmk.utils.store
-from cmk.utils.memoize import MemoizeCache
 
 from cmk.gui.globals import current_app
 import cmk.gui.mkeventd

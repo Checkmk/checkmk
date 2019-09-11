@@ -15,10 +15,13 @@ discovery = {'': [(None, {})]}
 
 
 checks = {'': [(None,
-                {},
+                {'in_queue_since': (3600, 7200)},
                 [(0,
                   'Queue length: 1 Tasks',
                   [('queue', 1, None, None, None, None)]),
+                 (2,
+                  'At least one task above thresholds, see long output for further information (warn/crit at 60 m/120 m)',
+                  []),
                  (0,
-                  u'\nID: 174702, In queue since: 192 m (2019-08-27 10:02:02), Stuck: False, Blocked: True, Why kept: Build #475 is already in progress (ETA: 23 min)',
+                  u'\nID: 174702, In queue since: 192 m (2019-08-27 10:02:02)(!!), Stuck: no, Blocked: yes, Why kept: Build #475 is already in progress (ETA: 23 min)',
                   [])])]}

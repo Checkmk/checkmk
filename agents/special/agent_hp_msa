@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 from __future__ import print_function
-import re
 import sys
 import hashlib
 import argparse
@@ -135,6 +134,10 @@ class HTMLObjectParser(HTMLParser):
             self.current_property.append(data.replace("\n", "").replace("\r", ""))
 
 
+class AuthError(RuntimeError):
+    pass
+
+
 class HPMSAConnection(object):
     def __init__(self, hostaddress, opt_timeout, debug):
         self._host = hostaddress
@@ -142,25 +145,31 @@ class HPMSAConnection(object):
         self._timeout = opt_timeout
         self._session = requests.Session()
         self._session.verify = False
+        self._session.headers = {"User-agent": "Checkmk special agent_hp_msa"}
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self._debug = debug
 
     def login(self, username, password):
-        login_hash = hashlib.sha256()
-        login_hash.update("%s_%s" % (username, password))
         try:
-            response = self.get("login/%s" % login_hash.hexdigest())
-        except requests.exceptions.ConnectionError:
+            session_key = self._get_session_key(hashlib.sha256, username, password)
+        except (requests.exceptions.ConnectionError, AuthError):
             # Try to connect to old API if no connection to new API can be established
-            session_key = self._login_v3(username, password)
-        else:
-            xml_tree = ET.fromstring(response.text)
-            session_key = xml_tree.find("./OBJECT/PROPERTY[@name='response']").text
+            self._base_url = "https://%s/v3/api/" % self._host
+            session_key = self._get_session_key(hashlib.md5, username, password)
 
-        self._session.headers.update({
-            "sessionKey": session_key,
-            "User-agent": "Checkmk special agent_hp_msa"
-        })
+        self._session.headers.update(sessionKey=session_key)
+
+    def _get_session_key(self, hash_class, username, password):
+        login_hash = hash_class()
+        login_hash.update("%s_%s" % (username, password))
+        login_url = "login/%s" % login_hash.hexdigest()
+        response = self.get(login_url)
+        xml_tree = ET.fromstring(response.text)
+        session_key = xml_tree.find("./OBJECT/PROPERTY[@name='response']").text
+        if session_key.lower() == "authentication unsuccessful":
+            raise AuthError("Connecting to %s failed. Please verify host address & login details" %
+                            self._base_url)
+        return session_key
 
     def get(self, url_suffix):
         url = urljoin(self._base_url, url_suffix)
@@ -171,23 +180,6 @@ class HPMSAConnection(object):
                            (response.status_code, response.reason))
         LOGGER.debug("RESPONSE.text\n%s", response.text)
         return response
-
-    def _login_v3(self, username, password):
-        self._base_url = "https://%s/v3/api/" % self._host
-        login_hash = hashlib.md5()
-        login_hash.update("%s_%s" % (username, password))
-        try:
-            response = self.get("login/%s" % login_hash.hexdigest())
-        except Exception as exc:
-            if self._debug:
-                raise
-            if isinstance(exc, requests.exceptions.ConnectionError):
-                raise SystemExit("Connection failed. Please verify host address & login details")
-            else:
-                raise SystemExit(exc)
-
-        session_key = re.match('.*"response">(.*?)<.*', response.text).groups()[0]
-        return session_key
 
 
 def main(argv=None):

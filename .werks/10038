@@ -1,0 +1,20 @@
+Title: Fix cmk/check_mk_server:yes label related issues
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568215697
+
+This label was detected based on the asynchronously created agent section
+'<<<omd_status>>>'. Because this section is not immediately available on the
+first agent contact, this resulted in a label discovery after the second check
+cycle.
+
+Another issue was that the '<<<omd_status>>>' section was produced by non
+Checkmk servers with older agent versions. This lead to a wrong label discovery.
+
+We now use the dedicated '<<<labels>>>' section to create the label which is
+produced once we find the command 'omd' on a system.

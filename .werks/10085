@@ -1,0 +1,11 @@
+Title: Service discovery page: Do not show long output of services
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1568193437
+
+

@@ -3436,7 +3436,9 @@ class ModeDiscovery(WatoMode):
                 json.dumps(div_id)
             ))
         else:
-            html.write_text(output)
+            service_details = output.split("\n", 1)
+            if service_details:
+                html.write_text(service_details[0])
 
         if table_source in [self.SERVICE_ACTIVE, self.SERVICE_ACTIVE_IGNORED]:
             ctype = "check_" + check_type

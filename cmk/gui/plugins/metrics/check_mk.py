@@ -3720,6 +3720,18 @@ metric_info["harddrive_udma_crc_errors"] = {
     "color": "46/a",
 }
 
+metric_info["harddrive_crc_errors"] = {
+    "title": _("Harddrive CRC errors"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["harddrive_uncorrectable_errors"] = {
+    "title": _("Harddrive uncorrectable errors"),
+    "unit": "count",
+    "color": "13/a",
+}
+
 metric_info["nvme_media_and_data_integrity_errors"] = {
     "title": _("Media and data integrity errors"),
     "unit": "count",
@@ -8136,6 +8148,12 @@ check_metrics["check_mk-smart.stats"] = {
     },
     "UDMA_CRC_Error_Count": {
         "name": "harddrive_udma_crc_errors"
+    },
+    "CRC_Error_Count": {
+        "name": "harddrive_crc_errors",
+    },
+    "Uncorrectable_Error_Cnt": {
+        "name": "harddrive_uncorrectable_errors",
     },
     "Power_Cycles": {
         "name": "harddrive_power_cycles"

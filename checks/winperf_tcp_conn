@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example output from agent:
 # <<<winperf_tcp_conn>>>
 # 1368619819.06 638
@@ -38,45 +37,29 @@
 # 16 18437 counter
 
 
-def inventory_winperf_tcp_conn(info):
-    if len(info) > 1:
-        return [ (None, {}) ]
+def parse_winperf_tcp_conn(info):
+    counter_keys = {
+        "4": "ESTABLISHED",
+    }
 
-
-def check_winperf_tcp_conn(item, params, info):
-    if len(info) == 1:
-        raise MKCounterWrapped("Got no information from agent")
-
-    fields = [
-                ( 2, "Established", "ESTABLISHED" ),
-             ]
-    infotext    = ""
-    worst_state = 0
-    perfdata    = []
-    for offset, name, param_key in fields:
-        value = saveint(info[offset][1])
-        infotext += "%s: %s" % (name, value)
-        warn, crit = "", ""
-        if params.get(param_key):
-            warn, crit = params.get(param_key)
-            if value >= crit:
-                worst_state = 2
-                infotext += "(!!) (critical at %d)" % crit
-            elif value >= warn:
-                worst_state = max(1, worst_state)
-                infotext += "(!) (warning at %d)" % warn
-        infotext += ", "
-        perfdata.append( (name, value, warn, crit) )
-
-    infotext = infotext[:-2]
-    return worst_state, infotext, perfdata
+    parsed = {}
+    for line in info:
+        tcp_state = counter_keys.get(line[0])
+        if tcp_state is None:
+            continue
+        try:
+            parsed[tcp_state] = int(line[1])
+        except ValueError:
+            pass
+    return parsed
 
 
 check_info["winperf_tcp_conn"] = {
-    'check_function':          check_winperf_tcp_conn,
-    'inventory_function':      inventory_winperf_tcp_conn,
-    'service_description':     'TCP connections',
-    'has_perfdata':            True,
-    'group':                   'tcp_conn_stats',
+    'parse_function': parse_winperf_tcp_conn,
+    'check_function': check_tcp_connections,
+    'inventory_function': inventory_tcp_connections,
+    'service_description': 'TCP connections',
+    'has_perfdata': True,
+    'group': 'tcp_conn_stats',
+    'includes': ["tcp_connections.include"],
 }
-

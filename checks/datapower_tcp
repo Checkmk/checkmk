@@ -36,24 +36,34 @@
 # .1.3.6.1.4.1.14685.3.1.12.10.0 24 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummarylisten.0
 # .1.3.6.1.4.1.14685.3.1.12.11.0 0 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummaryclosing.0
 
+
 def parse_datapower_tcp(info):
-    parsed = {}
-    for tcp_state, tcp_count in info:
-        parsed[int(tcp_state.split(".")[0])] = int(tcp_count)
+    parsed = empty_stats()
+    parsed.update({map_counter_keys.get(int(row[0].split(".")[0])): int(row[1]) for row in info})
     return parsed
 
 
 check_info['datapower_tcp'] = {
-    'parse_function'            : parse_datapower_tcp,
-    'inventory_function'        : inventory_tcp_connections,
-    'check_function'            : check_tcp_connections,
-    'service_description'       : 'TCP Connections',
-    'snmp_info'                 : (".1.3.6.1.4.1.14685.3.1.12", [
-                                        OID_END,    # state of tcp connection
-                                        "",         # number of tcp connections of this state
-                                  ]),
-    "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
-    'has_perfdata'              : True,
-    'group'                     : 'tcp_conn_stats',
-    'includes'                  : [ "tcp_connections.include" ],
+    'parse_function':
+        parse_datapower_tcp,
+    'inventory_function':
+        inventory_tcp_connections,
+    'check_function':
+        check_tcp_connections,
+    'service_description':
+        'TCP Connections',
+    'snmp_info': (
+        ".1.3.6.1.4.1.14685.3.1.12",
+        [
+            OID_END,  # state of tcp connection
+            "",  # number of tcp connections of this state
+        ]),
+    "snmp_scan_function":
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
+        [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
+    'has_perfdata':
+        True,
+    'group':
+        'tcp_conn_stats',
+    'includes': ["tcp_connections.include"],
 }

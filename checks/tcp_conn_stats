@@ -40,20 +40,26 @@
 
 
 def parse_tcp_conn_stats(info):
-    parsed = {}
-    for tcp_state, tcp_count in info:
+    parsed = empty_stats()
+    for line in info:
+        tcp_state = line[0]
         if len(tcp_state) == 2:
-            tcp_state = int(tcp_state, 16) # Hex
-        parsed[tcp_state] = int(tcp_count)
+            tcp_state = map_counter_keys.get(int(tcp_state, 16))  # Hex
+        if tcp_state is None:
+            continue
+        try:
+            parsed[tcp_state] = int(line[1])
+        except ValueError:
+            pass
     return parsed
 
 
 check_info["tcp_conn_stats"] = {
-    'parse_function'        : parse_tcp_conn_stats,
-    'check_function'        : check_tcp_connections,
-    'inventory_function'    : inventory_tcp_connections,
-    'service_description'   : 'TCP Connections',
-    'has_perfdata'          : True,
-    'group'                 : 'tcp_conn_stats',
-    'includes'              : [ "tcp_connections.include" ],
+    'parse_function': parse_tcp_conn_stats,
+    'check_function': check_tcp_connections,
+    'inventory_function': inventory_tcp_connections,
+    'service_description': 'TCP Connections',
+    'has_perfdata': True,
+    'group': 'tcp_conn_stats',
+    'includes': ["tcp_connections.include"],
 }

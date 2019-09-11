@@ -1,0 +1,13 @@
+Title: Improve GUI page loading times
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b10
+Date: 1568200280
+
+The config initialization, which is executed during each page access, took
+longer than it needed. Especially configurations with a larger number of tag
+groups and folders should be faster now.

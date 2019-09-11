@@ -577,8 +577,14 @@ def transform_old_dict_based_icons():
 
 
 def _register_tag_plugins():
+    if hasattr(_register_tag_plugins, "_config_hash") \
+       and _register_tag_plugins._config_hash == hash(repr(config.tags.get_dict_format())):
+        return  # No re-register needed :-)
+
     _register_host_tag_painters()
     _register_host_tag_sorters()
+
+    _register_tag_plugins._config_hash = hash(repr(config.tags.get_dict_format()))
 
 
 config.register_post_config_load_hook(_register_tag_plugins)

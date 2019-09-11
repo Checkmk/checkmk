@@ -576,7 +576,14 @@ def undeclare_host_tag_attribute(tag_id):
     undeclare_host_attribute(attrname)
 
 
-def update_config_based_host_attributes():
+def _update_config_based_host_attributes():
+    def _compute_config_hash():
+        return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+
+    if hasattr(_update_config_based_host_attributes, "_config_hash") \
+       and _update_config_based_host_attributes._config_hash == _compute_config_hash():
+        return  # No re-register needed :-)
+
     _clear_config_based_host_attributes()
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
@@ -584,9 +591,11 @@ def update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder
     Folder.invalidate_caches()
 
+    _update_config_based_host_attributes._config_hash = _compute_config_hash()
+
 
 # Make the config module initialize the host attributes after loading the config
-config.register_post_config_load_hook(update_config_based_host_attributes)
+config.register_post_config_load_hook(_update_config_based_host_attributes)
 
 
 def _clear_config_based_host_attributes():

@@ -879,9 +879,9 @@ def _find_check_plugins(checktype):
 
     paths = []
     for candidate in candidates:
-        filename = cmk.utils.paths.local_checks_dir + "/" + candidate
-        if os.path.exists(filename):
-            paths.append(filename)
+        local_file_path = cmk.utils.paths.local_checks_dir / candidate
+        if local_file_path.exists():
+            paths.append(str(local_file_path))
             continue
 
         filename = cmk.utils.paths.checks_dir + "/" + candidate
@@ -1137,8 +1137,9 @@ def _get_needed_check_file_names(needed_check_plugin_names):
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
         for lib in set(config.check_includes.get(section_name, [])):
-            if os.path.exists(cmk.utils.paths.local_checks_dir + "/" + lib):
-                to_add = cmk.utils.paths.local_checks_dir + "/" + lib
+            local_path = cmk.utils.paths.local_checks_dir / lib
+            if local_path.exists():
+                to_add = str(local_path)
             else:
                 to_add = cmk.utils.paths.checks_dir + "/" + lib
 

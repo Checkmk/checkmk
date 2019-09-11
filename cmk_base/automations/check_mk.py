@@ -883,7 +883,7 @@ class AutomationRestart(Automation):
         return configuration_warnings
 
     def _check_plugins_have_changed(self):
-        this_time = self._last_modification_in_dir(cmk.utils.paths.local_checks_dir)
+        this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))
         last_time = self._time_of_last_core_restart()
         return this_time > last_time
 

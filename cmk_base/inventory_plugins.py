@@ -54,7 +54,7 @@ _include_contexts = {}  # type: Dict[str, Any]
 
 def load_plugins(get_check_api_context, get_inventory_context):
     loaded_files = set()
-    filelist = config.get_plugin_paths(cmk.utils.paths.local_inventory_dir,
+    filelist = config.get_plugin_paths(str(cmk.utils.paths.local_inventory_dir),
                                        cmk.utils.paths.inventory_dir)
 
     for f in filelist:
@@ -115,9 +115,10 @@ def _load_plugin_includes(check_file_path, plugin_context):
 
 
 def _include_file_path(name):
-    local_path = os.path.join(cmk.utils.paths.local_inventory_dir, name)
-    if os.path.exists(local_path):
-        return local_path
+    local_path = cmk.utils.paths.local_inventory_dir / name
+    if local_path.exists():
+        return str(local_path)
+
     shared_path = os.path.join(cmk.utils.paths.inventory_dir, name)
     if os.path.exists(shared_path):
         return shared_path

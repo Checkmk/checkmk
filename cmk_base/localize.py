@@ -50,12 +50,12 @@ domain = 'multisite'
 
 
 def _locale_base():
-    return cmk.utils.paths.local_locale_dir
+    return str(cmk.utils.paths.local_locale_dir)
 
 
 def _pot_file():
-    if os.path.exists(cmk.utils.paths.local_locale_dir + '/multisite.pot'):
-        return cmk.utils.paths.local_locale_dir + '/multisite.pot'
+    if os.path.exists(str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'):
+        return str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'
     return _locale_base() + '/multisite.pot'
 
 
@@ -180,8 +180,8 @@ def _localize_sniff():
         cmk.utils.paths.web_dir + "/app",
         cmk.utils.paths.lib_dir + "/python/cmk",
     ]
-    if os.path.exists(cmk.utils.paths.local_web_dir):
-        paths.append(cmk.utils.paths.local_web_dir)
+    if cmk.utils.paths.local_web_dir.exists():
+        paths.append(str(cmk.utils.paths.local_web_dir))
 
     sniff_files = []
     for path in paths:

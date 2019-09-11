@@ -783,7 +783,7 @@ def theme_dirs(tmp_path, monkeypatch):
     local_theme_path.mkdir(parents=True)
 
     monkeypatch.setattr(cmk.utils.paths, "web_dir", str(tmp_path))
-    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", str(tmp_path / "local"))
+    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", tmp_path / "local")
 
     return theme_path, local_theme_path
 

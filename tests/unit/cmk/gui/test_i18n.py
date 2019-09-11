@@ -14,7 +14,7 @@ import cmk.gui.i18n as i18n
 @pytest.fixture(autouse=True)
 def locale_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(cmk.utils.paths, "locale_dir", "%s/locale" % cmk_path())
-    monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", str(tmp_path / "locale"))
+    monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +35,7 @@ def local_translation():
 
 
 def _add_local_translation(lang, alias, texts):
-    local_dir = Path(cmk.utils.paths.local_locale_dir) / lang / "LC_MESSAGES"
+    local_dir = cmk.utils.paths.local_locale_dir / lang / "LC_MESSAGES"
     local_dir.mkdir(parents=True)  # pylint: disable=no-member
     po_file = local_dir / "multisite.po"
     mo_file = local_dir / "multisite.mo"

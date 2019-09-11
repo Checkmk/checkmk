@@ -63,10 +63,10 @@ CHECKS_USING_DF_INCLUDE = [
 
 def check_df_sources_include_flag():
     """Verify that df.include files are can return fs_used metric name"""
-    checks_dirs = (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+    checks_dirs = (cmk.utils.paths.local_checks_dir, Path(cmk.utils.paths.checks_dir))
     logger.info("Looking for df.include files...")
     for path_dir in checks_dirs:
-        df_file = Path(path_dir, 'df.include')
+        df_file = path_dir / 'df.include'
         if df_file.exists():
             logger.info("Inspecting %s", df_file)
             with df_file.open('r') as fid:

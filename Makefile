@@ -558,8 +558,7 @@ virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
 	@type python$* >/dev/null 2>&1 || (echo "ERROR: python$* can not be found. Execute: \"make setup\"" && exit 1)
 	cd virtual-envs/$*/; \
 	$(RM) -r .venv; \
-	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1); \
-	touch .venv
+	($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1)
 
 .venv-%: virtual-envs/%/.venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}

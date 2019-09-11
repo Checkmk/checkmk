@@ -72,8 +72,8 @@ class RulespecCheckgroupParametersJenkinsQueue(CheckParameterRulespecWithoutItem
              Tuple(
                  title=_("Task in queue since"),
                  elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
+                     Age(title=_("Warning at"), default_value=3600),
+                     Age(title=_("Critical at"), default_value=7200),
                  ],
              )),
         ],)

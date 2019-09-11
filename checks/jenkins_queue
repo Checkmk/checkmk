@@ -34,6 +34,11 @@
 
 import json
 
+MAP_QUEUE_STATES = {
+    True: "yes",
+    False: "no",
+}
+
 
 def parse_jenkins_queue(info):
     parsed = []
@@ -46,6 +51,11 @@ def parse_jenkins_queue(info):
 
 def inventory_jenkins_queue(parsed):
     yield None, {}
+
+
+factory_settings["jenkins_queue_default_levels"] = {
+    "in_queue_since": (3600, 7200),
+}
 
 
 def check_jenkins_queue(no_item, params, parsed):
@@ -62,9 +72,9 @@ def check_jenkins_queue(no_item, params, parsed):
                        unit="Tasks",
                        infoname="Queue length")
 
-    levels = params.get("in_queue_since")
+    levels = params["in_queue_since"]
 
-    for task in parsed:
+    for task in sorted(parsed, key=lambda k: k['inQueueSince']):
         now = time.time()
         state = 0
         timestamp_in_queue = task["inQueueSince"] / 1000
@@ -76,22 +86,30 @@ def check_jenkins_queue(no_item, params, parsed):
         long_output.append(
             (state, "ID: %d, In queue since: %s (%s)%s, Stuck: %s, Blocked: %s, Why kept: %s" %
              (task["id"], get_age_human_readable(since),
-              get_timestamp_human_readable(timestamp_in_queue), state_markers[state], task["stuck"],
-              task["blocked"], task["why"])))
+              get_timestamp_human_readable(timestamp_in_queue), state_markers[state],
+              MAP_QUEUE_STATES[task["stuck"]], MAP_QUEUE_STATES[task["blocked"]], task["why"])))
 
     max_state = max([state for state, _infotext in long_output])
-    if max_state and levels is not None:
-        yield max_state, 'At least one task above thresholds (warn/crit at %s/%s)' % (
-            get_age_human_readable(levels[0]), get_age_human_readable(levels[1]))
+    longoutput_note = "See long output for further information"
 
-    for state, line in long_output:
-        yield 0, "\n%s" % line
+    if max_state:
+        yield max_state, 'At least one task above thresholds, %s (warn/crit at %s/%s)' % (
+            longoutput_note.lower(), get_age_human_readable(
+                levels[0]), get_age_human_readable(levels[1]))
+
+    if long_output:
+        if not max_state:
+            yield 0, longoutput_note
+
+        for state, line in long_output:
+            yield 0, "\n%s" % line
 
 
 check_info["jenkins_queue"] = {
     "parse_function": parse_jenkins_queue,
     "check_function": check_jenkins_queue,
     "inventory_function": inventory_jenkins_queue,
+    'default_levels_variable': "jenkins_queue_default_levels",
     "service_description": "Jenkins Queue",
     "has_perfdata": True,
     "group": "jenkins_queue",

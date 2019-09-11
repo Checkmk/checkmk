@@ -38,42 +38,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEnterasysPowersupply(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_enterasys_powersupply():
+    return Dictionary(
+        elements=[
+            ("redundancy_ok_states",
+             ListChoice(
+                 title=_("States treated as OK"),
+                 choices=[
+                     (1, 'redundant'),
+                     (2, 'notRedundant'),
+                     (3, 'notSupported'),
+                 ],
+                 default_value=[1],
+             )),
+        ],
+        optional_keys=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "enterasys_powersupply"
 
-    @property
-    def title(self):
-        return _("Enterasys Power Supply Settings")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("redundancy_ok_states",
-                 ListChoice(
-                     title=_("States treated as OK"),
-                     choices=[
-                         (1, 'redundant'),
-                         (2, 'notRedundant'),
-                         (3, 'notSupported'),
-                     ],
-                     default_value=[1],
-                 )),
-            ],
-            optional_keys=False,
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Number of Powersupply"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="enterasys_powersupply",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Number of Powersupply"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_enterasys_powersupply,
+        title=lambda: _("Enterasys Power Supply Settings"),
+    ))

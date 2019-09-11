@@ -37,38 +37,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJenkinsInstance(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_jenkins_instance():
+    return Dictionary(elements=[
+        ("mode",
+         DropdownChoice(
+             title=_("Expected mode state."),
+             help=_("Choose between Normal (Utilize this node as much "
+                    "as possible) and Exclusive (Only build jobs with label "
+                    "restrictions matching this node). The state will "
+                    "change to warning state, if the mode differs."),
+             choices=[
+                 ("NORMAL", _("Normal")),
+                 ("EXCLUSIVE", _("Exclusive")),
+             ],
+             default_value="NORMAL",
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "jenkins_instance"
 
-    @property
-    def title(self):
-        return _("Jenkins instance")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("mode",
-             DropdownChoice(
-                 title=_("Expected mode state."),
-                 help=_("Choose between Normal (Utilize this node as much "
-                        "as possible) and Exclusive (Only build jobs with label "
-                        "restrictions matching this node). The state will "
-                        "change to warning state, if the mode differs."),
-                 choices=[
-                     ("NORMAL", _("Normal")),
-                     ("EXCLUSIVE", _("Exclusive")),
-                 ],
-                 default_value="NORMAL",
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="jenkins_instance",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_jenkins_instance,
+        title=lambda: _("Jenkins instance"),
+    ))

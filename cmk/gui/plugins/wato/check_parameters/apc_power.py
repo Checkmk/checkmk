@@ -37,41 +37,36 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersApcPower(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_apc_power():
+    return TextAscii(
+        title=_("Phase"),
+        help=_("The identifier of the phase the power is related to."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "apc_power"
 
-    @property
-    def title(self):
-        return _("APC Power Consumption")
+def _parameter_valuespec_apc_power():
+    return Tuple(
+        title=_("Power Comsumption of APC Devices"),
+        elements=[
+            Integer(
+                title=_("Warning below"),
+                unit=_("W"),
+                default_value=20,
+            ),
+            Integer(
+                title=_("Critical below"),
+                unit=_("W"),
+                default_value=1,
+            ),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Power Comsumption of APC Devices"),
-            elements=[
-                Integer(
-                    title=_("Warning below"),
-                    unit=_("W"),
-                    default_value=20,
-                ),
-                Integer(
-                    title=_("Critical below"),
-                    unit=_("W"),
-                    default_value=1,
-                ),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Phase"),
-            help=_("The identifier of the phase the power is related to."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="apc_power",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_apc_power,
+        parameter_valuespec=_parameter_valuespec_apc_power,
+        title=lambda: _("APC Power Consumption"),
+    ))

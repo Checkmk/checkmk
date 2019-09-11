@@ -38,48 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAdvaIfs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _item_spec_adva_ifs():
+    return TextAscii(
+        title=_("Interface"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "adva_ifs"
 
-    @property
-    def title(self):
-        return _("Adva Optical Transport Laser Power")
+def _parameter_valuespec_adva_ifs():
+    return Dictionary(elements=[
+        ("limits_output_power",
+         Tuple(
+             title=_("Sending Power"),
+             elements=[
+                 Float(title=_("lower limit"), unit="dBm"),
+                 Float(title=_("upper limit"), unit="dBm"),
+             ],
+         )),
+        ("limits_input_power",
+         Tuple(
+             title=_("Received Power"),
+             elements=[
+                 Float(title=_("lower limit"), unit="dBm"),
+                 Float(title=_("upper limit"), unit="dBm"),
+             ],
+         )),
+    ])
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("limits_output_power",
-             Tuple(
-                 title=_("Sending Power"),
-                 elements=[
-                     Float(title=_("lower limit"), unit="dBm"),
-                     Float(title=_("upper limit"), unit="dBm"),
-                 ],
-             )),
-            ("limits_input_power",
-             Tuple(
-                 title=_("Received Power"),
-                 elements=[
-                     Float(title=_("lower limit"), unit="dBm"),
-                     Float(title=_("upper limit"), unit="dBm"),
-                 ],
-             )),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Interface"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="adva_ifs",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=_item_spec_adva_ifs,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_adva_ifs,
+        title=lambda: _("Adva Optical Transport Laser Power"),
+    ))

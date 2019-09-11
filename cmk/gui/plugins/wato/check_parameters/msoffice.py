@@ -39,69 +39,49 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsOfficeLicenses(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "msoffice_licenses"
-
-    @property
-    def title(self):
-        return _("MS Office 365 licenses")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("usage",
-             Tuple(title=_("Upper levels for license usage"),
-                   elements=[
-                       Percentage(title=_("Warning at"), default_value=80.0),
-                       Percentage(title=_("Critical at"), default_value=90.0),
-                   ])),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("MS Office 365 license"))
+def _item_spec_msoffice_licenses():
+    return TextAscii(title=_("MS Office 365 license"))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsOfficeServiceplans(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_msoffice_licenses():
+    return Dictionary(elements=[
+        ("usage",
+         Tuple(title=_("Upper levels for license usage"),
+               elements=[
+                   Percentage(title=_("Warning at"), default_value=80.0),
+                   Percentage(title=_("Critical at"), default_value=90.0),
+               ])),
+    ])
 
-    @property
-    def check_group_name(self):
-        return "msoffice_serviceplans"
 
-    @property
-    def title(self):
-        return _("MS Office 365 service plans")
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="msoffice_licenses",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_msoffice_licenses,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_msoffice_licenses,
+        title=lambda: _("MS Office 365 licenses"),
+    ))
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Tuple(title=_("Upper levels for pending activations"),
-                   elements=[
-                       Integer(title=_("Warning at"), unit=_("services")),
-                       Integer(title=_("Critical at"), unit=_("services")),
-                   ])),
-        ])
+def _parameter_valuespec_msoffice_serviceplans():
+    return Dictionary(elements=[
+        ("levels",
+         Tuple(title=_("Upper levels for pending activations"),
+               elements=[
+                   Integer(title=_("Warning at"), unit=_("services")),
+                   Integer(title=_("Critical at"), unit=_("services")),
+               ])),
+    ])
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("MS Office 365 license"))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="msoffice_serviceplans",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("MS Office 365 license")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_msoffice_serviceplans,
+        title=lambda: _("MS Office 365 service plans"),
+    ))

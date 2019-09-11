@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersThreads(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_sophos_memory():
+    return Dictionary(elements=[
+        ("memory_levels",
+         Tuple(
+             title=_("Memory percentage usage"),
+             elements=[
+                 Percentage(title=_("Warning at"), default_value=80),
+                 Percentage(title=_("Critical at"), default_value=90)
+             ],
+         )),
+    ])
 
-    @property
-    def check_group_name(self):
-        return "sophos_memory"
 
-    @property
-    def title(self):
-        return _("Sophos Memory utilization")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("memory_levels",
-             Tuple(
-                 title=_("Memory percentage usage"),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=80),
-                     Percentage(title=_("Critical at"), default_value=90)
-                 ],
-             )),
-        ])
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="sophos_memory",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sophos_memory,
+        title=lambda: _("Sophos Memory utilization"),
+    ))

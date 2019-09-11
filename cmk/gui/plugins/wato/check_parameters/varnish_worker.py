@@ -38,49 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishWorker(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_worker():
+    return Dictionary(elements=[
+        ("wrk_drop",
+         Tuple(
+             title=_("Upper levels for \"dropped work requests\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("wrk_failed",
+         Tuple(
+             title=_("Upper levels for \"worker threads not created\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("wrk_queued",
+         Tuple(
+             title=_("Upper levels for \"queued work requests\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_worker"
 
-    @property
-    def title(self):
-        return _("Varnish Worker")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("wrk_drop",
-             Tuple(
-                 title=_("Upper levels for \"dropped work requests\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("wrk_failed",
-             Tuple(
-                 title=_("Upper levels for \"worker threads not created\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("wrk_queued",
-             Tuple(
-                 title=_("Upper levels for \"queued work requests\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_worker",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_worker,
+        title=lambda: _("Varnish Worker"),
+    ))

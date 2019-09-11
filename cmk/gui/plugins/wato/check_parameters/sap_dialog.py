@@ -40,56 +40,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSapDialog(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_sap_dialog():
+    return TextAscii(
+        title=_("System ID"),
+        help=_("The SAP system ID."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "sap_dialog"
 
-    @property
-    def title(self):
-        return _("SAP Dialog")
+def _parameter_valuespec_sap_dialog():
+    return Dictionary(elements=[
+        ("UsersLoggedIn",
+         Tuple(
+             title=_("Number of Loggedin Users"),
+             elements=[
+                 Integer(title=_("Warning at"), label=_("Users")),
+                 Integer(title=_("Critical at"), label=_("Users"))
+             ],
+         )),
+        ("FrontEndNetTime",
+         Tuple(
+             title=_("Frontend net time"),
+             elements=[
+                 Float(title=_("Warning at"), unit=_('ms')),
+                 Float(title=_("Critical at"), unit=_('ms'))
+             ],
+         )),
+        ("ResponseTime",
+         Tuple(
+             title=_("Response Time"),
+             elements=[
+                 Float(title=_("Warning at"), unit=_('ms')),
+                 Float(title=_("Critical at"), unit=_('ms'))
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("UsersLoggedIn",
-             Tuple(
-                 title=_("Number of Loggedin Users"),
-                 elements=[
-                     Integer(title=_("Warning at"), label=_("Users")),
-                     Integer(title=_("Critical at"), label=_("Users"))
-                 ],
-             )),
-            ("FrontEndNetTime",
-             Tuple(
-                 title=_("Frontend net time"),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_('ms')),
-                     Float(title=_("Critical at"), unit=_('ms'))
-                 ],
-             )),
-            ("ResponseTime",
-             Tuple(
-                 title=_("Response Time"),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_('ms')),
-                     Float(title=_("Critical at"), unit=_('ms'))
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("System ID"),
-            help=_("The SAP system ID."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="sap_dialog",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_sap_dialog,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sap_dialog,
+        title=lambda: _("SAP Dialog"),
+    ))

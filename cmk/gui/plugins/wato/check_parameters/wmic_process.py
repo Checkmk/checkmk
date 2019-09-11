@@ -38,38 +38,33 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class ManualCheckParameterWMICProcess(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksApplications
+def _item_spec_wmic_process():
+    return TextAscii(
+        title=_("Process name for usage in the Nagios service description"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "wmic_process"
 
-    @property
-    def title(self):
-        return _("Memory and CPU of processes on Windows")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            TextAscii(
-                title=_("Name of the process"),
-                allow_empty=False,
-            ),
-            Integer(title=_("Memory warning at"), unit="MB"),
-            Integer(title=_("Memory critical at"), unit="MB"),
-            Integer(title=_("Pagefile warning at"), unit="MB"),
-            Integer(title=_("Pagefile critical at"), unit="MB"),
-            Percentage(title=_("CPU usage warning at")),
-            Percentage(title=_("CPU usage critical at")),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Process name for usage in the Nagios service description"),
+def _parameter_valuespec_wmic_process():
+    return Tuple(elements=[
+        TextAscii(
+            title=_("Name of the process"),
             allow_empty=False,
-        )
+        ),
+        Integer(title=_("Memory warning at"), unit="MB"),
+        Integer(title=_("Memory critical at"), unit="MB"),
+        Integer(title=_("Pagefile warning at"), unit="MB"),
+        Integer(title=_("Pagefile critical at"), unit="MB"),
+        Percentage(title=_("CPU usage warning at")),
+        Percentage(title=_("CPU usage critical at")),
+    ],)
+
+
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="wmic_process",
+        group=RulespecGroupManualChecksApplications,
+        item_spec=_item_spec_wmic_process,
+        parameter_valuespec=_parameter_valuespec_wmic_process,
+        title=lambda: _("Memory and CPU of processes on Windows"),
+    ))

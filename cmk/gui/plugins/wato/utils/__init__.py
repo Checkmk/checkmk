@@ -696,32 +696,28 @@ def register_check_parameters(subgroup,
 
     # Register rule for discovered checks
     if has_inventory:
-        class_attrs = {
+        kwargs = {
             "group": subgroup,
-            "title": title,
+            "title": lambda: title,
             "match_type": match_type,
             "is_deprecated": deprecated,
-            "parameter_valuespec": valuespec,
+            "parameter_valuespec": lambda: valuespec,
             "check_group_name": checkgroup,
-            "item_spec": itemspec,
+            "create_manual_check": register_static_check,
         }
+
+        if itemspec:
+            kwargs["item_spec"] = lambda: itemspec
 
         base_class = CheckParameterRulespecWithItem if itemspec is not None else CheckParameterRulespecWithoutItem
 
-        rulespec_class = type("LegacyCheckParameterRulespec%s" % checkgroup.title(), (base_class,),
-                              class_attrs)
-        rulespec_registry.register(rulespec_class)
+        rulespec_registry.register(base_class(**kwargs))
 
     if not (valuespec and has_inventory) and register_static_check:
         raise MKGeneralException("Sorry, registering manual check parameters without discovery "
                                  "check parameters is not supported anymore using the old API. "
                                  "Please register the manual check rulespec using the new API. "
                                  "Checkgroup: %s" % checkgroup)
-
-    if has_inventory and not register_static_check:
-        # Remove the static checks rulespec that was created during the checkgroup
-        # rulespec registration by the registry
-        del rulespec_registry["static_checks:%s" % checkgroup]
 
 
 @rulespec_group_registry.register

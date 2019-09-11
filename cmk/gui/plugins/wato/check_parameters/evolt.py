@@ -38,32 +38,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEvolt(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_evolt():
+    return TextAscii(title=_("Phase"),
+                     help=_("The identifier of the phase the power is related to."))
 
-    @property
-    def check_group_name(self):
-        return "evolt"
 
-    @property
-    def title(self):
-        return _("Voltage levels (UPS / PDU / Other Devices)")
+def _parameter_valuespec_evolt():
+    return Tuple(
+        help=_("Voltage Levels for devices like UPS or PDUs. "
+               "Several phases may be addressed independently."),
+        elements=[
+            Integer(title=_("warning if below"), unit="V", default_value=210),
+            Integer(title=_("critical if below"), unit="V", default_value=180),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Voltage Levels for devices like UPS or PDUs. "
-                   "Several phases may be addressed independently."),
-            elements=[
-                Integer(title=_("warning if below"), unit="V", default_value=210),
-                Integer(title=_("critical if below"), unit="V", default_value=180),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Phase"),
-                         help=_("The identifier of the phase the power is related to."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="evolt",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_evolt,
+        parameter_valuespec=_parameter_valuespec_evolt,
+        title=lambda: _("Voltage levels (UPS / PDU / Other Devices)"),
+    ))

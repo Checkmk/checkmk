@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFireeyeActiveVms(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_fireeye_active_vms():
+    return Dictionary(elements=[(
+        "vms",
+        Tuple(
+            title=_("Levels for active VMs"),
+            elements=[
+                Integer(title="Warning at", default_value=60, unit="VMs"),
+                Integer(title="Critical at", default_value=70, unit="VMs"),
+            ],
+        ),
+    )],)
 
-    @property
-    def check_group_name(self):
-        return "fireeye_active_vms"
 
-    @property
-    def title(self):
-        return _("Fireeye Active VMs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[(
-            "vms",
-            Tuple(
-                title=_("Levels for active VMs"),
-                elements=[
-                    Integer(title="Warning at", default_value=60, unit="VMs"),
-                    Integer(title="Critical at", default_value=70, unit="VMs"),
-                ],
-            ),
-        )],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fireeye_active_vms",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fireeye_active_vms,
+        title=lambda: _("Fireeye Active VMs"),
+    ))

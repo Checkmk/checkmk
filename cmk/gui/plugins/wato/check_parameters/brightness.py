@@ -34,37 +34,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBrightness(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_brightness():
+    return TextAscii(
+        title=_("Sensor name"),
+        help=_("The identifier of the sensor."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "brightness"
 
-    @property
-    def title(self):
-        return _("Brightness Levels")
+def _parameter_valuespec_brightness():
+    return Levels(
+        title=_("Brightness"),
+        unit=_("lx"),
+        default_value=None,
+        default_difference=(2.0, 4.0),
+        default_levels=(50.0, 100.0),
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Levels(
-            title=_("Brightness"),
-            unit=_("lx"),
-            default_value=None,
-            default_difference=(2.0, 4.0),
-            default_levels=(50.0, 100.0),
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Sensor name"),
-            help=_("The identifier of the sensor."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="brightness",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_brightness,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_brightness,
+        title=lambda: _("Brightness Levels"),
+    ))

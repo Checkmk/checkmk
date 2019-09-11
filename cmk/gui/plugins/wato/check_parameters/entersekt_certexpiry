@@ -41,33 +41,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleJobs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_entersekt_certexpiry():
+    return Dictionary(elements=[
+        (
+            "levels",
+            Tuple(title=_("Levels for number of days until expiration"),
+                  elements=[
+                      Integer(title=_("Warning if below"), default_value=20, allow_empty=False),
+                      Integer(title=_("Critical if below"), default_value=10, allow_empty=False)
+                  ]),
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "entersekt_certexpiry"
 
-    @property
-    def title(self):
-        return _("Entersekt Certificate Expiration")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "levels",
-                Tuple(title=_("Levels for number of days until expiration"),
-                      elements=[
-                          Integer(title=_("Warning if below"), default_value=20, allow_empty=False),
-                          Integer(title=_("Critical if below"), default_value=10, allow_empty=False)
-                      ]),
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="entersekt_certexpiry",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_entersekt_certexpiry,
+        title=lambda: _("Entersekt Certificate Expiration"),
+    ))

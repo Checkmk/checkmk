@@ -57,31 +57,21 @@ def _vs_fortinet_signatures(title):
                        ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFortinetSignatures(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_fortinet_signatures():
+    return Dictionary(elements=[
+        ('av_age', _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),
+        ('av_ext_age', _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database"))),
+        ('ips_age', _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
+        ('ips_ext_age',
+         _vs_fortinet_signatures(_("Age of Intrusion Prevention signature extended database"))),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "fortinet_signatures"
 
-    @property
-    def title(self):
-        return _("Fortigate Signatures")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('av_age', _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),
-            ('av_ext_age',
-             _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database"))),
-            ('ips_age', _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
-            ('ips_ext_age',
-             _vs_fortinet_signatures(_("Age of Intrusion Prevention signature extended database"))),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fortinet_signatures",
+        group=RulespecGroupCheckParametersNetworking,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fortinet_signatures,
+        title=lambda: _("Fortigate Signatures"),
+    ))

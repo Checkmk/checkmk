@@ -38,49 +38,37 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersGenericRate(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_keepalived():
+    return Dictionary(elements=[
+        ("master", MonitoringState(
+            title=_("master"),
+            default_value=0,
+        )),
+        ("unknown", MonitoringState(
+            title=_("unknown"),
+            default_value=3,
+        )),
+        ("init", MonitoringState(
+            title=_("init"),
+            default_value=0,
+        )),
+        ("backup", MonitoringState(
+            title=_("backup"),
+            default_value=0,
+        )),
+        ("fault", MonitoringState(
+            title=_("fault"),
+            default_value=2,
+        )),
+    ])
 
-    @property
-    def check_group_name(self):
-        return "keepalived"
 
-    @property
-    def title(self):
-        return _("Keepalived Parameters")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("master", MonitoringState(
-                title=_("master"),
-                default_value=0,
-            )),
-            ("unknown", MonitoringState(
-                title=_("unknown"),
-                default_value=3,
-            )),
-            ("init", MonitoringState(
-                title=_("init"),
-                default_value=0,
-            )),
-            ("backup", MonitoringState(
-                title=_("backup"),
-                default_value=0,
-            )),
-            ("fault", MonitoringState(
-                title=_("fault"),
-                default_value=2,
-            )),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("VRRP Instance"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="keepalived",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("VRRP Instance"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_keepalived,
+        title=lambda: _("Keepalived Parameters"),
+    ))

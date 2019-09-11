@@ -37,34 +37,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersRaidSummary(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_raid_summary():
+    return Dictionary(elements=[
+        ("use_device_states",
+         DropdownChoice(
+             title=_("Use device states and overwrite expected status"),
+             choices=[
+                 (False, _("Ignore")),
+                 (True, _("Use device states")),
+             ],
+             default_value=True,
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "raid_summary"
 
-    @property
-    def title(self):
-        return _("RAID: summary state")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("use_device_states",
-             DropdownChoice(
-                 title=_("Use device states and overwrite expected status"),
-                 choices=[
-                     (False, _("Ignore")),
-                     (True, _("Use device states")),
-                 ],
-                 default_value=True,
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="raid_summary",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_raid_summary,
+        title=lambda: _("RAID: summary state"),
+    ))

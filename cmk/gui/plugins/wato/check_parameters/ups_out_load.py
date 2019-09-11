@@ -38,28 +38,23 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersUpsOutLoad(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_ups_out_load():
+    return TextAscii(title=_("Phase"),
+                     help=_("The identifier of the phase the power is related to."))
 
-    @property
-    def check_group_name(self):
-        return "ups_out_load"
 
-    @property
-    def title(self):
-        return _("Parameters for output loads of UPSs and PDUs")
+def _parameter_valuespec_ups_out_load():
+    return Tuple(elements=[
+        Integer(title=_("warning at"), unit=u"%", default_value=85),
+        Integer(title=_("critical at"), unit=u"%", default_value=90),
+    ],)
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Integer(title=_("warning at"), unit=u"%", default_value=85),
-            Integer(title=_("critical at"), unit=u"%", default_value=90),
-        ],)
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Phase"),
-                         help=_("The identifier of the phase the power is related to."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ups_out_load",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_ups_out_load,
+        parameter_valuespec=_parameter_valuespec_ups_out_load,
+        title=lambda: _("Parameters for output loads of UPSs and PDUs"),
+    ))

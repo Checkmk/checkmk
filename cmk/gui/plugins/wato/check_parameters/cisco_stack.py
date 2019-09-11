@@ -38,70 +38,55 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCiscoStack(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_cisco_stack():
+    return Dictionary(
+        elements=[
+            ("waiting",
+             MonitoringState(title=u"waiting",
+                             default_value=0,
+                             help=_(u"Waiting for other switches to come online"))),
+            ("progressing",
+             MonitoringState(title=u"progressing",
+                             default_value=0,
+                             help=_(u"Master election or mismatch checks in progress"))),
+            ("added", MonitoringState(title=u"added", default_value=0, help=_(u"Added to stack"))),
+            ("ready", MonitoringState(title=u"ready", default_value=0, help=_(u"Ready"))),
+            ("sdmMismatch",
+             MonitoringState(title=u"sdmMismatch",
+                             default_value=1,
+                             help=_(u"SDM template mismatch"))),
+            ("verMismatch",
+             MonitoringState(title=u"verMismatch", default_value=1,
+                             help=_(u"OS version mismatch"))),
+            ("featureMismatch",
+             MonitoringState(title=u"featureMismatch",
+                             default_value=1,
+                             help=_(u"Configured feature mismatch"))),
+            ("newMasterInit",
+             MonitoringState(title=u"newMasterInit",
+                             default_value=0,
+                             help=_(u"Waiting for new master initialization"))),
+            ("provisioned",
+             MonitoringState(title=u"provisioned",
+                             default_value=0,
+                             help=_(u"Not an active member of the stack"))),
+            ("invalid",
+             MonitoringState(title=u"invalid",
+                             default_value=2,
+                             help=_(u"State machine in invalid state"))),
+            ("removed",
+             MonitoringState(title=u"removed", default_value=2, help=_(u"Removed from stack"))),
+        ],
+        optional_keys=[],
+    )
 
-    @property
-    def check_group_name(self):
-        return "cisco_stack"
 
-    @property
-    def title(self):
-        return _("Cisco Stack Switch Status")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("waiting",
-                 MonitoringState(title=u"waiting",
-                                 default_value=0,
-                                 help=_(u"Waiting for other switches to come online"))),
-                ("progressing",
-                 MonitoringState(title=u"progressing",
-                                 default_value=0,
-                                 help=_(u"Master election or mismatch checks in progress"))),
-                ("added", MonitoringState(title=u"added",
-                                          default_value=0,
-                                          help=_(u"Added to stack"))),
-                ("ready", MonitoringState(title=u"ready", default_value=0, help=_(u"Ready"))),
-                ("sdmMismatch",
-                 MonitoringState(title=u"sdmMismatch",
-                                 default_value=1,
-                                 help=_(u"SDM template mismatch"))),
-                ("verMismatch",
-                 MonitoringState(title=u"verMismatch",
-                                 default_value=1,
-                                 help=_(u"OS version mismatch"))),
-                ("featureMismatch",
-                 MonitoringState(title=u"featureMismatch",
-                                 default_value=1,
-                                 help=_(u"Configured feature mismatch"))),
-                ("newMasterInit",
-                 MonitoringState(title=u"newMasterInit",
-                                 default_value=0,
-                                 help=_(u"Waiting for new master initialization"))),
-                ("provisioned",
-                 MonitoringState(title=u"provisioned",
-                                 default_value=0,
-                                 help=_(u"Not an active member of the stack"))),
-                ("invalid",
-                 MonitoringState(title=u"invalid",
-                                 default_value=2,
-                                 help=_(u"State machine in invalid state"))),
-                ("removed",
-                 MonitoringState(title=u"removed", default_value=2, help=_(u"Removed from stack"))),
-            ],
-            optional_keys=[],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Switch number"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="cisco_stack",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Switch number"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cisco_stack,
+        title=lambda: _("Cisco Stack Switch Status"),
+    ))

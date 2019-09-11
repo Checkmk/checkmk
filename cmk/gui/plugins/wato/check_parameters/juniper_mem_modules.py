@@ -38,39 +38,34 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJuniperMemModules(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _item_spec_juniper_mem_modules():
+    return TextAscii(
+        title=_("Module Name"),
+        help=_("The identificator of the module."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "juniper_mem_modules"
 
-    @property
-    def title(self):
-        return _("Juniper Modules Memory Usage")
+def _parameter_valuespec_juniper_mem_modules():
+    return Tuple(
+        title=_("Specify levels in percentage of total memory usage"),
+        elements=[
+            Percentage(title=_("Warning at a usage of"),
+                       unit=_("% of RAM"),
+                       default_value=80.0,
+                       maxvalue=100.0),
+            Percentage(title=_("Critical at a usage of"),
+                       unit=_("% of RAM"),
+                       default_value=90.0,
+                       maxvalue=100.0)
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Specify levels in percentage of total memory usage"),
-            elements=[
-                Percentage(title=_("Warning at a usage of"),
-                           unit=_("% of RAM"),
-                           default_value=80.0,
-                           maxvalue=100.0),
-                Percentage(title=_("Critical at a usage of"),
-                           unit=_("% of RAM"),
-                           default_value=90.0,
-                           maxvalue=100.0)
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Module Name"),
-            help=_("The identificator of the module."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="juniper_mem_modules",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=_item_spec_juniper_mem_modules,
+        parameter_valuespec=_parameter_valuespec_juniper_mem_modules,
+        title=lambda: _("Juniper Modules Memory Usage"),
+    ))

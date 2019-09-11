@@ -39,35 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMysqlDbSize(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_mysql_db_size():
+    return TextAscii(
+        title=_("Name of the database"),
+        help=_("Don't forget the instance: instance:dbname"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "mysql_db_size"
 
-    @property
-    def title(self):
-        return _("Size of MySQL databases")
+def _parameter_valuespec_mysql_db_size():
+    return Optional(
+        Tuple(elements=[
+            Filesize(title=_("warning at")),
+            Filesize(title=_("critical at")),
+        ],),
+        help=_("The check will trigger a warning or critical state if the size of the "
+               "database exceeds these levels."),
+        title=_("Impose limits on the size of the database"),
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Optional(
-            Tuple(elements=[
-                Filesize(title=_("warning at")),
-                Filesize(title=_("critical at")),
-            ],),
-            help=_("The check will trigger a warning or critical state if the size of the "
-                   "database exceeds these levels."),
-            title=_("Impose limits on the size of the database"),
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the database"),
-            help=_("Don't forget the instance: instance:dbname"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mysql_db_size",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_mysql_db_size,
+        parameter_valuespec=_parameter_valuespec_mysql_db_size,
+        title=lambda: _("Size of MySQL databases"),
+    ))

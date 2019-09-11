@@ -38,81 +38,72 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishFetch(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_fetch():
+    return Dictionary(elements=[
+        ("1xx",
+         Tuple(
+             title=_("Upper levels for \"fetch no body (1xx)\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("204",
+         Tuple(
+             title=_("Upper levels for \"fetch no body (204)\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("304",
+         Tuple(
+             title=_("Upper levels for \"fetch no body (304)\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("bad",
+         Tuple(
+             title=_("Upper levels for \"fetch had bad headers\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("eof",
+         Tuple(
+             title=_("Upper levels for \"fetch EOF\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("failed",
+         Tuple(
+             title=_("Upper levels for \"fetch failed\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("zero",
+         Tuple(
+             title=_("Upper levels for \"fetch zero length\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_fetch"
 
-    @property
-    def title(self):
-        return _("Varnish Fetch")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("1xx",
-             Tuple(
-                 title=_("Upper levels for \"fetch no body (1xx)\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("204",
-             Tuple(
-                 title=_("Upper levels for \"fetch no body (204)\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("304",
-             Tuple(
-                 title=_("Upper levels for \"fetch no body (304)\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("bad",
-             Tuple(
-                 title=_("Upper levels for \"fetch had bad headers\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("eof",
-             Tuple(
-                 title=_("Upper levels for \"fetch EOF\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("failed",
-             Tuple(
-                 title=_("Upper levels for \"fetch failed\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("zero",
-             Tuple(
-                 title=_("Upper levels for \"fetch zero length\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_fetch",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_fetch,
+        title=lambda: _("Varnish Fetch"),
+    ))

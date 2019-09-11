@@ -38,38 +38,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPfUsedStates(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "pf_used_states"
-
-    @property
-    def title(self):
-        return _("Number of used states of OpenBSD PF engine")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "used",
-                    Tuple(
-                        title=_("Limits for the number of used states"),
-                        elements=[
-                            Integer(title=_("warning at")),
-                            Integer(title=_("critical at")),
-                        ],
-                    ),
+def _parameter_valuespec_pf_used_states():
+    return Dictionary(
+        elements=[
+            (
+                "used",
+                Tuple(
+                    title=_("Limits for the number of used states"),
+                    elements=[
+                        Integer(title=_("warning at")),
+                        Integer(title=_("critical at")),
+                    ],
                 ),
-            ],
-            optional_keys=[None],
-        )
+            ),
+        ],
+        optional_keys=[None],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="pf_used_states",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_pf_used_states,
+        title=lambda: _("Number of used states of OpenBSD PF engine"),
+    ))

@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDominoTransactions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_domino_transactions():
+    return Tuple(
+        title=_("Number of Transactions per Minute on a Lotus Domino Server"),
+        elements=[
+            Integer(title=_("warning at"), default_value=30000),
+            Integer(title=_("critical at"), default_value=35000),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "domino_transactions"
 
-    @property
-    def title(self):
-        return _("Lotus Domino Transactions")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Number of Transactions per Minute on a Lotus Domino Server"),
-            elements=[
-                Integer(title=_("warning at"), default_value=30000),
-                Integer(title=_("critical at"), default_value=35000),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="domino_transactions",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_domino_transactions,
+        title=lambda: _("Lotus Domino Transactions"),
+    ))

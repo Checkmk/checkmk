@@ -38,40 +38,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLocal(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_local():
+    return Dictionary(elements=[
+        ("outcome_on_cluster",
+         DropdownChoice(
+             choices=[
+                 ("worst", _("Worst state")),
+                 ("best", _("Best state")),
+             ],
+             title=_("Clusters: Prefered check result of local checks"),
+             help=_("If you're running local checks on clusters via clustered services rule "
+                    "you can influence the check result with this rule. You can choose between "
+                    "best or worst state. Default setting is worst state."),
+             default_value="worst"))
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "local"
 
-    @property
-    def title(self):
-        return _("Settings for local checks")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("outcome_on_cluster",
-             DropdownChoice(
-                 choices=[
-                     ("worst", _("Worst state")),
-                     ("best", _("Best state")),
-                 ],
-                 title=_("Clusters: Prefered check result of local checks"),
-                 help=_("If you're running local checks on clusters via clustered services rule "
-                        "you can influence the check result with this rule. You can choose between "
-                        "best or worst state. Default setting is worst state."),
-                 default_value="worst"))
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of local item"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="local",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of local item")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_local,
+        title=lambda: _("Settings for local checks"),
+    ))

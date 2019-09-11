@@ -41,61 +41,49 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJenkinsNodes(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_jenkins_nodes():
+    return Dictionary(elements=[
+        ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
+        ('jenkins_numexecutors',
+         Tuple(
+             title=_("Lower level for number of executors of this node"),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+        ('avg_response_time',
+         Tuple(
+             title=_("Average round-trip response time to this node"),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ],
+         )),
+        ('jenkins_clock',
+         Tuple(
+             title=_("Clock difference"),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ],
+         )),
+        ("jenkins_temp",
+         Tuple(title=_("Absolute levels for free temp space"),
+               elements=[
+                   Integer(title=_("Warning if below"), unit=_("MB"), minvalue=0),
+                   Integer(title=_("Critical if below"), unit=_("MB"), minvalue=0),
+               ],
+               allow_empty=False)),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "jenkins_nodes"
 
-    @property
-    def title(self):
-        return _("Jenkins nodes")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("jenkins_offline", MonitoringState(title=_("Node state: Offline"), default_value=2)),
-            ('jenkins_numexecutors',
-             Tuple(
-                 title=_("Lower level for number of executors of this node"),
-                 elements=[
-                     Integer(title=_("Warning below")),
-                     Integer(title=_("Critical below")),
-                 ],
-             )),
-            ('avg_response_time',
-             Tuple(
-                 title=_("Average round-trip response time to this node"),
-                 elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
-                 ],
-             )),
-            ('jenkins_clock',
-             Tuple(
-                 title=_("Clock difference"),
-                 elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
-                 ],
-             )),
-            ("jenkins_temp",
-             Tuple(title=_("Absolute levels for free temp space"),
-                   elements=[
-                       Integer(title=_("Warning if below"), unit=_("MB"), minvalue=0),
-                       Integer(title=_("Critical if below"), unit=_("MB"), minvalue=0),
-                   ],
-                   allow_empty=False)),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Node name"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jenkins_nodes",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Node name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_jenkins_nodes,
+        title=lambda: _("Jenkins nodes"),
+    ))

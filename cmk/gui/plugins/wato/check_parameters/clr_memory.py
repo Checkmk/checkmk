@@ -39,45 +39,37 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersClrMemory(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_clr_memory():
+    return TextAscii(
+        title=_("Name of the Application"),
+        help=_("The name of the DotNet (.Net) application or _Global_"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "clr_memory"
 
-    @property
-    def title(self):
-        return _("DotNet (.Net) runtime memory levels")
+def _parameter_valuespec_clr_memory():
+    return Dictionary(
+        help=_("This rule allows to set the warn and crit levels of the memory "
+               "metrics of the DotNet (.Net) Runtime"),
+        elements=[
+            ("upper",
+             Tuple(
+                 title=_("Percent time spent in garbage collection"),
+                 elements=[
+                     Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
+                     Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule allows to set the warn and crit levels of the memory "
-                   "metrics of the DotNet (.Net) Runtime"),
-            elements=[
-                ("upper",
-                 Tuple(
-                     title=_("Percent time spent in garbage collection"),
-                     elements=[
-                         Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
-                         Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the Application"),
-            help=_("The name of the DotNet (.Net) application or _Global_"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="clr_memory",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_clr_memory,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_clr_memory,
+        title=lambda: _("DotNet (.Net) runtime memory levels"),
+    ))

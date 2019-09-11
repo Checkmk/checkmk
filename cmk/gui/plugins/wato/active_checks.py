@@ -1312,7 +1312,13 @@ class RulespecActiveChecksHttp(ABCHostValueRulespec):
             proxy = transformed.setdefault("proxy", {"address": proxy_address})
             # ':' outside a IPv6 address indicates port
             if ':' in proxy_address.split(']')[-1]:
-                proxy["address"], proxy["port"] = proxy_address.rsplit(':', 1)
+                addr, port = proxy_address.rsplit(':', 1)
+                try:
+                    proxy["port"] = int(port)
+                    proxy["address"] = addr
+                except ValueError:
+                    pass  # leave address as it is
+
             auth = mode.pop("proxy_auth", None)
             if auth:
                 proxy["auth"] = auth

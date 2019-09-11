@@ -577,8 +577,8 @@ class CheckMKAgentDataSource(DataSource):
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data = {}
+        piggybacked_hostname = None
         persisted_sections = {}  # handle sections with option persist(...)
-        host = None
         section_content = []
         section_options = {}
         agent_cache_info = {}
@@ -588,23 +588,11 @@ class CheckMKAgentDataSource(DataSource):
             line = line.rstrip("\r")
             stripped_line = line.strip()
             if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
-                host = stripped_line[4:-4]
-                if not host:
-                    host = None
-                else:
-                    host = config.translate_piggyback_host(self._hostname, host)
-                    if host == self._hostname:
-                        host = None  # unpiggybacked "normal" host
+                piggybacked_hostname =\
+                    self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
-                    # Protect Check_MK against unallowed host names. Normally source scripts
-                    # like agent plugins should care about cleaning their provided host names
-                    # up, but we need to be sure here to prevent bugs in Check_MK code.
-                    # a) Replace spaces by underscores
-                    if host:
-                        host = host.replace(" ", "_")
-
-            elif host:  # processing data for an other host
-                piggybacked_raw_data.setdefault(host, []).append(line)
+            elif piggybacked_hostname:  # processing data for an other host
+                piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
@@ -658,6 +646,21 @@ class CheckMKAgentDataSource(DataSource):
                 section_content.append(line.split(separator))
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
+
+    def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
+        piggybacked_hostname = orig_piggyback_header[4:-4]
+        if not piggybacked_hostname:
+            return
+
+        piggybacked_hostname = config.translate_piggyback_host(self._hostname, piggybacked_hostname)
+        if piggybacked_hostname == self._hostname or not piggybacked_hostname:
+            return  # unpiggybacked "normal" host
+
+        # Protect Check_MK against unallowed host names. Normally source scripts
+        # like agent plugins should care about cleaning their provided host names
+        # up, but we need to be sure here to prevent bugs in Check_MK code.
+        # a) Replace spaces by underscores
+        return piggybacked_hostname.replace(" ", "_")
 
     # TODO: refactor
     def _summary_result(self, for_checking):

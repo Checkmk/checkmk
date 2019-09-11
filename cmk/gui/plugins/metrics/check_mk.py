@@ -5982,7 +5982,7 @@ metric_info["avg_flush_time"] = {
 
 metric_info["jenkins_job_score"] = {
     "title": _("Job score"),
-    "unit": "count",
+    "unit": "%",
     "color": "11/a",
 }
 
@@ -6002,6 +6002,18 @@ metric_info["jenkins_numexecutors"] = {
     "title": _("Number of executers"),
     "unit": "count",
     "color": "31/a",
+}
+
+metric_info["jenkins_clock"] = {
+    "title": _("Clock difference"),
+    "unit": "s",
+    "color": "43/a",
+}
+
+metric_info["jenkins_temp"] = {
+    "title": _("Available temp space"),
+    "unit": "bytes",
+    "color": "53/a",
 }
 
 for nimble_op_ty in ["read", "write"]:

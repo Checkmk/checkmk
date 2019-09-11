@@ -146,7 +146,7 @@ def check_jenkins_nodes(item, params, item_data):
 
         for key, column, value, info, ds_key, hr_func in [
             ("monitorData", "hudson.node_monitors.ResponseTimeMonitor", "average",
-             "Average response time", "jenkins_response", get_age_human_readable),
+             "Average response time", "avg_response_time", get_age_human_readable),
             ("monitorData", "hudson.node_monitors.ClockMonitor", "diff", "Clock difference",
              "jenkins_clock", get_age_human_readable),
             ("monitorData", "hudson.node_monitors.TemporarySpaceMonitor", "size", "Free temp space",

@@ -71,7 +71,7 @@ class RulespecCheckgroupParametersJenkinsNodes(CheckParameterRulespecWithItem):
                      Integer(title=_("Critical below")),
                  ],
              )),
-            ('jenkins_response',
+            ('avg_response_time',
              Tuple(
                  title=_("Average round-trip response time to this node"),
                  elements=[

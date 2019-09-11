@@ -57,14 +57,11 @@ node {
                 withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                     sh """
                         cd ${PACKAGE_DIR}/${CMK_VERS}
-                        rm -f HASHES
-                        ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
-                        rsync -av \
+                        rsync -av --relative \
                             --exclude '*dbgsym*.deb' \
-                            -e "ssh -o StrictHostKeyChecking=no \
-                            -i ${RELEASE_KEY_DIR}" \
-                            ${PACKAGE_DIR}/${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/${CMK_VERS}/
+                            -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                            ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/
                     """
                 }
             }

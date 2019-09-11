@@ -39,7 +39,7 @@
 
 def parse_winperf_tcp_conn(info):
     counter_keys = {
-        "2": "ESTABLISHED",
+        "4": "ESTABLISHED",
     }
 
     parsed = {}

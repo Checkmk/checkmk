@@ -1,0 +1,13 @@
+Title: mk_logwatch: acceppt '1'/'0' and 'yes'/'no' for boolean options
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568179666
+Class: fix
+
+From version 1.6.0b1 to 1.6.0b9 the boolean configuration obtions needed to be
+set to 'true' or 'false', while earlier versions also allowed '1' or '0'.
+mk_logwatch now understands (caseinsensitive) 'true', 'false', 'yes', 'no', '1',
+and '0'.

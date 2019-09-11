@@ -39,39 +39,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetscalerSslcerts(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "netscaler_sslcerts"
-
-    @property
-    def title(self):
-        return _("Citrix Netscaler SSL certificates")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                'age_levels',
-                Tuple(
-                    title=_("Remaining days of validity"),
-                    elements=[
-                        Integer(title=_("Warning below"), default_value=30, min_value=0),
-                        Integer(title=_("Critical below"), default_value=10, min_value=0),
-                    ],
-                ),
+def _parameter_valuespec_netscaler_sslcerts():
+    return Dictionary(elements=[
+        (
+            'age_levels',
+            Tuple(
+                title=_("Remaining days of validity"),
+                elements=[
+                    Integer(title=_("Warning below"), default_value=30, min_value=0),
+                    Integer(title=_("Critical below"), default_value=10, min_value=0),
+                ],
             ),
-        ],)
+        ),
+    ],)
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of Certificate"),)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="netscaler_sslcerts",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of Certificate"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_netscaler_sslcerts,
+        title=lambda: _("Citrix Netscaler SSL certificates"),
+    ))

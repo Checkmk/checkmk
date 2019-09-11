@@ -85,39 +85,27 @@ def levels_absolute_or_dynamic(name, value):
         ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlDatafiles(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_datafiles():
+    return Dictionary(
+        title=_("File Size Levels"),
+        help=_("Specify levels for datafiles of a database. Please note that relative "
+               "levels will only work if there is a max_size set for the file on the database "
+               "side."),
+        elements=[
+            ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
+            ("allocated_used_levels",
+             levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),
+            ("allocated_levels", levels_absolute_or_dynamic(_("Datafile"), _("allocated"))),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "mssql_datafiles"
 
-    @property
-    def title(self):
-        return _("MSSQL Datafile Sizes")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("File Size Levels"),
-            help=_("Specify levels for datafiles of a database. Please note that relative "
-                   "levels will only work if there is a max_size set for the file on the database "
-                   "side."),
-            elements=[
-                ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
-                ("allocated_used_levels",
-                 levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),
-                ("allocated_levels", levels_absolute_or_dynamic(_("Datafile"), _("allocated"))),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database Name"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_datafiles",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database Name"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_datafiles,
+        title=lambda: _("MSSQL Datafile Sizes"),
+    ))

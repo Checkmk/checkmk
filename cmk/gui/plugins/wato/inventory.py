@@ -61,174 +61,156 @@ class RulespecGroupInventory(RulespecGroup):
         return _("Configuration of the Check_MK Hardware and Software Inventory System")
 
 
-@rulespec_registry.register
-class RulespecActiveChecksCmkInv(HostRulespec):
-    @property
-    def group(self):
-        return RulespecGroupInventory
-
-    @property
-    def name(self):
-        return "active_checks:cmk_inv"
-
-    @property
-    def match_type(self):
-        return "all"
-
-    @property
-    def valuespec(self):
-        return Transform(
-            Dictionary(elements=[
-                ("sw_changes",
-                 MonitoringState(
-                     title=_("State when software changes are detected"),
-                     default_value=0,
-                 )),
-                ("sw_missing",
-                 MonitoringState(
-                     title=_("State when software packages info is missing"),
-                     default_value=0,
-                 )),
-                ("hw_changes",
-                 MonitoringState(
-                     title=_("State when hardware changes are detected"),
-                     default_value=0,
-                 )),
-                ("fail_status",
-                 MonitoringState(
-                     title=_("State when inventory fails"),
-                     help=_("The check takes this state in case the inventory cannot be "
-                            "updated because of any possible reason. A common use is "
-                            "setting this to OK for workstations that can be switched "
-                            "off - so you will get no notifications in that case."),
-                     default_value=1,
-                 )),
-                ("status_data_inventory",
-                 DropdownChoice(
-                     title=_("Status data inventory"),
-                     help=_("All hosts configured via this ruleset will do a hardware and "
-                            "software inventory after every check cycle if there's at least "
-                            "one inventory plugin which processes status data. "
-                            "<b>Note:</b> in order to get any useful "
-                            "result for agent based hosts make sure that you have installed "
-                            "the agent plugin <tt>mk_inventory</tt> on these hosts."),
-                     choices=[
-                         (True, _("Do status data inventory")),
-                         (False, _("Do not status data inventory")),
-                     ],
-                     default_value=True,
-                 )),
-            ]),
-            title=_("Do hardware/software inventory"),
-            help=_("All hosts configured via this ruleset will do a hardware and "
-                   "software inventory. For each configured host a new active check "
-                   "will be created. You should also create a rule for changing the "
-                   "normal interval for that check to something between a couple of "
-                   "hours and one day. "
-                   "<b>Note:</b> in order to get any useful "
-                   "result for agent based hosts make sure that you have installed "
-                   "the agent plugin <tt>mk_inventory</tt> on these hosts."),
-            forth=lambda x: x is not None and x or {},  # convert from legacy None
-        )
+def _valuespec_active_checks_cmk_inv():
+    return Transform(
+        Dictionary(elements=[
+            ("sw_changes",
+             MonitoringState(
+                 title=_("State when software changes are detected"),
+                 default_value=0,
+             )),
+            ("sw_missing",
+             MonitoringState(
+                 title=_("State when software packages info is missing"),
+                 default_value=0,
+             )),
+            ("hw_changes",
+             MonitoringState(
+                 title=_("State when hardware changes are detected"),
+                 default_value=0,
+             )),
+            ("fail_status",
+             MonitoringState(
+                 title=_("State when inventory fails"),
+                 help=_("The check takes this state in case the inventory cannot be "
+                        "updated because of any possible reason. A common use is "
+                        "setting this to OK for workstations that can be switched "
+                        "off - so you will get no notifications in that case."),
+                 default_value=1,
+             )),
+            ("status_data_inventory",
+             DropdownChoice(
+                 title=_("Status data inventory"),
+                 help=_("All hosts configured via this ruleset will do a hardware and "
+                        "software inventory after every check cycle if there's at least "
+                        "one inventory plugin which processes status data. "
+                        "<b>Note:</b> in order to get any useful "
+                        "result for agent based hosts make sure that you have installed "
+                        "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+                 choices=[
+                     (True, _("Do status data inventory")),
+                     (False, _("Do not status data inventory")),
+                 ],
+                 default_value=True,
+             )),
+        ]),
+        title=_("Do hardware/software inventory"),
+        help=_("All hosts configured via this ruleset will do a hardware and "
+               "software inventory. For each configured host a new active check "
+               "will be created. You should also create a rule for changing the "
+               "normal interval for that check to something between a couple of "
+               "hours and one day. "
+               "<b>Note:</b> in order to get any useful "
+               "result for agent based hosts make sure that you have installed "
+               "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+        forth=lambda x: x is not None and x or {},  # convert from legacy None
+    )
 
 
-@rulespec_registry.register
-class RulespecInvExportsSoftwareCsv(HostRulespec):
-    @property
-    def group(self):
-        return RulespecGroupInventory
-
-    @property
-    def name(self):
-        return "inv_exports:software_csv"
-
-    @property
-    def valuespec(self):
-        return Dictionary(
-            title=_("Export List of Software packages as CSV file"),
-            elements=[
-                ("filename",
-                 TextAscii(
-                     title=_(
-                         "Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"
-                     ),
-                     help=
-                     _("Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
-                       "will be replaced with the host name the inventory has been done for. "
-                       "If you use a relative path then that will be relative to Check_MK's directory "
-                       "for variable data, which is <tt>%s</tt>.") % cmk.utils.paths.var_dir,
-                     allow_empty=False,
-                     size=64,
-                     default_value="csv-export/<HOST>.csv",
-                 )),
-                ("separator",
-                 TextAscii(
-                     title=_("Separator"),
-                     allow_empty=False,
-                     size=1,
-                     default_value=";",
-                 )),
-                ("quotes",
-                 DropdownChoice(
-                     title=_("Quoting"),
-                     choices=[
-                         (None, _("Don't use quotes")),
-                         ("single", _("Use single quotes, escape contained quotes with backslash")),
-                         ("double", _("Use double quotes, escape contained quotes with backslash")),
-                     ],
-                     default_value=None,
-                 )),
-                ("headers",
-                 DropdownChoice(
-                     title=_("Column headers"),
-                     choices=[
-                         (False, _("Do not add column headers")),
-                         (True, _("Add a first row with column titles")),
-                     ],
-                     default_value=False,
-                 )),
-            ],
-            required_keys=["filename"],
-        )
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        match_type="all",
+        name="active_checks:cmk_inv",
+        valuespec=_valuespec_active_checks_cmk_inv,
+    ))
 
 
-@rulespec_registry.register
-class RulespecInvParametersInvIf(HostRulespec):
-    @property
-    def group(self):
-        return RulespecGroupInventory
+def _valuespec_inv_exports_software_csv():
+    return Dictionary(
+        title=_("Export List of Software packages as CSV file"),
+        elements=[
+            ("filename",
+             TextAscii(
+                 title=_(
+                     "Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"),
+                 help=_(
+                     "Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
+                     "will be replaced with the host name the inventory has been done for. "
+                     "If you use a relative path then that will be relative to Check_MK's directory "
+                     "for variable data, which is <tt>%s</tt>.") % cmk.utils.paths.var_dir,
+                 allow_empty=False,
+                 size=64,
+                 default_value="csv-export/<HOST>.csv",
+             )),
+            ("separator",
+             TextAscii(
+                 title=_("Separator"),
+                 allow_empty=False,
+                 size=1,
+                 default_value=";",
+             )),
+            ("quotes",
+             DropdownChoice(
+                 title=_("Quoting"),
+                 choices=[
+                     (None, _("Don't use quotes")),
+                     ("single", _("Use single quotes, escape contained quotes with backslash")),
+                     ("double", _("Use double quotes, escape contained quotes with backslash")),
+                 ],
+                 default_value=None,
+             )),
+            ("headers",
+             DropdownChoice(
+                 title=_("Column headers"),
+                 choices=[
+                     (False, _("Do not add column headers")),
+                     (True, _("Add a first row with column titles")),
+                 ],
+                 default_value=False,
+             )),
+        ],
+        required_keys=["filename"],
+    )
 
-    @property
-    def name(self):
-        return "inv_parameters:inv_if"
 
-    @property
-    def match_type(self):
-        return "dict"
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        name="inv_exports:software_csv",
+        valuespec=_valuespec_inv_exports_software_csv,
+    ))
 
-    @property
-    def valuespec(self):
-        return Dictionary(
-            title=_("Parameters for switch port inventory"),
-            elements=[
-                ("unused_duration",
-                 Age(
-                     title=_("Port down time until considered unused"),
-                     help=_(
-                         "After this time in the state <i>down</i> a port is considered unused."),
-                     default_value=30 * 86400,
-                 )),
-                ("usage_port_types",
-                 DualListChoice(
-                     title=_("Port types to include in usage statistics"),
-                     choices=defines.interface_port_types(),
-                     autoheight=False,
-                     rows=40,
-                     enlarge_active=False,
-                     custom_order=True,
-                     default_value=[
-                         '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
-                         '229'
-                     ],
-                 )),
-            ])
+
+def _valuespec_inv_parameters_inv_if():
+    return Dictionary(
+        title=_("Parameters for switch port inventory"),
+        elements=[
+            ("unused_duration",
+             Age(
+                 title=_("Port down time until considered unused"),
+                 help=_("After this time in the state <i>down</i> a port is considered unused."),
+                 default_value=30 * 86400,
+             )),
+            ("usage_port_types",
+             DualListChoice(
+                 title=_("Port types to include in usage statistics"),
+                 choices=defines.interface_port_types(),
+                 autoheight=False,
+                 rows=40,
+                 enlarge_active=False,
+                 custom_order=True,
+                 default_value=[
+                     '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
+                 ],
+             )),
+        ])
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        match_type="dict",
+        name="inv_parameters:inv_if",
+        valuespec=_valuespec_inv_parameters_inv_if,
+    ))

@@ -37,37 +37,31 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPlugs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_plugs():
+    return TextAscii(
+        title=_("Plug item number or name"),
+        help=
+        _("Whether you need the number or the name depends on the check. Just take a look to the service description."
+         ),
+        allow_empty=True)
 
-    @property
-    def check_group_name(self):
-        return "plugs"
 
-    @property
-    def title(self):
-        return _("State of PDU Plugs")
+def _parameter_valuespec_plugs():
+    return DropdownChoice(help=_("This rule sets the required state of a PDU plug. It is meant to "
+                                 "be independent of the hardware manufacturer."),
+                          title=_("Required plug state"),
+                          choices=[
+                              ("on", _("Plug is ON")),
+                              ("off", _("Plug is OFF")),
+                          ],
+                          default_value="on")
 
-    @property
-    def parameter_valuespec(self):
-        return DropdownChoice(help=_(
-            "This rule sets the required state of a PDU plug. It is meant to "
-            "be independent of the hardware manufacturer."),
-                              title=_("Required plug state"),
-                              choices=[
-                                  ("on", _("Plug is ON")),
-                                  ("off", _("Plug is OFF")),
-                              ],
-                              default_value="on")
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Plug item number or name"),
-            help=
-            _("Whether you need the number or the name depends on the check. Just take a look to the service description."
-             ),
-            allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="plugs",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_plugs,
+        parameter_valuespec=_parameter_valuespec_plugs,
+        title=lambda: _("State of PDU Plugs"),
+    ))

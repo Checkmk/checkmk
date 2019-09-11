@@ -38,50 +38,41 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWinperfTsSessions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "winperf_ts_sessions"
-
-    @property
-    def title(self):
-        return _("Windows Terminal Server Sessions")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This check monitors number of active and inactive terminal "
-                   "server sessions."),
-            elements=[
-                (
-                    "active",
-                    Tuple(
-                        title=_("Number of active sessions"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
-                        ],
-                    ),
+def _parameter_valuespec_winperf_ts_sessions():
+    return Dictionary(
+        help=_("This check monitors number of active and inactive terminal "
+               "server sessions."),
+        elements=[
+            (
+                "active",
+                Tuple(
+                    title=_("Number of active sessions"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
+                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                    ],
                 ),
-                (
-                    "inactive",
-                    Tuple(
-                        title=_("Number of inactive sessions"),
-                        help=_("Levels for the number of sessions that are currently inactive"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
-                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
-                        ],
-                    ),
+            ),
+            (
+                "inactive",
+                Tuple(
+                    title=_("Number of inactive sessions"),
+                    help=_("Levels for the number of sessions that are currently inactive"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
+                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="winperf_ts_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_winperf_ts_sessions,
+        title=lambda: _("Windows Terminal Server Sessions"),
+    ))

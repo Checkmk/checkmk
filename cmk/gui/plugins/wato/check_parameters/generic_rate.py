@@ -39,45 +39,33 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersGenericRate(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_generic_rate():
+    return Dictionary(elements=[
+        ("levels",
+         Tuple(
+             title=_("Upper levels"),
+             elements=[
+                 Float(title="Warning at", unit="/s"),
+                 Float(title="Critical at", unit="/s"),
+             ],
+         )),
+        ("levels_lower",
+         Tuple(
+             title=_("Lower levels"),
+             elements=[
+                 Float(title="Warning below", unit="/s"),
+                 Float(title="Critical below", unit="/s"),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "generic_rate"
 
-    @property
-    def title(self):
-        return _("Generic rate")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Tuple(
-                 title=_("Upper levels"),
-                 elements=[
-                     Float(title="Warning at", unit="/s"),
-                     Float(title="Critical at", unit="/s"),
-                 ],
-             )),
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower levels"),
-                 elements=[
-                     Float(title="Warning below", unit="/s"),
-                     Float(title="Critical below", unit="/s"),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Item"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="generic_rate",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Item"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_generic_rate,
+        title=lambda: _("Generic rate"),
+    ))

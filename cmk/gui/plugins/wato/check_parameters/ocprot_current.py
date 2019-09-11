@@ -38,27 +38,18 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOcprotCurrent(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_ocprot_current():
+    return Tuple(elements=[
+        Float(title=_("Warning at"), unit=u"A", default_value=14.0),
+        Float(title=_("Critical at"), unit=u"A", default_value=15.0),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "ocprot_current"
 
-    @property
-    def title(self):
-        return _("Electrical Current of Overcurrent Protectors")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Float(title=_("Warning at"), unit=u"A", default_value=14.0),
-            Float(title=_("Critical at"), unit=u"A", default_value=15.0),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("The Index of the Overcurrent Protector"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ocprot_current",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=lambda: TextAscii(title=_("The Index of the Overcurrent Protector")),
+        parameter_valuespec=_parameter_valuespec_ocprot_current,
+        title=lambda: _("Electrical Current of Overcurrent Protectors"),
+    ))

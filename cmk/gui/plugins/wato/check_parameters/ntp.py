@@ -68,68 +68,50 @@ def _ntp_params():
         ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNtpPeer(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "ntp_peer"
-
-    @property
-    def title(self):
-        return _("State of NTP peer")
-
-    @property
-    def parameter_valuespec(self):
-        return _ntp_params()
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the peer"))
+def _item_spec_ntp_peer():
+    return TextAscii(title=_("Name of the peer"))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNtpTime(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ntp_peer",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=_item_spec_ntp_peer,
+        parameter_valuespec=_ntp_params,
+        title=lambda: _("State of NTP peer"),
+    ))
 
-    @property
-    def check_group_name(self):
-        return "ntp_time"
 
-    @property
-    def title(self):
-        return _("State of NTP time synchronisation")
+def _parameter_valuespec_ntp_time():
+    return Transform(
+        Dictionary(elements=[
+            (
+                "ntp_levels",
+                _ntp_params(),
+            ),
+            ("alert_delay",
+             Tuple(title=_("Phases without synchronization"),
+                   elements=[
+                       Age(
+                           title=_("Warning at"),
+                           display=["hours", "minutes"],
+                           default_value=300,
+                       ),
+                       Age(
+                           title=_("Critical at"),
+                           display=["hours", "minutes"],
+                           default_value=3600,
+                       ),
+                   ])),
+        ],),
+        forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(elements=[
-                (
-                    "ntp_levels",
-                    _ntp_params(),
-                ),
-                ("alert_delay",
-                 Tuple(title=_("Phases without synchronization"),
-                       elements=[
-                           Age(
-                               title=_("Warning at"),
-                               display=["hours", "minutes"],
-                               default_value=300,
-                           ),
-                           Age(
-                               title=_("Critical at"),
-                               display=["hours", "minutes"],
-                               default_value=3600,
-                           ),
-                       ])),
-            ],),
-            forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ntp_time",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ntp_time,
+        title=lambda: _("State of NTP time synchronisation"),
+    ))

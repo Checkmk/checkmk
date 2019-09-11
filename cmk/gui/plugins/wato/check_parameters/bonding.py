@@ -38,44 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBonding(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_bonding():
+    return Dictionary(elements=[
+        ("expect_active",
+         DropdownChoice(
+             title=_("Warn on unexpected active interface"),
+             choices=[
+                 ("ignore", _("ignore which one is active")),
+                 ("primary", _("require primary interface to be active")),
+                 ("lowest", _("require interface that sorts lowest alphabetically")),
+             ],
+             default_value="ignore",
+         )),
+        ("ieee_302_3ad_agg_id_missmatch_state",
+         MonitoringState(
+             title=_("State for missmatching Aggregator IDs for LACP"),
+             default_state=1,
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "bonding"
 
-    @property
-    def title(self):
-        return _("Status of Linux bonding interfaces")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("expect_active",
-             DropdownChoice(
-                 title=_("Warn on unexpected active interface"),
-                 choices=[
-                     ("ignore", _("ignore which one is active")),
-                     ("primary", _("require primary interface to be active")),
-                     ("lowest", _("require interface that sorts lowest alphabetically")),
-                 ],
-                 default_value="ignore",
-             )),
-            ("ieee_302_3ad_agg_id_missmatch_state",
-             MonitoringState(
-                 title=_("State for missmatching Aggregator IDs for LACP"),
-                 default_state=1,
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the bonding interface"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="bonding",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Name of the bonding interface")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_bonding,
+        title=lambda: _("Status of Linux bonding interfaces"),
+    ))

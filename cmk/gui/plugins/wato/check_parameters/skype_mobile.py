@@ -38,42 +38,33 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSkypeMobile(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_skype_mobile():
+    return Dictionary(
+        elements=[('requests_processing',
+                   Dictionary(
+                       title=_("Requests in Processing"),
+                       elements=[
+                           ("upper",
+                            Tuple(elements=[
+                                Integer(title=_("Warning at"),
+                                        unit=_("per second"),
+                                        default_value=10000),
+                                Integer(title=_("Critical at"),
+                                        unit=_("per second"),
+                                        default_value=20000),
+                            ],)),
+                       ],
+                       optional_keys=[],
+                   ))],
+        optional_keys=[],
+    )
 
-    @property
-    def check_group_name(self):
-        return "skype_mobile"
 
-    @property
-    def title(self):
-        return _("Skype for Business Mobile")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[('requests_processing',
-                       Dictionary(
-                           title=_("Requests in Processing"),
-                           elements=[
-                               ("upper",
-                                Tuple(elements=[
-                                    Integer(title=_("Warning at"),
-                                            unit=_("per second"),
-                                            default_value=10000),
-                                    Integer(title=_("Critical at"),
-                                            unit=_("per second"),
-                                            default_value=20000),
-                                ],)),
-                           ],
-                           optional_keys=[],
-                       ))],
-            optional_keys=[],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="skype_mobile",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_skype_mobile,
+        title=lambda: _("Skype for Business Mobile"),
+    ))

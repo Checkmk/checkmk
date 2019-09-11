@@ -39,77 +39,71 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersKernelPerformance(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_kernel_performance():
+    return Dictionary(elements=[
+        ("ctxt",
+         Levels(
+             unit=_("events per second"),
+             title=_("Context Switches"),
+             default_levels=(1000, 5000),
+             default_difference=(500.0, 1000.0),
+             default_value=None,
+         )),
+        ("processes",
+         Levels(
+             unit=_("events per second"),
+             title=_("Process Creations"),
+             default_levels=(1000, 5000),
+             default_difference=(500.0, 1000.0),
+             default_value=None,
+         )),
+        ("pgmajfault",
+         Levels(
+             unit=_("events per second"),
+             title=_("Major Page Faults"),
+             default_levels=(1000, 5000),
+             default_difference=(500.0, 1000.0),
+             default_value=None,
+         )),
+        (
+            "page_swap_in_levels_lower",
+            Tuple(title=_("Swap In Lower"),
+                  elements=[
+                      Float(title=_("Swap In warning below"), unit=_("events per second")),
+                      Float(title=_("Swap In critical below"), unit=_("events per second"))
+                  ]),
+        ),
+        (
+            "page_swap_in_levels",
+            Tuple(title=_("Swap In Upper"),
+                  elements=[
+                      Float(title=_("Swap In warning at"), unit=_("events per second")),
+                      Float(title=_("Swap In critical at"), unit=_("events per second"))
+                  ]),
+        ),
+        (
+            "page_swap_out_levels_lower",
+            Tuple(title=_("Swap Out Lower"),
+                  elements=[
+                      Float(title=_("Swap Out warning below"), unit=_("events per second")),
+                      Float(title=_("Swap Out critical below"), unit=_("events per second"))
+                  ]),
+        ),
+        (
+            "page_swap_out_levels",
+            Tuple(title=_("Swap Out Upper"),
+                  elements=[
+                      Float(title=_("Swap Out warning at"), unit=_("events per second")),
+                      Float(title=_("Swap Out critical at"), unit=_("events per second"))
+                  ]),
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "kernel_performance"
 
-    @property
-    def title(self):
-        return _("Number of kernel events per second")
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("ctxt",
-             Levels(
-                 unit=_("events per second"),
-                 title=_("Context Switches"),
-                 default_levels=(1000, 5000),
-                 default_difference=(500.0, 1000.0),
-                 default_value=None,
-             )),
-            ("processes",
-             Levels(
-                 unit=_("events per second"),
-                 title=_("Process Creations"),
-                 default_levels=(1000, 5000),
-                 default_difference=(500.0, 1000.0),
-                 default_value=None,
-             )),
-            ("pgmajfault",
-             Levels(
-                 unit=_("events per second"),
-                 title=_("Major Page Faults"),
-                 default_levels=(1000, 5000),
-                 default_difference=(500.0, 1000.0),
-                 default_value=None,
-             )),
-            (
-                "page_swap_in_levels_lower",
-                Tuple(title=_("Swap In Lower"),
-                      elements=[
-                          Float(title=_("Swap In warning below"), unit=_("events per second")),
-                          Float(title=_("Swap In critical below"), unit=_("events per second"))
-                      ]),
-            ),
-            (
-                "page_swap_in_levels",
-                Tuple(title=_("Swap In Upper"),
-                      elements=[
-                          Float(title=_("Swap In warning at"), unit=_("events per second")),
-                          Float(title=_("Swap In critical at"), unit=_("events per second"))
-                      ]),
-            ),
-            (
-                "page_swap_out_levels_lower",
-                Tuple(title=_("Swap Out Lower"),
-                      elements=[
-                          Float(title=_("Swap Out warning below"), unit=_("events per second")),
-                          Float(title=_("Swap Out critical below"), unit=_("events per second"))
-                      ]),
-            ),
-            (
-                "page_swap_out_levels",
-                Tuple(title=_("Swap Out Upper"),
-                      elements=[
-                          Float(title=_("Swap Out warning at"), unit=_("events per second")),
-                          Float(title=_("Swap Out critical at"), unit=_("events per second"))
-                      ]),
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="kernel_performance",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_kernel_performance,
+        title=lambda: _("Number of kernel events per second"),
+    ))

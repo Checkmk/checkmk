@@ -31,17 +31,9 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-
-@rulespec_registry.register
-class ManualCheckParameterVMState(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksVirtualization
-
-    @property
-    def check_group_name(self):
-        return "vm_state"
-
-    @property
-    def title(self):
-        return _("Overall state of a virtual machine (for example ESX VMs)")
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="vm_state",
+        group=RulespecGroupManualChecksVirtualization,
+        title=lambda: _("Overall state of a virtual machine (for example ESX VMs)"),
+    ))

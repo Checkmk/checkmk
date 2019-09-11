@@ -38,31 +38,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFireeyeContent(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_fireeye_content():
+    return Dictionary(elements=[(
+        "update_time_levels",
+        Tuple(title=_("Upper levels for the age of the update"),
+              elements=[
+                  Age(title=_("Warning at")),
+                  Age(title=_("Critical at")),
+              ]),
+    )])
 
-    @property
-    def check_group_name(self):
-        return "fireeye_content"
 
-    @property
-    def title(self):
-        return _("Fireeye Security Content")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[(
-            "update_time_levels",
-            Tuple(title=_("Upper levels for the age of the update"),
-                  elements=[
-                      Age(title=_("Warning at")),
-                      Age(title=_("Critical at")),
-                  ]),
-        )])
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fireeye_content",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fireeye_content,
+        title=lambda: _("Fireeye Security Content"),
+    ))

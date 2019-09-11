@@ -40,55 +40,43 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCpuUtilizationMultiitem(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "cpu_utilization_multiitem"
-
-    @property
-    def title(self):
-        return _("CPU utilization of Devices with Modules")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("The CPU utilization sums up the percentages of CPU time that is used "
-                   "for user processes and kernel routines over all available cores within "
-                   "the last check interval. The possible range is from 0% to 100%"),
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Alert on too high CPU utilization"),
-                        elements=[
-                            Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                            Percentage(title=_("Critical at a utilization of"), default_value=95.0)
-                        ],
-                    ),
+def _parameter_valuespec_cpu_utilization_multiitem():
+    return Dictionary(
+        help=_("The CPU utilization sums up the percentages of CPU time that is used "
+               "for user processes and kernel routines over all available cores within "
+               "the last check interval. The possible range is from 0% to 100%"),
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Alert on too high CPU utilization"),
+                    elements=[
+                        Percentage(title=_("Warning at a utilization of"), default_value=90.0),
+                        Percentage(title=_("Critical at a utilization of"), default_value=95.0)
+                    ],
                 ),
-                ("average",
-                 Integer(
-                     title=_("Averaging"),
-                     help=
-                     _("Average the CPU utilization over the specified time period before levels are applied."
-                      ),
-                     unit=_("minutes"),
-                     minvalue=1,
-                     default_value=15,
-                     label=_("Compute average over last "),
-                 )),
-            ],
-        )
+            ),
+            ("average",
+             Integer(
+                 title=_("Averaging"),
+                 help=
+                 _("Average the CPU utilization over the specified time period before levels are applied."
+                  ),
+                 unit=_("minutes"),
+                 minvalue=1,
+                 default_value=15,
+                 label=_("Compute average over last "),
+             )),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Module name"), allow_empty=False)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="cpu_utilization_multiitem",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cpu_utilization_multiitem,
+        title=lambda: _("CPU utilization of Devices with Modules"),
+    ))

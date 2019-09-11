@@ -39,42 +39,34 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMotion(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_motion():
+    return TextAscii(
+        title=_("Sensor name"),
+        help=_("The identifier of the sensor."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "motion"
 
-    @property
-    def title(self):
-        return _("Motion Detectors")
+def _parameter_valuespec_motion():
+    return Dictionary(elements=[
+        ("time_periods",
+         Dictionary(
+             title=_("Time periods"),
+             help=_("Specifiy time ranges during which no motion is expected. "
+                    "Outside these times, the motion detector will always be in "
+                    "state OK"),
+             elements=[(day_id, ListOfTimeRanges(title=day_str))
+                       for day_id, day_str in defines.weekdays_by_name()],
+             optional_keys=[],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("time_periods",
-             Dictionary(
-                 title=_("Time periods"),
-                 help=_("Specifiy time ranges during which no motion is expected. "
-                        "Outside these times, the motion detector will always be in "
-                        "state OK"),
-                 elements=[(day_id, ListOfTimeRanges(title=day_str))
-                           for day_id, day_str in defines.weekdays_by_name()],
-                 optional_keys=[],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Sensor name"),
-            help=_("The identifier of the sensor."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="motion",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_motion,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_motion,
+        title=lambda: _("Motion Detectors"),
+    ))

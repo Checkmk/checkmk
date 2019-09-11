@@ -35,25 +35,11 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.check_parameters.fortigate_sessions import fortigate_sessions_element
 
-
-@rulespec_registry.register
-class RulespecCheckgroupParametersFortigateNodeSessions(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
-
-    @property
-    def check_group_name(self):
-        return "fortigate_node_sessions"
-
-    @property
-    def title(self):
-        return _("Fortigate Active Sessions")
-
-    @property
-    def parameter_valuespec(self):
-        return fortigate_sessions_element()
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Node name"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="fortigate_node_sessions",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Node name"), allow_empty=False),
+        parameter_valuespec=fortigate_sessions_element,
+        title=lambda: _("Fortigate Active Sessions"),
+    ))

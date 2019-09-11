@@ -40,62 +40,54 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmTp(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_jvm_tp():
+    return TextAscii(
+        title=_("Name of the virtual machine and/or<br>threadpool"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "jvm_tp"
 
-    @property
-    def title(self):
-        return _("JVM tomcat threadpool levels")
+def _parameter_valuespec_jvm_tp():
+    return Dictionary(
+        help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
+        elements=[
+            ("currentThreadCount",
+             Alternative(
+                 title=_("Current thread count levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Percentage levels of current thread count in threadpool"),
+                         elements=[
+                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
+                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                         ],
+                     )
+                 ],
+             )),
+            ("currentThreadsBusy",
+             Alternative(
+                 title=_("Current threads busy levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Percentage of current threads busy in threadpool"),
+                         elements=[
+                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
+                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                         ],
+                     )
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
-            elements=[
-                ("currentThreadCount",
-                 Alternative(
-                     title=_("Current thread count levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Percentage levels of current thread count in threadpool"),
-                             elements=[
-                                 Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                                 Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
-                             ],
-                         )
-                     ],
-                 )),
-                ("currentThreadsBusy",
-                 Alternative(
-                     title=_("Current threads busy levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Percentage of current threads busy in threadpool"),
-                             elements=[
-                                 Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                                 Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
-                             ],
-                         )
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine and/or<br>threadpool"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_tp",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_jvm_tp,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_jvm_tp,
+        title=lambda: _("JVM tomcat threadpool levels"),
+    ))

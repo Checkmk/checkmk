@@ -44,47 +44,35 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVolumeGroups(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_volume_groups():
+    return Dictionary(elements=[
+        ("levels",
+         Alternative(
+             title=_("Levels for volume group"),
+             show_alternative_title=True,
+             default_value=(80.0, 90.0),
+             match=match_dual_level_type,
+             elements=[
+                 get_free_used_dynamic_valuespec("used", "volume group"),
+                 Transform(get_free_used_dynamic_valuespec("free",
+                                                           "volume group",
+                                                           default_value=(20.0, 10.0)),
+                           title=_("Levels for volume group free space"),
+                           allow_empty=False,
+                           forth=transform_filesystem_free,
+                           back=transform_filesystem_free)
+             ],
+         )),
+    ],
+                      optional_keys=False)
 
-    @property
-    def check_group_name(self):
-        return "volume_groups"
 
-    @property
-    def title(self):
-        return _("Volume Groups (LVM)")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Alternative(
-                 title=_("Levels for volume group"),
-                 show_alternative_title=True,
-                 default_value=(80.0, 90.0),
-                 match=match_dual_level_type,
-                 elements=[
-                     get_free_used_dynamic_valuespec("used", "volume group"),
-                     Transform(get_free_used_dynamic_valuespec("free",
-                                                               "volume group",
-                                                               default_value=(20.0, 10.0)),
-                               title=_("Levels for volume group free space"),
-                               allow_empty=False,
-                               forth=transform_filesystem_free,
-                               back=transform_filesystem_free)
-                 ],
-             )),
-        ],
-                          optional_keys=False)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Volume Group"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="volume_groups",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Volume Group"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_volume_groups,
+        title=lambda: _("Volume Groups (LVM)"),
+    ))

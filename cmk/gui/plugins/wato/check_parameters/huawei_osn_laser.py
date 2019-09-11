@@ -39,47 +39,35 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHuaweiOsnLaser(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_huawei_osn_laser():
+    return Dictionary(elements=[
+        ('levels_low_in',
+         Tuple(
+             title=_('Levels for laser input'),
+             default_value=(-160.0, -180.0),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+        ('levels_low_out',
+         Tuple(
+             title=_('Levels for laser output'),
+             default_value=(-160.0, -180.0),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "huawei_osn_laser"
 
-    @property
-    def title(self):
-        return _("OSN Laser attenuation")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('levels_low_in',
-             Tuple(
-                 title=_('Levels for laser input'),
-                 default_value=(-160.0, -180.0),
-                 elements=[
-                     Integer(title=_("Warning below")),
-                     Integer(title=_("Critical below")),
-                 ],
-             )),
-            ('levels_low_out',
-             Tuple(
-                 title=_('Levels for laser output'),
-                 default_value=(-160.0, -180.0),
-                 elements=[
-                     Integer(title=_("Warning below")),
-                     Integer(title=_("Critical below")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Laser id"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="huawei_osn_laser",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Laser id")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_huawei_osn_laser,
+        title=lambda: _("OSN Laser attenuation"),
+    ))

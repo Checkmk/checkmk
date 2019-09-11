@@ -39,39 +39,27 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersThreeparCapacity(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "threepar_capacity"
-
-    @property
-    def title(self):
-        return _("3Par Capacity (used space and growth)")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return vs_filesystem([
-            (
-                "failed_capacity_levels",
-                Tuple(
-                    title=_("Levels for failed capacity in percent"),
-                    elements=[
-                        Percentage(title=_("Warning at"), default=0.0),
-                        Percentage(title=_("Critical at"), default=0.0),
-                    ],
-                ),
+def _parameter_valuespec_threepar_capacity():
+    return vs_filesystem([
+        (
+            "failed_capacity_levels",
+            Tuple(
+                title=_("Levels for failed capacity in percent"),
+                elements=[
+                    Percentage(title=_("Warning at"), default=0.0),
+                    Percentage(title=_("Critical at"), default=0.0),
+                ],
             ),
-        ],)
+        ),
+    ],)
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Device type"), allow_empty=False)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="threepar_capacity",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Device type"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_threepar_capacity,
+        title=lambda: _("3Par Capacity (used space and growth)"),
+    ))

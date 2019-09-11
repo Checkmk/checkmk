@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishCache(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_cache():
+    return Dictionary(elements=[
+        ("miss",
+         Tuple(
+             title=_("Upper levels for \"cache misses\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_cache"
 
-    @property
-    def title(self):
-        return _("Varnish Cache")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("miss",
-             Tuple(
-                 title=_("Upper levels for \"cache misses\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_cache",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_cache,
+        title=lambda: _("Varnish Cache"),
+    ))

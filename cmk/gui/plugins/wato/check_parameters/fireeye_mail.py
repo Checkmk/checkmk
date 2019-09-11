@@ -37,31 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFireeyeMail(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_fireeye_mail():
+    return Dictionary(elements=[
+        (
+            "interval",
+            Integer(title="Timespan for mail rate computation", default_value=60, unit="minutes"),
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "fireeye_mail"
 
-    @property
-    def title(self):
-        return _("Fireeye Mail Rate Average")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "interval",
-                Integer(title="Timespan for mail rate computation",
-                        default_value=60,
-                        unit="minutes"),
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fireeye_mail",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fireeye_mail,
+        title=lambda: _("Fireeye Mail Rate Average"),
+    ))

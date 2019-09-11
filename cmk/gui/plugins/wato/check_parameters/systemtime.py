@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSystemtime(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_systemtime():
+    return Tuple(
+        title=_("Time offset"),
+        elements=[
+            Integer(title=_("Warning at"), unit=_("Seconds")),
+            Integer(title=_("Critical at"), unit=_("Seconds")),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "systemtime"
 
-    @property
-    def title(self):
-        return _("Windows system time offset")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Time offset"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("Seconds")),
-                Integer(title=_("Critical at"), unit=_("Seconds")),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="systemtime",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_systemtime,
+        title=lambda: _("Windows system time offset"),
+    ))

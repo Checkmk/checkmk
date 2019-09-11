@@ -38,91 +38,83 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersIbmSvcMdisk(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_ibm_svc_mdisk():
+    return TextAscii(
+        title=_("IBM SVC disk"),
+        help=_("Name of the disk, e.g. mdisk0"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "ibm_svc_mdisk"
 
-    @property
-    def title(self):
-        return _("IBM SVC Disk")
+def _parameter_valuespec_ibm_svc_mdisk():
+    return Dictionary(
+        optional_keys=False,
+        elements=[
+            (
+                "online_state",
+                MonitoringState(
+                    title=_("Resulting state if disk is online"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "degraded_state",
+                MonitoringState(
+                    title=_("Resulting state if disk is degraded"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "offline_state",
+                MonitoringState(
+                    title=_("Resulting state if disk is offline"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "excluded_state",
+                MonitoringState(
+                    title=_("Resulting state if disk is excluded"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "managed_mode",
+                MonitoringState(
+                    title=_("Resulting state if disk is in managed mode"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "array_mode",
+                MonitoringState(
+                    title=_("Resulting state if disk is in array mode"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "image_mode",
+                MonitoringState(
+                    title=_("Resulting state if disk is in image mode"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "unmanaged_mode",
+                MonitoringState(
+                    title=_("Resulting state if disk is in unmanaged mode"),
+                    default_value=1,
+                ),
+            ),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            optional_keys=False,
-            elements=[
-                (
-                    "online_state",
-                    MonitoringState(
-                        title=_("Resulting state if disk is online"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "degraded_state",
-                    MonitoringState(
-                        title=_("Resulting state if disk is degraded"),
-                        default_value=1,
-                    ),
-                ),
-                (
-                    "offline_state",
-                    MonitoringState(
-                        title=_("Resulting state if disk is offline"),
-                        default_value=2,
-                    ),
-                ),
-                (
-                    "excluded_state",
-                    MonitoringState(
-                        title=_("Resulting state if disk is excluded"),
-                        default_value=2,
-                    ),
-                ),
-                (
-                    "managed_mode",
-                    MonitoringState(
-                        title=_("Resulting state if disk is in managed mode"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "array_mode",
-                    MonitoringState(
-                        title=_("Resulting state if disk is in array mode"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "image_mode",
-                    MonitoringState(
-                        title=_("Resulting state if disk is in image mode"),
-                        default_value=0,
-                    ),
-                ),
-                (
-                    "unmanaged_mode",
-                    MonitoringState(
-                        title=_("Resulting state if disk is in unmanaged mode"),
-                        default_value=1,
-                    ),
-                ),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("IBM SVC disk"),
-            help=_("Name of the disk, e.g. mdisk0"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ibm_svc_mdisk",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_ibm_svc_mdisk,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ibm_svc_mdisk,
+        title=lambda: _("IBM SVC Disk"),
+    ))

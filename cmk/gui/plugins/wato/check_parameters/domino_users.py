@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDominoUsers(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_domino_users():
+    return Tuple(
+        title=_("Number of Lotus Domino Users"),
+        elements=[
+            Integer(title=_("warning at"), default_value=1000),
+            Integer(title=_("critical at"), default_value=1500),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "domino_users"
 
-    @property
-    def title(self):
-        return _("Lotus Domino Users")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Number of Lotus Domino Users"),
-            elements=[
-                Integer(title=_("warning at"), default_value=1000),
-                Integer(title=_("critical at"), default_value=1500),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="domino_users",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_domino_users,
+        title=lambda: _("Lotus Domino Users"),
+    ))

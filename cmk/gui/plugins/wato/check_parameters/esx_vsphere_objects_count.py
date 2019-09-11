@@ -40,45 +40,35 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEsxVsphereObjectsCount(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_esx_vsphere_objects_count():
+    return Dictionary(
+        optional_keys=False,
+        elements=[
+            ("distribution",
+             ListOf(
+                 Dictionary(
+                     optional_keys=False,
+                     elements=[("vm_names", ListOfStrings(title=_("VMs"))),
+                               ("hosts_count", Integer(title=_("Number of hosts"),
+                                                       default_value=2)),
+                               ("state",
+                                MonitoringState(title=_("State if violated"), default_value=1))],
+                 ),
+                 title=_("VM distribution"),
+                 help=_(
+                     "You can specify lists of VM names and a number of hosts,"
+                     " to make sure the specfied VMs are distributed across at least so many hosts."
+                     " E.g. provide two VM names and set 'Number of hosts' to two,"
+                     " to make sure those VMs are not running on the same host."))),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "esx_vsphere_objects_count"
 
-    @property
-    def title(self):
-        return _("Distribution of virtual machines over ESX hosts")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            optional_keys=False,
-            elements=[
-                ("distribution",
-                 ListOf(
-                     Dictionary(
-                         optional_keys=False,
-                         elements=[
-                             ("vm_names", ListOfStrings(title=_("VMs"))),
-                             ("hosts_count", Integer(title=_("Number of hosts"), default_value=2)),
-                             ("state", MonitoringState(title=_("State if violated"),
-                                                       default_value=1))
-                         ],
-                     ),
-                     title=_("VM distribution"),
-                     help=_(
-                         "You can specify lists of VM names and a number of hosts,"
-                         " to make sure the specfied VMs are distributed across at least so many hosts."
-                         " E.g. provide two VM names and set 'Number of hosts' to two,"
-                         " to make sure those VMs are not running on the same host."))),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="esx_vsphere_objects_count",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_esx_vsphere_objects_count,
+        title=lambda: _("Distribution of virtual machines over ESX hosts"),
+    ))

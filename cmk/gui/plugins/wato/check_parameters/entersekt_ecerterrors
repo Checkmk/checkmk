@@ -41,36 +41,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleJobs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_entersekt_ecerterrors():
+    return Dictionary(elements=[
+        (
+            "levels",
+            Tuple(title=_("Upper levels for HTTP Ecert Errors"),
+                  elements=[
+                      Integer(title=_("Warning if above"), default_value=100, allow_empty=False),
+                      Integer(title=_("Critical if above"), default_value=200, allow_empty=False)
+                  ]),
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "entersekt_ecerterrors"
 
-    @property
-    def title(self):
-        return _("Entersekt HTTP Ecert Errors")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "levels",
-                Tuple(title=_("Upper levels for HTTP Ecert Errors"),
-                      elements=[
-                          Integer(title=_("Warning if above"), default_value=100,
-                                  allow_empty=False),
-                          Integer(title=_("Critical if above"),
-                                  default_value=200,
-                                  allow_empty=False)
-                      ]),
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="entersekt_ecerterrors",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_entersekt_ecerterrors,
+        title=lambda: _("Entersekt HTTP Ecert Errors"),
+    ))

@@ -31,17 +31,9 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-
-@rulespec_registry.register
-class ManualCheckParameterZypper(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "zypper"
-
-    @property
-    def title(self):
-        return _("Zypper Updates")
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="zypper",
+        group=RulespecGroupManualChecksOperatingSystem,
+        title=lambda: _("Zypper Updates"),
+    ))

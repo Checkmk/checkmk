@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersUptime(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_uptime():
+    return Dictionary(elements=[
+        ("min",
+         Tuple(
+             title=_("Minimum required uptime"),
+             elements=[
+                 Age(title=_("Warning if below")),
+                 Age(title=_("Critical if below")),
+             ],
+         )),
+        ("max",
+         Tuple(
+             title=_("Maximum allowed uptime"),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "uptime"
 
-    @property
-    def title(self):
-        return _("Uptime since last reboot")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("min",
-             Tuple(
-                 title=_("Minimum required uptime"),
-                 elements=[
-                     Age(title=_("Warning if below")),
-                     Age(title=_("Critical if below")),
-                 ],
-             )),
-            ("max",
-             Tuple(
-                 title=_("Maximum allowed uptime"),
-                 elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="uptime",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_uptime,
+        title=lambda: _("Uptime since last reboot"),
+    ))

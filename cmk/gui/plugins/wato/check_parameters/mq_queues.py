@@ -39,48 +39,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMqQueues(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_mq_queues():
+    return TextAscii(title=_("Queue Name"),
+                     help=_("The name of the queue like in the Apache queue manager"))
 
-    @property
-    def check_group_name(self):
-        return "mq_queues"
 
-    @property
-    def title(self):
-        return _("Apache ActiveMQ Queue lengths")
+def _parameter_valuespec_mq_queues():
+    return Dictionary(elements=[
+        ("size",
+         Tuple(
+             title=_("Levels for the queue length"),
+             help=_("Set the maximum and minimum length for the queue size"),
+             elements=[
+                 Integer(title="Warning at a size of"),
+                 Integer(title="Critical at a size of"),
+             ],
+         )),
+        ("consumerCount",
+         Tuple(
+             title=_("Levels for the consumer count"),
+             help=_("Consumer Count is the size of connected consumers to a queue"),
+             elements=[
+                 Integer(title="Warning less then"),
+                 Integer(title="Critical less then"),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("size",
-             Tuple(
-                 title=_("Levels for the queue length"),
-                 help=_("Set the maximum and minimum length for the queue size"),
-                 elements=[
-                     Integer(title="Warning at a size of"),
-                     Integer(title="Critical at a size of"),
-                 ],
-             )),
-            ("consumerCount",
-             Tuple(
-                 title=_("Levels for the consumer count"),
-                 help=_("Consumer Count is the size of connected consumers to a queue"),
-                 elements=[
-                     Integer(title="Warning less then"),
-                     Integer(title="Critical less then"),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Queue Name"),
-                         help=_("The name of the queue like in the Apache queue manager"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mq_queues",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_mq_queues,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mq_queues,
+        title=lambda: _("Apache ActiveMQ Queue lengths"),
+    ))

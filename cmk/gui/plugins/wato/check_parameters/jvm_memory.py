@@ -41,106 +41,98 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmMemory(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_jvm_memory():
+    return TextAscii(
+        title=_("Name of the virtual machine"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "jvm_memory"
 
-    @property
-    def title(self):
-        return _("JVM memory levels")
+def _parameter_valuespec_jvm_memory():
+    return Dictionary(
+        help=_("This rule allows to set the warn and crit levels of the heap / "
+               "non-heap and total memory area usage on web application servers. "
+               "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        elements=[
+            ("totalheap",
+             Alternative(
+                 title=_("Total Memory Levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Percentage levels of used space"),
+                         elements=[
+                             Percentage(title=_("Warning at"), label=_("% usage")),
+                             Percentage(title=_("Critical at"), label=_("% usage")),
+                         ],
+                     ),
+                     Tuple(
+                         title=_("Absolute free space in MB"),
+                         elements=[
+                             Integer(title=_("Warning if below"), unit=_("MB")),
+                             Integer(title=_("Critical if below"), unit=_("MB")),
+                         ],
+                     )
+                 ],
+             )),
+            ("heap",
+             Alternative(
+                 title=_("Heap Memory Levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Percentage levels of used space"),
+                         elements=[
+                             Percentage(title=_("Warning at"), label=_("% usage")),
+                             Percentage(title=_("Critical at"), label=_("% usage")),
+                         ],
+                     ),
+                     Tuple(
+                         title=_("Absolute free space in MB"),
+                         elements=[
+                             Integer(title=_("Warning if below"), unit=_("MB")),
+                             Integer(title=_("Critical if below"), unit=_("MB")),
+                         ],
+                     )
+                 ],
+             )),
+            ("nonheap",
+             Alternative(
+                 title=_("Nonheap Memory Levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Percentage levels of used space"),
+                         elements=[
+                             Percentage(title=_("Warning at"), label=_("% usage")),
+                             Percentage(title=_("Critical at"), label=_("% usage")),
+                         ],
+                     ),
+                     Tuple(
+                         title=_("Absolute free space in MB"),
+                         elements=[
+                             Integer(title=_("Warning if below"), unit=_("MB")),
+                             Integer(title=_("Critical if below"), unit=_("MB")),
+                         ],
+                     )
+                 ],
+             )),
+            ("perm",
+             Tuple(
+                 title=_("Perm Memory usage"),
+                 elements=[
+                     Percentage(title=_("Warning at"), label=_("% usage")),
+                     Percentage(title=_("Critical at"), label=_("% usage")),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule allows to set the warn and crit levels of the heap / "
-                   "non-heap and total memory area usage on web application servers. "
-                   "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
-            elements=[
-                ("totalheap",
-                 Alternative(
-                     title=_("Total Memory Levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Percentage levels of used space"),
-                             elements=[
-                                 Percentage(title=_("Warning at"), label=_("% usage")),
-                                 Percentage(title=_("Critical at"), label=_("% usage")),
-                             ],
-                         ),
-                         Tuple(
-                             title=_("Absolute free space in MB"),
-                             elements=[
-                                 Integer(title=_("Warning if below"), unit=_("MB")),
-                                 Integer(title=_("Critical if below"), unit=_("MB")),
-                             ],
-                         )
-                     ],
-                 )),
-                ("heap",
-                 Alternative(
-                     title=_("Heap Memory Levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Percentage levels of used space"),
-                             elements=[
-                                 Percentage(title=_("Warning at"), label=_("% usage")),
-                                 Percentage(title=_("Critical at"), label=_("% usage")),
-                             ],
-                         ),
-                         Tuple(
-                             title=_("Absolute free space in MB"),
-                             elements=[
-                                 Integer(title=_("Warning if below"), unit=_("MB")),
-                                 Integer(title=_("Critical if below"), unit=_("MB")),
-                             ],
-                         )
-                     ],
-                 )),
-                ("nonheap",
-                 Alternative(
-                     title=_("Nonheap Memory Levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Percentage levels of used space"),
-                             elements=[
-                                 Percentage(title=_("Warning at"), label=_("% usage")),
-                                 Percentage(title=_("Critical at"), label=_("% usage")),
-                             ],
-                         ),
-                         Tuple(
-                             title=_("Absolute free space in MB"),
-                             elements=[
-                                 Integer(title=_("Warning if below"), unit=_("MB")),
-                                 Integer(title=_("Critical if below"), unit=_("MB")),
-                             ],
-                         )
-                     ],
-                 )),
-                ("perm",
-                 Tuple(
-                     title=_("Perm Memory usage"),
-                     elements=[
-                         Percentage(title=_("Warning at"), label=_("% usage")),
-                         Percentage(title=_("Critical at"), label=_("% usage")),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_memory",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_jvm_memory,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_jvm_memory,
+        title=lambda: _("JVM memory levels"),
+    ))

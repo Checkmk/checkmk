@@ -178,7 +178,7 @@ class ModeObjectParameters(WatoMode):
             # via checkgroup_parameters but via "logwatch_rules" in a special
             # WATO module.
             elif checkgroup == "logwatch":
-                rulespec = rulespec_registry["logwatch_rules"]()
+                rulespec = rulespec_registry["logwatch_rules"]
                 self._output_analysed_ruleset(all_rulesets,
                                               rulespec,
                                               svc_desc_or_item=serviceinfo["item"],
@@ -195,7 +195,7 @@ class ModeObjectParameters(WatoMode):
                 grouprule = "checkgroup_parameters:" + checkgroup
                 if grouprule not in rulespec_registry:
                     try:
-                        rulespec = rulespec_registry["static_checks:" + checkgroup]()
+                        rulespec = rulespec_registry["static_checks:" + checkgroup]
                     except KeyError:
                         rulespec = None
 
@@ -213,7 +213,7 @@ class ModeObjectParameters(WatoMode):
                                                  _("This check is not configurable via WATO"))
 
                 else:
-                    rulespec = rulespec_registry[grouprule]()
+                    rulespec = rulespec_registry[grouprule]
                     self._output_analysed_ruleset(all_rulesets,
                                                   rulespec,
                                                   svc_desc_or_item=serviceinfo["item"],
@@ -226,7 +226,7 @@ class ModeObjectParameters(WatoMode):
             if not checkgroup:
                 html.write_text(_("This check is not configurable via WATO"))
             else:
-                rulespec = rulespec_registry["static_checks:" + checkgroup]()
+                rulespec = rulespec_registry["static_checks:" + checkgroup]
                 itemspec = rulespec.item_spec
                 if itemspec:
                     item_text = itemspec.value_to_text(serviceinfo["item"])
@@ -247,7 +247,7 @@ class ModeObjectParameters(WatoMode):
 
         elif origin == "active":
             checktype = serviceinfo["checktype"]
-            rulespec = rulespec_registry["active_checks:" + checktype]()
+            rulespec = rulespec_registry["active_checks:" + checktype]
             self._output_analysed_ruleset(all_rulesets,
                                           rulespec,
                                           svc_desc_or_item=None,

@@ -40,47 +40,34 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJuniperCpuUtil(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "juniper_cpu_util"
-
-    @property
-    def title(self):
-        return _("Juniper Processor Utilization of Routing Engine")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                help=_("CPU utilization of routing engine."),
-                optional_keys=[],
-                elements=[
-                    (
-                        "levels",
-                        Tuple(
-                            title=_(
-                                "Specify levels in percentage of processor routing engine usage"),
-                            elements=[
-                                Percentage(title=_("Warning at"), default_value=80.0),
-                                Percentage(title=_("Critical at"), default_value=90.0),
-                            ],
-                        ),
+def _parameter_valuespec_juniper_cpu_util():
+    return Transform(
+        Dictionary(
+            help=_("CPU utilization of routing engine."),
+            optional_keys=[],
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Specify levels in percentage of processor routing engine usage"),
+                        elements=[
+                            Percentage(title=_("Warning at"), default_value=80.0),
+                            Percentage(title=_("Critical at"), default_value=90.0),
+                        ],
                     ),
-                ],
-            ),
-            forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
-        )
+                ),
+            ],
+        ),
+        forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Routing Engine"),)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="juniper_cpu_util",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=lambda: TextAscii(title=_("Routing Engine"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
+        title=lambda: _("Juniper Processor Utilization of Routing Engine"),
+    ))

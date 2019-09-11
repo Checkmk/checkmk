@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishCacheHitRatio(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_cache_hit_ratio():
+    return Dictionary(elements=[
+        ("levels_lower",
+         Tuple(
+             title=_("Lower levels"),
+             elements=[
+                 Percentage(title=_("Warning if below"), default_value=70.0, allow_empty=False),
+                 Percentage(title=_("Critical if below"), default_value=60.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_cache_hit_ratio"
 
-    @property
-    def title(self):
-        return _("Varnish Cache Hit Ratio")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower levels"),
-                 elements=[
-                     Percentage(title=_("Warning if below"), default_value=70.0, allow_empty=False),
-                     Percentage(title=_("Critical if below"), default_value=60.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_cache_hit_ratio",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_cache_hit_ratio,
+        title=lambda: _("Varnish Cache Hit Ratio"),
+    ))

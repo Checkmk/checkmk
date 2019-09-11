@@ -37,31 +37,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecDiscoveryNetappPortsRules(HostRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
+def _valuespec_discovery_netapp_api_ports_ignored():
+    return Dictionary(title=_("Discovery of Netapp ports"),
+                      elements=[
+                          ("ignored_ports",
+                           ListChoice(title=_("Ignore port types during discovery"),
+                                      help=_("Specify which port types should not be discovered"),
+                                      choices=[
+                                          ("physical", _("Physical")),
+                                          ("vlan", _("Vlan")),
+                                          ("trunk", _("Trunk")),
+                                      ])),
+                      ])
 
-    @property
-    def name(self):
-        return "discovery_netapp_api_ports_ignored"
 
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def valuespec(self):
-        return Dictionary(title=_("Discovery of Netapp ports"),
-                          elements=[
-                              ("ignored_ports",
-                               ListChoice(
-                                   title=_("Ignore port types during discovery"),
-                                   help=_("Specify which port types should not be discovered"),
-                                   choices=[
-                                       ("physical", _("Physical")),
-                                       ("vlan", _("Vlan")),
-                                       ("trunk", _("Trunk")),
-                                   ])),
-                          ])
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="dict",
+        name="discovery_netapp_api_ports_ignored",
+        valuespec=_valuespec_discovery_netapp_api_ports_ignored,
+    ))

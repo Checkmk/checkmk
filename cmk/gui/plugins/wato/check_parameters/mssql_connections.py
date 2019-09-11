@@ -39,37 +39,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlConnections(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_connections():
+    return Dictionary(elements=[(
+        "levels",
+        Tuple(
+            title=_("Upper levels for the number of active database connections"),
+            elements=[
+                Integer(title=_("Warning if over"), default_value=20),
+                Integer(title=_("Critical if over"), default_value=50),
+            ],
+        ),
+    )],)
 
-    @property
-    def check_group_name(self):
-        return "mssql_connections"
 
-    @property
-    def title(self):
-        return _("MSSQL Connections")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[(
-            "levels",
-            Tuple(
-                title=_("Upper levels for the number of active database connections"),
-                elements=[
-                    Integer(title=_("Warning if over"), default_value=20),
-                    Integer(title=_("Critical if over"), default_value=50),
-                ],
-            ),
-        )],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database identifier"), allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_connections",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database identifier"), allow_empty=True),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_connections,
+        title=lambda: _("MSSQL Connections"),
+    ))

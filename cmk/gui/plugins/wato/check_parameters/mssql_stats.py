@@ -39,61 +39,49 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlStats(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_stats():
+    return Dictionary(elements=[
+        ("batch_requests/sec",
+         Tuple(
+             title=_("Batch Requests/sec"),
+             elements=[
+                 Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
+                 Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),
+             ],
+         )),
+        ("sql_compilations/sec",
+         Tuple(
+             title=_("SQL Compilations/sec"),
+             elements=[
+                 Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
+                 Float(title=_("critical at"), unit=_("/sec"), default_value=20000.0),
+             ],
+         )),
+        ("sql_re-compilations/sec",
+         Tuple(
+             title=_("SQL Re-Compilations/sec"),
+             elements=[
+                 Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
+                 Float(title=_("critical at"), unit=_("/sec"), default_value=200.0),
+             ],
+         )),
+        ("locks_per_batch",
+         Tuple(
+             title=_("Locks/Batch"),
+             elements=[
+                 Float(title=_("warning at"), default_value=1000.0),
+                 Float(title=_("critical at"), default_value=3000.0),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "mssql_stats"
 
-    @property
-    def title(self):
-        return _("MSSQL Statistics")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("batch_requests/sec",
-             Tuple(
-                 title=_("Batch Requests/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec"), default_value=100000.0),
-                     Float(title=_("critical at"), unit=_("/sec"), default_value=200000.0),
-                 ],
-             )),
-            ("sql_compilations/sec",
-             Tuple(
-                 title=_("SQL Compilations/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
-                     Float(title=_("critical at"), unit=_("/sec"), default_value=20000.0),
-                 ],
-             )),
-            ("sql_re-compilations/sec",
-             Tuple(
-                 title=_("SQL Re-Compilations/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec"), default_value=10000.0),
-                     Float(title=_("critical at"), unit=_("/sec"), default_value=200.0),
-                 ],
-             )),
-            ("locks_per_batch",
-             Tuple(
-                 title=_("Locks/Batch"),
-                 elements=[
-                     Float(title=_("warning at"), default_value=1000.0),
-                     Float(title=_("critical at"), default_value=3000.0),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Counter ID"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_stats",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Counter ID"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_stats,
+        title=lambda: _("MSSQL Statistics"),
+    ))

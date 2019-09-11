@@ -1358,7 +1358,10 @@ class DiscoveryPageRenderer(object):
                 DiscoveryState.CUSTOM_IGNORED,
                 DiscoveryState.ACTIVE_IGNORED,
         ]:
-            html.write_text(output)
+            # Do not show long output
+            service_details = output.split("\n", 1)
+            if service_details:
+                html.write_text(service_details[0])
             return
 
         div_id = "activecheck_%s" % descr

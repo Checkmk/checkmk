@@ -21,5 +21,5 @@ discovery = {'': [(None, 'tcp_conn_stats_default_levels')]}
 
 checks = {'': [(None,
                 {},
-                [(0, 'ESTABLISHED: 53267', []),
-                 (0, '', [('ESTABLISHED', 53267, None, None, None, None)])])]}
+                [(0, 'ESTABLISHED: 3', []),
+                 (0, '', [('ESTABLISHED', 3, None, None, None, None)])])]}

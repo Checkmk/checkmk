@@ -1,0 +1,11 @@
+Title: winperf_tcp_conn: fix for parse function of winperf tcp check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b10
+Date: 1568200647
+
+This is a bug fix where the wrong information was previously retrieved during the parse procedure.

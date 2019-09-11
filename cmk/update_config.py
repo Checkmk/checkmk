@@ -58,6 +58,7 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.modules
 import cmk.gui.config
+import cmk.gui.utils
 import cmk.gui.htmllib as htmllib
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request, Response
@@ -85,12 +86,13 @@ class UpdateConfig(object):
         logging.getLogger().addHandler(console_handler)
 
     def run(self):
-        self._logger.log(VERBOSE, "Updating Checkmk configuration...")
-
+        self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
         with AppContext(DummyApplication(environ, None)), \
              RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
             self._initialize_gui_environment()
+
+            self._logger.log(VERBOSE, "Updating Checkmk configuration...")
             for step_func, title in self._steps():
                 self._logger.log(VERBOSE, " + %s..." % title)
                 step_func()
@@ -128,7 +130,17 @@ class UpdateConfig(object):
         all_rulesets.save()
 
     def _initialize_gui_environment(self):
+        self._logger.log(VERBOSE, "Loading GUI plugins...")
         cmk.gui.modules.load_all_plugins()
+        failed_plugins = cmk.gui.utils.get_failed_plugins()
+
+        if failed_plugins:
+            self._logger.error("")
+            self._logger.error("ERROR: Failed to load some GUI plugins. You will either have \n"
+                               "       to remove or update them to be compatible with this \n"
+                               "       Checkmk version.")
+            self._logger.error("")
+
         # TODO: We are about to rewrite parts of the config. Would be better to be executable without
         # loading the configuration first (because the load_config() may miss some conversion logic
         # which is only known to cmk.update_config in the future).
@@ -151,7 +163,8 @@ def main(args):
     except Exception:
         if arguments.debug:
             raise
-        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
+        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\" "
+                         "BEFORE starting the site again.")
         return 1
     return 0
 

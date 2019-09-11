@@ -219,6 +219,7 @@ input.button:not([type=password]) {
 
 input.button.hot {
   &, &:active {
+    color: $hot-font-color;
     background-color: #11bd7b;
     border: 1px solid #11bd7b;
   }
@@ -1393,7 +1394,7 @@ th.header_state {
 }
 
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
-  color: $hot-color;
+  color: $hot-font-color;
   background-color: $hot-bg-color;
   border-color: $theme-color-nuance-16;
 }

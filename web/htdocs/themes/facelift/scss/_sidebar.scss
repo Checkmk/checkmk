@@ -263,7 +263,11 @@ body.side div.snapin, div.add_snapin div.snapin  {
   box-sizing: border-box;
 
   &:first-child {
-    margin-top: $snapin-first-margin-top;
+    margin-top: $sidebar-ends-margin;
+  }
+
+  &:last-of-type {
+    margin-bottom: $sidebar-ends-margin;
   }
 }
 

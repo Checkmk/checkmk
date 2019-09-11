@@ -374,7 +374,7 @@ $host-diag-failed-bg-color:		    #fee;
 $wato-inherited-color:			    #444;
 
 $hot-bg-color:				    rgb(255, 160, 66);
-$hot-color:				    null;
+$hot-font-color:			    $grey-5;
 
 $input-hover-bg-color:			    #edeceb;
 
@@ -456,7 +456,7 @@ $duallist-control-a-hover-bg-color:             $wato-a-hover-bg-color;
 
 $side-content-top:                              66px;
 $snapin-margin:                                 8px 0;
-$snapin-first-margin-top:			6px;
+$sidebar-ends-margin:				6px;
 
 $main-body-padding:                             68px 16px 60px;
 
@@ -488,3 +488,6 @@ $host-folder-font-color:		    #bde;
 $snapin-link-hover-color:		    #fff;
 
 $if-state-up-font-color:		    null;
+
+$foldertree-snapin-bg-color:		    $theme-color-lightgrey;
+$foldertree-snapin-font-color:		    $theme-color-nuance-7;

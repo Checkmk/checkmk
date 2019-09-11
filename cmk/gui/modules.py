@@ -141,7 +141,7 @@ def _cmk_gui_top_level_modules():
 
 
 def _find_local_web_plugins():
-    basedir = cmk.utils.paths.local_web_dir + "/plugins/"
+    basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
 
     try:
         plugin_dirs = os.listdir(basedir)

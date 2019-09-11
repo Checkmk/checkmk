@@ -69,6 +69,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from html import escape as html_escape  # type: ignore
+from pathlib2 import Path
 
 import six
 
@@ -1649,13 +1650,13 @@ class html(ABCHTMLGenerator):
     def _plugin_stylesheets(self):
         plugin_stylesheets = set([])
         for directory in [
-                cmk.utils.paths.web_dir + "/htdocs/css",
-                cmk.utils.paths.local_web_dir + "/htdocs/css",
+                Path(cmk.utils.paths.web_dir, "htdocs", "css"),
+                cmk.utils.paths.local_web_dir.joinpath("htdocs", "css"),
         ]:
-            if os.path.exists(directory):
-                for fn in os.listdir(directory):
-                    if fn.endswith(".css"):
-                        plugin_stylesheets.add(fn)
+            if directory.exists():
+                for entry in directory.iterdir():
+                    if entry.suffix == ".css":
+                        plugin_stylesheets.add(entry.name)
         return plugin_stylesheets
 
     # Make the browser load specified javascript files. We have some special handling here:

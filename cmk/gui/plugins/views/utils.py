@@ -29,13 +29,13 @@
 
 import abc
 from collections import namedtuple
-import os
 import time
 import re
 import hashlib
 import traceback
 from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
+from pathlib2 import Path
 
 import livestatus
 
@@ -1881,13 +1881,12 @@ class Cell(object):
     def render_for_pdf(self, row, time_range):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
-            dirs = [
-                cmk.utils.paths.local_web_dir + "/htdocs/",
-                cmk.utils.paths.web_dir + "/htdocs/",
-            ]
-            for d in dirs:
-                if os.path.exists(d + filename):
-                    return d + filename
+            for file_path in [
+                    cmk.utils.paths.local_web_dir.joinpath("htdocs", filename),
+                    Path(cmk.utils.paths.web_dir, "htdocs", filename),
+            ]:
+                if file_path.exists():
+                    return str(file_path)
 
         try:
             row = join_row(row, self)

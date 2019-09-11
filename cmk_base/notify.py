@@ -1280,9 +1280,9 @@ def create_bulk_parameter_context(params):
 
 def path_to_notification_script(plugin):
     # Call actual script without any arguments
-    local_path = cmk.utils.paths.local_notifications_dir + "/" + plugin
-    if os.path.exists(local_path):
-        path = local_path
+    local_path = cmk.utils.paths.local_notifications_dir / plugin
+    if local_path.exists():
+        path = str(local_path)
     else:
         path = cmk.utils.paths.notifications_dir + "/" + plugin
 

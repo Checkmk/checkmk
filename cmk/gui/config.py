@@ -1041,7 +1041,7 @@ def load_plugins(force):
 def theme_choices():
     themes = {}
 
-    for base_dir in [Path(cmk.utils.paths.web_dir), Path(cmk.utils.paths.local_web_dir)]:
+    for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
         if not base_dir.exists():
             continue
 

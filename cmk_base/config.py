@@ -1215,7 +1215,7 @@ def load_all_checks(get_check_api_context):
     global _all_checks_loaded
 
     _initialize_data_structures()
-    filelist = get_plugin_paths(cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+    filelist = get_plugin_paths(str(cmk.utils.paths.local_checks_dir), cmk.utils.paths.checks_dir)
     load_checks(get_check_api_context, filelist)
 
     _all_checks_loaded = True
@@ -1404,9 +1404,9 @@ def load_check_includes(check_file_path, check_context):
 
 
 def check_include_file_path(include_file_name):
-    local_path = os.path.join(cmk.utils.paths.local_checks_dir, include_file_name)
-    if os.path.exists(local_path):
-        return local_path
+    local_path = cmk.utils.paths.local_checks_dir / include_file_name
+    if local_path.exists():
+        return str(local_path)
     return os.path.join(cmk.utils.paths.checks_dir, include_file_name)
 
 
@@ -1454,7 +1454,7 @@ def _write_check_include_cache(cache_file_path, includes):
 
 
 def _include_cache_file_path(path):
-    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.include_cache_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
@@ -1553,7 +1553,7 @@ def _is_plugin_precompiled(path, precompiled_path):
 
 
 def _precompiled_plugin_path(path):
-    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.precompiled_checks_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 

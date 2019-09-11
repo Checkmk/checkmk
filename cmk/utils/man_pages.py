@@ -277,7 +277,7 @@ def man_page_exists(name):
 def man_page_path(name):
     if name[0] != "." and name[-1] != "~":
         for basedir in [
-                Path(cmk.utils.paths.local_check_manpages_dir),
+                cmk.utils.paths.local_check_manpages_dir,
                 Path(cmk.utils.paths.check_manpages_dir)
         ]:
             p = basedir / name
@@ -289,15 +289,17 @@ def man_page_path(name):
 def all_man_pages():
     manuals = {}
 
-    for basedir in [cmk.utils.paths.check_manpages_dir, cmk.utils.paths.local_check_manpages_dir]:
-        if not os.path.exists(basedir):
+    for basedir in [
+            Path(cmk.utils.paths.check_manpages_dir), cmk.utils.paths.local_check_manpages_dir
+    ]:
+        if not basedir.exists():
             continue
 
-        for name in os.listdir(basedir):
-            if name[0] == "." or name[-1] == "~":
+        for file_path in basedir.iterdir():
+            if file_path.name.startswith(".") or file_path.name.endswith("~"):
                 continue
 
-            manuals[name] = basedir + "/" + name
+            manuals[file_path.name] = str(file_path)
 
     return manuals
 

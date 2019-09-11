@@ -1,0 +1,14 @@
+Title: Windows Agent: Increased speed of processing data coming from plugins
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568210995
+Class: fix
+
+Previously, a plugin that generated large amounts of data could be interrupted 
+by the timeout. An example of such plugin is mssql.vbs.    
+
+Now this problem is solved and the Windows Agent agent fully supports such 
+plugins.

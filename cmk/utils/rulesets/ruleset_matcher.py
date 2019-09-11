@@ -318,7 +318,7 @@ class RulesetOptimizer(object):
         for the current hostset """
         used_groups = set()
         for hostname in self._all_processed_hosts:
-            used_groups.add(self._host_grouped_ref[hostname])
+            used_groups.add(self._host_grouped_ref.get(hostname, ()))
 
         if not used_groups:
             self._all_processed_hosts_similarity = 1

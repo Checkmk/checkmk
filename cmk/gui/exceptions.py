@@ -86,6 +86,16 @@ class MKUnauthenticatedException(MKGeneralException):
         return _("Missing authentication credentials")
 
 
+class MKIncompatiblePluginException(MKGeneralException):
+    def title(self):
+        # type: () -> unicode
+        return _("Incompatible plugin")
+
+    def plain_title(self):
+        # type: () -> unicode
+        return _("Incompatible plugin")
+
+
 class MKConfigError(MKException):
     def title(self):
         # type: () -> unicode

@@ -57,7 +57,9 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.modules
 import cmk.gui.config
+import cmk.gui.utils
 import cmk.gui.htmllib as htmllib
+from cmk.gui.exceptions import MKIncompatiblePluginException
 from cmk.gui.globals import html, current_app
 from cmk.gui.http import Request, Response
 
@@ -78,9 +80,10 @@ class UpdateConfig(object):
         self._logger = logger
 
     def run(self):
-        self._logger.verbose("Updating Checkmk configuration...")
+        self._logger.verbose("Initializing application...")
         self._initialize_gui_environment()
 
+        self._logger.verbose("Updating Checkmk configuration...")
         for step_func, title in self._steps():
             self._logger.verbose(" + %s..." % title)
             step_func()
@@ -122,12 +125,28 @@ class UpdateConfig(object):
         current_app.set_current(DummyApplication(environ, None))
         html.set_current(htmllib.html(Request(environ), Response(is_secure=False)))
 
+        self._logger.verbose("Loading GUI plugins...")
         cmk.gui.modules.load_all_plugins()
+        failed_plugins = cmk.gui.utils.get_failed_plugins()
+
+        if failed_plugins:
+            _show_failed_plugin_error(self._logger)
+            self._logger.error("       We'll continue with updating your configuration. You\n"
+                               "       may be able to start your site after this, but it is\n"
+                               "       recommended to remove the incompatible plugins soon.\n")
+
         # TODO: We are about to rewrite parts of the config. Would be better to be executable without
         # loading the configuration first (because the load_config() may miss some conversion logic
         # which is only known to cmk.update_config in the future).
         cmk.gui.config.load_config()
         cmk.gui.config.set_super_user()
+
+
+def _show_failed_plugin_error(logger):
+    logger.error("")
+    logger.error("ERROR: Failed to load some GUI plugins. You will either have \n"
+                 "       to remove or update them to be compatible with this \n"
+                 "       Checkmk version.\n")
 
 
 def main(args):
@@ -142,10 +161,21 @@ def main(args):
 
     try:
         UpdateConfig(logger, arguments).run()
+    except MKIncompatiblePluginException:
+        if arguments.debug:
+            raise
+        _show_failed_plugin_error(logger)
+        logger.exception("       We can not continue updating your config. You\n"
+                         "       will have to repair or remove your incompatible\n"
+                         "       plugins and run \"cmk-update-config -v\" BEFORE\n"
+                         "       starting your site again.\n\n")
+        return 1
+
     except Exception:
         if arguments.debug:
             raise
-        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
+        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\" "
+                         "BEFORE starting the site again.")
         return 1
     return 0
 

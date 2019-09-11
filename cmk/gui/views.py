@@ -69,6 +69,7 @@ from cmk.gui.exceptions import (
     MKGeneralException,
     MKUserError,
     MKInternalError,
+    MKIncompatiblePluginException,
 )
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -513,16 +514,17 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
     # will be displayed.
     if multisite_painter_options:
-        raise MKGeneralException("Found legacy painter option plugins: %s. You will either have to "
-                                 "remove or migrate them." %
-                                 ", ".join(multisite_painter_options.keys()))
+        raise MKIncompatiblePluginException(
+            "Found legacy painter option plugins: %s. You will either have to "
+            "remove or migrate them." % ", ".join(multisite_painter_options.keys()))
     if multisite_layouts:
-        raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
-                                 "remove or migrate them." % ", ".join(multisite_layouts.keys()))
+        raise MKIncompatiblePluginException(
+            "Found legacy layout plugins: %s. You will either have to "
+            "remove or migrate them." % ", ".join(multisite_layouts.keys()))
     if multisite_datasources:
-        raise MKGeneralException("Found legacy data source plugins: %s. You will either have to "
-                                 "remove or migrate them." %
-                                 ", ".join(multisite_datasources.keys()))
+        raise MKIncompatiblePluginException(
+            "Found legacy data source plugins: %s. You will either have to "
+            "remove or migrate them." % ", ".join(multisite_datasources.keys()))
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:

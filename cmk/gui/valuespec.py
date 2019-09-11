@@ -1531,8 +1531,8 @@ class ListOfMultiple(ValueSpec):
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
         if self._delete_style == "filter":
-            self._show_content(varprefix, ident, value)
             self._show_del_button(varprefix, ident)
+            self._show_content(varprefix, ident, value)
         else:
             self._show_del_button(varprefix, ident)
             self._show_content(varprefix, ident, value)

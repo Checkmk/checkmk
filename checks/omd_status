@@ -42,7 +42,6 @@
 
 
 def inventory_omd_status(info):
-    yield HostLabel(u"cmk/check_mk_server", u"yes")
     for site in info.keys():
         yield site, None
 

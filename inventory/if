@@ -100,8 +100,14 @@ def inv_if(info, params, inventory_tree):
 
         last_change_timestamp = round_to_day(now - state_age)
 
+        # in case ifIndex is missing
+        try:
+            if_index_nr = int(if_index)
+        except ValueError:
+            if_index_nr = ""
+
         interfaces.append({
-            "index": int(if_index),
+            "index": if_index_nr,
             "description": if_descr,
             "alias": if_alias,
             "speed": speed,

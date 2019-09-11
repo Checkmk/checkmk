@@ -30,7 +30,10 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
-    ("fromstart=True", 'fromstart', True),
+    ("fromstart=1", 'fromstart', True),
+    ("fromstart=yEs", 'fromstart', True),
+    ("fromstart=0", 'fromstart', False),
+    ("fromstart=no", 'fromstart', False),
     ("maxoutputsize=1024", 'maxoutputsize', 1024),
 ])
 def test_options_setter(mk_logwatch, option_string, key, expected_value):

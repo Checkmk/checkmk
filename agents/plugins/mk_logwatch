@@ -659,7 +659,7 @@ def process_logfile(logfile, patterns, opt, status):
 class Options(object):
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
-    MAP_BOOL = {'true': True, 'false': False}
+    MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
     DEFAULTS = {
         'maxfilesize': None,
         'maxlines': None,

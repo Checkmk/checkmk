@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import copy
-import urlparse
 import six
 
 import cmk.gui.mkeventd as mkeventd
@@ -1051,7 +1050,7 @@ class RulespecActiveChecksHttp(ABCHostValueRulespec):
                                                   " (e.g. '/index.html')."),
                                            allow_empty=False,
                                            default_value="/",
-                                           validate=self._validate_uri)),
+                                       )),
                                       ("ssl",
                                        Transform(
                                            DropdownChoice(
@@ -1281,11 +1280,6 @@ class RulespecActiveChecksHttp(ABCHostValueRulespec):
             ),
             forth=self._transform_check_http,
         )
-
-    def _validate_uri(self, value, varprefix):
-        url = urlparse.urlsplit(value)
-        if url.scheme or url.netloc or not url.path.startswith('/'):
-            raise MKUserError(varprefix, _("Invalid URI (see help for details)"))
 
     def _validate_all(self, value, varprefix):
         _name, mode = value['mode']

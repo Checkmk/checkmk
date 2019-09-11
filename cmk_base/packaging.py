@@ -81,7 +81,7 @@ PERM_MAP = (
     (cmk.utils.paths.local_bin_dir, 0o755),
     (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0o755),
     (cmk.utils.paths.local_lib_dir, 0o644),
-    (cmk.utils.paths.local_mib_dir, 0o644),
+    (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
     (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0o755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
@@ -114,7 +114,7 @@ _package_parts = [
     PackagePart("locales", "Localizations", cmk.utils.paths.local_locale_dir),
     PackagePart("bin", "Binaries", cmk.utils.paths.local_bin_dir),
     PackagePart("lib", "Libraries", cmk.utils.paths.local_lib_dir),
-    PackagePart("mibs", "SNMP MIBs", cmk.utils.paths.local_mib_dir),
+    PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
     PackagePart("alert_handlers", "Alert handlers",
                 cmk.utils.paths.local_share_dir + "/alert_handlers"),
 ]

@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-import errno
 import logging
 import os
 import re
 import time
 import zipfile
 import cStringIO
+from typing import Union, Dict, Text  # pylint: disable=unused-import
+from pathlib2 import Path  # pylint: disable=unused-import
 
 from pysmi.compiler import MibCompiler  # type: ignore
 from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore
@@ -2424,7 +2425,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        file(cmk.gui.mkeventd.mib_upload_dir() + "/" + filename, "w").write(content)
+        with cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).open("w") as f:
+            f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
 
@@ -2519,7 +2521,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
 
         # Delete the uploaded mib file
-        os.remove(cmk.gui.mkeventd.mib_upload_dir() + "/" + filename)
+        cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).unlink()
 
         # Also delete the compiled files
         compiled_mibs_dir = _compiled_mibs_dir()
@@ -2553,20 +2555,19 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         html.hidden_fields()
         html.end_form()
 
-        if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir()):
-            os.makedirs(cmk.gui.mkeventd.mib_upload_dir()
-                       )  # Let exception happen if this fails. Never happens on OMD
+        cmk.gui.mkeventd.mib_upload_dir().mkdir(parents=True, exist_ok=True)
 
         for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
     def _show_mib_table(self, path, title):
+        # type: (Path, Text) -> None
         is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:
             html.begin_form("bulk_delete_form", method="POST")
 
-        with table_element("mibs_" + path, title, searchable=False) as table:
+        with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
                 table.row()
 
@@ -2600,36 +2601,34 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             html.end_form()
 
     def _load_snmp_mibs(self, path):
-        found = {}
-        try:
-            file_names = os.listdir(path)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return found
-            else:
-                raise
+        # type: (Path) -> Dict[str, Dict]
+        found = {}  # type: Dict[str, Dict]
 
-        for fn in file_names:
-            mib_path = path + "/" + fn
-            if os.path.isdir(mib_path):
+        if not path.exists():
+            return found
+
+        for file_obj in path.iterdir():
+            if file_obj.is_dir():
                 continue
 
-            if fn[0] != '.':
-                mib = self._parse_snmp_mib_header(mib_path)
-                found[fn] = mib
+            if file_obj.name.startswith("."):
+                continue
+
+            found[file_obj.name] = self._parse_snmp_mib_header(file_obj)
         return found
 
     def _parse_snmp_mib_header(self, path):
-        mib = {}
-        mib["size"] = os.stat(path).st_size
+        # type: (Path) -> Dict[str, Union[int, str]]
+        mib = {"size": path.stat().st_size}  # type: Dict[str, Union[int, str]]
 
         # read till first "OBJECT IDENTIFIER" declaration
         head = ''
-        for line in file(path):
-            if not line.startswith("--"):
-                if 'OBJECT IDENTIFIER' in line:
-                    break  # seems the header is finished
-                head += line
+        with path.open() as f:
+            for line in f:
+                if not line.startswith("--"):
+                    if 'OBJECT IDENTIFIER' in line:
+                        break  # seems the header is finished
+                    head += line
 
         # now try to extract some relevant information from the header
 

@@ -29,7 +29,8 @@ import ast
 import re
 import socket
 import time
-import os
+from typing import List, Tuple, Text  # pylint: disable=unused-import
+
 from pathlib2 import Path
 import livestatus
 
@@ -51,19 +52,22 @@ from cmk.gui.permissions import (
 
 
 def _socket_path():
-    return cmk.utils.paths.omd_root + "/tmp/run/mkeventd/status"
+    # type: () -> Path
+    return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
 
 
 def mib_upload_dir():
+    # type: () -> Path
     return cmk.utils.paths.local_mib_dir
 
 
 def mib_dirs():
+    # type: () -> List[Tuple[Path, Text]]
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
-        (mib_upload_dir(), 'Custom MIBs'),
-        (cmk.utils.paths.mib_dir, 'MIBs shipped with Checkmk'),
-        ('/usr/share/snmp/mibs', 'System MIBs'),
+        (mib_upload_dir(), _('Custom MIBs')),
+        (cmk.utils.paths.mib_dir, _('MIBs shipped with Checkmk')),
+        (Path('/usr/share/snmp/mibs'), _('System MIBs')),
     ]
 
 
@@ -178,7 +182,8 @@ def eventd_configuration():
 
 
 def daemon_running():
-    return os.path.exists(_socket_path())
+    # type: () -> bool
+    return _socket_path().exists()
 
 
 # Note: in order to be able to simulate an original IP address
@@ -217,7 +222,7 @@ def query_ec_directly(query):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(config.mkeventd_connect_timeout)
-        sock.connect(_socket_path())
+        sock.connect(str(_socket_path()))
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 

@@ -80,6 +80,9 @@ def check_oracle_rman(item, params, info):
                 backupscn = -1
             else:
                 backupscn = int(backupscn)
+        else:
+            # We can't derive any useful information from these kind of rows.
+            continue
 
         if backuptype == 'DB_INCR' and item[:-1] == "%s.%s_" % (sid,  backuptype):
             # we found a DB_INCR_ entry
@@ -101,7 +104,6 @@ def check_oracle_rman(item, params, info):
             # <sid>.DB_INCR as there was no level availible
             item_found = True
             break
-
 
     if item_found:
 

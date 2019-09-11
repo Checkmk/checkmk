@@ -1,0 +1,9 @@
+Title: oracle_rman: don't crash on intermittent connection loss
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1568204849
+Class: fix
+

@@ -663,8 +663,14 @@ export function listofmultiple_del(varprefix, ident) {
 }
 
 export function listofmultiple_init(varprefix) {
+    var table = document.getElementById(varprefix + "_table");
+    var tbody = table.getElementsByTagName("tbody")[0];
+
     document.getElementById(varprefix + "_choice").value = "";
     listofmultiple_disable_selected_options(varprefix);
+    // Put in a line break following the table if it's not empty
+    if (tbody.childNodes.length >= 1)
+        table.after(document.createElement("br"));
 }
 
 // The <option> elements in the <select> field of the currently choosen

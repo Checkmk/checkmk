@@ -501,6 +501,10 @@ msgstr "%s ausgeschlossen ist."
 msgid "%s operations"
 msgstr "%s Operationen"
 
+#, fuzzy, python-format
+msgid "%s other %s"
+msgstr "%s von %s"
+
 #, python-format
 msgid "%s per Second"
 msgstr "%s pro Sekunde"
@@ -795,6 +799,10 @@ msgstr "15 Min."
 msgid "25 Hours"
 msgstr "25 Std."
 
+#, fuzzy
+msgid "3 months"
+msgstr "Monat"
+
 msgid "3.3 Volt Output Lower Levels"
 msgstr "Untere Schwellen für 3.3 Volt"
 
@@ -833,6 +841,10 @@ msgstr "Obere Schwellen für 5 Volt"
 
 msgid "5 minutes"
 msgstr "5 Min."
+
+#, fuzzy
+msgid "6 months"
+msgstr "Monat"
 
 msgid "64bit packaged binary"
 msgstr "Paketierte 64bit binary"
@@ -2736,6 +2748,10 @@ msgstr "Kontakt hinzufügen"
 msgid "Add contact information"
 msgstr "Kontaktinformation ergänzen"
 
+#, fuzzy
+msgid "Add context information to title"
+msgstr "Kontaktinformation ergänzen"
+
 msgid "Add custom icon or action"
 msgstr "Benutzersymbol oder -aktion hinzufügen"
 
@@ -2980,15 +2996,17 @@ msgstr "Neue Tuning-Konfiguration hinzufügen"
 msgid "Add tunnel"
 msgstr "Tunnel hinzufügen"
 
-msgid "Add unmonitored & remove vanished services"
-msgstr "Unüberwachte Services hinzufügen, verschwundene entfernen"
-
 #, fuzzy
 msgid "Add unmonitored & remove vanished services and host labels"
 msgstr "Unüberwachte Services hinzufügen, verschwundene entfernen"
 
-msgid "Add unmonitored services"
+#, fuzzy
+msgid "Add unmonitored services and new host labels"
 msgstr "Nicht überwachte Services hinzufzügen"
+
+#, fuzzy
+msgid "Add unmonitored services and new host labels, remove vanished services"
+msgstr "Unüberwachte Services hinzufügen, verschwundene entfernen"
 
 #, fuzzy
 msgid "Add unmonitored services, new host labels"
@@ -4333,6 +4351,10 @@ msgstr ""
 msgid "An Alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
 
+#, fuzzy
+msgid "An absolute path to a CA certificate"
+msgstr "Absoluter Pfad der Logdatei"
+
 msgid ""
 "An absolute path to the filename (in case of MRPE) or to a directory in case "
 "of local / plugin"
@@ -5041,6 +5063,10 @@ msgstr "Auto-Shrink an"
 msgid "Auto-disovered services of the host"
 msgstr "Erkannte Services des Hosts"
 
+#, fuzzy
+msgid "Autodetect instances, expect HTTPS on the following ports:"
+msgstr "Instanzen automatisch erkennen, HTTPS auf folgenden Ports erwarten:"
+
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "Instanzen automatisch erkennen, HTTPS auf folgenden Ports erwarten:"
 
@@ -5444,14 +5470,6 @@ msgstr "Bi Konfigurationspakete"
 msgid "BI Hostname Aggregations"
 msgstr "BI Hostnamens Aggregationen"
 
-#, fuzzy
-msgid "BI Map Hover Host"
-msgstr "Hosts importieren"
-
-#, fuzzy
-msgid "BI Map Hover Service"
-msgstr "Ersatz Server"
-
 msgid "BI Pack Properties"
 msgstr "BI Paketeingenschaften"
 
@@ -5462,6 +5480,10 @@ msgstr "Virtualisierung"
 msgid "BI compilation"
 msgstr "BI-Kompilierung"
 
+#, fuzzy
+msgid "BI host details"
+msgstr "Hostdetails"
+
 msgid "BI pack ID"
 msgstr "BI Paket-ID"
 
@@ -5471,6 +5493,10 @@ msgstr "BI-Regel oder Aggregationen"
 #, python-format
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BI-Regeln %s aus BI-Paket '%s'"
+
+#, fuzzy
+msgid "BI service details"
+msgstr "Zertifikatsdetails"
 
 msgid "BIOS"
 msgstr "BIOS"
@@ -5940,9 +5966,6 @@ msgstr "Massen-Umbenennung"
 
 msgid "Bulk Renaming"
 msgstr "Massen-Umbenennung"
-
-msgid "Bulk Service Discovery"
-msgstr "Massen-Serviceerkennung"
 
 msgid "Bulk delete"
 msgstr "Sammellöschung"
@@ -6435,6 +6458,10 @@ msgstr "Verworfene C3 Pakete"
 
 msgid "CA"
 msgstr "CA"
+
+#, fuzzy
+msgid "CA certificate"
+msgstr "CA-Zertifikat hinzufügen"
 
 msgid "CA port indices"
 msgstr "CA-Portindizes"
@@ -6967,6 +6994,9 @@ msgstr "Kann Bild nicht darstellen: %s"
 msgid "Cannot reschedule check: %s"
 msgstr "Kann Check %s nicht neu ansetzen"
 
+msgid "Cannot retrieve historic data with Nagios core"
+msgstr ""
+
 #, python-format
 msgid "Cannot update timeperiod information for %s: %s"
 msgstr "Kann Zeitperiode %s nicht aktualisieren: %s"
@@ -7366,6 +7396,14 @@ msgstr "Checkbefehl erweiterte"
 msgid "Check connecting to a TCP port"
 msgstr "Prüfe Verbindung zu TCP Port"
 
+#, fuzzy
+msgid "Check containers cpu utilization"
+msgstr "Kanalauslastung"
+
+#, fuzzy
+msgid "Check containers memory usage"
+msgstr "Nutzung von virtuellem Speicher"
+
 msgid "Check current routing (uses <tt>traceroute</tt>)"
 msgstr "Aktuelle Routen überwachen (verwendet <tt>traceroute</tt>)"
 
@@ -7650,13 +7688,6 @@ msgstr ""
 
 msgid "Check_MK helper usage"
 msgstr "Belegung Check_MK-Hilfsprozesse"
-
-msgid ""
-"Check_MK service discovery will automatically find and configure services to "
-"be checked on your hosts."
-msgstr ""
-"Die Serviceerkennung von Check_MK findet und konfiguriert automatisch alle zu "
-"überwachenden Services eines Hosts."
 
 msgid "Check_MK site objects"
 msgstr "Objekte von Check_MK-Instanzen"
@@ -9081,7 +9112,7 @@ msgid "Connector type"
 msgstr "Verbindungstyp"
 
 #, fuzzy
-msgid "Consider history since"
+msgid "Consider history of"
 msgstr "Bestätige Zurücksetzen auf Fabrikseinstellung"
 
 msgid "Consider periods of flapping states"
@@ -10094,6 +10125,10 @@ msgstr "Momentaner Name"
 msgid "Current number of Sessions"
 msgstr "Aktuelle Anzahl von Sitzungen"
 
+#, fuzzy
+msgid "Current number of nodes scheduled"
+msgstr "Aktuelle Anzahl von Prozessen"
+
 msgid "Current number of processes"
 msgstr "Aktuelle Anzahl von Prozessen"
 
@@ -10594,6 +10629,10 @@ msgstr "DRBD wird gemeldet als"
 
 msgid "DROP"
 msgstr "DROP"
+
+#, fuzzy
+msgid "Daemon sets"
+msgstr "Daemon-Threads"
 
 #, fuzzy
 msgid "Daemon state and summarized count of containers and their states"
@@ -11757,6 +11796,10 @@ msgstr "Graph entwerfen -%s"
 msgid "Design This Graph"
 msgstr "Diesen Graph gestalten"
 
+#, fuzzy
+msgid "Desired number of nodes scheduled"
+msgstr "Erwartete Anzahl Knoten"
+
 msgid "Desktop Group Name"
 msgstr "Desktop Gruppenname"
 
@@ -12299,7 +12342,7 @@ msgid "Display graphs among each other"
 msgstr "Graphen untereinander darstellen"
 
 #, fuzzy
-msgid "Display historic data since"
+msgid "Display historic data since the last"
 msgstr "SLA Statistiken anzeigen"
 
 msgid "Display inode usage in check output..."
@@ -12450,7 +12493,8 @@ msgstr "Check alle"
 msgid "Do full SNMP scan for SNMP devices"
 msgstr "Bei SNMP-Geräten vollständigen SNMP-Suchlauf durchführen"
 
-msgid "Do hardware/software Inventory"
+#, fuzzy
+msgid "Do hardware/software inventory"
 msgstr "Hardware/Software-Inventur durchführen"
 
 msgid "Do inventory and service configuration on existing hosts."
@@ -13073,10 +13117,6 @@ msgstr ""
 #, python-format
 msgid "Do you really want to switch the event daemon to %s mode?"
 msgstr "Wollen Sie den Ereignis Daemon in %s Modus umschalten?"
-
-#, fuzzy
-msgid "Docker"
-msgstr "Docker-Node"
 
 #, fuzzy
 msgid "Docker Containers"
@@ -18098,6 +18138,10 @@ msgstr "Interne Ordnernamen in WATO verstecken"
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
 
+#, fuzzy
+msgid "Hide plugin names"
+msgstr "blende Ordner-Namen aus"
+
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
 
@@ -18344,6 +18388,9 @@ msgstr "Hostmetriken"
 msgid "Host Name"
 msgstr "Hostname"
 
+msgid "Host Parent/Child topology"
+msgstr ""
+
 msgid "Host Problems"
 msgstr "Hostprobleme"
 
@@ -18508,10 +18555,6 @@ msgstr "Hostgruppen werden zur Darstellung und Filterung von Hosts genutzt"
 msgid "Host groups the host is member of"
 msgstr "Hostgruppen zu denen der Host gehört"
 
-#, python-format
-msgid "Host has <b>not</b> the tag <tt>%s</tt>"
-msgstr "Der Host hat <b>nicht</b> das Tag <tt>%s</tt>."
-
 msgid "Host has a baked agent"
 msgstr "Host hat einen gebackenen Agenten"
 
@@ -18531,14 +18574,13 @@ msgstr "Host hat Softwarepaket"
 msgid "Host has tag <b>%s</b>"
 msgstr "Der Host hat das Tag <b>%s</b>"
 
-#, python-format
-msgid "Host has the tag <tt>%s</tt>"
-msgstr "Der Host hat das Tag <tt>%s</tt>"
-
 msgid "Host history"
 msgstr "Hostverlauf"
 
 msgid "Host hover menu shown in BI visualization"
+msgstr ""
+
+msgid "Host hover menu shown in topolgoy visualization"
 msgstr ""
 
 msgid "Host icons"
@@ -20371,12 +20413,13 @@ msgstr ""
 
 msgid ""
 "If you omit this setting then the configured IP address of that host will be "
-"pinged. You can set an alternative address here (e.g. when you want to check "
-"a secondary IP address of the host in question)."
+"pinged. In the host configuration you can provide additional addresses "
+"besides the main IP address (additional IP addresses section). In this option "
+"you can select which set of addresses you want to include for this check. "
+"\"Ping additional IP addresses\" will omit the host configured main address "
+"while the \"Ping all addresses\" option will include both the main and "
+"additional addresses."
 msgstr ""
-"Wenn Sie diese Einstellung weglassen, dann wird die beim Host eingestellte IP-"
-"Adresse angepingt. Sie können hier eine alternative Adresse angeben (z.B. "
-"wenn Sie eine sekundäre IP-Adresse eines Hosts prüfen möchten)."
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -22641,6 +22684,14 @@ msgstr "Letzter"
 #, python-format
 msgid "Last %d %s"
 msgstr "Die letzten %d %s"
+
+#, fuzzy
+msgid "Last 3 months"
+msgstr "Letzter Monat"
+
+#, fuzzy
+msgid "Last 6 months"
+msgstr "Letzter Monat"
 
 msgid "Last Change"
 msgstr "Letzte Änderung"
@@ -26839,6 +26890,10 @@ msgstr "Neue Dateien im Spooler"
 msgid "New folder"
 msgstr "Neuer Ordner"
 
+#, fuzzy
+msgid "New forecast graph..."
+msgstr "Neuer Benutzergraph..."
+
 msgid "New host"
 msgstr "Neuer Host"
 
@@ -26977,6 +27032,10 @@ msgstr "Für diesen Host ist kein gebackener Agent vefügbar"
 msgid "No broken extensions were found."
 msgstr "Es wurden keine defekten Erweiterungen gefunden."
 
+#, fuzzy
+msgid "No certificate"
+msgstr "Name des Zertifikats"
+
 msgid "No changes"
 msgstr "Keine Änderungen"
 
@@ -27003,6 +27062,10 @@ msgstr "Keine Benutzer-Attribute definiert."
 msgid "No custom graph with the name <tt>%s</tt>"
 msgstr "Kein Benutzergraph mit dem Namen <tt>%s</tt>"
 
+#, fuzzy
+msgid "No data available"
+msgstr "nicht verfügbar"
+
 msgid "No data for discovery available. Please perform a full scan."
 msgstr ""
 "Keine Daten für die Erkennung verfügbar. Bitte führen Sie einen vollständigen "
@@ -27021,6 +27084,10 @@ msgid "No discovery information available. Please perform a full scan."
 msgstr ""
 "Keine Information zur Erkennung verfügbar. Bitte führen Sie einen "
 "vollständigen Scan durch."
+
+#, fuzzy
+msgid "No entries"
+msgstr "Keine Einträge."
 
 msgid "No entries."
 msgstr "Keine Einträge."
@@ -28007,6 +28074,19 @@ msgstr ""
 "Anzahl von neuen Sperren und Sperrumwandlungen die pro Sekunde vom Sperr-"
 "Manager angefordert werden."
 
+#, fuzzy
+msgid "Number of nodes ready"
+msgstr "Anzahl der Knoten"
+
+msgid "Number of nodes scheduled with available pods"
+msgstr ""
+
+msgid "Number of nodes scheduled with unavailable pods"
+msgstr ""
+
+msgid "Number of nodes scheduled with up-to-date pods"
+msgstr ""
+
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Anzahl von Alarme übersteigt erlaubte Höchstzahl"
 
@@ -28030,6 +28110,10 @@ msgstr "Anzahl ausstehender Aufgaben"
 
 msgid "Number of physical CPUs"
 msgstr "Anzahl der physischen CPUs"
+
+#, fuzzy
+msgid "Number of positve responses required for OK state"
+msgstr "Anzahl von E-Mails in Status \"deferred\""
 
 msgid "Number of probes per hop"
 msgstr "Anzahl von Tests pro Sprung"
@@ -28524,6 +28608,12 @@ msgstr "Nur Plugins mit den Folgenden Dateiendungen ausführen:"
 msgid "Only fetch specific OIDs"
 msgstr "Nur bestimmte OIDs holen"
 
+msgid "Only first 10 sorted results"
+msgstr ""
+
+msgid "Only first 20 sorted results"
+msgstr ""
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -28909,6 +28999,10 @@ msgstr "Andere Entität"
 msgid "Other hosts"
 msgstr "Andere Hosts"
 
+#, fuzzy
+msgid "Other latency"
+msgstr "Gesamtlatenz"
+
 msgid "Other speed in bits per second"
 msgstr "Andere Geschwindigkeit in bits/Sek."
 
@@ -29049,6 +29143,18 @@ msgstr ""
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
+msgstr ""
+"Gesamtzustand von allen Hosts, mit den Anzahlen von Services in den "
+"verschiedenen Zuständen."
+
+#, fuzzy
+msgid "Overall state of all vSphere based virtual machines."
+msgstr "Status von ESX hosts und Virtual Machines"
+
+#, fuzzy
+msgid ""
+"Overall state of all vSphere servers, with counts of services in the various "
+"states."
 msgstr ""
 "Gesamtzustand von allen Hosts, mit den Anzahlen von Services in den "
 "verschiedenen Zuständen."
@@ -29454,6 +29560,9 @@ msgstr "Parameter von"
 msgid "Parameters:"
 msgstr "Parameter:"
 
+msgid "Parent / Child topology"
+msgstr ""
+
 msgid "Parent definition"
 msgstr "Parenthost-Definition"
 
@@ -29565,6 +29674,10 @@ msgstr "Pfad zur .pgpass-Datei"
 
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr "Pfad zu <tt>MegaCLI.exe</tt>"
+
+#, fuzzy
+msgid "Path to a CA certificate"
+msgstr "CA-Zertifikat hinzufügen"
 
 msgid "Path to sapgenpse"
 msgstr "Pfad zu sapgenpse"
@@ -30972,6 +31085,9 @@ msgstr "Regeln in Konfigdatei für Event Console einrücken"
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "DNS-Abfragen vermeiden, in dem eine Cache-Datei verwendet wird"
 
+msgid "Prevent host deletion right after initialization"
+msgstr ""
+
 msgid "Prevent loading HTML from plugin output or log messages"
 msgstr "Ausführung von HTML aus Checkausgaben und Logmeldungen vermeiden"
 
@@ -31913,7 +32029,8 @@ msgstr "Referer"
 msgid "Refine search"
 msgstr "Suche verfeinern"
 
-msgid "Refresh all services (tabula rasa)"
+#, fuzzy
+msgid "Refresh all services (tabula rasa), add new host labels"
 msgstr "Alle Services auffrischen (tabula rasa)"
 
 #, fuzzy
@@ -35457,6 +35574,10 @@ msgstr "Zeige nur diese Aggregation"
 msgid "Show pin"
 msgstr "Zeige Pin"
 
+#, fuzzy
+msgid "Show plugin names"
+msgstr "Eine Login-Nachricht anzeigen"
+
 msgid "Show prediction for "
 msgstr "Vorhersage zeigen für"
 
@@ -37233,6 +37354,10 @@ msgstr "Status, wenn BI-Aggregation quittiert ist"
 msgid "State, if BI aggregate is in scheduled downtime"
 msgstr "Status, wenn BI-Aggregation in Wartungszeit ist"
 
+#, fuzzy
+msgid "Stateful sets"
+msgstr "Status %s"
+
 msgid "Statement"
 msgstr "Statement"
 
@@ -37784,9 +37909,6 @@ msgstr "Switche, Loadbalancer, Storage, USVen, Umgebungssensoren, etc."
 msgid "Switchover"
 msgstr "Switchover"
 
-msgid "Sychronizing"
-msgstr "Synchronisiere"
-
 msgid "Symantec Anti Virus (Linux)"
 msgstr "Symantec Anti Virus (Linux)"
 
@@ -37842,6 +37964,10 @@ msgstr "Synchronisiert mit Master (Instanz-ID ist %s.)"
 
 msgid "Synchronizes the email of the LDAP user account into Check_MK."
 msgstr "Synchronisiert E-Mails des LDAP Benutzerkontos nach Check_MK."
+
+#, fuzzy
+msgid "Synchronizing"
+msgstr "Synchronisiere"
 
 msgid "Synchronous"
 msgstr "Synchron"
@@ -38610,6 +38736,14 @@ msgstr ""
 "Dieses Feature heißt MRPE (MK's Remote Plugin Executor). Diese Regel erlaubt "
 "den Agenten so zu konfigurieren, dass er Plugins Ihrer Wahl mit den gegebenen "
 "Argumenten ausführt."
+
+#, fuzzy
+msgid ""
+"The Checkmk discovery will automatically find and configure services to be "
+"checked on your hosts and may also discover host labels."
+msgstr ""
+"Die Serviceerkennung von Check_MK findet und konfiguriert automatisch alle zu "
+"überwachenden Services eines Hosts."
 
 msgid "The Customer has been deleted."
 msgstr "Der Kunde wurde gelöscht."
@@ -40826,6 +40960,14 @@ msgstr ""
 
 msgid "The new password must differ from your current one."
 msgstr "Das neue Passwort muss sich vom aktuellen unterscheiden."
+
+#, fuzzy
+msgid "The next "
+msgstr "Der Text"
+
+#, fuzzy
+msgid "The next..."
+msgstr "Der Text"
 
 #, python-format
 msgid ""
@@ -45555,12 +45697,14 @@ msgstr ""
 msgid ""
 "This will deploy the agent plugin <tt>mk_docker.py</tt>. You can choose to "
 "monitor the node and/or the individual containers. This plugin requires the "
-"python library 'docker-py' to be installed on the monitored system. If you "
-"want to monitor the containers of multiple docker nodes we strongly recommend "
-"to set up <a href='wato.py?"
-"mode=edit_ruleset&varname=piggyback_translation'>Piggyback translation rules</"
-"a> to avoid name collisions if containers with the same name exist on "
-"multiple docker nodes."
+"python library 'docker' (at least version 2.0.0) to be installed on the "
+"monitored system, which can be achieved using the command '<tt>pip install "
+"docker</tt>'. WARNING: <tt>pip install docker-py</tt> may install an "
+"outdated, incompatible version of the same library. If you want to monitor "
+"the containers of multiple docker nodes we strongly recommend to set up <a "
+"href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
+"translation rules</a> to avoid name collisions if containers with the same "
+"name exist on multiple docker nodes."
 msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_docker.py</tt> ausgerollt. Sie können "
 "den Knoten und/oder die einzelnen Container überwachen. Dieses Plugin setzt "
@@ -46141,6 +46285,10 @@ msgstr "Thema"
 
 msgid "Topic:"
 msgstr "Thema:"
+
+#, fuzzy
+msgid "Toplogy host details"
+msgstr "Service-Ausgabe umschalten"
 
 msgid "Total"
 msgstr "Gesamt"
@@ -46832,6 +46980,19 @@ msgstr ""
 msgid "Unable to parse provided data: %s"
 msgstr "Die Daten können nicht geparst werden: %s"
 
+#, fuzzy, python-format
+msgid ""
+"Unable to read current conditions of this rule. Falling back to default "
+"values. When saving this rule now, your previous settings will be "
+"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an issue "
+"may be caused by an inconsistent configuration, e.g. when rules refer to tag "
+"groups or tags that do not exist anymore."
+msgstr ""
+"Es war nicht möglich, die momentanen Optionen der Regel zu bestimmen. "
+"Fehlermeldung bei der Auswertung der Optionen: <i>%s</i> Deswegen werden "
+"soweit möglich Standardwerte angenommen. Wenn sie diese Regel speichern, "
+"werden ihre vorherigen Einstellungen möglicherweise überschrieben."
+
 #, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
@@ -47060,6 +47221,14 @@ msgstr "Unbekannte Tag-Gruppe %s"
 msgid "Unknown tag group %s"
 msgstr "Unbekannte Tag-Gruppe %s"
 
+#, fuzzy, python-format
+msgid "Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>"
+msgstr "Der Host hat <b>nicht</b> das Tag <tt>%s</tt>."
+
+#, fuzzy, python-format
+msgid "Unknown tag: Host has the tag <tt>%s</tt>"
+msgstr "Der Host hat das Tag <tt>%s</tt>"
+
 msgid "Unknown user"
 msgstr "Unbekannter Nutzer: %s"
 
@@ -47111,6 +47280,14 @@ msgstr "Nicht unterstütztes Bildformat \"%s\" (ungültige Dateiendung)"
 
 msgid "Until"
 msgstr "Bis"
+
+#, fuzzy
+msgid "Until end of this month"
+msgstr "Gleicher Tag im Monat"
+
+#, fuzzy
+msgid "Until end of year"
+msgstr "BI-Regel ohne Titel"
 
 msgid "Untitled BI rule"
 msgstr "BI-Regel ohne Titel"
@@ -47736,6 +47913,14 @@ msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
 #, fuzzy
+msgid "Use default color"
+msgstr "Standardport benutzen"
+
+#, fuzzy
+msgid "Use default color of the theme or medium"
+msgstr "Die ID für den Temperatursensor."
+
+#, fuzzy
 msgid "Use default layout"
 msgstr "Standardport benutzen"
 
@@ -47949,6 +48134,10 @@ msgstr "Standard Aussehen benutzen"
 msgid "Use the following ID"
 msgstr "Die folgende ID verwenden"
 
+#, fuzzy
+msgid "Use the following color"
+msgstr "Die folgende ID verwenden"
+
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
@@ -48033,6 +48222,10 @@ msgid ""
 msgstr ""
 "Diesen Hostnamen für alle erzeugten Ereignisse verwenden, anstelle des Namens "
 "des Mailservers"
+
+#, fuzzy
+msgid "Use this metric for a forecast graph..."
+msgstr "Diese Metrik zu Benutzergraph hinzufügen..."
 
 msgid ""
 "Use this only if you want to overwrite the postion of the information in the "
@@ -49476,6 +49669,15 @@ msgstr ""
 "Verfügung."
 
 msgid ""
+"When a Checkmk site have just been started, e.g. after booting the Checkmk "
+"server, the tmp directory may not have been fully initialized. For example "
+"the piggyback information from some sources may totally be missing until the "
+"first contact with the piggyback source. To protect against loosing piggyback "
+"based hosts in this situation, the deletion of hosts is disabled for some "
+"time after the site initialization."
+msgstr ""
+
+msgid ""
 "When aggregation is turned on and the rule matches for two different "
 "applications then these two events will be kept separate if you check this "
 "box."
@@ -49843,6 +50045,16 @@ msgstr ""
 "die geholt werden, einschränken. Bitte beachten Sie, dass dies nur in "
 "Einzelfällen wie dem oben beschriebenen sinnvoll ist. Die Beschränkung greift "
 "auch nur dann, wenn Bulkwalks durchgeführt werden."
+
+msgid ""
+"When pinging multiple addresses, failure to ping one of the provided "
+"addresses will lead to a Crit status of the service. This option allows to "
+"specify the minimum number of successful pings which will still classify the "
+"service as OK. The smallest number is 1 and the maximum number should be "
+"(number of addresses - 1). A number larger than the suggested number will "
+"always lead to a Crit Status. One must also select a suitable option from the "
+"\"Alternative address to ping\" above."
+msgstr ""
 
 msgid ""
 "When quering the event status you can either use the monitoring host name, "
@@ -50457,6 +50669,11 @@ msgstr ""
 "Immer wenn Sie erfolgreich Veränderungen anwenden wird ein Schnappshuss "
 "angelegt. Schnappschüsse können auch manuell erstellt werden. WATO löscht "
 "alte Schnappshüsse wenn ein vorgegebenes Maximum erreicht ist."
+
+msgid ""
+"Whether or not additional information from the page context (filters) should "
+"be added to the title given above."
+msgstr ""
 
 msgid ""
 "Whether or not the user is permitted to see the number of open events in the "
@@ -51507,6 +51724,10 @@ msgstr ""
 "Sie können Instanzspezifische globale Konfigurationsvariablen in nicht "
 "verteilten Umgebungen nicht konfigurieren."
 
+#, fuzzy
+msgid "You can not delete the connection to the local site."
+msgstr "Die lokale Instanz kann nicht repliziert werden."
+
 #, python-format
 msgid "You can not delete this %s because it is <a href=\"%s\">in use</a>."
 msgstr ""
@@ -51519,14 +51740,6 @@ msgid ""
 msgstr ""
 "Sie können dieses Sicherungszuel nicht löschen, das es von diesen Sicherungs-"
 "Jobs verwendet wird: %s"
-
-#, fuzzy, python-format
-msgid "You can not override the builtin auxiliary tag \"%s\"."
-msgstr "Sie können eingebaute Hilfs-Merkmale nicht überschreiben."
-
-#, fuzzy, python-format
-msgid "You can not override the builtin tag group \"%s\"."
-msgstr "Sie können eingebaute Merkmalsgruppen nicht überschreiben."
 
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr "Sie können \"public\" nicht als erste Pfad-Ebene nutzen."
@@ -52044,6 +52257,14 @@ msgid "You have created %d <a href=\"%s\">signature keys</a> for signing agents"
 msgstr ""
 "Sie haben %d <a href=\"%s\">Signatur-Schlüssel</a> angelegt, um Agenten zu "
 "signieren."
+
+#, python-format
+msgid ""
+"You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
+"In current Checkmk versions these are <i>builtin</i> tag groups which can not "
+"be customized anymore. Your customized tag group will work for the moment, "
+"but needs to be migrated until 1.7. With 1.7 it won't work anymore."
+msgstr ""
 
 msgid ""
 "You have enabled the fallback notifications but missed to configure an email "
@@ -54164,8 +54385,16 @@ msgstr "Benutzer"
 msgid "users: "
 msgstr "Benutzer:"
 
+#, fuzzy
+msgid "vSphere Servers"
+msgstr "vSphere secret"
+
 msgid "vSphere User name"
 msgstr "vSphere Benutzer"
+
+#, fuzzy
+msgid "vSphere VMs"
+msgstr "vSphere secret"
 
 msgid "vSphere secret"
 msgstr "vSphere secret"
@@ -54269,6 +54498,41 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Add unmonitored services"
+#~ msgstr "Nicht überwachte Services hinzufzügen"
+
+#, fuzzy
+#~ msgid "BI Map Hover Host"
+#~ msgstr "Hosts importieren"
+
+#, fuzzy
+#~ msgid "BI Map Hover Service"
+#~ msgstr "Ersatz Server"
+
+#~ msgid "Bulk Service Discovery"
+#~ msgstr "Massen-Serviceerkennung"
+
+#, fuzzy
+#~ msgid "Docker"
+#~ msgstr "Docker-Node"
+
+#~ msgid ""
+#~ "If you omit this setting then the configured IP address of that host will "
+#~ "be pinged. You can set an alternative address here (e.g. when you want to "
+#~ "check a secondary IP address of the host in question)."
+#~ msgstr ""
+#~ "Wenn Sie diese Einstellung weglassen, dann wird die beim Host eingestellte "
+#~ "IP-Adresse angepingt. Sie können hier eine alternative Adresse angeben (z."
+#~ "B. wenn Sie eine sekundäre IP-Adresse eines Hosts prüfen möchten)."
+
+#, fuzzy
+#~ msgid "You can not override the builtin auxiliary tag \"%s\"."
+#~ msgstr "Sie können eingebaute Hilfs-Merkmale nicht überschreiben."
+
+#, fuzzy
+#~ msgid "You can not override the builtin tag group \"%s\"."
+#~ msgstr "Sie können eingebaute Merkmalsgruppen nicht überschreiben."
 
 #~ msgid "%Y-%m-%d %H:%M:%S"
 #~ msgstr "%d.%m.%Y %H:%M:%S"
@@ -57992,9 +58256,6 @@ msgstr "z/OS"
 
 #~ msgid "CPU utilization for Windows and ESX Hosts"
 #~ msgstr "CPU Nutzung für Windows und ESX Hosts"
-
-#~ msgid "Absolute path to log file"
-#~ msgstr "Absoluter Pfad der Logdatei"
 
 #~ msgid "Levels for rate of packets that matched a rule"
 #~ msgstr "Schwellwerte für freien Speicher"

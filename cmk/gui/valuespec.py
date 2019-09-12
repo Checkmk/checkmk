@@ -54,6 +54,7 @@ import types
 import urlparse
 from UserDict import DictMixin
 from StringIO import StringIO
+from typing import Type, Union, Callable, Text, Any  # pylint: disable=unused-import
 from PIL import Image  # type: ignore
 
 from Cryptodome.PublicKey import RSA
@@ -4227,9 +4228,18 @@ class UploadOrPasteTextFile(Alternative):
         return value
 
 
-class TextOrRegExp(Alternative):
-    _text_valuespec_class = TextAscii
-    _regex_valuespec_class = RegExp
+class ABCTextOrRegExp(six.with_metaclass(abc.ABCMeta, Alternative)):
+    #@classmethod
+    @abc.abstractmethod
+    def _text_valuespec_class(self):
+        # type: () -> Type[ValueSpec]
+        raise NotImplementedError()
+
+    #@classmethod
+    @abc.abstractmethod
+    def _regex_valuespec_class(self):
+        # type: () -> Type[ValueSpec]
+        raise NotImplementedError()
 
     def __init__(self, **kwargs):
         allow_empty = kwargs.pop("allow_empty", True)
@@ -4237,12 +4247,12 @@ class TextOrRegExp(Alternative):
         if "text_valuespec" in kwargs:
             vs_text = kwargs.pop("text_valuespec")
         else:
-            vs_text = self._text_valuespec_class(
+            vs_text = self._text_valuespec_class()(
                 title=_("Explicit match"),
                 allow_empty=allow_empty,
             )
 
-        vs_regex = self._regex_valuespec_class(
+        vs_regex = self._regex_valuespec_class()(
             mode=RegExp.prefix,
             title=_("Regular expression match"),
             allow_empty=allow_empty,
@@ -4263,12 +4273,27 @@ class TextOrRegExp(Alternative):
             "orientation": "horizontal",
         })
 
-        super(TextOrRegExp, self).__init__(**kwargs)
+        super(ABCTextOrRegExp, self).__init__(**kwargs)
 
 
-class TextOrRegExpUnicode(TextOrRegExp):
-    _default_valuespec_class = TextUnicode
-    _regex_valuespec_class = RegExpUnicode
+class TextOrRegExp(ABCTextOrRegExp):
+    @classmethod
+    def _text_valuespec_class(cls):
+        return TextAscii
+
+    @classmethod
+    def _regex_valuespec_class(cls):
+        return RegExp
+
+
+class TextOrRegExpUnicode(ABCTextOrRegExp):
+    @classmethod
+    def _text_valuespec_class(cls):
+        return TextUnicode
+
+    @classmethod
+    def _regex_valuespec_class(cls):
+        return RegExpUnicode
 
 
 class Labels(ValueSpec):

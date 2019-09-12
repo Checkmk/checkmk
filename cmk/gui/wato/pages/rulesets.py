@@ -28,7 +28,6 @@
 import abc
 import itertools
 import pprint
-import json
 import re
 from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
@@ -1332,7 +1331,7 @@ class EditRuleMode(WatoMode):
         self._vs_condition_type().render_input(varprefix="condition_type", value=condition_type)
         self._show_predefined_conditions()
         self._show_explicit_conditions()
-        html.javascript("cmk.wato.toggle_rule_condition_type(%s)" % json.dumps(condition_type))
+        html.javascript("cmk.wato.toggle_rule_condition_type(\"condition_type\")")
 
     def _vs_condition_type(self):
         return DropdownChoice(
@@ -1344,7 +1343,7 @@ class EditRuleMode(WatoMode):
                 ("explicit", _("Explicit conditions")),
                 ("predefined", _("Predefined conditions")),
             ],
-            on_change="cmk.wato.toggle_rule_condition_type(this.value)",
+            on_change="cmk.wato.toggle_rule_condition_type(\"condition_type\")",
             encode_value=False,
         )
 

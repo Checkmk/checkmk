@@ -13,6 +13,13 @@ info = [
     ['User', 'used', 'soft', 'hard', 'grace', 'used', 'soft', 'hard', 'grace'],
     ['----------------------------------------------------------------------'],
     ['root', '--', '6003424', '0', '0', '0', '167394', '0', '0', '0'],
+    ['[[[/quarktasche]]]'],
+    ['***', 'Report', 'for', 'user', 'quotas', 'on', 'device', '/moo'],
+    ['Block', 'grace', 'time:', '7days;', 'Inode', 'grace', 'time:', '7days'],
+    ['Block', 'limits', 'File', 'limits'],
+    ['User', 'used', 'soft', 'hard', 'grace', 'used', 'soft', 'hard', 'grace'],
+    ['----------------------------------------------------------------------'],
+    ['root', '--', '6003424', '0', '0', '0', '167394', '0', '100000000', '0'],
     ['daemon', '--', '120', '0', '0', '0', '19', '0', '0', '0'],
     ['bin', '--', '4', '0', '0', '0', '1', '0', '0', '0'],
     ['man', '--', '1324', '0', '0', '0', '102', '0', '0', '0'],
@@ -40,6 +47,7 @@ info = [
 discovery = {
     '': [
         ('/', {'user': True}),
+        ('/quarktasche', {'user': True}),
     ],
 }
 
@@ -47,6 +55,9 @@ discovery = {
 checks = {
     '': [
         ('/', {'user': True}, [
+            (0, 'All users within quota limits', []),
+        ]),
+        ('/quarktasche', {'user': True}, [
             (0, 'All users within quota limits', []),
         ]),
     ],

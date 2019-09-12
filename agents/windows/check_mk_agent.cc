@@ -81,6 +81,7 @@
 #include "WinApi.h"
 #include "WritableFile.h"
 #include "dynamic_func.h"
+#include "monitor.h"
 #include "stringutil.h"
 #include "types.h"
 #include "wmiHelper.h"
@@ -344,6 +345,7 @@ void WINAPI ServiceMain(DWORD, char *[]) {
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
         s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
 
+        monitor::EnableHealthMonitor = true;  // service may be restarted
         RunImmediate("service", 0, NULL);
 
         // service is now stopped
@@ -702,6 +704,10 @@ DWORD WINAPI realtime_check_func(void *data_in) {
     }
 }
 
+//#define WITH_MEMORY_OVERFLOW
+#if defined(WITH_MEMORY_OVERFLOW)
+std::vector<char *> vec;
+#endif
 void do_adhoc(const Environment &env) {
     g_should_terminate = false;
     Logger *logger = Logger::getLogger("winagent");
@@ -787,6 +793,21 @@ void do_adhoc(const Environment &env) {
             } catch (const std::exception &e) {
                 Alert(Logger::getLogger("winagent"))
                     << "unhandled exception: " << e.what();
+            }
+        }
+
+        if (monitor::EnableHealthMonitor) {
+#if defined(WITH_MEMORY_OVERFLOW)
+            // code to overflow memory
+            char *b = new char[10'000'000];
+            memset(b, 0, 10'000'000);
+            vec.push_back(b);
+            Error(logger) << "memory vector is " << vec.size();
+#endif
+            if (!monitor::IsAgentHealthy()) {
+                Error(logger)
+                    << "MEMORY IS OVER for process " << ::GetCurrentProcessId();
+                RestartService();
             }
         }
     }

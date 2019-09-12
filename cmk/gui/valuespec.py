@@ -95,10 +95,6 @@ class ValueSpec(object):
             self._default_value = kwargs.get("default_value")
         self._validate = kwargs.get("validate")
 
-        # debug display allows to view the class name of a certain element in the gui.
-        # If set False, then the corresponding div is present, but hidden.
-        self.debug_display = False
-
     def title(self):
         return self._title
 
@@ -179,12 +175,6 @@ class ValueSpec(object):
         if self._validate:
             self._validate(value, varprefix)
 
-    def classtype_info(self):
-        superclass = " ".join(base.__name__ for base in self.__class__.__bases__)
-        if not self.debug_display:
-            return
-        html.div("Check_MK-Type: %s %s" % (superclass, type(self).__name__), class_="legend")
-
 
 # A fixed non-editable value, e.g. to be use in "Alternative"
 class FixedValue(ValueSpec):
@@ -233,7 +223,6 @@ class Age(ValueSpec):
         return 0
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
@@ -320,7 +309,6 @@ class Integer(ValueSpec):
         return 0
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if self._label:
             html.write(self._label)
             html.nbsp()
@@ -396,7 +384,6 @@ class Filesize(Integer):
                 return exp, int(value / count)  # fixed: true-division
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         exp, count = self.get_exponent(value)
         html.number_input(varprefix + '_size', count, size=self._size)
         html.nbsp()
@@ -444,7 +431,6 @@ class TextAscii(ValueSpec):
         return ""
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         value_text = "%s" % value if value is not None else ""
 
         if self._label:
@@ -998,7 +984,6 @@ class TextAreaUnicode(TextUnicode):
         return html.attrencode(value).replace("\n", "<br>")
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
@@ -1116,7 +1101,6 @@ class ListOfStrings(ValueSpec):
         return " ".join([t for t in help_texts if t])
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         # Form already submitted?
         if html.request.has_var(varprefix + "_0"):
             value = self.from_html_vars(varprefix)
@@ -1252,8 +1236,6 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
-        self.classtype_info()
-
         html.open_div(class_=["valuespec_listof", self._style.value])
 
         # Beware: the 'value' is only the default value in case the form
@@ -1482,7 +1464,6 @@ class ListOfMultiple(ValueSpec):
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
         # ignore 'value' but reuse the input from the HTML variables -
@@ -1606,7 +1587,6 @@ class Float(Integer):
         self._allow_int = kwargs.get("allow_int", False)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         Integer.render_input(self, varprefix, value)
 
     def _render_value(self, value):
@@ -1680,7 +1660,6 @@ class Checkbox(ValueSpec):
         return False
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
 
     def value_to_text(self, value):
@@ -1750,7 +1729,6 @@ class DropdownChoice(ValueSpec):
         return None
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if self._label:
             html.write("%s " % self._label)
 
@@ -1972,7 +1950,6 @@ class CascadingDropdown(ValueSpec):
             return choices[0][0]
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         def_val = '0'
         options = []
         choices = self.choices()
@@ -2158,7 +2135,6 @@ class RadioChoice(DropdownChoice):
             self._columns = 9999999
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         html.begin_radio_group()
         if self._columns is not None:
             html.open_table(class_=["radiochoice"])
@@ -2264,7 +2240,6 @@ class ListChoice(ValueSpec):
         html.close_table()
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         self.load_elements()
         if not self._elements:
             html.write(self._no_elements_text)
@@ -2346,8 +2321,6 @@ class DualListChoice(ListChoice):
         self._size = kwargs.get("size")  # Total width in ex
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
-
         self.load_elements()
         if not self._elements:
             html.write_text(_("There are no elements for selection."))
@@ -2470,7 +2443,6 @@ class OptionalDropdownChoice(DropdownChoice):
         return value not in [c[0] for c in self.choices()]
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         defval = "other"
         options = []
         for n, (val, title) in enumerate(self.choices()):
@@ -2583,7 +2555,6 @@ class RelativeDate(OptionalDropdownChoice):
         return self._default_value
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         OptionalDropdownChoice.render_input(self, varprefix, reldays)
 
@@ -2652,9 +2623,6 @@ class AbsoluteDate(ValueSpec):
                lt.tm_hour, lt.tm_min, lt.tm_sec
 
     def render_input(self, varprefix, value):
-
-        self.classtype_info()
-
         if self._label:
             html.write("%s" % self._label)
             html.nbsp()
@@ -2783,7 +2751,6 @@ class Timeofday(ValueSpec):
         return (0, 0)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         text = ("%02d:%02d" % value) if value else ''
         html.text_input(varprefix, text, size=5)
 
@@ -2860,7 +2827,6 @@ class TimeofdayRange(ValueSpec):
         return (0, 0), (24, 0)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if value is None:
             value = (None, None)
         self._bounds[0].render_input(varprefix + "_from", value[0])
@@ -3166,7 +3132,6 @@ class Optional(ValueSpec):
         return self._none_value
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked is None:
@@ -3245,7 +3210,6 @@ class OptionalEdit(Optional):
         self._label = ''
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked is None:
@@ -3326,7 +3290,6 @@ class Alternative(ValueSpec):
         return None, value
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if self._style == "radio":
             self.render_input_radio(varprefix, value)
         else:
@@ -3465,7 +3428,6 @@ class Tuple(ValueSpec):
         return tuple([x.default_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if self._orientation != "float":
             html.open_table(class_=["valuespec_tuple", self._orientation])
             if self._orientation == "horizontal":
@@ -3608,7 +3570,6 @@ class Dictionary(ValueSpec):
         return []
 
     def render_input_as_form(self, varprefix, value):
-        self.classtype_info()
         value = self.migrate(value)
         if not isinstance(value, (dict, DictMixin)):
             value = {}  # makes code simpler in complain phase
@@ -3616,7 +3577,6 @@ class Dictionary(ValueSpec):
         self._render_input_form(varprefix, value)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         value = self.migrate(value)
         if not isinstance(value, (dict, DictMixin)):
             value = {}  # makes code simpler in complain phase
@@ -3889,7 +3849,6 @@ class ElementSelection(ValueSpec):
             return self._elements.keys()[0]
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         self.load_elements()
         if len(self._elements) == 0:
             html.write(self._empty_text)
@@ -3957,7 +3916,6 @@ class Foldable(ValueSpec):
         self._title_function = kwargs.get("title_function", None)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         try:
             title_value = value
             if html.form_submitted():
@@ -4034,13 +3992,11 @@ class Transform(ValueSpec):
         return self._valuespec.help()
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         self._valuespec.render_input(varprefix, self.forth(value))
 
     def render_input_as_form(self, varprefix, value):
         if not isinstance(self._valuespec, Dictionary):
             raise NotImplementedError()
-        self.classtype_info()
         self._valuespec.render_input_as_form(varprefix, self.forth(value))
 
     def set_focus(self, varprefix):
@@ -4100,7 +4056,6 @@ class Password(TextAscii):
         TextAscii.__init__(self, attrencode=True, **kwargs)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if value is None:
             value = ""
 
@@ -4135,7 +4090,6 @@ class PasswordSpec(Password):
         super(PasswordSpec, self).__init__(hidden=hidden, **kwargs)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         TextAscii.render_input(self, varprefix, value)
         if not value:
             html.icon_button("#",
@@ -4190,7 +4144,6 @@ class FileUpload(ValueSpec):
         self.custom_validate(value, varprefix)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix):
@@ -4204,8 +4157,6 @@ class ImageUpload(FileUpload):
         FileUpload.__init__(self, **kwargs)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
-
         if self._show_current_image and value:
             html.open_table()
             html.open_tr()
@@ -4538,7 +4489,6 @@ class IconSelector(ValueSpec):
         if value is None:
             value = html.request.var(varprefix + "_value")
 
-        self.classtype_info()
         if not value:
             value = self._empty_img
 
@@ -4681,7 +4631,6 @@ class Color(ValueSpec):
         self._allow_empty = kwargs.get("allow_empty", True)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if not value:
             value = "#FFFFFF"
 
@@ -4751,7 +4700,6 @@ class SSHKeyPair(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
 
     def render_input(self, varprefix, value):
-        self.classtype_info()
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)

@@ -287,6 +287,8 @@ class JolokiaInstance(object):
 
     def _initialize_http_session(self):
         session = requests.Session()
+        # Watch out: we must provide the verify keyword to every individual request call!
+        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
@@ -332,8 +334,12 @@ class JolokiaInstance(object):
         if VERBOSE:
             sys.stderr.write("\nDEBUG: POST data: %r\n" % post_data)
         try:
-            raw_response = self._session.post(self.base_url, data=post_data)
-        except () if DEBUG else Exception as exc:
+            # Watch out: we must provide the verify keyword to every individual request call!
+            # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
+            raw_response = self._session.post(self.base_url,
+                                              data=post_data,
+                                              verify=self._session.verify)
+        except () if DEBUG else Exception, exc:
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
 

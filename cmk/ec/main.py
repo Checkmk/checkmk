@@ -2304,12 +2304,6 @@ class EventServer(ECServerThread):
                     # Remember the rule id that this event originated from
                     event["rule_id"] = rule["id"]
 
-                    # Lookup the monitoring core hosts and add the core host
-                    # name to the event when one can be matched
-                    # For the moment we have no rule/condition matching on this
-                    # field. So we only add the core host info for matched events.
-                    self._add_core_host_to_new_event(event)
-
                     # Attach optional contact group information for visibility
                     # and eventually for notifications
                     self._add_rule_contact_groups_to_event(rule, event)
@@ -2320,6 +2314,16 @@ class EventServer(ECServerThread):
                     event["match_groups"] = match_groups.get("match_groups_message", ())
                     event["match_groups_syslog_application"] = match_groups.get("match_groups_syslog_application", ())
                     self.rewrite_event(rule, event, match_groups)
+
+                    # Lookup the monitoring core hosts and add the core host
+                    # name to the event when one can be matched.
+                    #
+                    # Needs to be done AFTER event rewriting, because the rewriting
+                    # may change the "host" field.
+                    #
+                    # For the moment we have no rule/condition matching on this
+                    # field. So we only add the core host info for matched events.
+                    self._add_core_host_to_new_event(event)
 
                     if "count" in rule:
                         count = rule["count"]

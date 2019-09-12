@@ -176,14 +176,6 @@ def raw_context_from_string(data):
     return context
 
 
-def raw_context_from_stdin():
-    context = {}
-    for line in sys.stdin:
-        varname, value = line.strip().split("=", 1)
-        context[varname] = expand_backslashes(value)
-    return context
-
-
 def expand_backslashes(value):
     # We cannot do the following:
     # value.replace(r"\n", "\n").replace("\\\\", "\\")

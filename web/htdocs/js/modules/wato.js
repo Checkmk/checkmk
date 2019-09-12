@@ -322,7 +322,8 @@ export function toggle_folder(event, oDiv, on) {
     }
 }
 
-export function toggle_rule_condition_type(value) {
+export function toggle_rule_condition_type(select_id) {
+    var value = document.getElementById(select_id).value;
     $(".condition").hide();
     $(".condition."+value).show();
 }

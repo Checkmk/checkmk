@@ -489,7 +489,8 @@ div.snapin table.allhosts td a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin table.allhosts td body.main .popup_menu span.link,
 body.main .popup_menu div.snapin table.allhosts td span.link {
-  padding: 7px 4px;
+  padding: 2px;
+  padding-left: 4px;
 }
 
 div.snapin div.footnotelink a.link,

@@ -41,50 +41,38 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersIbmSvcEnclosure(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_ibm_svc_enclosure():
+    return Dictionary(elements=[("levels_lower_online_canisters",
+                                 Alternative(
+                                     title="Lower levels for online canisters",
+                                     style="dropdown",
+                                     elements=[
+                                         FixedValue(
+                                             False,
+                                             title=_("All must be online"),
+                                             totext="",
+                                         ),
+                                         Tuple(
+                                             title=_("Specify levels"),
+                                             elements=[
+                                                 Integer(title=_("Warning below"),
+                                                         minvalue=-1,
+                                                         unit=_("online canisters")),
+                                                 Integer(title=_("Critical below"),
+                                                         minvalue=-1,
+                                                         unit=_("online canisters")),
+                                             ],
+                                         ),
+                                     ],
+                                 ))],)
 
-    @property
-    def check_group_name(self):
-        return "ibm_svc_enclosure"
 
-    @property
-    def title(self):
-        return _("IBM SVC Enclosure")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[("levels_lower_online_canisters",
-                                     Alternative(
-                                         title="Lower levels for online canisters",
-                                         style="dropdown",
-                                         elements=[
-                                             FixedValue(
-                                                 False,
-                                                 title=_("All must be online"),
-                                                 totext="",
-                                             ),
-                                             Tuple(
-                                                 title=_("Specify levels"),
-                                                 elements=[
-                                                     Integer(title=_("Warning below"),
-                                                             minvalue=-1,
-                                                             unit=_("online canisters")),
-                                                     Integer(title=_("Critical below"),
-                                                             minvalue=-1,
-                                                             unit=_("online canisters")),
-                                                 ],
-                                             ),
-                                         ],
-                                     ))],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of enclosure"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ibm_svc_enclosure",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Name of enclosure"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ibm_svc_enclosure,
+        title=lambda: _("IBM SVC Enclosure"),
+    ))

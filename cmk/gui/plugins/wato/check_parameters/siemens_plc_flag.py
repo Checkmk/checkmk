@@ -37,38 +37,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSiemensPlcFlag(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_siemens_plc_flag():
+    return TextAscii(
+        title=_("Device Name and Value Ident"),
+        help=_("You need to concatenate the device name which is configured in the special agent "
+               "for the PLC device separated by a space with the ident of the value which is also "
+               "configured in the special agent."),
+        allow_empty=True)
 
-    @property
-    def check_group_name(self):
-        return "siemens_plc_flag"
 
-    @property
-    def title(self):
-        return _("State of Siemens PLC Flags")
+def _parameter_valuespec_siemens_plc_flag():
+    return DropdownChoice(help=_(
+        "This rule sets the expected state, the one which should result in an OK state, "
+        "of the monitored flags of Siemens PLC devices."),
+                          title=_("Expected flag state"),
+                          choices=[
+                              (True, _("Expect the flag to be: On")),
+                              (False, _("Expect the flag to be: Off")),
+                          ],
+                          default_value=True)
 
-    @property
-    def parameter_valuespec(self):
-        return DropdownChoice(help=_(
-            "This rule sets the expected state, the one which should result in an OK state, "
-            "of the monitored flags of Siemens PLC devices."),
-                              title=_("Expected flag state"),
-                              choices=[
-                                  (True, _("Expect the flag to be: On")),
-                                  (False, _("Expect the flag to be: Off")),
-                              ],
-                              default_value=True)
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Device Name and Value Ident"),
-            help=_(
-                "You need to concatenate the device name which is configured in the special agent "
-                "for the PLC device separated by a space with the ident of the value which is also "
-                "configured in the special agent."),
-            allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="siemens_plc_flag",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_siemens_plc_flag,
+        parameter_valuespec=_parameter_valuespec_siemens_plc_flag,
+        title=lambda: _("State of Siemens PLC Flags"),
+    ))

@@ -39,58 +39,50 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersK8SResources(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_k8s_port():
+    return TextAscii(
+        title=_("Port"),
+        help=_("Name or number of the port"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "k8s_port"
 
-    @property
-    def title(self):
-        return _("Kubernetes Port")
+def _parameter_valuespec_k8s_port():
+    return Dictionary(elements=[
+        ('port', Integer(
+            title=_('Port'),
+            minvalue=0,
+            maxvalue=65535,
+        )),
+        ('target_port', Integer(
+            title=_('Target port'),
+            minvalue=0,
+            maxvalue=65535,
+        )),
+        ('node_port', Integer(
+            title=_('Node port'),
+            minvalue=0,
+            maxvalue=65535,
+        )),
+        ('protocol',
+         DropdownChoice(
+             title=_('Protocol'),
+             choices=[
+                 ('TCP', _('TCP')),
+                 ('UDP', _('UDP')),
+                 ('HTTP', _('HTTP')),
+                 ('PROXY', _('PROXY')),
+                 ('SCTP', _('SCTP')),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('port', Integer(
-                title=_('Port'),
-                minvalue=0,
-                maxvalue=65535,
-            )),
-            ('target_port', Integer(
-                title=_('Target port'),
-                minvalue=0,
-                maxvalue=65535,
-            )),
-            ('node_port', Integer(
-                title=_('Node port'),
-                minvalue=0,
-                maxvalue=65535,
-            )),
-            ('protocol',
-             DropdownChoice(
-                 title=_('Protocol'),
-                 choices=[
-                     ('TCP', _('TCP')),
-                     ('UDP', _('UDP')),
-                     ('HTTP', _('HTTP')),
-                     ('PROXY', _('PROXY')),
-                     ('SCTP', _('SCTP')),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Port"),
-            help=_("Name or number of the port"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="k8s_port",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_k8s_port,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_k8s_port,
+        title=lambda: _("Kubernetes Port"),
+    ))

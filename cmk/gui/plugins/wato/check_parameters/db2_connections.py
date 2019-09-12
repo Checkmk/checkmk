@@ -39,46 +39,35 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Connections(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_db2_connections():
+    return TextAscii(title=_("Instance"),
+                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
-    @property
-    def check_group_name(self):
-        return "db2_connections"
 
-    @property
-    def title(self):
-        return _("DB2 Connections")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
-            elements=[
-                (
-                    "levels_total",
-                    Tuple(
-                        title=_("Number of current connections"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("connections"),
-                                    default_value=150),
-                            Integer(title=_("Critical at"),
-                                    unit=_("connections"),
-                                    default_value=200),
-                        ],
-                    ),
+def _parameter_valuespec_db2_connections():
+    return Dictionary(
+        help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
+        elements=[
+            (
+                "levels_total",
+                Tuple(
+                    title=_("Number of current connections"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("connections"), default_value=150),
+                        Integer(title=_("Critical at"), unit=_("connections"), default_value=200),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance"),
-                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_connections",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_db2_connections,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_db2_connections,
+        title=lambda: _("DB2 Connections"),
+    ))

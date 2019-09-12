@@ -38,30 +38,21 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersF5Pools(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_f5_pools():
+    return Tuple(
+        title=_("Minimum number of pool members"),
+        elements=[
+            Integer(title=_("Warning if below"), unit=_("Members ")),
+            Integer(title=_("Critical if below"), unit=_("Members")),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "f5_pools"
 
-    @property
-    def title(self):
-        return _("F5 Loadbalancer Pools")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Minimum number of pool members"),
-            elements=[
-                Integer(title=_("Warning if below"), unit=_("Members ")),
-                Integer(title=_("Critical if below"), unit=_("Members")),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of pool"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="f5_pools",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of pool")),
+        parameter_valuespec=_parameter_valuespec_f5_pools,
+        title=lambda: _("F5 Loadbalancer Pools"),
+    ))

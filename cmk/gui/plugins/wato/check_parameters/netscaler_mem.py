@@ -37,32 +37,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetscalerMem(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_netscaler_mem():
+    return Tuple(
+        title=_("Specify levels in percentage of total memory usage"),
+        elements=[
+            Percentage(title=_("Warning at a usage of"),
+                       unit=_("% of RAM"),
+                       default_value=80.0,
+                       maxvalue=100.0),
+            Percentage(title=_("Critical at a usage of"),
+                       unit=_("% of RAM"),
+                       default_value=90.0,
+                       maxvalue=100.0)
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "netscaler_mem"
 
-    @property
-    def title(self):
-        return _("Netscaler Memory Usage")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Specify levels in percentage of total memory usage"),
-            elements=[
-                Percentage(title=_("Warning at a usage of"),
-                           unit=_("% of RAM"),
-                           default_value=80.0,
-                           maxvalue=100.0),
-                Percentage(title=_("Critical at a usage of"),
-                           unit=_("% of RAM"),
-                           default_value=90.0,
-                           maxvalue=100.0)
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="netscaler_mem",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_netscaler_mem,
+        title=lambda: _("Netscaler Memory Usage"),
+    ))

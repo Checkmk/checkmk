@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCiscoSupervisorMem(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_cisco_supervisor_mem():
+    return Tuple(
+        title=_("The average utilization of memory on the active supervisor"),
+        elements=[
+            Percentage(title=_("Warning at a usage of"), default_value=80.0, maxvalue=100.0),
+            Percentage(title=_("Critical at a usage of"), default_value=90.0, maxvalue=100.0)
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "cisco_supervisor_mem"
 
-    @property
-    def title(self):
-        return _("Cisco Nexus Supervisor Memory Usage")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("The average utilization of memory on the active supervisor"),
-            elements=[
-                Percentage(title=_("Warning at a usage of"), default_value=80.0, maxvalue=100.0),
-                Percentage(title=_("Critical at a usage of"), default_value=90.0, maxvalue=100.0)
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cisco_supervisor_mem",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_cisco_supervisor_mem,
+        title=lambda: _("Cisco Nexus Supervisor Memory Usage"),
+    ))

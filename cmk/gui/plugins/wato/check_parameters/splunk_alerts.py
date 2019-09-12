@@ -37,33 +37,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSplunkAlerts(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_splunk_alerts():
+    return Dictionary(elements=[
+        ("alerts",
+         Tuple(
+             title=_("Upper levels for number of alerts"),
+             elements=[
+                 Integer(title=_("Warning at"), minvalue=0),
+                 Integer(title=_("Critical at"), minvalue=0),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "splunk_alerts"
 
-    @property
-    def title(self):
-        return _("Splunk Alerts")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("alerts",
-             Tuple(
-                 title=_("Upper levels for number of alerts"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0),
-                     Integer(title=_("Critical at"), minvalue=0),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="splunk_alerts",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_splunk_alerts,
+        title=lambda: _("Splunk Alerts"),
+    ))

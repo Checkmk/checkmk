@@ -40,87 +40,67 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLivestatusStatus(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_livestatus_status():
+    return Dictionary(
+        help=_("When monitoring the performance of a monitoring site (i.e. its core) "
+               "then also settings are being checked, e.g. for manually disabled notifications. "
+               "The status of the various situations can be configured here."),
+        elements=[
+            ("site_stopped", MonitoringState(title="State when the site is stopped",
+                                             default_value=2)),
+            ("execute_host_checks",
+             MonitoringState(title="State when host checks are disabled", default_value=2)),
+            ("execute_service_checks",
+             MonitoringState(title="State when service checks are disabled", default_value=2)),
+            ("accept_passive_host_checks",
+             MonitoringState(title="State when not accepting passive host checks",
+                             default_value=2)),
+            ("accept_passive_service_checks",
+             MonitoringState(title="State when not accepting passive service checks",
+                             default_value=2)),
+            ("check_host_freshness",
+             MonitoringState(title="State when not checking host freshness", default_value=2)),
+            ("check_service_freshness",
+             MonitoringState(title="State when not checking service freshness", default_value=2)),
+            ("enable_event_handlers",
+             MonitoringState(title="State when event handlers are disabled", default_value=0)),
+            ("enable_flap_detection",
+             MonitoringState(title="State when flap detection is disabled", default_value=1)),
+            ("enable_notifications",
+             MonitoringState(title="State when notifications are disabled", default_value=2)),
+            ("process_performance_data",
+             MonitoringState(title="State when performance data is disabled", default_value=1)),
+            ("check_external_commands",
+             MonitoringState(title="State when not checking external commands", default_value=2)),
+            ("site_cert_days",
+             Tuple(
+                 title=_("Site certificate validity"),
+                 help=_("Minimum number of days a certificate has to be valid."),
+                 elements=[
+                     Integer(
+                         title=_("Warning at or below"),
+                         minvalue=0,
+                         unit=_("days"),
+                         default_value=30,
+                     ),
+                     Integer(
+                         title=_("Critical at or below"),
+                         minvalue=0,
+                         unit=_("days"),
+                         default_value=7,
+                     ),
+                 ],
+             ))
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "livestatus_status"
 
-    @property
-    def title(self):
-        return _("Performance and settings of a Check_MK site")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "When monitoring the performance of a monitoring site (i.e. its core) "
-                "then also settings are being checked, e.g. for manually disabled notifications. "
-                "The status of the various situations can be configured here."),
-            elements=[("site_stopped",
-                       MonitoringState(title="State when the site is stopped", default_value=2)),
-                      ("execute_host_checks",
-                       MonitoringState(title="State when host checks are disabled",
-                                       default_value=2)),
-                      ("execute_service_checks",
-                       MonitoringState(title="State when service checks are disabled",
-                                       default_value=2)),
-                      ("accept_passive_host_checks",
-                       MonitoringState(title="State when not accepting passive host checks",
-                                       default_value=2)),
-                      ("accept_passive_service_checks",
-                       MonitoringState(title="State when not accepting passive service checks",
-                                       default_value=2)),
-                      ("check_host_freshness",
-                       MonitoringState(title="State when not checking host freshness",
-                                       default_value=2)),
-                      ("check_service_freshness",
-                       MonitoringState(title="State when not checking service freshness",
-                                       default_value=2)),
-                      ("enable_event_handlers",
-                       MonitoringState(title="State when event handlers are disabled",
-                                       default_value=0)),
-                      ("enable_flap_detection",
-                       MonitoringState(title="State when flap detection is disabled",
-                                       default_value=1)),
-                      ("enable_notifications",
-                       MonitoringState(title="State when notifications are disabled",
-                                       default_value=2)),
-                      ("process_performance_data",
-                       MonitoringState(title="State when performance data is disabled",
-                                       default_value=1)),
-                      ("check_external_commands",
-                       MonitoringState(title="State when not checking external commands",
-                                       default_value=2)),
-                      ("site_cert_days",
-                       Tuple(
-                           title=_("Site certificate validity"),
-                           help=_("Minimum number of days a certificate has to be valid."),
-                           elements=[
-                               Integer(
-                                   title=_("Warning at or below"),
-                                   minvalue=0,
-                                   unit=_("days"),
-                                   default_value=30,
-                               ),
-                               Integer(
-                                   title=_("Critical at or below"),
-                                   minvalue=0,
-                                   unit=_("days"),
-                                   default_value=7,
-                               ),
-                           ],
-                       ))],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the monitoring site"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="livestatus_status",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of the monitoring site"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_livestatus_status,
+        title=lambda: _("Performance and settings of a Check_MK site"),
+    ))

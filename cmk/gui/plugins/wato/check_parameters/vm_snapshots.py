@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVmSnapshots(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_vm_snapshots():
+    return Dictionary(elements=[
+        ("age",
+         Tuple(
+             title=_("Age of the last snapshot"),
+             elements=[
+                 Age(title=_("Warning if older than")),
+                 Age(title=_("Critical if older than"))
+             ],
+         )),
+        ("age_oldest",
+         Tuple(
+             title=_("Age of the oldest snapshot"),
+             elements=[
+                 Age(title=_("Warning if older than")),
+                 Age(title=_("Critical if older than"))
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "vm_snapshots"
 
-    @property
-    def title(self):
-        return _("Virtual Machine Snapshots")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("age",
-             Tuple(
-                 title=_("Age of the last snapshot"),
-                 elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than"))
-                 ],
-             )),
-            ("age_oldest",
-             Tuple(
-                 title=_("Age of the oldest snapshot"),
-                 elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than"))
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="vm_snapshots",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_vm_snapshots,
+        title=lambda: _("Virtual Machine Snapshots"),
+    ))

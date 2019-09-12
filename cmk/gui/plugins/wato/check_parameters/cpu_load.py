@@ -34,32 +34,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCpuLoad(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_cpu_load():
+    return Levels(
+        help=_("The CPU load of a system is the number of processes currently being "
+               "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
+               "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
+               "5 or 15 minutes. The following levels will be applied on the average "
+               "load. On Linux system the 15-minute average load is used when applying "
+               "those levels. The configured levels are multiplied with the number of "
+               "CPUs, so you should configure the levels based on the value you want to "
+               "be warned \"per CPU\"."),
+        unit="per core",
+        default_difference=(2.0, 4.0),
+        default_levels=(5.0, 10.0),
+    )
 
-    @property
-    def check_group_name(self):
-        return "cpu_load"
 
-    @property
-    def title(self):
-        return _("CPU load (not utilization!)")
-
-    @property
-    def parameter_valuespec(self):
-        return Levels(
-            help=_("The CPU load of a system is the number of processes currently being "
-                   "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
-                   "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
-                   "5 or 15 minutes. The following levels will be applied on the average "
-                   "load. On Linux system the 15-minute average load is used when applying "
-                   "those levels. The configured levels are multiplied with the number of "
-                   "CPUs, so you should configure the levels based on the value you want to "
-                   "be warned \"per CPU\"."),
-            unit="per core",
-            default_difference=(2.0, 4.0),
-            default_levels=(5.0, 10.0),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cpu_load",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_cpu_load,
+        title=lambda: _("CPU load (not utilization!)"),
+    ))

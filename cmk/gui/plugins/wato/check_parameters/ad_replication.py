@@ -37,33 +37,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAdReplication(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_ad_replication():
+    return TextAscii(
+        title=_("Replication Partner"),
+        help=_("The name of the replication partner (Destination DC Site/Destination DC)."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "ad_replication"
 
-    @property
-    def title(self):
-        return _("Active Directory Replication")
+def _parameter_valuespec_ad_replication():
+    return Tuple(
+        help=_("The number of replication failures"),
+        elements=[
+            Integer(title=_("Warning at"), unit=_("failures")),
+            Integer(title=_("Critical at"), unit=_("failures")),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("The number of replication failures"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("failures")),
-                Integer(title=_("Critical at"), unit=_("failures")),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Replication Partner"),
-            help=_("The name of the replication partner (Destination DC Site/Destination DC)."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ad_replication",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_ad_replication,
+        parameter_valuespec=_parameter_valuespec_ad_replication,
+        title=lambda: _("Active Directory Replication"),
+    ))

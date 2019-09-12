@@ -38,94 +38,84 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDockerNodeContainers(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_docker_node_containers():
+    return Dictionary(
+        help=_(
+            "Allows to define absolute levels for all, running, paused, and stopped containers."),
+        elements=[
+            ("upper_levels",
+             Tuple(
+                 title=_("Containers upper levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("lower_levels",
+             Tuple(
+                 title=_("Containers lower levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("running_upper_levels",
+             Tuple(
+                 title=_("Running containers upper levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("running_lower_levels",
+             Tuple(
+                 title=_("Running containers lower levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("paused_upper_levels",
+             Tuple(
+                 title=_("Paused containers upper levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("paused_lower_levels",
+             Tuple(
+                 title=_("Paused containers lower levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("stopped_upper_levels",
+             Tuple(
+                 title=_("Stopped containers upper levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("stopped_lower_levels",
+             Tuple(
+                 title=_("Stopped containers lower levels"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "docker_node_containers"
 
-    @property
-    def title(self):
-        return _("Docker node container levels")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "Allows to define absolute levels for all, running, paused, and stopped containers."
-            ),
-            elements=[
-                ("upper_levels",
-                 Tuple(
-                     title=_("Containers upper levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("lower_levels",
-                 Tuple(
-                     title=_("Containers lower levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("running_upper_levels",
-                 Tuple(
-                     title=_("Running containers upper levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("running_lower_levels",
-                 Tuple(
-                     title=_("Running containers lower levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("paused_upper_levels",
-                 Tuple(
-                     title=_("Paused containers upper levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("paused_lower_levels",
-                 Tuple(
-                     title=_("Paused containers lower levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("stopped_upper_levels",
-                 Tuple(
-                     title=_("Stopped containers upper levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("stopped_lower_levels",
-                 Tuple(
-                     title=_("Stopped containers lower levels"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="docker_node_containers",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_docker_node_containers,
+        title=lambda: _("Docker node container levels"),
+    ))

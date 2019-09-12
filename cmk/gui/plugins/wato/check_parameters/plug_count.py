@@ -37,28 +37,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPlugCount(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_plug_count():
+    return Tuple(
+        help=_("Levels for the number of active plugs in a device."),
+        elements=[
+            Integer(title=_("critical if below or equal"), default_value=30),
+            Integer(title=_("warning if below or equal"), default_value=32),
+            Integer(title=_("warning if above or equal"), default_value=38),
+            Integer(title=_("critical if above or equal"), default_value=40),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "plug_count"
 
-    @property
-    def title(self):
-        return _("Number of active Plugs")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Levels for the number of active plugs in a device."),
-            elements=[
-                Integer(title=_("critical if below or equal"), default_value=30),
-                Integer(title=_("warning if below or equal"), default_value=32),
-                Integer(title=_("warning if above or equal"), default_value=38),
-                Integer(title=_("critical if above or equal"), default_value=40),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="plug_count",
+        group=RulespecGroupCheckParametersEnvironment,
+        parameter_valuespec=_parameter_valuespec_plug_count,
+        title=lambda: _("Number of active Plugs"),
+    ))

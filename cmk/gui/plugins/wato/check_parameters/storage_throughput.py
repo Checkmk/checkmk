@@ -39,53 +39,41 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersStorageThroughput(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_storage_throughput():
+    return Dictionary(elements=[
+        ("read",
+         Tuple(
+             title=_(u"Read throughput per second"),
+             elements=[
+                 Filesize(title=_(u"Warning at")),
+                 Filesize(title=_(u"Critical at")),
+             ],
+         )),
+        ("write",
+         Tuple(
+             title=_(u"Write throughput per second"),
+             elements=[
+                 Filesize(title=_(u"Warning at")),
+                 Filesize(title=_(u"Critical at")),
+             ],
+         )),
+        ("total",
+         Tuple(
+             title=_(u"Total throughput per second"),
+             elements=[
+                 Filesize(title=_(u"Warning at")),
+                 Filesize(title=_(u"Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "storage_throughput"
 
-    @property
-    def title(self):
-        return _("Throughput for DDN S2A devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("read",
-             Tuple(
-                 title=_(u"Read throughput per second"),
-                 elements=[
-                     Filesize(title=_(u"Warning at")),
-                     Filesize(title=_(u"Critical at")),
-                 ],
-             )),
-            ("write",
-             Tuple(
-                 title=_(u"Write throughput per second"),
-                 elements=[
-                     Filesize(title=_(u"Warning at")),
-                     Filesize(title=_(u"Critical at")),
-                 ],
-             )),
-            ("total",
-             Tuple(
-                 title=_(u"Total throughput per second"),
-                 elements=[
-                     Filesize(title=_(u"Warning at")),
-                     Filesize(title=_(u"Critical at")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_(u"Port index or 'Total'"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="storage_throughput",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_(u"Port index or 'Total'")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_storage_throughput,
+        title=lambda: _("Throughput for DDN S2A devices"),
+    ))

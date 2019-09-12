@@ -36,45 +36,36 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCheckpointPackets(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_checkpoint_packets():
+    return Dictionary(elements=[
+        ("accepted",
+         Levels(title=_("Maximum Rate of Accepted Packets"),
+                default_value=None,
+                default_levels=(100000, 200000),
+                unit="pkts/sec")),
+        ("rejected",
+         Levels(title=_("Maximum Rate of Rejected Packets"),
+                default_value=None,
+                default_levels=(100000, 200000),
+                unit="pkts/sec")),
+        ("dropped",
+         Levels(title=_("Maximum Rate of Dropped Packets"),
+                default_value=None,
+                default_levels=(100000, 200000),
+                unit="pkts/sec")),
+        ("logged",
+         Levels(title=_("Maximum Rate of Logged Packets"),
+                default_value=None,
+                default_levels=(100000, 200000),
+                unit="pkts/sec")),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "checkpoint_packets"
 
-    @property
-    def title(self):
-        return _("Checkpoint Firewall Packet Rates")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("accepted",
-             Levels(title=_("Maximum Rate of Accepted Packets"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="pkts/sec")),
-            ("rejected",
-             Levels(title=_("Maximum Rate of Rejected Packets"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="pkts/sec")),
-            ("dropped",
-             Levels(title=_("Maximum Rate of Dropped Packets"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="pkts/sec")),
-            ("logged",
-             Levels(title=_("Maximum Rate of Logged Packets"),
-                    default_value=None,
-                    default_levels=(100000, 200000),
-                    unit="pkts/sec")),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="checkpoint_packets",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_checkpoint_packets,
+        title=lambda: _("Checkpoint Firewall Packet Rates"),
+    ))

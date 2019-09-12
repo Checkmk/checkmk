@@ -38,35 +38,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCiscoFwConnections(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_cisco_fw_connections():
+    return Dictionary(elements=[
+        ("connections",
+         Tuple(
+             help=_("This rule sets limits to the current number of connections through "
+                    "a Cisco ASA firewall."),
+             title=_("Maximum number of firewall connections"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "cisco_fw_connections"
 
-    @property
-    def title(self):
-        return _("Cisco ASA Firewall Connections")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("connections",
-             Tuple(
-                 help=_("This rule sets limits to the current number of connections through "
-                        "a Cisco ASA firewall."),
-                 title=_("Maximum number of firewall connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cisco_fw_connections",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cisco_fw_connections,
+        title=lambda: _("Cisco ASA Firewall Connections"),
+    ))

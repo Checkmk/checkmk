@@ -39,37 +39,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleLocks(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_oracle_locks():
+    return Dictionary(elements=[("levels",
+                                 Tuple(
+                                     title=_("Levels for minimum wait time for a lock"),
+                                     elements=[
+                                         Age(title=_("warning if higher then"), default_value=1800),
+                                         Age(title=_("critical if higher then"),
+                                             default_value=3600),
+                                     ],
+                                 ))],)
 
-    @property
-    def check_group_name(self):
-        return "oracle_locks"
 
-    @property
-    def title(self):
-        return _("Oracle Locks")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[("levels",
-                                     Tuple(
-                                         title=_("Levels for minimum wait time for a lock"),
-                                         elements=[
-                                             Age(title=_("warning if higher then"),
-                                                 default_value=1800),
-                                             Age(title=_("critical if higher then"),
-                                                 default_value=3600),
-                                         ],
-                                     ))],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="oracle_locks",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_oracle_locks,
+        title=lambda: _("Oracle Locks"),
+    ))

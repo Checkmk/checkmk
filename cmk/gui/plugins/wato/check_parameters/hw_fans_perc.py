@@ -39,45 +39,33 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHwFansPerc(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_hw_fans_perc():
+    return Dictionary(elements=[
+        ("levels",
+         Tuple(
+             title=_("Upper fan speed levels"),
+             elements=[
+                 Percentage(title=_("warning if at")),
+                 Percentage(title=_("critical if at")),
+             ],
+         )),
+        ("levels_lower",
+         Tuple(
+             title=_("Lower fan speed levels"),
+             elements=[
+                 Percentage(title=_("warning if below")),
+                 Percentage(title=_("critical if below")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "hw_fans_perc"
 
-    @property
-    def title(self):
-        return _("Fan speed of hardware devices (in percent)")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Tuple(
-                 title=_("Upper fan speed levels"),
-                 elements=[
-                     Percentage(title=_("warning if at")),
-                     Percentage(title=_("critical if at")),
-                 ],
-             )),
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower fan speed levels"),
-                 elements=[
-                     Percentage(title=_("warning if below")),
-                     Percentage(title=_("critical if below")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Fan Name"), help=_("The identifier of the fan."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hw_fans_perc",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=lambda: TextAscii(title=_("Fan Name"), help=_("The identifier of the fan.")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_hw_fans_perc,
+        title=lambda: _("Fan speed of hardware devices (in percent)"),
+    ))

@@ -39,56 +39,44 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlPageActivity(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_page_activity():
+    return Dictionary(
+        title=_("Page Activity Levels"),
+        elements=[
+            ("page_reads/sec",
+             Tuple(
+                 title=_("Reads/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec")),
+                     Float(title=_("critical at"), unit=_("/sec")),
+                 ],
+             )),
+            ("page_writes/sec",
+             Tuple(
+                 title=_("Writes/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec")),
+                     Float(title=_("critical at"), unit=_("/sec")),
+                 ],
+             )),
+            ("page_lookups/sec",
+             Tuple(
+                 title=_("Lookups/sec"),
+                 elements=[
+                     Float(title=_("warning at"), unit=_("/sec")),
+                     Float(title=_("critical at"), unit=_("/sec")),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "mssql_page_activity"
 
-    @property
-    def title(self):
-        return _("MSSQL Page Activity")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Page Activity Levels"),
-            elements=[
-                ("page_reads/sec",
-                 Tuple(
-                     title=_("Reads/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec")),
-                         Float(title=_("critical at"), unit=_("/sec")),
-                     ],
-                 )),
-                ("page_writes/sec",
-                 Tuple(
-                     title=_("Writes/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec")),
-                         Float(title=_("critical at"), unit=_("/sec")),
-                     ],
-                 )),
-                ("page_lookups/sec",
-                 Tuple(
-                     title=_("Lookups/sec"),
-                     elements=[
-                         Float(title=_("warning at"), unit=_("/sec")),
-                         Float(title=_("critical at"), unit=_("/sec")),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Service descriptions"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_page_activity",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_page_activity,
+        title=lambda: _("MSSQL Page Activity"),
+    ))

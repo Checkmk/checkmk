@@ -38,36 +38,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFilehandler(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "filehandler"
-
-    @property
-    def title(self):
-        return _("Filehandler")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Levels"),
-                    default_value=(80.0, 90.0),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%")),
-                        Percentage(title=_("Critical at"), unit=_("%"))
-                    ],
-                ),
+def _parameter_valuespec_filehandler():
+    return Dictionary(elements=[
+        (
+            "levels",
+            Tuple(
+                title=_("Levels"),
+                default_value=(80.0, 90.0),
+                elements=[
+                    Percentage(title=_("Warning at"), unit=_("%")),
+                    Percentage(title=_("Critical at"), unit=_("%"))
+                ],
             ),
-        ],)
+        ),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="filehandler",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_filehandler,
+        title=lambda: _("Filehandler"),
+    ))

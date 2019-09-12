@@ -38,50 +38,42 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLvmLvsPools(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_lvm_lvs_pools():
+    return TextAscii(
+        title=_("Logical Volume Pool"),
+        allow_empty=True,
+    )
 
-    @property
-    def check_group_name(self):
-        return "lvm_lvs_pools"
 
-    @property
-    def title(self):
-        return _("Logical Volume Pools (LVM)")
+def _parameter_valuespec_lvm_lvs_pools():
+    return Dictionary(elements=[
+        (
+            "levels_meta",
+            Tuple(title=_("Levels for Meta"),
+                  default_value=(80.0, 90.0),
+                  elements=[
+                      Percentage(title=_("Warning at"), unit=_("%")),
+                      Percentage(title=_("Critical at"), unit=_("%"))
+                  ]),
+        ),
+        (
+            "levels_data",
+            Tuple(title=_("Levels for Data"),
+                  default_value=(80.0, 90.0),
+                  elements=[
+                      Percentage(title=_("Warning at"), unit=_("%")),
+                      Percentage(title=_("Critical at"), unit=_("%"))
+                  ]),
+        ),
+    ])
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "levels_meta",
-                Tuple(title=_("Levels for Meta"),
-                      default_value=(80.0, 90.0),
-                      elements=[
-                          Percentage(title=_("Warning at"), unit=_("%")),
-                          Percentage(title=_("Critical at"), unit=_("%"))
-                      ]),
-            ),
-            (
-                "levels_data",
-                Tuple(title=_("Levels for Data"),
-                      default_value=(80.0, 90.0),
-                      elements=[
-                          Percentage(title=_("Warning at"), unit=_("%")),
-                          Percentage(title=_("Critical at"), unit=_("%"))
-                      ]),
-            ),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Logical Volume Pool"),
-            allow_empty=True,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="lvm_lvs_pools",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_lvm_lvs_pools,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_lvm_lvs_pools,
+        title=lambda: _("Logical Volume Pools (LVM)"),
+    ))

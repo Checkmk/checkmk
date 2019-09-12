@@ -39,59 +39,50 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSafenetHsmEventstats(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_safenet_hsm_eventstats():
+    return Dictionary(elements=[
+        ("critical_events",
+         Tuple(
+             title=_(u"Critical events"),
+             help=_(u"Sets levels on total critical events since last counter reset."),
+             elements=[
+                 Integer(title=_("Warning at"), default_value=0),
+                 Integer(title=_("Critical at"), default_value=1),
+             ],
+         )),
+        ("noncritical_events",
+         Tuple(
+             title=_(u"Noncritical events"),
+             help=_(u"Sets levels on total noncritical events since last counter reset."),
+             elements=[
+                 Integer(title=_("Warning at"), default_value=0),
+                 Integer(title=_("Critical at"), default_value=1),
+             ],
+         )),
+        ("critical_event_rate",
+         Tuple(
+             title=_(u"Critical event rate"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
+                 Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
+             ],
+         )),
+        ("noncritical_event_rate",
+         Tuple(
+             title=_(u"Noncritical event rate"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
+                 Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "safenet_hsm_eventstats"
 
-    @property
-    def title(self):
-        return _("Safenet HSM Event Stats")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("critical_events",
-             Tuple(
-                 title=_(u"Critical events"),
-                 help=_(u"Sets levels on total critical events since last counter reset."),
-                 elements=[
-                     Integer(title=_("Warning at"), default_value=0),
-                     Integer(title=_("Critical at"), default_value=1),
-                 ],
-             )),
-            ("noncritical_events",
-             Tuple(
-                 title=_(u"Noncritical events"),
-                 help=_(u"Sets levels on total noncritical events since last counter reset."),
-                 elements=[
-                     Integer(title=_("Warning at"), default_value=0),
-                     Integer(title=_("Critical at"), default_value=1),
-                 ],
-             )),
-            ("critical_event_rate",
-             Tuple(
-                 title=_(u"Critical event rate"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
-                     Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
-                 ],
-             )),
-            ("noncritical_event_rate",
-             Tuple(
-                 title=_(u"Noncritical event rate"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=0.0001, unit=_("1/s")),
-                     Float(title=_("Critical at"), default_value=0.0005, unit=_("1/s")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="safenet_hsm_eventstats",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_safenet_hsm_eventstats,
+        title=lambda: _("Safenet HSM Event Stats"),
+    ))

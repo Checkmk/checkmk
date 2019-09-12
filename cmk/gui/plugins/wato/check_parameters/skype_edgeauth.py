@@ -38,43 +38,31 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSkypeEdgeauth(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_skype_edgeauth():
+    return Dictionary(
+        elements=[
+            ('bad_requests',
+             Dictionary(
+                 title=_("Bad Requests Received"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
+                          Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+        ],
+        optional_keys=[],
+    )
 
-    @property
-    def check_group_name(self):
-        return "skype_edgeauth"
 
-    @property
-    def title(self):
-        return _("Skype for Business Edge Auth")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('bad_requests',
-                 Dictionary(
-                     title=_("Bad Requests Received"),
-                     elements=[
-                         ("upper",
-                          Tuple(elements=[
-                              Integer(title=_("Warning at"), unit=_("per second"),
-                                      default_value=20),
-                              Integer(title=_("Critical at"),
-                                      unit=_("per second"),
-                                      default_value=40),
-                          ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-            ],
-            optional_keys=[],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="skype_edgeauth",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_skype_edgeauth,
+        title=lambda: _("Skype for Business Edge Auth"),
+    ))

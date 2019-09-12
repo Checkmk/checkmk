@@ -39,52 +39,44 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFirewallIf(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_firewall_if():
+    return TextAscii(
+        title=_("Interface"),
+        help=_("The description of the interface as provided by the device"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "firewall_if"
 
-    @property
-    def title(self):
-        return _("Firewall Interfaces")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "ipv4_in_blocked",
-                Levels(
-                    title=_("Levels for rate of incoming IPv4 packets blocked"),
-                    unit=_("pkts/s"),
-                    default_levels=(100.0, 10000.0),
-                    default_difference=(5, 8),
-                    default_value=None,
-                ),
+def _parameter_valuespec_firewall_if():
+    return Dictionary(elements=[
+        (
+            "ipv4_in_blocked",
+            Levels(
+                title=_("Levels for rate of incoming IPv4 packets blocked"),
+                unit=_("pkts/s"),
+                default_levels=(100.0, 10000.0),
+                default_difference=(5, 8),
+                default_value=None,
             ),
-            ("average",
-             Integer(
-                 title=_("Averaging"),
-                 help=_("When this option is activated then the block rate is being "
-                        "averaged <b>before</b> the levels are being applied."),
-                 unit=_("minutes"),
-                 default_value=3,
-                 minvalue=1,
-                 label=_("Compute average over last "),
-             )),
-        ],)
+        ),
+        ("average",
+         Integer(
+             title=_("Averaging"),
+             help=_("When this option is activated then the block rate is being "
+                    "averaged <b>before</b> the levels are being applied."),
+             unit=_("minutes"),
+             default_value=3,
+             minvalue=1,
+             label=_("Compute average over last "),
+         )),
+    ],)
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Interface"),
-            help=_("The description of the interface as provided by the device"),
-        )
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="firewall_if",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_firewall_if,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_firewall_if,
+        title=lambda: _("Firewall Interfaces"),
+    ))

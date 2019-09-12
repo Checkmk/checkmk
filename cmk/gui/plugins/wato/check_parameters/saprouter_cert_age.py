@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSaprouterCertAge(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_saprouter_cert_age():
+    return Dictionary(elements=[
+        ("validity_age",
+         Tuple(
+             title=_('Lower levels for certificate age'),
+             elements=[
+                 Age(title=_("Warning below"), default_value=30 * 86400),
+                 Age(title=_("Critical below"), default_value=7 * 86400),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "saprouter_cert_age"
 
-    @property
-    def title(self):
-        return _("SAP router certificate time settings")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("validity_age",
-             Tuple(
-                 title=_('Lower levels for certificate age'),
-                 elements=[
-                     Age(title=_("Warning below"), default_value=30 * 86400),
-                     Age(title=_("Critical below"), default_value=7 * 86400),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="saprouter_cert_age",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_saprouter_cert_age,
+        title=lambda: _("SAP router certificate time settings"),
+    ))

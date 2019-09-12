@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLogins(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_logins():
+    return Tuple(
+        help=_("This rule defines upper limits for the number of logins on a system."),
+        elements=[
+            Integer(title=_("Warning at"), unit=_("users"), default_value=20),
+            Integer(title=_("Critical at"), unit=_("users"), default_value=30)
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "logins"
 
-    @property
-    def title(self):
-        return _("Number of Logins on System")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule defines upper limits for the number of logins on a system."),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("users"), default_value=20),
-                Integer(title=_("Critical at"), unit=_("users"), default_value=30)
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="logins",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_logins,
+        title=lambda: _("Number of Logins on System"),
+    ))

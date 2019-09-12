@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersK8SNodes(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_k8s_nodes():
+    return Dictionary(elements=[
+        ('levels',
+         Tuple(
+             title=_('Upper levels'),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('levels_lower',
+         Tuple(
+             title=_('Lower levels'),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "k8s_nodes"
 
-    @property
-    def title(self):
-        return _("Kubernetes nodes")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('levels',
-             Tuple(
-                 title=_('Upper levels'),
-                 elements=[
-                     Integer(title=_("Warning above")),
-                     Integer(title=_("Critical above")),
-                 ],
-             )),
-            ('levels_lower',
-             Tuple(
-                 title=_('Lower levels'),
-                 elements=[
-                     Integer(title=_("Warning below")),
-                     Integer(title=_("Critical below")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="k8s_nodes",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_k8s_nodes,
+        title=lambda: _("Kubernetes nodes"),
+    ))

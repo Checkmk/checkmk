@@ -38,47 +38,39 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmThreads(CheckParameterRulespecWithItem):
-    @property
-    def is_deprecated(self):
-        return True
+def _item_spec_jvm_threads():
+    return TextAscii(
+        title=_("Name of the virtual machine"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
 
-    @property
-    def check_group_name(self):
-        return "jvm_threads"
+def _parameter_valuespec_jvm_threads():
+    return Tuple(
+        help=_("This rule sets the warn and crit levels for the number of threads "
+               "running in a JVM."),
+        elements=[
+            Integer(
+                title=_("Warning at"),
+                unit=_("threads"),
+                default_value=80,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("threads"),
+                default_value=100,
+            ),
+        ],
+    )
 
-    @property
-    def title(self):
-        return _("JVM threads")
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets the warn and crit levels for the number of threads "
-                   "running in a JVM."),
-            elements=[
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("threads"),
-                    default_value=80,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("threads"),
-                    default_value=100,
-                ),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_threads",
+        group=RulespecGroupCheckParametersApplications,
+        is_deprecated=True,
+        item_spec=_item_spec_jvm_threads,
+        parameter_valuespec=_parameter_valuespec_jvm_threads,
+        title=lambda: _("JVM threads"),
+    ))

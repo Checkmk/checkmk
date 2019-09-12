@@ -38,46 +38,38 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersIbmSvcTotalLatency(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_ibm_svc_total_latency():
+    return DropdownChoice(
+        choices=[
+            ("Drives", _("Total latency for all drives")),
+            ("MDisks", _("Total latency for all MDisks")),
+            ("VDisks", _("Total latency for all VDisks")),
+        ],
+        title=_("Disk/Drive type"),
+        help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."))
 
-    @property
-    def check_group_name(self):
-        return "ibm_svc_total_latency"
 
-    @property
-    def title(self):
-        return _("IBM SVC Total Disk Latency")
+def _parameter_valuespec_ibm_svc_total_latency():
+    return Dictionary(elements=[
+        ("read",
+         Levels(title=_("Read latency"),
+                unit=_("ms"),
+                default_value=None,
+                default_levels=(50.0, 100.0))),
+        ("write",
+         Levels(title=_("Write latency"),
+                unit=_("ms"),
+                default_value=None,
+                default_levels=(50.0, 100.0))),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("read",
-             Levels(title=_("Read latency"),
-                    unit=_("ms"),
-                    default_value=None,
-                    default_levels=(50.0, 100.0))),
-            ("write",
-             Levels(title=_("Write latency"),
-                    unit=_("ms"),
-                    default_value=None,
-                    default_levels=(50.0, 100.0))),
-        ],)
-
-    @property
-    def item_spec(self):
-        return DropdownChoice(
-            choices=[
-                ("Drives", _("Total latency for all drives")),
-                ("MDisks", _("Total latency for all MDisks")),
-                ("VDisks", _("Total latency for all VDisks")),
-            ],
-            title=_("Disk/Drive type"),
-            help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ibm_svc_total_latency",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_ibm_svc_total_latency,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ibm_svc_total_latency,
+        title=lambda: _("IBM SVC Total Disk Latency"),
+    ))

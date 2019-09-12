@@ -37,36 +37,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCitrixState(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_citrix_state():
+    return Dictionary(elements=[(
+        "registrationstate",
+        Dictionary(
+            title=_("Interpretation of Registration States"),
+            elements=[
+                ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
+                ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
+                ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
+                ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
+            ],
+            optional_keys=False,
+        ),
+    )],)
 
-    @property
-    def check_group_name(self):
-        return "citrix_state"
 
-    @property
-    def title(self):
-        return _("State of Citrix VMs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[(
-            "registrationstate",
-            Dictionary(
-                title=_("Interpretation of Registration States"),
-                elements=[
-                    ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
-                    ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
-                    ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
-                    ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
-                ],
-                optional_keys=False,
-            ),
-        )],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="citrix_state",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_citrix_state,
+        title=lambda: _("State of Citrix VMs"),
+    ))

@@ -37,55 +37,46 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSplunkJobs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_splunk_jobs():
+    return Dictionary(
+        optional_keys=True,
+        elements=[
+            ("job_count",
+             Tuple(
+                 title=_("Number of jobs"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+            ("failed_count",
+             Tuple(
+                 title=_("Number of failed jobs"),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+            ("zombie_count",
+             Tuple(
+                 title=_("Number of zombie jobs"),
+                 help=_("Splunk calls a search a zombie when the search is "
+                        "no longer running, but did not declare explicitly that "
+                        "it has finished its work."),
+                 elements=[
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "splunk_jobs"
 
-    @property
-    def title(self):
-        return _("Splunk Jobs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            optional_keys=True,
-            elements=[
-                ("job_count",
-                 Tuple(
-                     title=_("Number of jobs"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-                ("failed_count",
-                 Tuple(
-                     title=_("Number of failed jobs"),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-                ("zombie_count",
-                 Tuple(
-                     title=_("Number of zombie jobs"),
-                     help=_("Splunk calls a search a zombie when the search is "
-                            "no longer running, but did not declare explicitly that "
-                            "it has finished its work."),
-                     elements=[
-                         Integer(title=_("Warning at")),
-                         Integer(title=_("Critical at")),
-                     ],
-                 )),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="splunk_jobs",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_splunk_jobs,
+        title=lambda: _("Splunk Jobs"),
+    ))

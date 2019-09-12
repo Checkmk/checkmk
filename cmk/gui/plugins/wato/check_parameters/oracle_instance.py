@@ -41,88 +41,77 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleInstance(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _oracle_instance_transform_oracle_instance_params(p):
+    if "ignore_noarchivelog" in p:
+        if p["ignore_noarchivelog"]:
+            p["noarchivelog"] = 0
+        del p["ignore_noarchivelog"]
+    return p
 
-    @property
-    def check_group_name(self):
-        return "oracle_instance"
 
-    @property
-    def title(self):
-        return _("Oracle Instance")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(Dictionary(
-            title=_("Consider state of Archivelogmode: "),
-            elements=[
-                ('archivelog',
-                 MonitoringState(
-                     default_value=0,
-                     title=_("State in case of Archivelogmode is enabled: "),
-                 )),
-                (
-                    'noarchivelog',
-                    MonitoringState(
-                        default_value=1,
-                        title=_("State in case of Archivelogmode is disabled: "),
-                    ),
+def _parameter_valuespec_oracle_instance():
+    return Transform(Dictionary(
+        title=_("Consider state of Archivelogmode: "),
+        elements=[
+            ('archivelog',
+             MonitoringState(
+                 default_value=0,
+                 title=_("State in case of Archivelogmode is enabled: "),
+             )),
+            (
+                'noarchivelog',
+                MonitoringState(
+                    default_value=1,
+                    title=_("State in case of Archivelogmode is disabled: "),
                 ),
-                (
-                    'forcelogging',
-                    MonitoringState(
-                        default_value=0,
-                        title=_("State in case of Force Logging is enabled: "),
-                    ),
+            ),
+            (
+                'forcelogging',
+                MonitoringState(
+                    default_value=0,
+                    title=_("State in case of Force Logging is enabled: "),
                 ),
-                (
-                    'noforcelogging',
-                    MonitoringState(
-                        default_value=1,
-                        title=_("State in case of Force Logging is disabled: "),
-                    ),
+            ),
+            (
+                'noforcelogging',
+                MonitoringState(
+                    default_value=1,
+                    title=_("State in case of Force Logging is disabled: "),
                 ),
-                (
-                    'logins',
-                    MonitoringState(
-                        default_value=2,
-                        title=_("State in case of logins are not possible: "),
-                    ),
+            ),
+            (
+                'logins',
+                MonitoringState(
+                    default_value=2,
+                    title=_("State in case of logins are not possible: "),
                 ),
-                (
-                    'primarynotopen',
-                    MonitoringState(
-                        default_value=2,
-                        title=_("State in case of Database is PRIMARY and not OPEN: "),
-                    ),
+            ),
+            (
+                'primarynotopen',
+                MonitoringState(
+                    default_value=2,
+                    title=_("State in case of Database is PRIMARY and not OPEN: "),
                 ),
-                ('uptime_min',
-                 Tuple(
-                     title=_("Minimum required uptime"),
-                     elements=[
-                         Age(title=_("Warning if below")),
-                         Age(title=_("Critical if below")),
-                     ],
-                 )),
-            ],
-        ),
-                         forth=self._transform_oracle_instance_params)
+            ),
+            ('uptime_min',
+             Tuple(
+                 title=_("Minimum required uptime"),
+                 elements=[
+                     Age(title=_("Warning if below")),
+                     Age(title=_("Critical if below")),
+                 ],
+             )),
+        ],
+    ),
+                     forth=_oracle_instance_transform_oracle_instance_params)
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)
 
-    def _transform_oracle_instance_params(self, p):
-        if "ignore_noarchivelog" in p:
-            if p["ignore_noarchivelog"]:
-                p["noarchivelog"] = 0
-            del p["ignore_noarchivelog"]
-        return p
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="oracle_instance",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_oracle_instance,
+        title=lambda: _("Oracle Instance"),
+    ))

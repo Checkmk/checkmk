@@ -33,27 +33,18 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class ManualCheckParameterTemperatureAuto(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksEnvironment
+def _item_spec_temperature_auto():
+    return TextAscii(
+        title=_("Sensor ID"),
+        help=_("The identificator of the thermal sensor."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "temperature_auto"
 
-    @property
-    def title(self):
-        return _("Temperature sensors with builtin levels")
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Sensor ID"),
-            help=_("The identificator of the thermal sensor."),
-        )
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="temperature_auto",
+        group=RulespecGroupManualChecksEnvironment,
+        is_deprecated=True,
+        item_spec=_item_spec_temperature_auto,
+        title=lambda: _("Temperature sensors with builtin levels"),
+    ))

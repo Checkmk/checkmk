@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMcafeeWebGatewayMisc(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mcafee_web_gateway_misc():
+    return Dictionary(elements=[
+        ("clients",
+         Tuple(
+             title=_("Upper levels for clients"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+        ("network_sockets",
+         Tuple(
+             title=_("Upper levels for open network sockets"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "mcafee_web_gateway_misc"
 
-    @property
-    def title(self):
-        return _("McAfee web gateway miscellaneous")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("clients",
-             Tuple(
-                 title=_("Upper levels for clients"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("network_sockets",
-             Tuple(
-                 title=_("Upper levels for open network sockets"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mcafee_web_gateway_misc",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mcafee_web_gateway_misc,
+        title=lambda: _("McAfee web gateway miscellaneous"),
+    ))

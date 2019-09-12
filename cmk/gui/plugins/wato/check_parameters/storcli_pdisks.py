@@ -38,63 +38,55 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersStorcliPdisks(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_storcli_pdisks():
+    return TextAscii(
+        title=_("PDisk EID:Slot-Device"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "storcli_pdisks"
 
-    @property
-    def title(self):
-        return _("LSI RAID physical disks (StorCLI)")
+def _parameter_valuespec_storcli_pdisks():
+    return Dictionary(
+        title=_("Evaluation of PDisk States"),
+        elements=[
+            ("Dedicated Hot Spare",
+             MonitoringState(
+                 title=_("State for <i>Dedicated Hot Spare</i>"),
+                 default_value=0,
+             )),
+            ("Global Hot Spare",
+             MonitoringState(
+                 title=_("State for <i>Global Hot Spare</i>"),
+                 default_value=0,
+             )),
+            ("Unconfigured Good",
+             MonitoringState(
+                 title=_("State for <i>Unconfigured Good</i>"),
+                 default_value=0,
+             )),
+            ("Unconfigured Bad",
+             MonitoringState(
+                 title=_("State for <i>Unconfigured Bad</i>"),
+                 default_value=1,
+             )),
+            ("Online", MonitoringState(
+                title=_("State for <i>Online</i>"),
+                default_value=0,
+            )),
+            ("Offline", MonitoringState(
+                title=_("State for <i>Offline</i>"),
+                default_value=2,
+            )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Evaluation of PDisk States"),
-            elements=[
-                ("Dedicated Hot Spare",
-                 MonitoringState(
-                     title=_("State for <i>Dedicated Hot Spare</i>"),
-                     default_value=0,
-                 )),
-                ("Global Hot Spare",
-                 MonitoringState(
-                     title=_("State for <i>Global Hot Spare</i>"),
-                     default_value=0,
-                 )),
-                ("Unconfigured Good",
-                 MonitoringState(
-                     title=_("State for <i>Unconfigured Good</i>"),
-                     default_value=0,
-                 )),
-                ("Unconfigured Bad",
-                 MonitoringState(
-                     title=_("State for <i>Unconfigured Bad</i>"),
-                     default_value=1,
-                 )),
-                ("Online", MonitoringState(
-                    title=_("State for <i>Online</i>"),
-                    default_value=0,
-                )),
-                ("Offline", MonitoringState(
-                    title=_("State for <i>Offline</i>"),
-                    default_value=2,
-                )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("PDisk EID:Slot-Device"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="storcli_pdisks",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_storcli_pdisks,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_storcli_pdisks,
+        title=lambda: _("LSI RAID physical disks (StorCLI)"),
+    ))

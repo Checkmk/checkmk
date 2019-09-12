@@ -6028,6 +6028,24 @@ metric_info["jenkins_temp"] = {
     "color": "53/a",
 }
 
+metric_info["jenkins_stuck_tasks"] = {
+    "title": _("Number of stuck tasks"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["jenkins_blocked_tasks"] = {
+    "title": _("Number of blocked tasks"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["jenkins_pending_tasks"] = {
+    "title": _("Number of pending tasks"),
+    "unit": "count",
+    "color": "51/a",
+}
+
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
         ("total", "Total", "11/a"),

@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     Integer,
+    MonitoringState,
     Tuple,
 )
 
@@ -62,10 +63,10 @@ class RulespecCheckgroupParametersJenkinsQueue(CheckParameterRulespecWithoutItem
         return Dictionary(elements=[
             ("queue_length",
              Tuple(
-                 title=_("Queue length"),
+                 title=_("Upper level for queue length"),
                  elements=[
-                     Integer(title=_("Warning above"), unit="Tasks"),
-                     Integer(title=_("Critical above"), unit="Tasks"),
+                     Integer(title=_("Warning at"), unit="Tasks"),
+                     Integer(title=_("Critical at"), unit="Tasks"),
                  ],
              )),
             ('in_queue_since',
@@ -74,6 +75,39 @@ class RulespecCheckgroupParametersJenkinsQueue(CheckParameterRulespecWithoutItem
                  elements=[
                      Age(title=_("Warning at"), default_value=3600),
                      Age(title=_("Critical at"), default_value=7200),
+                 ],
+             )),
+            ("stuck", MonitoringState(
+                title=_("Task state: Stuck"),
+                default_value=2,
+            )),
+            ("jenkins_stuck_tasks",
+             Tuple(
+                 title=_("Upper level for stuck tasks"),
+                 elements=[
+                     Integer(title=_("Warning at"), unit="Tasks", default_value=1),
+                     Integer(title=_("Critical at"), unit="Tasks", default_value=2),
+                 ],
+             )),
+            ("blocked", MonitoringState(
+                title=_("Task state: Blocked"),
+                default_value=0,
+            )),
+            ("jenkins_blocked_tasks",
+             Tuple(
+                 title=_("Upper level for blocked tasks"),
+                 elements=[
+                     Integer(title=_("Warning at"), unit="Tasks"),
+                     Integer(title=_("Critical at"), unit="Tasks"),
+                 ],
+             )),
+            ("pending", MonitoringState(title=_("Task state: Pending"), default_value=0)),
+            ("jenkins_pending_tasks",
+             Tuple(
+                 title=_("Upper level for pending tasks"),
+                 elements=[
+                     Integer(title=_("Warning at or above"), unit="Tasks"),
+                     Integer(title=_("Critical at or above"), unit="Tasks"),
                  ],
              )),
         ],)

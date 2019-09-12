@@ -55,6 +55,10 @@ def inventory_jenkins_queue(parsed):
 
 factory_settings["jenkins_queue_default_levels"] = {
     "in_queue_since": (3600, 7200),
+    "stuck": 2,
+    "blocked": 0,
+    "pending": 0,
+    "jenkins_stuck_tasks": (1, 2),
 }
 
 
@@ -73,33 +77,74 @@ def check_jenkins_queue(no_item, params, parsed):
                        infoname="Queue length")
 
     levels = params["in_queue_since"]
+    stuck_tasks = 0
+    blocked_tasks = 0
+    pending_tasks = 0
 
-    for task in sorted(parsed, key=lambda k: k['inQueueSince']):
+    for task in sorted(parsed,
+                       key=lambda k: (k['stuck'], k['blocked'], -k['inQueueSince']),
+                       reverse=True):
         now = time.time()
-        state = 0
+        len_state = 0
         timestamp_in_queue = task["inQueueSince"] / 1000
         since = now - timestamp_in_queue
 
-        if levels is not None:
-            state, _since_infotext, _perf_data = check_levels(since, "in_queue_since", levels)
+        len_state, _since_infotext, _perf_data = check_levels(since, "in_queue_since", levels)
 
-        long_output.append(
-            (state, "ID: %d, In queue since: %s (%s)%s, Stuck: %s, Blocked: %s, Why kept: %s" %
-             (task["id"], get_age_human_readable(since),
-              get_timestamp_human_readable(timestamp_in_queue), state_markers[state],
-              MAP_QUEUE_STATES[task["stuck"]], MAP_QUEUE_STATES[task["blocked"]], task["why"])))
+        stuck_state = 0
+        if task["stuck"]:
+            stuck_tasks += 1
+            stuck_state = params["stuck"]
+
+        blocked_state = 0
+        if task["blocked"]:
+            blocked_tasks += 1
+            blocked_state = params["blocked"]
+
+        long_output_str = "ID: %d, Stuck: %s%s, Blocked: %s%s" % (
+            task["id"], MAP_QUEUE_STATES[task["stuck"]], state_markers[stuck_state],
+            MAP_QUEUE_STATES[task["blocked"]], state_markers[blocked_state])
+
+        pending_state = 0
+        # pending can be missing
+        task_pending = task.get("pending")
+        if task_pending or task_pending is False:
+            if task_pending:
+                pending_tasks += 1
+            pending_state = params["pending"]
+            long_output_str += ", Pending: %s%s" % (MAP_QUEUE_STATES[task_pending],
+                                                    state_markers[pending_state])
+
+        long_output_str += ", In queue since: %s (%s)" % (
+            get_age_human_readable(since), get_timestamp_human_readable(timestamp_in_queue))
+
+        if len_state:
+            long_output_str += " (warn/crit at %s/%s)%s" % (get_age_human_readable(
+                levels[0]), get_age_human_readable(levels[1]), state_markers[len_state])
+
+        state = max([len_state, stuck_state, blocked_state, pending_state])
+
+        long_output_str += ", Why kept: %s" % task["why"]
+
+        long_output.append((state, long_output_str))
 
     max_state = max([state for state, _infotext in long_output])
-    longoutput_note = "See long output for further information"
 
-    if max_state:
-        yield max_state, 'At least one task above thresholds, %s (warn/crit at %s/%s)' % (
-            longoutput_note.lower(), get_age_human_readable(
-                levels[0]), get_age_human_readable(levels[1]))
+    if stuck_tasks or blocked_tasks or pending_tasks:
+        for key, value, infotext in [(stuck_tasks, "stuck_tasks", "Stuck"),
+                                     (blocked_tasks, "blocked_tasks", "Blocked"),
+                                     (pending_tasks, "pending_tasks", "Pending")]:
+
+            jenkins_value = "jenkins_%s" % value
+
+            yield check_levels(key,
+                               jenkins_value,
+                               params.get(jenkins_value),
+                               human_readable_func=int,
+                               infoname=infotext)
 
     if long_output:
-        if not max_state:
-            yield 0, longoutput_note
+        yield max_state, "See long output for further information"
 
         for state, line in long_output:
             yield 0, "\n%s" % line

@@ -2057,9 +2057,8 @@ msgstr "AWS/ELB HTTP Fehler"
 msgid "AWS/ELB Healthy Hosts"
 msgstr "Gesunde AWS/ELB Hosts"
 
-#, fuzzy
 msgid "AWS/ELB Latency"
-msgstr "Verarbeitungsdauer"
+msgstr "AWS/ELB Latenz"
 
 msgid "AWS/ELB Limits"
 msgstr "AWS/ELB Grenzwerte"
@@ -10456,9 +10455,8 @@ msgstr "DB2-Verbindungen"
 msgid "DB2 Counters"
 msgstr "DB2-Zähler"
 
-#, fuzzy
 msgid "DB2 Databases (Linux, AIX)"
-msgstr "ORACLE Datenbanken (Linux, Solaris, AIX)"
+msgstr "DB2 Datenbanken (Linux, AIX)"
 
 msgid "DB2 Sort Overflow"
 msgstr "DB2 Sortierüberlauf"
@@ -11047,9 +11045,9 @@ msgstr "Verzögerte Dateien im Spooler"
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definiere einen Bereich von Sylog Prioritäten auf die Regel zutrifft"
 
-#, fuzzy
 msgid "Define a tolerating time period for activating services"
-msgstr "Checkperiode für aktive Services"
+msgstr ""
+"Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
 msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern (* "
@@ -11561,9 +11559,8 @@ msgstr "Plugin für Citrix-Lizenzen ausrollen"
 msgid "Deploy plugin for DAG"
 msgstr "Plugin für DAG bereitstellen"
 
-#, fuzzy
 msgid "Deploy plugin for DB2"
-msgstr "Plugin für DAG bereitstellen"
+msgstr "Plugin für DB2 ausrollen"
 
 msgid "Deploy plugin for Hyper-V VM Guest Information"
 msgstr "Plugin für Hyper-V VM Gastinformationen ausrollen"
@@ -12674,9 +12671,8 @@ msgstr "Das Check_MK Inventory Plugin nicht ausrollen"
 msgid "Do not deploy the Check_MK site objects plugin"
 msgstr "Das Check_MK Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the DB2 plugin"
-msgstr "Das %s Plugin nicht ausrollen"
+msgstr "Das DB2 Plugin nicht ausrollen"
 
 msgid "Do not deploy the DNS client plugin"
 msgstr "Das DNS client Plugin nicht ausrollen"
@@ -14112,9 +14108,8 @@ msgstr "Alarme von Hosts/Services ein/aus"
 msgid "Enable automatic agent updates"
 msgstr "Automatische Agentupdates aktivieren"
 
-#, fuzzy
 msgid "Enable automatic host key acceptance"
-msgstr "Automatische Agentupdates aktivieren"
+msgstr "Hostkeys automatisch akzeptieren"
 
 msgid "Enable automatic invalidation at"
 msgstr "Automatisch invalidieren um"
@@ -14895,9 +14890,8 @@ msgstr "Reserviertern Platz anzeigen"
 msgid "Exclude scheduled downtimes"
 msgstr "geplante Wartungszeiten ausnehmen"
 
-#, fuzzy
 msgid "Exclude services matching provided regex patterns"
-msgstr "Reklassifizierung des Status durch regulären Ausdruck"
+msgstr "Services ausschließen, die auf folgende regulären Ausdrücke matchen"
 
 msgid "Exclude some sections on certain instances"
 msgstr "Auf einigen Instanzen einige Sektionen auslassen"
@@ -16754,12 +16748,8 @@ msgstr "Erzeugen"
 msgid "Generate Event!"
 msgstr "Generiere Ereignis!"
 
-msgid "Generate config via multiprocessing"
-msgstr "Generierung der Konfiguration durch Multiprocessing"
-
-#, fuzzy
-msgid "Generate monitoring configuration via multiprocessing"
-msgstr "Konfigurationsvariable zurücksetzen"
+msgid "Generate core config parallelized"
+msgstr ""
 
 msgid "Generate report in background job"
 msgstr "Erstelle Report in Hintergrund-Prozess"
@@ -28077,9 +28067,8 @@ msgstr "Anzahl ausstehender Aufgaben"
 msgid "Number of physical CPUs"
 msgstr "Anzahl der physischen CPUs"
 
-#, fuzzy
 msgid "Number of positve responses required for OK state"
-msgstr "Anzahl von E-Mails in Status \"deferred\""
+msgstr "Benötigte Anzahl an positiven Antworten für einen OK Status"
 
 msgid "Number of probes per hop"
 msgstr "Anzahl von Tests pro Sprung"
@@ -29444,6 +29433,10 @@ msgstr "Auslastung paralleler Verbindungen"
 
 msgid "Parallel pings to send"
 msgstr "Parallel zu sendende Pings"
+
+#, fuzzy
+msgid "Parallelize core config creation"
+msgstr "Parallele Verbindungen"
 
 msgid "Parameter rule set"
 msgstr "Parameter-Regelsatz"
@@ -54515,6 +54508,13 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Generate config via multiprocessing"
+#~ msgstr "Generierung der Konfiguration durch Multiprocessing"
+
+#, fuzzy
+#~ msgid "Generate monitoring configuration via multiprocessing"
+#~ msgstr "Konfigurationsvariable zurücksetzen"
 
 #~ msgid "Add unmonitored services"
 #~ msgstr "Nicht überwachte Services hinzufzügen"

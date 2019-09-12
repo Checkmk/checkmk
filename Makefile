@@ -326,12 +326,16 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json
-	if curl --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy' | grep '200\ OK'; then \
-            npm config set registry '${ARTIFACT_STORAGE}/repository/npm-proxy/'; \
+node_modules: package.json package-lock.json
+	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
-        fi; \
-	npm install --unsafe-perm
+	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
+	else \
+	    REGISTRY= ; \
+	    echo "Installing from public registry" ; \
+        fi ; \
+	npm install --audit=false --unsafe-perm $$REGISTRY
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)

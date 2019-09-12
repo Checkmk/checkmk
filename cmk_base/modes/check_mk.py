@@ -480,14 +480,14 @@ def mode_paths():
     paths = [
         (cmk.utils.paths.modules_dir, directory, inst, "Main components of check_mk"),
         (cmk.utils.paths.checks_dir, directory, inst, "Checks"),
-        (cmk.utils.paths.notifications_dir, directory, inst, "Notification scripts"),
+        (str(cmk.utils.paths.notifications_dir), directory, inst, "Notification scripts"),
         (cmk.utils.paths.inventory_dir, directory, inst, "Inventory plugins"),
         (cmk.utils.paths.agents_dir, directory, inst, "Agents for operating systems"),
-        (cmk.utils.paths.doc_dir, directory, inst, "Documentation files"),
+        (str(cmk.utils.paths.doc_dir), directory, inst, "Documentation files"),
         (cmk.utils.paths.web_dir, directory, inst, "Check_MK's web pages"),
         (cmk.utils.paths.check_manpages_dir, directory, inst, "Check manpages (for check_mk -M)"),
         (cmk.utils.paths.lib_dir, directory, inst, "Binary plugins (architecture specific)"),
-        (cmk.utils.paths.pnp_templates_dir, directory, inst, "Templates for PNP4Nagios"),
+        (str(cmk.utils.paths.pnp_templates_dir), directory, inst, "Templates for PNP4Nagios"),
     ]
     if config.monitoring_core == "nagios":
         paths += [

@@ -1,8 +1,9 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import subprocess
 import gettext
-import pytest
+import pytest  # type: ignore
 import six
 from pathlib2 import Path
 from testlib import cmk_path
@@ -13,13 +14,13 @@ import cmk.gui.i18n as i18n
 
 @pytest.fixture(autouse=True)
 def locale_paths(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "locale_dir", "%s/locale" % cmk_path())
+    monkeypatch.setattr(cmk.utils.paths, "locale_dir", Path("%s/locale" % cmk_path()))
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
 @pytest.fixture(autouse=True)
 def compile_builtin_po_files(locale_paths):
-    builtin_dir = Path(cmk.utils.paths.locale_dir) / "de" / "LC_MESSAGES"
+    builtin_dir = cmk.utils.paths.locale_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
     if po_file.exists() and not mo_file.exists():  # pylint: disable=no-member

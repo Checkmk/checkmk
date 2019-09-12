@@ -206,11 +206,9 @@ class RulesetCollection(object):
     def load(self):
         raise NotImplementedError()
 
-    def _initialize_rulesets(self):
-        self._rulesets = {
-            varname: Ruleset(varname, self._tag_to_group_map)
-            for varname in rulespec_registry.keys()
-        }
+    def _initialize_rulesets(self, only_varname=None):
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        self._rulesets = {varname: Ruleset(varname, self._tag_to_group_map) for varname in varnames}
 
     def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
@@ -267,6 +265,7 @@ class RulesetCollection(object):
     def _save_folder(self, folder):
         store.mkdir(folder.get_root_dir())
 
+        has_content = False
         content = ""
         for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
             if varname not in rulespec_registry:
@@ -275,10 +274,13 @@ class RulesetCollection(object):
             if ruleset.is_empty_in_folder(folder):
                 continue  # don't save empty rule sets
 
+            has_content = True
             content += ruleset.to_config(folder)
 
-        if not content:
-            os.unlink(folder.rules_file_path())  # Do not keep empty rules.mk files
+        rules_file_path = folder.rules_file_path()
+        # Remove rules files if it has no content. This prevents needless reads
+        if not has_content and os.path.exists(rules_file_path):
+            os.unlink(rules_file_path)  # Do not keep empty rules.mk files
             return
 
         # Adding this instead of the full path makes it easy to move config
@@ -286,7 +288,7 @@ class RulesetCollection(object):
         # loading the file in cmk_base.config
         content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
 
-        store.save_mk_file(folder.rules_file_path(), content, add_header=not config.wato_use_git)
+        store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
     def exists(self, name):
         return name in self._rulesets
@@ -356,7 +358,7 @@ class SingleRulesetRecursively(AllRulesets):
 
     # Load single ruleset from all folders
     def load(self):
-        self._initialize_rulesets()
+        self._initialize_rulesets(only_varname=self._name)
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
 
     def save_folder(self, folder):

@@ -655,7 +655,7 @@ class ModeEditRuleset(WatoMode):
                     if ':' in self._name else self._name
             html.div(display_varname, class_="varname")
 
-        rulesets = watolib.AllRulesets()
+        rulesets = watolib.SingleRulesetRecursively(self._name)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 

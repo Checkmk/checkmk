@@ -192,18 +192,9 @@ def do_notify(options, args):
                 notify_usage()
                 sys.exit(1)
 
-            if len(args) != 2 and notify_mode not in ["stdin", "replay", "send-bulks"]:
-                console.error("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
+            if notify_mode == 'spoolfile' and len(args) != 2:
+                console.error("ERROR: need an argument to --notify spoolfile.\n\n")
                 sys.exit(1)
-
-            elif notify_mode == 'spoolfile':
-                filename = args[1]
-
-            elif notify_mode == 'replay':
-                try:
-                    replay_nr = int(args[1])
-                except (IndexError, ValueError):
-                    replay_nr = 0
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
         # This spoolfile contains a python dictionary
@@ -211,10 +202,15 @@ def do_notify(options, args):
         # Any problems while reading the spoolfile results in returning 2
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
+            filename = args[1]
             return handle_spoolfile(filename)
         elif keepalive and keepalive.enabled():
             notify_keepalive()
         elif notify_mode == 'replay':
+            try:
+                replay_nr = int(args[1])
+            except (IndexError, ValueError):
+                replay_nr = 0
             notify_notify(raw_context_from_backlog(replay_nr))
         elif notify_mode == 'stdin':
             notify_notify(raw_context_from_stdin())

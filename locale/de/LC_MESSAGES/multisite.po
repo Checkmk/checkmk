@@ -6486,9 +6486,8 @@ msgstr "CMA-Version"
 msgid "CPG member name"
 msgstr "CPG Mitglieds Name"
 
-#, fuzzy
 msgid "CPU"
-msgstr "CPUs"
+msgstr "CPU"
 
 msgid "CPU Arch"
 msgstr "CPU Arch"
@@ -10106,9 +10105,8 @@ msgstr "Momentaner Name"
 msgid "Current number of Sessions"
 msgstr "Aktuelle Anzahl von Sitzungen"
 
-#, fuzzy
 msgid "Current number of nodes scheduled"
-msgstr "Aktuelle Anzahl von Prozessen"
+msgstr "Aktuelle Anzahl von angesetztem Nodes"
 
 msgid "Current number of processes"
 msgstr "Aktuelle Anzahl von Prozessen"
@@ -10608,9 +10606,8 @@ msgstr "DRBD wird gemeldet als"
 msgid "DROP"
 msgstr "DROP"
 
-#, fuzzy
 msgid "Daemon sets"
-msgstr "Daemon-Threads"
+msgstr "DaemonSets"
 
 msgid "Daemon state and summarized count of containers and their states"
 msgstr ""
@@ -11693,7 +11690,7 @@ msgstr ""
 
 #, fuzzy
 msgid "Deployments"
-msgstr "Inhaltselemente"
+msgstr "Deployments"
 
 msgid "Deprecated"
 msgstr "Veraltet"
@@ -11773,9 +11770,8 @@ msgstr "Graph entwerfen -%s"
 msgid "Design This Graph"
 msgstr "Diesen Graph gestalten"
 
-#, fuzzy
 msgid "Desired number of nodes scheduled"
-msgstr "Erwartete Anzahl Knoten"
+msgstr "Erwartete Anzahl von angesetztem Nodes"
 
 msgid "Desktop Group Name"
 msgstr "Desktop Gruppenname"
@@ -21770,9 +21766,6 @@ msgstr "Ungültiger RPM-Ausdruck: %d Elemente auf dem Stapel (1 erwartet)"
 msgid "Invalid TX words"
 msgstr "Ungültige TX-Worte"
 
-msgid "Invalid URI (see help for details)"
-msgstr "Ungültige URI (Details in der Hilfe)"
-
 msgid "Invalid URL given"
 msgstr "Ungültige URL angegeben"
 
@@ -22323,6 +22316,9 @@ msgstr "Januar"
 msgid "Java pool size"
 msgstr "Java-Poolgröße"
 
+msgid "Job"
+msgstr "Job"
+
 msgid "Job ID"
 msgstr "Prozess ID"
 
@@ -22639,13 +22635,11 @@ msgstr "Größte Bucketgröße"
 msgid "Largest file"
 msgstr "Größte Datei"
 
-#, fuzzy
 msgid "Largest file size at"
-msgstr "Größte Datei"
+msgstr "Größte Dateigröße an"
 
-#, fuzzy
 msgid "Largest file size below"
-msgstr "Größte Datei"
+msgstr "Größte Dateigröße unter"
 
 msgid "Largest free chunk"
 msgstr "Größter freier Bereich"
@@ -23159,9 +23153,8 @@ msgstr "Schwellwerte für die CPU Auslastung eines einzelnen Prozesses"
 msgid "Levels on IO wait (UNIX only)"
 msgstr "Schwellwerte für IO-Wait (nur UNIX)"
 
-#, fuzzy
 msgid "Levels on availability in percent"
-msgstr "Schwellwerte für fehlerhafte Kapazität in Prozent"
+msgstr "Schwellwerte für die Verfügbarkeit in Prozent"
 
 msgid "Levels on disk IO (old style checks)"
 msgstr "Schwellwerte für Festplatten-Durchsatz (IO) (Checks nach altem Muster)"
@@ -23172,9 +23165,8 @@ msgstr "Stufen der End-to-End-Latenz in Sekunden"
 msgid "Levels on health status score in percent"
 msgstr "Werte für den Gesundheitszustand in Prozent"
 
-#, fuzzy
 msgid "Levels on ingress data in bytes"
-msgstr "Schwellen für die einzelne Kerne"
+msgstr "Schwellwerte für die Eingangscontroller-Daten in Bytes"
 
 #, fuzzy
 msgid "Levels on server latency in seconds"
@@ -23215,9 +23207,8 @@ msgstr ""
 msgid "Levels on total CPU utilization"
 msgstr "Schwellwerte für die gesamte CPU-Auslastung"
 
-#, fuzzy
 msgid "Levels on transaction count"
-msgstr "Schwellen für Prozessanzahl"
+msgstr "Schwellwerte für die Anzahl an Transaktionen"
 
 msgid "Levels on trends in MB per time range"
 msgstr "Schwellwerte für Trends in MB pro Zeitspanne"
@@ -29622,7 +29613,6 @@ msgstr "Pfad zur .pgpass-Datei"
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr "Pfad zu <tt>MegaCLI.exe</tt>"
 
-#, fuzzy
 msgid "Path to a CA certificate"
 msgstr "CA-Zertifikat hinzufügen"
 
@@ -36050,13 +36040,11 @@ msgstr ""
 msgid "Smallest file"
 msgstr "Kleinste Datei"
 
-#, fuzzy
 msgid "Smallest file size at"
-msgstr "Kleinste Datei"
+msgstr "Kleinste Dateigröße an"
 
-#, fuzzy
 msgid "Smallest file size below"
-msgstr "Kleinste Datei"
+msgstr "Kleinste Dateigröße unter"
 
 msgid "Smart PING (only with Check_MK Micro Core)"
 msgstr "Smart-PING (nur mit Check_MK Micro Core)"
@@ -37307,9 +37295,8 @@ msgstr "Status, wenn BI-Aggregation quittiert ist"
 msgid "State, if BI aggregate is in scheduled downtime"
 msgstr "Status, wenn BI-Aggregation in Wartungszeit ist"
 
-#, fuzzy
 msgid "Stateful sets"
-msgstr "Status %s"
+msgstr "StatefulSets"
 
 msgid "Statement"
 msgstr "Statement"
@@ -54508,6 +54495,9 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Invalid URI (see help for details)"
+#~ msgstr "Ungültige URI (Details in der Hilfe)"
 
 #~ msgid "Generate config via multiprocessing"
 #~ msgstr "Generierung der Konfiguration durch Multiprocessing"

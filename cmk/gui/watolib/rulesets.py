@@ -206,8 +206,17 @@ class RulesetCollection(object):
     def load(self):
         raise NotImplementedError()
 
+    def _initialize_rulesets(self):
+        self._rulesets = {
+            varname: Ruleset(varname, self._tag_to_group_map)
+            for varname in rulespec_registry.keys()
+        }
+
     def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
+
+        if not os.path.exists(path):
+            return  # Do not initialize rulesets when no rule at all exists
 
         config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
@@ -226,9 +235,6 @@ class RulesetCollection(object):
             else:
                 config_dict[varname] = []
 
-        if not os.path.exists(path):
-            return  # Do not initialize rulesets when no rule at all exists
-
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
@@ -236,18 +242,21 @@ class RulesetCollection(object):
             if only_varname and varname != only_varname:
                 continue  # skip unwanted options
 
-            if varname in self._rulesets:
-                ruleset = self._rulesets[varname]
-            else:
-                ruleset = self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
-
             if ':' in varname:
-                dictname, subkey = varname.split(":")
-                ruleset_config = rulesets_config.get(dictname, {})
-                if subkey in ruleset_config:
-                    ruleset.from_config(folder, ruleset_config[subkey])
+                config_varname, subkey = varname.split(":", 1)
+                rulegroup_config = rulesets_config.get(config_varname, {})
+                if subkey not in rulegroup_config:
+                    continue  # Nothing configured: nothing left to doa
+
+                ruleset_config = rulegroup_config[subkey]
             else:
-                ruleset.from_config(folder, rulesets_config.get(varname, []))
+                config_varname, subkey = varname, None
+                ruleset_config = rulesets_config.get(config_varname, [])
+
+            if not ruleset_config:
+                continue  # Nothing configured: nothing left to do
+
+            self._rulesets[varname].from_config(folder, ruleset_config)
 
     def save(self):
         raise NotImplementedError()
@@ -267,6 +276,10 @@ class RulesetCollection(object):
                 continue  # don't save empty rule sets
 
             content += ruleset.to_config(folder)
+
+        if not content:
+            os.unlink(folder.rules_file_path())  # Do not keep empty rules.mk files
+            return
 
         # Adding this instead of the full path makes it easy to move config
         # files around. The real FOLDER_PATH will be added dynamically while
@@ -319,6 +332,7 @@ class AllRulesets(RulesetCollection):
 
     def load(self):
         """Load all rules of all folders"""
+        self._initialize_rulesets()
         self._load_rulesets_recursively(Folder.root_folder())
 
     def save_folder(self, folder):
@@ -342,6 +356,7 @@ class SingleRulesetRecursively(AllRulesets):
 
     # Load single ruleset from all folders
     def load(self):
+        self._initialize_rulesets()
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
 
     def save_folder(self, folder):
@@ -354,6 +369,7 @@ class FolderRulesets(RulesetCollection):
         self._folder = folder
 
     def load(self):
+        self._initialize_rulesets()
         self._load_folder_rulesets(self._folder)
 
     def save(self):

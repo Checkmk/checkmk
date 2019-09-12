@@ -117,17 +117,12 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
 
 
 def inventory_lnx_quota(parsed):
-    inv = []
-
     for item in parsed.keys():
-        inv.append((item, {'user': True}))
-    return inv
+        yield item, {'user': True}
 
 
-def check_lnx_quota(item, params, parsed):
-
-    if item not in parsed:
-        yield 3, 'Quota info not found for this filesystem'
+@get_parsed_item_data
+def check_lnx_quota(_item, params, data):
 
     if not params:
         # old discovery until version 1.2.6
@@ -137,7 +132,7 @@ def check_lnx_quota(item, params, parsed):
     for param_key, mode, name in [('user', 'usr', 'users'), ('group', 'grp', 'groups')]:
         if params.get(param_key) is True:
             at_least_one_problematic = False
-            for user, values in parsed[item][mode].items():
+            for user, values in data[mode].items():
                 for what, (used, soft, hard, grace) in [
                     ('blocks', values[:4]),
                     ('files', values[4:]),
@@ -149,7 +144,8 @@ def check_lnx_quota(item, params, parsed):
                     state, txt = lnx_quota_limit_check(mode, what, user, used, soft, hard, grace)
 
                     at_least_one_problematic = bool(txt)
-                    yield state, txt or ''
+                    if state != 0 or txt:
+                        yield state, txt or ''
 
             if not at_least_one_problematic:
                 yield 0, 'All %s within quota limits' % name

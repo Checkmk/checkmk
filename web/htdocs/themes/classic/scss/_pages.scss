@@ -1412,6 +1412,10 @@ table.agents tbody > tr.data > td.agent_config {
     line-height: normal;
 }
 
+td.agent_config table.rulesets table td.title {
+    background-color: rgb(115, 161, 180);
+    border: 1px solid rgb(204, 204, 204);
+}
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

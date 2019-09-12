@@ -249,10 +249,10 @@ input.button.hot {
   .wato div.globalvars & a,
   .wato div.globalvars & body.main .popup_menu span,
   body.main .popup_menu .wato div.globalvars & {
-    height: 16px;
+    height: $toggle-switch-height;
     font-size: 8px;
     font-weight: $theme-font-weight-bold;
-    line-height: 18px;
+    line-height: $toggle-switch-height;
     letter-spacing: $theme-letter-spacing-table;
     text-transform: uppercase;
     border: none;
@@ -263,21 +263,25 @@ input.button.hot {
   a, .wato div.globalvars & a {
     display: block;
     width: 30px;
-    color: #fff;
+    color: $toggle-switch-font-color;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
   }
 
-  &.on a {
-    float: right;
-    background-color: $toggle-switch-on-bg-color;
-    border-width: 0 0 0 1px;
+  &.on {
+    a, .wato div.globalvars & a {
+      float: right;
+      background-color: $toggle-switch-on-bg-color;
+      border: $toggle-switch-on-border;
+    }
   }
 
-  &.off a {
-    background-color: $toggle-switch-off-bg-color;
-    border-width: 0 1px 0 0;
+  &.off {
+    a, .wato div.globalvars & a {
+      background-color: $toggle-switch-off-bg-color;
+      border: $toggle-switch-off-border;
+    }
   }
 
   a:hover, .wato div.globalvars & a:hover {
@@ -644,12 +648,43 @@ div.valuespec_listof.floating > table > tbody > tr > td:first-child {
   vertical-align: top;
 }
 
-div.valuespec_listof_floating_container > table {
-  float: left;
+div.valuespec_listof_floating_container {
+  margin-top: -4px;
+  vertical-align: top;
+
+  > table {
+    float: left;
+
+    td {
+      vertical-align: top;
+
+      &.vlof_buttons img {
+	margin-top: 4px;
+      }
+
+      &.vlof_content .tagify {
+	tag {
+	  margin: 4px 5px 2px 4px;
+
+	  x {
+	    display: none;
+	  }
+
+	  > div {
+	    padding-right: .3em;
+	  }
+	}
+
+	span.tagify__input {
+	  margin: 3px 5px 2px 4px;
+	}
+      }
+    }
+  }
 }
 
 table.nform table.valuespec_listof div.valuespec_listof_floating_container > table > tbody > tr > td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 table.valuespec_listof.regular > tbody > tr {
@@ -1307,31 +1342,6 @@ table.data td > div:first-child div.graph_with_timeranges {
 
 table.data td > div:last-child div.graph_with_timeranges {
   margin-bottom: 8px;
-}
-
-td.agent_config table.rulesets td {
-  vertical-align: top;
-
-  table {
-    border: none solid;
-    box-shadow: none;
-
-    td {
-      padding: 4px 8px 4px 8px;
-      vertical-align: top;
-
-      td.title {
-        height: auto;
-        font-weight: $theme-font-weight-bold;
-        color: $theme-color-black;
-        background-color: $theme-color-white;
-      }
-
-      table tbody tr td {
-        padding: 0;
-      }
-    }
-  }
 }
 
 div.metricchoice select, div.metricchoice input, div.metricchoice select,

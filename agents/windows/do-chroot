@@ -21,23 +21,19 @@ if [ -z $CHROOT_BUILD_DIR ]; then
     exit 1
 fi
 
-if [ ! -e $CHROOT_PATH/proc/self ] ; then
-    mount -t proc proc $CHROOT_PATH/proc
+if ! mountpoint -q -- $CHROOT_PATH/proc ; then
+    mount -o bind /proc $CHROOT_PATH/proc
 fi
 
-if [ ! -e $CHROOT_PATH/dev/sda ] ; then
-    mount -o bind /dev $CHROOT_PATH/dev
+if ! mountpoint -q -- $CHROOT_PATH/dev ; then
+    mount --rbind /dev $CHROOT_PATH/dev
 fi
 
-if [ ! -e $CHROOT_PATH/dev/pts/ptmx ] ; then
-    mount -t devpts devpts $CHROOT_PATH/dev/pts 2>/dev/null || true
-fi
-
-if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR ]; then
+if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR ; then
     mkdir $CHROOT_PATH/$CHROOT_BUILD_DIR
 fi
 
-if [ ! -e $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ] ; then
+if ! mountpoint -q -- $CHROOT_PATH/$CHROOT_BUILD_DIR/Makefile ; then
     mount -o bind $BASE $CHROOT_PATH/$CHROOT_BUILD_DIR
 fi
 

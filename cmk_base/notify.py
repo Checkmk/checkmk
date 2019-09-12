@@ -1282,17 +1282,17 @@ def path_to_notification_script(plugin):
     # Call actual script without any arguments
     local_path = cmk.utils.paths.local_notifications_dir / plugin
     if local_path.exists():
-        path = str(local_path)
+        path = local_path
     else:
-        path = cmk.utils.paths.notifications_dir + "/" + plugin
+        path = cmk.utils.paths.notifications_dir / plugin
 
-    if not os.path.exists(path):
+    if not path.exists():
         notify_log("Notification plugin '%s' not found" % plugin)
         notify_log("  not in %s" % cmk.utils.paths.notifications_dir)
         notify_log("  and not in %s" % cmk.utils.paths.local_notifications_dir)
         return None
 
-    return path
+    return str(path)
 
 
 # This is the function that finally sends the actual notification.

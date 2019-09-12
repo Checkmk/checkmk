@@ -75,7 +75,7 @@ def _get_language_dirs():
 
 def _get_base_language_dirs():
     # type: () -> List[Path]
-    return [Path(cmk.utils.paths.locale_dir), cmk.utils.paths.local_locale_dir]
+    return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
 
 
 def _get_package_language_dirs():

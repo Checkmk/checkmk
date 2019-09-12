@@ -106,7 +106,7 @@ body.main .popup_menu .hostmatrix td.state0 span {
   }
 
   .statebullet {
-    margin: 8px 4px 8px 0;
+    margin: 2px;
   }
 }
 
@@ -122,6 +122,10 @@ div.snapin table.master_control {
     div.toggle_switch {
       float: right;
       background-color: $primary-bg-color;
+
+      a {
+	font-weight: $theme-font-weight-bold;
+      }
     }
 
     &.left {

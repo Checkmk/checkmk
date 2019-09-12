@@ -614,7 +614,7 @@ table.data {
       &:first-child {
         border-radius: $first-child-border-radius;
 
-	&:not(.state):not(.gap):not(.bulksearch) {
+	&:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
 	  border-left: 1px solid $theme-color-table-border;
 	}
       }
@@ -943,7 +943,7 @@ table.data.headerleft {
       vertical-align: top;
       background: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;
-      border-bottom: none;
+      border-bottom: $table-headerleft-border-bottom;
       border-left: 1px solid $theme-color-table-border;
       border-radius: 0;
     }
@@ -958,7 +958,7 @@ table.data.headerleft {
     border-right: 1px solid $theme-color-table-border;
 
     &.nowiki p {
-        margin: 0;
+      margin: 0;
     }
   }
 

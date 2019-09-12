@@ -264,7 +264,13 @@ $checkbox-checked-color:		    $primary-font-color;
 $checkbox-checked-bg-color:		    #ddd;
 
 $toggle-switch-on-bg-color:		    #54a626;
+$toggle-switch-on-border:		    null;
 $toggle-switch-off-bg-color:		    #f60000;
+$toggle-switch-off-border:		    null;
+$toggle-switch-font-color:		    $white;
+$toggle-switch-height:			    17px;
+$toggle-switch-font-weight:		    700;
+
 $toggle-button-off-border:		    null;
 $toggle-button-down-bg-color:		    $theme-color-text-light;
 $toggle-button-down-border-color:	    $theme-button-border;
@@ -491,3 +497,9 @@ $if-state-up-font-color:		    null;
 
 $foldertree-snapin-bg-color:		    $theme-color-lightgrey;
 $foldertree-snapin-font-color:		    $theme-color-nuance-7;
+
+$table-headerleft-border-bottom:	    none;
+
+$agent-config-inner-title-bg-color:	    $grey-1;
+
+$service-container-groupheader-bg-color:    null;

@@ -1014,10 +1014,12 @@ class DiscoveryPageRenderer(object):
     def _show_discovery_details(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
         if not discovery_result.check_table and self._is_active(discovery_result):
+            html.br()
             html.show_info(_("Discovered no service yet."))
             return
 
         if not discovery_result.check_table and self._host.is_cluster():
+            html.br()
             url = watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                                   ("varname", "clustered_services")])
             html.show_info(

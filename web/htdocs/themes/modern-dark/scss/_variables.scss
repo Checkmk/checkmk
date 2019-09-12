@@ -262,8 +262,14 @@ $checkbox-shadow:			    $grey-3;
 $checkbox-checked-color:		    $primary-font-color;
 $checkbox-checked-bg-color:		    $grey-3;
 
-$toggle-switch-on-bg-color:		    $grey-4;
-$toggle-switch-off-bg-color:		    $grey-6;
+$toggle-switch-on-bg-color:		    rgb(20, 118, 20);
+$toggle-switch-on-border:		    1px solid rgb(40, 60, 40);
+$toggle-switch-off-bg-color:		    rgb(164, 0, 0);
+$toggle-switch-off-border:		    1px solid rgb(70, 40, 40);
+$toggle-switch-font-color:		    $theme-color-text;
+$toggle-switch-height:			    15px;
+$toggle-switch-font-weight:		    400;
+
 $toggle-button-off-border:		    1px solid $grey-7;
 $toggle-button-down-bg-color:		    $grey-3;
 $toggle-button-down-border-color:	    null;
@@ -484,7 +490,7 @@ $node-vis-history-bg-color:		    $grey-1;
 $node-vis-history-border-color:		    $grey-1;
 $node-vis-history-filter:		    invert(70%);
 
-$host-folder-font-color:		    rgb(220, 220, 220);
+$host-folder-font-color:		    $theme-color-text;
 
 $snapin-link-hover-color:		    $grey-1;
 
@@ -492,3 +498,9 @@ $if-state-up-font-color:		    $grey-7;
 
 $foldertree-snapin-bg-color:		    $grey-3;
 $foldertree-snapin-font-color:		    $primary-sidebar-font-color;
+
+$table-headerleft-border-bottom:	    1px solid $grey-5;
+
+$agent-config-inner-title-bg-color:	    $grey-5;
+
+$service-container-groupheader-bg-color:    $grey-6;

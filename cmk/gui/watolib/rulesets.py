@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import os
 import pprint
 from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
 
@@ -224,6 +225,9 @@ class RulesetCollection(object):
                 config_dict[dictname] = {}
             else:
                 config_dict[varname] = []
+
+        if not os.path.exists(path):
+            return  # Do not initialize rulesets when no rule at all exists
 
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 

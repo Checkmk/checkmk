@@ -86,4 +86,8 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Return only summary information in case there is piggyback data"""
 
+        if not for_checking:
+            # Check_MK Discovery: Do not display information about piggyback files
+            # and source status file
+            return 0, '', []
         return 0, ", ".join(self._processed_file_reasons), []

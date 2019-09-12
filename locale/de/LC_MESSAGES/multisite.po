@@ -3000,21 +3000,19 @@ msgstr "Neue Tuning-Konfiguration hinzufügen"
 msgid "Add tunnel"
 msgstr "Tunnel hinzufügen"
 
-#, fuzzy
 msgid "Add unmonitored & remove vanished services and host labels"
-msgstr "Unüberwachte Services hinzufügen, verschwundene entfernen"
+msgstr ""
+"Unüberwachte Services und Host Labels hinzufügen, verschwundene entfernen"
 
-#, fuzzy
 msgid "Add unmonitored services and new host labels"
-msgstr "Nicht überwachte Services hinzufzügen"
+msgstr "Nicht überwachte Services und neue Host Labels hinzufzügen"
 
-#, fuzzy
 msgid "Add unmonitored services and new host labels, remove vanished services"
-msgstr "Unüberwachte Services hinzufügen, verschwundene entfernen"
+msgstr ""
+"Unüberwachte Services und Host Labels hinzufügen, verschwundene entfernen"
 
-#, fuzzy
 msgid "Add unmonitored services, new host labels"
-msgstr "Nicht überwachte Services hinzufzügen"
+msgstr "Nicht überwachte Services und neue Host Labels hinzufzügen"
 
 msgid "Add user"
 msgstr "Benutzer hinzufügen"
@@ -6185,7 +6183,6 @@ msgstr ""
 "anhand von Host und Checktyp, konfiguriert werden, welche Kontexte Check_MK "
 "anfragen soll, um Informationen via SNMPv3 abzuholen."
 
-#, fuzzy
 msgid ""
 "By default Check_MK treats space that is reserved for the <tt>root</tt> user "
 "on Linux and Unix as used space. Usually, 5% are being reserved for root when "
@@ -6195,8 +6192,9 @@ msgid ""
 msgstr ""
 "Check_MK behandelt den auf Linux- und Unixsystemen für <tt>root</tt> "
 "reservierten Platz als benutzt. Üblicherweise werden bei der Erstellung eines "
-"neuen Dateisystems 5% für root reserviert. Mit dieser Option kann man "
-"Check_MK den momentan reservierten aber ungenutzten Platz anzeigen lassen."
+"neuen Dateisystems 5% für root reserviert. Mit dieser Option kann man Checkmk "
+"den momentan reservierten aber ungenutzten Platz von der Berechnung des "
+"benutzen Platzes ausschließen."
 
 msgid ""
 "By default Check_MK uses command line calls of Net-SNMP tools like snmpget or "
@@ -7129,9 +7127,8 @@ msgstr "Graphzeitbereich ändern auf: %s"
 msgid "Change infotext in check output"
 msgstr "Infotext in der Ausgabe des Checks ändern"
 
-#, fuzzy
 msgid "Change metric"
-msgstr "Ändere Kommentar:"
+msgstr "Ändere Metrik"
 
 msgid "Change password at next login or access"
 msgstr "Passwort bei der nächsten Anmeldung oder Zugriff ändern"
@@ -7972,9 +7969,8 @@ msgstr "Citrix Terminal-Server Sessions"
 msgid "Citrix XenApp (Windows)"
 msgstr "Citrix XenApp (Windows)"
 
-#, fuzzy
 msgid "Citrix licenses"
-msgstr "Citrix-Lizenzen (Windows)"
+msgstr "Citrix-Lizenzen"
 
 msgid "City name"
 msgstr "Stadtname"
@@ -8974,7 +8970,6 @@ msgstr "Zu ACME SBC verbinden"
 msgid "Connect to remote sites"
 msgstr "Zu entfernten Instanzen verbinden"
 
-#, fuzzy
 msgid "Connect to site url"
 msgstr "Zu entfernten Instanzen verbinden"
 
@@ -10106,7 +10101,7 @@ msgid "Current number of Sessions"
 msgstr "Aktuelle Anzahl von Sitzungen"
 
 msgid "Current number of nodes scheduled"
-msgstr "Aktuelle Anzahl von angesetztem Nodes"
+msgstr "Aktuelle Anzahl von geplanten Nodes"
 
 msgid "Current number of processes"
 msgstr "Aktuelle Anzahl von Prozessen"
@@ -10930,17 +10925,16 @@ msgstr "Deduplizierung der gemeinsamen Kapazität"
 msgid "Default"
 msgstr "Standard"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Default %s template"
-msgstr "Default-Status"
+msgstr "Default %s Vorlage"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Default (%s)"
-msgstr "Standard (%s)"
+msgstr "Voreinstellung (%s)"
 
-#, fuzzy
 msgid "Default BI Visualization Settings"
-msgstr "Virtualisierung"
+msgstr "Voreingestellte BI Visualisierungseinstellungen"
 
 msgid "Default Graph layout"
 msgstr "Standardgraphlayout"
@@ -10975,16 +10969,14 @@ msgstr "Default ist 22."
 msgid "Default is 389 for normal connections and 636 for SSL connections."
 msgstr "Standard ist 389 für normale Verbindungen und 636 für SSL Verbindungen."
 
-#, fuzzy
 msgid "Default layout"
-msgstr "Standard: %s"
+msgstr "Voreingestelltes Layout"
 
 msgid "Default levels"
 msgstr "Standardschwellwerte"
 
-#, fuzzy
 msgid "Default line style"
-msgstr "Standardschwellwerte"
+msgstr "Voreingestellter Linien Stil"
 
 msgid "Default parameters for detected services"
 msgstr "Standardparameter für erkannte Services"
@@ -11688,7 +11680,6 @@ msgstr ""
 "die betroffene Datei auf dem Check_MK-Server unter %s zu löschen und den Host "
 "%s neu zu registrieren."
 
-#, fuzzy
 msgid "Deployments"
 msgstr "Deployments"
 
@@ -11740,16 +11731,14 @@ msgstr ""
 msgid "Description for host alerts"
 msgstr "Beschreibung für Host Alerts"
 
-#, fuzzy
 msgid "Description for host incidents"
-msgstr "Beschreibung oder Kommentar"
+msgstr "Beschreibung der Host Vorfälle"
 
 msgid "Description for service alerts"
 msgstr "Beschreibung für Service Alerts"
 
-#, fuzzy
 msgid "Description for service incidents"
-msgstr "Wahl der Servicegruppe"
+msgstr "Beschreibung der Service Vorfälle"
 
 msgid "Description or comment"
 msgstr "Beschreibung oder Kommentar"
@@ -11771,7 +11760,7 @@ msgid "Design This Graph"
 msgstr "Diesen Graph gestalten"
 
 msgid "Desired number of nodes scheduled"
-msgstr "Erwartete Anzahl von angesetztem Nodes"
+msgstr "Erwünschte Anzahl von geplanten Nodes"
 
 msgid "Desktop Group Name"
 msgstr "Desktop Gruppenname"
@@ -11902,13 +11891,14 @@ msgstr "Hat sich nicht geändert"
 msgid "Did not find any global setting matching your search."
 msgstr "Keine globalen Einstellungen gefunden, die auf den Suchbegriff passen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Did service discovery on host %s: %d added, %d removed, %d kept, %d total "
 "services and %d host labels added, %d host labels total"
 msgstr ""
-"Serviceerkennung auf Host %s durchgeführt: %d neu, %d entfernt, %d behalten, "
-"%d services insgesamt"
+"Serviceerkennung auf Host %s durchgeführt: %d hinzugefügt, %d entfernt, %d "
+"behalten, %d services insgesamt und %d Host Labels hinzugefügt, %d Host "
+"Labels insgesamt"
 
 msgid "Difference"
 msgstr "Unterschied"
@@ -12155,9 +12145,8 @@ msgstr "Nach Ablauf einer Zeit nicht mehr weiterzählen"
 msgid "Discover services during creation"
 msgstr "Erkennen von Services während der Erstellung"
 
-#, fuzzy
 msgid "Discovered by plugin"
-msgstr "Entdeckt durch ein Inventur-Plugin"
+msgstr "Erkannt durch Plugin"
 
 msgid "Discovered host labels"
 msgstr "Entdeckte Host-Labels"
@@ -13405,7 +13394,6 @@ msgstr "Dynamische Konfiguration"
 msgid "Dynamic Token Bucket"
 msgstr "Dynamischer Token Bucket"
 
-#, fuzzy
 msgid "Dynamic config"
 msgstr "Dynamische Konfiguration"
 
@@ -15120,7 +15108,7 @@ msgstr "Erklärung für Ereignisaktion"
 
 #, fuzzy
 msgid "Explicit"
-msgstr "Explizite Aufruf"
+msgstr "Explizit"
 
 #, python-format
 msgid "Explicit %s mapping"
@@ -15807,9 +15795,8 @@ msgstr "Dateisystemstruktur"
 msgid "Filesystem types to ignore"
 msgstr "Zu ignorierende Dateisystemtypen"
 
-#, fuzzy
 msgid "Filesystem usage"
-msgstr "Dateisystemgröße"
+msgstr "Dateisystembenutzung"
 
 msgid "Filesystems (used space and growth)"
 msgstr "Dateisysteme (genutzter Speicherplatz/Wachstum)"
@@ -15826,9 +15813,8 @@ msgstr "Filter/Suche"
 msgid "Filter Group (Only use in special situations)"
 msgstr "Gruppen-Filter (nur in speziellen Situationen)"
 
-#, fuzzy
 msgid "Filter aggregations"
-msgstr "Aggregationen"
+msgstr "Filter Aggregationen"
 
 msgid "Filter files by age"
 msgstr "Filtern von Dateien nach Alter"
@@ -16072,9 +16058,9 @@ msgstr "Ordnerpfad fehlt"
 msgid "Folder properties"
 msgstr "Ordnereigenschaften"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Folder: %s"
-msgstr "Ordner"
+msgstr "Ordner: %s"
 
 msgid "Folders"
 msgstr "Ordner"
@@ -16368,9 +16354,8 @@ msgstr "Fortigate aktive Sessions"
 msgid "Fortigate IPSec VPN Tunnels"
 msgstr "Fortigate IPSec VPN Tunnels"
 
-#, fuzzy
 msgid "Fortigate Signatures"
-msgstr "Agenten-Signaturschlüssel"
+msgstr "Fortigate Signaturen"
 
 msgid "Fortigate node memory"
 msgstr "Fortigate Nodespeicher"
@@ -16566,9 +16551,8 @@ msgstr "Vom linken Seitenrand"
 msgid "From now for"
 msgstr "Ab sofort für"
 
-#, fuzzy
 msgid "From password store"
-msgstr "Schlüssel aus dem Passwortspeicher"
+msgstr "Aus dem Passwortspeicher"
 
 msgid "From right of the page"
 msgstr "Vom rechten Seitenrand"
@@ -17972,11 +17956,8 @@ msgstr ""
 "welche die Schwelle des Parameters <i>Standardschwellwerte</i> überschreiben. "
 "Diese Einstellung funktioniert nur im NetApp-Clustermode."
 
-#, fuzzy
 msgid "Here you can specify the allowed license states for windows."
-msgstr ""
-"Hier können Sie die Schwellwerte für den gesamten Speicherverbrauch von "
-"geclusterten Hosts angeben."
+msgstr "Hier können Sie die erlaubten Lizenz Zustände für Windows festlegen."
 
 msgid ""
 "Here you can specify the subject text instead of default text 'Check_MK-Mail-"
@@ -22316,9 +22297,6 @@ msgstr "Januar"
 msgid "Java pool size"
 msgstr "Java-Poolgröße"
 
-msgid "Job"
-msgstr "Job"
-
 msgid "Job ID"
 msgstr "Prozess ID"
 
@@ -23037,9 +23015,8 @@ msgstr "Schwellen für restliches Verbrauchsmaterial"
 msgid "Levels for remaining undo retention"
 msgstr "Schwellen für restliche Undo-Retention"
 
-#, fuzzy
 msgid "Levels for sessions used"
-msgstr "Schwellen für aktive Sitzungen"
+msgstr "Schwellen für benutzte Sitzungen"
 
 msgid "Levels for signal/noise ratio"
 msgstr "Schwellwerte für Signal/Rauschen-Verhältnis"
@@ -23216,9 +23193,8 @@ msgstr "Schwellwerte für Trends in MB pro Zeitspanne"
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr "Schwellwerte für Trends in Grad Celsius pro Zeitspanne"
 
-#, fuzzy
 msgid "Levels on used capacity in bytes"
-msgstr "Schwellwerte für fehlerhafte Kapazität in Prozent"
+msgstr "Schwellwerte für benutzte Kapazität in Bytes"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -25382,9 +25358,8 @@ msgstr "Speicherschwellen"
 msgid "Memory levels for DB2 memory usage"
 msgstr "Schwellenwerte für DB2-Speichernutzung"
 
-#, fuzzy
 msgid "Memory levels for Windows"
-msgstr "Speicher-/Pagefile-Levels bei Windows"
+msgstr "Speicher Levels bei Windows"
 
 msgid "Memory levels for simple devices not running more complex OSs"
 msgstr ""
@@ -25447,13 +25422,11 @@ msgstr "Nachrichtenanzahl"
 msgid "Message count"
 msgstr "Nachrichtenanzahl"
 
-#, fuzzy
 msgid "Message for host alerts"
-msgstr "Regulärer Ausdruck für Hostalias"
+msgstr "Nachricht für Hostvorfälle"
 
-#, fuzzy
 msgid "Message for service alerts"
-msgstr "Services verwalten"
+msgstr "Nachricht für Servicevorfälle"
 
 msgid "Message processing"
 msgstr "Meldungsverarbeitung"
@@ -25508,9 +25481,8 @@ msgstr "Messmethode"
 msgid "Metric Name"
 msgstr "Metrikname"
 
-#, fuzzy
 msgid "Metric not found"
-msgstr "Daten nicht gefunden"
+msgstr "Metrik nicht gefunden"
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -25551,9 +25523,8 @@ msgstr "Minimales Alter der ältesten Datei"
 msgid "Minimal file count"
 msgstr "Minimale Dateianzahl"
 
-#, fuzzy
 msgid "Minimal logging"
-msgstr "Normales Loggen"
+msgstr "Minimales Loggen"
 
 msgid "Minimal size"
 msgstr "Minimale Größe"
@@ -25994,9 +25965,8 @@ msgstr "Monitoring State für alle übrigen Service Zustände"
 msgid "Monitoring of forwarded logfiles"
 msgstr "Liste der weitergeleiteten Logdateien überwachen"
 
-#, fuzzy
 msgid "Monitoring state"
-msgstr "Monitorign-Kern"
+msgstr "Monitoring-Zustand"
 
 msgid "Monitoring state for any other service state"
 msgstr "Monitoring State für alle übrigen Service Zustände"
@@ -26918,9 +26888,8 @@ msgstr "Nächster Lauf"
 msgid "Nginx Server"
 msgstr "Nginx Server"
 
-#, fuzzy
 msgid "Nginx Status"
-msgstr "Instanzstatus"
+msgstr "Nginx Status"
 
 msgid "Nice"
 msgstr "Nice"
@@ -29804,7 +29773,6 @@ msgstr ""
 "Prozentsatz im Bezug auf optimale Ausnutzung. Wenn Sie z.B. bei 50% "
 "verschwendetem Platz alarmieren möchten, müssen Sie hier 150% konfigurieren."
 
-#, fuzzy
 msgid "Percentage levels"
 msgstr "Prozentuale Schwellen"
 
@@ -31642,9 +31610,8 @@ msgstr "RX Signal Stromleitung %d"
 msgid "RX/TX"
 msgstr "RX/TX"
 
-#, fuzzy
 msgid "Radial layout"
-msgstr "Matrixlayout"
+msgstr "Radiallayout"
 
 msgid "Random Hosts"
 msgstr "Zufalls-Hosts"
@@ -31652,7 +31619,6 @@ msgstr "Zufalls-Hosts"
 msgid "Random delay"
 msgstr "Zufällige zusätzliche Verzögerung"
 
-#, fuzzy
 msgid "Random hosts"
 msgstr "Zufalls-Hosts"
 
@@ -32162,9 +32128,8 @@ msgstr "Prozentualer Unterschied zur Prognose"
 msgid "Relative humidity"
 msgstr "Relative Luftfeuchtigkeit"
 
-#, fuzzy
 msgid "Relative levels"
-msgstr "Setze relative Schwellwerte"
+msgstr "Relative Schwellwerte"
 
 msgid "Relative levels of active sessions."
 msgstr "Relative Schwellen für aktive Sitzungen"
@@ -35481,9 +35446,8 @@ msgstr "Legende anzeigen"
 msgid "Show margin round the graph"
 msgstr "Zeige Rand um den Graphen"
 
-#, fuzzy
 msgid "Show metric"
-msgstr "Neue Metrik hinzufügen"
+msgstr "Metrik anzeigen"
 
 msgid "Show number of groups"
 msgstr "Anzahl der Gruppen anzeigen"
@@ -54495,6 +54459,9 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Job"
+#~ msgstr "Job"
 
 #~ msgid "Invalid URI (see help for details)"
 #~ msgstr "Ungültige URI (Details in der Hilfe)"

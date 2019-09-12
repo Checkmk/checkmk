@@ -212,20 +212,14 @@ def do_notify(options, args):
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             return handle_spoolfile(filename)
-
         elif keepalive and keepalive.enabled():
             notify_keepalive()
-
         elif notify_mode == 'replay':
-            raw_context = raw_context_from_backlog(replay_nr)
-            notify_notify(raw_context)
-
+            notify_notify(raw_context_from_backlog(replay_nr))
         elif notify_mode == 'stdin':
-            notify_notify(events.raw_context_from_stdin())
-
+            notify_notify(raw_context_from_stdin())
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
-
         else:
             notify_notify(raw_context_from_env())
 
@@ -1865,6 +1859,14 @@ def raw_context_from_backlog(nr):
 
     notify_log("Replaying notification %d from backlog...\n" % nr)
     return backlog[nr]
+
+
+def raw_context_from_stdin():
+    context = {}
+    for line in sys.stdin:
+        varname, value = line.strip().split("=", 1)
+        context[varname] = events.expand_backslashes(value)
+    return context
 
 
 def raw_context_from_env():

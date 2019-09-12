@@ -64,7 +64,7 @@ def main():
             name="queue",
             key="items",
             uri=
-            "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,why,buildableStartMilliseconds,task[name,color]]"
+            "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]"
         ),
     ]
 

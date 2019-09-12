@@ -48,7 +48,7 @@
 def parse_lnx_quota(info):
     parsed = {}
     mode = None
-    fs = None
+    filesys = None
 
     for line in info:
         if line[0].startswith('[[['):
@@ -59,19 +59,19 @@ def parse_lnx_quota(info):
             # was changed in version 1.2.8
             if len(parts) == 1:
                 mode = 'usr'
-                fs = line[0][3:-3]
+                filesys = line[0][3:-3]
             elif len(parts) == 2:
                 # new format for check data
-                mode, fs = parts
+                mode, filesys = parts
 
             # new filesystem for quota
-            parsed.setdefault(fs, {})
-            parsed[fs].setdefault(mode, {})
+            parsed.setdefault(filesys, {})
+            parsed[filesys].setdefault(mode, {})
 
-        elif fs and mode and len(line) == 10:
+        elif filesys and mode and len(line) == 10:
             # new table entry for quota
-            parsed[fs][mode][line[0]] = [int(x) * 1024 for x in line[2:5]
-                                        ] + [int(x) for x in line[5:]]
+            parsed[filesys][mode][line[0]] = [int(x) * 1024 for x in line[2:5]
+                                             ] + [int(x) for x in line[5:]]
 
     return parsed
 
@@ -125,7 +125,6 @@ def inventory_lnx_quota(parsed):
 
 
 def check_lnx_quota(item, params, parsed):
-    #perfdata = []
 
     if item not in parsed:
         yield 3, 'Quota info not found for this filesystem'
@@ -135,10 +134,10 @@ def check_lnx_quota(item, params, parsed):
         # params were empty dictionary and enabled by standard user checking
         params = {'user': True}
 
-    for param_key, thing, name in [('user', 'usr', 'users'), ('group', 'grp', 'groups')]:
+    for param_key, mode, name in [('user', 'usr', 'users'), ('group', 'grp', 'groups')]:
         if params.get(param_key) is True:
             at_least_one_problematic = False
-            for user, values in parsed[item][thing].items():
+            for user, values in parsed[item][mode].items():
                 for what, (used, soft, hard, grace) in [
                     ('blocks', values[:4]),
                     ('files', values[4:]),
@@ -147,25 +146,10 @@ def check_lnx_quota(item, params, parsed):
                     if soft == 0 and hard == 0:
                         continue  # skip entries without limits
 
-                    state, txt = lnx_quota_limit_check(thing, what, user, used, soft, hard, grace)
+                    state, txt = lnx_quota_limit_check(mode, what, user, used, soft, hard, grace)
 
-                    # Performance data was removed, because the graphing system is not
-                    # able to handle such kind of dynamic performance data. Performance
-                    # variables were named like group_USERNAME_blocks, group_USERNAME_files,
-                    # USERNAME_blocks or USERNAME_files and can appear and disappear in the
-                    # configuration.
-                    # Additional the graphs show the performance data like filesystem usage
-                    # in the standard logarithmic scale which is not a useful view for the user.
-                    #perfdata.append(('%s%s_%s' % (perf_prefix, user, what),
-                    #                used, soft, hard, 0, hard))
-
-                    if txt:
-                        at_least_one_problematic = True
-                        yield state, txt
-                        #yield state, (txt + ', '), perfdata
-                    else:
-                        yield state, ''
-                        #yield state, None, perfdata
+                    at_least_one_problematic = bool(txt)
+                    yield state, txt or ''
 
             if not at_least_one_problematic:
                 yield 0, 'All %s within quota limits' % name
@@ -179,6 +163,6 @@ check_info['lnx_quota'] = {
     'check_function': check_lnx_quota,
     'inventory_function': inventory_lnx_quota,
     'service_description': 'Quota %s',
-    'has_perfdata': True,
+    'has_perfdata': False,
     'group': 'lnx_quota',
 }

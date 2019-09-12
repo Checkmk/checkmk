@@ -92,7 +92,7 @@ def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
             txt += ' exceeded space hard limit %s/%s' % (fmt(used, what), fmt(hard, what))
         elif what == 'files':
             txt += ' exceeded file hard limit %s/%s' % (fmt(used, what), fmt(hard, what))
-    elif used > soft:
+    elif soft != 0 and used > soft:
         # check, if soft limit is exceeded
         state = 1
         if what == 'blocks':

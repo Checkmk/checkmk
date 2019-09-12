@@ -236,10 +236,8 @@ class RulesetCollection(object):
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        for varname in rulespec_registry.keys():
-            if only_varname and varname != only_varname:
-                continue  # skip unwanted options
-
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        for varname in varnames:
             if ':' in varname:
                 config_varname, subkey = varname.split(":", 1)
                 rulegroup_config = rulesets_config.get(config_varname, {})

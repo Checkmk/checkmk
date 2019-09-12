@@ -8586,8 +8586,8 @@ graph_info["packet_loss"] = {
         ("pl", "area"),
     ],
     "scalars": [
-        "rta:warn",
-        "rta:crit",
+        "pl:warn",
+        "pl:crit",
     ]
 }
 

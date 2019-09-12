@@ -1,0 +1,10 @@
+Title: GUI: Fix mismatched unit on PING packet-loss graph
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1568292976
+Class: fix
+
+Previously the units were ms, which is wrong. Now it is displayed in percent.

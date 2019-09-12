@@ -206,8 +206,15 @@ class RulesetCollection(object):
     def load(self):
         raise NotImplementedError()
 
+    def _initialize_rulesets(self, only_varname=None):
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        self._rulesets = {varname: Ruleset(varname, self._tag_to_group_map) for varname in varnames}
+
     def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
+
+        if not os.path.exists(path):
+            return  # Do not initialize rulesets when no rule at all exists
 
         config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
@@ -226,39 +233,26 @@ class RulesetCollection(object):
             else:
                 config_dict[varname] = []
 
-        # Initialize rulesets once
-        self._initialize_rulesets(only_varname=only_varname)
-
-        if os.path.exists(path):
-            self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
-
-    def _initialize_rulesets(self, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
-
-        for varname in varnames:
-            if varname in self._rulesets:
-                continue
-            self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
+        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
-
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
         for varname in varnames:
-            if varname not in self._rulesets:
-                self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
             if ':' in varname:
-                dictname, subkey = varname.split(":")
-                ruleset_config = rulesets_config.get(dictname, {})
-                if subkey in ruleset_config:
-                    self._rulesets[varname].from_config(folder, ruleset_config[subkey])
+                config_varname, subkey = varname.split(":", 1)
+                rulegroup_config = rulesets_config.get(config_varname, {})
+                if subkey not in rulegroup_config:
+                    continue  # Nothing configured: nothing left to do
+
+                ruleset_config = rulegroup_config[subkey]
             else:
-                self._rulesets[varname].from_config(folder, rulesets_config.get(varname, []))
+                config_varname, subkey = varname, None
+                ruleset_config = rulesets_config.get(config_varname, [])
+
+            if not ruleset_config:
+                continue  # Nothing configured: nothing left to do
+
+            self._rulesets[varname].from_config(folder, ruleset_config)
 
     def save(self):
         raise NotImplementedError()
@@ -281,16 +275,16 @@ class RulesetCollection(object):
             has_content = True
             content += ruleset.to_config(folder)
 
+        rules_file_path = folder.rules_file_path()
+        # Remove rules files if it has no content. This prevents needless reads
+        if not has_content and os.path.exists(rules_file_path):
+            os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+            return
+
         # Adding this instead of the full path makes it easy to move config
         # files around. The real FOLDER_PATH will be added dynamically while
         # loading the file in cmk_base.config
         content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
-
-        rules_file_path = folder.rules_file_path()
-        # Remove rules files if it has no content. This prevents needless reads
-        if not has_content and os.path.exists(rules_file_path):
-            os.unlink(rules_file_path)
-            return
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
@@ -338,6 +332,7 @@ class AllRulesets(RulesetCollection):
 
     def load(self):
         """Load all rules of all folders"""
+        self._initialize_rulesets()
         self._load_rulesets_recursively(Folder.root_folder())
 
     def save_folder(self, folder):
@@ -361,6 +356,7 @@ class SingleRulesetRecursively(AllRulesets):
 
     # Load single ruleset from all folders
     def load(self):
+        self._initialize_rulesets(only_varname=self._name)
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
 
     def save_folder(self, folder):
@@ -373,6 +369,7 @@ class FolderRulesets(RulesetCollection):
         self._folder = folder
 
     def load(self):
+        self._initialize_rulesets()
         self._load_folder_rulesets(self._folder)
 
     def save(self):

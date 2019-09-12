@@ -144,8 +144,10 @@ class HPMSAConnection(object):
         self._base_url = "https://%s/api/" % self._host
         self._timeout = opt_timeout
         self._session = requests.Session()
-        self._session.verify = False
         self._session.headers = {"User-agent": "Checkmk special agent_hp_msa"}
+        # we cannot use self._session.verify because it will be overwritten by
+        # the REQUESTS_CA_BUNDLE env variable
+        self._verify_ssl = False
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self._debug = debug
 
@@ -174,7 +176,8 @@ class HPMSAConnection(object):
     def get(self, url_suffix):
         url = urljoin(self._base_url, url_suffix)
         LOGGER.info("GET %r", url)
-        response = self._session.get(url, timeout=self._timeout, verify=self._session.verify)
+        # we must provide the verify keyword to every individual request call!
+        response = self._session.get(url, timeout=self._timeout, verify=self._verify_ssl)
         if response.status_code != 200:
             LOGGER.warning("RESPONSE.status_code, reason: %r",
                            (response.status_code, response.reason))

@@ -47,6 +47,8 @@ class ESXSession(requests.Session):
     def __init__(self, address, port, no_cert_check=False):
         super(ESXSession, self).__init__()
         if no_cert_check:
+            # Watch out: we must provide the verify keyword to every individual request call!
+            # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
             self.verify = False
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 
@@ -59,6 +61,8 @@ class ESXSession(requests.Session):
 
     def postsoap(self, request):
         soapdata = ESXSession.ENVELOPE % request
+        # Watch out: we must provide the verify keyword to every individual request call!
+        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         return super(ESXSession, self).post(self._post_url, data=soapdata, verify=self.verify)
 
 

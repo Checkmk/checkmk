@@ -11,7 +11,7 @@ def mk_docker():
 
 
 PLUGIN_CHECKSUMS = {
-    '0.1': 'befd7e6eab046826412a80c4172aada6',
+    '0.1': 'cad29e67ea901e2d59a508fb4fc081a8',
 }
 
 

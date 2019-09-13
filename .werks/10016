@@ -1,0 +1,10 @@
+Title: mk_docker.py: crash in diskstat section
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568366164
+Class: fix
+
+The plugin in version 1.6.0b9 could not create the diskstat section.

@@ -218,6 +218,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return multisite_dir()
 
     def config_file(self, site_specific=False):
+        if site_specific:
+            return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False):

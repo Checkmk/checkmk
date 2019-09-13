@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.2.1\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -7350,13 +7350,11 @@ msgstr "Prüfe Zugriff auf SMB share"
 msgid "Check access to SMTP services"
 msgstr "Prüfe Zugriff auf SMTP Services"
 
-#, fuzzy
 msgid "Check and CRIT"
-msgstr "Checkbefehl"
+msgstr "Prüfen und CRIT"
 
-#, fuzzy
 msgid "Check and WARN"
-msgstr "Checkbefehl"
+msgstr "Prüfen und WARN"
 
 #, fuzzy
 msgid "Check and display only"
@@ -12458,7 +12456,6 @@ msgstr "Check alle"
 msgid "Do full SNMP scan for SNMP devices"
 msgstr "Bei SNMP-Geräten vollständigen SNMP-Suchlauf durchführen"
 
-#, fuzzy
 msgid "Do hardware/software inventory"
 msgstr "Hardware/Software-Inventur durchführen"
 
@@ -13347,9 +13344,9 @@ msgstr ""
 "Aggregation nur einmal haben. Hinweis: Sie können im Titel der der Toplevel-"
 "Aggregation Argumente verwenden, wie <tt>Host $HOST$</tt>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Duplicate tag ID \"%s\" in auxilary tags"
-msgstr "Doppeltes Hostmerkmal: %s"
+msgstr "Doppelte Tag-ID \"%s\" in den Hilfsmerkmalen"
 
 msgid "Duration"
 msgstr "Ausführungszeit"
@@ -16729,7 +16726,7 @@ msgid "Generate Event!"
 msgstr "Generiere Ereignis!"
 
 msgid "Generate core config parallelized"
-msgstr ""
+msgstr "Parallele Erzeugung der Kernkonfiguration"
 
 msgid "Generate report in background job"
 msgstr "Erstelle Report in Hintergrund-Prozess"
@@ -16994,9 +16991,8 @@ msgstr ""
 msgid "Group"
 msgstr "Gruppe"
 
-#, fuzzy
 msgid "Group \"Activate changes\" for up to"
-msgstr "Aktivierung gruppieren bis zu"
+msgstr "\"Änderungen aktivieren\" gruppieren bis zu"
 
 msgid "Group Base DN"
 msgstr "Gruppen Base DN"
@@ -18050,9 +18046,8 @@ msgstr "Check-Parameter verstecken"
 msgid "Hide checkboxes"
 msgstr "Checkboxen verstecken"
 
-#, fuzzy
 msgid "Hide discovered labels"
-msgstr "Entdeckte Host-Labels"
+msgstr "Erkannte Label ausblenden"
 
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
@@ -18078,9 +18073,8 @@ msgstr "Interne Ordnernamen in WATO verstecken"
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
 
-#, fuzzy
 msgid "Hide plugin names"
-msgstr "blende Ordner-Namen aus"
+msgstr "Namen von Plugins ausblenden"
 
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
@@ -20663,9 +20657,8 @@ msgstr "TLS-Fehler ignorieren"
 msgid "Ignore acknowledged events"
 msgstr "Quittierte Ereignisse ignorieren"
 
-#, fuzzy
 msgid "Ignore certificate errors (unsecure)"
-msgstr "Ignoriere SSL Zertifikatfehler"
+msgstr "Ignoriere SSL Zertifikatfehler (unsicher)"
 
 msgid "Ignore core restarts shorter than"
 msgstr "Neustarts des Kern ignorieren wenn kürzer als"
@@ -26229,9 +26222,8 @@ msgstr "NAS DB Benutzername"
 msgid "NFS"
 msgstr "NFS"
 
-#, fuzzy
 msgid "NFS IO Statistics"
-msgstr "DNS Statistiken"
+msgstr "NFS IO Statistiken"
 
 msgid "NFS IO Stats (Linux)"
 msgstr "NFS IO Statistiken (Linux)"
@@ -28335,13 +28327,11 @@ msgstr "Älteste Replikation Slot Lag Größe"
 msgid "Oldest file"
 msgstr "Älteste Datei"
 
-#, fuzzy
 msgid "Oldest file age at"
-msgstr "Älteste Datei"
+msgstr "Älteste Datei älter als"
 
-#, fuzzy
 msgid "Oldest file age below"
-msgstr "Älteste Datei"
+msgstr "Älteste Datei jünger als"
 
 msgid "Oldest first"
 msgstr "Älteste zuerst"
@@ -30144,9 +30134,8 @@ msgstr "Klavier"
 msgid "Piggyback"
 msgstr "Huckepack"
 
-#, fuzzy
 msgid "Piggyback creation options"
-msgstr "Huckepack-Informationen für andere Hosts"
+msgstr "Optionen für die Erzeugung von Piggyback-Hosts"
 
 msgid "Piggyback data"
 msgstr "Huckepackdaten"
@@ -30460,9 +30449,8 @@ msgstr "Bitte wählen Sie eine Datei."
 msgid "Please select a metric"
 msgstr "Bitte wählen Sie eine Metrik"
 
-#, fuzzy
 msgid "Please select a number between 0 and 100"
-msgstr "Bitte wählen Sie eine Metrik"
+msgstr "Bitte eine Numer zwischen 0 und 100 auswählen"
 
 msgid "Please select a service"
 msgstr "Bitte wählen Sie einen Service"
@@ -30573,9 +30561,9 @@ msgstr "Bitte mindestens 10 Zeichen für Geheimtext verwenden."
 msgid "Please specify a tag ID"
 msgstr "Bitte eine Merkmal ID angeben."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Please specify a title for your tag group \"%s\"."
-msgstr "Bitte geben Sie einen Titel für Ihre Tag-Gruppe an."
+msgstr "Bitte einen Titel für die Tag-Gruppe \"%s\" angeben."
 
 msgid "Please specify a title."
 msgstr "Bitte geben sie einen Titel an."
@@ -30599,9 +30587,10 @@ msgstr "Bitte einen Alias angeben."
 msgid "Please specify an application name"
 msgstr "Bitte einen Anwendungsnamen angeben"
 
-#, fuzzy
 msgid "Please specify at least one \"Piggyback creation option\""
-msgstr "Bitte mindestens ein Merkmal angeben"
+msgstr ""
+"Bitte mindestens eine Option für die Erzeugung von Piggyback-Hosts angeben "
+"angeben"
 
 msgid "Please specify at least one condition or this rule will never match."
 msgstr ""
@@ -31936,13 +31925,11 @@ msgstr "Referer"
 msgid "Refine search"
 msgstr "Suche verfeinern"
 
-#, fuzzy
 msgid "Refresh all services (tabula rasa), add new host labels"
-msgstr "Alle Services auffrischen (tabula rasa)"
+msgstr "Alle Services auffrischen (tabula rasa), neue Hostlabel hinzufügen"
 
-#, fuzzy
 msgid "Refresh all services and host labels (tabula rasa)"
-msgstr "Alle Services auffrischen (tabula rasa)"
+msgstr "Alle Services und Hostlabel auffrischen (tabula rasa)"
 
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
@@ -32659,9 +32646,8 @@ msgstr "Repository/Tag"
 msgid "Req. Version"
 msgstr "Erf. Version"
 
-#, fuzzy
 msgid "Request"
-msgstr "Anfragen"
+msgstr "Bedarf"
 
 msgid "Request Method"
 msgstr "Requestmethode"
@@ -35096,9 +35082,8 @@ msgstr ""
 "Definieren Sie die Host-Adresse des LDAP Servers. Das kann eine IP Adresse "
 "oder ein auflösbarer Hostname sein."
 
-#, fuzzy
 msgid "Set the logging level for Windows Agent"
-msgstr "Absturzanalyse für den Windows-Agenten einschalten"
+msgstr "Loglevel des Windowsagenten konfigurieren"
 
 msgid "Set the maximum and minimum length for the queue size"
 msgstr "Die maximale und minimale Länge der Schlangengröße einstellen"
@@ -35399,9 +35384,8 @@ msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonten den Alias"
 msgid "Show details about livestatus encryption"
 msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
-#, fuzzy
 msgid "Show discovered labels"
-msgstr "Entdeckte Host-Labels"
+msgstr "Erkannte Label anzeigen"
 
 msgid "Show failed notifications"
 msgstr "%d fehlgeschlagene Alarmierungen"
@@ -35476,9 +35460,8 @@ msgstr "Zeige nur diese Aggregation"
 msgid "Show pin"
 msgstr "Zeige Pin"
 
-#, fuzzy
 msgid "Show plugin names"
-msgstr "Eine Login-Nachricht anzeigen"
+msgstr "Namen von Plugins anzeigen"
 
 msgid "Show prediction for "
 msgstr "Vorhersage zeigen für"
@@ -39850,9 +39833,8 @@ msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
 msgid "The directory %s does not exist or is not a directory."
 msgstr "Verzeichnis %s nicht vorhanden oder kein Verzeichnis."
 
-#, fuzzy
 msgid "The discovered host labels have been updated."
-msgstr "Entdeckte Host-Labels"
+msgstr "Die erkannten Hostlabel wurden aktualisiert."
 
 msgid ""
 "The disk wait is the total percentage of time all CPUs have nothing else to "
@@ -41680,21 +41662,21 @@ msgstr ""
 "Das Tag '%s' ist mehrfach ausgewählt. Ein Tag kann nur einmal ausgewählt "
 "werden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The tag ID \"%s\" does already exist in the list of auxiliary tags."
-msgstr "Diese Merkmal ID existiert bereits in der Liste der Hilfs-Merkmale."
+msgstr "Die Tag-ID \"%s\" existiert bereits in der Liste der Hilfsmerkmale."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The tag ID \"%s\" is used twice."
-msgstr "Die Tag-ID %s wird zweimal verwendet."
+msgstr "Die Tag-ID \"%s\" wird zweimal verwendet."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The tag group \"%s\" is reserved for internal use."
-msgstr "Die Tag-Gruppe %s ist für den internen Gebrauch reserviert."
+msgstr "Die Tag-Gruppe \"%s\" ist für den internen Gebrauch reserviert."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The tag group ID \"%s\" is used twice."
-msgstr "Die Tag-ID %s wird zweimal verwendet."
+msgstr "Die ID der Tag-Gruppe \"%s\" wird zweimal verwendet."
 
 msgid "The target has been deleted."
 msgstr "Das Ziel wurde gelöscht."
@@ -42131,9 +42113,8 @@ msgstr "Für diesen Check gibt es keine Beschreibung."
 msgid "There job \"%s\" is not encrypted"
 msgstr "Der Sicherungs-Job \"%s\" ist nicht verschlüsselt"
 
-#, fuzzy
 msgid "There was no change to activate"
-msgstr "Im Moment gibt es keine offenen Konfigurationsänderungen."
+msgstr "Es wurden keine Änderungen zum aktivieren gefunden"
 
 msgid ""
 "These attributes will be set for all hosts that are managed by this "
@@ -46368,9 +46349,8 @@ msgstr "Gesamte gedruckte Seiten"
 msgid "Total query timeout"
 msgstr "Gesamttimeout für Anfragen"
 
-#, fuzzy
 msgid "Total replicas"
-msgstr "Geräte insgesamt"
+msgstr "Anzahl der Replikas"
 
 msgid "Total sessions"
 msgstr "Gesamte Sitzungen"
@@ -48068,9 +48048,8 @@ msgstr "Standard Aussehen benutzen"
 msgid "Use the following ID"
 msgstr "Die folgende ID verwenden"
 
-#, fuzzy
 msgid "Use the following color"
-msgstr "Die folgende ID verwenden"
+msgstr "Die folgende Farbe verwenden"
 
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
@@ -48744,9 +48723,8 @@ msgstr "VLANs"
 msgid "VM distribution"
 msgstr "VM Verteilung"
 
-#, fuzzy
 msgid "VM name"
-msgstr "AP-Name"
+msgstr "VM-Name"
 
 msgid "VMWare ESX host systems: Used space"
 msgstr "VMWare ESX Hostsysteme: belegter Platz"
@@ -49107,9 +49085,8 @@ msgstr "Optische Schwellen (OK-Prozentwert)"
 msgid "Visualization Levels"
 msgstr "Schwellwerte Virtualisierung"
 
-#, fuzzy
 msgid "Visualize this aggregation"
-msgstr "Dieses Aggregat löschen"
+msgstr "Diese Aggregation anzeigen"
 
 msgid "VoIP"
 msgstr "VoIP"
@@ -51681,9 +51658,8 @@ msgstr ""
 "Sie können Instanzspezifische globale Konfigurationsvariablen in nicht "
 "verteilten Umgebungen nicht konfigurieren."
 
-#, fuzzy
 msgid "You can not delete the connection to the local site."
-msgstr "Die lokale Instanz kann nicht repliziert werden."
+msgstr "Die Verbindung zur lokalen Instanz kann nicht gelöscht werden"
 
 #, python-format
 msgid "You can not delete this %s because it is <a href=\"%s\">in use</a>."

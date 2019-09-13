@@ -16,8 +16,8 @@ REM *   domain user account with enough permissions on the DC.
 REM *
 REM ***
 
-echo ^<^<^<ad_replication^>^>^>
-dsquery server | find /I "CN=%COMPUTERNAME%," > nul
+where /Q repadmin > nul
 if ERRORLEVEL 1 goto SERVER_NOT_IN_DC_LIST
+echo ^<^<^<ad_replication^>^>^>
 repadmin /showrepl /csv
 :SERVER_NOT_IN_DC_LIST

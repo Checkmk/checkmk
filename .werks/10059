@@ -1,0 +1,15 @@
+Title: RAM Leak Protection for Windows Agent 1.5
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1568377108
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+In very rare cases, there may be a memory leak in the Agent.
+
+Now the Agent constantly monitors its own memory usage and restarts 
+if the acceptable limit is exceeded. 

@@ -191,9 +191,8 @@ class MKDockerClient(docker.DockerClient):
         self._device_map = None
         self.node_info = self.info()
 
-    @property
     def device_map(self):
-        with self._DEVIVE_MAP_LOCK:
+        with self._DEVICE_MAP_LOCK:
             if self._device_map is not None:
                 return self._device_map
 
@@ -455,7 +454,7 @@ def section_container_diskstat(client, container_id):
         return
     container_blkio = stats["blkio_stats"]
     container_blkio["time"] = time.time()
-    container_blkio["names"] = client.device_map
+    container_blkio["names"] = client.device_map()
     section = Section('container_diskstat', piggytarget=container_id)
     section.append(json.dumps(container_blkio))
     section.write()

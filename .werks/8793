@@ -1,0 +1,14 @@
+Title: notifications crash if non ASCII characters are present in the plugin output
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568361403
+Class: fix
+
+For bulk notifications this results in recurring notifications since
+the corresponding spoolfile was not cleaned up. Non bulk notifications
+were not sent multiple times. For both normal and bulk notifications
+no "Final notification result" was produced in the "Host- and Service
+notifications" view.

@@ -415,7 +415,7 @@ class Rulespec(object):
             factory_default,
             help_func,
     ):
-        # type: (str, Type[RulespecSubGroup], Optional[Callable[[], Text]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], Optional[Callable[[], Text]], bool, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], Optional[Callable[[], Text]], bool, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(Rulespec, self).__init__()
 
         arg_infos = [
@@ -461,7 +461,7 @@ class Rulespec(object):
 
     @property
     def group(self):
-        # type: () -> Type[RulespecSubGroup]
+        # type: () -> Type[RulespecGroup]
         return self._group
 
     @property
@@ -641,7 +641,7 @@ class ServiceRulespec(Rulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecSubGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(ServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -675,7 +675,7 @@ class BinaryHostRulespec(HostRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecSubGroup], Optional[Callable[[], Text]], str, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], str, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(BinaryHostRulespec, self).__init__(
             name=name,
             group=group,
@@ -719,7 +719,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecSubGroup], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(BinaryServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -760,7 +760,7 @@ def _get_manual_check_parameter_rulespec_instance(
         is_deprecated=None,
 ):
     # type: (Type[Any], str, Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], ValueSpec]], bool, bool) -> ManualCheckParameterRulespec
-    # There may be no RulespecSubGroup declaration for the static checks.
+    # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
     try:
         subgroup_key = "static/" + group().sub_group_name
@@ -808,7 +808,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             create_manual_check=True,
     ):
-        # type: (str, Type[RulespecSubGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, bool) -> None
+        # type: (str, Type[RulespecGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, bool) -> None
         # Mandatory keys
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name

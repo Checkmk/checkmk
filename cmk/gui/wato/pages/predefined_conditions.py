@@ -55,9 +55,12 @@ from cmk.gui.plugins.wato import (
 
 
 def dummy_rulespec():
-    return ServiceRulespec(name="dummy",
-                           group=RulespecGroupUserInterface,
-                           valuespec=FixedValue(None))
+    # type: () -> ServiceRulespec
+    return ServiceRulespec(
+        name="dummy",
+        group=RulespecGroupUserInterface,
+        valuespec=lambda: FixedValue(None),
+    )
 
 
 def vs_conditions():

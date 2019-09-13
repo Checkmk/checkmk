@@ -86,8 +86,8 @@ def _type_name(v):
 seconds_per_day = 86400
 
 
-# Abstract base class of all value declaration classes.
 class ValueSpec(object):
+    """Abstract base class of all value declaration classes"""
     def __init__(self, **kwargs):
         super(ValueSpec, self).__init__()
         self._title = kwargs.get("title")
@@ -104,30 +104,31 @@ class ValueSpec(object):
             return self._help()
         return self._help
 
-    # Create HTML-form elements that represent a given
-    # value and let the user edit that value. The varprefix
-    # is prepended to the HTML variable names and is needed
-    # in order to make the variable unique in case that another
-    # Value of the same type is being used as well.
-    # The function may assume that the type of the value is valid.
     def render_input(self, varprefix, value):
+        """Create HTML-form elements that represent a given
+        value and let the user edit that value
+
+        The varprefix is prepended to the HTML variable names and is needed in
+        order to make the variable unique in case that another Value of the same
+        type is being used as well.  The function may assume that the type of the
+        value is valid."""
         pass
 
-    # Sets the input focus (cursor) into the most promiment
-    # field of the HTML code previously rendered with render_input()
     def set_focus(self, varprefix):
+        """Sets the input focus (cursor) into the most promiment field of the
+        HTML code previously rendered with render_input()"""
         html.set_focus(varprefix)
 
-    # Create a canonical, minimal, default value that
-    # matches the datatype of the value specification and
-    # fulfills also data validation.
     def canonical_value(self):
+        """Create a canonical, minimal, default value that matches the datatype
+        of the value specification and fulfills also data validation."""
         return None
 
-    # Return a default value for this variable. This
-    # is optional and only used in the value editor
-    # for same cases where the default value is known.
     def default_value(self):
+        """Return a default value for this variable
+
+        This is optional and only used in the value editor for same cases where
+        the default value is known."""
         try:
             if isinstance(self._default_value, (types.FunctionType, types.MethodType)):
                 return self._default_value()
@@ -135,21 +136,24 @@ class ValueSpec(object):
         except Exception:
             return self.canonical_value()
 
-    # Creates a text-representation of the value that can be
-    # used in tables and other contextes. It is to be read
-    # by the user and need not to be parsable.
-    # The function may assume that the type of the value is valid.
-    #
-    # In the current implementation this function is only used to
-    # render the object for html code. So it is allowed to add
-    # html code for better layout in the GUI.
+    # TODO: Rename to value_to_html?
     def value_to_text(self, value):
+        """Creates a text-representation of the value that can be
+        used in tables and other contextes
+
+        It is to be read by the user and need not to be parsable.  The function
+        may assume that the type of the value is valid.
+
+        In the current implementation this function is only used to render the
+        object for html code. So it is allowed to add html code for better
+        layout in the GUI."""
         return repr(value)
 
-    # Create a value from the current settings of the
-    # HTML variables. This function must also check the validity
-    # and may raise a MKUserError in case of invalid set variables.
     def from_html_vars(self, varprefix):
+        """Create a value from the current settings of the HTML variables
+
+        This function must also check the validity and may raise a MKUserError
+        in case of invalid set variables."""
         return None
 
     def validate_value(self, value, varprefix):
@@ -195,8 +199,8 @@ class ValueSpec(object):
             self._validate(value, varprefix)
 
 
-# A fixed non-editable value, e.g. to be use in "Alternative"
 class FixedValue(ValueSpec):
+    """A fixed non-editable value, e.g. to be used in 'Alternative'"""
     def __init__(self, value, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._value = value
@@ -224,8 +228,8 @@ class FixedValue(ValueSpec):
                               _("Invalid value, must be '%r' but is '%r'") % (self._value, value))
 
 
-# Time in seconds
 class Age(ValueSpec):
+    """Time in seconds"""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label = kwargs.get("label")
@@ -300,8 +304,8 @@ class Age(ValueSpec):
                 _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
 
 
-# Editor for a single integer
 class Integer(ValueSpec):
+    """Editor for a single integer"""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._size = kwargs.get("size", 5)
@@ -384,8 +388,8 @@ class Integer(ValueSpec):
                 _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
 
 
-# Filesize in Byte, KByte, MByte, Gigabyte, Terabyte
 class Filesize(Integer):
+    """Filesize in Byte, KByte, MByte, Gigabyte, Terabyte"""
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
         self._names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
@@ -416,8 +420,8 @@ class Filesize(Integer):
         return "%s %s" % (count, self._names[exp])
 
 
-# Editor for a line of text
 class TextAscii(ValueSpec):
+    """Editor for a line of text"""
     def __init__(self, **kwargs):
         super(TextAscii, self).__init__(**kwargs)
         self._label = kwargs.get("label")
@@ -532,9 +536,8 @@ class TextUnicode(TextAscii):
                 _type_name(value))
 
 
-# Internal ID as used in many places (for contact names, group name,
-# an so on)
 class ID(TextAscii):
+    """Internal ID as used in many places (for contact names, group name, an so on)"""
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
@@ -542,8 +545,8 @@ class ID(TextAscii):
                               "underscore and it must start with a letter or underscore.")
 
 
-# Same as the ID class, but allowing unicode objects
 class UnicodeID(TextUnicode):
+    """Same as the ID class, but allowing unicode objects"""
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
@@ -682,8 +685,8 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
         EmailAddress.validate_value(self, value, varprefix)
 
 
-# Same as IPv4Network, but allowing both IPv4 and IPv6
 class IPNetwork(TextAscii):
+    """Same as IPv4Network, but allowing both IPv4 and IPv6"""
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 34)
         super(IPNetwork, self).__init__(**kwargs)
@@ -700,9 +703,8 @@ class IPNetwork(TextAscii):
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
 
-# Network as used in routing configuration, such as
-# "10.0.0.0/8" or "192.168.56.1"
 class IPv4Network(IPNetwork):
+    """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 18)
         super(IPv4Network, self).__init__(**kwargs)
@@ -808,8 +810,8 @@ class PageVsAutocomplete(Page):
         TextAsciiAutocomplete.ajax_handler()
 
 
-# A host name with or without domain part. Also allow IP addresses
 class Hostname(TextAscii):
+    """A host name with or without domain part. Also allow IP addresses"""
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
@@ -819,8 +821,8 @@ class Hostname(TextAscii):
             self._allow_empty = False
 
 
-# Use this for all host / ip address input fields!
 class HostAddress(TextAscii):
+    """Use this for all host / ip address input fields!"""
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._allow_host_name = kwargs.get("allow_host_name", True)
@@ -1021,10 +1023,9 @@ class TextAreaUnicode(TextUnicode):
         return text
 
 
-# A variant of TextAscii() that validates a path to a filename that
-# lies in an existing directory.
 # TODO: Rename the valuespec here to ExistingFilename or somehting similar
 class Filename(TextAscii):
+    """A variant of TextAscii() that validates a path to a filename that lies in an existing directory."""
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         if "size" not in kwargs:
@@ -1203,9 +1204,8 @@ class ListOfIntegers(ListOfStrings):
         ListOfStrings.__init__(self, **kwargs)
 
 
-# Generic list-of-valuespec ValueSpec with Javascript-based
-# add/delete/move
 class ListOf(ValueSpec):
+    """Generic list-of-valuespec ValueSpec with Javascript-based add/delete/move"""
     class Style(Enum):
         REGULAR = "regular"
         FLOATING = "floating"
@@ -1578,8 +1578,8 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
             return {"html_code": html.drain()}
 
 
-# Same but for floating point values
 class Float(Integer):
+    """Same as Integer, but for floating point values"""
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
         self._decimal_separator = kwargs.get("decimal_separator", ".")
@@ -1676,16 +1676,18 @@ class Checkbox(ValueSpec):
                 (value, _type_name(value)))
 
 
-# A type-save dropdown choice. Parameters:
-# help_separator: if you set this to a character, e.g. "-", then
-# value_to_texg will omit texts from the character up to the end of
-# a choices name.
-# Note: The list of choices may contain 2-tuples or 3-tuples.
-# The format is (value, text {, icon} )
-# choices may also be a function that returns - when called
-# wihtout arguments - such a tuple list. That way the choices
-# can by dynamically computed
 class DropdownChoice(ValueSpec):
+    """A type-save dropdown choice
+
+    Parameters:
+    help_separator: if you set this to a character, e.g. "-", then
+    value_to_text will omit texts from the character up to the end of
+    a choices name.
+    Note: The list of choices may contain 2-tuples or 3-tuples.
+    The format is (value, text {, icon} )
+    choices may also be a function that returns - when called
+    wihtout arguments - such a tuple list. That way the choices
+    can by dynamically computed"""
     def __init__(self, **kwargs):
         super(DropdownChoice, self).__init__(**kwargs)
         self._choices = kwargs["choices"]
@@ -1833,9 +1835,9 @@ class DropdownChoice(ValueSpec):
         return True
 
 
-# Special conveniance variant for monitoring states
 # TODO: Rename to ServiceState() or something like this
 class MonitoringState(DropdownChoice):
+    """Special conveniance variant for monitoring states"""
     def __init__(self, **kwargs):
         choices = [
             (0, _("OK")),
@@ -1858,19 +1860,20 @@ class HostState(DropdownChoice):
         DropdownChoice.__init__(self, choices=choices, **kwargs)
 
 
-# A Dropdown choice where the elements are ValueSpecs.
-# The currently selected ValueSpec will be displayed.
-# The text representations of the ValueSpecs will be used as texts.
-# A ValueSpec of None is also allowed and will return
-# the value None. It is also allowed to leave out the
-# value spec for some of the choices (which is the same as
-# using None).
-# The resulting value is either a single value (if no
-# value spec is defined for the selected entry) or a pair
-# of (x, y) where x is the value of the selected entry and
-# y is the value of the valuespec assigned to that entry.
-# choices is a list of triples: [ ( value, title, vs ), ... ]
 class CascadingDropdown(ValueSpec):
+    """A Dropdown choice where the elements are ValueSpecs.
+
+    The currently selected ValueSpec will be displayed.  The text
+    representations of the ValueSpecs will be used as texts.  A ValueSpec of
+    None is also allowed and will return the value None. It is also allowed to
+    leave out the value spec for some of the choices (which is the same as
+    using None).
+
+    The resulting value is either a single value (if no value spec is defined
+    for the selected entry) or a pair of (x, y) where x is the value of the
+    selected entry and y is the value of the valuespec assigned to that entry.
+    choices is a list of triples: [ ( value, title, vs ), ... ]
+    """
     class Render(Enum):
         normal = "normal"
         foldable = "foldable"
@@ -2118,10 +2121,9 @@ class CascadingDropdown(ValueSpec):
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
 
-# The same logic as the dropdown choice, but rendered
-# as a group of radio buttons.
-# columns is None or unset -> separate with "&nbsp;"
 class RadioChoice(DropdownChoice):
+    """The same logic as the dropdown choice, but rendered as a group of radio buttons.
+    columns is None or unset -> separate with '&nbsp;'"""
     def __init__(self, **kwargs):
         DropdownChoice.__init__(self, **kwargs)
         self._columns = kwargs.get("columns")
@@ -2178,8 +2180,8 @@ class RadioChoice(DropdownChoice):
         html.end_radio_group()
 
 
-# A list of checkboxes representing a list of values
 class ListChoice(ValueSpec):
+    """A list of checkboxes representing a list of values"""
     @staticmethod
     def dict_choices(choices):
         return [("%s" % type_id, "%d - %s" % (type_id, type_name))
@@ -2292,18 +2294,19 @@ class ListChoice(ValueSpec):
         return value not in d
 
 
-# Implements a choice of items which is realized with
-# two ListChoices select fields. One contains every unselected
-# item and the other one contains the selected items.
-# Optionally you can have the user influence the order of
-# the entries by simply clicking them in a certain order.
-# If that feature is not being used, then the original order
-# of the elements is kept.
-# TODO: Beware: the keys in this choice are not type safe.
-# They can only be strings. They must not contain | or other
-# dangerous characters. We should fix this and make it this
-# compatible to DropdownChoice()
 class DualListChoice(ListChoice):
+    """Implements a choice of items which is realized with two ListChoices
+    select fields.
+
+    One contains every unselected item and the other one contains the selected
+    items.  Optionally you can have the user influence the order of the entries
+    by simply clicking them in a certain order.  If that feature is not being
+    used, then the original order of the elements is kept.
+
+    Beware: the keys in this choice are not type safe.  They can only be
+    strings. They must not contain | or other dangerous characters. We should
+    fix this and make it this compatible to DropdownChoice()
+    """
     def __init__(self, **kwargs):
         super(DualListChoice, self).__init__(**kwargs)
         self._autoheight = kwargs.get("autoheight", False)
@@ -2424,10 +2427,10 @@ class DualListChoice(ListChoice):
         return value
 
 
-# A type-save dropdown choice with one extra field that
-# opens a further value spec for entering an alternative
-# Value.
 class OptionalDropdownChoice(DropdownChoice):
+    """A type-save dropdown choice with one extra field that
+    opens a further value spec for entering an alternative
+    Value."""
     def __init__(self, **kwargs):
         DropdownChoice.__init__(self, **kwargs)
         self._explicit = kwargs["explicit"]
@@ -2499,10 +2502,6 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.validate_datatype(value, varprefix + "_ex")
 
 
-# Input of date with optimization for nearby dates
-# in the future. Useful for example for alarms. The
-# date is represented by a UNIX timestamp where the
-# seconds are silently ignored.
 def round_date(t):
     return int(int(t) / seconds_per_day) * seconds_per_day
 
@@ -2518,6 +2517,10 @@ class Weekday(DropdownChoice):
 
 
 class RelativeDate(OptionalDropdownChoice):
+    """Input of date with optimization for nearby dates in the future
+
+    Useful for example for alarms. The date is represented by a UNIX timestamp
+    where the seconds are silently ignored."""
     def __init__(self, **kwargs):
         choices = [
             (0, _("today")),
@@ -2574,11 +2577,12 @@ class RelativeDate(OptionalDropdownChoice):
             raise MKUserError(varprefix, _("Date must be a number value"))
 
 
-# A ValueSpec for editing a date. The date is
-# represented as a UNIX timestamp x where x % seconds_per_day
-# is zero (or will be ignored if non-zero), as long as
-# include_time is not set to True
 class AbsoluteDate(ValueSpec):
+    """A ValueSpec for editing a date
+
+    The date is represented as a UNIX timestamp x where x % seconds_per_day is
+    zero (or will be ignored if non-zero), as long as include_time is not set
+    to True"""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._show_titles = kwargs.get("show_titles", True)
@@ -2725,12 +2729,13 @@ class AbsoluteDate(ValueSpec):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
-# Valuespec for entering times like 00:35 or 16:17. Currently
-# no seconds are supported. But this could easily be added.
-# The value itself is stored as a pair of integers, a.g.
-# (0, 35) or (16, 17). If the user does not enter a time
-# the vs will return None.
 class Timeofday(ValueSpec):
+    """Valuespec for entering times like 00:35 or 16:17
+
+    Currently no seconds are supported. But this could easily be added.  The
+    value itself is stored as a pair of integers, a.g.  (0, 35) or (16, 17). If
+    the user does not enter a time the vs will return None.
+    """
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_24_00 = kwargs.get("allow_24_00", False)
@@ -2801,8 +2806,8 @@ class Timeofday(ValueSpec):
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
 
 
-# Range like 00:15 - 18:30
 class TimeofdayRange(ValueSpec):
+    """Range like 00:15 - 18:30"""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._allow_empty = kwargs.get("allow_empty", True)
@@ -3075,8 +3080,8 @@ class Timerange(CascadingDropdown):
             return (prev_time, from_time), titles[1] or prev_time_str
 
 
-# A selection of various date formats
 def DateFormat(**args):
+    """A selection of various date formats"""
     args.setdefault("title", _("Date format"))
     args.setdefault("default_value", "%Y-%m-%d")
     args["choices"] = [
@@ -3103,10 +3108,11 @@ def TimeFormat(**args):
     return DropdownChoice(**args)
 
 
-# Make a configuration value optional, i.e. it may be None.
-# The user has a checkbox for activating the option. Example:
-# debug_log: it is either None or set to a filename.
 class Optional(ValueSpec):
+    """Make a configuration value optional, i.e. it may be None.
+
+    The user has a checkbox for activating the option. Example:
+    debug_log: it is either None or set to a filename."""
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
@@ -3189,10 +3195,11 @@ class Optional(ValueSpec):
             self._valuespec.validate_value(value, varprefix + "_value")
 
 
-# Makes a configuration value optional, while displaying the current
-# value as text with a checkbox in front of it. When the checkbox is being checked,
-# the text hides and the encapsulated valuespec is being shown.
 class OptionalEdit(Optional):
+    """Makes a configuration value optional, while displaying the current value
+    as text with a checkbox in front of it.
+
+    When the checkbox is being checked, the text hides and the encapsulated valuespec is being shown."""
     def __init__(self, valuespec, **kwargs):
         Optional.__init__(self, valuespec, **kwargs)
         self._label = ''
@@ -3244,11 +3251,11 @@ class OptionalEdit(Optional):
         return self._valuespec.from_html_vars(varprefix + "_value")
 
 
-# Handle case when there are several possible allowed formats
-# for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)
-# The different alternatives must have different data types that can
-# be distinguished with validate_datatype.
 class Alternative(ValueSpec):
+    """Handle case when there are several possible allowed formats
+    for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)
+    The different alternatives must have different data types that can
+    be distinguished with validate_datatype."""
     def __init__(self, **kwargs):
         super(Alternative, self).__init__(**kwargs)
         self._elements = kwargs["elements"]
@@ -3398,8 +3405,8 @@ class Alternative(ValueSpec):
                 vs.validate_value(value, varprefix + "_%d" % nr)
 
 
-# Edit a n-tuple (with fixed size) of values
 class Tuple(ValueSpec):
+    """Edit a n-tuple (with fixed size) of values"""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
@@ -3807,12 +3814,12 @@ class Dictionary(ValueSpec):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
 
-# Base class for selection of a Nagios element out
-# of a given list that must be loaded from a file.
-# Example: GroupSelection. Child class must define
-# a function get_elements() that returns a dictionary
-# from element keys to element titles.
 class ElementSelection(ValueSpec):
+    """Base class for selection of a Nagios element out of a given list that must be loaded from a file.
+
+    Example: GroupSelection. Child class must define
+    a function get_elements() that returns a dictionary
+    from element keys to element titles."""
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._loaded_at = None
@@ -3890,9 +3897,8 @@ class AutoTimestamp(FixedValue):
             return MKUserError(varprefix, _("Invalid datatype of timestamp: must be int or float."))
 
 
-# Fully transparant VS encapsulating a vs in a foldable
-# container.
 class Foldable(ValueSpec):
+    """Fully transparant VS encapsulating a vs in a foldable container"""
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
@@ -3939,15 +3945,14 @@ class Foldable(ValueSpec):
         self._valuespec.validate_value(value, varprefix)
 
 
-# Transforms the value from one representation to
-# another while being completely transparent to the user.
-# forth: function that converts a value into the representation
-#        needed by the encapsulated vs
-# back:  function that converts a value created by the encapsulated
-#        vs back to the outer representation
-
-
 class Transform(ValueSpec):
+    """Transforms the value from one representation to another while being
+    completely transparent to the user
+
+    forth: function that converts a value into the representation
+           needed by the encapsulated vs
+    back:  function that converts a value created by the encapsulated
+           vs back to the outer representation"""
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec

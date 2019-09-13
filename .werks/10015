@@ -1,0 +1,12 @@
+Title: agent_azure: Do not crash if offer type has no consumption API
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568360378
+Class: fix
+
+According to the Azure API documentation offers of type MS-AZR-0145P, MS-AZR-0146P, MS-AZR-159P,
+MS-AZR-0036P, MS-AZR-0143P, MS-AZR-0015P and MS-AZR-0144P do not have a consuption API.
+The agent no longer crashes in this case.

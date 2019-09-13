@@ -605,7 +605,8 @@ def check_logwatch_generic(item, params, loglines, found):
                 # if the file is far too large, truncate it
                 truncate_by_line(logmsg_file_path, logwatch_max_filesize)
             return (2, "unacknowledged messages have exceeded max size, "
-                    "new messages are dropped (limit %d Bytes)" % logwatch_max_filesize)
+                    "new messages are dropped (limit %s)" %
+                    get_bytes_human_readable(logwatch_max_filesize))
 
         for line in logmsg_file_handle:
             line = line.rstrip('\n')
@@ -666,7 +667,8 @@ def check_logwatch_generic(item, params, loglines, found):
     # if logfile has reached maximum size, abort with critical state
     if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > logwatch_max_filesize:
         return (2, "unacknowledged messages have exceeded max size, "
-                "new messages are lost (limit %d Bytes)" % logwatch_max_filesize)
+                "new messages are lost (limit %s)" %
+                get_bytes_human_readable(logwatch_max_filesize))
 
     #
     # Render output

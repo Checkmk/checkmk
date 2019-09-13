@@ -2819,6 +2819,12 @@ class ConfigCache(object):
                 host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
                                                                    self._hosttags[hostname])
 
+        for shadow_host_name, shadow_host_spec in shadow_hosts.iteritems():
+            self._hosttags[shadow_host_name] = set(
+                shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split())
+            host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
+                tag_to_group_map, self._hosttags[shadow_host_name])
+
     def _tag_groups_to_tag_list(self, host_path, tag_groups):
         # type: (str, Dict[str, str]) -> Set[str]
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),

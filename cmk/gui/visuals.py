@@ -1324,7 +1324,7 @@ class VisualFilter(ValueSpec):
                               _("The value must be of type dict, but it has type %s") % type(value))
 
     def validate_value(self, value, varprefix):
-        ValueSpec.custom_validate(self, value, varprefix)
+        self._custom_validate(value, varprefix)
 
 
 def SingleInfoSelection(info_keys, **args):

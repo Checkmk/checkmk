@@ -1236,7 +1236,7 @@ def notify_via_email(plugin_context):
     os.putenv("LANG", old_lang)  # Important: do not destroy our environment
     if exitcode != 0:
         notify_log("ERROR: could not deliver mail. Exit code of command is %r" % exitcode)
-        for line in (stdout_txt + stderr_txt).splitlines():
+        for line in (stdout_txt + stderr_txt).decode('utf-8').splitlines():
             notify_log("mail: %s" % line.rstrip())
         return 2
 
@@ -1810,7 +1810,7 @@ def call_bulk_notification_script(plugin, context_lines):
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
 
-    output_lines = (stdout_txt + stderr_txt).splitlines()
+    output_lines = (stdout_txt + stderr_txt).decode('utf-8').splitlines()
     for line in output_lines:
         notify_log("%s: %s" % (plugin, line.rstrip()))
 

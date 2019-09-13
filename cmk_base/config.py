@@ -1873,6 +1873,13 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         if item is None and checkgroup not in service_rule_groups:
             return config_cache.host_extra_conf(host, rules)
 
+        # At the moment the items are not validated strictly, this means we can have
+        # integers or something else here. Convert them to unicode for easier handling
+        # in the following code.
+        # TODO: This should be strictly validated by the check API in 1.7.
+        if item is not None and not isinstance(item, six.string_types):
+            item = unicode(item)
+
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
             host, item, descr)
@@ -3019,7 +3026,7 @@ class ConfigCache(object):
         return result
 
     def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
-        # type: (str, Text, Text) -> RulesetMatchObject
+        # type: (str, Optional[Text], Text) -> RulesetMatchObject
         """Construct the object that is needed to match checkgroup parameters rulesets
 
         Please note that the host attributes like host_folder and host_tags are

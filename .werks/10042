@@ -1,0 +1,13 @@
+Title: Fix exception caused by autochecks with integers as items
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568371670
+Class: fix
+
+The calculation of check parameters during activate changes or checking
+could cause an exception like "TypeError: expected string or buffer" when
+a discovery function of a check created services using integers as items
+instead of strings.

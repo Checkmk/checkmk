@@ -1242,13 +1242,8 @@ class TimeperiodValuespec(ValueSpec):
     def canonical_value(self):
         return self._enclosed_valuespec.canonical_value()
 
-    def validate_datatype(self, value, varprefix):
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_datatype(value, varprefix)
-
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
+        super(TimeperiodValuespec, self)._validate_value(value, varprefix)
         if self.is_active(value):
             self._get_timeperiod_valuespec().validate_value(value, varprefix)
         else:

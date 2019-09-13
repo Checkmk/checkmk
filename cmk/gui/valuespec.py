@@ -152,27 +152,45 @@ class ValueSpec(object):
     def from_html_vars(self, varprefix):
         return None
 
-    # Check if a given value matches the
-    # datatype of described by this class. This method will
-    # be used by cmk -X on the command line in order to
-    # validate main.mk (some happy day in future)
-    def validate_datatype(self, value, varprefix):
-        pass
-
-    # Check if a given value is within the ranges that are
-    # allowed for this type of value. This function should
-    # assume that the data type is valid (either because it
-    # has been returned by from_html_vars() or because it has
-    # been checked with validate_datatype()).
     def validate_value(self, value, varprefix):
+        """Check if a given value is a valid structure for the current valuespec
+
+        The validation is done in 3 phases:
+
+        1. validate_datatype : Ensure the python data type is as expected
+        2. _validate_value   : Valuespec type specific validations
+        3. _custom_validate  : instance specific validations
+        """
+        # TODO: Would be really good to enable this to prevent unexpected data
+        # types being written to the configuration. For the moment we can not
+        # enable this because of the Web API: When using JSON as request_format
+        # the JSON modules decodes all strings to unicode strings which are not
+        # accepted by some attribute valuespecs which base on e.g. TextAscii.
+        # This should be solved during Python3 transformation where we will
+        # finally make a huge switch to unicode strings in many places.
+        # TODO: Cleanup all external direct calls to validate_datatype() once this is
+        #       being enabled.
+        #self.validate_datatype(value, varprefix)
+        self._validate_value(value, varprefix)
         self._custom_validate(value, varprefix)
 
-    # Needed for implementation of customer validation
-    # functions that are configured by the user argument
-    # validate = .... Problem: this function must be
-    # called by *every* validate_value() function in all
-    # subclasses - explicitely.
+    def validate_datatype(self, value, varprefix):
+        """Check if a given value matches the datatype of described by this class."""
+        pass
+
+    def _validate_value(self, value, varprefix):
+        """Override this method to implement custom validation functions for sub-valuespec types
+
+        This function should assume that the data type is valid (either because
+        it has been returned by from_html_vars() or because it has been checked
+        with validate_datatype())."""
+        pass
+
     def _custom_validate(self, value, varprefix):
+        """Call instance specific validations
+
+        These are the ones that are configured by the valuespec instance argument
+        validate = ...."""
         if self._validate:
             self._validate(value, varprefix)
 
@@ -204,10 +222,6 @@ class FixedValue(ValueSpec):
         if not self._value == value:
             raise MKUserError(varprefix,
                               _("Invalid value, must be '%r' but is '%r'") % (self._value, value))
-
-    def validate_value(self, value, varprefix):
-        self.validate_datatype(value, varprefix)
-        self._custom_validate(value, varprefix)
 
 
 # Time in seconds
@@ -279,7 +293,7 @@ class Age(ValueSpec):
                 varprefix,
                 _("The value %r has type %s, but must be of type int") % (value, _type_name(value)))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
@@ -359,7 +373,7 @@ class Integer(ValueSpec):
                 _("The value %r has the wrong type %s, but must be of type int") %
                 (value, _type_name(value)))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if self._minvalue is not None and value < self._minvalue:
             raise MKUserError(
                 varprefix,
@@ -368,7 +382,6 @@ class Integer(ValueSpec):
             raise MKUserError(
                 varprefix,
                 _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
-        self._custom_validate(value, varprefix)
 
 
 # Filesize in Byte, KByte, MByte, Gigabyte, Terabyte
@@ -481,7 +494,7 @@ class TextAscii(ValueSpec):
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         try:
             unicode(value)
         except:
@@ -502,8 +515,6 @@ class TextAscii(ValueSpec):
         if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
-
-        self._custom_validate(value, varprefix)
 
 
 class TextUnicode(TextAscii):
@@ -610,7 +621,7 @@ class RegExp(TextAscii):
 
         return " ".join(classes)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
 
         # Check if the string is a valid regex
@@ -630,18 +641,15 @@ class RegExp(TextAscii):
                 _("Your regular expression containes <b>%d</b> groups. "
                   "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
 
-        self._custom_validate(value, varprefix)
-
 
 class RegExpUnicode(TextUnicode, RegExp):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, attrencode=True, **kwargs)
         RegExp.__init__(self, **kwargs)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         TextUnicode.validate_value(self, value, varprefix)
         RegExp.validate_value(self, value, varprefix)
-        self._custom_validate(value, varprefix)
 
 
 class EmailAddress(TextAscii):
@@ -669,10 +677,9 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
         EmailAddress.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         TextUnicode.validate_value(self, value, varprefix)
         EmailAddress.validate_value(self, value, varprefix)
-        self._custom_validate(value, varprefix)
 
 
 # Same as IPv4Network, but allowing both IPv4 and IPv6
@@ -684,7 +691,7 @@ class IPNetwork(TextAscii):
     def _ip_class(self):
         return ipaddress.ip_interface
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         super(IPNetwork, self).validate_value(value, varprefix)
 
         try:
@@ -820,7 +827,7 @@ class HostAddress(TextAscii):
         self._allow_ipv4_address = kwargs.get("allow_ipv4_address", True)
         self._allow_ipv6_address = kwargs.get("allow_ipv6_address", True)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if value and self._allow_host_name and self._is_valid_host_name(value):
             pass
         elif value and self._allow_ipv4_address and self._is_valid_ipv4_address(value):
@@ -832,8 +839,6 @@ class HostAddress(TextAscii):
                 varprefix,
                 _("Invalid host address. You need to specify the address "
                   "either as %s.") % ", ".join(self._allowed_type_names()))
-
-        self._custom_validate(value, varprefix)
 
     def _is_valid_host_name(self, hostname):
         # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
@@ -908,7 +913,7 @@ class Url(TextAscii):
         self._link_target = kwargs.get("target")
         super(Url, self).__init__(**kwargs)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         super(Url, self).validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
@@ -923,8 +928,6 @@ class Url(TextAscii):
             raise MKUserError(
                 varprefix,
                 _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes))
-
-        self._custom_validate(value, varprefix)
 
     def from_html_vars(self, varprefix):
         value = super(Url, self).from_html_vars(varprefix)
@@ -1038,7 +1041,7 @@ class Filename(TextAscii):
     def canonical_value(self):
         return self._default_path
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         # The transformation function only changes the value for validation. This is
         # usually a function which is later also used within the code which uses
         # this variable to e.g. replace macros
@@ -1065,8 +1068,6 @@ class Filename(TextAscii):
         # Write permissions to the file cannot be checked here since we run with Apache
         # permissions and the file might be created with Nagios permissions (on OMD this
         # is the same, but for others not)
-
-        self._custom_validate(value, varprefix)
 
 
 class ListOfStrings(ValueSpec):
@@ -1170,7 +1171,7 @@ class ListOfStrings(ValueSpec):
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if len(value) == 0 and not self._allow_empty:
             if self._empty_text:
                 msg = self._empty_text
@@ -1185,7 +1186,6 @@ class ListOfStrings(ValueSpec):
         if self._valuespec:
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, varprefix + "_%d" % nr)
-        self._custom_validate(value, varprefix)
 
 
 class ListOfIntegers(ListOfStrings):
@@ -1437,12 +1437,11 @@ class ListOf(ValueSpec):
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not self._allow_empty and len(value) == 0:
             raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n + 1))
-        self._custom_validate(value, varprefix)
 
 
 class ListOfMultiple(ValueSpec):
@@ -1561,10 +1560,9 @@ class ListOfMultiple(ValueSpec):
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         for ident, val in value.items():
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
-        self._custom_validate(value, varprefix)
 
 
 class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
@@ -1647,7 +1645,7 @@ class Percentage(Float):
                     _("The value %r has type %s, but must be either float or int") %
                     (value, _type_name(value)))
         else:
-            Float.validate_datatype(self, value, varprefix)
+            super(Percentage, self).validate_datatype(value, varprefix)
 
 
 class Checkbox(ValueSpec):
@@ -1818,7 +1816,7 @@ class DropdownChoice(ValueSpec):
     def option_id(val):
         return "%s" % hashlib.sha256(repr(val)).hexdigest()
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix, self._no_preselect_error)
 
@@ -1827,8 +1825,6 @@ class DropdownChoice(ValueSpec):
                 raise MKUserError(varprefix, self._invalid_choice_error)
             else:
                 raise MKUserError(varprefix, self._empty_text)
-
-        self._custom_validate(value, varprefix)
 
     def _value_is_invalid(self, value):
         for entry in self.choices():
@@ -2108,7 +2104,7 @@ class CascadingDropdown(ValueSpec):
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
             raise MKUserError(varprefix + "_sel", self._no_preselect_error)
 
@@ -2287,10 +2283,9 @@ class ListChoice(ValueSpec):
             if self._value_is_invalid(v):
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _('You have to select at least one element.'))
-        self._custom_validate(value, varprefix)
 
     def _value_is_invalid(self, value):
         d = dict(self._elements)
@@ -2406,9 +2401,9 @@ class DualListChoice(ListChoice):
                           id_=varprefix,
                           add_var=True)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         try:
-            ListChoice.validate_value(self, value, varprefix)
+            super(DualListChoice, self)._validate_value(value, varprefix)
         except MKUserError as e:
             raise MKUserError(e.varname + "_selected", e.message)
 
@@ -2493,11 +2488,9 @@ class OptionalDropdownChoice(DropdownChoice):
                 return val
         return choices[0][0]  # can only happen if user garbled URL
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if self.value_is_explicit(value):
             self._explicit.validate_value(value, varprefix)
-        # else valid_datatype already has made the job
-        self._custom_validate(value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         for val, _title in self.choices():
@@ -2579,9 +2572,6 @@ class RelativeDate(OptionalDropdownChoice):
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, (int, float)):
             raise MKUserError(varprefix, _("Date must be a number value"))
-
-    def validate_value(self, value, varprefix):
-        self._custom_validate(value, varprefix)
 
 
 # A ValueSpec for editing a date. The date is
@@ -2730,10 +2720,9 @@ class AbsoluteDate(ValueSpec):
                 varprefix,
                 _("The type of the timestamp must be int or float, but is %s") % _type_name(value))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if (not self._allow_empty and value is None) or value < 0 or int(value) > (2**31 - 1):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
-        self._custom_validate(value, varprefix)
 
 
 # Valuespec for entering times like 00:35 or 16:17. Currently
@@ -2798,7 +2787,7 @@ class Timeofday(ValueSpec):
                     varprefix,
                     _("All elements of the tuple must be of type int, you have %s") % _type_name(x))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not self._allow_empty and value is None:
             raise MKUserError(varprefix, _("Please enter a time."))
         if self._allow_24_00:
@@ -2810,7 +2799,6 @@ class Timeofday(ValueSpec):
                               _("The time must not be greater than %02d:%02d.") % max_value)
         elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
-        self._custom_validate(value, varprefix)
 
 
 # Range like 00:15 - 18:30
@@ -2871,7 +2859,7 @@ class TimeofdayRange(ValueSpec):
         self._bounds[0].validate_datatype(value[0], varprefix + "_from")
         self._bounds[1].validate_datatype(value[1], varprefix + "_until")
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if value is None:
             if self._allow_empty:
                 return
@@ -2885,7 +2873,6 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(
                 varprefix + "_until",
                 _("The <i>from</i> time must not be later then the <i>until</i> time."))
-        self._custom_validate(value, varprefix)
 
 
 class TimeHelper(object):
@@ -3197,10 +3184,9 @@ class Optional(ValueSpec):
         if value != self._none_value:
             self._valuespec.validate_datatype(value, varprefix + "_value")
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
-        self._custom_validate(value, varprefix)
 
 
 # Makes a configuration value optional, while displaying the current
@@ -3405,12 +3391,11 @@ class Alternative(ValueSpec):
             _("The data type of the value does not match any of the "
               "allowed alternatives."))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         vs, value = self.matching_alternative(value)
         for nr, v in enumerate(self._elements):
             if vs == v:
                 vs.validate_value(value, varprefix + "_%d" % nr)
-        self._custom_validate(value, varprefix)
 
 
 # Edit a n-tuple (with fixed size) of values
@@ -3502,11 +3487,10 @@ class Tuple(ValueSpec):
             value.append(element.from_html_vars(vp))
         return tuple(value)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             element.validate_value(val, vp)
-        self._custom_validate(value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, tuple):
@@ -3812,7 +3796,7 @@ class Dictionary(ValueSpec):
                     _("Undefined key '%s' in the dictionary. Allowed are %s.") %
                     (param, ", ".join(allowed_keys)))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         value = self.migrate(value)
 
         for param, vs in self._get_elements():
@@ -3821,7 +3805,6 @@ class Dictionary(ValueSpec):
                 vs.validate_value(value[param], vp)
             elif not self._optional_keys or param in self._required_keys:
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
-        self._custom_validate(value, varprefix)
 
 
 # Base class for selection of a Nagios element out
@@ -3867,14 +3850,13 @@ class ElementSelection(ValueSpec):
     def from_html_vars(self, varprefix):
         return html.request.var(varprefix)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, _("You cannot save this rule.") + ' ' + self._empty_text)
         if value not in self._elements:
             raise MKUserError(varprefix,
                               _("%s is not an existing element in this selection.") % (value,))
-        self._custom_validate(value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         self.load_elements()
@@ -3953,9 +3935,8 @@ class Foldable(ValueSpec):
     def validate_datatype(self, value, varprefix):
         self._valuespec.validate_datatype(value, varprefix)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         self._valuespec.validate_value(value, varprefix)
-        self._custom_validate(value, varprefix)
 
 
 # Transforms the value from one representation to
@@ -4019,9 +4000,8 @@ class Transform(ValueSpec):
     def validate_datatype(self, value, varprefix):
         self._valuespec.validate_datatype(self.forth(value), varprefix)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         self._valuespec.validate_value(self.forth(value), varprefix)
-        self._custom_validate(value, varprefix)
 
 
 class LDAPDistinguishedName(TextUnicode):
@@ -4029,14 +4009,13 @@ class LDAPDistinguishedName(TextUnicode):
         TextUnicode.__init__(self, **kwargs)
         self.enforce_suffix = kwargs.get('enforce_suffix')
 
-    def validate_value(self, value, varprefix):
-        TextAscii.validate_value(self, value, varprefix)
+    def _validate_value(self, value, varprefix):
+        super(LDAPDistinguishedName, self)._validate_value(value, varprefix)
 
         # Check whether or not the given DN is below a base DN
         if self.enforce_suffix and value and not value.lower().endswith(
                 self.enforce_suffix.lower()):
             raise MKUserError(varprefix, _('Does not ends with "%s".') % self.enforce_suffix)
-        self._custom_validate(value, varprefix)
 
 
 class Password(TextAscii):
@@ -4119,7 +4098,7 @@ class FileUpload(ValueSpec):
             return None
         return ''
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not value:
             raise MKUserError(varprefix, _('Please select a file.'))
 
@@ -4142,8 +4121,6 @@ class FileUpload(ValueSpec):
                     varprefix,
                     _("Invalid file name extension. Allowed are: %s") %
                     ", ".join(self._allowed_extensions))
-
-        self._custom_validate(value, varprefix)
 
     def render_input(self, varprefix, value):
         html.upload_file(varprefix)
@@ -4175,7 +4152,7 @@ class ImageUpload(FileUpload):
         else:
             super(ImageUpload, self).render_input(varprefix, value)
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not value:
             raise MKUserError(varprefix, _('Please choose a PNG image.'))
 
@@ -4196,8 +4173,6 @@ class ImageUpload(FileUpload):
             max_w, max_h = self._max_size
             if w > max_w or h > max_h:
                 raise MKUserError(varprefix, _('Maximum image size: %dx%dpx') % (max_w, max_h))
-
-        self._custom_validate(value, varprefix)
 
 
 class UploadOrPasteTextFile(Alternative):
@@ -4335,7 +4310,7 @@ class Labels(ValueSpec):
 
         return labels
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         for k, v in value.iteritems():
             if not isinstance(k, six.text_type):
                 raise MKUserError(
@@ -4613,7 +4588,7 @@ class IconSelector(ValueSpec):
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select an icon."))
 
@@ -4700,7 +4675,7 @@ class Color(ValueSpec):
         if value is not None and not isinstance(value, str):
             raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _("You need to select a color."))
 
@@ -4798,7 +4773,7 @@ class CAorCAChain(UploadOrPasteTextFile):
             value = value[2]  # FileUpload sends (filename, mime-type, content)
         return value
 
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
         try:
             self.analyse_cert(value)
         except Exception as e:

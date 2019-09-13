@@ -1970,9 +1970,6 @@ class HostTagCondition(ValueSpec):
                     _("The list of host tags must only contain strings "
                       "but also contains %r") % x)
 
-    def validate_value(self, value, varprefix):
-        pass
-
     def _render_condition_editor(self, varprefix, tag_specs):
         """Render HTML input fields for editing a tag based condition"""
         if varprefix:

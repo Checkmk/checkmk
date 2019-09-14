@@ -283,75 +283,63 @@ def cleanup_piggyback_files(piggyback_max_cachefile_age):
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
-    # Cleanup piggyback data of hosts that are not sending piggyback data anymore
-    # a) hosts that have a file below piggyback_sources:
-    #    -> check age of the file and remove it once it reached piggyback_max_cachefile_age
-    # b) hosts that don't have a file below piggyback_sources (old version or removed by step "a)"):
-    #    -> remove all piggyback_raw_data files created by this source
+    # Source status files and/or piggybacked data files are cleaned up/deleted
+    # if and only if they have exceeded the maximum cache age configured in the
+    # global settings."""
 
-    # Cleanup empty backed host directories below "piggyback"
+    time_settings = {"max_cache_age": piggyback_max_cachefile_age}  # type: Dict[str, int]
 
-    Please note that there may be multiple parallel calls executing the
-    _get_piggyback_processed_file_infos(), store_piggyback_raw_data() or cleanup_piggyback_files()
-    functions. Therefor all these functions needs to deal with suddenly vanishing or
-    updated files/directories.
-    """
-    _cleanup_old_source_status_files(piggyback_max_cachefile_age)
-    _cleanup_old_piggybacked_files(piggyback_max_cachefile_age)
+    _cleanup_old_source_status_files(time_settings)
+    _cleanup_old_piggybacked_files(time_settings)
 
 
-def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
-    # type: (int) -> None
+def _cleanup_old_source_status_files(time_settings):
+    # type: (Dict[str, int]) -> None
+    """Remove source status files which exceed configured maximum cache age."""
+
+    piggyback_max_cachefile_age = time_settings["max_cache_age"]
+
     base_dir = str(cmk.utils.paths.piggyback_source_dir)
     for entry in os.listdir(base_dir):
         if entry[0] == ".":
             continue
 
-        piggyback_file_path = os.path.join(base_dir, entry)
+        source_file_path = os.path.join(base_dir, entry)
 
         try:
-            file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
+            file_age = cmk_base.utils.cachefile_age(source_file_path)
         except MKGeneralException:
             continue  # File might've been deleted. That's ok.
 
         if file_age > piggyback_max_cachefile_age:
-            console.verbose("Removing outdated piggyback source status file %s\n" %
-                            piggyback_file_path)
-            _remove_piggyback_file(piggyback_file_path)
+            console.verbose("Piggyback source status file '%s' is outdated. Remove it.\n" %
+                            source_file_path)
+            _remove_piggyback_file(source_file_path)
 
 
-def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
-    # type: (int) -> None
-    """Remove piggyback data that is not needed anymore
+def _cleanup_old_piggybacked_files(time_settings):
+    # type: (Dict[str, int]) -> None
+    """Remove piggybacked data files which exceed configured maximum cache age."""
 
-    The monitoring (_get_piggyback_processed_file_infos()) is already skipping these files,
-    but we need some cleanup mechanism.
-
-    - Remove all piggyback files created by sources without status file
-    - Remove all piggyback files that are older that the current status file of the source host
-    - Cleanup empty backed host directories below "piggyback"
-    """
-    keep_sources = set(os.listdir(str(cmk.utils.paths.piggyback_source_dir)))
-
-    base_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback")
-    for backed_host_name in os.listdir(base_dir):
-        if backed_host_name[0] == ".":
+    base_dir = str(cmk.utils.paths.piggyback_dir)
+    for piggybacked_hostname in os.listdir(base_dir):
+        if piggybacked_hostname[0] == ".":
             continue
 
         # Cleanup piggyback files from sources that we have no status file for
-        backed_host_dir_path = os.path.join(base_dir, backed_host_name)
-        for source_host_name in os.listdir(backed_host_dir_path):
-            if source_host_name[0] == ".":
+        backed_host_dir_path = os.path.join(base_dir, piggybacked_hostname)
+        for source_hostname in os.listdir(backed_host_dir_path):
+            if source_hostname[0] == ".":
                 continue
 
-            piggyback_file_path = os.path.join(backed_host_dir_path, source_host_name)
+            piggyback_file_path = os.path.join(backed_host_dir_path, source_hostname)
 
-            delete_reason = _shall_cleanup_piggyback_file(piggyback_max_cachefile_age,
-                                                          piggyback_file_path, source_host_name,
-                                                          keep_sources)
-            if delete_reason:
-                console.verbose("Removing outdated piggyback file (%s) %s\n" %
-                                (delete_reason, piggyback_file_path))
+            successfully_processed, reason =\
+                _get_piggyback_processed_file_info(source_hostname, piggyback_file_path, time_settings)
+
+            if not successfully_processed:
+                console.verbose("Piggyback file '%s' is outdated (%s). Skip processing.\n" %
+                                (piggyback_file_path, reason))
                 _remove_piggyback_file(piggyback_file_path)
 
         # Remove empty backed host directory
@@ -362,28 +350,3 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
                 pass
             else:
                 raise
-
-
-def _shall_cleanup_piggyback_file(piggyback_max_cachefile_age, piggyback_file_path,
-                                  source_host_name, keep_sources):
-    # type: (int, str, str, Set[str]) -> Optional[str]
-    if source_host_name not in keep_sources:
-        return "Source not sending piggyback data"
-
-    try:
-        file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
-    except MKGeneralException:
-        return None  # File might've been deleted. That's ok.
-
-    # Skip piggyback files that are outdated at all
-    if file_age > piggyback_max_cachefile_age:
-        return "Piggyback file too old: %s" % Age(file_age - piggyback_max_cachefile_age)
-
-    status_file_path = _piggyback_source_status_path(source_host_name)
-    if not os.path.exists(status_file_path):
-        return "Source not sending piggyback"
-
-    if _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
-        return "Not updated by source"
-
-    return None

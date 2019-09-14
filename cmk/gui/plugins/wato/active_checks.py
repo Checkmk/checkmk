@@ -60,7 +60,7 @@ from cmk.gui.plugins.wato import (
     rulespec_group_registry,
     RulespecGroup,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
     PluginCommandLine,
     IndividualOrStoredPassword,
 )
@@ -231,7 +231,7 @@ def _mail_receiving_params():
 
 
 @rulespec_registry.register
-class RulespecActiveChecksSsh(ABCHostValueRulespec):
+class RulespecActiveChecksSsh(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -281,7 +281,7 @@ class RulespecActiveChecksSsh(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksIcmp(ABCHostValueRulespec):
+class RulespecActiveChecksIcmp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -362,7 +362,7 @@ def transform_cert_days(cert_days):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksFtp(ABCHostValueRulespec):
+class RulespecActiveChecksFtp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -434,7 +434,7 @@ class RulespecActiveChecksFtp(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksSftp(ABCHostValueRulespec):
+class RulespecActiveChecksSftp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -519,7 +519,7 @@ class RulespecActiveChecksSftp(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksDns(ABCHostValueRulespec):
+class RulespecActiveChecksDns(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -606,7 +606,7 @@ class RulespecActiveChecksDns(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksSql(ABCHostValueRulespec):
+class RulespecActiveChecksSql(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -751,7 +751,7 @@ class RulespecActiveChecksSql(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksTcp(ABCHostValueRulespec):
+class RulespecActiveChecksTcp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -896,7 +896,7 @@ class RulespecActiveChecksTcp(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksUniserv(ABCHostValueRulespec):
+class RulespecActiveChecksUniserv(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -959,7 +959,7 @@ def _ip_address_family_element():
 
 
 @rulespec_registry.register
-class RulespecActiveChecksHttp(ABCHostValueRulespec):
+class RulespecActiveChecksHttp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1339,7 +1339,7 @@ class RulespecActiveChecksHttp(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksLdap(ABCHostValueRulespec):
+class RulespecActiveChecksLdap(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1461,7 +1461,7 @@ class RulespecActiveChecksLdap(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksSmtp(ABCHostValueRulespec):
+class RulespecActiveChecksSmtp(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1619,7 +1619,7 @@ class RulespecActiveChecksSmtp(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksDiskSmb(ABCHostValueRulespec):
+class RulespecActiveChecksDiskSmb(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1694,7 +1694,7 @@ class RulespecActiveChecksDiskSmb(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecCustomChecks(ABCHostValueRulespec):
+class RulespecCustomChecks(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1789,7 +1789,7 @@ class RulespecCustomChecks(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksBiAggr(ABCHostValueRulespec):
+class RulespecActiveChecksBiAggr(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -1918,7 +1918,7 @@ class RulespecActiveChecksBiAggr(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksFormSubmit(ABCHostValueRulespec):
+class RulespecActiveChecksFormSubmit(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2024,7 +2024,7 @@ class RulespecActiveChecksFormSubmit(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksNotifyCount(ABCHostValueRulespec):
+class RulespecActiveChecksNotifyCount(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2072,7 +2072,7 @@ class RulespecActiveChecksNotifyCount(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksTraceroute(ABCHostValueRulespec):
+class RulespecActiveChecksTraceroute(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2135,7 +2135,7 @@ class RulespecActiveChecksTraceroute(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksMailLoop(ABCHostValueRulespec):
+class RulespecActiveChecksMailLoop(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2240,7 +2240,7 @@ class RulespecActiveChecksMailLoop(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksMail(ABCHostValueRulespec):
+class RulespecActiveChecksMail(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2427,7 +2427,7 @@ class RulespecActiveChecksMail(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksMailboxes(ABCHostValueRulespec):
+class RulespecActiveChecksMailboxes(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2478,7 +2478,7 @@ class RulespecActiveChecksMailboxes(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksBySsh(ABCHostValueRulespec):
+class RulespecActiveChecksBySsh(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks
@@ -2564,7 +2564,7 @@ class RulespecActiveChecksBySsh(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksElasticsearch(ABCHostValueRulespec):
+class RulespecActiveChecksElasticsearch(HostRulespec):
     @property
     def group(self):
         return RulespecGroupActiveChecks

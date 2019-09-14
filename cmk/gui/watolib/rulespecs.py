@@ -573,7 +573,7 @@ class ABCBinaryRulespec(Rulespec):
         raise NotImplementedError()
 
 
-class ABCBinaryHostRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCBinaryRulespec)):
+class BinaryHostRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCBinaryRulespec)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -582,8 +582,7 @@ class ABCBinaryHostRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABC
     pass
 
 
-class ABCBinaryServiceRulespec(
-        six.with_metaclass(abc.ABCMeta, ABCServiceRulespec, ABCBinaryRulespec)):
+class BinaryServiceRulespec(six.with_metaclass(abc.ABCMeta, ABCServiceRulespec, ABCBinaryRulespec)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
@@ -615,7 +614,7 @@ class ABCValueRulespec(Rulespec):
         return self.valuespec.help()
 
 
-class ABCHostValueRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCValueRulespec)):
+class HostRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCValueRulespec)):
     """Base class for all rulespecs managing host rule sets with values"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -626,8 +625,7 @@ class ABCHostValueRulespec(six.with_metaclass(abc.ABCMeta, ABCHostRulespec, ABCV
     pass
 
 
-class ABCServiceValueRulespec(six.with_metaclass(abc.ABCMeta, ABCServiceRulespec,
-                                                 ABCValueRulespec)):
+class ServiceRulespec(six.with_metaclass(abc.ABCMeta, ABCServiceRulespec, ABCValueRulespec)):
     """Base class for all rulespecs managing service rule sets with values"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -638,7 +636,7 @@ class ABCServiceValueRulespec(six.with_metaclass(abc.ABCMeta, ABCServiceRulespec
     pass
 
 
-class CheckParameterRulespecWithItem(ABCServiceValueRulespec):
+class CheckParameterRulespecWithItem(ServiceRulespec):
     """Base class for all rulespecs managing parameters for check groups with item
 
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
@@ -692,7 +690,7 @@ class CheckParameterRulespecWithItem(ABCServiceValueRulespec):
         raise NotImplementedError()
 
 
-class CheckParameterRulespecWithoutItem(ABCHostValueRulespec):
+class CheckParameterRulespecWithoutItem(HostRulespec):
     """Base class for all rulespecs managing parameters for check groups without item
 
     These have to be named checkgroup_parameters:<name-of-checkgroup>. These
@@ -726,7 +724,7 @@ class CheckParameterRulespecWithoutItem(ABCHostValueRulespec):
         raise NotImplementedError()
 
 
-class ManualCheckParameterRulespec(ABCHostValueRulespec):
+class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
     These have to be named static_checks:<name-of-checkgroup>"""
@@ -820,9 +818,9 @@ def register_rule(
     elif varname.startswith("checkgroup_parameters:"):
         base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem
     elif valuespec is None:
-        base_class = ABCBinaryServiceRulespec if itemtype is not None else ABCBinaryHostRulespec
+        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
     else:
-        base_class = ABCServiceValueRulespec if itemtype is not None else ABCHostValueRulespec
+        base_class = ServiceRulespec if itemtype is not None else HostRulespec
 
     if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
         class_attrs["check_group_name"] = varname.split(":", 1)[1]

@@ -42,12 +42,12 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecInventorySolarisServicesRules(ABCHostValueRulespec):
+class RulespecInventorySolarisServicesRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

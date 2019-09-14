@@ -50,8 +50,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
     rulespec_registry,
-    ABCHostValueRulespec,
-    ABCBinaryHostRulespec,
+    HostRulespec,
+    BinaryHostRulespec,
     CheckParameterRulespecWithItem,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
@@ -114,7 +114,7 @@ def _transform_discovery_if_rules(params):
 
 
 @rulespec_registry.register
-class RulespecInventoryIfRules(ABCHostValueRulespec):
+class RulespecInventoryIfRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery
@@ -288,7 +288,7 @@ vs_elements_if_groups_group = [
 
 
 @rulespec_registry.register
-class RulespecIfGroups(ABCHostValueRulespec):
+class RulespecIfGroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersNetworking
@@ -342,7 +342,7 @@ class RulespecIfGroups(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecIfDisableIf64Hosts(ABCBinaryHostRulespec):
+class RulespecIfDisableIf64Hosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersNetworking

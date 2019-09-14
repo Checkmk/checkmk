@@ -202,7 +202,7 @@ class ValueSpec(object):
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
     def __init__(self, value, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(FixedValue, self).__init__(**kwargs)
         self._value = value
         self._totext = kwargs.get("totext")
 
@@ -231,7 +231,7 @@ class FixedValue(ValueSpec):
 class Age(ValueSpec):
     """Time in seconds"""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Age, self).__init__(**kwargs)
         self._label = kwargs.get("label")
         self._minvalue = kwargs.get("minvalue")
         self._display = kwargs.get("display", ["days", "hours", "minutes", "seconds"])
@@ -307,7 +307,7 @@ class Age(ValueSpec):
 class Integer(ValueSpec):
     """Editor for a single integer"""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Integer, self).__init__(**kwargs)
         self._size = kwargs.get("size", 5)
         # TODO: inconsistency with default_value. All should be named with underscore
         self._minvalue = kwargs.get("minvalue")
@@ -391,7 +391,7 @@ class Integer(ValueSpec):
 class Filesize(Integer):
     """Filesize in Byte, KByte, MByte, Gigabyte, Terabyte"""
     def __init__(self, **kwargs):
-        Integer.__init__(self, **kwargs)
+        super(Filesize, self).__init__(**kwargs)
         self._names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
 
     def get_exponent(self, value):
@@ -522,9 +522,6 @@ class TextAscii(ValueSpec):
 
 
 class TextUnicode(TextAscii):
-    def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
-
     def from_html_vars(self, varprefix):
         return html.get_unicode_input(varprefix, "").strip()
 
@@ -536,27 +533,30 @@ class TextUnicode(TextAscii):
                 _type_name(value))
 
 
+# TODO: Change to factory
 class ID(TextAscii):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        super(ID, self).__init__(**kwargs)
         self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
         self._regex_error = _("An identifier must only consist of letters, digits, dash and "
                               "underscore and it must start with a letter or underscore.")
 
 
+# TODO: Change to factory
 class UnicodeID(TextUnicode):
     """Same as the ID class, but allowing unicode objects"""
     def __init__(self, **kwargs):
-        TextUnicode.__init__(self, **kwargs)
+        super(UnicodeID, self).__init__(**kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
         self._regex_error = _("An identifier must only consist of letters, digits, dash and "
                               "underscore and it must start with a letter or underscore.")
 
 
+# TODO: Change to factory
 class UserID(TextUnicode):
     def __init__(self, **kwargs):
-        TextUnicode.__init__(self, **kwargs)
+        super(UserID, self).__init__(**kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE)
         self._regex_error = _("An identifier must only consist of letters, digits, dash, dot, "
                               "at and underscore. But it must start with a letter or underscore.")
@@ -571,7 +571,7 @@ class RegExp(TextAscii):
         self._mode = mode
         self._case_sensitive = kwargs.get("case_sensitive", True)
 
-        TextAscii.__init__(self, attrencode=True, cssclass=self._css_classes(), **kwargs)
+        super(RegExp, self).__init__(attrencode=True, cssclass=self._css_classes(), **kwargs)
 
         self._mingroups = kwargs.get("mingroups", 0)
         self._maxgroups = kwargs.get("maxgroups")
@@ -579,7 +579,7 @@ class RegExp(TextAscii):
     def help(self):
         help_text = []
 
-        default_help_text = TextAscii.help(self)
+        default_help_text = super(RegExp, self).help()
         if default_help_text is not None:
             help_text.append(default_help_text + "<br><br>")
 
@@ -625,7 +625,7 @@ class RegExp(TextAscii):
         return " ".join(classes)
 
     def _validate_value(self, value, varprefix):
-        TextAscii.validate_value(self, value, varprefix)
+        super(RegExp, self)._validate_value(value, varprefix)
 
         # Check if the string is a valid regex
         try:
@@ -658,7 +658,7 @@ class RegExpUnicode(TextUnicode, RegExp):
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         kwargs.setdefault("size", 40)
-        TextAscii.__init__(self, **kwargs)
+        super(EmailAddress, self).__init__(**kwargs)
         # The "new" top level domains are very unlimited in length. Theoretically they can be
         # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
         # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
@@ -667,7 +667,7 @@ class EmailAddress(TextAscii):
 
     def value_to_text(self, value):
         if not value:
-            return TextAscii.value_to_text(self, value)
+            return super(EmailAddress, self).value_to_text(value)
         elif self._make_clickable:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             return "%s" % html.render_a(HTML(value), href="mailto:%s" % value)
@@ -813,7 +813,7 @@ class PageVsAutocomplete(Page):
 class Hostname(TextAscii):
     """A host name with or without domain part. Also allow IP addresses"""
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        super(Hostname, self).__init__(**kwargs)
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
         self._regex_error = _("Please enter a valid hostname or IPv4 address. "
                               "Only letters, digits, dash, underscore and dot are allowed.")
@@ -824,7 +824,7 @@ class Hostname(TextAscii):
 class HostAddress(TextAscii):
     """Use this for all host / ip address input fields!"""
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        super(HostAddress, self).__init__(**kwargs)
         self._allow_host_name = kwargs.get("allow_host_name", True)
         self._allow_ipv4_address = kwargs.get("allow_ipv4_address", True)
         self._allow_ipv6_address = kwargs.get("allow_ipv6_address", True)
@@ -901,7 +901,7 @@ class HostAddress(TextAscii):
 
 class AbsoluteDirname(TextAscii):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        super(AbsoluteDirname, self).__init__(**kwargs)
         self._regex = re.compile('^(/|(/[^/]+)+)$')
         self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
 
@@ -977,7 +977,7 @@ def CheckMKVersion(**args):
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
-        TextUnicode.__init__(self, **kwargs)
+        super(TextAreaUnicode, self).__init__(**kwargs)
         self._cols = kwargs.get("cols", 60)
         self._try_max_width = kwargs.get("try_max_width", False)  # If set, uses calc(100%-10px)
         self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
@@ -1027,7 +1027,7 @@ class TextAreaUnicode(TextUnicode):
 class Filename(TextAscii):
     """A variant of TextAscii() that validates a path to a filename that lies in an existing directory."""
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        super(Filename, self).__init__(**kwargs)
         if "size" not in kwargs:
             self._size = 60
         if "default" in kwargs:
@@ -1073,7 +1073,7 @@ class Filename(TextAscii):
 
 class ListOfStrings(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(ListOfStrings, self).__init__(**kwargs)
         if "valuespec" in kwargs:
             self._valuespec = kwargs.get("valuespec")
         elif "size" in kwargs:
@@ -1091,7 +1091,7 @@ class ListOfStrings(ValueSpec):
 
     def help(self):
         help_texts = [
-            ValueSpec.help(self),
+            super(ListOfStrings, self).help(),
             self._valuespec.help(),
         ]
 
@@ -1201,7 +1201,7 @@ class ListOfIntegers(ListOfStrings):
         int_args["default_value"] = 34
         valuespec = Integer(**int_args)
         kwargs["valuespec"] = valuespec
-        ListOfStrings.__init__(self, **kwargs)
+        super(ListOfIntegers, self).__init__(**kwargs)
 
 
 class ListOf(ValueSpec):
@@ -1211,7 +1211,7 @@ class ListOf(ValueSpec):
         FLOATING = "floating"
 
     def __init__(self, valuespec, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(ListOf, self).__init__(**kwargs)
         self._valuespec = valuespec
         self._magic = kwargs.get("magic", "@!@")
         self._rowlabel = kwargs.get("row_label")
@@ -1581,13 +1581,10 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
 class Float(Integer):
     """Same as Integer, but for floating point values"""
     def __init__(self, **kwargs):
-        Integer.__init__(self, **kwargs)
+        super(Float, self).__init__(**kwargs)
         self._decimal_separator = kwargs.get("decimal_separator", ".")
         self._display_format = kwargs.get("display_format", "%.2f")
         self._allow_int = kwargs.get("allow_int", False)
-
-    def render_input(self, varprefix, value):
-        Integer.render_input(self, varprefix, value)
 
     def _render_value(self, value):
         return self._display_format % utils.savefloat(value)
@@ -1596,7 +1593,7 @@ class Float(Integer):
         return float(Integer.canonical_value(self))
 
     def value_to_text(self, value):
-        return Integer.value_to_text(self, value).replace(".", self._decimal_separator)
+        return super(Float, self).value_to_text(value).replace(".", self._decimal_separator)
 
     def from_html_vars(self, varprefix):
         try:
@@ -1622,7 +1619,7 @@ class Float(Integer):
 
 class Percentage(Float):
     def __init__(self, **kwargs):
-        Float.__init__(self, **kwargs)
+        super(Percentage, self).__init__(**kwargs)
         if "minvalue" not in kwargs:
             self._minvalue = 0.0
         if "maxvalue" not in kwargs:
@@ -1650,7 +1647,7 @@ class Percentage(Float):
 
 class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Checkbox, self).__init__(**kwargs)
         self._label = kwargs.get("label")
         self._true_label = kwargs.get("true_label", _("on"))
         self._false_label = kwargs.get("false_label", _("off"))
@@ -1835,6 +1832,7 @@ class DropdownChoice(ValueSpec):
         return True
 
 
+# TODO: Change to factory
 # TODO: Rename to ServiceState() or something like this
 class MonitoringState(DropdownChoice):
     """Special conveniance variant for monitoring states"""
@@ -1846,9 +1844,10 @@ class MonitoringState(DropdownChoice):
             (3, _("UNKNOWN")),
         ]
         kwargs.setdefault("default_value", 0)
-        DropdownChoice.__init__(self, choices=choices, **kwargs)
+        super(MonitoringState, self).__init__(choices=choices, **kwargs)
 
 
+# TODO: Change to factory
 class HostState(DropdownChoice):
     def __init__(self, **kwargs):
         choices = [
@@ -1857,7 +1856,7 @@ class HostState(DropdownChoice):
             (2, _("UNREACHABLE")),
         ]
         kwargs.setdefault("default_value", 0)
-        DropdownChoice.__init__(self, choices=choices, **kwargs)
+        super(HostState, self).__init__(choices=choices, **kwargs)
 
 
 class CascadingDropdown(ValueSpec):
@@ -1879,7 +1878,7 @@ class CascadingDropdown(ValueSpec):
         foldable = "foldable"
 
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(CascadingDropdown, self).__init__(**kwargs)
 
         if isinstance(kwargs["choices"], list):
             self._choices = self.normalize_choices(kwargs["choices"])
@@ -2125,7 +2124,7 @@ class RadioChoice(DropdownChoice):
     """The same logic as the dropdown choice, but rendered as a group of radio buttons.
     columns is None or unset -> separate with '&nbsp;'"""
     def __init__(self, **kwargs):
-        DropdownChoice.__init__(self, **kwargs)
+        super(RadioChoice, self).__init__(**kwargs)
         self._columns = kwargs.get("columns")
         # Allow orientation as corner cases of columns
         orientation = kwargs.get("orientation")
@@ -2188,7 +2187,7 @@ class ListChoice(ValueSpec):
                 for (type_id, type_name) in sorted(choices.items())]
 
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(ListChoice, self).__init__(**kwargs)
         self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
         self._allow_empty = kwargs.get("allow_empty", True)
@@ -2432,7 +2431,7 @@ class OptionalDropdownChoice(DropdownChoice):
     opens a further value spec for entering an alternative
     Value."""
     def __init__(self, **kwargs):
-        DropdownChoice.__init__(self, **kwargs)
+        super(OptionalDropdownChoice, self).__init__(**kwargs)
         self._explicit = kwargs["explicit"]
         self._otherlabel = kwargs.get("otherlabel", _("Other"))
 
@@ -2510,10 +2509,11 @@ def today():
     return round_date(time.time())
 
 
+# TODO: Change to factory
 class Weekday(DropdownChoice):
     def __init__(self, **kwargs):
         kwargs['choices'] = sorted(defines.weekdays().items())
-        DropdownChoice.__init__(self, **kwargs)
+        super(Weekday, self).__init__(**kwargs)
 
 
 class RelativeDate(OptionalDropdownChoice):
@@ -2542,7 +2542,7 @@ class RelativeDate(OptionalDropdownChoice):
         kwargs['explicit'] = Integer()
         kwargs['otherlabel'] = _("in ... days")
 
-        OptionalDropdownChoice.__init__(self, **kwargs)
+        super(RelativeDate, self).__init__(**kwargs)
 
         if "default_days" in kwargs:
             self._default_value = kwargs["default_days"] * seconds_per_day + today()
@@ -2554,7 +2554,7 @@ class RelativeDate(OptionalDropdownChoice):
 
     def render_input(self, varprefix, value):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
-        OptionalDropdownChoice.render_input(self, varprefix, reldays)
+        super(RelativeDate, self).render_input(varprefix, reldays)
 
     def value_to_text(self, value):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
@@ -2569,7 +2569,7 @@ class RelativeDate(OptionalDropdownChoice):
         return _("in %d days") % reldays
 
     def from_html_vars(self, varprefix):
-        reldays = OptionalDropdownChoice.from_html_vars(self, varprefix)
+        reldays = super(RelativeDate, self).from_html_vars(varprefix)
         return today() + reldays * seconds_per_day
 
     def validate_datatype(self, value, varprefix):
@@ -2584,7 +2584,7 @@ class AbsoluteDate(ValueSpec):
     zero (or will be ignored if non-zero), as long as include_time is not set
     to True"""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(AbsoluteDate, self).__init__(**kwargs)
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
         self._include_time = kwargs.get("include_time", False)
@@ -2737,7 +2737,7 @@ class Timeofday(ValueSpec):
     the user does not enter a time the vs will return None.
     """
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Timeofday, self).__init__(**kwargs)
         self._allow_24_00 = kwargs.get("allow_24_00", False)
         self._allow_empty = kwargs.get("allow_empty", True)
 
@@ -2809,7 +2809,7 @@ class Timeofday(ValueSpec):
 class TimeofdayRange(ValueSpec):
     """Range like 00:15 - 18:30"""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(TimeofdayRange, self).__init__(**kwargs)
         self._allow_empty = kwargs.get("allow_empty", True)
         self._bounds = (
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
@@ -2937,7 +2937,7 @@ class Timerange(CascadingDropdown):
         self._include_time = kwargs.get("include_time", False)
         self._fixed_choices = kwargs.get("choices", [])
         kwargs['choices'] = self._prepare_choices
-        CascadingDropdown.__init__(self, **kwargs)
+        super(Timerange, self).__init__(**kwargs)
 
     def _prepare_choices(self):
         choices = list(self._fixed_choices)
@@ -3114,7 +3114,7 @@ class Optional(ValueSpec):
     The user has a checkbox for activating the option. Example:
     debug_log: it is either None or set to a filename."""
     def __init__(self, valuespec, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Optional, self).__init__(**kwargs)
         self._valuespec = valuespec
         self._label = kwargs.get("label")
         self._negate = kwargs.get("negate", False)
@@ -3201,7 +3201,7 @@ class OptionalEdit(Optional):
 
     When the checkbox is being checked, the text hides and the encapsulated valuespec is being shown."""
     def __init__(self, valuespec, **kwargs):
-        Optional.__init__(self, valuespec, **kwargs)
+        super(OptionalEdit, self).__init__(valuespec, **kwargs)
         self._label = ''
 
     def render_input(self, varprefix, value):
@@ -3408,7 +3408,7 @@ class Alternative(ValueSpec):
 class Tuple(ValueSpec):
     """Edit a n-tuple (with fixed size) of values"""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Tuple, self).__init__(**kwargs)
         self._elements = kwargs["elements"]
         self._show_titles = kwargs.get("show_titles", True)
         self._orientation = kwargs.get("orientation", "vertical")  # also: horizontal, float
@@ -3821,7 +3821,7 @@ class ElementSelection(ValueSpec):
     a function get_elements() that returns a dictionary
     from element keys to element titles."""
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(ElementSelection, self).__init__(**kwargs)
         self._loaded_at = None
         self._label = kwargs.get("label")
         self._empty_text = kwargs.get("empty_text",
@@ -3880,9 +3880,6 @@ class ElementSelection(ValueSpec):
 
 
 class AutoTimestamp(FixedValue):
-    def __init__(self, **kwargs):
-        FixedValue.__init__(self, **kwargs)
-
     def canonical_value(self):
         return time.time()
 
@@ -3900,7 +3897,7 @@ class AutoTimestamp(FixedValue):
 class Foldable(ValueSpec):
     """Fully transparant VS encapsulating a vs in a foldable container"""
     def __init__(self, valuespec, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Foldable, self).__init__(**kwargs)
         self._valuespec = valuespec
         self._open = kwargs.get("open", False)
         self._title_function = kwargs.get("title_function", None)
@@ -3954,7 +3951,7 @@ class Transform(ValueSpec):
     back:  function that converts a value created by the encapsulated
            vs back to the outer representation"""
     def __init__(self, valuespec, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(Transform, self).__init__(**kwargs)
         self._valuespec = valuespec
         self._back = kwargs.get("back")
         self._forth = kwargs.get("forth")
@@ -4011,7 +4008,7 @@ class Transform(ValueSpec):
 
 class LDAPDistinguishedName(TextUnicode):
     def __init__(self, **kwargs):
-        TextUnicode.__init__(self, **kwargs)
+        super(LDAPDistinguishedName, self).__init__(**kwargs)
         self.enforce_suffix = kwargs.get('enforce_suffix')
 
     def _validate_value(self, value, varprefix):
@@ -4039,7 +4036,7 @@ class Password(TextAscii):
             else:
                 kwargs["help"] = plain_help
 
-        TextAscii.__init__(self, attrencode=True, **kwargs)
+        super(Password, self).__init__(attrencode=True, **kwargs)
 
     def render_input(self, varprefix, value):
         if value is None:
@@ -4076,7 +4073,7 @@ class PasswordSpec(Password):
         super(PasswordSpec, self).__init__(hidden=hidden, **kwargs)
 
     def render_input(self, varprefix, value):
-        TextAscii.render_input(self, varprefix, value)
+        super(PasswordSpec, self).render_input(varprefix, value)
         if not value:
             html.icon_button("#",
                              _(u"Randomize password"),
@@ -4093,7 +4090,7 @@ class PasswordSpec(Password):
 
 class FileUpload(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(FileUpload, self).__init__(**kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
         self._allowed_extensions = kwargs.get('allowed_extensions')
         self._allow_empty_content = kwargs.get('allow_empty_content', True)
@@ -4138,7 +4135,7 @@ class ImageUpload(FileUpload):
     def __init__(self, max_size=None, show_current_image=False, **kwargs):
         self._max_size = max_size
         self._show_current_image = show_current_image
-        FileUpload.__init__(self, **kwargs)
+        super(ImageUpload, self).__init__(**kwargs)
 
     def render_input(self, varprefix, value):
         if self._show_current_image and value:
@@ -4198,10 +4195,10 @@ class UploadOrPasteTextFile(Alternative):
             kwargs["match"] = lambda *args: 1
 
         kwargs.setdefault("style", "dropdown")
-        Alternative.__init__(self, **kwargs)
+        super(UploadOrPasteTextFile, self).__init__(**kwargs)
 
     def from_html_vars(self, varprefix):
-        value = Alternative.from_html_vars(self, varprefix)
+        value = super(UploadOrPasteTextFile, self).from_html_vars(varprefix)
         # Convert textarea value to format of upload field
         if not isinstance(value, tuple):
             value = (None, None, value)
@@ -4398,7 +4395,7 @@ def _encode_labels_for_tagify(labels):
 
 class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        super(IconSelector, self).__init__(**kwargs)
         self._allow_empty = kwargs.get('allow_empty', True)
         self._empty_img = kwargs.get('emtpy_img', 'empty')
 
@@ -4632,7 +4629,7 @@ class Color(ValueSpec):
     def __init__(self, **kwargs):
         kwargs["regex"] = "#[0-9]{3,6}"
         kwargs["regex_error"] = _("The color needs to be given in hex format.")
-        ValueSpec.__init__(self, **kwargs)
+        super(Color, self).__init__(**kwargs)
         self._on_change = kwargs.get("on_change")
         self._allow_empty = kwargs.get("allow_empty", True)
 
@@ -4702,9 +4699,6 @@ def GraphColor(title, default_value):
 
 
 class SSHKeyPair(ValueSpec):
-    def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-
     def render_input(self, varprefix, value):
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
@@ -4754,8 +4748,7 @@ class SchedulePeriod(CascadingDropdown):
         else:
             from_end_choice = []
 
-        CascadingDropdown.__init__(
-            self,
+        super(SchedulePeriod, self).__init__(
             title=_("Period"),
             orientation="horizontal",
             choices=[
@@ -4770,7 +4763,7 @@ class CAorCAChain(UploadOrPasteTextFile):
     def __init__(self, **args):
         args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
         args.setdefault("file_title", _("CRT/PEM File"))
-        UploadOrPasteTextFile.__init__(self, **args)
+        super(CAorCAChain, self).__init__(**args)
 
     def from_html_vars(self, varprefix):
         value = Alternative.from_html_vars(self, varprefix)

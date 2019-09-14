@@ -98,7 +98,16 @@ factory_settings["hp_msa_psu_default_levels"] = {
 
 
 def inventory_hp_msa_psu(parsed):
-    return [(key, {}) for key in parsed]
+    """detect if PSU info is invalid
+
+    Some fields where deprecated for HP MSA 1050/2050.
+    If the PSU is freezing and has no voltage we assume
+    that means data is not valid
+    """
+    indicators = ('dc12v', 'dc5v', 'dc33v', 'dc12i', 'dc5i', 'dctemp')
+    for item, data in parsed.iteritems():
+        if any(data.get(i) != '0' for i in indicators):
+            yield item, {}
 
 
 def check_hp_msa_psu(item, params, parsed):
@@ -147,18 +156,13 @@ factory_settings["hp_msa_psu_temp_default_levels"] = {
 }
 
 
-def inventory_hp_msa_psu_temp(parsed):
-    for key in parsed.keys():
-        yield key, {}
-
-
 def check_hp_msa_psu_temp(item, params, parsed):
     if item in parsed:
         return check_temperature(float(parsed[item]["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
 check_info['hp_msa_psu.temp'] = {
-    'inventory_function': inventory_hp_msa_psu_temp,
+    'inventory_function': inventory_hp_msa_psu,
     'check_function': check_hp_msa_psu_temp,
     'service_description': 'Temperature Power Supply %s',
     'has_perfdata': True,

@@ -1561,7 +1561,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                          title=_('Minimum number of items to create a group'),
                          help=_('When less than these items are found for a group, the services '
                                 'are not shown grouped together.'),
-                         min_value=2,
+                         minvalue=2,
                          default_value=2,
                      )),
                 ],

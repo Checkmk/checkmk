@@ -534,7 +534,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
             return None
 
         if isinstance(item_spec, (DropdownChoice, OptionalDropdownChoice)):
-            return item_spec._choices
+            return item_spec.choices()
 
         return None
 

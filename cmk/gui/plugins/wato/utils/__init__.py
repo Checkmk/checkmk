@@ -529,7 +529,7 @@ def _translation_elements(what):
 # TODO: Refactor this and all other childs of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
-    def __init__(self, what, choices, **kwargs):
+    def __init__(self, what, choices, no_selection=None, **kwargs):
         kwargs.setdefault(
             'empty_text',
             _('You have not defined any %s group yet. Please '
@@ -537,8 +537,7 @@ class _GroupSelection(ElementSelection):
         super(_GroupSelection, self).__init__(**kwargs)
         self._what = what
         self._choices = choices
-        # Allow to have "none" entry with the following title
-        self._no_selection = kwargs.get("no_selection")
+        self._no_selection = no_selection
 
     def get_elements(self):
         elements = self._choices()

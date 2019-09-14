@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 """Module to hold shared code for check parameter module internals"""
 
+from typing import List, Tuple as TypingTuple  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -159,7 +161,7 @@ fs_levels_elements_hack = [
         totext="",
         title="",
     )),
-]
+]  # type: List[TypingTuple[str, ValueSpec]]
 
 fs_reserved_elements = [
     ("show_reserved",
@@ -187,7 +189,7 @@ fs_reserved_elements = [
              (False, _("Include reserved space")),
              (True, _("Exclude reserved space")),
          ])),
-]
+]  # type: List[TypingTuple[str, ValueSpec]]
 
 fs_inodes_elements = [
     ("inodes_levels",
@@ -314,7 +316,12 @@ size_trend_elements = [
               label=_("Enable generation of performance data from trends"))),
 ]
 
-filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements + fs_inodes_elements + fs_magic_elements + size_trend_elements
+filesystem_elements = fs_levels_elements \
+                    + fs_levels_elements_hack \
+                    + fs_reserved_elements \
+                    + fs_inodes_elements \
+                    + fs_magic_elements \
+                    + size_trend_elements # type: List[TypingTuple[str, ValueSpec]]
 
 
 def vs_filesystem(extra_elements=None):

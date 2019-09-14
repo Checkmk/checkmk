@@ -3181,62 +3181,6 @@ class Optional(ValueSpec):
             self._valuespec.validate_value(value, varprefix + "_value")
 
 
-class OptionalEdit(Optional):
-    """Makes a configuration value optional, while displaying the current value
-    as text with a checkbox in front of it.
-
-    When the checkbox is being checked, the text hides and the encapsulated valuespec is being shown."""
-    def __init__(self, valuespec, **kwargs):
-        super(OptionalEdit, self).__init__(valuespec, **kwargs)
-        self._label = ''
-
-    def render_input(self, varprefix, value):
-        div_id = "option_" + varprefix
-        checked = html.get_checkbox(varprefix + "_use")
-        if checked is None:
-            checked = self._negate
-
-        html.open_span()
-
-        if self._label is not None:
-            label = self._label
-        elif self.title():
-            label = self.title()
-        elif self._negate:
-            label = _(" Ignore this option")
-        else:
-            label = _(" Activate this option")
-
-        html.checkbox(
-            "%s_use" % varprefix,
-            checked,
-            label=label,
-            onclick=
-            "cmk.valuespecs.toggle_option(this, %r, %r);cmk.valuespecs.toggle_option(this, %r, %r)"
-            % (div_id + '_on', 1 if self._negate else 0, div_id + '_off', 0 if self._negate else 1))
-
-        html.nbsp()
-        html.close_span()
-
-        if value is None:
-            value = self._valuespec.default_value()
-
-        html.open_span(id_="%s_off" % div_id,
-                       style="display:none;" if checked != self._negate else None)
-        html.write(value)
-        html.close_span()
-
-        html.open_span(id_="%s_on" % div_id,
-                       style="display:none;" if checked == self._negate else None)
-        if self._valuespec.title():
-            html.write(self._valuespec.title() + " ")
-        self._valuespec.render_input(varprefix + "_value", value)
-        html.close_span()
-
-    def from_html_vars(self, varprefix):
-        return self._valuespec.from_html_vars(varprefix + "_value")
-
-
 class Alternative(ValueSpec):
     """Handle case when there are several possible allowed formats
     for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)

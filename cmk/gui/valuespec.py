@@ -54,7 +54,10 @@ import types
 import urlparse
 from UserDict import DictMixin
 from StringIO import StringIO
-from typing import Type, Union, Callable, Text, Any  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Dict, Pattern, Type, Union, Callable, Text, Any, List, Optional as TypingOptional, Tuple as
+    TypingTuple,
+)
 from PIL import Image  # type: ignore
 
 import six
@@ -91,13 +94,22 @@ _DEF_VALUE = object()
 
 class ValueSpec(object):
     """Abstract base class of all value declaration classes"""
-    def __init__(self, **kwargs):
+
+    # TODO: Remove **kwargs once all valuespecs have been changed
+    # TODO: Cleanup help argument redefined-builtin
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+            **kwargs):
         super(ValueSpec, self).__init__()
-        self._title = kwargs.get("title")
-        self._help = kwargs.get("help")
-        if "default_value" in kwargs:
-            self._default_value = kwargs.get("default_value")
-        self._validate = kwargs.get("validate")
+        self._title = title
+        self._help = help
+        if default_value is not _DEF_VALUE:
+            self._default_value = default_value
+        self._validate = validate
 
     def title(self):
         return self._title
@@ -204,10 +216,21 @@ class ValueSpec(object):
 
 class FixedValue(ValueSpec):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
-    def __init__(self, value, **kwargs):
-        super(FixedValue, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            value,  # type: Any
+            totext=None,  # type: Text
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(FixedValue, self).__init__(title=title,
+                                         help=help,
+                                         default_value=default_value,
+                                         validate=validate)
         self._value = value
-        self._totext = kwargs.get("totext")
+        self._totext = totext
 
     def canonical_value(self):
         return self._value
@@ -233,12 +256,26 @@ class FixedValue(ValueSpec):
 
 class Age(ValueSpec):
     """Time in seconds"""
-    def __init__(self, **kwargs):
-        super(Age, self).__init__(**kwargs)
-        self._label = kwargs.get("label")
-        self._minvalue = kwargs.get("minvalue")
-        self._maxvalue = kwargs.get("maxvalue")
-        self._display = kwargs.get("display", ["days", "hours", "minutes", "seconds"])
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            label=None,  # type: TypingOptional[Text]
+            minvalue=None,  # type: TypingOptional[int]
+            maxvalue=None,  # type: TypingOptional[Union[int, float]]
+            display=None,  # type: TypingOptional[List[str]]
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Age, self).__init__(title=title,
+                                  help=help,
+                                  default_value=default_value,
+                                  validate=validate)
+        self._label = label
+        self._minvalue = minvalue
+        self._maxvalue = maxvalue
+        self._display = display if display is not None else \
+            ["days", "hours", "minutes", "seconds"]
 
     def canonical_value(self):
         if self._minvalue:
@@ -314,21 +351,40 @@ class Age(ValueSpec):
 
 class Integer(ValueSpec):
     """Editor for a single integer"""
-    def __init__(self, **kwargs):
-        super(Integer, self).__init__(**kwargs)
-        self._size = kwargs.get("size", 5)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            size=None,  # type: TypingOptional[int]
+            minvalue=None,  # type: TypingOptional[Union[float, int]]
+            maxvalue=None,  # type: TypingOptional[Union[float, int]]
+            label=None,  # type: TypingOptional[Text]
+            unit="",  # type: Text
+            thousand_sep=None,  # type: TypingOptional[Text]
+            display_format="%d",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Integer, self).__init__(title=title,
+                                      help=help,
+                                      default_value=default_value,
+                                      validate=validate)
         # TODO: inconsistency with default_value. All should be named with underscore
-        self._minvalue = kwargs.get("minvalue")
-        self._maxvalue = kwargs.get("maxvalue")
-        self._label = kwargs.get("label")
-        self._unit = kwargs.get("unit", "")
-        self._thousand_sep = kwargs.get("thousand_sep")
-        self._display_format = kwargs.get("display_format", "%d")
-        self._align = kwargs.get("align", "left")
+        self._minvalue = minvalue
+        self._maxvalue = maxvalue
+        self._label = label
+        self._unit = unit
+        self._thousand_sep = thousand_sep
+        self._display_format = display_format
+        self._align = align
 
-        if "size" not in kwargs and "maxvalue" in kwargs and kwargs["maxvalue"] is not None:
-            self._size = 1 + int(math.log10(self._maxvalue)) + \
-               (3 if isinstance(self._maxvalue, float) else 0)
+        if size is None and maxvalue is not None:
+            self._size = 1 + int(math.log10(maxvalue)) + \
+               (3 if isinstance(maxvalue, float) else 0)
+        else:
+            self._size = size if size is not None else 5
 
     def canonical_value(self):
         if self._minvalue:
@@ -398,9 +454,7 @@ class Integer(ValueSpec):
 
 class Filesize(Integer):
     """Filesize in Byte, KByte, MByte, Gigabyte, Terabyte"""
-    def __init__(self, **kwargs):
-        super(Filesize, self).__init__(**kwargs)
-        self._names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
+    _names = ['Byte', 'KByte', 'MByte', 'GByte', 'TByte']
 
     def get_exponent(self, value):
         for exp, count in ((exp, 1024**exp) for exp in reversed(xrange(len(self._names)))):
@@ -430,28 +484,57 @@ class Filesize(Integer):
 
 class TextAscii(ValueSpec):
     """Editor for a line of text"""
-    def __init__(self, **kwargs):
-        super(TextAscii, self).__init__(**kwargs)
-        self._label = kwargs.get("label")
-        self._size = kwargs.get("size", 25)  # also possible: "max"
-        self._try_max_width = kwargs.get("try_max_width", False)  # If set, uses calc(100%-10px)
-        self._cssclass = kwargs.get("cssclass", "text")
-        self._strip = kwargs.get("strip", True)
-        self._attrencode = kwargs.get("attrencode", True)
-        self._allow_empty = kwargs.get("allow_empty", _("none"))
-        self._empty_text = kwargs.get("empty_text", "")
-        self._read_only = kwargs.get("read_only")
-        self._none_is_empty = kwargs.get("none_is_empty", False)
-        self._forbidden_chars = kwargs.get("forbidden_chars", "")
-        self._regex = kwargs.get("regex")
-        self._regex_error = kwargs.get("regex_error",
-                                       _("Your input does not match the required format."))
-        self._minlen = kwargs.get('minlen', None)
+
+    # TODO: Cleanup attrencode attribute
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            label=None,  # type: TypingOptional[Text]
+            size=25,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(TextAscii, self).__init__(title=title,
+                                        help=help,
+                                        default_value=default_value,
+                                        validate=validate)
+        self._label = label
+        self._size = size  # also possible: "max"
+        self._try_max_width = try_max_width  # If set, uses calc(100%-10px)
+        self._cssclass = cssclass
+        self._strip = strip
+        self._attrencode = attrencode
+        self._allow_empty = allow_empty
+        self._empty_text = empty_text
+        self._read_only = read_only
+        self._none_is_empty = none_is_empty
+        self._forbidden_chars = forbidden_chars
+        self._regex = regex
         if isinstance(self._regex, str):
             self._regex = re.compile(self._regex)
-        self._onkeyup = kwargs.get("onkeyup")
-        self._autocomplete = kwargs.get("autocomplete", True)
-        self._hidden = kwargs.get("hidden", False)
+        self._regex_error = regex_error if regex_error is not None else \
+            _("Your input does not match the required format.")
+        self._minlen = minlen
+        self._onkeyup = onkeyup
+        self._autocomplete = autocomplete
+        self._hidden = hidden
 
     def canonical_value(self):
         return ""
@@ -570,14 +653,64 @@ class RegExp(TextAscii):
     prefix = "prefix"
     complete = "complete"
 
-    def __init__(self, mode, **kwargs):
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            mode,  # type: str
+            case_sensitive=True,  # type: bool
+            mingroups=0,  # type: int
+            maxgroups=None,  # type: TypingOptional[int]
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=25,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # From ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(RegExp, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=self._css_classes(case_sensitive, mode),
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
         self._mode = mode
-        self._case_sensitive = kwargs.get("case_sensitive", True)
-
-        super(RegExp, self).__init__(attrencode=True, cssclass=self._css_classes(), **kwargs)
-
-        self._mingroups = kwargs.get("mingroups", 0)
-        self._maxgroups = kwargs.get("maxgroups")
+        self._case_sensitive = case_sensitive
+        self._mingroups = mingroups
+        self._maxgroups = maxgroups
 
     def help(self):
         help_text = []
@@ -614,16 +747,16 @@ class RegExp(TextAscii):
 
         return " ".join(help_text)
 
-    def _css_classes(self):
+    def _css_classes(self, case_sensitive, mode):
         classes = ["text", "regexp"]
 
-        if self._case_sensitive is True:
+        if case_sensitive is True:
             classes.append("case_sensitive")
-        elif self._case_sensitive is False:
+        elif case_sensitive is False:
             classes.append("case_insensitive")
 
-        if self._mode is not None:
-            classes.append(self._mode)
+        if mode is not None:
+            classes.append(mode)
 
         return " ".join(classes)
 
@@ -654,14 +787,59 @@ class RegExpUnicode(TextUnicode, RegExp):
 
 
 class EmailAddress(TextAscii):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("size", 40)
-        super(EmailAddress, self).__init__(**kwargs)
-        # The "new" top level domains are very unlimited in length. Theoretically they can be
-        # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
-        # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
-        self._regex = re.compile(r'^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I)
-        self._make_clickable = kwargs.get("make_clickable", False)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            make_clickable=False,  # type: bool
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=40,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # From ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(EmailAddress, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            # The "new" top level domains are very unlimited in length. Theoretically they can be
+            # up to 63 chars long. But currently the longest is 24 characters. Check this out with:
+            # wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
+            regex=re.compile(r'^[A-Z0-9._%&+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,24})$', re.I),
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+        self._make_clickable = make_clickable
 
     def value_to_text(self, value):
         if not value:
@@ -716,14 +894,60 @@ class IPv4Address(IPNetwork):
 
 
 class TextAsciiAutocomplete(TextAscii):
-    def __init__(self, completion_ident, completion_params, **kwargs):
-        kwargs["onkeyup"] = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            completion_ident,  # type: Text
+            completion_params,  # type: Dict[Text, Any]
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=40,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            hidden=False,  # type: bool
+            # From ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        onkeyup = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
                             (json.dumps(completion_ident),
                              json.dumps(completion_params),
-                             json.dumps(kwargs.get("onkeyup")),
-                             kwargs.get("onkeyup", ""))
-        kwargs["autocomplete"] = False
-        super(TextAsciiAutocomplete, self).__init__(**kwargs)
+                             json.dumps(onkeyup), onkeyup)
+        super(TextAsciiAutocomplete, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=False,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
     @classmethod
     def idents(cls):
@@ -816,11 +1040,61 @@ class Hostname(TextAscii):
 
 class HostAddress(TextAscii):
     """Use this for all host / ip address input fields!"""
-    def __init__(self, **kwargs):
-        super(HostAddress, self).__init__(**kwargs)
-        self._allow_host_name = kwargs.get("allow_host_name", True)
-        self._allow_ipv4_address = kwargs.get("allow_ipv4_address", True)
-        self._allow_ipv6_address = kwargs.get("allow_ipv6_address", True)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            allow_host_name=True,  # type: bool
+            allow_ipv4_address=True,  # type: bool
+            allow_ipv6_address=True,  # type: bool
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(HostAddress, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+        self._allow_host_name = allow_host_name
+        self._allow_ipv4_address = allow_ipv4_address
+        self._allow_ipv6_address = allow_ipv6_address
 
     def _validate_value(self, value, varprefix):
         if value and self._allow_host_name and self._is_valid_host_name(value):
@@ -900,13 +1174,63 @@ class AbsoluteDirname(TextAscii):
 
 
 class Url(TextAscii):
-    def __init__(self, default_scheme, allowed_schemes, **kwargs):
-        kwargs.setdefault("size", 64)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            default_scheme,  # type: Text
+            allowed_schemes,  # type: List[Text]
+            show_as_link=False,  # type: bool
+            target=None,  # type: TypingOptional[Text]
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Url, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._default_scheme = default_scheme
         self._allowed_schemes = allowed_schemes
-        self._show_as_link = kwargs.get("show_as_link", False)
-        self._link_target = kwargs.get("target")
-        super(Url, self).__init__(**kwargs)
+        self._show_as_link = show_as_link
+        self._link_target = target
 
     def _validate_value(self, value, varprefix):
         super(Url, self)._validate_value(value, varprefix)
@@ -969,13 +1293,64 @@ def CheckMKVersion(**args):
 
 
 class TextAreaUnicode(TextUnicode):
-    def __init__(self, **kwargs):
-        super(TextAreaUnicode, self).__init__(**kwargs)
-        self._cols = kwargs.get("cols", 60)
-        self._try_max_width = kwargs.get("try_max_width", False)  # If set, uses calc(100%-10px)
-        self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
-        self._minrows = kwargs.get("minrows", 0)  # Minimum number of initial rows when "auto"
-        self._monospaced = kwargs.get("monospaced", False)  # select TT font
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            cols=60,  # type: int
+            rows=20,  # type: Union[int, Text]
+            minrows=0,  # type: int
+            monospaced=False,  # type: bool
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=64,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(TextAreaUnicode, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+        self._cols = cols
+        self._try_max_width = try_max_width
+        self._rows = rows  # Allowed: "auto" -> Auto resizing
+        self._minrows = minrows  # Minimum number of initial rows when "auto"
+        self._monospaced = monospaced  # select TT font
 
     def value_to_text(self, value):
         if self._monospaced:
@@ -1019,18 +1394,61 @@ class TextAreaUnicode(TextUnicode):
 # TODO: Rename the valuespec here to ExistingFilename or somehting similar
 class Filename(TextAscii):
     """A variant of TextAscii() that validates a path to a filename that lies in an existing directory."""
-    def __init__(self, **kwargs):
-        super(Filename, self).__init__(**kwargs)
-        if "size" not in kwargs:
-            self._size = 60
-        if "default" in kwargs:
-            self._default_path = kwargs["default"]
-        else:
-            self._default_path = "/tmp/foo"
-        if "trans_func" in kwargs:
-            self._trans_func = kwargs["trans_func"]
-        else:
-            self._trans_func = None
+
+    # TODO: Cleanup default / default_value?
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            default="/tmp/foo",  # type: Text
+            trans_func=None,  # type: TypingOptional[Callable[[Text], Text]]
+            # TextAscii
+            label=None,  # type: TypingOptional[Text]
+            size=60,  # type: Union[int, str]
+            try_max_width=False,  # type: bool
+            cssclass="text",  # type: str
+            strip=True,  # type: bool
+            attrencode=True,  # type: bool
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            read_only=False,  # type: bool
+            none_is_empty=False,  # type: bool
+            forbidden_chars="",  # type: Text
+            regex=None,  # type: TypingOptional[Union[str, Pattern[str]]]
+            regex_error=None,  # type: TypingOptional[Text]
+            minlen=None,  # type: TypingOptional[int]
+            onkeyup=None,  # type: TypingOptional[Text]
+            autocomplete=True,  # type: bool
+            hidden=False,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Filename, self).__init__(
+            label=label,
+            size=size,
+            try_max_width=try_max_width,
+            cssclass=cssclass,
+            strip=strip,
+            attrencode=attrencode,
+            allow_empty=allow_empty,
+            empty_text=empty_text,
+            read_only=read_only,
+            none_is_empty=none_is_empty,
+            forbidden_chars=forbidden_chars,
+            regex=regex,
+            regex_error=regex_error,
+            minlen=minlen,
+            onkeyup=onkeyup,
+            autocomplete=autocomplete,
+            hidden=hidden,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+        self._default_path = default
+        self._trans_func = trans_func
 
     def canonical_value(self):
         return self._default_path
@@ -1065,22 +1483,38 @@ class Filename(TextAscii):
 
 
 class ListOfStrings(ValueSpec):
-    def __init__(self, **kwargs):
-        super(ListOfStrings, self).__init__(**kwargs)
-        if "valuespec" in kwargs:
-            self._valuespec = kwargs.get("valuespec")
-        elif "size" in kwargs:
-            self._valuespec = TextAscii(size=kwargs["size"])
-        else:
-            self._valuespec = TextAscii()
-        self._vertical = kwargs.get("orientation", "vertical") == "vertical"
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._empty_text = kwargs.get("empty_text", "")
-        self._max_entries = kwargs.get("max_entries")
-        self._separator = kwargs.get("separator", "")  # in case of float
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # ListOfStrings
+            valuespec=None,  # type: TypingOptional[ValueSpec]
+            size=25,  # type: Union[str, int]
+            orientation="vertical",  # type: Text
+            allow_empty=True,  # type: bool
+            empty_text="",  # type: Text
+            max_entries=None,  # type: TypingOptional[int]
+            separator="",  # type: Text
+            split_on_paste=True,  # type: bool
+            split_separators=";",  # type: Text
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(ListOfStrings, self).__init__(title=title,
+                                            help=help,
+                                            default_value=default_value,
+                                            validate=validate)
 
-        self._split_on_paste = kwargs.get("split_on_paste", True)
-        self._split_separators = kwargs.get("split_separators", ";")
+        self._valuespec = valuespec if valuespec is not None else TextAscii(size=size)
+        self._vertical = orientation == "vertical"
+        self._allow_empty = allow_empty
+        self._empty_text = empty_text
+        self._max_entries = max_entries
+        self._separator = separator  # in case of float
+
+        self._split_on_paste = split_on_paste
+        self._split_separators = split_separators
 
     def help(self):
         help_texts = [
@@ -1209,26 +1643,45 @@ class ListOf(ValueSpec):
         REGULAR = "regular"
         FLOATING = "floating"
 
-    def __init__(self, valuespec, **kwargs):
-        super(ListOf, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            valuespec,  # type: ValueSpec
+            magic="@!@",  # type: Text
+            add_label=None,  # type: TypingOptional[Text]
+            del_label=None,  # type: TypingOptional[Text]
+            movable=True,  # type: bool
+            style=None,  # type: TypingOptional[ListOf.Style]
+            totext=None,  # type: TypingOptional[Text]
+            text_if_empty=None,  # type: TypingOptional[Text]
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            sort_by=None,  # type: TypingOptional[int]
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(ListOf, self).__init__(title=title,
+                                     help=help,
+                                     default_value=default_value,
+                                     validate=validate)
         self._valuespec = valuespec
-        self._magic = kwargs.get("magic", "@!@")
-        self._rowlabel = kwargs.get("row_label")
-        self._add_label = kwargs.get("add_label", _("Add new element"))
-        self._del_label = kwargs.get("del_label", _("Delete this entry"))
-        self._movable = kwargs.get("movable", True)
-        self._style = kwargs.get("style", ListOf.Style.REGULAR)
-        self._totext = kwargs.get("totext")  # pattern with option %d
-        self._text_if_empty = kwargs.get("text_if_empty", _("No entries"))
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._empty_text = kwargs.get("empty_text")  # complain text if empty
+        self._magic = magic
+        self._add_label = add_label if add_label else _("Add new element")
+        self._del_label = del_label if del_label else _("Delete this entry")
+        self._movable = movable
+        self._style = style or ListOf.Style.REGULAR
+        self._totext = totext  # pattern with option %d
+        self._text_if_empty = text_if_empty if text_if_empty is not None else _("No entries")
+        self._allow_empty = allow_empty
+        self._empty_text = empty_text if empty_text is not None else \
+            _("Please specify at least one entry")
+
         # Makes a sort button visible that can be used to sort the list in the GUI
         # (without submitting the form). But this currently only works for list of
         # tuples that contain input field elements directly. The value of sort_by
         # refers to the index of the sort values in the tuple
-        self._sort_by = kwargs.get("sort_by")
-        if not self._empty_text:
-            self._empty_text = _("Please specify at least one entry")
+        self._sort_by = sort_by
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -1447,16 +1900,32 @@ class ListOfMultiple(ValueSpec):
     """A generic valuespec where the user can choose from a list of sub-valuespecs.
     Each sub-valuespec can be added only once
     """
-    def __init__(self, choices, choice_page_name, **kwargs):
-        super(ListOfMultiple, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            choices,  # type: List[TypingTuple[str, Text]]
+            choice_page_name,  # type: str
+            page_request_vars=None,  # type: Dict[Text, Text]
+            size=None,  # type: TypingOptional[int]
+            add_label=None,  # type: TypingOptional[Text]
+            del_label=None,  # type: TypingOptional[Text]
+            delete_style="default",  # type: str
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(ListOfMultiple, self).__init__(title=title,
+                                             help=help,
+                                             default_value=default_value,
+                                             validate=validate)
         self._choices = choices
         self._choice_dict = dict(choices)
         self._choice_page_name = choice_page_name
-        self._page_request_vars = kwargs.get("page_request_vars", {})
-        self._size = kwargs.get("size")
-        self._add_label = kwargs.get("add_label", _("Add element"))
-        self._del_label = kwargs.get("del_label", _("Delete this entry"))
-        self._delete_style = kwargs.get("delete_style", "default")  # or "filter"
+        self._page_request_vars = page_request_vars or {}
+        self._size = size
+        self._add_label = add_label if add_label is not None else _("Add element")
+        self._del_label = del_label if del_label is not None else _("Delete this entry")
+        self._delete_style = delete_style  # or "filter"
 
     def del_button(self, varprefix, ident):
         js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (json.dumps(varprefix),
@@ -1579,11 +2048,39 @@ class ABCPageListOfMultipleGetChoice(six.with_metaclass(abc.ABCMeta, AjaxPage)):
 
 class Float(Integer):
     """Same as Integer, but for floating point values"""
-    def __init__(self, **kwargs):
-        super(Float, self).__init__(**kwargs)
-        self._decimal_separator = kwargs.get("decimal_separator", ".")
-        self._display_format = kwargs.get("display_format", "%.2f")
-        self._allow_int = kwargs.get("allow_int", False)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            decimal_separator=".",  # type: Text
+            allow_int=False,  # type: bool
+            # Integer
+            size=None,  # type: TypingOptional[int]
+            minvalue=None,  # type: TypingOptional[Union[int, float]]
+            maxvalue=None,  # type: TypingOptional[Union[int, float]]
+            label=None,  # type: TypingOptional[Text]
+            unit="",  # type: Text
+            thousand_sep=None,  # type: TypingOptional[Text]
+            display_format="%.2f",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Float, self).__init__(size=size,
+                                    minvalue=minvalue,
+                                    maxvalue=maxvalue,
+                                    label=label,
+                                    unit=unit,
+                                    thousand_sep=thousand_sep,
+                                    display_format=display_format,
+                                    align=align,
+                                    title=title,
+                                    help=help,
+                                    default_value=default_value,
+                                    validate=validate)
+        self._decimal_separator = decimal_separator
+        self._allow_int = allow_int
 
     def _render_value(self, value):
         return self._display_format % utils.savefloat(value)
@@ -1617,18 +2114,40 @@ class Float(Integer):
 
 
 class Percentage(Float):
-    def __init__(self, **kwargs):
-        super(Percentage, self).__init__(**kwargs)
-        if "minvalue" not in kwargs:
-            self._minvalue = 0.0
-        if "maxvalue" not in kwargs:
-            self._maxvalue = 101.0
-        if "unit" not in kwargs:
-            self._unit = "%"
-        if "display_format" not in kwargs:
-            self._display_format = "%.1f"
-
-        self._allow_int = kwargs.get("allow_int", False)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # Float
+            decimal_separator=".",  # type: Text
+            allow_int=False,  # type: bool
+            # Integer
+            size=None,  # type: TypingOptional[int]
+            minvalue=0.0,  # type: TypingOptional[Union[int, float]]
+            maxvalue=101.0,  # type: TypingOptional[Union[int, float]]
+            label=None,  # type: TypingOptional[Text]
+            unit="%",  # type: Text
+            thousand_sep=None,  # type: TypingOptional[Text]
+            display_format="%.1f",  # type: Text
+            align="left",  # type: str
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Percentage, self).__init__(decimal_separator=decimal_separator,
+                                         allow_int=allow_int,
+                                         size=size,
+                                         minvalue=minvalue,
+                                         maxvalue=maxvalue,
+                                         label=label,
+                                         unit=unit,
+                                         thousand_sep=thousand_sep,
+                                         display_format=display_format,
+                                         align=align,
+                                         title=title,
+                                         help=help,
+                                         default_value=default_value,
+                                         validate=validate)
 
     def value_to_text(self, value):
         return (self._display_format + "%%") % value
@@ -1645,12 +2164,25 @@ class Percentage(Float):
 
 
 class Checkbox(ValueSpec):
-    def __init__(self, **kwargs):
-        super(Checkbox, self).__init__(**kwargs)
-        self._label = kwargs.get("label")
-        self._true_label = kwargs.get("true_label", _("on"))
-        self._false_label = kwargs.get("false_label", _("off"))
-        self._onclick = kwargs.get("onclick")
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            label=None,  # type: TypingOptional[Text]
+            true_label=None,  # type: TypingOptional[Text]
+            false_label=None,  # type: TypingOptional[Text]
+            onclick=None,  # type: TypingOptional[Text]
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Checkbox, self).__init__(title=title,
+                                       help=help,
+                                       default_value=default_value,
+                                       validate=validate)
+        self._label = label
+        self._true_label = true_label if true_label is not None else _("on")
+        self._false_label = false_label if false_label is not None else _("off")
+        self._onclick = onclick
 
     def canonical_value(self):
         return False
@@ -1682,33 +2214,63 @@ class DropdownChoice(ValueSpec):
     Note: The list of choices may contain 2-tuples or 3-tuples.
     The format is (value, text {, icon} )
     choices may also be a function that returns - when called
-    wihtout arguments - such a tuple list. That way the choices
+    without arguments - such a tuple list. That way the choices
     can by dynamically computed"""
-    def __init__(self, **kwargs):
-        super(DropdownChoice, self).__init__(**kwargs)
-        self._choices = kwargs["choices"]
-        self._help_separator = kwargs.get("help_separator")
-        self._label = kwargs.get("label")
-        self._prefix_values = kwargs.get("prefix_values", False)
-        self._sorted = kwargs.get("sorted", False)
-        self._empty_text = kwargs.get("empty_text",
-                                      _("There are no elements defined for this selection yet."))
-        self._invalid_choice = kwargs.get("invalid_choice", "complain")  # also possible: "replace"
-        self._invalid_choice_title = kwargs.get("invalid_choice_title",
-                                                _("Element '%r' does not exist anymore"))
-        self._invalid_choice_error = kwargs.get(
-            "invalid_choice_error",
-            _("The selected element is not longer available. Please select something else."))
-        self._no_preselect = kwargs.get("no_preselect", False)
-        self._no_preselect_value = kwargs.get("no_preselect_value", None)
-        self._no_preselect_title = kwargs.get("no_preselect_title", "")  # if not preselected
-        self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
-        self._on_change = kwargs.get("on_change")
-        self._read_only = kwargs.get("read_only", False)
-        self._encode_value = kwargs.get("encode_value", True)
+
+    # TODO: Cleanup redefined builtin sorted
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # DropdownChoice
+            choices,  # type: Union[List[TypingTuple[Any, Text]], Callable[[], List[TypingTuple[Any, Text]]]]
+            sorted=False,  # type: bool
+            label=None,  # type: TypingOptional[Text]
+            help_separator=None,  # type: Text
+            prefix_values=False,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            invalid_choice="complain",  # type: TypingOptional[str]
+            invalid_choice_title=None,  # type: TypingOptional[Text]
+            invalid_choice_error=None,  # type: TypingOptional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: Any
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: Text
+            on_change=None,  # type: Text
+            read_only=False,  # type: bool
+            encode_value=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(DropdownChoice, self).__init__(title=title,
+                                             help=help,
+                                             default_value=default_value,
+                                             validate=validate)
+        self._choices = choices
+        self._help_separator = help_separator
+        self._label = label
+        self._prefix_values = prefix_values
+        self._sorted = sorted
+        self._empty_text = empty_text if empty_text is not None else \
+            _("There are no elements defined for this selection yet.")
+        self._invalid_choice = invalid_choice
+        self._invalid_choice_title = invalid_choice_title if invalid_choice_title is not None else \
+            _("Element '%r' does not exist anymore")
+        self._invalid_choice_error = invalid_choice_error if invalid_choice_error is not None else \
+            _("The selected element is not longer available. Please select something else.")
+        self._no_preselect = no_preselect
+        self._no_preselect_value = no_preselect_value
+        self._no_preselect_title = no_preselect_title
+        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else \
+            _("Please make a selection")
+        self._on_change = on_change
+        self._read_only = read_only
+        self._encode_value = encode_value
 
     def choices(self):
-        result = []
+        # type: () -> List[TypingTuple[Any, Text]]
+        result = []  # type: List[TypingTuple[Any, Text]]
         if isinstance(self._choices, list):
             result = self._choices
         elif isinstance(self._choices, dict):
@@ -1871,36 +2433,59 @@ class CascadingDropdown(ValueSpec):
         normal = "normal"
         foldable = "foldable"
 
-    def __init__(self, **kwargs):
-        super(CascadingDropdown, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # TODO: Make this more specific
+            choices,  # type: Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]
+            label=None,  # type: TypingOptional[Text]
+            separator=", ",  # type: TypingOptional[Text]
+            sorted=True,  # type: bool
+            orientation="vertical",  # type: Text
+            render=None,  # type: TypingOptional[CascadingDropdown.Render]
+            encoding="tuple",  # type: Text
+            no_elements_text=None,  # type: TypingOptional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: TypingOptional[Any]
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: TypingOptional[Text]
+            render_sub_vs_page_name=None,  # type: TypingOptional[Text]
+            render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(CascadingDropdown, self).__init__(title=title,
+                                                help=help,
+                                                default_value=default_value,
+                                                validate=validate)
 
-        if isinstance(kwargs["choices"], list):
-            self._choices = self.normalize_choices(kwargs["choices"])
+        if isinstance(choices, list):
+            self._choices = self.normalize_choices(choices)
         else:
-            self._choices = kwargs["choices"]  # function, store for later
+            self._choices = choices  # function, store for later
 
-        self._label = kwargs.get("label")
-        self._separator = kwargs.get("separator", ", ")
-        self._sorted = kwargs.get("sorted", True)
-        self._orientation = kwargs.get("orientation", "vertical")  # or horizontal
-        self._render = kwargs.get("render", CascadingDropdown.Render.normal)
-        if kwargs.get("encoding", "tuple") == "list":
-            self._encoding_type = list
-        else:
-            self._encoding_type = tuple
+        self._label = label
+        self._separator = separator
+        self._sorted = sorted
+        self._orientation = orientation  # or horizontal
+        self._render = render if render is not None else CascadingDropdown.Render.normal
+        self._encoding_type = list if encoding == "list" else tuple
 
-        self._no_elements_text = kwargs.get("no_elements_text",
-                                            _("There are no elements defined for this selection"))
+        self._no_elements_text = no_elements_text if not no_elements_text is not None else \
+            _("There are no elements defined for this selection")
 
-        self._no_preselect = kwargs.get("no_preselect", False)
-        self._no_preselect_value = kwargs.get("no_preselect_value", None)
-        self._no_preselect_title = kwargs.get("no_preselect_title", "")  # if not preselected
-        self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
+        self._no_preselect = no_preselect
+        self._no_preselect_value = no_preselect_value
+        self._no_preselect_title = no_preselect_title  # if not preselected
+        self._no_preselect_error = no_preselect_error if no_preselect_error is not None else \
+            _("Please make a selection")
 
         # When given, this ajax page is called to render the input fields of a cascaded valuespec
         # once the user selected this choice in case it was initially hidden.
-        self._render_sub_vs_page_name = kwargs.get("render_sub_vs_page_name")
-        self._render_sub_vs_request_vars = kwargs.get("render_sub_vs_request_vars", {})
+        self._render_sub_vs_page_name = render_sub_vs_page_name
+        self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def normalize_choices(self, choices):
         new_choices = []
@@ -2117,11 +2702,56 @@ class CascadingDropdown(ValueSpec):
 class RadioChoice(DropdownChoice):
     """The same logic as the dropdown choice, but rendered as a group of radio buttons.
     columns is None or unset -> separate with '&nbsp;'"""
-    def __init__(self, **kwargs):
-        super(RadioChoice, self).__init__(**kwargs)
-        self._columns = kwargs.get("columns")
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            choices,  # type: List[TypingTuple[Any, Text]]
+            columns=None,  # type: TypingOptional[int]
+            orientation=None,  # typing: TypingOptional[Text]
+            # DropdownChoice
+            sorted=False,  # type: bool
+            label=None,  # type: TypingOptional[Text]
+            help_separator=None,  # type: Text
+            prefix_values=False,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            invalid_choice="complain",  # type: TypingOptional[str]
+            invalid_choice_title=None,  # type: TypingOptional[Text]
+            invalid_choice_error=None,  # type: TypingOptional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: Any
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: Text
+            on_change=None,  # type: Text
+            read_only=False,  # type: bool
+            encode_value=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(RadioChoice, self).__init__(choices=choices,
+                                          sorted=sorted,
+                                          label=label,
+                                          help_separator=help_separator,
+                                          prefix_values=prefix_values,
+                                          empty_text=empty_text,
+                                          invalid_choice=invalid_choice,
+                                          invalid_choice_title=invalid_choice_title,
+                                          invalid_choice_error=invalid_choice_error,
+                                          no_preselect=no_preselect,
+                                          no_preselect_value=no_preselect_value,
+                                          no_preselect_title=no_preselect_title,
+                                          no_preselect_error=no_preselect_error,
+                                          on_change=on_change,
+                                          read_only=read_only,
+                                          encode_value=encode_value,
+                                          title=title,
+                                          help=help,
+                                          default_value=default_value,
+                                          validate=validate)
+        self._columns = columns
         # Allow orientation as corner cases of columns
-        orientation = kwargs.get("orientation")
+        orientation = orientation
         if orientation == "vertical":
             self._columns = 1
         elif orientation == "horizontal":
@@ -2180,18 +2810,39 @@ class ListChoice(ValueSpec):
         return [("%s" % type_id, "%d - %s" % (type_id, type_name))
                 for (type_id, type_name) in sorted(choices.items())]
 
-    def __init__(self, **kwargs):
-        super(ListChoice, self).__init__(**kwargs)
-        self._choices = kwargs.get("choices")
-        self._columns = kwargs.get("columns", 1)
-        self._allow_empty = kwargs.get("allow_empty", True)
-        self._empty_text = kwargs.get("empty_text", _("(nothing selected)"))
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # ListChoice
+            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+            columns=1,  # type: int
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
+            toggle_all=False,  # type: bool
+            # TODO: Rename to "orientation" to be in line with other valuespecs
+            render_orientation="horizontal",  # type: Text
+            no_elements_text=None,  # type: TypingOptional[Text]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(ListChoice, self).__init__(title=title,
+                                         help=help,
+                                         default_value=default_value,
+                                         validate=validate)
+        self._choices = choices
+        self._columns = columns
+        self._allow_empty = allow_empty
+        self._empty_text = empty_text if empty_text is not None else _("(nothing selected)")
         self._loaded_at = None
-        self._render_function = kwargs.get("render_function", lambda id, val: val)
-        self._toggle_all = kwargs.get("toggle_all", False)
-        self._render_orientation = kwargs.get("render_orientation", "horizontal")  # other: vertical
-        self._no_elements_text = kwargs.get("no_elements_text",
-                                            _("There are no elements defined for this selection"))
+        self._render_function = render_function if render_function is not None else (
+            lambda id, val: val)
+        self._toggle_all = toggle_all
+        self._render_orientation = render_orientation  # other: vertical
+        self._no_elements_text = no_elements_text if no_elements_text is not None else \
+            _("There are no elements defined for this selection")
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -2300,18 +2951,53 @@ class DualListChoice(ListChoice):
     strings. They must not contain | or other dangerous characters. We should
     fix this and make it this compatible to DropdownChoice()
     """
-    def __init__(self, **kwargs):
-        super(DualListChoice, self).__init__(**kwargs)
-        self._autoheight = kwargs.get("autoheight", False)
-        self._custom_order = kwargs.get("custom_order", False)
-        self._instant_add = kwargs.get("instant_add", False)
-        self._enlarge_active = kwargs.get("enlarge_active", False)
-        if "rows" in kwargs:
-            self._rows = kwargs.get("rows", 5)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            # DualListChoice
+            autoheight=False,  # type: bool
+            custom_order=False,  # type: bool
+            instant_add=False,  # type: bool
+            enlarge_active=False,  # type: bool
+            rows=None,  # type: TypingOptional[int]
+            size=None,  # type: TypingOptional[int]
+            # ListChoice
+            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text]], Dict[Text, Text], Callable[[], List]]]
+            columns=1,  # type: int
+            allow_empty=True,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            render_function=None,  # type: TypingOptional[Callable[[Text, Text], Text]]
+            toggle_all=False,  # type: bool
+            # TODO: Rename to "orientation" to be in line with other valuespecs
+            render_orientation="horizontal",  # type: Text
+            no_elements_text=None,  # type: TypingOptional[Text]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(DualListChoice, self).__init__(choices=choices,
+                                             columns=columns,
+                                             allow_empty=allow_empty,
+                                             empty_text=empty_text,
+                                             render_function=render_function,
+                                             toggle_all=toggle_all,
+                                             render_orientation=render_orientation,
+                                             no_elements_text=no_elements_text,
+                                             title=title,
+                                             help=help,
+                                             default_value=default_value,
+                                             validate=validate)
+        self._autoheight = autoheight
+        self._custom_order = custom_order
+        self._instant_add = instant_add
+        self._enlarge_active = enlarge_active
+        if rows is not None:
+            self._rows = rows
             self._autoheight = False
         else:
             self._rows = 5
-        self._size = kwargs.get("size")  # Total width in ex
+        self._size = size  # Total width in ex
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -2424,10 +3110,56 @@ class OptionalDropdownChoice(DropdownChoice):
     """A type-save dropdown choice with one extra field that
     opens a further value spec for entering an alternative
     Value."""
-    def __init__(self, **kwargs):
-        super(OptionalDropdownChoice, self).__init__(**kwargs)
-        self._explicit = kwargs["explicit"]
-        self._otherlabel = kwargs.get("otherlabel", _("Other"))
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            explicit,  # type: ValueSpec
+            choices,  # type: List[TypingTuple[Any, Text]]
+            otherlabel=None,  # type: TypingOptional[Text]
+            # DropdownChoice
+            sorted=False,  # type: bool
+            label=None,  # type: TypingOptional[Text]
+            help_separator=None,  # type: Text
+            prefix_values=False,  # type: bool
+            empty_text=None,  # type: TypingOptional[Text]
+            invalid_choice="complain",  # type: TypingOptional[str]
+            invalid_choice_title=None,  # type: TypingOptional[Text]
+            invalid_choice_error=None,  # type: TypingOptional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: Any
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: Text
+            on_change=None,  # type: Text
+            read_only=False,  # type: bool
+            encode_value=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(OptionalDropdownChoice, self).__init__(choices=choices,
+                                                     sorted=sorted,
+                                                     label=label,
+                                                     help_separator=help_separator,
+                                                     prefix_values=prefix_values,
+                                                     empty_text=empty_text,
+                                                     invalid_choice=invalid_choice,
+                                                     invalid_choice_title=invalid_choice_title,
+                                                     invalid_choice_error=invalid_choice_error,
+                                                     no_preselect=no_preselect,
+                                                     no_preselect_value=no_preselect_value,
+                                                     no_preselect_title=no_preselect_title,
+                                                     no_preselect_error=no_preselect_error,
+                                                     on_change=on_change,
+                                                     read_only=read_only,
+                                                     encode_value=encode_value,
+                                                     title=title,
+                                                     help=help,
+                                                     default_value=default_value,
+                                                     validate=validate)
+
+        self._explicit = explicit
+        self._otherlabel = otherlabel if otherlabel is not None else _("Other")
 
     def canonical_value(self):
         return self._explicit.canonical_value()
@@ -2727,10 +3459,22 @@ class Timeofday(ValueSpec):
     value itself is stored as a pair of integers, a.g.  (0, 35) or (16, 17). If
     the user does not enter a time the vs will return None.
     """
-    def __init__(self, **kwargs):
-        super(Timeofday, self).__init__(**kwargs)
-        self._allow_24_00 = kwargs.get("allow_24_00", False)
-        self._allow_empty = kwargs.get("allow_empty", True)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            allow_24_00=False,  # type: bool
+            allow_empty=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Timeofday, self).__init__(title=title,
+                                        help=help,
+                                        default_value=default_value,
+                                        validate=validate)
+        self._allow_24_00 = allow_24_00
+        self._allow_empty = allow_empty
 
     def canonical_value(self):
         if self._allow_empty:
@@ -2799,9 +3543,20 @@ class Timeofday(ValueSpec):
 
 class TimeofdayRange(ValueSpec):
     """Range like 00:15 - 18:30"""
-    def __init__(self, **kwargs):
-        super(TimeofdayRange, self).__init__(**kwargs)
-        self._allow_empty = kwargs.get("allow_empty", True)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            allow_empty=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(TimeofdayRange, self).__init__(title=title,
+                                             help=help,
+                                             default_value=default_value,
+                                             validate=validate)
+        self._allow_empty = allow_empty
         self._bounds = (
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
             Timeofday(allow_empty=self._allow_empty, allow_24_00=True),
@@ -2922,13 +3677,56 @@ class TimeHelper(object):
 
 
 class Timerange(CascadingDropdown):
-    def __init__(self, **kwargs):
-        self._title = kwargs.get('title', _('Time range'))
-        self._allow_empty = kwargs.get("allow_empty", False)
-        self._include_time = kwargs.get("include_time", False)
-        self._fixed_choices = kwargs.get("choices", [])
-        kwargs['choices'] = self._prepare_choices
-        super(Timerange, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            allow_empty=False,  # type: bool
+            include_time=False,  # type: bool
+            choices=None,  # type: TypingOptional[Union[List[TypingTuple[Text, Text, ValueSpec]], Callable]]
+            # CascadingDropdown
+            # TODO: Make this more specific
+            label=None,  # type: TypingOptional[Text]
+            separator=", ",  # type: TypingOptional[Text]
+            sorted=True,  # type: bool
+            orientation="vertical",  # type: Text
+            render=None,  # type: TypingOptional[CascadingDropdown.Render]
+            encoding="tuple",  # type: Text
+            no_elements_text=None,  # type: TypingOptional[Text]
+            no_preselect=False,  # type: bool
+            no_preselect_value=None,  # type: TypingOptional[Any]
+            no_preselect_title="",  # type: Text
+            no_preselect_error=None,  # type: TypingOptional[Text]
+            render_sub_vs_page_name=None,  # type: TypingOptional[Text]
+            render_sub_vs_request_vars=None,  # type: TypingOptional[Dict]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Timerange, self).__init__(
+            choices=self._prepare_choices,
+            label=label,
+            separator=separator,
+            sorted=sorted,
+            orientation=orientation,
+            render=render,
+            encoding=encoding,
+            no_elements_text=no_elements_text,
+            no_preselect=no_preselect,
+            no_preselect_value=no_preselect_value,
+            no_preselect_title=no_preselect_title,
+            no_preselect_error=no_preselect_error,
+            render_sub_vs_page_name=render_sub_vs_page_name,
+            render_sub_vs_request_vars=render_sub_vs_request_vars,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+        self._title = title if title is not None else _('Time range')
+        self._allow_empty = allow_empty
+        self._include_time = include_time
+        self._fixed_choices = choices or []
 
     def _prepare_choices(self):
         choices = list(self._fixed_choices)
@@ -3104,15 +3902,33 @@ class Optional(ValueSpec):
 
     The user has a checkbox for activating the option. Example:
     debug_log: it is either None or set to a filename."""
-    def __init__(self, valuespec, **kwargs):
-        super(Optional, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            valuespec,  # type: ValueSpec
+            label=None,  # type: TypingOptional[Text]
+            negate=False,  # type: bool
+            none_label=None,  # type: TypingOptional[Text]
+            none_value=None,  # type: Any
+            sameline=False,  # type: bool
+            indent=True,  # type: bool
+            allow_empty=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Optional, self).__init__(title=title,
+                                       help=help,
+                                       default_value=default_value,
+                                       validate=validate)
         self._valuespec = valuespec
-        self._label = kwargs.get("label")
-        self._negate = kwargs.get("negate", False)
-        self._none_label = kwargs.get("none_label", _("(unset)"))
-        self._none_value = kwargs.get("none_value", None)
-        self._sameline = kwargs.get("sameline", False)
-        self._indent = kwargs.get("indent", True)
+        self._label = label
+        self._negate = negate
+        self._none_label = none_label if none_label is not None else _("(unset)")
+        self._none_value = none_value
+        self._sameline = sameline
+        self._indent = indent
 
     def canonical_value(self):
         return self._none_value
@@ -3191,15 +4007,30 @@ class Alternative(ValueSpec):
     for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)
     The different alternatives must have different data types that can
     be distinguished with validate_datatype."""
-    def __init__(self, **kwargs):
-        super(Alternative, self).__init__(**kwargs)
-        self._elements = kwargs["elements"]
-        self._match = kwargs.get("match")  # custom match function, returns index in elements
-        self._style = kwargs.get("style", "radio")  # alternative: "dropdown"
-        self._show_alternative_title = kwargs.get("show_alternative_title")
-        self._on_change = kwargs.get("on_change")  # currently only working for style="dropdown"
-        self._orientation = kwargs.get("orientation",
-                                       "vertical")  # or horizontal: for style="dropdown"
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            elements,  # type: List[ValueSpec]
+            match=None,  # type: TypingOptional[Callable[[Any], int]]
+            style="radio",  # type: Text
+            show_alternative_title=False,  # type: bool
+            on_change=None,  # type: TypingOptional[Text]
+            orientation="vertical",  # type: Text
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Alternative, self).__init__(title=title,
+                                          help=help,
+                                          default_value=default_value,
+                                          validate=validate)
+        self._elements = elements
+        self._match = match  # custom match function, returns index in elements
+        self._style = style  # alternative: "dropdown"
+        self._show_alternative_title = show_alternative_title
+        self._on_change = on_change  # currently only working for style="dropdown"
+        self._orientation = orientation  # or horizontal: for style="dropdown"
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -3342,13 +4173,27 @@ class Alternative(ValueSpec):
 
 class Tuple(ValueSpec):
     """Edit a n-tuple (with fixed size) of values"""
-    def __init__(self, **kwargs):
-        super(Tuple, self).__init__(**kwargs)
-        self._elements = kwargs["elements"]
-        self._show_titles = kwargs.get("show_titles", True)
-        self._orientation = kwargs.get("orientation", "vertical")  # also: horizontal, float
-        self._separator = kwargs.get("separator", " ")  # in case of float
-        self._title_br = kwargs.get("title_br", True)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            elements,  # type: List[ValueSpec]
+            show_titles=True,  # type: bool
+            orientation="vertical",  # type: str
+            separator=" ",  # type: Text
+            title_br=True,  # type: bool
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Tuple, self).__init__(title=title,
+                                    help=help,
+                                    default_value=default_value,
+                                    validate=validate)
+        self._elements = elements
+        self._show_titles = show_titles
+        self._orientation = orientation  # also: horizontal, float
+        self._separator = separator  # in case of float
+        self._title_br = title_br
 
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
@@ -3449,41 +4294,61 @@ class Tuple(ValueSpec):
 
 
 class Dictionary(ValueSpec):
-    def __init__(self, **kwargs):
-        super(Dictionary, self).__init__(**kwargs)
-        self._elements = kwargs["elements"]
-        self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
+    # TODO: Cleanup ancient "migrate"
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            elements,  # type: List[TypingTuple[str, ValueSpec]]
+            empty_text=None,  # type: TypingOptional[Text]
+            default_text=None,  # type: TypingOptional[Text]
+            optional_keys=True,  # type: Union[bool, List[str]]
+            required_keys=None,  # type: TypingOptional[List[str]]
+            ignored_keys=None,  # type: TypingOptional[List[str]]
+            default_keys=None,  # type: TypingOptional[List[str]]
+            hidden_keys=None,  # type: TypingOptional[List[str]]
+            columns=1,  # type: int
+            render="normal",  # type: str
+            form_narrow=False,  # type: bool
+            form_isopen=True,  # type: bool
+            headers=None,  # type: TypingOptional[Union[str, List[Union[TypingTuple[str, List[str]], TypingTuple[str, str, List[str]]]]]]
+            migrate=None,  # type: Callable[[TypingTuple], Dict]
+            indent=True,  # type: bool
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Dictionary, self).__init__(title=title,
+                                         help=help,
+                                         default_value=default_value,
+                                         validate=validate)
+        self._elements = elements
+        self._empty_text = empty_text if empty_text is not None else _("(no parameters)")
+
         # Optionally a text can be specified to be shown by value_to_text()
         # when the value equal the default value of the value spec. Normally
         # the default values are shown.
-        self._default_text = kwargs.get("default_text", None)
-        self._required_keys = kwargs.get("required_keys", [])
-        self._ignored_keys = kwargs.get("ignored_keys", [])
-        self._default_keys = kwargs.get("default_keys", [])  # keys present in default value
-        if "optional_keys" in kwargs:
-            ok = kwargs["optional_keys"]
-            if isinstance(ok, list) and ok:
-                self._required_keys = \
-                    [ e[0] for e in self._get_elements() if e[0] not in ok ]
-                self._optional_keys = True
-            elif ok:
-                self._optional_keys = True
-            else:
-                self._optional_keys = False
-        else:
-            self._optional_keys = True
-        if "hidden_keys" in kwargs:
-            self._hidden_keys = kwargs["hidden_keys"]
-        else:
-            self._hidden_keys = []
+        self._default_text = default_text
+        self._required_keys = required_keys or []
+        self._ignored_keys = ignored_keys or []
+        self._default_keys = default_keys or []  # keys present in default value
+        self._hidden_keys = hidden_keys or []
 
-        self._columns = kwargs.get("columns", 1)  # possible: 1 or 2
-        self._render = kwargs.get("render", "normal")  # also: "form" -> use forms.section()
-        self._form_narrow = kwargs.get("form_narrow", False)  # used if render == "form"
-        self._form_isopen = kwargs.get("form_isopen", True)  # used if render == "form"
-        self._headers = kwargs.get("headers")  # "sup" -> small headers in oneline mode
-        self._migrate = kwargs.get("migrate")  # value migration from old tuple version
-        self._indent = kwargs.get("indent", True)
+        if isinstance(optional_keys, list) and optional_keys:
+            self._required_keys = [e[0] for e in self._get_elements() if e[0] not in optional_keys]
+            self._optional_keys = True
+        elif optional_keys:
+            self._optional_keys = True
+        else:
+            self._optional_keys = False
+
+        self._columns = columns  # possible: 1 or 2
+        self._render = render  # also: "form" -> use forms.section()
+        self._form_narrow = form_narrow  # used if render == "form"
+        self._form_isopen = form_isopen  # used if render == "form"
+        self._headers = headers  # "sup" -> small headers in oneline mode
+        self._migrate = migrate  # value migration from old tuple version
+        self._indent = indent
 
     def migrate(self, value):
         if self._migrate:
@@ -3755,12 +4620,24 @@ class ElementSelection(ValueSpec):
     Example: GroupSelection. Child class must define
     a function get_elements() that returns a dictionary
     from element keys to element titles."""
-    def __init__(self, **kwargs):
-        super(ElementSelection, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            label=None,  # type: TypingOptional[Text]
+            empty_text=None,  # type: TypingOptional[Text]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(ElementSelection, self).__init__(title=title,
+                                               help=help,
+                                               default_value=default_value,
+                                               validate=validate)
         self._loaded_at = None
-        self._label = kwargs.get("label")
-        self._empty_text = kwargs.get("empty_text",
-                                      _("There are no elements defined for this selection yet."))
+        self._label = label
+        self._empty_text = empty_text if empty_text is not None else \
+            _("There are no elements defined for this selection yet.")
 
     def load_elements(self):
         if self._loaded_at != id(html):
@@ -3885,11 +4762,23 @@ class Transform(ValueSpec):
            needed by the encapsulated vs
     back:  function that converts a value created by the encapsulated
            vs back to the outer representation"""
-    def __init__(self, valuespec, **kwargs):
-        super(Transform, self).__init__(**kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            valuespec,  # type: ValueSpec
+            back=None,  # type: TypingOptional[Callable[[Any], Any]]
+            forth=None,  # type: TypingOptional[Callable[[Any], Any]]
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        super(Transform, self).__init__(title=title,
+                                        help=help,
+                                        default_value=default_value,
+                                        validate=validate)
         self._valuespec = valuespec
-        self._back = kwargs.get("back")
-        self._forth = kwargs.get("forth")
+        self._back = back
+        self._forth = forth
 
     def forth(self, value):
         if self._forth:
@@ -4114,8 +5003,8 @@ class ImageUpload(FileUpload):
 
 class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
-        file_title = kwargs.get("file_title", _("File"))
-        allow_empty = kwargs.get("allow_empty", True)
+        file_title = kwargs.pop("file_title", _("File"))
+        allow_empty = kwargs.pop("allow_empty", True)
         kwargs["elements"] = [
             FileUpload(title=_("Upload %s") % file_title, allow_empty=allow_empty),
             TextAreaUnicode(title=_("Content of %s") % file_title,
@@ -4124,7 +5013,7 @@ class UploadOrPasteTextFile(Alternative):
                             rows="auto"),
         ]
 
-        if kwargs.get("default_mode", "text") == "upload":
+        if kwargs.pop("default_mode", "text") == "upload":
             kwargs["match"] = lambda *args: 0
         else:
             kwargs["match"] = lambda *args: 1
@@ -4219,16 +5108,30 @@ class Labels(ValueSpec):
         RULESET = "ruleset"
         DISCOVERED = "discovered"
 
-    def __init__(self, world, label_source=None, max_labels=None, **kwargs):
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            world,  # type: Labels.World
+            label_source=None,  # type: Labels.Source
+            max_labels=None,  # type: TypingOptional[int]
+            # ValueSpec
+            title=None,  # type: TypingOptional[Text]
+            help=None,  # type: TypingOptional[Text]
+            default_value=_DEF_VALUE,  # type: Any
+            validate=None,  # type: TypingOptional[Callable[[str, Any], None]]
+    ):
+        help_ = help if help is not None else ""
+        help_ += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
+                   "For example <tt>os:windows</tt>.")
+        super(Labels, self).__init__(title=title,
+                                     help=help_,
+                                     default_value=default_value,
+                                     validate=validate)
+
         self._world = world
         # Set this source to mark the labels that have no explicit label source set
         self._label_source = label_source
         # Set to positive integer to limit the number of labels to add to this field
         self._max_labels = max_labels
-        kwargs.setdefault("help", "")
-        kwargs["help"] += _("Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. "
-                            "For example <tt>os:windows</tt>.")
-        super(Labels, self).__init__(**kwargs)
 
     def canonical_value(self):
         return {}
@@ -4533,10 +5436,7 @@ class IconSelector(ValueSpec):
 
 
 def ListOfTimeRanges(**kwargs):
-    return ListOf(TimeofdayRange(
-        allow_empty=True,
-        allow_24_00=True,
-    ),
+    return ListOf(TimeofdayRange(allow_empty=True,),
                   movable=False,
                   add_label=_("Add time range"),
                   del_label=_("Delete time range"),

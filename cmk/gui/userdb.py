@@ -377,11 +377,12 @@ def transform_userdb_automatic_sync(val):
     return val
 
 
+# TODO: Change to factory
 class UserSelection(DropdownChoice):
     """Dropdown for choosing a multisite user"""
     def __init__(self, **kwargs):
-        only_contacts = kwargs.get("only_contacts", False)
-        only_automation = kwargs.get("only_automation", False)
+        only_contacts = kwargs.pop("only_contacts", False)
+        only_automation = kwargs.pop("only_automation", False)
         kwargs["choices"] = self._generate_wato_users_elements_function(
             kwargs.get("none"), only_contacts=only_contacts, only_automation=only_automation)
         kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!

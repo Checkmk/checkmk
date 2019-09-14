@@ -13,7 +13,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
     RulespecRegistry,
     Rulespec,
-    ABCHostValueRulespec,
+    HostRulespec,
     rulespec_registry,
     CheckTypeGroupSelection,
     RulespecGroupManualChecks,
@@ -1643,7 +1643,7 @@ class DummyGroup(RulespecGroup):
         return "help text"
 
 
-class DummyRulespec(ABCHostValueRulespec):
+class DummyRulespec(HostRulespec):
     name = "name"
     group = DummyGroup
     valuespec = FixedValue(None)

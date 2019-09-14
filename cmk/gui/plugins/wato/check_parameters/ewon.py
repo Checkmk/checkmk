@@ -35,7 +35,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    ABCHostValueRulespec,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
@@ -43,7 +43,7 @@ from cmk.gui.plugins.wato import (
 
 
 @rulespec_registry.register
-class RulespecEwonDiscoveryRules(ABCHostValueRulespec):
+class RulespecEwonDiscoveryRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

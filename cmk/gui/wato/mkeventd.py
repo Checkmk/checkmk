@@ -126,8 +126,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     RulespecGroup,
     rulespec_registry,
-    ABCHostValueRulespec,
-    ABCServiceValueRulespec,
+    HostRulespec,
+    ServiceRulespec,
     main_module_registry,
     MainModule,
     wato_confirm,
@@ -3786,7 +3786,7 @@ def convert_mkevents_hostspec(value):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcEventLimit(ABCHostValueRulespec):
+class RulespecExtraHostConfEcEventLimit(HostRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole
@@ -3805,7 +3805,7 @@ class RulespecExtraHostConfEcEventLimit(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksMkevents(ABCHostValueRulespec):
+class RulespecActiveChecksMkevents(HostRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole
@@ -3941,7 +3941,7 @@ def _sl_help():
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcSl(ABCHostValueRulespec):
+class RulespecExtraHostConfEcSl(HostRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -3960,7 +3960,7 @@ class RulespecExtraHostConfEcSl(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfEcSl(ABCServiceValueRulespec):
+class RulespecExtraServiceConfEcSl(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -4000,7 +4000,7 @@ def _vs_contact(title):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEcContact(ABCHostValueRulespec):
+class RulespecExtraHostConfEcContact(HostRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole
@@ -4015,7 +4015,7 @@ class RulespecExtraHostConfEcContact(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfEcContact(ABCServiceValueRulespec):
+class RulespecExtraServiceConfEcContact(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupEventConsole

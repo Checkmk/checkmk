@@ -49,13 +49,13 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     RulespecGroupCheckParametersApplications,
     rulespec_registry,
-    ABCHostValueRulespec,
-    ABCServiceValueRulespec,
+    HostRulespec,
+    ServiceRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecLogwatchRules(ABCServiceValueRulespec):
+class RulespecLogwatchRules(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications
@@ -192,7 +192,7 @@ class RulespecLogwatchRules(ABCServiceValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecLogwatchGroups(ABCHostValueRulespec):
+class RulespecLogwatchGroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersApplications

@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     CheckParameterRulespecWithItem,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 _brocade_fcport_adm_choices = [
@@ -78,7 +78,7 @@ _brocade_fcport_phy_choices = [
 
 
 @rulespec_registry.register
-class RulespecBrocadeFcportInventory(ABCHostValueRulespec):
+class RulespecBrocadeFcportInventory(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

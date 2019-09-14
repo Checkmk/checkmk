@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
@@ -57,7 +57,7 @@ def transform_ipmi_inventory_rules(p):
 
 
 @rulespec_registry.register
-class RulespecInventoryIpmiRules(ABCHostValueRulespec):
+class RulespecInventoryIpmiRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

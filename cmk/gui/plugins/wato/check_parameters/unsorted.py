@@ -45,7 +45,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 # TODO: Sort all rules and check parameters into the figlet header sections.
@@ -65,7 +65,7 @@ from cmk.gui.plugins.wato import (
 
 
 @rulespec_registry.register
-class RulespecPingLevels(ABCHostValueRulespec):
+class RulespecPingLevels(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersNetworking
@@ -101,7 +101,7 @@ class RulespecPingLevels(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecInventorySapValues(ABCHostValueRulespec):
+class RulespecInventorySapValues(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery
@@ -165,7 +165,7 @@ class RulespecInventorySapValues(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecSapValueGroups(ABCHostValueRulespec):
+class RulespecSapValueGroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery
@@ -213,7 +213,7 @@ class RulespecSapValueGroups(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecInventoryFujitsuCaPorts(ABCHostValueRulespec):
+class RulespecInventoryFujitsuCaPorts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

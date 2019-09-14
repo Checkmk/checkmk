@@ -40,13 +40,13 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
     UserIconOrAction,
 )
 
 
 @rulespec_registry.register
-class RulespecInventoryServicesRules(ABCHostValueRulespec):
+class RulespecInventoryServicesRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

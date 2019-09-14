@@ -38,12 +38,12 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecInventoryMssqlCountersRules(ABCHostValueRulespec):
+class RulespecInventoryMssqlCountersRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

@@ -38,12 +38,12 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecInventoryHeartbeatCrmRules(ABCHostValueRulespec):
+class RulespecInventoryHeartbeatCrmRules(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

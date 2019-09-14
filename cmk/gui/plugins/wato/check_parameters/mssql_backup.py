@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
@@ -64,7 +64,7 @@ def _vs_mssql_backup_age(title):
 
 
 @rulespec_registry.register
-class RulespecDiscoveryMssqlBackup(ABCHostValueRulespec):
+class RulespecDiscoveryMssqlBackup(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersDiscovery

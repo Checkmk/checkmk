@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato import (
     rulespec_group_registry,
     RulespecGroup,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
@@ -62,7 +62,7 @@ class RulespecGroupInventory(RulespecGroup):
 
 
 @rulespec_registry.register
-class RulespecActiveChecksCmkInv(ABCHostValueRulespec):
+class RulespecActiveChecksCmkInv(HostRulespec):
     @property
     def group(self):
         return RulespecGroupInventory
@@ -133,7 +133,7 @@ class RulespecActiveChecksCmkInv(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecInvExportsSoftwareCsv(ABCHostValueRulespec):
+class RulespecInvExportsSoftwareCsv(HostRulespec):
     @property
     def group(self):
         return RulespecGroupInventory
@@ -193,7 +193,7 @@ class RulespecInvExportsSoftwareCsv(ABCHostValueRulespec):
 
 
 @rulespec_registry.register
-class RulespecInvParametersInvIf(ABCHostValueRulespec):
+class RulespecInvParametersInvIf(HostRulespec):
     @property
     def group(self):
         return RulespecGroupInventory

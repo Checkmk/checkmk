@@ -43,12 +43,12 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
 @rulespec_registry.register
-class RulespecFileinfoGroups(ABCHostValueRulespec):
+class RulespecFileinfoGroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupCheckParametersStorage

@@ -38,6 +38,16 @@ def test_config():
     os.utime(str(source_file), (source_stat.st_atime, source_stat.st_mtime))
 
 
+def test_cleanup_piggyback_files():
+    piggyback.cleanup_piggyback_files(-1)
+    assert [
+        source_host.name
+        for piggybacked_dir in cmk.utils.paths.piggyback_dir.glob("*")
+        for source_host in piggybacked_dir.glob("*")
+    ] == []
+    assert list(cmk.utils.paths.piggyback_source_dir.glob("*")) == []
+
+
 def test_get_piggyback_raw_data_no_data():
     time_settings = {"max_cache_age": piggyback_max_cachefile_age}
     assert piggyback.get_piggyback_raw_data("no-host", time_settings) == []

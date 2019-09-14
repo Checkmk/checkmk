@@ -40,29 +40,25 @@ hp_msa_state_map = {
 }
 
 
-def parse_hp_msa(info):
-    info_enrolment = {}
+def _parse_hp_msa_objects(info):
+    objects = []
     for line in info:
-        if line[2] == "durable-id":
-            item_id = " ".join(line[3:])
-            info_enrolment.setdefault(item_id, {"item_type": line[0]})
-        else:
-            info_enrolment[item_id][line[2]] = " ".join(line[3:])
+        if line[2] == "durable-id":  # marks start of new object
+            objects.append({"item_type": line[0]})
+        if not objects:
+            continue  # should never happen
+        objects[-1][line[2]] = " ".join(line[3:])
 
-    parsed = {}
-    now = time.time()
-    for key, values in info_enrolment.items():
-        item_name = values.get("location", key).replace("- ", "")
-        item_name = (item_name.rsplit("_", 1)[-1]).strip()
-        if values.get("data-read-numeric", ""):
-            values["data-read-numeric"] = \
-                get_rate("%s_read" % item_name, now, int(values["data-read-numeric"]))
-        if values.get("data-written-numeric", ""):
-            values["data-written-numeric"] = \
-                get_rate("%s_write" % item_name, now, int(values["data-written-numeric"]))
-        parsed[item_name] = values
+    return objects
 
-    return parsed
+
+def _get_hp_msa_object_item(data):
+    item = data.get("location", data["durable-id"]).replace("- ", "")
+    return item.rsplit("_", 1)[-1].strip()
+
+
+def parse_hp_msa(info):
+    return {_get_hp_msa_object_item(data): data for data in _parse_hp_msa_objects(info)}
 
 
 def inventory_hp_msa_health(parsed):
@@ -106,10 +102,18 @@ def inventory_hp_msa_io(parsed):
 
 def check_hp_msa_io(item, params, parsed):
     disks = {}
+    now = time.time()
     for key, values in parsed.items():
-        disks[key] = {
-            "read_throughput": values["data-read-numeric"],
-            "write_throughput": values["data-written-numeric"],
-        }
+        disk = disks.setdefault(key, {})
+        try:
+            read = int(values["data-read-numeric"])
+            disk["read_throughput"] = get_rate("%s_read" % key, now, read)
+        except (KeyError, ValueError, TypeError):
+            pass
+        try:
+            written = int(values["data-written-numeric"])
+            disk["write_throughput"] = get_rate("%s_write" % key, now, written)
+        except (KeyError, ValueError, TypeError):
+            pass
 
     return check_diskstat_dict(item, params, disks)

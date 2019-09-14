@@ -533,33 +533,28 @@ class TextUnicode(TextAscii):
                 _type_name(value))
 
 
-# TODO: Change to factory
-class ID(TextAscii):
+def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
-    def __init__(self, **kwargs):
-        super(ID, self).__init__(**kwargs)
-        self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
-        self._regex_error = _("An identifier must only consist of letters, digits, dash and "
-                              "underscore and it must start with a letter or underscore.")
+    return TextAscii(regex=re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$'),
+                     regex_error=_("An identifier must only consist of letters, digits, dash and "
+                                   "underscore and it must start with a letter or underscore."),
+                     **kwargs)
 
 
-# TODO: Change to factory
-class UnicodeID(TextUnicode):
+def UnicodeID(**kwargs):
     """Same as the ID class, but allowing unicode objects"""
-    def __init__(self, **kwargs):
-        super(UnicodeID, self).__init__(**kwargs)
-        self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
-        self._regex_error = _("An identifier must only consist of letters, digits, dash and "
-                              "underscore and it must start with a letter or underscore.")
+    return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
+                       regex_error=_("An identifier must only consist of letters, digits, dash and "
+                                     "underscore and it must start with a letter or underscore."),
+                       **kwargs)
 
 
-# TODO: Change to factory
-class UserID(TextUnicode):
-    def __init__(self, **kwargs):
-        super(UserID, self).__init__(**kwargs)
-        self._regex = re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE)
-        self._regex_error = _("An identifier must only consist of letters, digits, dash, dot, "
-                              "at and underscore. But it must start with a letter or underscore.")
+def UserID(**kwargs):
+    return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
+                       regex_error=_(
+                           "An identifier must only consist of letters, digits, dash, dot, "
+                           "at and underscore. But it must start with a letter or underscore."),
+                       **kwargs)
 
 
 class RegExp(TextAscii):
@@ -1822,31 +1817,26 @@ class DropdownChoice(ValueSpec):
         return True
 
 
-# TODO: Change to factory
 # TODO: Rename to ServiceState() or something like this
-class MonitoringState(DropdownChoice):
-    """Special conveniance variant for monitoring states"""
-    def __init__(self, **kwargs):
-        choices = [
-            (0, _("OK")),
-            (1, _("WARN")),
-            (2, _("CRIT")),
-            (3, _("UNKNOWN")),
-        ]
-        kwargs.setdefault("default_value", 0)
-        super(MonitoringState, self).__init__(choices=choices, **kwargs)
+def MonitoringState(**kwargs):
+    """Special convenience variant for monitoring states"""
+    kwargs.setdefault("default_value", 0)
+    return DropdownChoice(choices=[
+        (0, _("OK")),
+        (1, _("WARN")),
+        (2, _("CRIT")),
+        (3, _("UNKNOWN")),
+    ],
+                          **kwargs)
 
 
-# TODO: Change to factory
-class HostState(DropdownChoice):
-    def __init__(self, **kwargs):
-        choices = [
-            (0, _("UP")),
-            (1, _("DOWN")),
-            (2, _("UNREACHABLE")),
-        ]
-        kwargs.setdefault("default_value", 0)
-        super(HostState, self).__init__(choices=choices, **kwargs)
+def HostState(**kwargs):
+    kwargs.setdefault("default_value", 0)
+    return DropdownChoice(choices=[
+        (0, _("UP")),
+        (1, _("DOWN")),
+        (2, _("UNREACHABLE")),
+    ], **kwargs)
 
 
 class CascadingDropdown(ValueSpec):
@@ -2499,11 +2489,8 @@ def today():
     return round_date(time.time())
 
 
-# TODO: Change to factory
-class Weekday(DropdownChoice):
-    def __init__(self, **kwargs):
-        kwargs['choices'] = sorted(defines.weekdays().items())
-        super(Weekday, self).__init__(**kwargs)
+def Weekday(**kwargs):
+    return DropdownChoice(choices=sorted(defines.weekdays().items()), **kwargs)
 
 
 class RelativeDate(OptionalDropdownChoice):
@@ -4336,10 +4323,9 @@ class Labels(ValueSpec):
                         })
 
 
-class SingleLabel(Labels):
+def SingleLabel(world, label_source=None, **kwargs):
     """Input element for a single label"""
-    def __init__(self, world, label_source=None, **kwargs):
-        super(SingleLabel, self).__init__(world, label_source=None, max_labels=1, **kwargs)
+    return Labels(world, label_source=label_source, max_labels=1, **kwargs)
 
 
 @page_registry.register_page("ajax_autocomplete_labels")
@@ -4588,18 +4574,17 @@ class IconSelector(ValueSpec):
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
 
 
-class ListOfTimeRanges(ListOf):
-    def __init__(self, **kwargs):
-        super(ListOfTimeRanges, self).__init__(TimeofdayRange(
-            allow_empty=True,
-            allow_24_00=True,
-        ),
-                                               movable=False,
-                                               add_label=_("Add time range"),
-                                               del_label=_("Delete time range"),
-                                               style=ListOf.Style.FLOATING,
-                                               magic="#!#",
-                                               **kwargs)
+def ListOfTimeRanges(**kwargs):
+    return ListOf(TimeofdayRange(
+        allow_empty=True,
+        allow_24_00=True,
+    ),
+                  movable=False,
+                  add_label=_("Add time range"),
+                  del_label=_("Delete time range"),
+                  style=ListOf.Style.FLOATING,
+                  magic="#!#",
+                  **kwargs)
 
 
 # Kept for compatibility reasons (removed in 1.6)
@@ -4728,25 +4713,25 @@ class SSHKeyPair(ValueSpec):
         return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-class SchedulePeriod(CascadingDropdown):
-    def __init__(self, from_end=True, **kwargs):
-        if from_end:
-            from_end_choice = [
-                ("month_end", _("At the end of every month at day"),
-                 Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
-            ]
-        else:
-            from_end_choice = []
+def SchedulePeriod(from_end=True, **kwargs):
+    if from_end:
+        from_end_choice = [
+            ("month_end", _("At the end of every month at day"),
+             Integer(minvalue=1, maxvalue=28, unit=_("from the end"))),
+        ]
+    else:
+        from_end_choice = []
 
-        super(SchedulePeriod, self).__init__(
-            title=_("Period"),
-            orientation="horizontal",
-            choices=[
-                ("day", _("Every day")),
-                ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
-                ("month_begin", _("At the beginning of every month at day"),
-                 Integer(minvalue=1, maxvalue=28)),
-            ] + from_end_choice)
+    return CascadingDropdown(
+        title=_("Period"),
+        orientation="horizontal",
+        choices=[
+            ("day", _("Every day")),
+            ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
+            ("month_begin", _("At the beginning of every month at day"),
+             Integer(minvalue=1, maxvalue=28)),
+        ] + from_end_choice,
+        **kwargs)
 
 
 class CAorCAChain(UploadOrPasteTextFile):
@@ -4850,20 +4835,17 @@ class SiteChoice(DropdownChoice):
         return config.site_attribute_choices()
 
 
-class LogLevelChoice(DropdownChoice):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("default_value", logging.INFO)
-        kwargs.update({
-            "choices": [
-                (logging.CRITICAL, _("Critical")),
-                (logging.ERROR, _("Error")),
-                (logging.WARNING, _("Warning")),
-                (logging.INFO, _("Informational")),
-                (cmk.utils.log.VERBOSE, _("Verbose")),
-                (logging.DEBUG, _("Debug")),
-            ],
-        })
-        super(LogLevelChoice, self).__init__(**kwargs)
+def LogLevelChoice(**kwargs):
+    kwargs.setdefault("default_value", logging.INFO)
+    return DropdownChoice(choices=[
+        (logging.CRITICAL, _("Critical")),
+        (logging.ERROR, _("Error")),
+        (logging.WARNING, _("Warning")),
+        (logging.INFO, _("Informational")),
+        (cmk.utils.log.VERBOSE, _("Verbose")),
+        (logging.DEBUG, _("Debug")),
+    ],
+                          **kwargs)
 
 
 def MetricName():
@@ -4873,4 +4855,5 @@ def MetricName():
         sorted=True,
         choices=[
             (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
-        ])
+        ],
+    )

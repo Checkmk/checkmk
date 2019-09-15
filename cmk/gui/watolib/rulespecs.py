@@ -408,7 +408,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
             factory_default,
             help_func,
     ):
-        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], Optional[Callable[[], Text]], bool, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], Callable[[], ValueSpec], str, Optional[str], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], Optional[Callable[[], Text]], bool, bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(Rulespec, self).__init__()
 
         arg_infos = [
@@ -454,7 +454,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def group(self):
-        # type: () -> Type[RulespecGroup]
+        # type: () -> Type[RulespecBaseGroup]
         return self._group
 
     @property
@@ -634,7 +634,7 @@ class ServiceRulespec(Rulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(ServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -668,7 +668,7 @@ class BinaryHostRulespec(HostRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], str, bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], str, bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(BinaryHostRulespec, self).__init__(
             name=name,
             group=group,
@@ -712,7 +712,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             help_func=None,
     ):
-        # type: (str, Type[RulespecGroup], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, Optional[Callable[[], Text]]) -> None
+        # type: (str, Type[RulespecBaseGroup], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, Optional[Callable[[], Text]]) -> None
         super(BinaryServiceRulespec, self).__init__(
             name=name,
             group=group,
@@ -801,7 +801,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             factory_default=Rulespec.NO_FACTORY_DEFAULT,
             create_manual_check=True,
     ):
-        # type: (str, Type[RulespecGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, bool) -> None
+        # type: (str, Type[RulespecBaseGroup], Callable[[], ValueSpec], Optional[Callable[[], Text]], str, Optional[str], Optional[Callable[[], Text]], Optional[Callable[[], ValueSpec]], Optional[Callable[[], Text]], bool, bool, Any, bool) -> None
         # Mandatory keys
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name

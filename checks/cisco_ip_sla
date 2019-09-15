@@ -37,7 +37,7 @@ factory_settings['cisco_ip_sla_default_levels'] = {
 def parse_cisco_ip_sla(info):
     # since the RTT Index, Owner and Tag don't have to be set we use
     # indices for the different items
-    precisions = [list_.pop() for list_ in info[0]]
+    precisions = [list_[-1] for list_ in info[0]]
     precisions = {str(i): 'ms' if p[0] == '1' else 'us' for i, p in enumerate(precisions)}
 
     rtt_types = {
@@ -100,6 +100,7 @@ def parse_cisco_ip_sla(info):
         (  # rttMonEchoAdminEntry
             ('Target address', to_ip_address, '', None),
             ('Source address', to_ip_address, '', None),
+            # rttMonEchoAdminPrecision is deliberatly dropped by zip below
         ),
         (  # rttMonCtrlAdminEntry
             ('Owner', None, '', None),

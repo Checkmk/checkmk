@@ -535,8 +535,8 @@ class Immutables(object):
         for k in self.refs.keys():
             try:
                 assertEqual(self.refs[k], self.copies[k], repr(k) + descr)
-            except AssertionError as e:
-                raise ImmutablesChangedError(e.message)
+            except AssertionError as exc:
+                raise ImmutablesChangedError(*exc)
 
 
 def assertEqual(first, second, descr=''):

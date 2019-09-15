@@ -28,7 +28,7 @@
 This library is currently handled as internal module of Check_MK and
 does not offer stable APIs. The code may change at any time."""
 
-__version__ = "1.6.0b10"
+__version__ = "1.6.0b11"
 
 import os
 

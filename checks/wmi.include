@@ -224,9 +224,7 @@ def parse_wmi_table(info, key="Name"):
             # read table content
             line = next(info_iter)
             while not line[0].startswith("["):
-                if missing_wmi_status:
-                    line.append("OK")
-                current_table.add_row(line)
+                current_table.add_row(line + ['OK'] * bool(missing_wmi_status))
                 line = next(info_iter)
     except (StopIteration, ValueError):
         # regular end of block

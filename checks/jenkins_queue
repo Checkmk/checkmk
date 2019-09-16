@@ -89,7 +89,7 @@ def check_jenkins_queue(no_item, params, parsed):
         timestamp_in_queue = task["inQueueSince"] / 1000
         since = now - timestamp_in_queue
 
-        len_state, _since_infotext, _perf_data = check_levels(since, "in_queue_since", levels)
+        len_state, _since_infotext, _perf_data = check_levels(since, None, levels)
 
         stuck_state = 0
         if task["stuck"]:

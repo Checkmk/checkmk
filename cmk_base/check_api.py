@@ -396,6 +396,19 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
                                                    human_readable_func(crit), unit_info)
 
 
+def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
+    if not dsname:
+        return []
+
+    perf_list = [dsname, value, levels[0], levels[1]]
+    if isinstance(boundaries, tuple) and len(boundaries) == 2:
+        perf_list.extend(map(scale_value, boundaries))
+    perfdata = [tuple(perf_list)]
+    if ref_value:
+        perfdata.append(('predict_' + dsname, ref_value))
+    return perfdata
+
+
 def check_levels(value,
                  dsname,
                  params,
@@ -471,9 +484,10 @@ def check_levels(value,
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
-        if dsname:
-            return 0, infotext, [(dsname, value)]
-        return 0, infotext, []
+        # always add warn/crit, because the call-site may not know it passed None,
+        # and therefore expect a quadruple.
+        perf = _build_perfdata(dsname, value, scale_value, (None, None), boundaries)
+        return 0, infotext, perf
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
@@ -510,16 +524,7 @@ def check_levels(value,
     if statemarkers:
         infotext += state_markers[state]
 
-    if dsname:
-        if isinstance(boundaries, tuple) and len(boundaries) == 2:
-            min_, max_ = map(scale_value, boundaries)
-            perfdata = [(dsname, value, levels[0], levels[1], min_, max_)]
-        else:
-            perfdata = [(dsname, value, levels[0], levels[1])]
-        if ref_value:
-            perfdata.append(('predict_' + dsname, ref_value))
-    else:
-        perfdata = []
+    perfdata = _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value)
 
     return state, infotext, perfdata
 

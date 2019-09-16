@@ -423,10 +423,9 @@ def check_inodes(levels, inodes_total, inodes_avail):
 
     inode_status, infotext, i_perf = check_levels(inodes_total - inodes_avail,
                                                   'inodes_used', (inodes_warn, inodes_crit),
+                                                  boundaries=(0, inodes_total),
                                                   human_readable_func=human_readable_func,
                                                   infoname="Inodes Used")
-
-    i_perf[0] += (0, inodes_total)  # because check_levels does not include min, max
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]

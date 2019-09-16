@@ -371,6 +371,8 @@ def cleanup_piggyback_files(time_settings):
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
 
+    console.verbose("Cleanup piggyback files; time settings: %s.\n" % repr(time_settings))
+
     _cleanup_old_source_status_files(time_settings)
     _cleanup_old_piggybacked_files(time_settings)
 
@@ -409,8 +411,9 @@ def _cleanup_old_source_status_files(time_settings):
 
         max_cache_age = max_cache_age_by_sources.get(entry, global_max_cache_age)
         if file_age > max_cache_age:
-            console.verbose("Piggyback source status file '%s' is outdated. Remove it.\n" %
-                            source_file_path)
+            console.verbose(
+                "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.\n" %
+                (source_file_path, Age(file_age - max_cache_age)))
             _remove_piggyback_file(source_file_path)
 
 
@@ -435,7 +438,7 @@ def _cleanup_old_piggybacked_files(time_settings):
                 _get_piggyback_processed_file_info(source_hostname, piggybacked_hostname, piggyback_file_path, time_settings)
 
             if not successfully_processed:
-                console.verbose("Piggyback file '%s' is outdated (%s). Skip processing.\n" %
+                console.verbose("Piggyback file '%s' is outdated (%s). Remove it.\n" %
                                 (piggyback_file_path, reason))
                 _remove_piggyback_file(piggyback_file_path)
 
@@ -447,3 +450,5 @@ def _cleanup_old_piggybacked_files(time_settings):
                 pass
             else:
                 raise
+        else:
+            console.verbose("Piggyback folder '%s' is empty. Remove it.\n" % backed_host_dir_path)

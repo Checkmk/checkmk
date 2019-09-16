@@ -104,23 +104,26 @@ def check_fibrechannel_common(item, params, parsed):
         ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
     ]:
         value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
-        if value is not None:
-            state = 0
-            infotext = "%s: %s" % (descr, format_func(value))
-            perfdata = [(what, value)]
-            if levels_what:
-                if (what, 'predictive') in traffic_levels:
-                    level_params = traffic_levels[(what, 'predictive')]
-                    bw_warn, bw_crit = None, None
-                else:
-                    bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
-                    bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
-                    bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
-                    bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
-                    level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
-                state, infotext, perfdata = check_levels(value, what, level_params, infoname=descr)
+        if value is None:
+            continue
 
-            yield state, infotext, perfdata
+        if levels_what:
+            if (what, 'predictive') in traffic_levels:
+                level_params = traffic_levels[(what, 'predictive')]
+            else:
+                bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
+                bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
+                bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
+                bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
+                level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
+        else:
+            level_params = None
+
+        yield check_levels(value,
+                           what,
+                           level_params,
+                           human_readable_func=format_func,
+                           infoname=descr)
 
     # Latency
     total_ops = fcp_if["total_ops"]

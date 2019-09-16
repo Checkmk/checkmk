@@ -30,14 +30,9 @@ def check_fan(rpm, params):
         params = {"lower": params}
 
     levels = params.get("upper", (None, None)) + params["lower"]
-    state, infotext, perfdata = check_levels(rpm,
-                                             "fan",
-                                             levels,
-                                             unit="RPM",
-                                             human_readable_func=int,
-                                             infoname="Speed")
-
-    if not params.get("output_metrics"):
-        perfdata = []
-
-    return state, infotext, perfdata
+    return check_levels(rpm,
+                        "fan" if params.get("output_metrics") else None,
+                        levels,
+                        unit="RPM",
+                        human_readable_func=int,
+                        infoname="Speed")

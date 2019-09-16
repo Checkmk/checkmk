@@ -61,24 +61,22 @@ def k8s_network_err_pac(device, params, now):
         err_rate = get_rate('if.%s.if_%s_errors' % (device['name'], pway), now,
                             device['%s_errors' % mway])
         warn, crit = params.get('errors', (None, None))
-        perf_data = [('if_%s_pkts' % pway, pac_rate), ('if_%s_errors' % pway, err_rate)]
+        yield 0, '', [('if_%s_pkts' % pway, pac_rate), ('if_%s_errors' % pway, err_rate)]
         if isinstance(warn, float):
             try:
                 err_perc = 100.0 * err_rate / (err_rate + pac_rate)
             except ZeroDivisionError:
                 err_perc = 0
 
-            status, infotext, _perf = check_levels(err_perc,
-                                                   'err_perc', (warn, crit),
-                                                   human_readable_func=get_percent_human_readable,
-                                                   infoname="%s errors" % name)
+            yield check_levels(err_perc,
+                               None, (warn, crit),
+                               human_readable_func=get_percent_human_readable,
+                               infoname="%s errors" % name)
         else:  # absolute levels or no levels
-            status, infotext, _perf = check_levels(err_rate,
-                                                   'if_errors', (warn, crit),
-                                                   unit='1/s',
-                                                   infoname="%s error rate" % name)
-
-        yield status, infotext, perf_data
+            yield check_levels(err_rate,
+                               None, (warn, crit),
+                               unit='1/s',
+                               infoname="%s error rate" % name)
 
 
 def check_k8s_stats_network(item, params, parsed):

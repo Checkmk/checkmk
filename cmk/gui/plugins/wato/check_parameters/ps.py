@@ -460,7 +460,7 @@ rulespec_registry.register(
 
 
 # Rule for static process checks
-def _item_spec_ps():
+def _manual_item_spec_ps():
     return TextAscii(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
@@ -471,7 +471,7 @@ def _item_spec_ps():
     )
 
 
-def _parameter_valuespec_ps():
+def _manual_parameter_valuespec_ps():
     return Transform(
         Dictionary(elements=[
             ("process", process_match_options()),
@@ -487,8 +487,8 @@ rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="ps",
         group=RulespecGroupManualChecksApplications,
-        item_spec=_item_spec_ps,
-        parameter_valuespec=_parameter_valuespec_ps,
+        item_spec=_manual_item_spec_ps,
+        parameter_valuespec=_manual_parameter_valuespec_ps,
         title=lambda: _("State and count of processes"),
     ))
 
@@ -804,7 +804,7 @@ rulespec_registry.register(
 
 
 # Rule for static process checks
-def _item_spec_hr_ps():
+def _manual_item_spec_hr_ps():
     return TextAscii(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
@@ -815,7 +815,7 @@ def _item_spec_hr_ps():
     )
 
 
-def _parameter_valuespec_hr_ps():
+def _manual_parameter_valuespec_hr_ps():
     return Dictionary(
         elements=hr_process_match_elements() + hr_process_parameter_elements(),
         required_keys=["descr"],
@@ -827,7 +827,7 @@ rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="hr_ps",
         group=RulespecGroupManualChecksApplications,
-        item_spec=_item_spec_hr_ps,
-        parameter_valuespec=_parameter_valuespec_hr_ps,
+        item_spec=_manual_item_spec_hr_ps,
+        parameter_valuespec=_manual_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),
     ))

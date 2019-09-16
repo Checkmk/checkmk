@@ -200,6 +200,7 @@ def test_store_piggyback_raw_data_second_source():
 
 
 def test_get_source_and_piggyback_hosts():
+    time_settings = {(None, "max_cache_age"): piggyback_max_cachefile_age}
     cmk.utils.paths.piggyback_source_dir.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
 
     piggyback.store_piggyback_raw_data("source1", {
@@ -233,12 +234,11 @@ def test_get_source_and_piggyback_hosts():
         ]
     })
 
-    assert sorted(list(
-        piggyback.get_source_and_piggyback_hosts(piggyback_max_cachefile_age))) == sorted([
-            ('source1', 'test-host2'),
-            ('source2', 'test-host'),
-            ('source2', 'test-host2'),
-        ])
+    assert sorted(list(piggyback.get_source_and_piggyback_hosts(time_settings))) == sorted([
+        ('source1', 'test-host2'),
+        ('source2', 'test-host'),
+        ('source2', 'test-host2'),
+    ])
 
 
 @pytest.mark.parametrize("time_settings, successfully_processed, reason, reason_status", [

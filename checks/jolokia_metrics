@@ -303,6 +303,17 @@ check_info["jolokia_metrics.gc"] = {
 #   '----------------------------------------------------------------------'
 
 
+def discover_jolokia_metrics_mem(info):
+    parsed = jolokia_metrics_parse(info)
+
+    required_keys = ("HeapMemoryUsage", "NonHeapMemoryUsage", "HeapMemoryMax", "NonHeapMemoryMax")
+
+    for instance, data in parsed.items():
+        # don't add memory check if we don't have the necessary data
+        if data and all(key in data for key in required_keys):
+            yield instance, {}
+
+
 def check_jolokia_metrics_mem(item, params, info):
     parsed = jolokia_metrics_parse(info)
 
@@ -406,7 +417,7 @@ check_info["jolokia_metrics.mem"] = {
     "includes": ["jolokia.include"],
     "service_description": "JVM %s Memory",
     "check_function": check_jolokia_metrics_mem,
-    "inventory_function": lambda i: inventory_jolokia_metrics(i, "mem"),
+    "inventory_function": discover_jolokia_metrics_mem,
     "has_perfdata": True,
     "group": "jvm_memory",
     "default_levels_variable": "jolokia_metrics_mem_default_levels"
@@ -423,6 +434,13 @@ check_info["jolokia_metrics.mem"] = {
 #   '----------------------------------------------------------------------'
 
 
+def discover_jolokia_metrics_uptime(info):
+    parsed = jolokia_metrics_parse(info)
+    for instance, data in parsed.items():
+        if data and "Uptime" in data:
+            yield instance, None
+
+
 def check_jolokia_metrics_uptime(item, params, info):
     parsed = jolokia_metrics_parse(info)
     if parsed.get(item, "") is None:
@@ -437,7 +455,7 @@ check_info["jolokia_metrics.uptime"] = {
     "includes": ["jolokia.include", 'uptime.include'],
     "service_description": "JVM %s Uptime",
     "check_function": check_jolokia_metrics_uptime,
-    "inventory_function": lambda i: inventory_jolokia_metrics(i, "uptime"),
+    "inventory_function": discover_jolokia_metrics_uptime,
     "group": "jvm_uptime",
     "has_perfdata": True,
 }

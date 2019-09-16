@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0b11
+Version: 1.6.0b10
 Date: 1568365264
 
 If a source host is not sending piggyback data for its piggypacked hosts

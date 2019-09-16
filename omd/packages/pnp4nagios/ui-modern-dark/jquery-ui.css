@@ -1,7 +1,7 @@
 * {
     font-family: "Lato", "Roboto", Helvetica, Arial, sans-serif;
     font-size: 11px;
-    color: #1A243D;
+    color: #dcdcdc;
     letter-spacing: .5px;
     line-height: 1.5;
     text-decoration: none;
@@ -11,10 +11,10 @@ html {
     font-size: 12px; }
 
 h1, h2, h3, h4 {
-    color: #1A243D; }
+    color: #dcdcdc; }
 
 body {
-    background: #f0f2f4;
+    background: #323232;
     background-image: none !important;
     padding: 0px 32px;
     font-weight: 400; }
@@ -69,38 +69,44 @@ table.body {
 
 .ui-widget {
     border-radius: 8px;
-    background: #FFF;
-    color: #1A243D !important;
+    background: #282828;
+    color: #dcdcdc !important;
     font-weight: 400;
     padding: 8px; }
     .ui-widget .ui-widget {
         font-size: 1em; }
 .ui-widget-header {
-    background: #FFF;
+    background: #282828;
     padding: 8px;
-    color: #1A243D;
+    color: #dcdcdc;
     font-weight: 400; }
     .ui-widget-header a {
-        color: #fff; }
+        color: #dcdcdc; }
 .p4.ui-widget-header.ui-corner-all {
     padding: 32px;
     font-size: 15pt; }
 .p4.ui-widget-content {
     padding: 16px;
     size: 13pt;
-    font-color: #1A243D !important; }
+    color: #dcdcdc !important; }
+.p4.ui-widget-content.ui-corner-bottom div.graph {
+    z-index: 1; }
+.p4.ui-widget-content.ui-corner-bottom div.graph + img {
+    filter: invert(84%); }
+.p4.ui-widget-content.ui-corner-bottom img.goto {
+    filter: invert(90%); }
 .p4.ui-widget-content.ui-corner-bottom strong {
     display: inline-block;
     width: 60px; }
 .p4.ui-widget-content.ui-corner-bottom a {
-    color: #1A243D; }
+    color: #dcdcdc; }
 .p4.ui-widget-content.ui-corner-bottom a:hover {
     text-decoration: underline}
-    .p4.ui-widget-content.ui-corner-bottom a.multi0 {
+.p4.ui-widget-content.ui-corner-bottom a.multi0 {
     background: none;
     padding: 0px 0px 0px 16px;
     line-height: 1.5; }
-    .p4.ui-widget-content.ui-corner-bottom > span > a.multi0 {
+.p4.ui-widget-content.ui-corner-bottom > span > a.multi0 {
     background: none;
     padding: 0px 0px 0px 0px;
     line-height: 1.5; }
@@ -117,9 +123,10 @@ table.body {
     padding: 2px; }
 .p4 a img.icon {
     width: 41px;
-    height: 41px; }
+    height: 41px;
+    filter: grayscale(40%); }
 .p4 #services {
-color: #1A243D !important; }
+    color: #dcdcdc !important; }
 #basket_items.ui-sortable li {
 font-size: 11px;
 padding: 4px;
@@ -135,7 +142,7 @@ span#basket_action_add a img {
     font-size: 12px; }
     button#basket-show, button#basket-clear, input#submit, input#remove_timerange_session, button.ui-datepicker-current, button.ui-datepicker-close {
         padding: 4px;
-        background: #FFF;
+        background: #282828;
         height: 34px;
         width: 100px;
         margin-right: 6px;
@@ -152,7 +159,7 @@ div.ui-widget-header.ui-corner-top {
     font-weight: 600;}
 
     .ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited {
-        color: #1A243D;
+        color: #dcdcdc;
         padding: 8px;
         vertical-align: middle; }
 
@@ -340,7 +347,7 @@ input.ui-button {
     left: .5em; }
 .ui-button-text-icon-secondary .ui-button-icon-secondary, .ui-button-text-icons .ui-button-icon-secondary, .ui-button-icons-only .ui-button-icon-secondary {
     right: .5em; }
-.ui-button-text-icons .ui-button-icon-secondary, .ui-button-icons-only .ui-button-icon-secondary { 
+.ui-button-text-icons .ui-button-icon-secondary, .ui-button-icons-only .ui-button-icon-secondary {
     right: .5em; }
 
 .ui-buttonset {
@@ -536,7 +543,7 @@ button.ui-button::-moz-focus-inner {
         .ui-datepicker td span, .ui-datepicker td a {
             display: block;
             padding: .2em;
-            color: #1A243D;
+            color: #dcdcdc;
             border: 1px solid;
             border-radius: 3px;
             text-align: center;
@@ -608,6 +615,13 @@ button.ui-button::-moz-focus-inner {
 .ui-progressbar .ui-progressbar-value {
     margin: -1px;
     height:100%; }
+
+input {
+    padding: 3px 6px;
+    color: #dcdcdc;
+    background: #444 !important;
+    border: 1px solid #212121;
+    border-radius: 4px; }
 
 /* positioning */
 .ui-icon-carat-1-n { background-position: 0 0; }

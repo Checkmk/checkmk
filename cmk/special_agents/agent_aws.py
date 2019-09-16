@@ -464,7 +464,16 @@ def _chunks(list_, length=100):
 
 def _get_ec2_piggyback_hostname(inst, region):
     # PrivateIpAddress and InstanceId is available although the instance is stopped
-    return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
+    # When we terminate an instance, the instance gets the state "terminated":
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
+    # The instance remains in this state about 60 minutes, after 60 minutes the
+    # instance is no longer visible in the console.
+    # In this case we do not deliever any data for this piggybacked host such that
+    # the services go stable and Check_MK service reports "CRIT - Got not information".
+    try:
+        return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
+    except KeyError:
+        return
 
 
 #.
@@ -1004,6 +1013,8 @@ class EC2Limits(AWSSectionLimits):
             if inst is None:
                 continue
             inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if not inst_id:
+                continue
             key = (inst_id, vpc_id)
             sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
@@ -1029,8 +1040,11 @@ class EC2Limits(AWSSectionLimits):
             inst = self._get_inst_assignment(instances, 'VpcId', iface.get('VpcId'))
             if inst is None:
                 continue
+            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if not inst_id:
+                continue
             self._add_limit(
-                _get_ec2_piggyback_hostname(inst, self._region),
+                inst_id,
                 AWSLimit(
                     "if_vpc_sec_group", "VPC security groups of elastic network interface %s" %
                     iface['NetworkInterfaceId'], 5, len(iface['Groups'])))
@@ -1131,7 +1145,12 @@ class EC2Summary(AWSSectionGeneric):
                                   raw_content.cache_timestamp)
 
     def _format_instances(self, instances):
-        return {_get_ec2_piggyback_hostname(inst, self._region): inst for inst in instances}
+        formatted_instances = {}
+        for inst in instances:
+            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if inst_id:
+                formatted_instances[inst_id] = inst
+        return formatted_instances
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]

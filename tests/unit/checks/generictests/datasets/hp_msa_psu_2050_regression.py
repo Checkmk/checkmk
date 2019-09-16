@@ -73,12 +73,9 @@ checks = {
     ],
     'sensor': [
         ('Enclosure 1 Right', default_params, [
-            (0, '12 V: 0.00 V', []),
-            (2, 'too low (warn/crit below 11.90 V/11.80 V)', []),
-            (0, '5 V: 0.00 V', []),
-            (2, 'too low (warn/crit below 4.90 V/4.80 V)', []),
-            (0, '3.3 V: 0.00 V', []),
-            (2, 'too low (warn/crit below 3.25 V/3.20 V)', []),
+            (2, '12 V: 0.00 V (warn/crit below 11.90 V/11.80 V)', []),
+            (2, '5 V: 0.00 V (warn/crit below 4.90 V/4.80 V)', []),
+            (2, '3.3 V: 0.00 V (warn/crit below 3.25 V/3.20 V)', []),
         ]),
     ],
     'temp': [

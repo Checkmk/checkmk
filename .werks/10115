@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0b11
+Version: 1.6.0b10
 Date: 1568616792
 
 Due to a regression in 1.6.0, using shadow hosts on the master site caused

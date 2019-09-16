@@ -840,7 +840,6 @@ div.popup {
   }
 }
 
-/* TODO: Reproduce these #hover_menu elements */
 div#hover_menu {
   position: absolute;
   /* The hover menu needs to have a higher z-index than the highest element
@@ -865,6 +864,11 @@ div#hover_menu {
 
   .graph_container div.time {
     letter-spacing: 0;
+  }
+
+  /* For pnp4nagios hover_menu graphs in the Raw Edition */
+  table tbody tr td img {
+    filter: $hover-menu-pnp4nagios-filter;
   }
 }
 

@@ -14,12 +14,12 @@ mock_item_state = {
         "cifs:vserver.cifs_read_ops": (20000, 1000),
         "cifs:vserver.cifs_write_latency": (20000, 1000),
         "cifs:vserver.cifs_write_ops": (20000, 1000),
-        "fcp_lif:vserver.avg_read_latency": (20000, 1000),
-        "fcp_lif:vserver.avg_write_latency": (20000, 1000),
+        "fcp_lif:vserver.fcp_read_latency": (20000, 1000),
+        "fcp_lif:vserver.fcp_write_latency": (20000, 1000),
         "fcp_lif:vserver.read_data": (20000, 1000),
         "fcp_lif:vserver.write_data": (20000, 1000),
-        "iscsi_lif:vserver.avg_read_latency": (20000, 1000),
-        "iscsi_lif:vserver.avg_write_latency": (20000, 1000),
+        "iscsi_lif:vserver.iscsi_read_latency": (20000, 1000),
+        "iscsi_lif:vserver.iscsi_write_latency": (20000, 1000),
         "iscsi_lif:vserver.read_data": (20000, 1000),
         "iscsi_lif:vserver.write_data": (20000, 1000),
         "lif:vserver.recv_data": (20000, 1000),
@@ -59,10 +59,18 @@ info = [
     [
         "protocol fcp_lif:vserver",
         "instance_name flvs0",
-        "avg_read_latency 10000",
-        "avg_write_latency 10000",
-        "read_ops 10",
-        "write_ops 10",
+        "fcp_read_latency 10000",
+        "fcp_write_latency 10000",
+        "fcp_read_ops 10",
+        "fcp_write_ops 10",
+        "read_data 10000",
+        "write_data 10000",
+    ],
+    [
+        "protocol fcp_lif:vserver",
+        "instance_name flvs0_norefs",
+        "fcp_read_latency 10000",
+        "fcp_write_latency 10000",
         "read_data 10000",
         "write_data 10000",
     ],
@@ -75,12 +83,26 @@ info = [
         "cifs_write_ops 10000",
     ],
     [
+        "protocol cifs:vserver",
+        "instance_name pcvs0_norefs",
+        "cifs_read_latency 10000",
+        "cifs_write_latency 10000",
+    ],
+    [
         "protocol iscsi_lif:vserver",
         "instance_name ilvs0",
-        "avg_read_latency 10000",
-        "avg_write_latency 10000",
-        "read_ops 10",
-        "write_ops 10",
+        "iscsi_read_latency 10000",
+        "iscsi_write_latency 10000",
+        "iscsi_read_ops 10",
+        "iscsi_write_ops 10",
+        "read_data 10000",
+        "write_data 10000",
+    ],
+    [
+        "protocol iscsi_lif:vserver",
+        "instance_name ilvs0_norefs",
+        "iscsi_read_latency 10000",
+        "iscsi_write_latency 10000",
         "read_data 10000",
         "write_data 10000",
     ],
@@ -115,12 +137,15 @@ info = [
 discovery = {
     "": [
         ("flvs0", {}),
+        ("flvs0_norefs", {}),
         ("ilvs0", {}),
+        ("ilvs0_norefs", {}),
         ("lvs0", {}),
         ("n3", {}),
         ("n4", {}),
         ("n41", {}),
         ("pcvs0", {}),
+        ("pcvs0_norefs", {}),
     ]
 }
 
@@ -154,7 +179,77 @@ checks = {
             ],
         ),
         (
+            "flvs0_norefs",
+            {},
+            [
+                (
+                    0,
+                    "FCP avg. Read latency: 0.00 ms",
+                    [("fcp_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "FCP avg. Write latency: 0.00 ms",
+                    [("fcp_write_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "FCP read data: 0.00 B",
+                    [("fcp_read_data", 9.000180003600072e-06, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "FCP write data: 0.00 B",
+                    [("fcp_write_data", 9.000180003600072e-06, None, None, None, None)],
+                ),
+            ],
+        ),
+        (
             "ilvs0",
+            {},
+            [
+                (
+                    0,
+                    "iSCSI avg. Read latency: 0.00 ms",
+                    [("iscsi_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "iSCSI avg. Write latency: 0.00 ms",
+                    [("iscsi_write_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "iSCSI read data: 0.00 B",
+                    [
+                        (
+                            "iscsi_read_data",
+                            9.000180003600072e-06,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                    ],
+                ),
+                (
+                    0,
+                    "iSCSI write data: 0.00 B",
+                    [
+                        (
+                            "iscsi_write_data",
+                            9.000180003600072e-06,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                    ],
+                ),
+            ],
+        ),
+        (
+            "ilvs0_norefs",
             {},
             [
                 (
@@ -369,6 +464,22 @@ checks = {
                     0,
                     "CIFS write OPs: 0",
                     [("cifs_write_ios", 9.000180003600072e-06, None, None, None, None)],
+                ),
+            ],
+        ),
+        (
+            "pcvs0_norefs",
+            {},
+            [
+                (
+                    0,
+                    "CIFS read latency: 0.00 ms",
+                    [("cifs_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "CIFS write latency: 0.00 ms",
+                    [("cifs_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),

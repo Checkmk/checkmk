@@ -22,13 +22,18 @@ checks = {
     "": [(
         None,
         {},
-        [(
-            0,
-            "Ready: 0/1, Running: 0, Waiting: 0, Terminated: 1",
-            [
-                ("docker_all_containers", 1, None, None, 0, 1),
-                ("ready_containers", 0, None, None, 0, 1),
-            ],
-        )],
-    )]
+        [
+            (
+                0,
+                "Ready: 0/1",
+                [
+                    ("docker_all_containers", 1, None, None, 0, 1),
+                    ("ready_containers", 0, None, None, 0, 1),
+                ],
+            ),
+            (0, "Running: 0", []),
+            (0, "Waiting: 0", []),
+            (0, "Terminated: 1", []),
+        ],
+    )],
 }

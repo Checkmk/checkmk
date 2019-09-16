@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -169,6 +169,16 @@ msgstr "über %d Minuten verteilt"
 
 msgid " to:"
 msgstr " An:"
+
+#, python-format
+msgid "!!! Error: Received class in RulespecRegistry:register %r"
+msgstr ""
+
+#, python-format
+msgid ""
+"!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
+"%r"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -3316,17 +3326,14 @@ msgstr "Die Angabe des Altersfilters muss das Format <operator><int> haben."
 msgid "Age of Anti-Virus signature"
 msgstr "Alter der AntiVirus-Signatur"
 
-#, fuzzy
 msgid "Age of Anti-Virus signature extended database"
-msgstr "Alter des letzten AntiVirus-Updates"
+msgstr "Alter der AntiVirus-Signatur (erweiterte Datenbank)"
 
-#, fuzzy
 msgid "Age of Intrusion Prevention signature"
-msgstr "Alter des letzten AntiVirus-Updates"
+msgstr "Alter der Intrusion-Prevention-Signatur"
 
-#, fuzzy
 msgid "Age of Intrusion Prevention signature extended database"
-msgstr "Alter des letzten AntiVirus-Updates"
+msgstr "Alter der Intrusion-Prevention-Signatur (erweiterte Datenbank)"
 
 msgid "Age of jobs controlled by mk-job"
 msgstr "Alter von Jobs, die mit mk-job überwacht werden"
@@ -6737,9 +6744,9 @@ msgstr "Gecachte Ausgabe vom Monitoring-Agent"
 msgid "Caches"
 msgstr "Caches"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Caching nearest DC %s"
-msgstr "Erkennungs-Zustand"
+msgstr "Nächsten DC %s cachen"
 
 msgid "Call a Rule"
 msgstr "Regel auswählen..."
@@ -7356,9 +7363,8 @@ msgstr "Prüfen und CRIT"
 msgid "Check and WARN"
 msgstr "Prüfen und WARN"
 
-#, fuzzy
 msgid "Check and display only"
-msgstr "Ändere Optionen der Spaltenanzeige"
+msgstr "Prüfen und nur anzeigen"
 
 msgid "Check command"
 msgstr "Checkbefehl"
@@ -7371,6 +7377,9 @@ msgstr "Prüfe Verbindung zu TCP Port"
 
 msgid "Check containers cpu utilization"
 msgstr "Überwache die CPU Auslastung der Container"
+
+msgid "Check containers disk status"
+msgstr "Überwache den Festplattenstatus der Container"
 
 msgid "Check containers memory usage"
 msgstr "Überwache die Speichernutzung der Container"
@@ -7773,10 +7782,10 @@ msgstr "Name des Childhosts:"
 msgid "Child report"
 msgstr "Eingebetteter Bericht"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Child report is added %d times (once for each matched element)"
 msgstr ""
-"Eingebetteter Bericht wird %d mal eingefügt (1x für jeden gefundenen Host)"
+"Eingebetteter Bericht wird %d mal eingefügt (1x für jedes gefundene Element)"
 
 msgid "Child time in system space"
 msgstr "CPU-Zeit von Kindprozessen im Kernel"
@@ -12257,9 +12266,8 @@ msgstr "Zeige Warnung in der Weboberfläche, wenn Alarmierungen fehlschlagen"
 msgid "Display GUI notifications sent to users."
 msgstr "Zeige Alarme der Weboberfläche, die an die Benutzer gesendet wurden"
 
-#, fuzzy
 msgid "Display Model Parametrization in graph"
-msgstr "Alle Aggregate einer bestimmten Gruppe anzeigen."
+msgstr "Modellparametrisierung in Graph anzeigen"
 
 msgid "Display Options"
 msgstr "Anzeigeoptionen"
@@ -12301,9 +12309,8 @@ msgstr "Titel der Übersicht anzeigen"
 msgid "Display graphs among each other"
 msgstr "Graphen untereinander darstellen"
 
-#, fuzzy
 msgid "Display historic data since the last"
-msgstr "SLA Statistiken anzeigen"
+msgstr "Historische Daten anzeigen für die letzten"
 
 msgid "Display inode usage in check output..."
 msgstr "Inode-Benutzung in Ausgabe des Checks anzeigen"
@@ -13152,9 +13159,8 @@ msgstr "Nicht importieren"
 msgid "Don't publish to other users"
 msgstr "Nicht für andere Benutzer veröffentlichen"
 
-#, fuzzy
 msgid "Don't show and check"
-msgstr "Nicht den Graphtitel anzeigen"
+msgstr "Nicht anzeigen und prüfen"
 
 msgid "Don't show graph title"
 msgstr "Nicht den Graphtitel anzeigen"
@@ -14864,9 +14870,8 @@ msgstr "Leere Merkmale ausklammern"
 msgid "Exclude hosts where the agent is unreachable"
 msgstr "Hosts ausschließen, deren Agent nicht erreichbar ist"
 
-#, fuzzy
 msgid "Exclude reserved space"
-msgstr "Reserviertern Platz anzeigen"
+msgstr "Reserviertern Speicher ausschließen"
 
 msgid "Exclude scheduled downtimes"
 msgstr "geplante Wartungszeiten ausnehmen"
@@ -14877,11 +14882,12 @@ msgstr "Services ausschließen, die auf folgende regulären Ausdrücke matchen"
 msgid "Exclude some sections on certain instances"
 msgstr "Auf einigen Instanzen einige Sektionen auslassen"
 
-#, fuzzy
 msgid ""
 "Exclude space reserved for the <tt>root</tt> user from calculation of used "
 "space"
-msgstr "Zeige reservierten Platz für <tt>root</tt>-User"
+msgstr ""
+"Schließe für den <tt>root</tt>-User reservierten Speicher von der Berechnung "
+"des benutzten Speichers aus"
 
 msgid "Exclude the following SIDs (if found)"
 msgstr "Folgende SIDs auslassen (falls vorhanden)"
@@ -14999,9 +15005,8 @@ msgstr "Erwarte autoritativen DNS-Server"
 msgid "Expect regular messages"
 msgstr "Erwarte regelmäßig Nachrichten"
 
-#, fuzzy
 msgid "Expect resource to be online on"
-msgstr "Erwartete Antwortzeit"
+msgstr "Erwarte die Ressource online auf"
 
 msgid "Expect the flag to be: Off"
 msgstr "Erwarte das Flag: Nicht gesetzt"
@@ -15103,7 +15108,6 @@ msgstr "Läuft ab"
 msgid "Explanation for event action"
 msgstr "Erklärung für Ereignisaktion"
 
-#, fuzzy
 msgid "Explicit"
 msgstr "Explizit"
 
@@ -15141,9 +15145,8 @@ msgstr "Expliziter Bereich"
 msgid "Explicit renaming"
 msgstr "Explizite Umbenennung"
 
-#, fuzzy
 msgid "Explicit set"
-msgstr "Explizite Hosts"
+msgstr "Explizites Set"
 
 msgid "Explicit tablespaces"
 msgstr "Explizite Tablesspaces"
@@ -16321,7 +16324,7 @@ msgid "Forecast Graphs"
 msgstr "Hostgraphen"
 
 msgid "Forecast Model Parametrization"
-msgstr "Parametrierung des Vorhersagemodells"
+msgstr "Parametrisierung des Vorhersagemodells"
 
 #, fuzzy
 msgid "Forecast into the future"
@@ -21729,6 +21732,10 @@ msgid "Invalid DCD command: %r"
 msgstr "Ungültiger DCD-Befehl: %r"
 
 #, python-format
+msgid "Invalid None argument at for %s idx %d"
+msgstr ""
+
+#, python-format
 msgid "Invalid Perf-O-Meter definition %r: only one or two entries are allowed"
 msgstr ""
 "Ungültige Perf-O-Meter-Definition %r: Nur ein oder zwei Einträge sind erlaubt"
@@ -21828,6 +21835,10 @@ msgstr "Üngultiger Datentyp des Zeitstempels (muss int/float sein)"
 
 msgid "Invalid end time given"
 msgstr "Ungülitge Endzeit"
+
+#, fuzzy, python-format
+msgid "Invalid expected callable for %s at idx %d: %r"
+msgstr "Ungültige Perfometer-Deklaraion: %r"
 
 #, python-format
 msgid "Invalid file name extension. Allowed are: %s"
@@ -26544,6 +26555,11 @@ msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
 "Negative Übereinstimmung (Exkludieren von betroffenen Hosts von der Auswahl)"
 
+#, fuzzy
+msgid "Negative match (Exclude matching services from the set)"
+msgstr ""
+"Negative Übereinstimmung (Exkludieren von betroffenen Hosts von der Auswahl)"
+
 msgid "Negotiate SSL"
 msgstr "SSL-Verbindungsaufbau"
 
@@ -30831,6 +30847,10 @@ msgid "Position"
 msgstr "Position"
 
 msgid "Positive match (Add matching hosts to the set)"
+msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
+
+#, fuzzy
+msgid "Positive match (Add matching services to the set)"
 msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
 
 msgid "Possible are 'user', 'operator', 'admin'"
@@ -53173,9 +53193,8 @@ msgstr "inaktiv"
 msgid "down"
 msgstr "heruntergefahren"
 
-#, fuzzy
 msgid "dynamic configuration connection"
-msgstr "Konfigurationsverbindung"
+msgstr "Dynamische Konfigurationsverbindung"
 
 msgid "eWON Discovery"
 msgstr "eWON-Serviceerkennung"

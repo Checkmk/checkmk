@@ -364,7 +364,7 @@ def check_jolokia_metrics_mem(item, params, info):
                     crit_level = value_max - params[what][1]
 
                 if what != "total":
-                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                    perfdata.append((what, value, warn_level, crit_level, None, value_max))
 
                 if not value_max:
                     param_state = 0
@@ -380,7 +380,7 @@ def check_jolokia_metrics_mem(item, params, info):
                     crit_level = value_max * params[what][1] / 100.0
 
                 if what != "total":
-                    perfdata.append((what, value, warn_level, crit_level, "", value_max))
+                    perfdata.append((what, value, warn_level, crit_level, None, value_max))
 
                 if not value_max:
                     param_state = 0
@@ -392,7 +392,7 @@ def check_jolokia_metrics_mem(item, params, info):
                     level_info = "%s(warn at %s%%)" % (state_markers[1], params[what][0])
         else:
             if what != "total":
-                perfdata.append((what, value, "", "", "", value_max))
+                perfdata.append((what, value, None, None, None, value_max))
 
         if value_max:
             used_info = "/%.1f%% used" % (value / value_max * 100)

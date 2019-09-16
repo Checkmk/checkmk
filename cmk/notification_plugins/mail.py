@@ -591,7 +591,7 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
 
     encryption = context.get('PARAMETER_SMTP_ENCRYPTION', "NONE")
 
-    if encryption == "SSL_TLS":
+    if encryption == "ssl_tls":
         conn = smtplib.SMTP_SSL(smarthost, port)  # , from_address)
     else:
         conn = smtplib.SMTP(smarthost, port)  # , from_address)
@@ -602,7 +602,7 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
     conn.last_repl = ""
     conn.getreply = types.MethodType(getreply_wrapper, conn)
 
-    if encryption == "STARTTLS":
+    if encryption == "starttls":
         conn.starttls()
 
     if context.get('PARAMETER_SMTP_AUTH_USER') is not None:

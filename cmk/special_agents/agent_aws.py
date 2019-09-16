@@ -3186,8 +3186,8 @@ class AWSSectionsGeneric(AWSSections):
         elb_health = ELBHealth(elb_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
 
-        elbv2_labels = ELBLabelsGeneric(elb_client, region, config, resource='elbv2')
-        elbv2_target_groups = ELBv2TargetGroups(elb_client, region, config)
+        elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource='elbv2')
+        elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
         elbv2_application = ELBv2Application(cloudwatch_client, region, config)
         elbv2_network = ELBv2Network(cloudwatch_client, region, config)
 

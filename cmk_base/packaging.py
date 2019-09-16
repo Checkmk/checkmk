@@ -79,7 +79,7 @@ PERM_MAP = (
     (cmk.utils.paths.locale_dir, 0o644),
     (str(cmk.utils.paths.local_locale_dir), 0o644),
     (str(cmk.utils.paths.local_bin_dir), 0o755),
-    (os.path.join(str(cmk.utils.paths.local_lib_dir), "nagios", "plugins"), 0o755),
+    (str(cmk.utils.paths.local_lib_dir.joinpath("nagios", "plugins")), 0o755),
     (str(cmk.utils.paths.local_lib_dir), 0o644),
     (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),

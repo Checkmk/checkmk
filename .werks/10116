@@ -1,0 +1,14 @@
+Title: Make fileinfo work again on old Perl versions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b11
+Date: 1568636356
+
+Due to a change in 1.6.0, the fileinfo part of the Checkmk agent only worked
+when a Perl >= 5.16 (released in spring 2012) was installed on the client. 
+For distributions with ancient Perl versions (Debian Squeeze/Wheezy, Ubuntu
+Precise, CentOS 6, SLES 11), fileinfo stopped working.  This has been fixed.

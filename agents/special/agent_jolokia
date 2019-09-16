@@ -31,7 +31,7 @@ import argparse
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
-sys.path.append(os.path.join(cmk.utils.paths.local_agents_dir, 'plugins'))
+sys.path.append(str(cmk.utils.paths.local_agents_dir.joinpath('plugins')))
 sys.path.append(os.path.join(cmk.utils.paths.agents_dir, 'plugins'))
 import mk_jolokia  # pylint: disable=import-error,wrong-import-position
 

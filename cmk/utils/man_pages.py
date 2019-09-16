@@ -37,9 +37,10 @@ import sys
 import StringIO
 import subprocess
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
     from pathlib2 import Path
 
 import cmk.utils.debug

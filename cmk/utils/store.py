@@ -27,6 +27,7 @@
 functionality is the locked file opening realized with the File() context
 manager."""
 
+import sys
 import ast
 from contextlib import contextmanager
 import errno
@@ -38,9 +39,10 @@ import tempfile
 import time
 from typing import Callable, Any, Union, Dict, Iterator, List  # pylint: disable=unused-import
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
     from pathlib2 import Path
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout

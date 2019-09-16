@@ -1,0 +1,11 @@
+Title: oracle_dataguard_stats: Fixed letter salad while rendering table of dataguard statistics
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b11
+Date: 1568631672
+
+

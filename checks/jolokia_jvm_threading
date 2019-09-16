@@ -23,38 +23,22 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import json
 
 factory_settings['jolokia_jvm_threading.pool'] = {
     'currentThreadsBusy': (80, 90),
 }
 
 
-def parse_jolokia_json_output(info):
-    for line in info:
-        try:
-            instance, mbean, raw_json_data = line
-            yield instance, mbean, json.loads(raw_json_data)
-        except ValueError:
-            continue
-
-
-def _jolokia_mbean_type(mbean):
-    tmp = mbean.split("type=", 1)[-1]
-    tmp = tmp.split(",", 1)[0]
-    return tmp.split("/", 1)[0]
-
-
 def parse_jolokia_jvm_threading(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = _jolokia_mbean_type(mbean)
+        type_ = _jolokia_mbean_attribute('type', mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 
         if type_ == "ThreadPool":
             for key in data:
-                name = key.split('name="', 1)[-1].split('"', 1)[0]
+                name = _jolokia_mbean_attribute('name', key).strip('"')
                 parsed_data[name] = data[key]
         else:
             parsed_data.update(data)
@@ -107,6 +91,7 @@ check_info["jolokia_jvm_threading"] = {
     "service_description": "JVM %s Threading",
     "group": "jvm_threading",
     "has_perfdata": True,
+    "includes": ["jolokia.include"],
 }
 
 

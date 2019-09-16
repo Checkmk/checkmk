@@ -571,10 +571,10 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
 
     encryption = context.get('PARAMETER_SMTP_ENCRYPTION', "NONE")
 
-    if encryption == "SSL_TLS":
-        conn = smtplib.SMTP_SSL(smarthost, port) # , from_address)
+    if encryption == "ssl_tls":
+        conn = smtplib.SMTP_SSL(smarthost, port)
     else:
-        conn = smtplib.SMTP(smarthost, port) # , from_address)
+        conn = smtplib.SMTP(smarthost, port)
 
     # evil hack: the smtplib doesn't allow access to the reply code/message
     #  in case of success. But we want it!
@@ -582,7 +582,7 @@ def send_mail_smtp_impl(message, target, smarthost, from_address, context):
     conn.last_repl = ""
     conn.getreply = types.MethodType(getreply_wrapper, conn)
 
-    if encryption == "STARTTLS":
+    if encryption == "starttls":
         conn.starttls()
 
     if context.get('PARAMETER_SMTP_AUTH_USER') is not None:

@@ -1,0 +1,12 @@
+Title: mail: SSL/TLS and STARTTLS options were not used
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1568633068
+Class: fix
+
+Due to en error in the notification script the encryption
+options "SSL/TLS" and "STARTTLS" for the synchronous delivery
+via SMTP were never used.

@@ -832,22 +832,30 @@ class Rule(object):
         return ro
 
     def is_ineffective(self):
+        """Whether or not this rule does not match at all
+
+        Interesting: This has always tried host matching. Whether or not a service ruleset
+        does not match any service has never been tested. Probably because this would be
+        too expensive."""
         hosts = Host.all()
         for host_name, host in hosts.items():
-            if self.matches_host_and_item(host.folder(),
-                                          host_name,
-                                          svc_desc_or_item=None,
-                                          svc_desc=None):
+            if self.matches_host_conditions(host.folder(), host_name):
                 return False
         return True
 
+    def matches_host_conditions(self, host_folder, hostname):
+        """Whether or not the given folder/host matches this rule
+        This only evaluates host related conditions, even if the ruleset is a service ruleset."""
+        return not any(True for _r in self.get_mismatch_reasons(
+            host_folder, hostname, svc_desc_or_item=None, svc_desc=None, only_host_conditions=True))
+
     def matches_host_and_item(self, host_folder, hostname, svc_desc_or_item, svc_desc):
         """Whether or not the given folder/host/item matches this rule"""
-        return not any(
-            True
-            for _r in self.get_mismatch_reasons(host_folder, hostname, svc_desc_or_item, svc_desc))
+        return not any(True for _r in self.get_mismatch_reasons(
+            host_folder, hostname, svc_desc_or_item, svc_desc, only_host_conditions=False))
 
-    def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc):
+    def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,
+                             only_host_conditions):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
         if host is None:
@@ -863,7 +871,9 @@ class Rule(object):
         # either the item or the full service description, depending on the
         # ruleset, but the labels of a service need to be gathered using the
         # real service description.
-        if self.ruleset.item_type() == "service":
+        if only_host_conditions:
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        elif self.ruleset.item_type() == "service":
             match_object = cmk_base.export.ruleset_match_object_of_service(
                 hostname, svc_desc_or_item)
         elif self.ruleset.item_type() == "item":
@@ -874,16 +884,21 @@ class Rule(object):
         else:
             raise NotImplementedError()
 
-        for reason in self._get_mismatch_reasons_of_match_object(match_object):
+        match_service_conditions = self.ruleset.rulespec.is_for_services
+        if only_host_conditions:
+            match_service_conditions = False
+
+        for reason in self._get_mismatch_reasons_of_match_object(match_object,
+                                                                 match_service_conditions):
             yield reason
 
-    def _get_mismatch_reasons_of_match_object(self, match_object):
+    def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
         matcher = cmk_base.export.get_ruleset_matcher()
 
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        if self.ruleset.rulespec.is_for_services:
+        if match_service_conditions:
             if list(
                     matcher.get_service_ruleset_values(
                         match_object, [rule_dict],

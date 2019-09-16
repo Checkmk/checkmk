@@ -1,0 +1,12 @@
+Title: Reanimated shadow hosts
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1568616792
+Class: fix
+
+Due to a regression in 1.6.0, using shadow hosts on the master site caused
+invalid configurations, which in turn caused CMC crashes.  This has been
+fixed.

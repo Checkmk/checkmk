@@ -106,12 +106,9 @@ def get_piggyback_raw_data(piggybacked_hostname, time_settings):
     return piggyback_data
 
 
-def get_source_and_piggyback_hosts(piggyback_max_cachefile_age):
-    # type: (int) -> Iterator[Tuple[str, str]]
+def get_source_and_piggyback_hosts(time_settings):
+    # type: (Dict[Tuple[Optional[str], str], int]) -> Iterator[Tuple[str, str]]
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
-    time_settings = {
-        (None, 'max_cache_age'): piggyback_max_cachefile_age
-    }  # type: Dict[Tuple[Optional[str], str], int]
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggyback_folder in _get_piggybacked_host_folders():
@@ -196,7 +193,7 @@ def _get_max_cache_age(source_hostname, piggybacked_hostname, time_settings):
 def _get_validity_period(source_hostname, piggybacked_hostname, time_settings):
     # type: (str, str, Dict[Tuple[Optional[str], str], int]) -> Optional[int]
     key = 'validity_period'
-    dflt = None
+    dflt = time_settings.get((None, key))  # type: Optional[int]
     return time_settings.get((piggybacked_hostname, key),
                              time_settings.get((source_hostname, key), dflt))
 

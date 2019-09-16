@@ -3874,6 +3874,80 @@ rulespec_registry.register(
         valuespec=_valuespec_extra_service_conf_service_period,
     ))
 
+
+def _valuespec_piggybacked_host_files():
+    return Dictionary(
+        title=_("Piggybacked Host Files"),
+        optional_keys=[],
+        elements=[
+            ("global_max_cache_age", _vs_max_cache_age()),
+            ("global_validity", _vs_validity()),
+            ("per_piggybacked_host",
+             ListOf(
+                 Dictionary(
+                     optional_keys=[],
+                     elements=[
+                         ("piggybacked_hostname",
+                          TextUnicode(
+                              title=_("Piggybacked host name"),
+                              allow_empty=False,
+                          )),
+                         ("max_cache_age", _vs_max_cache_age(additional_title="or above")),
+                         ("validity", _vs_validity()),
+                     ],
+                 ),
+                 title=_("Exceptions for piggybacked hosts"),
+             )),
+        ],
+    )
+
+
+def _vs_max_cache_age(additional_title=None):
+    if additional_title is None:
+        title = _("Use maximum age from global settings")
+    else:
+        title = _("Use maximum age from global settings %s" % additional_title)
+    return Alternative(
+        title=_("Set maximum age how long piggyback files are kept"),
+        style="dropdown",
+        elements=[
+            FixedValue(
+                "global",
+                title=title,
+                totext=_("Global maximum age"),
+            ),
+            Age(
+                title=_("Set maximum age"),
+                default_value=3600,
+            ),
+        ],
+    )
+
+
+def _vs_validity():
+    return Dictionary(
+        title=_("Set period how long piggyback files are treated as valid"),
+        elements=[
+            ("period", Age(
+                title=_("Period"),
+                default_value=60,
+            )),
+            ("check_mk_state",
+             MonitoringState(
+                 title=_("Check MK status within this period"),
+                 default_value=0,
+             )),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupMonitoringConfigurationHostChecks,
+        name="piggybacked_host_files",
+        valuespec=_valuespec_piggybacked_host_files,
+    ))
+
 #.
 #   .--User Interface------------------------------------------------------.
 #   |   _   _                 ___       _             __                   |

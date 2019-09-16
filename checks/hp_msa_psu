@@ -110,26 +110,14 @@ def inventory_hp_msa_psu(parsed):
             yield item, {}
 
 
-def check_hp_msa_psu(item, params, parsed):
-    state = 0
-    if item in parsed:
-        for psu_type, psu_type_readable, levels_type in [("dc12v", "12 V", "levels_12v_"),
-                                                         ("dc5v", "5 V", "levels_5v_"),
-                                                         ("dc33v", "3.3 V", "levels_33v_")]:
-            psu_voltage = float(parsed[item][psu_type]) / 100
-            yield state, "%s: %.2f V" % (psu_type_readable, psu_voltage)
-
-            warn_lower, crit_lower = params[levels_type + "lower"]
-            if psu_voltage < crit_lower:
-                yield 2, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
-            elif psu_voltage < warn_lower:
-                yield 1, "too low (warn/crit below %.2f V/%.2f V)" % (warn_lower, crit_lower)
-
-            warn, crit = params[levels_type + "upper"]
-            if psu_voltage >= crit:
-                yield 2, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
-            elif psu_voltage >= warn:
-                yield 1, "too high (warn/crit at %.2f V/%.2f V)" % (warn, crit)
+@get_parsed_item_data
+def check_hp_msa_psu(_item, params, data):
+    for psu_type, psu_type_readable, levels_type in [("dc12v", "12 V", "levels_12v_"),
+                                                     ("dc5v", "5 V", "levels_5v_"),
+                                                     ("dc33v", "3.3 V", "levels_33v_")]:
+        psu_voltage = float(data[psu_type]) / 100
+        levels = params[levels_type + "upper"] + params[levels_type + "lower"]
+        yield check_levels(psu_voltage, None, levels, unit='V', infoname=psu_type_readable)
 
 
 check_info['hp_msa_psu.sensor'] = {
@@ -156,9 +144,9 @@ factory_settings["hp_msa_psu_temp_default_levels"] = {
 }
 
 
-def check_hp_msa_psu_temp(item, params, parsed):
-    if item in parsed:
-        return check_temperature(float(parsed[item]["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
+@get_parsed_item_data
+def check_hp_msa_psu_temp(item, params, data):
+    return check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
 
 
 check_info['hp_msa_psu.temp'] = {

@@ -39,11 +39,17 @@ def parse_jolokia_json_output(info):
             continue
 
 
+def _jolokia_mbean_type(mbean):
+    tmp = mbean.split("type=", 1)[-1]
+    tmp = tmp.split(",", 1)[0]
+    return tmp.split("/", 1)[0]
+
+
 def parse_jolokia_jvm_threading(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = mbean.split("type=", 1)[-1].split(",", 1)[0].split("/", 1)[0]
+        type_ = _jolokia_mbean_type(mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 
         if type_ == "ThreadPool":

@@ -108,7 +108,8 @@ export function fix_visibility() {
             }
             if ( display == "none" ) {
                 // Uncheck checkboxes of hidden fields
-                var chkbox = oAttrDisp.parentNode.childNodes[0].childNodes[1].childNodes[0];
+                var input_fields = oTr.cells[0].getElementsByTagName("input");
+                var chkbox = input_fields[0];
                 chkbox.checked = false;
                 toggle_attribute(chkbox, attrname);
 
@@ -215,7 +216,6 @@ function get_effective_tags()
                     if (elements.length == 0)
                         elements = content_cell.getElementsByTagName("select");
 
-                    console.log(elements);
                     if (elements.length == 0)
                         continue;
 

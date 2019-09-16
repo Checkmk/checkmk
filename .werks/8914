@@ -1,0 +1,18 @@
+Title: Fix calculation of latency for netapp_api_vs_traffic 2
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b11
+Date: 1568641952
+
+read_ops and write_ops do not necessarily exist to use as
+reference for the avg_read_latency and avg_write_latency.
+The check now crashes when they are not available.
+
+This fix uses the latency and ops values in the isci and fcp
+namespaces and handles missing references.  When the ref
+is missing, the time is taken as reference.
+

@@ -25,21 +25,19 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inv_oracle_dataguard_stats(info):
+def inv_oracle_dataguard_stats(parsed):
     node = inv_tree_list("software.applications.oracle.dataguard_stats:")
-    for line in info:
-        if len(line) >= 5:
-            db_name, db_unique_name, database_role, _parameter, _value = line[:5]
-            switchover = None
-            if len(line) > 5:
-                switchover = line[-1]
-
-            node.append({
-                "sid": db_name,
-                "db_unique": "%s.%s" % (db_name, db_unique_name),
-                "role": database_role,
-                "switchover": switchover,
-            })
+    for inst, data in sorted(parsed.iteritems()):
+        try:
+            db_name, db_unique_name = inst.split(".", 1)
+        except ValueError:
+            continue
+        node.append({
+            "sid": db_name,
+            "db_unique": "%s.%s" % (db_name, db_unique_name),
+            "role": data.get('database_role'),
+            "switchover": data.get('switchover_status'),
+        })
 
 
 inv_info['oracle_dataguard_stats'] = {

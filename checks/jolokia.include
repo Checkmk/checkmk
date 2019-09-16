@@ -147,29 +147,6 @@ def jolokia_metrics_parse(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_jolokia_metrics(info, what):
-    parsed = jolokia_metrics_parse(info)
-
-    levels = None
-
-    if what == 'mem':
-        levels = {}
-    elif what == 'threads':
-        levels = 'jolokia_metrics_threads_default_levels'
-
-    for instance, data in parsed.items():
-        if data is None:
-            continue  # No connection to agent currently
-
-        if what == 'uptime' and "Uptime" not in data:
-            continue
-        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data or
-                              "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
-            # don't add memory check if we don't have the necessary data
-            continue
-        yield instance, levels
-
-
 def inventory_jolokia_metrics_apps(info, what):
     inv = []
     parsed = jolokia_metrics_parse(info)

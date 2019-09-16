@@ -1,11 +1,8 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import OpenSSL
 import pytest  # type: ignore
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
 
 import omdlib.certs as certs
 

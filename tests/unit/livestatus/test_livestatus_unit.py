@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=redefined-outer-name
+
 import errno
 import socket
 import ssl
-import six
 from contextlib import closing
-try:
-    from pathlib import Path  # Py3 first
-except ImportError:
-    from pathlib2 import Path
 
+import six
 import pytest  # type: ignore
 
 import omdlib.certs as certs

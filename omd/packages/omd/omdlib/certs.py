@@ -27,10 +27,11 @@
 import sys
 from typing import Tuple  # pylint: disable=unused-import
 import random
-try:
-    from pathlib import Path  # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 from OpenSSL import crypto
 from OpenSSL.SSL import FILETYPE_PEM  # type: ignore
 

@@ -3,14 +3,14 @@
 
 from __future__ import print_function
 
-import pytest
+import pytest  # type: ignore
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
     "unit.checks.generictests.run")
 
-import _pytest.monkeypatch
+import _pytest.monkeypatch  # type: ignore
 import re
 import collections
 import errno
@@ -19,10 +19,7 @@ import pwd
 import shutil
 import sys
 import tempfile
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib import Path
 import testlib
 
 #

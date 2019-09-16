@@ -25,14 +25,16 @@
 # Boston, MA 02110-1301 USA.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
+import sys
 import abc
 from typing import Any, Dict, Text, List  # pylint: disable=unused-import
 import six
 
-try:
-    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store

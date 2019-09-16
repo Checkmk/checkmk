@@ -1,0 +1,31 @@
+Title: Piggybacked Hosts: Validity period and state are configurable
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b11
+Date: 1568365264
+
+If a source host is not sending piggyback data for its piggypacked hosts
+the services {{Check_MK}} and {{Check_MK Discovery}} of the piggybacked hosts
+report
+<ul>
+<li>CRIT - Got no information of host</li>
+<li>OK - X vanished services</li>
+<ul>
+by default.
+
+Now a validity period and state are configurable within the host rule
+{{Piggybacked Host Files}}. This means that the piggybacked data is considered
+as {{valid}} within this period. The services {{Check_MK}} and {{Check_MK Discovery}}
+treat the piggybacked host data almost as {{live}} such that above warnings are not
+shown anymore. Instead the {{Check_MK}} service shows {{still valid}}.
+The validity state applies to the {{Check_MK}} service of the piggybacked host within
+this period.
+
+This rules has to be configured for the source host.
+
+Moreover the piggybacked data is now cached for 1.5 periods of the check
+interval of the Check_MK service of the source host.

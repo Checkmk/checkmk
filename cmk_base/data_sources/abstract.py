@@ -578,6 +578,10 @@ class CheckMKAgentDataSource(DataSource):
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data = {}
         piggybacked_hostname = None
+        piggybacked_cached_at = int(time.time())
+        # Transform to seconds and give the piggybacked host a little bit more time
+        piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
+
         persisted_sections = {}  # handle sections with option persist(...)
         section_content = []
         section_options = {}
@@ -592,6 +596,10 @@ class CheckMKAgentDataSource(DataSource):
                     self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
             elif piggybacked_hostname:  # processing data for an other host
+                if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                    line = self._add_cached_info_to_piggybacked_section_header(
+                        piggybacked_hostname, stripped_line, piggybacked_cached_at,
+                        piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
@@ -661,6 +669,12 @@ class CheckMKAgentDataSource(DataSource):
         # up, but we need to be sure here to prevent bugs in Check_MK code.
         # a) Replace spaces by underscores
         return piggybacked_hostname.replace(" ", "_")
+
+    def _add_cached_info_to_piggybacked_section_header(self, piggybacked_hostname,
+                                                       orig_section_header, cached_at, cache_age):
+        if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
+            return orig_section_header
+        return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
 
     # TODO: refactor
     def _summary_result(self, for_checking):

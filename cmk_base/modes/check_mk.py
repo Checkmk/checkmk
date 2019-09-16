@@ -728,7 +728,8 @@ modes.register(
 
 def mode_cleanup_piggyback():
     from cmk_base.piggyback import cleanup_piggyback_files
-    cleanup_piggyback_files(config.piggyback_max_cachefile_age)
+    time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings()
+    cleanup_piggyback_files(time_settings)
 
 
 modes.register(

@@ -2109,11 +2109,79 @@ class HostConfig(object):
 
     @property
     def has_piggyback_data(self):
-        if piggyback.has_piggyback_raw_data(self.hostname, piggyback_max_cachefile_age):
+        # type: () -> bool
+        time_settings = {
+            (None, "max_cache_age"): piggyback_max_cachefile_age
+        }  # type: Dict[Tuple[Optional[str], str], int]
+        time_settings.update(self.piggybacked_host_files)
+
+        if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
             return True
 
         from cmk_base.data_sources.abstract import has_persisted_agent_sections
         return has_persisted_agent_sections("piggyback", self.hostname)
+
+    @property
+    def piggybacked_host_files(self):
+        # type: () -> Dict[Tuple[Optional[str], str], int]
+        rules = self._config_cache.host_extra_conf(self.hostname, piggybacked_host_files)
+        if rules:
+            return self._flatten_piggybacked_host_files_rule(rules[0])
+        return {}
+
+    def _flatten_piggybacked_host_files_rule(self, rule):
+        # type: (Dict[str, Any]) -> Dict[Tuple[Optional[str], str], int]
+        """This rule is a first match rule.
+
+        Max cache age, validity period and state are configurable wihtin this
+        rule for all piggybacked host or per piggybacked host of this source.
+        In order to differentiate later for which piggybacked hosts a parameter
+        is used we flat this rule to a homogeneous data structure:
+            (HOST, KEY): VALUE
+        Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
+        parameters generically."""
+        flat_rule = {}  # type: Dict[Tuple[Optional[str], str], int]
+
+        max_cache_age = rule.get('global_max_cache_age')
+        if max_cache_age is not None and max_cache_age != "global":
+            flat_rule[(self.hostname, 'max_cache_age')] = max_cache_age
+
+        global_validity_setting = rule.get('global_validity', {})
+
+        period = global_validity_setting.get("period")
+        if period is not None:
+            flat_rule[(self.hostname, 'validity_period')] = period
+
+        check_mk_state = global_validity_setting.get("check_mk_state")
+        if check_mk_state is not None:
+            flat_rule[(self.hostname, 'validity_state')] = check_mk_state
+
+        for setting in rule.get('per_piggybacked_host', []):
+            piggybacked_hostname = setting["piggybacked_hostname"]
+
+            max_cache_age = setting.get('max_cache_age')
+            if max_cache_age is not None and max_cache_age != "global":
+                flat_rule[(piggybacked_hostname, 'max_cache_age')] = max_cache_age
+
+            validity_setting = setting.get('validity', {})
+            if not validity_setting:
+                continue
+
+            period = validity_setting.get("period")
+            if period is not None:
+                flat_rule[(piggybacked_hostname, 'validity_period')] = period
+
+            check_mk_state = validity_setting.get("check_mk_state")
+            if check_mk_state is not None:
+                flat_rule[(piggybacked_hostname, 'validity_state')] = check_mk_state
+
+        return flat_rule
+
+    @property
+    def check_mk_check_interval(self):
+        # type: () -> int
+        return self._config_cache.extra_attributes_of_service(self.hostname,
+                                                              'Check_MK')['check_interval']
 
     def _primary_ip_address_family_of(self):
         rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
@@ -3257,6 +3325,18 @@ class ConfigCache(object):
             return the_clusters[0]
 
         return hostname
+
+    def get_piggybacked_hosts_time_settings(self, piggybacked_hostname=None):
+        # type: (Optional[str]) -> Dict[Tuple[Optional[str], str], int]
+
+        # From global settings
+        time_settings = {
+            (None, 'max_cache_age'): piggyback_max_cachefile_age,
+        }  # type: Dict[Tuple[Optional[str], str], int]
+
+        for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
+            time_settings.update(self.get_host_config(source_hostname).piggybacked_host_files)
+        return time_settings
 
 
 def get_config_cache():

@@ -32,11 +32,6 @@ import requests
 
 Section = namedtuple('Section', ['name', 'key', 'uri'])
 
-JenkinsJobInfo = namedtuple("job_info", [
-    "displayNameOrNull", "name", "state", "job_score", "last_suc_build", "build_id", "build_result",
-    "build_duration", "build_timestamp"
-])
-
 
 def main():
     args = parse_arguments()

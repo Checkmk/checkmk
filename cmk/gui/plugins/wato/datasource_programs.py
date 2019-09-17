@@ -2211,3 +2211,93 @@ rulespec_registry.register(
         name="special_agents:jenkins",
         valuespec=_valuespec_special_agents_jenkins,
     ))
+
+
+def _factory_default_special_agents_graylog():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_graylog():
+    return Dictionary(
+        title=_("Check state of Graylog"),
+        help=_("Requests node, cluster and indice data from a graylog "
+               "instance."),
+        optional_keys=["port"],
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("Graylog instance to query."),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_graylog.com."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "graylog API. Has to have read permissions at least."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            ("port",
+             Integer(
+                 title=_("Port"),
+                 help=_(
+                     "Use this option to query a port which is different from standard port 443."),
+                 default_value=443,
+                 allow_empty=False,
+             )),
+            ("sections",
+             ListChoice(
+                 title=_("Informations to query"),
+                 help=_("Defines what information to query. You can choose "
+                        "between the alerts, failures, cluster_health, cluster_inputstates, "
+                        "cluster_stats, cluster_traffic, collectors, count, "
+                        "failures, jvm, nodes and sidecars."),
+                 choices=[
+                     ("alerts", _("Most recent alarms of all streams")),
+                     ("collectors", _("Management of graylog collectors")),
+                     ("cluster_health", _("Indexer cluster information")),
+                     ("cluster_inputstates", _("Cluster input states")),
+                     ("cluster_stats", _("Cluster statistics")),
+                     ("cluster_traffic", _("Cluster traffic statistics")),
+                     ("failures", _("Failed index operations")),
+                     ("jvm", _("JVM heap size")),
+                     ("messages", _("Message count in all your indices")),
+                     ("node", _("All nodes")),
+                     ("sidecars", _("Manage sidecar fleet")),
+                 ],
+                 default_value=[
+                     "alerts", "collectors", "cluster_health", "cluster_inputstates",
+                     "cluster_stats", "cluster_traffic", "failures", "jvm", "messages", "node",
+                     "sidecars"
+                 ],
+                 allow_empty=False,
+             )),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_graylog(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:graylog",
+        valuespec=_valuespec_special_agents_graylog,
+    ))

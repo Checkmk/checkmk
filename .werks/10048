@@ -1,0 +1,12 @@
+Title: Fix bulk discovery error on cluster nodes
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b11
+Date: 1568735587
+Class: fix
+
+When executing a bulk discovery operation on nodes of a cluster, this could
+result in an error displaying "'clustered_old'" in the progress dialog for
+the affected host. The services were not updated for these hosts.

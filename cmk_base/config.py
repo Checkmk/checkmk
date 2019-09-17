@@ -612,20 +612,18 @@ def strip_tags(tagged_hostlist):
         return result
 
 
+def _get_shadow_hosts():
+    # Only available with CEE
+    return shadow_hosts if "shadow_hosts" in globals() else {}
+
+
 # This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
 def _all_active_hosts_with_duplicates():
     # type: () -> List[str]
-    # Only available with CEE
-    if "shadow_hosts" in globals():
-        shadow_host_entries = shadow_hosts.keys()
-    else:
-        shadow_host_entries = []
-
-    config_cache = get_config_cache()
-    return _filter_active_hosts(config_cache, strip_tags(all_hosts)  \
-                               + strip_tags(clusters.keys()) \
-                               + strip_tags(shadow_host_entries))
+    return _filter_active_hosts(get_config_cache(),
+                                (strip_tags(all_hosts) + strip_tags(clusters.keys()) +
+                                 strip_tags(_get_shadow_hosts().keys())))
 
 
 def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
@@ -2887,7 +2885,7 @@ class ConfigCache(object):
                 host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
                                                                    self._hosttags[hostname])
 
-        for shadow_host_name, shadow_host_spec in shadow_hosts.iteritems():
+        for shadow_host_name, shadow_host_spec in _get_shadow_hosts().iteritems():
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split())
             host_tags[shadow_host_name] = self._tag_list_to_tag_groups(

@@ -2454,8 +2454,8 @@ class html(HTMLGenerator):
         add_attr["id"] = id_
         add_attr["CHECKED"] = '' if value else None
 
-        code = self.render_input(name=varname, type_="checkbox", **add_attr)\
-             + self.render_label(label, for_=id_)
+        code = self.render_input(name=varname, type_="checkbox", **add_attr) + self.render_label(
+            label, for_=id_)
         code = self.render_span(code, class_="checkbox")
 
         if error:

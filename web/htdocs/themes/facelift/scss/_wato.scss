@@ -238,23 +238,23 @@ table.validationerror  {
 }
 
 div#service_container {
-  div.action_buttons {
-    div.left {
-      float: left;
-    }
-
-    div.right {
-      float: right;
-    }
-
-    span.button_spacer {
-      display: inline-block;
-      width: 12px;
-    }
+  div.action_buttons div.button_spacer {
+    display: inline-block;
+    height: 19px;
+    margin-right: 16px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-right: 2px solid $button-spacer-color;
   }
 
-  table.data tr.groupheader {
-    background-color: $service-container-groupheader-bg-color;
+  table.data {
+    tr.groupheader {
+      background-color: $service-container-groupheader-bg-color;
+    }
+
+    td h3 {
+      margin-top: $td-h3-margin-top;
+    }
   }
 }
 
@@ -721,13 +721,27 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
-.wato table.data.ruleset tr.disabled td * {
-  color: #999;
-  text-shadow: 0 1px 0 #fff;
+.wato table.data.ruleset tr.disabled td {
+  * {
+    color: #999;
+  }
+
+  .tagify__tag-text {
+    color: inherit;
+  }
+
+  tag > div::before {
+    opacity: .5;
+  }
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-  background-color: $theme-color-nuance-2;
+  color: $matches-search-font-color;
+  background-color: $matches-search-bg-color;
+
+  &.buttons {
+    border-radius: 0;
+  }
 }
 
 /* Special styling for Timeperiods editor */

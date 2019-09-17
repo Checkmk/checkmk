@@ -194,7 +194,7 @@ $theme-color-nuance-11:                     #222f33; // dark grey
 $theme-color-nuance-12:                     #9ee273; // green
 $theme-color-nuance-13:                     #f3f4f6; // light grey
 $theme-color-nuance-14:                     rgba(37, 41, 42, .3); // transparent grey
-$theme-color-nuance-15:                     rgb(70, 50, 50); // dark red
+$theme-color-nuance-15:                     rgb(130, 50, 50); // dark red
 $theme-color-nuance-16:                     #fb9f49; // orange
 $theme-color-nuance-17:                     #a1e6f8; // light blue
 
@@ -373,7 +373,7 @@ $table-data-single-padding:		    2px 0;
 $td-single-left-border-right:		    null;
 $td-single-left-padding:		    2px 36px 2px 16px;
 
-$host-diag-success-bg-color:		    rgb(50, 54, 50);
+$host-diag-success-bg-color:		    rgb(50, 80, 50);
 $host-diag-failed-bg-color:		    $theme-color-nuance-15;
 
 
@@ -506,3 +506,15 @@ $agent-config-inner-title-bg-color:	    $grey-5;
 $service-container-groupheader-bg-color:    $grey-6;
 
 $hover-menu-pnp4nagios-filter:		    invert(84%);
+
+$matches-search-bg-color:		    darken($success, 5%);
+$matches-search-font-color:		    $grey-7;
+
+$help-bg-color:				    rgba(255, 235, 131, .85);
+$help-link-color:			    $grey-7;
+
+$minority-font-color:			    $grey-7;
+
+$button-spacer-color:			    rgb(90, 90, 90);
+
+$td-h3-margin-top:			    4px;

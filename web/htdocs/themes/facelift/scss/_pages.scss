@@ -1372,7 +1372,7 @@ div.help {
   font-weight: normal;
   color: #000;
   text-align: left;
-  background-color: #ffc;
+  background-color: $help-bg-color;
   background-image: none;
   border-radius: 5px;
   box-shadow: none;
@@ -1388,8 +1388,8 @@ div.help {
     content: "i";
   }
 
-  a {
-    color: $theme-color-text;
+  a, a:link {
+    color: $help-link-color;
 
     &:hover {
       text-decoration: none;

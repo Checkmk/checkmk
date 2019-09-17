@@ -1094,8 +1094,6 @@ class DiscoveryPageRenderer(object):
             return
 
         html.open_div(class_="action_buttons")
-
-        html.open_div(class_="left")
         fixall = 0
         already_has_services = False
         for check in discovery_result.check_table:
@@ -1135,42 +1133,38 @@ class DiscoveryPageRenderer(object):
             disabled=self._is_active(discovery_result),
         )
 
-        self._show_button_spacer()
+        if discovery_result.host_labels or self._is_active(discovery_result):
+            self._show_button_spacer()
 
-        if discovery_result.host_labels:
-            update_host_labels_options = self._options._replace(
-                action=DiscoveryAction.UPDATE_HOST_LABELS)
-            html.jsbutton(
-                "update_host_labels",
-                _("Update host labels"),
-                self._start_js_call(update_host_labels_options),
-                disabled=self._is_active(discovery_result),
-            )
+            if discovery_result.host_labels:
+                update_host_labels_options = self._options._replace(
+                    action=DiscoveryAction.UPDATE_HOST_LABELS)
+                html.jsbutton(
+                    "update_host_labels",
+                    _("Update host labels"),
+                    self._start_js_call(update_host_labels_options),
+                    disabled=self._is_active(discovery_result),
+                )
 
-        self._show_button_spacer()
-
-        if self._is_active(discovery_result):
-            stop_options = self._options._replace(action=DiscoveryAction.STOP)
-            html.jsbutton(
-                "stop",
-                _("Stop job"),
-                self._start_js_call(stop_options),
-            )
-
-        html.close_div()
+            if self._is_active(discovery_result):
+                stop_options = self._options._replace(action=DiscoveryAction.STOP)
+                html.jsbutton(
+                    "stop",
+                    _("Stop job"),
+                    self._start_js_call(stop_options),
+                )
 
         if already_has_services:
-            html.open_div(class_="right")
+            self._show_button_spacer()
             self._show_checkbox_button(discovery_result)
             self._show_parameters_button(discovery_result)
             self._show_discovered_labels_button(discovery_result)
             self._show_plugin_names_button(discovery_result)
-            html.close_div()
 
         html.close_div()
 
     def _show_button_spacer(self):
-        html.span("", class_=["button_spacer"])
+        html.div("", class_=["button_spacer"])
 
     def _show_checkbox_button(self, discovery_result):
         # type: (DiscoveryResult) -> None

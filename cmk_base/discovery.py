@@ -282,6 +282,7 @@ def discover_on_host(config_cache,
         service_filter = lambda hostname, check_plugin_name, item: True
 
     err = None
+    discovered_host_labels = DiscoveredHostLabels()
 
     try:
         # in "refresh" mode we first need to remove all previously discovered

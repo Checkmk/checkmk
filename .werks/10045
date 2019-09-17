@@ -1,0 +1,12 @@
+Title: Fix possible "variable referenced before assignment" during bulk discovery
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b11
+Date: 1568724177
+Class: fix
+
+When an error occurs while communicating with a monitored system, the bulk discovery
+could fail with an error like "variable referenced before assignment" while handling
+the error situation.

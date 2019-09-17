@@ -40,7 +40,7 @@ def check_traceroute_arguments(params):
     for router, state in params["routers"]:
         args += ["-%s" % state, router]
 
-    args.append('"$HOSTADDRESS$"')
+    args.append("$HOSTADDRESS$")
 
     return args
 

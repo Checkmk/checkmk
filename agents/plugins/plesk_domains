@@ -37,7 +37,7 @@ try:
         host='localhost',
         db='psa',
         user='admin',
-        passwd=file('/etc/psa/.psa.shadow').read().strip(),
+        passwd=open('/etc/psa/.psa.shadow').read().strip(),
         charset='utf8',
     )
 except MySQLdb.Error as e:  # pylint: disable=no-member

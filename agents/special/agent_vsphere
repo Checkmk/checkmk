@@ -41,12 +41,12 @@ import re
 import argparse
 import socket
 import sys
-import six
 import time
 from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
 # futurize requires this import:
 import functools
+import six
 
 from dateutil import tz
 from pathlib2 import Path
@@ -984,7 +984,7 @@ def get_section_vm(vms):
     return section_lines
 
 
-def get_sections_clusters(connection, vm_esx_host):
+def get_sections_clusters(connection, vm_esx_host, opt):
     section_lines = []
     response = connection.query_server('datacenters')
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
@@ -1063,7 +1063,7 @@ def fetch_data(connection, opt):
         vms, vm_esx_host = {}, {}
 
     if not opt.direct:
-        output += get_sections_clusters(connection, vm_esx_host)
+        output += get_sections_clusters(connection, vm_esx_host, opt)
 
     ###########################
     # Objects

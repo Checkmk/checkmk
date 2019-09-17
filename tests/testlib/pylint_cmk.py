@@ -111,7 +111,7 @@ def is_python_file(path):
         return True
 
     # Only add python files
-    shebang = open(path, "r").readline()
+    shebang = open(path, "r").readline().rstrip()
     if shebang.startswith("#!") and shebang.endswith("python"):
         return True
 

@@ -63,7 +63,6 @@ import getopt
 import pprint
 import select
 import shutil
-import six
 import signal
 import socket
 import logging
@@ -73,6 +72,7 @@ import traceback
 import subprocess
 import collections
 import multiprocessing
+import six
 
 import psutil
 import npyscreen

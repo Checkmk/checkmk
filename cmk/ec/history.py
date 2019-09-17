@@ -265,7 +265,7 @@ def _get_mongodb(history, query):
     result = history._mongodb.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
-    #file(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
+    #open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
     #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
     if limit:

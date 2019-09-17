@@ -467,7 +467,11 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, "search", mbean)
+    try:
+        value = fetch_var(inst, "search", mbean)
+    except () if DEBUG else SkipMBean:
+        return []
+
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:

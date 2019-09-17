@@ -42,7 +42,7 @@ def parse_arguments(argv=None):
 
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument("--verbose", action="count", help='''Verbose mode''')
+    parser.add_argument("-v", "--verbose", action="count", help='''Verbose mode''')
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let python exceptions come through")

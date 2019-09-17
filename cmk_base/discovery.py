@@ -271,6 +271,7 @@ def discover_on_host(config_cache,
         "self_new_host_labels": 0,
         "self_total_host_labels": 0,
         "clustered_new": 0,
+        "clustered_old": 0,
         "clustered_vanished": 0,
     }
 

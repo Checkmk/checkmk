@@ -1,0 +1,11 @@
+Title: agent_graylog: New special agent to query Graylog instances
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568710345
+Class: feature
+
+A new datasource program to query Graylog instances.
+Checks following soon.

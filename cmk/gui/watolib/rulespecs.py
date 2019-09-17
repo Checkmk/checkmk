@@ -1129,8 +1129,7 @@ class RulespecRegistry(cmk.utils.plugin_registry.InstanceRegistry):
     def register(self, instance):
         # type: (Rulespec) -> None
         if not isinstance(instance, Rulespec):
-            MKGeneralException(
-                _("!!! Error: Received class in RulespecRegistry:register %r") % instance)
+            raise MKGeneralException(_("Tried to register incompatible rulespec: %r") % instance)
 
         if isinstance(instance,
                       (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)):

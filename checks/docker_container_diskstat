@@ -66,23 +66,27 @@ def _parse_sub_sections(node, node_info):
 
 def _parse_sub_sections_plugin_section(node, node_info):
     raw = docker_json_get_obj(node_info[1])
-    sections = {"time": raw["time"]}
-    devices = sections.setdefault("devices", {})
+
+    devices = {}
+    for major_minor, name in raw["names"].iteritems():
+        major, minor = major_minor.split(':', 1)
+        devices[(node, major, minor)] = {
+            "name": name,
+            "bytes": {},
+            "ios": {},
+        }
 
     for entry in raw["io_service_bytes_recursive"]:
-        device_id = node, entry["major"], entry["minor"]
-        device = devices.setdefault(device_id, {})
-        device.setdefault("bytes", {})[entry["op"]] = entry["value"]
+        device = devices.get((node, entry["major"], entry["minor"]))
+        if device:
+            device["bytes"][entry["op"]] = entry["value"]
 
     for entry in raw["io_serviced_recursive"]:
-        device_id = node, entry["major"], entry["minor"]
-        device = devices.setdefault(device_id, {})
-        device.setdefault("ios", {})[entry["op"]] = entry["value"]
+        device = devices.get((node, entry["major"], entry["minor"]))
+        if device:
+            device["ios"][entry["op"]] = entry["value"]
 
-    for (_node, major, minor), device in devices.iteritems():
-        device["name"] = raw["names"]["%s:%s" % (major, minor)]
-
-    return sections
+    return {"time": raw["time"], "devices": devices}
 
 
 def _parse_sub_sections_agent_section(node, node_info):
@@ -143,19 +147,19 @@ def check_docker_container_diskstat(item, params, parsed):
 
         read_ios_rate = get_rate(counter_base + "read_ios",
                                  timestamp,
-                                 device["ios"]["Read"],
+                                 device["ios"].get("Read", 0),
                                  onwrap=0.0)
         write_ios_rate = get_rate(counter_base + "write_ios",
                                   timestamp,
-                                  device["ios"]["Write"],
+                                  device["ios"].get("Write", 0),
                                   onwrap=0.0)
         read_bytes_rate = get_rate(counter_base + "read_bytes",
                                    timestamp,
-                                   device["bytes"]["Read"],
+                                   device["bytes"].get("Read", 0),
                                    onwrap=0.0)
         write_bytes_rate = get_rate(counter_base + "write_bytes",
                                     timestamp,
-                                    device["bytes"]["Write"],
+                                    device["bytes"].get("Write", 0),
                                     onwrap=0.0)
 
         disks[device_name] = {

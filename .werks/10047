@@ -1,0 +1,14 @@
+Title: Improved validation of incompatible rulespec registration
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568734915
+
+In case an incompatible rulespec is registered with Checkmk, this
+does not affect the whole Host & service parameters configuration
+anymore. Instead of this, an error is shown in var/log/web.log and
+on the "Extension packages" page of the CEE/CME.

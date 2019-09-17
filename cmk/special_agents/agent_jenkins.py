@@ -36,8 +36,6 @@ Section = namedtuple('Section', ['name', 'key', 'uri'])
 def main():
     args = parse_arguments()
 
-    sys.stdout.write("<<<check_mk>>>\n")
-
     # Add new queries here
     sections = [
         Section(name="instance",

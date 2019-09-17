@@ -380,11 +380,13 @@ class Pod(Metadata):
             self.qos_class = status.qos_class
             self._container_statuses = (status.container_statuses
                                         if status.container_statuses else [])
+            self._conditions = status.conditions if status.conditions else []
         else:
             self.host_ip = None
             self.pod_ip = None
             self.qos_class = None
             self._container_statuses = []
+            self._conditions = []
 
     @staticmethod
     def zero_resources():
@@ -453,6 +455,16 @@ class Pod(Metadata):
                                     if container_status.container_id else '')
             data['image_id'] = container_status.image_id
         return view
+
+    @property
+    def conditions(self):
+        """Return condition type and status.
+
+        See Also:
+            - Node.conditions
+
+        """
+        return {c.type: c.status for c in self._conditions}
 
     @property
     def info(self):
@@ -847,6 +859,9 @@ class PodList(K8sList[Pod]):
     def containers(self):
         return {pod.name: pod.containers for pod in self}
 
+    def conditions(self):
+        return {pod.name: pod.conditions for pod in self}
+
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
         """
@@ -1214,6 +1229,7 @@ class ApiData(object):
         g = PiggybackGroup()
         g.join('labels', self.pods.labels())
         g.join('k8s_resources', self.pods.resources())
+        g.join('k8s_conditions', self.pods.conditions())
         g.join('k8s_pod_container', self.pods.containers())
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output(piggyback_prefix="pod_"))

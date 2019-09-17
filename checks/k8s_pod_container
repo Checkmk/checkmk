@@ -44,7 +44,7 @@ def check_k8s_pod_container(_no_item, params, parsed):
     yield 0, "Ready: %d/%d" % (ready, total), perfdata
     yield 0, "Running: %d" % state["running"]
     yield 0, "Waiting: %d" % state["waiting"]
-    yield 0, "Terminated: %d" % state["terminated"]
+    yield 0 if not exit_code else 2, "Terminated: %d" % state["terminated"]
 
 
 check_info['k8s_pod_container'] = {

@@ -1,23 +1,24 @@
-title: Perm Space usage of a JVM
+title: Memory usage of a JVM
 agents: linux
 catalog: app/java
 license: GPL
 distribution: check_mk
 description:
- This check is deprecated and has been replaced by the plugin
- {jolokia_jvm_memory}.
-
- This check allows to monitor the usage of Perm Space
+ This check allows to monitor the usage of heap and non-heap memory area
  usage on web application servers.
 
  To use this plugin, Jolokia and the agent plugin need to be installed
- on the monitored server.
+ on the monitored server, or the special agent Jolokia must be configured.
  It will then fetch the memory usage from the JMX status info of the remote
  Java Virtual Machine.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable heap, nonheap
+ or total is exceeded.
 
 item:
  The name of the application server instance as configured by the agent.
 
 inventory:
  One check is created for each Jolokia instance sent by the agent.
+
 

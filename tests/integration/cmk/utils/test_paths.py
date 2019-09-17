@@ -27,7 +27,7 @@ pathlib_paths = [
 
 def _check_paths(root):
     for var, value in cmk.utils.paths.__dict__.iteritems():
-        if not var.startswith("_") and var not in ('Path', 'os'):
+        if not var.startswith("_") and var not in ('Path', 'os', 'sys'):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)

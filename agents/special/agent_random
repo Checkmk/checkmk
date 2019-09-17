@@ -88,4 +88,4 @@ for service in services:
     print("%d %s - %s - %s" %
           (new_state, service.replace(" ", "_"), state_names[new_state], state_texts[new_state]))
 
-file(state_file, "w").write("%r\n" % history)
+open(state_file, "w").write("%r\n" % history)

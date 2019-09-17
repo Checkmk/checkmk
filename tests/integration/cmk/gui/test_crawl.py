@@ -216,7 +216,7 @@ class Worker(threading.Thread):
                     self.crawler.handled.add(url)
 
             if crawl_it:
-                #file("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
+                #open("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
                 self.crawler.todo.put(Url(url, orig_url=orig_url, referer_url=referer_url.url))
 
     def verify_is_valid_url(self, url):

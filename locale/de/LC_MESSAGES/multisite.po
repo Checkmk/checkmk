@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.2.1\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -7311,6 +7311,10 @@ msgstr "Überprüfung von IPMI-Sensoren über Freeipmi oder IPMItool"
 
 msgid "Check Item"
 msgstr "Checkitem"
+
+#, fuzzy
+msgid "Check MK status within this period"
+msgstr "Check_MK mit Zeitleistungsdaten"
 
 msgid "Check Manuals"
 msgstr "Check-Handbuch"
@@ -14852,6 +14856,9 @@ msgstr "Fehler"
 msgid "Exceptions (from weekdays)"
 msgstr "Ausnahme (von den Wochentagen)"
 
+msgid "Exceptions for piggybacked hosts"
+msgstr "Ausnahmen für Huckepack-Hosts"
+
 msgid "Exclude"
 msgstr "Schließe aus"
 
@@ -16271,9 +16278,8 @@ msgstr ""
 "Erzwinge explizite Einstellungen für Parents selbst wenn die Einstellungenzum "
 "Ordner passen"
 
-#, fuzzy
 msgid "Force layout"
-msgstr "Graphenlayout"
+msgstr "Kräftebasiertes Layout"
 
 msgid "Force margin even at top of a page"
 msgstr "Abstand auch am Seitenanfang erzwingen"
@@ -16315,20 +16321,17 @@ msgstr "Zustand WARN erzwingen, wenn Aggregation nicht OK ist"
 msgid "Force update of PNP meta information on restart / reload"
 msgstr "Aktualisierung der PNP-Metainformationen beim Neustart"
 
-#, fuzzy
 msgid "Forecast Graph"
-msgstr "Hostgraphen"
+msgstr "Vorhersagegraph"
 
-#, fuzzy
 msgid "Forecast Graphs"
-msgstr "Hostgraphen"
+msgstr "Vorhersagegraphen"
 
 msgid "Forecast Model Parametrization"
 msgstr "Parametrisierung des Vorhersagemodells"
 
-#, fuzzy
 msgid "Forecast into the future"
-msgstr "in der Zukunft!"
+msgstr "Vorhersage bis"
 
 msgid "Foreground color"
 msgstr "Vordergrundfarbe"
@@ -16808,6 +16811,9 @@ msgstr "Globale Einstellungen zum Suchbegriff '%s'"
 msgid "Global configuration settings for Check_MK"
 msgstr "Globale Einstellungen für Check_MK"
 
+msgid "Global maximum age"
+msgstr "Globales Maximales Alter"
+
 msgid "Global notification rule"
 msgstr "Globale Alarmierungsregel"
 
@@ -16829,9 +16835,8 @@ msgstr "Globale Einstellungen"
 msgid "Global settings for Check_MK, Multisite and the monitoring core."
 msgstr "Globale Einstellungen für Check_MK, Multisite und den Monitoring-Kern."
 
-#, fuzzy
 msgid "Globally enforced"
-msgstr "Globale Berichte"
+msgstr "Global erzwungen"
 
 msgid "Globbing pattern for input files"
 msgstr "Globbing-Muster für Eingabedateien"
@@ -17529,9 +17534,8 @@ msgstr ""
 "Diese Level werden dann an die Event Console gesendet wenn Sie Alarme "
 "weiterleiten und werden die Einstellung von passenden Regeln überschreiben."
 
-#, fuzzy
 msgid "Here you can configure timeout settings in seconds."
-msgstr "Verbindungstimeout"
+msgstr "Hier können Sie den Verbindungstimeout in Sekunden konfigurieren."
 
 msgid "Here you can configure timeout settings."
 msgstr "Hier können Sie Timeout Einstellungen konfigurieren."
@@ -18095,9 +18099,8 @@ msgstr "%s in der Seitenleiste nicht anzeigen"
 msgid "Hide user rules"
 msgstr "Benutzerregeln zu"
 
-#, fuzzy
 msgid "Hierarchical layout"
-msgstr "Graphenlayout"
+msgstr "Hierarchisches Layout"
 
 msgid "High"
 msgstr "Hoch"
@@ -19538,9 +19541,8 @@ msgstr ""
 "ist. Dies kann evtl. Cross-Site-Scripting ermöglichen, alls ein Angreifer "
 "Check-Ergebnisse einschleusen kann."
 
-#, fuzzy
 msgid "If available, the following metric will be shown"
-msgstr "Die folgenden Services ausschließen"
+msgstr "Wenn aktiviert, wird die folgende Metrik angezeigt"
 
 #, python-brace-format
 msgid ""
@@ -21836,9 +21838,9 @@ msgstr "Üngultiger Datentyp des Zeitstempels (muss int/float sein)"
 msgid "Invalid end time given"
 msgstr "Ungülitge Endzeit"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
-msgstr "Ungültige Perfometer-Deklaraion: %r"
+msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 
 #, python-format
 msgid "Invalid file name extension. Allowed are: %s"
@@ -22463,13 +22465,11 @@ msgstr "Kubernetes Port"
 msgid "Kubernetes nodes"
 msgstr "Kubernetes-Knoten"
 
-#, fuzzy
 msgid "Kubernetes resources"
-msgstr "Kernel"
+msgstr "Kubernetes Resourcen"
 
-#, fuzzy
 msgid "Kubernetes roles"
-msgstr "Kernel"
+msgstr "Kubernetes Rollen"
 
 msgid "L2 cache hit ratio"
 msgstr "L2-Cache-Hitrate"
@@ -22780,9 +22780,8 @@ msgstr ""
 "deaktivieren Sie Sammelalarme oder wählen Sie eine andere "
 "Alarmierungsmethode, welche dies erlaubt."
 
-#, fuzzy
 msgid "Legacy Agent Management"
-msgstr "Instanzverwaltung"
+msgstr "Verwaltung veralteter Agenten"
 
 msgid "Legacy SNMP devices using SNMP v2c"
 msgstr "Legacy SNMP-Geräte, die SNMP v2c benutzen"
@@ -22836,9 +22835,8 @@ msgstr "Schwellwert"
 msgid "Level (0...9)"
 msgstr "Ebene (0...9)"
 
-#, fuzzy
 msgid "Level conjunctions"
-msgstr "SSL-Verbindungen"
+msgstr "Verbindung von Ebenen"
 
 msgid "Levels"
 msgstr "Schwellwerte"
@@ -25370,13 +25368,11 @@ msgstr ""
 "Hauptspeicherschwellen für einfache Geräte, auf denen keine komplexeren "
 "Betriebssysteme laufen."
 
-#, fuzzy
 msgid "Memory request"
-msgstr "Schwellenwerte für Speichernutzung"
+msgstr "Speicheranfragen"
 
-#, fuzzy
 msgid "Memory resources"
-msgstr "Schwellenwerte für Speichernutzung"
+msgstr "Speicherresourcen"
 
 msgid "Memory that cannot be swapped out"
 msgstr "Nichtsauslagerbarer Speicher"
@@ -25397,7 +25393,7 @@ msgid "Memory used by caches"
 msgstr "Speicher belegt von Caches"
 
 msgid "Memory utilization"
-msgstr "Speicher Auslastung"
+msgstr "Speicherauslastung"
 
 msgid "Memory warning at"
 msgstr "speicherwarnung ab"
@@ -25897,9 +25893,8 @@ msgstr "Überwache spezifische TCP/UDP-Verbindungen oder Sockets"
 msgid "Monitor specific files in folder"
 msgstr "Bestimmte Dateien im Verzeichnis überwachen"
 
-#, fuzzy
 msgid "Monitor temporary Tablespace"
-msgstr "Anschluss Geschwindigkeit überwachen"
+msgstr "Temporären Tablespace überwachen"
 
 msgid "Monitor the performance of the Event Console"
 msgstr "Leistung der Event Console monitoren"
@@ -25962,9 +25957,8 @@ msgstr "Überwachung von Anwendungen wie Prozesse, Dienste, Datenbanken"
 msgid "Monitoring of cloud environments like Microsoft Azure"
 msgstr "Überwachung von Cloud-Umgebungen wie Microsoft Azure"
 
-#, fuzzy
 msgid "Monitoring of container and container orchestration software"
-msgstr "Monitoring State für alle übrigen Service Zustände"
+msgstr "Monitoring von Containern und Container-Orchestrationssoftware"
 
 msgid "Monitoring of forwarded logfiles"
 msgstr "Liste der weitergeleiteten Logdateien überwachen"
@@ -26553,12 +26547,11 @@ msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
-"Negative Übereinstimmung (Exkludieren von betroffenen Hosts von der Auswahl)"
+"Negative Übereinstimmung (Betroffene Hosts von der Auswahl ausschließen)"
 
-#, fuzzy
 msgid "Negative match (Exclude matching services from the set)"
 msgstr ""
-"Negative Übereinstimmung (Exkludieren von betroffenen Hosts von der Auswahl)"
+"Negative Übereinstimmung (Betroffene Services von der Auswahl ausschließen)"
 
 msgid "Negotiate SSL"
 msgstr "SSL-Verbindungsaufbau"
@@ -26870,13 +26863,11 @@ msgstr "Neuere Ereignisse"
 msgid "Newest file"
 msgstr "Neuste Datei"
 
-#, fuzzy
 msgid "Newest file age at"
-msgstr "Neuste Datei"
+msgstr "Alter der neuesten Datei ist"
 
-#, fuzzy
 msgid "Newest file age below"
-msgstr "Neuste Datei"
+msgstr "Alter der neuesten Datei kleiner als"
 
 msgid "Newest first"
 msgstr "Neuste zuerst"
@@ -27112,9 +27103,8 @@ msgstr "Keine Replikation mit dieser Instanz"
 msgid "No report defined with the name '%s'."
 msgstr "Es gibt keinen Bericht mit dem Namen '%s'."
 
-#, fuzzy
 msgid "No response from update thread"
-msgstr "Leere Antwort vom Webservice"
+msgstr "Keine Antwort vom Update-Thread"
 
 msgid "No roles assigned."
 msgstr "Keine Rollen zugewiesen."
@@ -29400,9 +29390,8 @@ msgstr "Auslastung paralleler Verbindungen"
 msgid "Parallel pings to send"
 msgstr "Parallel zu sendende Pings"
 
-#, fuzzy
 msgid "Parallelize core config creation"
-msgstr "Parallele Verbindungen"
+msgstr "Parallelisiere die Erzeugung der Kernkonfiguration"
 
 msgid "Parameter rule set"
 msgstr "Parameter-Regelsatz"
@@ -29816,7 +29805,7 @@ msgstr "Prozentuale Nutzung"
 
 #, fuzzy
 msgid "Percentile"
-msgstr "Prozentwert"
+msgstr "Durchschnittswert"
 
 #, fuzzy
 msgid "Percentile within the timerange"
@@ -30090,17 +30079,14 @@ msgstr "Phase 1.2: Holen von Site \"%s\""
 msgid "Phase 2.1: Extracting result"
 msgstr "Phase 2.1: Ergebnis extrahieren"
 
-#, fuzzy
 msgid "Phase 2.2: Fetching existing hosts"
-msgstr "Phase 2: Bestehende Hosts holen"
+msgstr "Phase 2.2: Bestehende Hosts holen"
 
-#, fuzzy
 msgid "Phase 2.3: Updating config"
-msgstr "Phase 2: Aktualisieren der Konfiguration"
+msgstr "Phase 2.3: Aktualisieren der Konfiguration"
 
-#, fuzzy
 msgid "Phase 2.4: Activating changes"
-msgstr "Phase 2: Aktivierung"
+msgstr "Phase 2.4: Aktivierung der Änderungen"
 
 msgid "Phase Merging"
 msgstr "Zusammenfassen von Phasen"
@@ -30165,8 +30151,16 @@ msgstr "Huckepage-Informationen von einem anderen Host"
 msgid "Piggyback name of virtual machines"
 msgstr "Huckepack Name der virtuellen Maschine"
 
+#, fuzzy
+msgid "Piggybacked Host Files"
+msgstr "Huckepack Docker Container"
+
 msgid "Piggybacked docker containers"
 msgstr "Huckepack Docker Container"
+
+#, fuzzy
+msgid "Piggybacked host name"
+msgstr "Präfix für Huckepack-Hostname"
 
 msgid "Ping"
 msgstr "Ping"
@@ -35015,6 +35009,14 @@ msgstr "Untere Schwellwerte setzen"
 msgid "Set lower and upper levels for numerical sensors"
 msgstr "Setze untere und obere Schwellen für numerische Sensoren"
 
+#, fuzzy
+msgid "Set maximum age"
+msgstr "Maximales Alter"
+
+#, fuzzy
+msgid "Set maximum age how long piggyback files are kept"
+msgstr "Maximales Alter für Huckepack-Dateien"
+
 msgid "Set optional timeout for connections to JIRA"
 msgstr "Setzen Sie einen optionalen Timeout Wert für Verbindungen zu JIRA."
 
@@ -35025,6 +35027,9 @@ msgstr "TCP Verbindungstimeout für Verbindung zum Master"
 #, python-format
 msgid "Set parents to %s"
 msgstr "Parents auf %s setzen"
+
+msgid "Set period how long piggyback files are treated as valid"
+msgstr ""
 
 msgid "Set relative levels"
 msgstr "Setze relative Schwellwerte"
@@ -47958,6 +47963,13 @@ msgstr "Lokalen FQDN benutzen"
 msgid "Use manually created ORACLE password wallet"
 msgstr "Manuell erzeugtes ORACLE Passwort-Wallet verwenden"
 
+msgid "Use maximum age from global settings"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Use maximum age from global settings %s"
+msgstr "Bearbeiten von instanzspezifischen globalen Einstellungen von %s"
+
 msgid "Use monitoring host name"
 msgstr "Monitoring-Hostname verwenden"
 
@@ -53326,16 +53338,14 @@ msgstr "Ordner"
 msgid "for"
 msgstr "für"
 
-#, fuzzy
 msgid "force"
-msgstr "erzwungen"
+msgstr "Kräftebasiert"
 
 msgid "forced"
 msgstr "erzwungen"
 
-#, fuzzy
 msgid "forced-commands-only"
-msgstr "Nur mit PKA und Befehl per SSH"
+msgstr "nur erzwungene Kommandos"
 
 msgid "fourth week"
 msgstr "vierte Woche"
@@ -53361,7 +53371,6 @@ msgstr "vom Ende"
 msgid "from:"
 msgstr "von:"
 
-#, fuzzy
 msgid "global"
 msgstr "Global"
 
@@ -53411,9 +53420,8 @@ msgstr "verberge Antwort"
 msgid "hide variable names"
 msgstr "blende Variablen-Namen aus"
 
-#, fuzzy
 msgid "hierarchy"
-msgstr "Suche"
+msgstr "Hierarchie"
 
 msgid "high threshold"
 msgstr "obere Schwelle"
@@ -53927,7 +53935,7 @@ msgstr "Prozent übrig"
 
 #, fuzzy
 msgid "percentile"
-msgstr "Prozent"
+msgstr "Durchschnittswert"
 
 msgid "period"
 msgstr "Periode"

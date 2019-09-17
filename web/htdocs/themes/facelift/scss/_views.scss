@@ -185,6 +185,16 @@ div.floatfilter {
     &.log_class .content, &.log_state .content {
       table {
 	border-spacing: 6px 0;
+
+	&.alertstatefilter {
+	  td {
+	    vertical-align: top;
+	  }
+
+	  .checkbox {
+	    margin: 3px 8px 0 0;
+	  }
+	}
       }
 
       .checkbox {
@@ -576,6 +586,11 @@ table.data.tiled td.tiles {
         &.states {
           border-radius: $theme-border-radius;
         }
+
+	&.center {
+	  white-space: break-spaces;
+	  word-wrap: anywhere;
+	}
       }
     }
 
@@ -683,7 +698,7 @@ table.data.matrix {
     > td {
       padding: 8px;
       border: 1px solid $theme-color-table-border;
-      border-left: 0 solid;
+      border-left: none;
 
       &.left {
         font-weight: $theme-font-weight-bold;
@@ -698,10 +713,6 @@ table.data.matrix {
           padding: 0;
         }
       }
-    }
-
-    &:hover td.left {
-      background-color: $theme-color-table-background;
     }
 
     &:first-child {

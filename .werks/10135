@@ -1,0 +1,11 @@
+Title: mk_docker.py: Do not crash upon removed images
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568798282
+Class: fix
+
+The section docker_container_status was not produced for containers
+whose image had been removed from the node.

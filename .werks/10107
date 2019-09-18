@@ -1,0 +1,10 @@
+Title: CLI: Don't crash on manual parent scan from the command line without a specific host
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b11
+Date: 1568785041
+Class: fix
+
+Fixes CMK-2732

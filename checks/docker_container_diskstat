@@ -69,7 +69,7 @@ def _parse_sub_sections_plugin_section(node, node_info):
 
     devices = {}
     for major_minor, name in raw["names"].iteritems():
-        major, minor = major_minor.split(':', 1)
+        major, minor = map(int, major_minor.split(':', 1))
         devices[(node, major, minor)] = {
             "name": name,
             "bytes": {},
@@ -129,53 +129,53 @@ def _parse_sub_sections_agent_section(node, node_info):
     return sections
 
 
-def inventory_docker_container_diskstat(parsed):
-    return inventory_diskstat_generic(parsed.keys())
+def _prepare_diskdata(node_name, device_name, timestamp, device):
+    # type: (str, str, int, dict) -> Tuple(bool, dict)
+    uninitialized = False
+
+    diskdata = {"node": node_name}
+    counter_template = "diskstat.%s.%%s" % device_name
+
+    for io_op in ('read', 'write'):
+        for unit in ('ios', 'bytes'):
+            key = "%s_%s" % (io_op, 'ios' if unit == 'ios' else 'throughput')
+            try:
+                diskdata[key] = get_rate(counter_template % key,
+                                         timestamp,
+                                         device[unit][io_op.title()],
+                                         onwrap=RAISE)
+            except KeyError:
+                # KeyError: Containers counters are not initialized
+                #           (may be because disk is not *ever* used by container)
+                pass
+            except MKCounterWrapped:
+                # MKCounterWrapped: Checkmk counter is not initialized
+                uninitialized = True
+
+    return uninitialized, diskdata
 
 
 def check_docker_container_diskstat(item, params, parsed):
     disks = {}
+    uninitialized = False
     for (node_name, device_name), (timestamp, device) in parsed.items():
-        counter_base = "diskstat.%s." % device_name
 
-        # Docker container information is provided via piggyback in the most cases. In case
-        # we got no new data simply skip this check
-        previous_timestamp = get_item_state(counter_base + "time")
-        if previous_timestamp == timestamp:
-            raise MKCounterWrapped('No time difference')
-        set_item_state(counter_base + "time", timestamp)
+        this_uninitialized, diskdata = _prepare_diskdata(node_name, device_name, timestamp, device)
+        uninitialized = uninitialized or this_uninitialized
 
-        read_ios_rate = get_rate(counter_base + "read_ios",
-                                 timestamp,
-                                 device["ios"].get("Read", 0),
-                                 onwrap=0.0)
-        write_ios_rate = get_rate(counter_base + "write_ios",
-                                  timestamp,
-                                  device["ios"].get("Write", 0),
-                                  onwrap=0.0)
-        read_bytes_rate = get_rate(counter_base + "read_bytes",
-                                   timestamp,
-                                   device["bytes"].get("Read", 0),
-                                   onwrap=0.0)
-        write_bytes_rate = get_rate(counter_base + "write_bytes",
-                                    timestamp,
-                                    device["bytes"].get("Write", 0),
-                                    onwrap=0.0)
+        # omit disks that only provide name
+        if len(diskdata) > 1:
+            disks[device_name] = diskdata
 
-        disks[device_name] = {
-            "node": node_name,
-            "read_ios": read_ios_rate,
-            "write_ios": write_ios_rate,
-            "read_throughput": read_bytes_rate,
-            "write_throughput": write_bytes_rate,
-        }
+    if uninitialized or not disks:
+        raise MKCounterWrapped("")
 
     return check_diskstat_dict(item, params, disks)
 
 
 check_info["docker_container_diskstat"] = {
     "parse_function": parse_docker_container_diskstat,
-    "inventory_function": inventory_docker_container_diskstat,
+    "inventory_function": inventory_diskstat_generic,
     "check_function": check_docker_container_diskstat,
     "service_description": "Disk IO %s",
     "has_perfdata": True,

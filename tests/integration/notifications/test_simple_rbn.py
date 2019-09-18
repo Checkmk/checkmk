@@ -51,15 +51,16 @@ def test_simple_rbn_host_notification(test_config, site, core, log):
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # Now check for appearing log lines - one after the other
+    # NOTE: "] " is necessary to get the actual log line and not the external command execution
     l.check_logged(
-        "HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
+        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
         timeout=20,
     )
     l.check_logged(
-        "HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
+        "] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
         timeout=20,
     )
     l.check_logged(
-        "HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;Spooled mail to local mail transmission agent",
+        "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;",
         timeout=20,
     )

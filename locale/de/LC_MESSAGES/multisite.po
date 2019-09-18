@@ -175,6 +175,8 @@ msgid ""
 "!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
 "%r"
 msgstr ""
+"!!! Fehler: Empfangene Klasse in RulespecRegistry:"
+"register_manual_check_rulespec %r"
 
 #, python-format
 msgid ""
@@ -7338,9 +7340,8 @@ msgstr "Überprüfung von IPMI-Sensoren über Freeipmi oder IPMItool"
 msgid "Check Item"
 msgstr "Checkitem"
 
-#, fuzzy
 msgid "Check MK status within this period"
-msgstr "Check_MK mit Zeitleistungsdaten"
+msgstr "Check_MK-Status innerhalb dieses Zeitraumes"
 
 msgid "Check Manuals"
 msgstr "Check-Handbuch"
@@ -34797,9 +34798,8 @@ msgstr "Serviceprobleme für NagStaMon"
 msgid "Service recovers to OK"
 msgstr "Service wiederhergestellt zu OK"
 
-#, fuzzy
 msgid "Service report for multiple services"
-msgstr "Serviceperiode für Services"
+msgstr "Servicebericht für mehrere Dienste"
 
 msgid "Service retry check interval"
 msgstr "Wiederholungsintervall für Service-Checks"
@@ -35048,20 +35048,19 @@ msgstr "Untere Schwellwerte setzen"
 msgid "Set lower and upper levels for numerical sensors"
 msgstr "Setze untere und obere Schwellen für numerische Sensoren"
 
-#, fuzzy
 msgid "Set maximum age"
-msgstr "Maximales Alter"
+msgstr "Maximales Alter einstellen"
 
-#, fuzzy
 msgid "Set maximum age how long piggyback files are kept"
-msgstr "Maximales Alter für Huckepack-Dateien"
+msgstr ""
+"Legen Sie das maximale Alter fest, wie lange Huckepackdateien aufbewahrt "
+"werden sollen."
 
 msgid "Set optional timeout for connections to JIRA"
 msgstr "Setzen Sie einen optionalen Timeout Wert für Verbindungen zu JIRA."
 
-#, fuzzy
 msgid "Set optional timeout for connections to servicenow"
-msgstr "TCP Verbindungstimeout für Verbindung zum Master"
+msgstr "Optionales Timeout für Verbindungen zu servicenow einstellen"
 
 #, python-format
 msgid "Set parents to %s"
@@ -35069,6 +35068,7 @@ msgstr "Parents auf %s setzen"
 
 msgid "Set period how long piggyback files are treated as valid"
 msgstr ""
+"Legen Sie fest, wie lange Huckepack-Dateien als gültig behandelt werden."
 
 msgid "Set relative levels"
 msgstr "Setze relative Schwellwerte"
@@ -35816,9 +35816,9 @@ msgstr "Sirene"
 msgid "Site"
 msgstr "Instanz"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Site %s is dead"
-msgstr "Diese Instanz ist deaktiviert"
+msgstr "Die Instanz %s ist nicht erreichbar"
 
 msgid "Site (enforced)"
 msgstr "Instanz (erzwungen)"
@@ -35865,9 +35865,8 @@ msgstr ""
 msgid "Site certificate validity"
 msgstr "Gültigkeit des Instanz-Zertifikats"
 
-#, fuzzy
 msgid "Site connection"
-msgstr "Neue Verbindung"
+msgstr "Instanzverbindung"
 
 msgid "Site globals"
 msgstr "Instanz-Globals"
@@ -45675,7 +45674,6 @@ msgstr ""
 "<tt>apt</tt> auf Debian-basierten Hosts (z.B. Debian und Ubuntu) und "
 "überwacht ausstehende normale und Sicherheitsupdates."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plugin <tt>mk_docker.py</tt>. You can choose to "
 "monitor the node and/or the individual containers. This plugin requires the "
@@ -45689,9 +45687,16 @@ msgid ""
 "name exist on multiple docker nodes."
 msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_docker.py</tt> ausgerollt. Sie können "
-"den Knoten und/oder die einzelnen Container überwachen. Dieses Plugin setzt "
-"voraus, dass die Python-Bibliothek 'docker-py' auf dem überwachten System "
-"installiert ist."
+"den Knoten und/oder die einzelnen Container überwachen. Dieses Plugin "
+"benötigt die Python-Bibliothek 'docker' (mindestens Version 2.0.0) auf dem "
+"überwachten System, welche mit dem Befehl '<tt>pip install docker</tt>' "
+"installiert werden kann. WARNUNG: <tt>pip install docker-py</tt> kann eine "
+"veraltete, inkompatible Version derselben Bibliothek installieren. Wenn Sie "
+"die Container mehrerer Dockerknoten überwachen möchten, empfehlen wir "
+"dringend, <a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Übersetzungsregeln für "
+"Huckepack-Hosts</a> einzurichten, um Namenskollisionen zu vermeiden, wenn "
+"Container mit dem gleichen Namen auf mehreren Dockerknoten existieren."
 
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
@@ -49547,7 +49552,6 @@ msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an den "
 "Administrator, um die folgende Berechtigung zu bekommen: '<b>%s</b>'."
 
-#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
@@ -50345,18 +50349,17 @@ msgstr ""
 "berechnet, <b>bevor</b> diese mit den Schwellwerten verglichen werden. Wird "
 "dieses auf Null gesetzt, wird die Mittelung deaktiviert."
 
-#, fuzzy
 msgid ""
 "When this option is active you will not get <b>any</b> alerts or other "
 "notifications via email, SMS or similar. This overrides all other "
 "notification settings and rules, so make sure that you know what you do. "
 "Moreover you can specify a timerange where no notifications are generated."
 msgstr ""
-"Wenn diese Option aktiviert ist, werden Sie <b>keine</b> Alarmierungen oder "
-"andere Alarme via E-Mail, SMS o.ä. erhalten. Dies setzt alle anderen "
-"Alarmierungseinstellungen und -regeln außer Kraft! Außerdem können Sie ein "
-"Zeitfenster konfigurieren, in dem garantiert keine Benachrichtigungen erzeugt "
-"werden sollen."
+"Wenn diese Option aktiviert ist, werden Sie <b>keinerlei</b> Alarmierungen "
+"oder andere Benachrichtigungen via E-Mail, SMS o.ä. erhalten. Dies setzt alle "
+"anderen Benachrichtigungseinstellungen und -regeln außer Kraft! Außerdem "
+"können Sie ein Zeitfenster konfigurieren, in dem garantiert keine "
+"Benachrichtigungen erzeugt werden."
 
 msgid ""
 "When this option is checked, then the Multisite webservice will only export "
@@ -51224,9 +51227,8 @@ msgstr "Schreibdurchsatz pro Sekunde"
 msgid "Write to log file all important events and all warnings"
 msgstr "Schreibe alle wichtigen Ereignisse und Warnungen in die Protokolldatei."
 
-#, fuzzy
 msgid "Write to log file everything"
-msgstr "Laufzeit des Logdateien-Parsings begrenzen"
+msgstr "Alles in die Protokolldatei schreiben"
 
 msgid "Write to log file only most important events"
 msgstr "Schreiben in die Protokolldatei nur die wichtigsten Ereignisse"
@@ -53912,9 +53914,8 @@ msgstr "offen"
 msgid "optional"
 msgstr "optional"
 
-#, fuzzy
 msgid "or above"
-msgstr "über"
+msgstr "oder von oben"
 
 msgid "orderly stop"
 msgstr "ordnungsgemäß gestoppt"

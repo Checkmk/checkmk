@@ -7,4 +7,26 @@ Version: 1.7.0i1
 Date: 1565619102
 Class: feature
 
-Out of single metrics it is now possible to calculation a forecast for the future behavior of this metric.
+Out of single metrics it is now possible to calculation a forecast for the
+future behavior of this metric.
+
+Forecast Graphs in Checkmk implements its time series prediction using
+Facebook's Prophet tool. This external tool is not packaged inside Checkmk
+and needs to be installed separately. The following instructions assist on
+the installation processes and strip unnecessary dependencies. Within your
+site execute the following instructions.
+
+<code>
+    pip install pystan
+    pip install fbprophet
+    pip uninstall -y matplotlib
+    find local/lib/ -iname tests | xargs rm -rf
+    find local/lib/ -name test | xargs rm -rf
+    rm -rf local/lib/python/pystan/stan/src
+    rm -rf local/lib/python/pystan/stan/lib/stan_math
+    omd restart
+</code>
+
+The easiest way to use a metric data for Forecast is from the service view
+under "Service Metrics" to click in the graph icon and select "Use this
+metric for a forecast graph".

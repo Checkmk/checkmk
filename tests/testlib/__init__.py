@@ -428,36 +428,32 @@ class Site(object):
     def send_host_check_result(self, hostname, state, output, expected_state=None):
         if expected_state is None:
             expected_state = state
-
         last_check_before = self._last_host_check(hostname)
-
-        # Ensure the next check result is not in same second as the previous check
-        schedule_ts = time.time()
-        while int(last_check_before) == int(schedule_ts):
-            schedule_ts = time.time()
-            time.sleep(0.1)
-
+        command_timestamp = self._command_timestamp(last_check_before)
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
-                          (schedule_ts, hostname, state, output))
-        self._wait_for_next_host_check(hostname, last_check_before, schedule_ts, expected_state)
+                          (command_timestamp, hostname, state, output))
+        self._wait_for_next_host_check(hostname, last_check_before, command_timestamp,
+                                       expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
         last_check_before = self._last_service_check(hostname, service_description)
-
-        # Ensure the next check result is not in same second as the previous check
-        schedule_ts = int(time.time())
-        while int(last_check_before) == int(schedule_ts):
-            schedule_ts = time.time()
-            time.sleep(0.1)
-
-        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
-        self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
-                          (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
-
+        command_timestamp = self._command_timestamp(last_check_before)
+        self.live.command(
+            "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
+            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp))
         self._wait_for_next_service_check(hostname, service_description, last_check_before,
-                                          schedule_ts, expected_state)
+                                          command_timestamp, expected_state)
 
-    def _wait_for_next_host_check(self, hostname, last_check_before, schedule_ts, expected_state):
+    def _command_timestamp(self, last_check_before):
+        # Ensure the next check result is not in same second as the previous check
+        timestamp = time.time()
+        while int(last_check_before) == int(timestamp):
+            timestamp = time.time()
+            time.sleep(0.1)
+        return timestamp
+
+    def _wait_for_next_host_check(self, hostname, last_check_before, command_timestamp,
+                                  expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET hosts\n" \
@@ -468,11 +464,12 @@ class Site(object):
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
-        self._verify_next_check_output(time.time(), schedule_ts, last_check, last_check_before,
-                                       state, expected_state, plugin_output, wait_timeout)
+        self._verify_next_check_output(time.time(), command_timestamp, last_check,
+                                       last_check_before, state, expected_state, plugin_output,
+                                       wait_timeout)
 
     def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
-                                     schedule_ts, expected_state):
+                                     command_timestamp, expected_state):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET services\n" \
@@ -484,16 +481,17 @@ class Site(object):
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
-        self._verify_next_check_output(time.time(), schedule_ts, last_check, last_check_before,
-                                       state, expected_state, plugin_output, wait_timeout)
+        self._verify_next_check_output(time.time(), command_timestamp, last_check,
+                                       last_check_before, state, expected_state, plugin_output,
+                                       wait_timeout)
 
-    def _verify_next_check_output(self, now, schedule_ts, last_check, last_check_before, state,
-                                  expected_state, plugin_output, wait_timeout):
-        print "processing check result took %0.2f seconds" % (time.time() - schedule_ts)
+    def _verify_next_check_output(self, now, command_timestamp, last_check, last_check_before,
+                                  state, expected_state, plugin_output, wait_timeout):
+        print "processing check result took %0.2f seconds" % (time.time() - command_timestamp)
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
-                (wait_timeout, last_check_before, schedule_ts, last_check)
+                (wait_timeout, last_check_before, command_timestamp, last_check)
         assert state == expected_state, \
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 

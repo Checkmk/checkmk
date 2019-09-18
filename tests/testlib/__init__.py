@@ -430,23 +430,22 @@ class Site(object):
             expected_state = state
 
         last_check_before = self._last_host_check(hostname)
-        schedule_ts, wait_timeout = time.time(), 20
 
         # Ensure the next check result is not in same second as the previous check
+        schedule_ts = time.time()
         while int(last_check_before) == int(schedule_ts):
             schedule_ts = time.time()
             time.sleep(0.1)
 
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
                           (schedule_ts, hostname, state, output))
-        self._wait_for_next_host_check(hostname, last_check_before, schedule_ts, wait_timeout,
-                                       expected_state)
+        self._wait_for_next_host_check(hostname, last_check_before, schedule_ts, expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
         last_check_before = self._last_service_check(hostname, service_description)
-        schedule_ts, wait_timeout = int(time.time()), 20
 
         # Ensure the next check result is not in same second as the previous check
+        schedule_ts = int(time.time())
         while int(last_check_before) == int(schedule_ts):
             schedule_ts = time.time()
             time.sleep(0.1)
@@ -456,10 +455,10 @@ class Site(object):
                           (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
 
         self._wait_for_next_service_check(hostname, service_description, last_check_before,
-                                          schedule_ts, wait_timeout, expected_state)
+                                          schedule_ts, expected_state)
 
-    def _wait_for_next_host_check(self, hostname, last_check_before, schedule_ts, wait_timeout,
-                                  expected_state):
+    def _wait_for_next_host_check(self, hostname, last_check_before, schedule_ts, expected_state):
+        wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET hosts\n" \
             "Columns: last_check state plugin_output\n" \
@@ -473,7 +472,8 @@ class Site(object):
                                        state, expected_state, plugin_output, wait_timeout)
 
     def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
-                                     schedule_ts, wait_timeout, expected_state):
+                                     schedule_ts, expected_state):
+        wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET services\n" \
             "Columns: last_check state plugin_output\n" \

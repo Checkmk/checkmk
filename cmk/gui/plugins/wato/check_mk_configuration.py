@@ -3897,8 +3897,17 @@ def _valuespec_piggybacked_host_files():
                      ],
                  ),
                  title=_("Exceptions for piggybacked hosts"),
+                 add_label=_("Add exception"),
              )),
         ],
+        help=_(
+            "We assume that a source host is sending piggyback data every check interval "
+            "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
+            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
+            "<b>Got not information from host</b> resp. <b>vanished services</b> if the piggybacked "
+            "data is missing within a check interval. "
+            "This rule helps you to get more control over the piggybacked host data handling. "
+            "The source host names have to be set in the condition field 'Explicit hosts'."),
     )
 
 
@@ -3914,7 +3923,7 @@ def _vs_max_cache_age(additional_title=None):
             FixedValue(
                 "global",
                 title=title,
-                totext=_("Global maximum age"),
+                totext="",
             ),
             Age(
                 title=_("Set maximum age"),

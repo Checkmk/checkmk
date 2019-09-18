@@ -49547,14 +49547,15 @@ msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an den "
 "Administrator, um die folgende Berechtigung zu bekommen: '<b>%s</b>'."
 
+#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Disovery</b> services of the piggybacked "
-"hosts report <b>Got not information from host</b> resp. <b>vanished services</"
+"hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
 "helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field 'Explicit hosts'."
+"source host names have to be set in the condition field <i>Explicit hosts</i>."
 msgstr ""
 "Wir gehen davon aus, dass ein Quellhost standardmäßig in jedem Prüfintervall "
 "Huckepackdaten sendet. Wenn dies bei einigen Quellhosts nicht der Fall ist, "
@@ -53910,6 +53911,10 @@ msgstr "offen"
 
 msgid "optional"
 msgstr "optional"
+
+#, fuzzy
+msgid "or above"
+msgstr "über"
 
 msgid "orderly stop"
 msgstr "ordnungsgemäß gestoppt"

@@ -6041,6 +6041,7 @@ def test_registered_display_hints(load_plugins):
     '.software.',
     '.software.applications.',
     '.software.applications.check_mk.',
+    '.software.applications.check_mk.agent_version',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',
     '.software.applications.check_mk.host_labels:',

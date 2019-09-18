@@ -3892,7 +3892,7 @@ def _valuespec_piggybacked_host_files():
                               title=_("Piggybacked host name"),
                               allow_empty=False,
                           )),
-                         ("max_cache_age", _vs_max_cache_age(additional_title="or above")),
+                         ("max_cache_age", _vs_max_cache_age(additional_title=_("or above"))),
                          ("validity", _vs_validity()),
                      ],
                  ),

@@ -262,6 +262,7 @@ class JolokiaInstance(object):
 
         self.base_url = self._get_base_url()
         self.target = self._get_target()
+        self.post_config = {"ignoreErrors": "true"}
         self._session = self._initialize_http_session()
 
     def _get_base_url(self):
@@ -327,6 +328,7 @@ class JolokiaInstance(object):
         data["type"] = function
         if use_target and self.target:
             data["target"] = self.target
+        data["config"] = self.post_config
         return data
 
     def post(self, data):

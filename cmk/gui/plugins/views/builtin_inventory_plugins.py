@@ -408,7 +408,8 @@ inventory_displayhints.update({
     ".software.packages:*.size": {"title": _("Size"), "paint": "count"},
     ".software.packages:*.path": {"title": _("Path")},
     ".software.applications.": {"title": _("Applications")},
-    ".software.applications.check_mk.": {"title": _("Check_MK")},
+    ".software.applications.check_mk.": {"title": _("Checkmk")},
+    ".software.applications.check_mk.agent_version": {"title": _("Checkmk Agent Version")},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
     },

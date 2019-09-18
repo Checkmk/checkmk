@@ -171,10 +171,6 @@ msgid " to:"
 msgstr " An:"
 
 #, python-format
-msgid "!!! Error: Received class in RulespecRegistry:register %r"
-msgstr ""
-
-#, python-format
 msgid ""
 "!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec "
 "%r"
@@ -856,11 +852,23 @@ msgstr "6 Monate"
 msgid "64bit packaged binary"
 msgstr "Paketierte 64bit binary"
 
+#, fuzzy
+msgid "68% - One standard deviation"
+msgstr "%sRoundtrip-Standardabweichung"
+
 msgid "7-segment display brightness"
 msgstr "Helligkeit Siebensegmentanzeige"
 
 msgid "7-segment display uid"
 msgstr "UID Siebensegmentanzeige"
+
+#, fuzzy
+msgid "86% - 1.5 standard deviations"
+msgstr "%sRoundtrip-Standardabweichung"
+
+#, fuzzy
+msgid "95% - Two standard deviations"
+msgstr "im Verhältnis zur Standardabweichung"
 
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
@@ -2665,6 +2673,10 @@ msgstr "Aktiver Datums- & Zeitbereich"
 msgid "Active unit"
 msgstr "Aktive Einheit"
 
+#, fuzzy
+msgid "Adaptable"
+msgstr "reserviert"
+
 msgid "Add & remove folders"
 msgstr "Ordner ergänzen & löschen"
 
@@ -3085,6 +3097,10 @@ msgstr "Zusätzliche Notiz, die beim Erstellen des Alerts hinzugefügt wird."
 
 msgid "Additional options"
 msgstr "Zusätzliche Optionen"
+
+#, fuzzy
+msgid "Additive: Effects of seasonality are added to the trend."
+msgstr "Berücksichtigung von Zeitabschnitten werden dem Trend hinzugefügt."
 
 msgid "Address"
 msgstr "Adresse"
@@ -6038,6 +6054,13 @@ msgstr "Business Intelligence Administration"
 msgid "Business Intelligence Rules and Aggregations"
 msgstr "Business Intelligence Regeln und Aggregate"
 
+msgid ""
+"Business time series display seasonalities as a result of the human\n"
+"behaviors they represent. 5-day work weeks can produce higher loads and\n"
+"repetition on each week. While vacations can produce effects that repeat\n"
+"each year. Seasonality are this periodic oscillations of the time series."
+msgstr ""
+
 msgid "Busy and idle servers"
 msgstr "Beschäftigte und untätige Server"
 
@@ -8525,6 +8548,10 @@ msgstr "Bedingungen"
 msgid "Conference Allocation Latency"
 msgstr "Latenz der Bereitstellung von Konferenzen"
 
+#, fuzzy
+msgid "Confidence interval"
+msgstr "Zeitintervall"
+
 msgid "Configuration"
 msgstr "Einstellungen"
 
@@ -9249,9 +9276,6 @@ msgstr "Inhalt von Bericht %s"
 
 msgid "Content-Type"
 msgstr "Inhaltstyp"
-
-msgid "Contention interval - Confidence interval"
-msgstr "Konfidenzintervall"
 
 msgid "Contents"
 msgstr "Contents"
@@ -13907,9 +13931,6 @@ msgstr "Effektiver Zustand"
 msgid "Effective labels"
 msgstr "Effektive Labels"
 
-msgid "Effects of seasonality are added to the trend."
-msgstr "Berücksichtigung von Zeitabschnitten werden dem Trend hinzugefügt."
-
 msgid "Either Containers, Images, Local Volumes or Build Cache"
 msgstr "Entweder Container, Images, lokale Volumes oder Build Caches."
 
@@ -16326,6 +16347,10 @@ msgstr "Vorhersagegraph"
 
 msgid "Forecast Graphs"
 msgstr "Vorhersagegraphen"
+
+#, fuzzy
+msgid "Forecast Model Configuration"
+msgstr "Parametrisierung des Vorhersagemodells"
 
 msgid "Forecast Model Parametrization"
 msgstr "Parametrisierung des Vorhersagemodells"
@@ -23316,6 +23341,10 @@ msgstr "Zeilennummer in Logdatei"
 msgid "Line spacing"
 msgstr "Zeilenabstand"
 
+#, fuzzy
+msgid "Linear"
+msgstr "Zeile"
+
 msgid "Lines"
 msgstr "Linien"
 
@@ -25716,6 +25745,10 @@ msgstr "Modellname"
 msgid "Model Name - LEGACY, don't use"
 msgstr "Modellname - VERALTET, nicht verwenden"
 
+#, fuzzy
+msgid "Model Parameters"
+msgstr "Parameter"
+
 msgid "Model and revsion"
 msgstr "Modell und Revision"
 
@@ -26180,6 +26213,10 @@ msgstr "Mehrere Graphen"
 
 msgid "Multiple regular expressions"
 msgstr "Mehrfache reguläre Ausdrücke"
+
+#, fuzzy
+msgid "Multiplicative: Seasonality grows with the trend."
+msgstr "Die Saisonalität wächst mit dem Trend."
 
 msgid "Must be unique for every host. Defaults to command that is executed."
 msgstr ""
@@ -28919,6 +28956,25 @@ msgid ""
 msgstr ""
 "Zählung wird bei der nächsten passenden Regel für ein neues Ereignis bei 1 "
 "beginnen"
+
+msgid ""
+"Our system will recognize breaks in the trend and set them automatically,\n"
+"but as a user your are required to select how flexible the trend is when it\n"
+"is adjusted to the data.  This options change between more global to\n"
+"local smooth models.\n"
+"\n"
+"The model is extrapolated to make the forecast using an extension of the\n"
+"last trend. However, in addition to that, our system will use the\n"
+"information about the changes in trend over the analyzed history to\n"
+"simulate future rate changes. In the aim of emulating changes from the\n"
+"past, future changes are randomly sampled so that their average frequency\n"
+"matches that of the history.\n"
+"\n"
+"The assumption that the trend changes with the same frequency in the future\n"
+"as it has in the past is very strong. As an indicator of overfitting is\n"
+"that an incleased model flexibility in fitting the history when projected\n"
+"to the future will produce wide uncertainty intervals."
+msgstr ""
 
 msgid "Out"
 msgstr "Ausgehend"
@@ -33941,9 +33997,6 @@ msgstr "Suche<nobr> </nobr>in"
 msgid "Searching and Filtering"
 msgstr "Suchen und Filtern"
 
-msgid "Seasonality grows with the trend."
-msgstr "Die Saisonalität wächst mit dem Trend."
-
 msgid "Sec."
 msgstr "Sec."
 
@@ -37759,6 +37812,10 @@ msgstr "Unterdrücke nicht verfügbare Sensoren"
 
 msgid "Surge queue length"
 msgstr "Anstieg der Warteschlangenlänge"
+
+#, fuzzy
+msgid "Susceptible"
+msgstr "Inkompatibel"
 
 msgid "Suspended"
 msgstr "Angehalten"
@@ -43534,6 +43591,13 @@ msgstr ""
 "Lässt den HTTP-Check detailliertere Metriken wie Verbindungszeit, Headerzeit, "
 "Zeit bis zum Empfang des ersten Bytes und Transferzeit generieren."
 
+msgid ""
+"This option quantifies the spread of the error between our model\n"
+"and the data. Assuming a normal distribution of the error we use the "
+"calculated standard\n"
+"deviation to quantify the confidence interval."
+msgstr ""
+
 msgid "This option turns on a faster algorithm for matching events to rules. "
 msgstr ""
 "Diese Option schaltet auf einen schnelleren Algorithmus beim Anwenden von "
@@ -46230,7 +46294,7 @@ msgid "Topic:"
 msgstr "Thema:"
 
 #, fuzzy
-msgid "Toplogy host details"
+msgid "Topology host details"
 msgstr "Service-Ausgabe umschalten"
 
 msgid "Total"
@@ -46505,7 +46569,8 @@ msgstr "Ordnerbaum"
 msgid "Trend computation"
 msgstr "Trend-Berechnung"
 
-msgid "Trend likelihood to follow changes"
+#, fuzzy
+msgid "Trend flexibility: likelihood to follow changes"
 msgstr "Trendwahrscheinlichkeit um Veränderungen zu verfolgen"
 
 msgid "Trend of filesystem growth"
@@ -46519,6 +46584,10 @@ msgstr "Performance-Daten aus Trends"
 
 msgid "Treshold"
 msgstr "Schwellwert"
+
+#, python-format
+msgid "Tried to register incompatible rulespec: %r"
+msgstr ""
 
 msgid "Trivial change"
 msgstr "Triviale Änderung"
@@ -49002,6 +49071,9 @@ msgstr "Vertikaler Abstand"
 msgid "Vertical spacing"
 msgstr "Vertikaler Abstand"
 
+msgid "Very voluble"
+msgstr ""
+
 msgid "VictorOPS REST Endpoint"
 msgstr "VictorOPS REST-Endpunkt"
 
@@ -49144,6 +49216,9 @@ msgstr "Spannungsschwellwerte (USV, Stromverteiler, anderen Geräte)"
 
 msgid "Voltage on Power Channel"
 msgstr "Spannung auf Stromleitung"
+
+msgid "Voluble"
+msgstr ""
 
 msgid "Volume Group"
 msgstr "Volumegruppe"
@@ -54462,6 +54537,9 @@ msgstr "gestern"
 
 msgid "z/OS"
 msgstr "z/OS"
+
+#~ msgid "Contention interval - Confidence interval"
+#~ msgstr "Konfidenzintervall"
 
 #~ msgid "Job"
 #~ msgstr "Job"

@@ -3904,10 +3904,10 @@ def _valuespec_piggybacked_host_files():
             "We assume that a source host is sending piggyback data every check interval "
             "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
             "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
-            "<b>Got not information from host</b> resp. <b>vanished services</b> if the piggybacked "
+            "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
             "data is missing within a check interval. "
             "This rule helps you to get more control over the piggybacked host data handling. "
-            "The source host names have to be set in the condition field 'Explicit hosts'."),
+            "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
     )
 
 

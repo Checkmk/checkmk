@@ -74,11 +74,10 @@ def do_scan_parents(hosts):
                                      "the file and try again.")
 
     console.output("Scanning for parents (%d processes)..." % config.max_num_processes)
-    while len(hosts) > 0:
+    while hosts:
         chunk = []
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
-            host = hosts[0]
-            del hosts[0]
+            host = hosts.pop()
 
             host_config = config_cache.get_host_config(host)
 

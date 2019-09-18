@@ -31,7 +31,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 2.0.6\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-Bookmarks: -1,-1,1412,-1,-1,-1,-1,-1,-1,-1\n"
 "X-Poedit-SearchPath-0: /home/mk/git/check_mk/web/htdocs\n"
@@ -2797,9 +2797,8 @@ msgstr "Regel hinzufügen"
 msgid "Add element"
 msgstr "Element hinzufügen"
 
-#, fuzzy
 msgid "Add exception"
-msgstr "Ausnahme ergänzen"
+msgstr "Ausnahme hinzufügen"
 
 msgid "Add exclusion"
 msgstr "Ausnahme hinzufügen"
@@ -21764,7 +21763,7 @@ msgstr "Ungültiger DCD-Befehl: %r"
 
 #, python-format
 msgid "Invalid None argument at for %s idx %d"
-msgstr ""
+msgstr "Ungültiges 'None' Argument für %s idx %d"
 
 #, python-format
 msgid "Invalid Perf-O-Meter definition %r: only one or two entries are allowed"
@@ -23001,16 +23000,14 @@ msgstr "Schwellen für optimierte Verbindungen"
 msgid "Levels for passthrough connections"
 msgstr "Schwellwerte für passthrough Verbindungen"
 
-#, fuzzy
 msgid "Levels for power state count"
-msgstr "Schwellen für Prozessanzahl"
+msgstr "Schwellwerte für die Anzahl von Stromzuständen"
 
 msgid "Levels for process count"
 msgstr "Schwellen für Prozessanzahl"
 
-#, fuzzy
 msgid "Levels for provisioning count"
-msgstr "Schwellen für Prozessanzahl"
+msgstr "Schwellen für die Anzahl der Datenbereitstellungen"
 
 msgid "Levels for queue length"
 msgstr "Schwellwerte für die Länge der Warteschlange"
@@ -23176,9 +23173,8 @@ msgstr "Werte für den Gesundheitszustand in Prozent"
 msgid "Levels on ingress data in bytes"
 msgstr "Schwellwerte für die Eingangscontroller-Daten in Bytes"
 
-#, fuzzy
 msgid "Levels on server latency in seconds"
-msgstr "Schwellen für aktive Verbindungen"
+msgstr "Schwellwerte der Server-Latenzzeit in Sekunden"
 
 msgid "Levels on single cores"
 msgstr "Schwellen für die einzelne Kerne"
@@ -24735,16 +24731,14 @@ msgstr "Einhängepunktnamen zuordnen"
 msgid "Map operational states"
 msgstr "Betriebszustände abbilden"
 
-#, fuzzy
 msgid "Map power states"
-msgstr "Zustände übersetzen"
+msgstr "Setze die Strom-Zustände"
 
 msgid "Map process states"
 msgstr "Prozesszustände abbilden"
 
-#, fuzzy
 msgid "Map provisioning states"
-msgstr "File-Online-Status abbilden"
+msgstr "Setze den Provisioning-Status"
 
 msgid "Map standby state"
 msgstr "Standbystatus abbilden"
@@ -29491,9 +29485,8 @@ msgstr "Parameter für erkannte Services"
 msgid "Parameters for input phases of UPSs and PDUs"
 msgstr "Parameter für Eingangsphasen von USVs und PDUs"
 
-#, fuzzy
 msgid "Parameters for output loads of UPSs and PDUs"
-msgstr "Parameter für Ausgangsphasen von USVs und PDUs"
+msgstr "Parameter für die Ausgangslasten von USVs und PDUs"
 
 msgid "Parameters for output phases of UPSs and PDUs"
 msgstr "Parameter für Ausgangsphasen von USVs und PDUs"
@@ -30211,16 +30204,14 @@ msgstr "Huckepage-Informationen von einem anderen Host"
 msgid "Piggyback name of virtual machines"
 msgstr "Huckepack Name der virtuellen Maschine"
 
-#, fuzzy
 msgid "Piggybacked Host Files"
-msgstr "Huckepack Docker Container"
+msgstr "Huckepack-Hostdateien"
 
 msgid "Piggybacked docker containers"
 msgstr "Huckepack Docker Container"
 
-#, fuzzy
 msgid "Piggybacked host name"
-msgstr "Präfix für Huckepack-Hostname"
+msgstr "Huckepack-Hostname"
 
 msgid "Ping"
 msgstr "Ping"
@@ -30573,13 +30564,12 @@ msgstr ""
 "Legen Sie den Alarm-Status fest, den der Serviceerkennungs-Check ausgeben "
 "soll wenn nicht überwachte Services gefunden werden."
 
-#, fuzzy
 msgid ""
 "Please select which state the service discovery check services shall assume "
 "in case that new host labels are found."
 msgstr ""
-"Legen Sie den Alarm-Status fest, den der Serviceerkennungs-Check ausgeben "
-"soll wenn nicht überwachte Services gefunden werden."
+"Bitte wählen Sie aus, welchen Zustand die Service Discovery Check Services "
+"annehmen sollen, falls neue Host-Labels gefunden werden."
 
 #, python-format
 msgid "Please specify %s."
@@ -30903,7 +30893,6 @@ msgstr "Position"
 msgid "Positive match (Add matching hosts to the set)"
 msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
 
-#, fuzzy
 msgid "Positive match (Add matching services to the set)"
 msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
 
@@ -31706,9 +31695,8 @@ msgstr "Lesen"
 msgid "Read / Write queue length"
 msgstr "Lese/Schreib-Warteschlange"
 
-#, fuzzy
 msgid "Read Average Executions (ms)"
-msgstr "Lesezugriffe"
+msgstr "Lesen der Ausführungen im Durchnitt (ms)"
 
 msgid "Read Average RTT (ms)"
 msgstr "Mittelwert von RTT lesen (ms)"
@@ -31716,16 +31704,14 @@ msgstr "Mittelwert von RTT lesen (ms)"
 msgid "Read IO operations per second"
 msgstr "Lesende IO-Operationen pro Sekunde"
 
-#, fuzzy
 msgid "Read Operations /s"
-msgstr "Lesezugriffe"
+msgstr "Lesezugriffe pro Sekunde"
 
 msgid "Read Queue-Length"
 msgstr "Warteschlangenlänge lesen"
 
-#, fuzzy
 msgid "Read Retransmissions"
-msgstr "Lesezugriffe"
+msgstr "Lese Wiederholungen"
 
 msgid "Read access to all hosts and folders"
 msgstr "Lesezugriff auf alle Hosts/Ordner"
@@ -31745,9 +31731,8 @@ msgstr "Durchschnittliche Leseumlaufzeit (RTT)"
 msgid "Read blocks per second"
 msgstr "Gelesende Blocks pro Sekunde"
 
-#, fuzzy
 msgid "Read bytes per operation"
-msgstr "Lesezugriffe"
+msgstr "Lese Bytes pro Operation"
 
 msgid "Read hits"
 msgstr "Lesetreffer"
@@ -31819,9 +31804,8 @@ msgstr "Lesende Verbindungen"
 msgid "Reading request"
 msgstr "Reading request"
 
-#, fuzzy
 msgid "Reads size /s"
-msgstr "Lesegröße"
+msgstr "Liest die Größe pro Sekunde"
 
 msgid "Reads/sec"
 msgstr "Leseoperationen/Sek"
@@ -33090,9 +33074,8 @@ msgstr "rotiertes Log"
 msgid "Rotations per minute"
 msgstr "Umdrehung pro Minute"
 
-#, fuzzy
 msgid "Round"
-msgstr "Roundtrip"
+msgstr "Rund"
 
 msgid "Round trip average"
 msgstr "Round Trip Zeit (Durchschnitt)"
@@ -33503,9 +33486,8 @@ msgstr "SLA: starte bei Periode %s, blicke zurück %s Perioden"
 msgid "SLAs"
 msgstr "SLAs"
 
-#, fuzzy
 msgid "SLES License"
-msgstr "NTLS-Links"
+msgstr "SLES-Lizenz"
 
 msgid "SMART harddisk monitoring (Linux)"
 msgstr "SMART Festplattenmonitoring (Linux)"
@@ -35318,9 +35300,8 @@ msgstr "Schwere des fehlgeschlagenen Serviceerkennungschecks"
 msgid "Severity of invalid autoextend setting"
 msgstr "Schwere einer ungültigen Einstellung für Autoextend"
 
-#, fuzzy
 msgid "Severity of new host labels"
-msgstr "Entdeckte Host-Labels"
+msgstr "Schweregrad der neuen Host-Labels"
 
 msgid "Severity of unmonitored services"
 msgstr "Status bei nicht überwachten Services"
@@ -35881,9 +35862,8 @@ msgstr ""
 "Basis-URL der Instanz für Zugriff auf die Web-API um z.B. Hosts zu erzeugen "
 "(Beispiel: <tt>https://myhost/mysite</tt>)."
 
-#, fuzzy
 msgid "Site certificate validity"
-msgstr "SSL Zertifikats Überprüfung"
+msgstr "Gültigkeit des Instanz-Zertifikats"
 
 #, fuzzy
 msgid "Site connection"
@@ -35992,9 +35972,8 @@ msgstr "Größe pro Prozess"
 msgid "Size, age and count of file groups"
 msgstr "Größe, Alter und Anzahl von Dateigruppen"
 
-#, fuzzy
 msgid "Size, age and count of file groups (mk_filestats)"
-msgstr "Größe, Alter und Anzahl von Dateigruppen"
+msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Übrige Nachrichten auslassen, eine kritische Nachricht erstellen"
@@ -36488,9 +36467,8 @@ msgstr ""
 "Gibt das Standardlayout an das verwendet werden soll, wenn eine Aggregation "
 "kein explizites Layout zugeordnet hat."
 
-#, fuzzy
 msgid "Specifies the default line style"
-msgstr "Standard Aussehen benutzen"
+msgstr "Gibt den Standard-Linienstil an"
 
 msgid "Specifies whether password authentication is allowed"
 msgstr "Gibt an, ob die Passwortauthentifizierung erlaubt ist"
@@ -36640,9 +36618,10 @@ msgstr "Spezifizieren Sie Zuordnungen von Remote-IPs zu Clusternamen."
 msgid "Specify queue names that the rule should apply to"
 msgstr "Geben Sie die Namen der Schlangen an, auf die diese Regel greifen soll"
 
-#, fuzzy
 msgid "Specify storage account names that the rule should apply to"
-msgstr "Geben Sie die Namen der Schlangen an, auf die diese Regel greifen soll"
+msgstr ""
+"Geben Sie die Zugangsnamen des Storageaccounts an, für den die Regel gelten "
+"soll."
 
 msgid ""
 "Specify the UDP port to listen on for Real-Time Check packets. It needs to "
@@ -36760,9 +36739,10 @@ msgstr "Zeit seit dem letzten erfolgreichen Backup"
 msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
 msgstr "Zwei Großbuchstaben angeben, z.B <tt>EN</tt> oder <tt>DE</tt>."
 
-#, fuzzy
 msgid "Specify virtual network gateway names that the rule should apply to"
-msgstr "Geben Sie die Namen der Schlangen an, auf die diese Regel greifen soll"
+msgstr ""
+"Geben Sie die Namen der virtuellen Netzwerk-Gateways an, für die die Regel "
+"gelten soll."
 
 msgid ""
 "Specify what we shall do if the selected graph is missing or cannot be "
@@ -36791,9 +36771,8 @@ msgstr ""
 msgid "Speed"
 msgstr "Geschwindigkeit"
 
-#, fuzzy
 msgid "Speed of interface groups (Netapp only)"
-msgstr "Netzwerkschnittstellen-Gruppen"
+msgstr "Geschwindigkeit der Interface-Gruppen (nur Netapp)"
 
 msgid "Splunk Alerts"
 msgstr "Splunk Alerts"
@@ -37562,9 +37541,8 @@ msgstr "Auslastung der Storageprozessors"
 msgid "Storage Processor utilization"
 msgstr "Auslastung der Storageprozessors"
 
-#, fuzzy
 msgid "Storage account name"
-msgstr "Logdatei: Kontaktname"
+msgstr "Zugangsname des Storageaccounts"
 
 msgid "Storage pools"
 msgstr "Speicherpools"
@@ -37602,9 +37580,8 @@ msgstr "Gespeicherter Bericht"
 msgid "Stored reports"
 msgstr "Gespeicherte Berichte"
 
-#, fuzzy
 msgid "Straight"
-msgstr "rechts"
+msgstr "Gerade"
 
 msgid "Streams"
 msgstr "Streams"
@@ -37658,9 +37635,8 @@ msgstr "Erwartete Zeichenketten in Serverantwort"
 msgid "Style"
 msgstr "Stil"
 
-#, fuzzy
 msgid "Style of connection lines"
-msgstr "Status bei Verbindungsverweigerung"
+msgstr "Stil der Verbindungsverzweigungen"
 
 msgid "Styles"
 msgstr "Stile"
@@ -37836,9 +37812,8 @@ msgstr "installierter Swap"
 msgid "Swap left and right margins on pages with even numbers"
 msgstr "Auf geraden Seiten rechte und linke Ränder vertauschen"
 
-#, fuzzy
 msgid "Swap memory usage"
-msgstr "Nutzung von Heapspeicher"
+msgstr "Nutzung von Swapspeichers"
 
 msgid "Swap used"
 msgstr "benutzer Swap"
@@ -37938,7 +37913,6 @@ msgstr "Synchronisiert mit Master (Instanz-ID ist %s.)"
 msgid "Synchronizes the email of the LDAP user account into Check_MK."
 msgstr "Synchronisiert E-Mails des LDAP Benutzerkontos nach Check_MK."
 
-#, fuzzy
 msgid "Synchronizing"
 msgstr "Synchronisiere"
 
@@ -38293,9 +38267,8 @@ msgstr "Zielagent"
 msgid "Target State"
 msgstr "Zielzustand"
 
-#, fuzzy
 msgid "Target port"
-msgstr "Ziel"
+msgstr "Zielport"
 
 msgid "Target states"
 msgstr "Ziel Status"
@@ -38791,12 +38764,11 @@ msgstr "Die ID muss eindeutig sein."
 msgid "The ID of an exported rule pack cannot be modified."
 msgstr "Die ID eines exportierten Regelsatzes kann nicht modifiziert werden."
 
-#, fuzzy
 msgid ""
 "The ID of the aggregation must be a unique text. It will be as unique ID."
 msgstr ""
-"Die ID des Ziels muss ein eindeutiger Text sein. Er wird als interner "
-"Schlüssel verwendet, wenn auf den Ziel referenziert wird."
+"Die ID der Aggregation muss ein eindeutiger Text sein. Es wird als eindeutige "
+"ID verwendet."
 
 msgid ""
 "The ID of the connection must be a unique text. It will be used as an "
@@ -43377,14 +43349,12 @@ msgstr ""
 "<a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> "
 "definiert ist."
 
-#, fuzzy
 msgid ""
 "This name must match the name of the section defined in the mk_filestats "
 "configuration."
 msgstr ""
-"Dieser Name muss mit dem Namen übereinstimmen, der in der Gruppe im Regelsatz "
-"<a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> "
-"definiert ist."
+"Dieser Name muss mit dem Namen der in der Konfiguration von mk_filestats "
+"definierten Sektion übereinstimmen."
 
 msgid "This name will be used in the description of the service"
 msgstr "Dieser Name wird als Service-Beschreibung verwendet"
@@ -46297,9 +46267,8 @@ msgstr "Thema"
 msgid "Topic:"
 msgstr "Thema:"
 
-#, fuzzy
 msgid "Topology host details"
-msgstr "Service-Ausgabe umschalten"
+msgstr "Details zum Topologie-Host"
 
 msgid "Total"
 msgstr "Gesamt"
@@ -46411,9 +46380,8 @@ msgstr "Gesamtzahl der Lizenzen"
 msgid "Total log file size: Absolute upper levels"
 msgstr "Gesamtgröße der Protokolldatei: Absolute obere Schwellenwerte"
 
-#, fuzzy
 msgid "Total memory usage"
-msgstr "Nutzung von virtuellem Speicher"
+msgstr "Nutzung von gesamten Speichers"
 
 msgid "Total number of Sessions"
 msgstr "Gesamtzahl von Sitzungen"
@@ -47583,9 +47551,8 @@ msgstr "Obere Schwellen für Mailverzögerung"
 msgid "Upper levels for average response time"
 msgstr "Obere Schwellen für die durchschnittliche Antwortzeit"
 
-#, fuzzy
 msgid "Upper levels for backend connection errors per second"
-msgstr "Obergrenze für \"backend connections failures\" pro Sekunde"
+msgstr "Obergrenze für Verbindungsfehler im Backend pro Sekunde"
 
 msgid "Upper levels for blocked connections"
 msgstr "Obere Grenzen für geblockte Verbindungen"
@@ -47650,17 +47617,14 @@ msgstr "Obere Schwellen für physikalische Kapazität in Prozent"
 msgid "Upper levels for rate of server errors"
 msgstr "Obere Schwellen für die Rate der Serverfehler"
 
-#, fuzzy
 msgid "Upper levels for reserved space"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für den reservierten Speicherplatz"
 
-#, fuzzy
 msgid "Upper levels for size"
-msgstr "Obere Schwellen für %s"
+msgstr "Obere Schwellen für die Größe"
 
-#, fuzzy
 msgid "Upper levels for surge queue length"
-msgstr "Schwellwerte für die Längen der Schlange"
+msgstr "Obere Schwellwerte für die Länge der Überspannungswarteschlange"
 
 msgid "Upper levels for the age"
 msgstr "Obere Schwellen für das Alter"
@@ -47686,17 +47650,15 @@ msgstr "Obere Schwellen für die Lizenznutzung"
 msgid "Upper levels for the number of active database connections"
 msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
 
-#, fuzzy
 msgid "Upper levels for the number of requests that were rejected (spillover)"
-msgstr "Schwellwerte für Anzahl von aktuell laufenden Sitzungen"
+msgstr "Obere Schwellwerte für die Anzahl der abgelehnten Anfragen (Spillover)"
 
 msgid "Upper levels for unblended costs"
 msgstr ""
 "Obere Schwellen für ClientsObere, prozentuale Schwellen für DELETE-Anfragen"
 
-#, fuzzy
 msgid "Upper levels for unused space"
-msgstr "Obere Schwellen für das Alter"
+msgstr "Obere Schwellen für den ungenutzen Speicherplatz"
 
 msgid "Upper levels on Point-to-site bandwidth in bytes per second"
 msgstr "Obere Level der Point-to-Site-Bandbreite in Bytes pro Sekunde"
@@ -47746,9 +47708,8 @@ msgstr "Obere, prozentuale Schwellen für PUT-Anfragen"
 msgid "Upper percentual levels for SELECT requests"
 msgstr "Obere, prozentuale Schwellen für DELETE-Anfragen"
 
-#, fuzzy
 msgid "Upper percentual levels for healthy hosts"
-msgstr "Prozentuale Schwellen für freien %s"
+msgstr "Obere prozentuale Schwellwerte für gesunde Hosts"
 
 msgid "Upper warning level"
 msgstr "Obere Warnschwelle"
@@ -47932,9 +47893,8 @@ msgstr "Standardport benutzen"
 msgid "Use default color of the theme or medium"
 msgstr "Die ID für den Temperatursensor."
 
-#, fuzzy
 msgid "Use default layout"
-msgstr "Standardport benutzen"
+msgstr "Standardlayout verwenden"
 
 msgid "Use default port"
 msgstr "Standardport benutzen"
@@ -48037,11 +47997,11 @@ msgid "Use manually created ORACLE password wallet"
 msgstr "Manuell erzeugtes ORACLE Passwort-Wallet verwenden"
 
 msgid "Use maximum age from global settings"
-msgstr ""
+msgstr "Maximales Alter aus den globalen Einstellungen verwenden"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Use maximum age from global settings %s"
-msgstr "Bearbeiten von instanzspezifischen globalen Einstellungen von %s"
+msgstr "Maximales Alter %s aus den globalen Einstellungen verwenden"
 
 msgid "Use monitoring host name"
 msgstr "Monitoring-Hostname verwenden"
@@ -48871,9 +48831,8 @@ msgstr "VServer Name"
 msgid "Val. %d"
 msgstr "Wert %d"
 
-#, fuzzy
 msgid "Valid automation secret for the automation user"
-msgstr "Ungültiges Automatisierungspasswort für Benutzer %s"
+msgstr "Gültiges Automatisierungsgeheimnis für den Automatisierungsanwender"
 
 msgid "Valid from"
 msgstr "Gültig ab"
@@ -49010,9 +48969,8 @@ msgstr "Serverzertifikat überprüfen"
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr "Das Serverzertifikat von Livestatus anhand der lokalen CA überprüfen"
 
-#, fuzzy
 msgid "Verify the certificate"
-msgstr "Serverzertifikat überprüfen"
+msgstr "Zertifikat überprüfen"
 
 msgid "Veritas Cluster Server"
 msgstr "Veritas Cluster Server"
@@ -49165,9 +49123,8 @@ msgstr "Heartbeat-Status von virtuellen Maschinen"
 msgid "Virtual memory usage"
 msgstr "Nutzung von virtuellem Speicher"
 
-#, fuzzy
 msgid "Virtual network gateway name"
-msgstr "Nutzung von virtuellem Speicher"
+msgstr "Name des virtuellen Netzwerk-Gateways"
 
 msgid "Virtual size"
 msgstr "Virtuelle Größe"
@@ -49599,6 +49556,14 @@ msgid ""
 "helps you to get more control over the piggybacked host data handling. The "
 "source host names have to be set in the condition field 'Explicit hosts'."
 msgstr ""
+"Wir gehen davon aus, dass ein Quellhost standardmäßig in jedem Prüfintervall "
+"Huckepackdaten sendet. Wenn dies bei einigen Quellhosts nicht der Fall ist, "
+"dann melden die Dienste <b>Check_MK</b> und <b>Check_MK Disovery</b> der "
+"Huckepack-Hosts <b>Keine Informationen vom Host erhalten</b> bzw. "
+"<b>verschwundene Dienste</b>, sobald die Huckepack-Hostdaten innerhalb dieses "
+"Prüfintervalls fehlen. Diese Regel hilft Ihnen, mehr Kontrolle über die "
+"Verarbeitung der Huckepack-Hostdaten zu erhalten. Die Quellhostnamen müssen "
+"im Bedingungsfeld 'Explizite Hosts' gesetzt werden."
 
 msgid "Web"
 msgstr "Web"
@@ -51204,9 +51169,8 @@ msgstr "Schreibzugriffe"
 msgid "Write Queue-Length"
 msgstr "schreibe Länge der Warteschlange"
 
-#, fuzzy
 msgid "Write Retransmissions"
-msgstr "Schreibzugriffe"
+msgstr "Schreiben von Wiederholungsübertragungen"
 
 msgid "Write access to all hosts and folders"
 msgstr "Schreibzugriff auf alle Hosts und Ordner"
@@ -51226,9 +51190,8 @@ msgstr "Durchschnittliche Schreibeumlaufzeit (RTT)"
 msgid "Write blocks per second"
 msgstr "Schreibeblöcke pro Sekunde"
 
-#, fuzzy
 msgid "Write bytes per operation"
-msgstr "Schreibzugriffe"
+msgstr "Schreibe Bytes pro Operation"
 
 msgid "Write cache state"
 msgstr "Schreibe Cachestatus"
@@ -54315,9 +54278,8 @@ msgstr ""
 msgid "the duration"
 msgstr "die Dauer"
 
-#, fuzzy
 msgid "the first node"
-msgstr "Name des Knotens"
+msgstr "Name des ersten Knotens"
 
 #, python-format
 msgid "the log file %s on host %s"

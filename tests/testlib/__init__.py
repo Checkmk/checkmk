@@ -433,7 +433,7 @@ class Site(object):
         if expected_state is None:
             expected_state = state
 
-        last_check_before = self._get_last_check(hostname)
+        last_check_before = self._last_host_check(hostname)
         schedule_ts, wait_timeout = time.time(), 20
 
         # Ensure the next check result is not in same second as the previous check
@@ -447,7 +447,7 @@ class Site(object):
                                   expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
-        last_check_before = self._get_last_check(hostname, service_description)
+        last_check_before = self._last_service_check(hostname, service_description)
         schedule_ts, wait_timeout = int(time.time()), 20
 
         # Ensure the next check result is not in same second as the previous check
@@ -503,12 +503,13 @@ class Site(object):
         assert state == expected_state, \
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
-    def _get_last_check(self, hostname, service_description=None):
-        if not service_description:
-            return self.live.query_value(
-                "GET hosts\n" \
-                "Columns: last_check\n" \
-                "Filter: host_name = %s\n" % (hostname))
+    def _last_host_check(self, hostname):
+        return self.live.query_value(
+            "GET hosts\n" \
+            "Columns: last_check\n" \
+            "Filter: host_name = %s\n" % (hostname))
+
+    def _last_service_check(self, hostname, service_description):
         return self.live.query_value(
                 "GET services\n" \
                 "Columns: last_check\n" \

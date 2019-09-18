@@ -385,8 +385,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         job_class_infos = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
-            jobs_info = self._get_job_infos(all_job_ids)
-            job_class_infos[job_class] = jobs_info
+            if not all_job_ids:
+                continue  # Skip job classes without current jobs
+            job_class_infos[job_class] = self._get_job_infos(all_job_ids)
+
         JobRenderer.show_job_class_infos(job_class_infos, **kwargs)
 
     def get_status_all_jobs(self, job_class):

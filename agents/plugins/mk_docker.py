@@ -392,7 +392,11 @@ def section_container_status(client, container_id):
     if restart_policy:
         status["RestartPolicy"] = restart_policy
 
-    status["ImageTags"] = container.image.tags
+    try:
+        status["ImageTags"] = container.image.tags
+    except docker.errors.ImageNotFound:
+        # image has been removed while container is still running
+        pass
     status["NodeName"] = client.node_info.get("Name")
 
     section = Section('container_status', piggytarget=container_id)

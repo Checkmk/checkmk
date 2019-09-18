@@ -181,7 +181,7 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         this.translate_layout()
         this.compute_node_positions()
 
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(1)
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(2)
         this._mouse_events_overlay.update_data()
     }
 

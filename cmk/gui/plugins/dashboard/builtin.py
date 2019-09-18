@@ -202,18 +202,23 @@ builtin_dashboards["topology"] = {
     "single_infos": [],
     "context": {},
     "mtime": 0,
-    "show_title": True,
+    "show_title": False,
     "title": _("Network Topology"),
     "topic": _("Overview"),
     "description": _("This dashboard uses the parent relationships of your hosts to display a "
                      "hierarchical map."),
     "dashlets": [{
-        "type": "network_topology",
-        "position": (1, 1),
-        "size": (GROW, GROW),
-        "context": {},
-        "single_infos": [],
-    },]
+        'add_context_to_title': True,
+        'background': True,
+        'context': {},
+        'position': (1, 1),
+        'show_in_iframe': True,
+        'show_title': False,
+        'single_infos': [],
+        'size': (GROW, GROW),
+        'type': 'url',
+        'url': 'parent_child_topology.py'
+    }],
 }
 
 builtin_dashboards["simple_problems"] = {

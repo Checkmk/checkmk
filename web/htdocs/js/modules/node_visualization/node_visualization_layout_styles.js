@@ -522,7 +522,10 @@ class ForceSimulation {
 
     _update_charge_force() {
         let charge_force = d3.forceManyBody().strength((d) => {
-            if (d._children)
+            let explicit_force = this._get_explicit_force_option(d.data, "repulsion")
+            if (explicit_force != null)
+                return explicit_force
+            else if (d._children)
                 return d.data.force_options.force_aggregator
             else
                 return d.data.force_options.force_node})
@@ -547,12 +550,20 @@ class ForceSimulation {
         let forceX = d3.forceX(d=>{
                 return d.data.chunk.coords.x + d.data.chunk.coords.width/2
         }).strength(d=>{
+                let explicit_force = this._get_explicit_force_option(d.data, "center_force")
+                if (explicit_force != null)
+                    return explicit_force / 100
+
                 if (d.parent != null)
                     return d.data.force_options.center_force / 300
                 return d.data.force_options.center_force / 100})
+
         let forceY = d3.forceY(d=>{
                 return d.data.chunk.coords.y + d.data.chunk.coords.height/2
         }).strength(d=>{
+                let explicit_force = this._get_explicit_force_option(d.data, "center_force")
+                if (explicit_force != null)
+                    return explicit_force / 100
                 if (d.parent != null)
                     return d.data.force_options.center_force / 300
                 return d.data.force_options.center_force / 100})
@@ -566,12 +577,23 @@ class ForceSimulation {
         let link_force = d3.forceLink(this._all_links)
                             .id(function (d) {return d.data.id})
                             .distance(d=>{
+                                let explicit_force = this._get_explicit_force_option(d.source.data, "link_distance")
+                                if (explicit_force != null)
+                                    return explicit_force
+
                                 if (d.source._children)
-                                    return d.source.data.force_options.link_force_aggregator
+                                    return d.source.data.force_options.link_force_aggregator;
                                 else
-                                    return d.source.data.force_options.link_force_node})
+                                    return d.source.data.force_options.link_force_node;})
                             .strength(d=>d.source.data.force_options.link_strength/100)
         this._simulation.force("links", link_force);
+    }
+
+    _get_explicit_force_option(data, force_name) {
+        if (data.explicit_force_options && data.explicit_force_options[force_name]) {
+            return data.explicit_force_options[force_name]
+        }
+        return null
     }
 
     update_nodes_and_links(all_nodes, all_links) {

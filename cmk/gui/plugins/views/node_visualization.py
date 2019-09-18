@@ -29,6 +29,37 @@ from . import (
     multisite_builtin_views,)
 
 multisite_builtin_views.update({
+    'topology_filters': {
+        'browser_reload': 30,
+        'column_headers': 'pergroup',
+        'datasource': 'hosts',
+        'description':
+            _('Configures the number of available filters in the network topology view.'),
+        'group_painters': [],
+        'hard_filters': [],
+        'hard_filtervars': [],
+        'hidden': True,
+        'hide_filters': [],
+        'layout': 'table',
+        'mustsearch': False,
+        'name': 'allhosts',
+        'num_columns': 3,
+        'owner': '',
+        'painters': [],
+        'play_sounds': False,
+        'public': True,
+        'show_filters': [
+            'hoststate',
+            'siteopt',
+            'hostregex',
+            'hostgroups',
+            'host_labels',
+            'host_tags',
+        ],
+        'sorters': [],
+        'title': _('Topology filters'),
+        'topic': _('Topology'),
+    },
     'bi_map_hover_host': {
         'browser_reload': 0,
         'column_headers': 'pergroup',

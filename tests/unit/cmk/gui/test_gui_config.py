@@ -450,6 +450,7 @@ def test_registered_permissions():
         'view.svcproblems',
         'view.svcproblems_dash',
         'view.topology_hover_host',
+        'view.topology_filters',
         'view.uncheckedsvc',
         'view.unmonitored_services',
         'wato.activate',

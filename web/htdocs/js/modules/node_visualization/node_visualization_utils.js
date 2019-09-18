@@ -37,6 +37,7 @@ export class DefaultTransition {
     }
 }
 
+// Stores layers and maintains their correct order
 class LayerRegistry {
     constructor() {
         this._layers = []
@@ -56,9 +57,25 @@ class LayerRegistry {
     get_layers() {
         return this._layers
     }
-
 }
 export let layer_registry = new LayerRegistry()
+
+
+// Stores node visualization classes
+class NodeTypeClassRegistry {
+    constructor() {
+        this._node_classes = {}
+    }
+
+    register(node_class) {
+        this._node_classes[node_class.id()] = node_class
+    }
+
+    get_node_class(class_id) {
+        return this._node_classes[class_id]
+    }
+}
+export let node_type_class_registry = new NodeTypeClassRegistry()
 
 
 export class NodeMatcher {

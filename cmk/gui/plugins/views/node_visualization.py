@@ -116,6 +116,6 @@ multisite_builtin_views.update({
         'public': True,
         'single_infos': ['host'],
         'sorters': [],
-        'title': _('Toplogy host details'),
+        'title': _('Topology host details'),
     },
 })

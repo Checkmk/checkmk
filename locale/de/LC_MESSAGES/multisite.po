@@ -854,9 +854,8 @@ msgstr "6 Monate"
 msgid "64bit packaged binary"
 msgstr "Paketierte 64bit binary"
 
-#, fuzzy
 msgid "68% - One standard deviation"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "68% - Eine Standardabweichung"
 
 msgid "7-segment display brightness"
 msgstr "Helligkeit Siebensegmentanzeige"
@@ -864,13 +863,11 @@ msgstr "Helligkeit Siebensegmentanzeige"
 msgid "7-segment display uid"
 msgstr "UID Siebensegmentanzeige"
 
-#, fuzzy
 msgid "86% - 1.5 standard deviations"
-msgstr "%sRoundtrip-Standardabweichung"
+msgstr "86% - 1,5 Standardabweichungen"
 
-#, fuzzy
 msgid "95% - Two standard deviations"
-msgstr "im Verhältnis zur Standardabweichung"
+msgstr "95% - Zwei Standardabweichungen"
 
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
@@ -2675,9 +2672,8 @@ msgstr "Aktiver Datums- & Zeitbereich"
 msgid "Active unit"
 msgstr "Aktive Einheit"
 
-#, fuzzy
 msgid "Adaptable"
-msgstr "reserviert"
+msgstr "Anpassungsfähig"
 
 msgid "Add & remove folders"
 msgstr "Ordner ergänzen & löschen"
@@ -3103,9 +3099,9 @@ msgstr "Zusätzliche Notiz, die beim Erstellen des Alerts hinzugefügt wird."
 msgid "Additional options"
 msgstr "Zusätzliche Optionen"
 
-#, fuzzy
 msgid "Additive: Effects of seasonality are added to the trend."
-msgstr "Berücksichtigung von Zeitabschnitten werden dem Trend hinzugefügt."
+msgstr ""
+"Additiv: Berücksichtigung von Zeitabschnitten werden dem Trend hinzugefügt."
 
 msgid "Address"
 msgstr "Adresse"
@@ -8552,9 +8548,8 @@ msgstr "Bedingungen"
 msgid "Conference Allocation Latency"
 msgstr "Latenz der Bereitstellung von Konferenzen"
 
-#, fuzzy
 msgid "Confidence interval"
-msgstr "Zeitintervall"
+msgstr "Konfidenzintervall"
 
 msgid "Configuration"
 msgstr "Einstellungen"
@@ -16352,9 +16347,8 @@ msgstr "Vorhersagegraph"
 msgid "Forecast Graphs"
 msgstr "Vorhersagegraphen"
 
-#, fuzzy
 msgid "Forecast Model Configuration"
-msgstr "Parametrisierung des Vorhersagemodells"
+msgstr "Konfiguration des Prognosemodells"
 
 msgid "Forecast Model Parametrization"
 msgstr "Parametrisierung des Vorhersagemodells"
@@ -23342,9 +23336,8 @@ msgstr "Zeilennummer in Logdatei"
 msgid "Line spacing"
 msgstr "Zeilenabstand"
 
-#, fuzzy
 msgid "Linear"
-msgstr "Zeile"
+msgstr "Linear"
 
 msgid "Lines"
 msgstr "Linien"
@@ -25744,9 +25737,8 @@ msgstr "Modellname"
 msgid "Model Name - LEGACY, don't use"
 msgstr "Modellname - VERALTET, nicht verwenden"
 
-#, fuzzy
 msgid "Model Parameters"
-msgstr "Parameter"
+msgstr "Modellparameter"
 
 msgid "Model and revsion"
 msgstr "Modell und Revision"
@@ -26213,9 +26205,8 @@ msgstr "Mehrere Graphen"
 msgid "Multiple regular expressions"
 msgstr "Mehrfache reguläre Ausdrücke"
 
-#, fuzzy
 msgid "Multiplicative: Seasonality grows with the trend."
-msgstr "Die Saisonalität wächst mit dem Trend."
+msgstr "Multiplikativ: Die Saisonalität wächst mit dem Trend."
 
 msgid "Must be unique for every host. Defaults to command that is executed."
 msgstr ""
@@ -28491,15 +28482,13 @@ msgstr ""
 msgid "Only bulk notifications during the following timeperiod"
 msgstr "Sammelalarme nur während der folgenden Zeitperiode erzeugen"
 
-#, fuzzy
 msgid ""
 "Only care about hosts that receive piggyback data from hosts which name "
 "matches one of these regular expressions."
 msgstr ""
-"Nur Hosts behandeln, die ihre Huckepack-Daten von einem Host erhalten, auf "
-"einen der angegebenen regulären Ausdrücke passen."
+"Kümmern Sie sich nur um Hosts, die Huckepackdaten von Hosts erhalten, deren "
+"Name einem dieser regulären Ausdrücke entspricht."
 
-#, fuzzy
 msgid ""
 "Only care about hosts with names that match one of these regular expressions."
 msgstr ""
@@ -29110,13 +29099,12 @@ msgstr ""
 msgid "Overall state of all vSphere based virtual machines."
 msgstr "Gesamtzustand von allen vSphere basierten virtuellen Maschinen"
 
-#, fuzzy
 msgid ""
 "Overall state of all vSphere servers, with counts of services in the various "
 "states."
 msgstr ""
-"Gesamtzustand von allen Hosts, mit den Anzahlen von Services in den "
-"verschiedenen Zuständen."
+"Gesamtzustand von aller vSphere-Server, mit Anzahl der Dienste in den "
+"verschiedenen Zustände."
 
 msgid "Overall state of your favorite hosts"
 msgstr "Gesamtstatus Ihrer Favoriten-Hosts"
@@ -29476,9 +29464,9 @@ msgstr ""
 msgid "Parameters for %s"
 msgstr "Parameter für %s"
 
-#, fuzzy
 msgid "Parameters for checks found by the Check_MK service discovery"
-msgstr "Status der Check_MK-Services"
+msgstr ""
+"Parameter für checks, die von der Check_MK Serviceerkennung gefunden wurden."
 
 msgid "Parameters for discovered services"
 msgstr "Parameter für erkannte Services"
@@ -29673,7 +29661,7 @@ msgid "Paused"
 msgstr "Pause"
 
 msgid "Paused containers"
-msgstr "Pausierte Container"
+msgstr "Pausiert"
 
 msgid "Paused containers lower levels"
 msgstr "Untere Schwellwerte für Container im Zustand paused"
@@ -29857,13 +29845,11 @@ msgstr "Prozentsatz vom gesamten RAM"
 msgid "Percentage used"
 msgstr "Prozentuale Nutzung"
 
-#, fuzzy
 msgid "Percentile"
-msgstr "Durchschnittswert"
+msgstr "Perzentil"
 
-#, fuzzy
 msgid "Percentile within the timerange"
-msgstr "Datums- & Zeitbereich löschen"
+msgstr "Perzentil innerhalb des Zeitbereichs"
 
 msgid "Percentual levels"
 msgstr "Prozentuale Schwellen"
@@ -30299,10 +30285,9 @@ msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 msgid "Please add at least one column to your view."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 
-#, fuzzy
 msgid "Please check one metric you want to apply a transformation"
 msgstr ""
-"Bitte kreuzen Sie die Metriken an, welche Sie mit einer Operation kombinieren "
+"Bitte kreuzen Sie eine Metrik an, die Sie für eine Transformation verwenden "
 "möchten."
 
 msgid "Please check the metrics you want to combine by an operation"
@@ -30792,13 +30777,11 @@ msgstr "Pod"
 msgid "Pod IP"
 msgstr "Pod-IP"
 
-#, fuzzy
 msgid "Pod request"
-msgstr "Senden der Anfrage"
+msgstr "Anfrage eines Pods"
 
-#, fuzzy
 msgid "Pod resources"
-msgstr "Ressourcengruppe"
+msgstr "Pod-Ressourcen"
 
 msgid "Pods"
 msgstr "Pods"
@@ -31288,9 +31271,8 @@ msgstr "Prozesse"
 msgid "Processes performance data"
 msgstr "Prozess Leistungsdaten"
 
-#, fuzzy
 msgid "Processing of Data "
-msgstr "Verarbeitung von Leistungsdaten ein"
+msgstr "Datenverarbeitung"
 
 msgid "Processing of incoming events"
 msgstr "Verarbeitung von eingehenden Ereignissen"
@@ -31817,13 +31799,11 @@ msgstr "Lesegröße"
 msgid "Ready"
 msgstr "Bereit"
 
-#, fuzzy
 msgid "Ready containers"
-msgstr "Pausierte Container"
+msgstr "Fertige Container"
 
-#, fuzzy
 msgid "Ready replicas"
-msgstr "Lesetreffer"
+msgstr "Fertige Replikationen"
 
 msgid "Real Number (REAL)"
 msgstr "Reelle Zahl (REAL)"
@@ -32231,9 +32211,8 @@ msgstr "Verbleibende Tage bis zum Ablauf der SLES-Lizenz"
 msgid "Remaining days until the Windows license expires"
 msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 
-#, fuzzy
 msgid "Remaining supply"
-msgstr "Verbleibende Leseoperationen"
+msgstr "Verbleibendes Belieferung"
 
 msgid "Remap states"
 msgstr "Zustände umschreiben"
@@ -32584,9 +32563,8 @@ msgstr "Diesen Alarm erneut zustellen!"
 msgid "Replayed notifiation number %d"
 msgstr "Alarm Nummer %d wieder eingespielt"
 
-#, fuzzy
 msgid "Replicas"
-msgstr "Replikation"
+msgstr "Replikationen"
 
 msgid "Replicate Event Console config"
 msgstr "Eventkonsolen-Konfiguration replizieren"
@@ -34627,13 +34605,13 @@ msgstr "Serviceerkennung"
 msgid "Service discovery check for SNMP devices"
 msgstr "Serviceerkennungscheck für SNMP-Geräte"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Service discovery successful. Added %d, removed %d, kept %d, total %d "
 "services and %d new, %d total host labels"
 msgstr ""
-"Serviceerkennung erfolgreich. %d hinzugefügt, %d entfernt, %d behalten. Neue "
-"Anzahl: %d"
+"Serviceerkennung erfolgreich. %d hinzugefügt, %d entfernt, %d behalten, "
+"insgesamt %d Dienste und davon %d neue, %d gesamte Host-Labels"
 
 msgid "Service discovery triggers service discovery check"
 msgstr "Serviceerkennungscheck nach Serviceerkennung durchführen"
@@ -34950,9 +34928,9 @@ msgid ""
 "configured check intervals."
 msgstr "Services, die schon länger als erwartet nicht mehr aktualisiert wurden."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
-msgstr "Services: %d gesamt, %d hinzugefügt, %d entfernt, %d behalten"
+msgstr "Services: %d gesamt (%d hinzugefügt, %d entfernt, %d behalten)"
 
 msgid "Services: CRIT"
 msgstr "Services: CRIT"
@@ -37792,9 +37770,8 @@ msgstr "Unterdrücke nicht verfügbare Sensoren"
 msgid "Surge queue length"
 msgstr "Anstieg der Warteschlangenlänge"
 
-#, fuzzy
 msgid "Susceptible"
-msgstr "Inkompatibel"
+msgstr "Anfällig"
 
 msgid "Suspended"
 msgstr "Angehalten"
@@ -38179,16 +38156,14 @@ msgstr "Merkmal ID"
 msgid "Tag choices"
 msgstr "Tag-Auswahl"
 
-#, fuzzy
 msgid "Tag group ID"
-msgstr "Tag-Gruppen"
+msgstr "Tag-Gruppen-ID"
 
 msgid "Tag groups"
 msgstr "Tag-Gruppen"
 
-#, fuzzy
 msgid "Tag groups with only one choice must have a tag ID."
-msgstr "Merkmale mit nur einem Wert müssen eine ID haben."
+msgstr "ag-Gruppen mit nur einer Auswahl müssen eine Tag-ID haben."
 
 msgid "Tag value"
 msgstr "Wert des Merkmals"
@@ -38203,10 +38178,9 @@ msgstr "Merkmale"
 msgid "Tags (with titles)"
 msgstr "Merkmake (mit Titeln)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Tags IDs must be unique. You've used \"%s\" twice."
-msgstr ""
-"Merkmal IDs müssen eindeutig sein. Sie haben <b>%s</b> zwei Mal verwendet."
+msgstr "Tags IDs müssen eindeutig sein. Sie haben \"%s\" zweimal benutzt."
 
 msgid ""
 "Tags are the basis of Check_MK's rule based configuration. If the first step "
@@ -38682,13 +38656,12 @@ msgstr ""
 "den Agenten so zu konfigurieren, dass er Plugins Ihrer Wahl mit den gegebenen "
 "Argumenten ausführt."
 
-#, fuzzy
 msgid ""
 "The Checkmk discovery will automatically find and configure services to be "
 "checked on your hosts and may also discover host labels."
 msgstr ""
 "Die Serviceerkennung von Check_MK findet und konfiguriert automatisch alle zu "
-"überwachenden Services eines Hosts."
+"überwachenden Services eines Hosts kann auch Host-Labels erkennen."
 
 msgid "The Customer has been deleted."
 msgstr "Der Kunde wurde gelöscht."
@@ -40450,13 +40423,13 @@ msgstr ""
 "Der Schlüssel mit dem Fingerprint %s wird zur Wiederherstellung benötigt, "
 "fehlt aber."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The label ID %r is of type %s, but should be unicode"
-msgstr "Type muss str sein - ist aber %s"
+msgstr "Die Label-ID %r ist vom Typ %s, sollte aber Unicode sein."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The label value %r is of type %s, but should be unicode"
-msgstr "Der Wert %r ist vom Typ %s, muss aber int sein"
+msgstr "Der Wert des Labels %r ist vom Typ %s, sollte aber Unicode sein."
 
 msgid "The last "
 msgstr "Die letzten"
@@ -40910,13 +40883,11 @@ msgstr ""
 msgid "The new password must differ from your current one."
 msgstr "Das neue Passwort muss sich vom aktuellen unterscheiden."
 
-#, fuzzy
 msgid "The next "
-msgstr "Der Text"
+msgstr "Die nächsten "
 
-#, fuzzy
 msgid "The next..."
-msgstr "Der Text"
+msgstr "Die nächsten..."
 
 #, python-format
 msgid ""
@@ -42488,11 +42459,10 @@ msgstr ""
 "Diese ID wird bereits von einer anderen Verbindung verwendet. Bitte wählen "
 "Sie eine andere."
 
-#, fuzzy
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
-"Die interne ID des Tags wird als eindeutige Kennung verwendet. Sie kann "
-"später nicht mehr geändert werden."
+"Diese ID wird als eindeutige Kennung verwendet. Sie kann später nicht mehr "
+"geändert werden."
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Dieser Regelsatz definiert Schwellwerte für Feuchtigkeitssensoren"
@@ -45790,9 +45760,8 @@ msgstr "Dieses Jahr"
 msgid "Thread creations per second"
 msgstr "Threaderstellungen pro Sekunde"
 
-#, fuzzy
 msgid "Thread usage"
-msgstr "Threads"
+msgstr "Threadnutzung"
 
 msgid "Threadpool"
 msgstr "Threadpool"
@@ -46481,9 +46450,8 @@ msgstr "Übertragungsgröße"
 msgid "Transform status output"
 msgstr "Status-Ausgabe umschreiben"
 
-#, fuzzy
 msgid "Transformation on selected metric"
-msgstr "Operation auf den gewählten Metriken"
+msgstr "Transformation auf ausgewählte Metriken"
 
 msgid "Translate Hostnames"
 msgstr "Hostnamen übersetzen"
@@ -46546,9 +46514,8 @@ msgstr "Ordnerbaum"
 msgid "Trend computation"
 msgstr "Trend-Berechnung"
 
-#, fuzzy
 msgid "Trend flexibility: likelihood to follow changes"
-msgstr "Trendwahrscheinlichkeit um Veränderungen zu verfolgen"
+msgstr "Trendflexibilität: Wahrscheinlichkeit, Veränderungen zu folgen"
 
 msgid "Trend of filesystem growth"
 msgstr "Trend des Wachstums eines Dateisystem"
@@ -46564,7 +46531,7 @@ msgstr "Schwellwert"
 
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
-msgstr ""
+msgstr "Es wurde versucht, inkompatible Regeln zu registrieren: %r"
 
 msgid "Trivial change"
 msgstr "Triviale Änderung"
@@ -46969,7 +46936,7 @@ msgstr ""
 msgid "Unable to parse provided data: %s"
 msgstr "Die Daten können nicht geparst werden: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
@@ -46977,10 +46944,12 @@ msgid ""
 "may be caused by an inconsistent configuration, e.g. when rules refer to tag "
 "groups or tags that do not exist anymore."
 msgstr ""
-"Es war nicht möglich, die momentanen Optionen der Regel zu bestimmen. "
-"Fehlermeldung bei der Auswertung der Optionen: <i>%s</i> Deswegen werden "
-"soweit möglich Standardwerte angenommen. Wenn sie diese Regel speichern, "
-"werden ihre vorherigen Einstellungen möglicherweise überschrieben."
+"Es ist nicht möglich, die aktuellen Bedingungen dieser Regel zu lesen. Setze "
+"zurück auf Standardwerte. Wenn Sie diese Regel jetzt speichern, werden Ihre "
+"bisherigen Einstellungen überschrieben. Das Problem war: %s, Vorherige "
+"Bedingungen: <pre>%s</pre> So ein Problem kann durch eine inkonsistente "
+"Konfiguration verursacht werden, z.B. wenn sich Regeln auf Tag-Gruppen oder "
+"Tags beziehen, die nicht mehr existieren."
 
 #, python-format
 msgid ""
@@ -47065,9 +47034,8 @@ msgstr "Ungemischte Kosten"
 msgid "Unclassified"
 msgstr "Nicht klassifiziert"
 
-#, fuzzy
 msgid "Uncommitted"
-msgstr "Zugelassen"
+msgstr "Unverbindlich"
 
 msgid "Uncorrectable codewords"
 msgstr "Nicht korrigierbare Schlüsselwörter"
@@ -47204,21 +47172,21 @@ msgstr "Unbekannte Instanz (%s)"
 msgid "Unknown tag %s"
 msgstr "Unbekanntes Tag %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown tag group \"%s\""
-msgstr "Unbekannte Tag-Gruppe %s"
+msgstr "Unbekannte Tag-Gruppe \"%s\""
 
 #, python-format
 msgid "Unknown tag group %s"
 msgstr "Unbekannte Tag-Gruppe %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>"
-msgstr "Der Host hat <b>nicht</b> das Tag <tt>%s</tt>."
+msgstr "Unbekanntes Tag: Der Host hat <b>nicht</b> das Tag <tt>%s</tt>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
-msgstr "Der Host hat das Tag <tt>%s</tt>"
+msgstr "Unknown tag: Host has the tag <tt>%s</tt>"
 
 msgid "Unknown user"
 msgstr "Unbekannter Nutzer: %s"
@@ -47325,9 +47293,8 @@ msgstr "Ereignis aktualisieren: Kontakt ändern"
 msgid "Update delay for PNP meta information"
 msgstr "Verzögerte Aktualisierung von PNP-Metadaten"
 
-#, fuzzy
 msgid "Update host labels"
-msgstr "Updatestatus"
+msgstr "Host-Labels aktualisieren"
 
 msgid "Update package database"
 msgstr "Paketdatenbank aktualisieren"
@@ -47890,13 +47857,11 @@ msgstr "Zugangsdaten angeben"
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
-#, fuzzy
 msgid "Use default color"
-msgstr "Standardport benutzen"
+msgstr "Standardfarbe verwenden"
 
-#, fuzzy
 msgid "Use default color of the theme or medium"
-msgstr "Die ID für den Temperatursensor."
+msgstr "Standardfarbe der Darstellung oder des Mediums verwenden"
 
 msgid "Use default layout"
 msgstr "Standardlayout verwenden"
@@ -48167,12 +48132,11 @@ msgstr ""
 "Verwenden Sie diese Bedingung, um Hosts basierend auf den konfigurierten Host-"
 "Labels auszuwählen."
 
-#, fuzzy
 msgid ""
 "Use this condition to select services based on the configured service labels."
 msgstr ""
-"Verwenden Sie diese Bedingung, um Hosts basierend auf den konfigurierten Host-"
-"Labels auszuwählen."
+"Verwenden Sie diese Bedingung, um Dienste basierend auf den konfigurierten "
+"Service-Labels auszuwählen."
 
 msgid "Use this custom start URL"
 msgstr "Individuelle Start-URL benutzen"
@@ -48206,9 +48170,8 @@ msgstr ""
 "Diesen Hostnamen für alle erzeugten Ereignisse verwenden, anstelle des Namens "
 "des Mailservers"
 
-#, fuzzy
 msgid "Use this metric for a forecast graph..."
-msgstr "Diese Metrik zu Benutzergraph hinzufügen..."
+msgstr "Verwenden Sie diese Metrik für ein Prognosegrafik....."
 
 msgid ""
 "Use this only if you want to overwrite the postion of the information in the "
@@ -49039,7 +49002,7 @@ msgid "Vertical spacing"
 msgstr "Vertikaler Abstand"
 
 msgid "Very voluble"
-msgstr ""
+msgstr "Sehr geläufig"
 
 msgid "VictorOPS REST Endpoint"
 msgstr "VictorOPS REST-Endpunkt"
@@ -49184,7 +49147,7 @@ msgid "Voltage on Power Channel"
 msgstr "Spannung auf Stromleitung"
 
 msgid "Voluble"
-msgstr ""
+msgstr "Geläufig"
 
 msgid "Volume Group"
 msgstr "Volumegruppe"
@@ -51764,14 +51727,13 @@ msgstr ""
 msgid "You can not use \"public\" as first level of a custom path"
 msgstr "Sie können \"public\" nicht als erste Pfad-Ebene nutzen."
 
-#, fuzzy
 msgid ""
 "You can not use the graph designer, because none of your sites is using the "
 "Check_MK Microcore. The graph designer can only be used with sites using the "
 "Check_MK Microcore."
 msgstr ""
-"Sie können den Graph-Designer nicht nutzen, da keine Ihrer Instanzen den "
-"Check_MK Microcore benutzt. Der Graph-Designer kann nur mit Instanzen genutzt "
+"Sie können den Graphdesigner nicht nutzen, da keine Ihrer Instanzen den "
+"Check_MK Microcore benutzt. Der Graphdesigner kann nur mit Instanzen genutzt "
 "werden, die den Check_MK Microcore nutzen."
 
 msgid ""
@@ -52027,7 +51989,6 @@ msgstr ""
 "Sie können hier andere Zeitperioden angeben. Deren Zeiten werden von dieser "
 "Zeitperiode abgezogen."
 
-#, fuzzy
 msgid ""
 "You can use report scheduler macros here: <ul><li><tt>$DATE$</tt>: The "
 "current date in <tt>%Y-%m-%d</tt> format</li><li><tt>$DATE_YEAR$</tt>: The "
@@ -52036,10 +51997,13 @@ msgid ""
 "<tt>%d</tt> format</li><li><tt>$TITLE$</tt>: The title of the schedule</"
 "li><li><tt>$PERIODNAME$</tt>: The name of the scheduling period</li></ul>"
 msgstr ""
-"Hier können Sie Berichtsplan-Macros nutzen: <ul><li><tt>$DATE$</tt>: Das "
-"aktuell Datum im Format: <tt>%Y-%m-%d</tt></li><li><tt>$TITLE$</tt>: Der "
-"Titel des Berichtsplans</li><li><tt>$PERIODNAME$</tt>: Der Name des "
-"Ausführungsintervalls</li></ul>"
+"Hier können Sie Makros des Berichtsplaners verwenden: <ul><li><tt>$DATE$</"
+"tt>: Das aktuelle Datum in <tt>%Y-%m-%d</tt> Format</li><li><tt>$DATE_YEAR$</"
+"tt>: Das aktuelle Jahr in <tt>%Y</tt> Format</li><li><tt><tt>$DATE_MONTH$</"
+"tt>: Der aktuelle Monat in <tt>%m</tt> Format</li><li><tt>$DATE_DAY$</tt>: "
+"Der aktuelle Tag in <tt>%d</tt> Format</li><li><li><tt>$TITLE$</tt>: Der "
+"Titel des Zeitplans</li><li><tt><tt>$PERIODNAME$</tt>: Der Name des "
+"Planungszeitraums</li></ul></ul>."
 
 msgid ""
 "You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced with the "
@@ -52630,9 +52594,10 @@ msgstr "Sie müssen eine URL in den Eigenschaften des Dashlets angeben"
 msgid "You need to specify a backup job."
 msgstr "Sie müssen einen Sicherungs-Job auswählen."
 
-#, fuzzy
 msgid "You need to specify a host name to test file matching."
-msgstr "Sie müssen Levels größer als 0 Bytes angeben."
+msgstr ""
+"Sie müssen einen Hostnamen angeben, um die Übereinstimmung der Dateien zu "
+"testen."
 
 msgid "You need to specify levels of at least 0 bytes."
 msgstr "Sie müssen Levels größer als 0 Bytes angeben."
@@ -54406,16 +54371,14 @@ msgstr "Benutzer"
 msgid "users: "
 msgstr "Benutzer:"
 
-#, fuzzy
 msgid "vSphere Servers"
-msgstr "vSphere secret"
+msgstr "vSphere Server"
 
 msgid "vSphere User name"
 msgstr "vSphere Benutzer"
 
-#, fuzzy
 msgid "vSphere VMs"
-msgstr "vSphere secret"
+msgstr "vSphere VMs"
 
 msgid "vSphere secret"
 msgstr "vSphere secret"

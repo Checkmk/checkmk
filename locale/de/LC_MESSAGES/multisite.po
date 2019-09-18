@@ -2797,6 +2797,10 @@ msgstr "Regel hinzufügen"
 msgid "Add element"
 msgstr "Element hinzufügen"
 
+#, fuzzy
+msgid "Add exception"
+msgstr "Ausnahme ergänzen"
+
 msgid "Add exclusion"
 msgstr "Ausnahme hinzufügen"
 
@@ -49585,6 +49589,16 @@ msgid ""
 msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an den "
 "Administrator, um die folgende Berechtigung zu bekommen: '<b>%s</b>'."
+
+msgid ""
+"We assume that a source host is sending piggyback data every check interval "
+"by default. If this is not the case for some source hosts then the "
+"<b>Check_MK</b> and <b>Check_MK Disovery</b> services of the piggybacked "
+"hosts report <b>Got not information from host</b> resp. <b>vanished services</"
+"b> if the piggybacked data is missing within a check interval. This rule "
+"helps you to get more control over the piggybacked host data handling. The "
+"source host names have to be set in the condition field 'Explicit hosts'."
+msgstr ""
 
 msgid "Web"
 msgstr "Web"

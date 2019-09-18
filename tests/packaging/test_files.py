@@ -28,6 +28,37 @@ def _edition_short_from_pkg_path(package_path):
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
+def _get_file_from_package(package_path, cmk_version, version_rel_path):
+    omd_version = _get_omd_version(cmk_version, package_path)
+
+    if package_path.endswith(".rpm"):
+        rpm2cpio = subprocess.Popen(["rpm2cpio", package_path], stdout=subprocess.PIPE)
+        return subprocess.check_output(
+            [
+                "cpio", "-i", "--quiet", "--to-stdout",
+                "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)
+            ],
+            stdin=rpm2cpio.stdout,
+        )
+
+    if package_path.endswith(".deb"):
+        dpkg = subprocess.Popen(["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE)
+        return subprocess.check_output(
+            ["tar", "xOf", "-",
+             "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
+            stdin=dpkg.stdout)
+
+    if package_path.endswith(".cma"):
+        return subprocess.check_output(
+            ["tar", "xOzf", package_path,
+             "%s/%s" % (omd_version, version_rel_path)])
+
+    if package_path.endswith(".tar.gz"):
+        raise NotImplementedError()
+
+    raise NotImplementedError()
+
+
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("pkg_format,min_size,max_size", [
     ("rpm", 196 * 1024 * 1024, 229 * 1024 * 1024),
@@ -149,9 +180,46 @@ def test_cma_specific_files(package_path, cmk_version):
 
 def test_src_only_contains_relative_version_paths(package_path):
     if not package_path.endswith(".tar.gz"):
-        pytest.skip("%s is another package type" % os.path.basename(package_path))
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
-    prefix = package_path.replace(".tar.gz", "")
+    prefix = os.path.basename(package_path).replace(".tar.gz", "")
     for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines():
         path = line.split()[5]
-        assert not path.startswith(prefix + "/")
+        assert path.startswith(prefix + "/")
+
+
+def test_src_not_contains_enterprise_sources(package_path):
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    enterprise_files = []
+    managed_files = []
+
+    for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines():
+        path = line.split()[5]
+        if path != "%s/enterprise/" % prefix and path.startswith("%s/enterprise/" % prefix):
+            enterprise_files.append(path)
+        if path != "%s/managed/" % prefix and path.startswith("%s/managed/" % prefix):
+            managed_files.append(path)
+
+    assert enterprise_files == []
+    assert managed_files == []
+
+
+def test_demo_modifications(package_path, cmk_version):
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s do not test source packages" % os.path.basename(package_path))
+
+    if _edition_short_from_pkg_path(package_path) != "cre":
+        cmc_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")
+        if _is_demo(package_path):
+            assert "THIS IS A DEMO" in cmc_bin
+        else:
+            assert "THIS IS A DEMO" not in cmc_bin
+
+    nagios_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")
+    if _is_demo(package_path):
+        assert "in this demo" in nagios_bin
+    else:
+        assert "in this demo" not in nagios_bin

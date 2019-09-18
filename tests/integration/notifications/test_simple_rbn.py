@@ -37,19 +37,30 @@ def test_config(web, site):
     web.activate_changes()
 
 
-@pytest.mark.parametrize("core", ["nagios", "cmc"])
-def test_simple_rbn_notification(test_config, site, core):
+@pytest.mark.parametrize("core,log", [
+    ("nagios", "var/log/nagios.log"),
+    ("cmc", "var/check_mk/core/history"),
+])
+def test_simple_rbn_host_notification(test_config, site, core, log):
     site.set_config("CORE", core, with_restart=True)
 
     # Open the log file and scan to end
-    l = WatchLog(site, "var/log/notify.log")
+    l = WatchLog(site, log)
 
     # Set object down to trigger a notification
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
     # Now check for appearing log lines - one after the other
-    l.check_logged("Got raw notification (notify-test)", timeout=20)
-    l.check_logged("notifying hh via mail", timeout=20)
-    l.check_logged("Creating spoolfile:", timeout=20)
-    l.check_logged("(notify-test) for local delivery", timeout=20)
-    l.check_logged("Output: Spooled mail to local mail transmission agent", timeout=20)
+    # NOTE: "] " is necessary to get the actual log line and not the external command execution
+    l.check_logged(
+        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
+        timeout=20,
+    )
+    l.check_logged(
+        "] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
+        timeout=20,
+    )
+    l.check_logged(
+        "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;",
+        timeout=20,
+    )

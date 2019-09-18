@@ -441,8 +441,6 @@ class Site(object):
             schedule_ts = time.time()
             time.sleep(0.1)
 
-        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
-
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
                           (schedule_ts, hostname, state, output))
         self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout,

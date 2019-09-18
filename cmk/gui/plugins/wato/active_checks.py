@@ -1488,14 +1488,11 @@ def _valuespec_active_checks_smtp():
                         ("response_time",
                          Tuple(title=_("Expected response time"),
                                elements=[
-                                   Float(
-                                       title=_("Warning if above"),
-                                       unit=_("sec"),
-                                   ),
-                                   Float(
-                                       title=_("Critical if above"),
-                                       unit=_("sec"),
-                                   ),
+                                   Float(title=_("Warning if above"), unit=_("sec"),
+                                         allow_int=True),
+                                   Float(title=_("Critical if above"),
+                                         unit=_("sec"),
+                                         allow_int=True),
                                ])),
                         ("timeout",
                          Integer(

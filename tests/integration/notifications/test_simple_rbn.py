@@ -53,13 +53,13 @@ def test_simple_rbn_host_notification(test_config, site, core, log):
     # Now check for appearing log lines - one after the other
     l.check_logged(
         "HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
-        timeout=40,
+        timeout=20,
     )
     l.check_logged(
         "HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
-        timeout=40,
+        timeout=20,
     )
     l.check_logged(
         "HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;Spooled mail to local mail transmission agent",
-        timeout=40,
+        timeout=20,
     )

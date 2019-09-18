@@ -158,17 +158,22 @@ info = [
 discovery = {'': [('SUMMARY', 'diskstat_default_levels')]}
 
 
+mock_item_state = {
+    '': (1527265295, 0),
+}
+
+
 checks = {'': [('SUMMARY',
                 {},
                 [(0,
-                  'Read: 0.00 B/s',
-                  [('disk_read_throughput', 0.0, None, None, None, None)]),
+                  'Read: 37.94 MB/s',
+                  [('disk_read_throughput', 39783680.0, None, None, None, None)]),
                  (0,
                   'Write: 0.00 B/s',
                   [('disk_write_throughput', 0.0, None, None, None, None)]),
                  (0,
-                  'Read operations: 0.00 1/s',
-                  [('disk_read_ios', 0.0, None, None, None, None)]),
+                  'Read operations: 1318.50 1/s',
+                  [('disk_read_ios', 1318.5, None, None, None, None)]),
                  (0,
                   'Write operations: 0.00 1/s',
                   [('disk_write_ios', 0.0, None, None, None, None)])])]}

@@ -22,8 +22,8 @@
   "author": "",
   "license": "GPL-2.0",
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
     "autoprefixer": "^9.6.1",
     "babel-loader": "^8.0.6",
     "css-loader": "^3.2.0",
@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@yaireo/tagify": "2.16.0",
+    "core-js": "^3.2.1",
     "d3": "^5.11.0",
     "d3-flextree": "^2.1.1",
     "jquery": "^3.4.1",

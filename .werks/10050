@@ -1,0 +1,12 @@
+Title: Fix GUI incompatiblities with IE11
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568819684
+Class: fix
+
+The whole javascript functionality was broken with IE11 in previous 1.6.0
+releases. We have now restored the most functionality for IE11. Some
+advanced or rarely used features might still not work, please let us know.

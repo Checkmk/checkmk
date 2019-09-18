@@ -468,9 +468,8 @@ class Site(object):
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
-        self._verify_next_check_output(time.time(), command_timestamp, last_check,
-                                       last_check_before, state, expected_state, plugin_output,
-                                       wait_timeout)
+        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
+                                       expected_state, plugin_output, wait_timeout)
 
     def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
                                      command_timestamp, expected_state):
@@ -485,12 +484,11 @@ class Site(object):
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
             "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
-        self._verify_next_check_output(time.time(), command_timestamp, last_check,
-                                       last_check_before, state, expected_state, plugin_output,
-                                       wait_timeout)
+        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
+                                       expected_state, plugin_output, wait_timeout)
 
-    def _verify_next_check_output(self, now, command_timestamp, last_check, last_check_before,
-                                  state, expected_state, plugin_output, wait_timeout):
+    def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
+                                  expected_state, plugin_output, wait_timeout):
         print("processing check result took %0.2f seconds" % (time.time() - command_timestamp))
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \

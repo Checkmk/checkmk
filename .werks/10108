@@ -1,0 +1,11 @@
+Title: Fix apt check when switched to "dist-upgrade" and encountering auto removals
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b12
+Date: 1568800733
+
+

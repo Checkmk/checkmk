@@ -121,10 +121,10 @@ def get_source_and_piggyback_hosts(time_settings):
 
 def has_piggyback_raw_data(piggybacked_hostname, time_settings):
     # type: (str, Dict[Tuple[Optional[str], str], int]) -> bool
-    return any([
-        file_info.successfully_processed
-        for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
-    ])
+    for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
+        if file_info.successfully_processed:
+            return True
+    return False
 
 
 def _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
@@ -311,11 +311,10 @@ def get_source_hostnames(piggybacked_hostname=None):
             for piggybacked_host_folder in _get_piggybacked_host_folders()
             for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
         ]
+
+    piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
     return [
-        source_host.name
-        for piggybacked_host_folder in _get_piggybacked_host_folders()
-        for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
-        if piggybacked_host_folder.name == piggybacked_hostname
+        source_host.name for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
     ]
 
 

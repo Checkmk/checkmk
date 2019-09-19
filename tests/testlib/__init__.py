@@ -1044,10 +1044,8 @@ class WebSession(requests.Session):
         self.via_system_apache = False
         super(WebSession, self).__init__()
 
-    def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):
-        url = self.url(proto, path)
-
-        response = self.get(path, expected_code=expected_code, allow_redirects=False)
+    def check_redirect(self, path, expected_target=None):
+        response = self.get(path, expected_code=302, allow_redirects=False)
         if expected_target:
             if response.headers['Location'] != expected_target:
                 raise AssertionError("REDIRECT FAILED: '%s' != '%s'" %

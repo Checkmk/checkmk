@@ -1947,6 +1947,7 @@ def _valuespec_active_checks_traceroute():
                         "are tried to be converted into names. This usually adds additional "
                         "execution time. Also DNS resolution might fail for some addresses."),
              )),
+            _ip_address_family_element(),
             ("routers",
              ListOf(
                  Tuple(elements=[

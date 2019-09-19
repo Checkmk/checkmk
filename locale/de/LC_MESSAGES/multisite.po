@@ -29656,9 +29656,8 @@ msgstr ""
 msgid "Patterns for matching lines in the specified logfiles"
 msgstr "Suchmuster für die Textzeilen der gewählten Logdateien"
 
-#, fuzzy
 msgid "Paused"
-msgstr "Pause"
+msgstr "Angehalten"
 
 msgid "Paused containers"
 msgstr "Pausiert"
@@ -53956,9 +53955,8 @@ msgstr "Prozent Fehlerrate"
 msgid "percentage left"
 msgstr "Prozent übrig"
 
-#, fuzzy
 msgid "percentile"
-msgstr "Durchschnittswert"
+msgstr "Prozent"
 
 msgid "period"
 msgstr "Periode"

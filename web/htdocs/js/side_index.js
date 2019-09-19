@@ -32,7 +32,7 @@ import * as quicksearch from "quicksearch";
 import * as visibility_detection from "visibility_detection";
 import * as valuespecs from "valuespecs";
 
-export default {
+export const cmk_export = {
     get_url: ajax.get_url,
     post_url: ajax.post_url,
     call_ajax: ajax.call_ajax,

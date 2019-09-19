@@ -23,7 +23,7 @@ module.exports = {
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
         libraryTarget: "window",
-        libraryExport: "default"
+        libraryExport: "cmk_export"
     },
     resolve: {
         modules: [
@@ -97,10 +97,23 @@ if (process.env.WEBPACK_MODE === "quick") {
     console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
     let babel_loader = {
         test: /\.js$/,
+        // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
+        include: [
+            path.resolve(__dirname, "web/htdocs/js"),
+            path.resolve(__dirname, "node_modules/d3"),
+        ],
         use: {
             loader: "babel-loader",
             options: {
-                presets: ["@babel/preset-env"],
+                presets: [
+                    ["@babel/preset-env", {
+                        //debug: true,
+                        // This adds polyfills when needed. Requires core-js dependency.
+                        // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+                        useBuiltIns: "usage",
+                        corejs: 3
+                    }]
+                ],
             }
         }
     };

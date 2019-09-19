@@ -22,6 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import "core-js/stable";
+
 import $ from "jquery";
 import * as forms from "forms";
 import * as ajax from "ajax";
@@ -74,7 +76,7 @@ $(() => {
     element_dragging.register_event_handlers();
 });
 
-export default {
+export const cmk_export = {
     cmk: {
         forms: forms,
         prediction: prediction,

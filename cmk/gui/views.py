@@ -1312,7 +1312,7 @@ def show_view(view, view_renderer, only_count=False):
     visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
 
     all_active_filters = _get_all_active_filters(view)
-    filterheaders = _get_livestatus_filter_headers(view, all_active_filters)
+    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
@@ -1487,7 +1487,7 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def _get_livestatus_filter_headers(view, all_active_filters):
+def get_livestatus_filter_headers(view, all_active_filters):
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:

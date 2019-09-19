@@ -137,6 +137,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.scale_y = null
         //////////////////////////////////
 
+        this.always_update_layout = false
 
     }
 
@@ -330,7 +331,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
         this.update_layers()
 
-        if (this._chunks_changed)
+        if (this.always_update_layout || this._chunks_changed)
             this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list())
         this.layout_manager.compute_node_positions()
 
@@ -492,8 +493,9 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         }
 
         // Try to use the coordinates of the parent node
-        if (node.parent && node.parent.x)
+        if (node.parent && node.parent.x) {
             return {x: node.parent.x, y: node.parent.y}
+        }
 
         // Fallback. Spawn at center
         return {x: node_chunk.coords.width/2, y: node_chunk.coords.height/2}

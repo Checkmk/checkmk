@@ -501,6 +501,8 @@ class AbstractGUINode {
 
         this._quickinfo_selection = null
         // Data fetched from external sources, e.g livestatus
+        //
+        this._has_quickinfo = true
         this._provides_external_quickinfo_data = false
         this._quickinfo_fetch_in_progress = false
         this._external_quickinfo_data = null
@@ -602,13 +604,6 @@ class AbstractGUINode {
         let spawn_point_x = this.node.x
         let spawn_point_y = this.node.y
 
-        // TODO: check spawn point mechanic
-        //       Points show generally spawn in the center of the viewport
-//        let spawn_point = this.nodes_layer.viewport.point_spawn_location
-//        if (spawn_point) {
-//            spawn_point_x = spawn_point[0]
-//            spawn_point_y = spawn_point[1]
-//        }
         let coords = this.nodes_layer.viewport.scale_to_zoom({x: spawn_point_x, y: spawn_point_y})
 
         this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y}
@@ -725,10 +720,14 @@ class AbstractGUINode {
     }
 
     _show_quickinfo() {
+        if (!this._has_quickinfo)
+            return
+
         if (this.viewport.layout_manager.edit_layout)
             return
 
         let div_selection = this.nodes_layer.div_selection.selectAll("div.quickinfo").data([this.node], d=>d.data.id)
+        div_selection.exit().remove()
         this._quickinfo_selection = div_selection.enter().append("div")
                             .classed("quickinfo", true)
                             .classed("noselect", true)
@@ -860,6 +859,10 @@ class AbstractGUINode {
 }
 
 class TopologyNode extends AbstractGUINode {
+    static id() {
+        return "topology"
+    }
+
     constructor(nodes_layer, node) {
         super(nodes_layer, node)
         this.radius = 9
@@ -872,6 +875,8 @@ class TopologyNode extends AbstractGUINode {
         if (this.node.data.has_no_parents)
             this.selection.select("circle").classed("has_no_parents", true)
 
+
+        this.selection.on("dblclick", ()=>this._toggle_growth_continue())
     }
 
     update_position() {
@@ -882,11 +887,8 @@ class TopologyNode extends AbstractGUINode {
         if (this.node.data.growth_root) {
             growth_root_selection.enter().append("circle")
                     .classed("growth_root", true)
-                    .classed("dashed", true)
                     .attr("r", this.radius + 4)
                     .attr("fill", "none")
-                    .attr("stroke", "black")
-                    .attr("stroke-width", 3);
         }
         else
             growth_root_selection.remove();
@@ -971,9 +973,74 @@ class TopologyNode extends AbstractGUINode {
         this.node.data.growth_root = true
         this.nodes_layer.viewport.main_instance.update_data();
     }
+
+    _toggle_growth_continue() {
+        this.node.data.growth_continue = !this.node.data.growth_continue;
+        this.nodes_layer.viewport.main_instance.update_data();
+    }
+
 }
 
+class TopologyCentralNode extends TopologyNode {
+    static id() {
+        return "topology_center"
+    }
+
+    constructor(nodes_layer, node) {
+        super(nodes_layer, node)
+        this.radius = 30
+        this._has_quickinfo = false
+    }
+
+
+    render_object() {
+        this.selection
+              .append("circle")
+              .attr("r", this.radius)
+              .classed("topology_center", true)
+        this.selection.append("svg:image")
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/logo_cmk_small.png")
+                .attr("x", -25)
+                .attr("y", -25)
+                .attr("width", 50)
+                .attr("height", 50)
+    }
+}
+
+class TopologySiteNode extends TopologyNode {
+    static id() {
+        return "topology_site"
+    }
+
+    constructor(nodes_layer, node) {
+        super(nodes_layer, node)
+        this.radius = 16 
+        this._has_quickinfo = false
+    }
+
+    render_object() {
+        this.selection
+              .append("circle")
+              .attr("r", this.radius)
+              .classed("topology_remote", true)
+        this.selection.append("svg:image")
+                .attr("xlink:href", this.viewport.main_instance.get_theme_prefix() + "/images/icon_sites.png")
+                .attr("x", -15)
+                .attr("y", -15)
+                .attr("width", 30)
+                .attr("height", 30)
+    }
+}
+
+node_visualization_utils.node_type_class_registry.register(TopologyNode)
+node_visualization_utils.node_type_class_registry.register(TopologySiteNode)
+node_visualization_utils.node_type_class_registry.register(TopologyCentralNode)
+
 class BILeafNode extends AbstractGUINode {
+    static id() {
+        return "bi_leaf"
+    }
+
     constructor(nodes_layer, node) {
         super(nodes_layer, node)
         this.radius = 9
@@ -1012,7 +1079,13 @@ class BILeafNode extends AbstractGUINode {
     }
 }
 
+node_visualization_utils.node_type_class_registry.register(BILeafNode)
+
+
 class BIAggregatorNode extends AbstractGUINode {
+    static id() {
+        return "bi_aggregator"
+    }
     constructor(nodes_layer, node) {
         super(nodes_layer, node)
         this.radius = 12
@@ -1097,6 +1170,7 @@ class BIAggregatorNode extends AbstractGUINode {
         return elements
     }
 }
+node_visualization_utils.node_type_class_registry.register(BIAggregatorNode)
 
 class NodeLink {
     constructor(nodes_layer, link_data) {
@@ -1105,7 +1179,7 @@ class NodeLink {
         this.link_data = link_data
         this.selection = null
 
-        this.line_style = this.link_data.source.data.chunk.layout_settings.config.line_config.style
+        this._line_config = this.link_data.source.data.chunk.layout_settings.config.line_config
     }
 
     id() {
@@ -1113,7 +1187,7 @@ class NodeLink {
     }
 
     render_into(selection) {
-        switch (this.line_style) {
+        switch (this._line_config.style) {
             case "straight": {
                 this.selection = selection.append("line")
                     .classed("link_element", true)
@@ -1132,6 +1206,8 @@ class NodeLink {
                 break;
             }
         }
+        if (this._line_config.dashed)
+            this.selection.classed("dashed", true)
     }
 
 
@@ -1163,7 +1239,7 @@ class NodeLink {
 
 
         let tmp_selection = this.add_optional_transition(this.selection)
-        switch (this.link_data.source.data.chunk.layout_settings.config.line_config.style) {
+        switch (this._line_config.style) {
             case "straight": {
                 tmp_selection.attr("x1", x1)
                              .attr("y1", y1)
@@ -1337,13 +1413,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
     }
 
     _create_node(node_data, selection) {
-        let new_node = null;
-        if (node_data.data.node_type == "bi_leaf")
-            new_node = new BILeafNode(this, node_data)
-        else if (node_data.data.node_type == "bi_aggregator")
-            new_node = new BIAggregatorNode(this, node_data)
-        else
-            new_node = new TopologyNode(this, node_data)
+        let node_class = node_visualization_utils.node_type_class_registry.get_node_class(node_data.data.node_type)
+        let new_node = new node_class(this, node_data)
         this.node_instances[new_node.id()] = new_node
         new_node.render_into(selection)
     }

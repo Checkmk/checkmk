@@ -1027,6 +1027,10 @@ div.varname {
     width: 160px;
     height: 16px;
     text-align: center;
+
+    &.state_success {
+      color: $dark-font-color;
+    }
   }
 
   div.progress {

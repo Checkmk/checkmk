@@ -955,7 +955,6 @@ table.timeline {
   &.standalone {
     width: 800px;
     margin-bottom: 20px;
-    box-shadow: 0 0 1px #ccf;
   }
 
   &.inline {
@@ -968,10 +967,9 @@ table.timeline {
     padding: 0;
     border-style: none;
 
-    &.hilite {
+    &.hilite, &.hilite.state2 {
       padding: 0;
-      background-color: #0091b6;
-      border-style: none;
+      border: $timeline-hilite-border;
       filter: brightness(80%);
     }
 
@@ -1024,10 +1022,16 @@ table.timelineevents {
   }
 }
 
-/* #TODO: Reproduce this html element */
 table.data.oddeven.timelineevents > tbody > tr.hilite {
-  color: #fff;
-  background-color: #6ab;
+  filter: $timetable-hilite-filter;
+
+  &[class*="even"] {
+    background-color: $timetable-hilite-even-bg-color;
+  }
+
+  &[class*="odd"] {
+    background-color: $timetable-hilite-odd-bg-color;
+  }
 }
 
 .timelinerange .from, .timelinerange .until {

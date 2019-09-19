@@ -6,8 +6,8 @@ checkname = 'docker_container_diskstat'
 
 
 info = [
-    ['node-1', '@docker_version_info', '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'],
-    ['node-1', ('{'
+    ['@docker_version_info', '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'],
+    [('{'
         '"io_service_time_recursive": ['
           '{"major": 8, "value": 1837047, "minor": 0, "op": "Read"}, '
           '{"major": 8, "value": 0, "minor": 0, "op": "Write"}, '

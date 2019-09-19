@@ -74,6 +74,8 @@ SC_HANDLE SelfOpen();
 bool IsServiceConfigured(SC_HANDLE handle);
 bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 
+bool IsGlobalStopSignaled();
+
 }  // namespace srv
 };  // namespace cma
 

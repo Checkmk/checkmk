@@ -1,0 +1,13 @@
+Title: Checkmk Discovery: Fixed crash if a host has no data sources configured
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0b12
+Date: 1568880170
+
+If a host has no data sources and a service discovery is executed the error message
+<tt>local variable 'host_sections' referenced before assignment</tt> was shown on
+discovery page.

@@ -644,7 +644,7 @@ class Topology(object):
     def _compute_meshes(self, hostnames):
         hostnames.update(self._known_hosts.keys())
         new_hosts = []
-        mandatory_keys = set(["name", "outgoing", "incoming"])
+        mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
             if len(mandatory_keys - set(host_data.keys())) > 0:
                 raise MKGeneralException(
@@ -814,7 +814,7 @@ class ParentChildNetworkTopology(Topology):
         central_node["incoming"] = site_nodes.keys()
         self._known_hosts[central_node["name"]] = central_node
 
-        combinator_mesh = set([central_node["name"]])
+        combinator_mesh = {central_node["name"]}
         for node_name, settings in site_nodes.iteritems():
             self._known_hosts[node_name] = settings
             combinator_mesh.add(node_name)

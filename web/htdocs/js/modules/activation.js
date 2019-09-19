@@ -241,6 +241,10 @@ function update_site_activation_state(site_state)
     var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
 
+    if (site_state["_phase"] == "done") {
+        utils.add_class(msg, "state_" + site_state["_state"]);
+    }
+
     // Show status details
     if (site_state["_status_details"]) {
         show_details(true);

@@ -536,17 +536,6 @@ table.data div.objectlist div {
   border-radius: $theme-border-radius;
 }
 
-/* TODO: Reproduce these pnpgraph elements */
-table.data tr.data td.pnpgraph {
-  padding: 0;
-}
-
-tr.data td.pnpgraph div.pnp_graph > a > img {
-  margin: 4px;
-  border: 1px solid #888;
-  box-shadow: 1px 1px 3px #000;
-}
-
 /*
  Sites can be represented by small icons with a size of 24x24 px.
  This is the styling for these icons.

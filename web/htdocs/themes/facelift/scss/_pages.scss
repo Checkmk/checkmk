@@ -1735,25 +1735,42 @@ div.popup_trigger {
   }
 }
 
-div.pnp_graph a.popup_trigger {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: block;
-  width: 20px;
-  height: 20px;
-  background-image: url("images/icon_menu.png");
-  background-size: contain;
+div.pnp_graph a {
+  &.popup_trigger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url("images/icon_menu.png");
+    background-size: contain;
 
-  &:hover {
-    cursor: pointer;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  img {
+    filter: $pnp4nagios-img-filter;
   }
 }
 
-tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
-  margin: 0;
-  border: none;
-  box-shadow: none;
+table.data tr.data td.pnpgraph {
+  padding: 0;
+
+  div.pnp_graph > a {
+    > img {
+      margin: 4px;
+      border: 1px solid $pnp-graph-img-border-color;
+    }
+
+    &.popup_trigger > img.icon {
+      margin: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
 }
 
 td.job_state {

@@ -50,7 +50,7 @@ factory_settings["apt_default_levels"] = {
 # from the apt agent plugin which can be found on the Check_MK exchange.
 def apt_valid_info(info):
     return info and len(info[0]) == 1 and \
-        (len(info[0][0].split(None, 3)) == 4 or info[0][0] == "No updates pending for installation")
+        (len(info[0][0].split(None, 2)) == 3 or info[0][0] == "No updates pending for installation")
 
 
 def inventory_apt(info):
@@ -72,7 +72,7 @@ def check_apt(_no_item, params, info):
     for line in info:
         if not line[0].startswith("Inst"):
             continue
-        inst, packet, version, hints = line[0].split(None, 3)
+        inst, packet, version = line[0].split(None, 2)
         if sec_regex.match(line[0]):
             sec_updates.append(packet)
         else:

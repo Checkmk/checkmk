@@ -1,0 +1,10 @@
+Title: Fix apt check when switched to "dist-upgrade" and encountering auto removals
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1568872356
+Class: fix
+
+

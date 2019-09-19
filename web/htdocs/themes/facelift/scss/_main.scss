@@ -868,7 +868,7 @@ div#hover_menu {
 
   /* For pnp4nagios hover_menu graphs in the Raw Edition */
   table tbody tr td img {
-    filter: $hover-menu-pnp4nagios-filter;
+    filter: $pnp4nagios-img-filter;
   }
 }
 

@@ -505,7 +505,7 @@ $agent-config-inner-title-bg-color:	    $grey-5;
 
 $service-container-groupheader-bg-color:    $grey-6;
 
-$hover-menu-pnp4nagios-filter:		    invert(84%);
+$pnp4nagios-img-filter:			    invert(84%);
 
 $matches-search-bg-color:		    darken($success, 5%);
 $matches-search-font-color:		    $grey-7;
@@ -523,3 +523,5 @@ $timeline-hilite-border:		    2px solid rgb(220, 220, 220) !important;
 $timetable-hilite-filter:		    null;
 $timetable-hilite-even-bg-color:	    lighten($grey-5, 15%);
 $timetable-hilite-odd-bg-color:		    lighten($grey-7, 15%);
+
+$pnp-graph-img-border-color:		    rgb(240, 240, 240);

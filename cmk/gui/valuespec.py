@@ -871,6 +871,7 @@ class HostAddress(TextAscii):
     def _is_valid_ipv6_address(self, address):
         # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
         try:
+            address = address.split('%')[0]
             socket.inet_pton(socket.AF_INET6, address)
         except socket.error:  # not a valid address
             return False

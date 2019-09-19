@@ -151,14 +151,14 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'/var/log/syslog /var/log/kern.log',
+            u'"c:\\a path\\with spaces" "d:\\another path\\with spaces"',
             u' I registered panic notifier',
             u' C panic',
             u' C Oops',
             u' W generic protection rip',
             u' W .*Unrecovered read error - auto reallocate failed',
         ],
-        [u'/var/log/syslog', u'/var/log/kern.log'],
+        [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces'],
         [
             (u'I', u'registered panic notifier', [], []),
             (u'C', u'panic', [], []),

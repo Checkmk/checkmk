@@ -1,0 +1,10 @@
+Title: mk_logwatch: Handle spaces in filenames
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568892521
+Class: fix
+
+

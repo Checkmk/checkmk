@@ -47,6 +47,8 @@ import binascii
 import platform
 import locale
 
+import shlex
+
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
 MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
@@ -243,7 +245,7 @@ def is_indented(line):
 
 
 def parse_filenames(line):
-    return line.split()
+    return shlex.split(line)
 
 
 def get_config_files(directory):

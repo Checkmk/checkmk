@@ -76,6 +76,9 @@ def _try_int(string):
 
 @get_parsed_item_data
 def check_ibm_svc_enclosure(item, params, data):
+    if params is None:
+        params = {}
+
     enclosure_status = data['status']
     if enclosure_status == "online":
         status = 0

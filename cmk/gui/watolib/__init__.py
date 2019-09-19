@@ -502,6 +502,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
+            # Docker container specific host check commands
+            'host_check_commands': [{
+                'condition': {
+                    'host_labels': {
+                        u'cmk/docker_object': u'container'
+                    }
+                },
+                'value': ('service', u'Docker container status'),
+                'options': {
+                    'description': u'Make all docker container host states base on the "Docker container status" service',
+                },
+            },],
+
             # Enable HW/SW inventory + status data inventory for docker containers by default to
             # simplify the setup procedure of docker monitoring
             'active_checks': {

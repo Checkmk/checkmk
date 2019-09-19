@@ -1,0 +1,13 @@
+Title: mssql.vbs: Do not ignore empty blocked sessions which causes vanished services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568883601
+Class: fix
+
+Previously the mssql.vbs ignored empty blocked session (==0).
+This causes vanished services on the Checkmk server.
+Now the blocked sessions are always delievered. You have to
+deploy the mssql.vbs.

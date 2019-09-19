@@ -25,74 +25,59 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _split_docker_container_diskstat_by_node(info):
-    nodes_info = {}
-    for line in info:
-        if len(line) > 1:
-            nodes_info.setdefault(line[0], []).append(line[1:])
-    return nodes_info
-
-
 def parse_docker_container_diskstat(info):
-    nodes_info = _split_docker_container_diskstat_by_node(info)
-    node_sections = {
-        node: _parse_sub_sections(node, node_info) for node, node_info in nodes_info.iteritems()
-    }
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    if version is None:
+        pre_parsed = _parse_docker_container_diskstat_agent(info)
+    else:
+        pre_parsed = _parse_docker_container_diskstat_plugin(info)
 
     disks = {}
-    for node_name, node_info in node_sections.items():
-        timestamp = node_info["time"]
+    timestamp = pre_parsed["time"]
 
-        for _device_id, device in node_info["devices"].items():
-            # Filter out unwanted things
-            if device["name"].startswith("loop"):
-                continue
+    for _device_id, device in pre_parsed["devices"].items():
+        # Filter out unwanted things
+        if device["name"].startswith("loop"):
+            continue
 
-            # Skip devices without counts
-            if "ios" not in device or "bytes" not in device:
-                continue
+        # Skip devices without counts
+        if "ios" not in device or "bytes" not in device:
+            continue
 
-            disks[(node_name, device["name"])] = timestamp, device
+        disks[device["name"]] = timestamp, device
 
     return disks
 
 
-def _parse_sub_sections(node, node_info):
-    version = docker_get_version(node_info)  # pylint: disable=undefined-variable
-    if version is None:
-        return _parse_sub_sections_agent_section(node, node_info)
-    return _parse_sub_sections_plugin_section(node, node_info)
-
-
-def _parse_sub_sections_plugin_section(node, node_info):
-    raw = docker_json_get_obj(node_info[1])
+def _parse_docker_container_diskstat_plugin(info):
+    raw = docker_json_get_obj(info[1])
 
     devices = {}
     for major_minor, name in raw["names"].iteritems():
         major, minor = map(int, major_minor.split(':', 1))
-        devices[(node, major, minor)] = {
+        devices[(major, minor)] = {
             "name": name,
             "bytes": {},
             "ios": {},
         }
 
     for entry in raw["io_service_bytes_recursive"]:
-        device = devices.get((node, entry["major"], entry["minor"]))
+        device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["bytes"][entry["op"]] = entry["value"]
 
     for entry in raw["io_serviced_recursive"]:
-        device = devices.get((node, entry["major"], entry["minor"]))
+        device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["ios"][entry["op"]] = entry["value"]
 
     return {"time": raw["time"], "devices": devices}
 
 
-def _parse_sub_sections_agent_section(node, node_info):
+def _parse_docker_container_diskstat_agent(info):
     sections = {}
 
-    for line in node_info:
+    for line in info:
 
         if line[0] == "[io_service_bytes]":
             phase = "bytes"
@@ -117,7 +102,7 @@ def _parse_sub_sections_agent_section(node, node_info):
             else:
                 major, minor = map(int, line[0].split(":"))
 
-            device_id = node, major, minor
+            device_id = major, minor
             device = devices.setdefault(device_id, {})
 
             if phase == "names":
@@ -129,11 +114,11 @@ def _parse_sub_sections_agent_section(node, node_info):
     return sections
 
 
-def _prepare_diskdata(node_name, device_name, timestamp, device):
+def _prepare_diskdata(device_name, timestamp, device):
     # type: (str, str, int, dict) -> Tuple(bool, dict)
     uninitialized = False
 
-    diskdata = {"node": node_name}
+    diskdata = {}
     counter_template = "diskstat.%s.%%s" % device_name
 
     for io_op in ('read', 'write'):
@@ -158,13 +143,13 @@ def _prepare_diskdata(node_name, device_name, timestamp, device):
 def check_docker_container_diskstat(item, params, parsed):
     disks = {}
     uninitialized = False
-    for (node_name, device_name), (timestamp, device) in parsed.items():
+    for device_name, (timestamp, device) in parsed.items():
 
-        this_uninitialized, diskdata = _prepare_diskdata(node_name, device_name, timestamp, device)
+        this_uninitialized, diskdata = _prepare_diskdata(device_name, timestamp, device)
         uninitialized = uninitialized or this_uninitialized
 
-        # omit disks that only provide name
-        if len(diskdata) > 1:
+        # omit empty disks
+        if diskdata:
             disks[device_name] = diskdata
 
     if uninitialized or not disks:
@@ -175,11 +160,11 @@ def check_docker_container_diskstat(item, params, parsed):
 
 check_info["docker_container_diskstat"] = {
     "parse_function": parse_docker_container_diskstat,
-    "inventory_function": inventory_diskstat_generic,
+    "inventory_function": lambda parsed: inventory_diskstat_generic([(None, key)
+                                                                     for key in parsed]),
     "check_function": check_docker_container_diskstat,
     "service_description": "Disk IO %s",
     "has_perfdata": True,
     "group": "diskstat",
-    "node_info": True,  # add first column with actual host name
     "includes": ["docker.include", "diskstat.include"],
 }

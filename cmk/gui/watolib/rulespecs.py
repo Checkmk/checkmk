@@ -1200,7 +1200,6 @@ class TimeperiodValuespec(ValueSpec):
         # Set the actual used mode
         html.hidden_field(self.tp_current_mode, "%d" % is_active)
 
-        mode = _("Disable") if is_active else _("Enable")
         vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
         toggle_url = html.makeuri(vars_copy.items())
 
@@ -1208,13 +1207,13 @@ class TimeperiodValuespec(ValueSpec):
             value = self._get_timeperiod_value(value)
             self._get_timeperiod_valuespec().render_input(varprefix, value)
             html.buttonlink(toggle_url,
-                            _("%s timespecific parameters") % mode,
+                            _("Disable timespecific parameters"),
                             class_=["toggle_timespecific_parameter"])
         else:
             value = self._get_timeless_value(value)
             r = self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(toggle_url,
-                            _("%s timespecific parameters") % mode,
+                            _("Enable timespecific parameters"),
                             class_=["toggle_timespecific_parameter"])
             return r
 

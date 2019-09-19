@@ -460,11 +460,15 @@ class EC2Summary(AWSSectionGeneric):
 
     def _compute_content(self, raw_content, colleague_contents):
         # PrivateIpAddress and InstanceId is available although the instance is stopped
-        return AWSComputedContent({
-            "%s-%s-%s" % (instance['PrivateIpAddress'], self._region, instance['InstanceId']):
-            instance for reservation in raw_content.content
+        instances = {}
+        for reservation in raw_content.content:
             for instance in reservation.get('Instances', [])
-        }, raw_content.cache_timestamp)
+                try:
+                    inst_id = "%s-%s-%s" % (instance['PrivateIpAddress'], self._region, instance['InstanceId'])
+                except KeyError:
+                    continue
+                instances.setdefault(inst_id, instance)
+        return AWSComputedContent(instances, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]

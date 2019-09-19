@@ -1111,8 +1111,10 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
     return {std::filesystem::exists(install_file, ec), install_file};
 }
 
-void UpdateInstallProtocolFile(bool exists_install_protocol,
-                               const std::filesystem::path& install_file) {
+// #TODO deprecated
+[[deprecated]] void UpdateInstallProtocolFile(
+    bool exists_install_protocol, const std::filesystem::path& install_file) {
+
     if (install_file.empty()) {
         XLOG::l("Install file cannot be generated, because it is not correct");
         return;
@@ -1172,9 +1174,10 @@ void ConfigInfo::initFolders(
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");
     else {
-        auto [exists_install_protocol, install_file] =
-            IsInstallProtocolExists(root);
-        UpdateInstallProtocolFile(exists_install_protocol, install_file);
+        // code is disabled as deprecated
+        // auto [exists_install_protocol, install_file] =
+        //    IsInstallProtocolExists(root);
+        // UpdateInstallProtocolFile(exists_install_protocol, install_file);
     }
 
     // exe

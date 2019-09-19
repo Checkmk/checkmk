@@ -518,3 +518,8 @@ $minority-font-color:			    $grey-7;
 $button-spacer-color:			    rgb(90, 90, 90);
 
 $td-h3-margin-top:			    4px;
+
+$timeline-hilite-border:		    2px solid rgb(220, 220, 220) !important;
+$timetable-hilite-filter:		    null;
+$timetable-hilite-even-bg-color:	    lighten($grey-5, 15%);
+$timetable-hilite-odd-bg-color:		    lighten($grey-7, 15%);

@@ -331,7 +331,12 @@ def aquire_lock(path, blocking=True):
         if not blocking:
             flags |= fcntl.LOCK_NB
 
-        fcntl.flock(fd, flags)
+        try:
+            fcntl.flock(fd, flags)
+        except IOError:
+            os.close(fd)
+            raise
+
         fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)

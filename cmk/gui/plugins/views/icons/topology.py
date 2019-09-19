@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import json
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
@@ -43,6 +42,6 @@ class ShowParentChildTopology(Icon):
         return 51
 
     def render(self, what, row, tags, custom_vars):
-        url = html.makeuri_contextless([("hostnames", json.dumps([row["host_name"]]))],
+        url = html.makeuri_contextless([("host_regex", "^%s$" % row["host_name"])],
                                        filename="parent_child_topology.py")
         return "aggr", _("Host Parent/Child topology"), url

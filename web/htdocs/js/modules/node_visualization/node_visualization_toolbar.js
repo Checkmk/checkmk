@@ -96,4 +96,8 @@ export class Toolbar {
                 plugin.update_active_state()
         })
     }
+
+    add_togglebutton() {
+
+    }
 }

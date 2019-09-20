@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include "cfg.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
@@ -25,7 +26,7 @@ namespace cma::provider {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 
-TEST(SectionProvider, Construction) {
+TEST(SectionProviders, Construction) {
     PluginsProvider plugins;
     EXPECT_EQ(plugins.getUniqName(), cma::section::kPlugins);
 
@@ -100,7 +101,14 @@ TEST(SectionProviders, BasicSystemTime) {
 
 TEST(SectionProviders, BasicCheckMk) {
     using namespace cma::section;
+    using namespace cma::cfg;
     using namespace cma::provider;
+    ASSERT_EQ(cma::section::kCheckMk, "check_mk");
+    OnStartTest();
+    auto cfg = cma::cfg::GetLoadedConfig();
+    ON_OUT_OF_SCOPE(OnStartTest());
+
+    cfg[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("127.0.0.1");
 
     const char* array_of_names[] = {
         "Version",          "BuildDate",       "AgentOS",
@@ -117,12 +125,69 @@ TEST(SectionProviders, BasicCheckMk) {
     ASSERT_TRUE(!cmk.empty());
     auto result = cma::tools::SplitString(cmk, "\n");
     EXPECT_EQ(result.size(), 18);
-    EXPECT_EQ(result[0], "<<<check_mk>>>");
+    EXPECT_EQ(result[0] + "\n",
+              cma::section::MakeHeader(cma::section::kCheckMk));
 
     auto count = result.size();
     for (size_t i = 1; i < count; ++i) {
         auto values = cma::tools::SplitString(result[i], ": ");
+        EXPECT_EQ(values.size(), 2);
         EXPECT_EQ(values[0], array_of_names[i - 1]);
+        EXPECT_FALSE(values[1].empty());
+    }
+}
+
+TEST(SectionProviders, BasicCheckMkAdvanced) {
+    using namespace cma::section;
+    using namespace cma::provider;
+
+    cma::srv::SectionProvider<CheckMk> check_mk_provider;
+    auto& e1 = check_mk_provider.getEngine();
+    auto cmk = e1.generateContent(section_name);
+    ASSERT_TRUE(!cmk.empty());
+    auto result = cma::tools::SplitString(cmk, "\n");
+
+    auto count = result.size();
+    auto get_val = [result](int pos) -> std::string {
+        auto tbl = cma::tools::SplitString(result[pos], ": ");
+        return tbl[1];
+    };
+
+    EXPECT_EQ(get_val(1), CHECK_MK_VERSION);
+    EXPECT_EQ(get_val(3), "windows");
+    EXPECT_EQ(get_val(4), cfg::GetHostName());
+    if (tgt::Is64bit())
+        EXPECT_EQ(get_val(5), "64bit");
+    else
+        EXPECT_EQ(get_val(5), "32bit");
+}
+
+TEST(SectionProviders, BasicCheckMkOnlyFrom) {
+    using namespace cma::cfg;
+
+    cma::srv::SectionProvider<CheckMk> check_mk_provider;
+    auto& engine = check_mk_provider.getEngine();
+    OnStartTest();
+    auto cfg = cma::cfg::GetLoadedConfig();
+    ON_OUT_OF_SCOPE(OnStartTest());
+
+    std::pair<std::string, std::string> matrix[] = {
+        //
+        {"~", ""},
+        {"127.0.0.1", "127.0.0.1"},
+        {"127.0.0.1 192.168.0.1", "127.0.0.1 192.168.0.1"},
+        {"[127.0.0.1, 192.168.0.1]", "127.0.0.1 192.168.0.1"},
+        {"[127.0.0.1, ::1]", "127.0.0.1 ::1"},
+        {"[127.0.0.1/16, ::1/64]", "127.0.0.1/16 ::1/64"}
+        //
+    };
+
+    size_t n = 0;
+    for (auto p : matrix) {
+        cfg[groups::kGlobal][vars::kOnlyFrom] = YAML::Load(p.first);
+        auto of = engine.makeOnlyFrom();
+        EXPECT_EQ(of, p.second) << "failed on string num " << n << "\n";
+        ++n;
     }
 }
 

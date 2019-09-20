@@ -19,7 +19,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_tools.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

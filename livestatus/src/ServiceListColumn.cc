@@ -104,7 +104,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc; // HACK
+    (void)_mc;  // HACK
     if (auto mem = columnData<Host::services_t>(row)) {
         for (auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {

@@ -106,7 +106,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
 #ifdef CMC
     if (auto mem = columnData<Host::services_t>(row)) {
         for (auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(_mc, auth_user)) {
+            if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 entries.emplace_back(
                     svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),

@@ -69,6 +69,7 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
     Row row, const contact *auth_user) const {
     std::vector<Member> members;
 #ifdef CMC
+    (void)_mc; // HACK
     if (auto p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {

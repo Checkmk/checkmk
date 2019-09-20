@@ -86,16 +86,16 @@ def test_cmk_ajax_graph_images(site):
 def test_trace_disabled(site):
     web = CMKWebSession(site)
     # TRACE is disabled by using "TraceEnable Off" in apache config
-    web._request("TRACE", "/", expected_code=405)
+    web.request("TRACE", "/", expected_code=405)
 
 
 def test_track_disabled(site):
     web = CMKWebSession(site)
     # TRACE is not supported by apache at all by apache, so there is no need to
     # disable this. The HTTP code is just different from TRACE.
-    web._request("TRACK", "/", expected_code=403)
+    web.request("TRACK", "/", expected_code=403)
 
 
 def test_options_disabled(site):
     web = CMKWebSession(site)
-    web._request("OPTIONS", "/", expected_code=403)
+    web.request("OPTIONS", "/", expected_code=403)

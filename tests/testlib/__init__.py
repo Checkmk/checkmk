@@ -26,7 +26,7 @@ import pytest  # type: ignore
 import requests  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
-import freezegun
+import freezegun  # type: ignore
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1054,22 +1054,22 @@ class WebSession(object):
             assert response.headers['Location'] == expected_target
 
     def get(self, *args, **kwargs):
-        return self._request("get", *args, **kwargs)
+        return self.request("get", *args, **kwargs)
 
     def post(self, *args, **kwargs):
-        return self._request("post", *args, **kwargs)
+        return self.request("post", *args, **kwargs)
 
-    def _request(self,
-                 method,
-                 path,
-                 proto="http",
-                 expected_code=200,
-                 expect_redirect=None,
-                 allow_errors=False,
-                 add_transid=False,
-                 allow_redirect_to_login=False,
-                 allow_retry=True,
-                 **kwargs):
+    def request(self,
+                method,
+                path,
+                proto="http",
+                expected_code=200,
+                expect_redirect=None,
+                allow_errors=False,
+                add_transid=False,
+                allow_redirect_to_login=False,
+                allow_retry=True,
+                **kwargs):
         url = self.url(proto, path)
 
         if add_transid:

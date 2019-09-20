@@ -100,7 +100,7 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
 #ifdef CMC
     if (auto p = columnData<Host::services_t>(row)) {
         for (auto &svc : *p) {
-            if (auth_user == nullptr || svc->hasContact(_mc, auth_user)) {
+            if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 members.emplace_back(
                     svc->host()->name(), svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),

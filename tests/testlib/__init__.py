@@ -1036,13 +1036,14 @@ class Site(object):
     #        raise Exception("Failed to add test user \"%s\" to site group")
 
 
-class WebSession(requests.Session):
+class WebSession(object):
     def __init__(self):
+        super(WebSession, self).__init__()
         self.transids = []
         # Resources are only fetched and verified once per session
         self.verified_resources = set()
         self.via_system_apache = False
-        super(WebSession, self).__init__()
+        self.session = requests.Session()
 
     def check_redirect(self, path, expected_target=None):
         response = self.get(path, expected_code=302, allow_redirects=False)
@@ -1085,10 +1086,10 @@ class WebSession(requests.Session):
         #   https://github.com/mikem23/keepalive-race
         # Trying to workaround this by trying the problematic request a second time.
         try:
-            response = super(WebSession, self).request(method, url, **kwargs)
+            response = self.session.request(method, url, **kwargs)
         except requests.ConnectionError as e:
             if allow_retry and "Connection aborted" in "%s" % e:
-                response = super(WebSession, self).request(method, url, **kwargs)
+                response = self.session.request(method, url, **kwargs)
             else:
                 raise
 
@@ -1860,11 +1861,12 @@ class CMKWebSession(WebSession):
         return result
 
 
-class CMKEventConsole(CMKWebSession):
+class CMKEventConsole(object):
     def __init__(self, site):
-        super(CMKEventConsole, self).__init__(site)
-        #self._gather_status_port()
+        super(CMKEventConsole, self).__init__()
+        self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
+        self.web_session = CMKWebSession(site)
 
     def _config(self):
         cfg = {}
@@ -1910,7 +1912,7 @@ class CMKEventConsole(CMKWebSession):
         #print "Old config load time: %s" % old_t
         assert old_t > time.time() - 86400
 
-        super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
+        self.web_session.activate_changes(allow_foreign_changes=True)
 
         def config_reloaded():
             new_t = web.site.live.query_value(

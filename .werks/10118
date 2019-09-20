@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0b12
+Version: 1.6.0
 Date: 1568895722
 
 Previously the CMC used an active check (check_lql_service) for this,

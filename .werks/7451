@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.6.0b12
+Version: 1.6.0
 Date: 1565619102
 
 Out of single metrics it is now possible to calculation a forecast for the

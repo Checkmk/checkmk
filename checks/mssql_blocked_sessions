@@ -30,13 +30,24 @@
 # 119 232292187 LCK_M_U 75
 # 76 221526672 LCK_M_U 115
 
-# TODO: Make this check aware of multiple instances! Don't handle the blocked
-# sessions independent of instances anymore. Use same service description
-# schema as "mssql_instance".
+# <<<mssql_blocked_sessions:sep(124)>>>
+# Blocked _Sessions
+# 119|232292187|LCK_M_U|75
+# 76|221526672|LCK_M_U|115
+
+# <<<mssql_blocked_sessions:sep(124)>>>
+# Blocked _Sessions
+# INST_ID1|119|232292187|LCK_M_U|75
+# INST_ID2|76|221526672|LCK_M_U|115
+
+# <<<mssql_blocked_sessions:sept(124)>>>
+# INST_ID1|No blocking sessions
 
 factory_settings['mssql_blocked_sessions_default_levels'] = {
     'state': 2,
 }
+
+NO_BLOCKING_SESSIONS_MSG = 'No blocking sessions'
 
 
 def parse_mssql_blocked_sessions(info):
@@ -44,10 +55,26 @@ def parse_mssql_blocked_sessions(info):
         "DBInstance", ["session_id", "wait_type", "blocking_session_id", "wait_duration"])
     parsed = {}
     for line in info:
-        if len(line) not in (4, 5) or line[-1].startswith("ERROR: "):
+        if line[-1].startswith("ERROR:"):
             continue
-        inst = line[0] if len(line) == 5 else ""
-        session_id, wait_duration_ms, wait_type, blocking_session_id = line[-4:]
+
+        if len(line) == 2 and line[1] == NO_BLOCKING_SESSIONS_MSG:
+            parsed.setdefault(line[0], NO_BLOCKING_SESSIONS_MSG)
+            continue
+
+        elif len(line) == 1 and line[-1] == NO_BLOCKING_SESSIONS_MSG:
+            parsed.setdefault("", NO_BLOCKING_SESSIONS_MSG)
+            continue
+
+        elif len(line) == 4:
+            session_id, wait_duration_ms, wait_type, blocking_session_id = line
+            inst = ""
+
+        elif len(line) == 5:
+            inst, session_id, wait_duration_ms, wait_type, blocking_session_id = line
+
+        else:
+            continue
 
         parsed.setdefault(inst, []).append(
             db_instance(
@@ -64,10 +91,15 @@ def check_mssql_blocked_sessions(item, params, parsed):
     if item is None:
         item = ""
 
-    if item not in parsed:
+    data = parsed.get(item)
+    if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Failed to retrieve data from database")
+
+    if data == NO_BLOCKING_SESSIONS_MSG:
+        yield 0, NO_BLOCKING_SESSIONS_MSG
+        return
 
     summary = {}
     details = []
@@ -75,7 +107,7 @@ def check_mssql_blocked_sessions(item, params, parsed):
     ignored_waittypes = set()
     waittypes_to_be_ignored = params.get("ignore_waittypes", [])
 
-    for db_inst in parsed[item]:
+    for db_inst in data:
         if db_inst.wait_type in waittypes_to_be_ignored:
             ignored_waittypes.add(db_inst.wait_type)
             continue

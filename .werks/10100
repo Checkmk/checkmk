@@ -1,0 +1,10 @@
+Title: mssql_clusters: Fixed inventorizing MSSQL clusters if DB name is missing
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568985395
+Class: fix
+
+

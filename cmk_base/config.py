@@ -3235,6 +3235,12 @@ class ConfigCache(object):
         monitored on a remote site. Does not return cluster hosts."""
         return set(strip_tags(all_hosts))
 
+    def _get_all_configured_shadow_hosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all shadow host names, regardless if currently disabled or
+        monitored on a remote site"""
+        return set(_get_shadow_hosts().keys())
+
     def all_configured_hosts(self):
         # type: () -> Set[str]
         return self._all_configured_hosts
@@ -3243,7 +3249,8 @@ class ConfigCache(object):
         # type: () -> Set[str]
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
         hosts = set()  # type: Set[str]
-        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters())
+        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
+                     self._get_all_configured_shadow_hosts())
         return hosts
 
     def _setup_clusters_nodes_cache(self):

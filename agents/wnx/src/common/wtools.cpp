@@ -435,7 +435,7 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
             // we want to know what is happened with service in windows
             ? RegisterServiceCtrlHandlerEx(name_.get(), ServiceCtrlHandlerEx,
                                            nullptr)
-            // in release w e want to use safe method
+            // in release we want to use safe method
             : RegisterServiceCtrlHandler(name_.get(), ServiceCtrlHandler);
 
     if (!status_handle_) {

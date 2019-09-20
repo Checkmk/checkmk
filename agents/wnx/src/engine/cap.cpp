@@ -302,12 +302,14 @@ static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
 
     if (!yaml.has_value()) return;  // bad ini
 
+    XLOG::l.i("Creating Bakery file '{}'", bakery_yml.u8string());
     std::ofstream ofs(bakery_yml, std::ios::binary);
     if (ofs) {
         ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
         ofs << *yaml;
     }
     ofs.close();
+    XLOG::l.i("Creating Bakery file SUCCESS");
 }
 
 // Replaces target with source
@@ -326,14 +328,23 @@ bool ReinstallIni(const std::filesystem::path &target_ini,
 
     // remove old files
     auto bakery_yml = cma::cfg::GetBakeryFile();
-    if (!packaged_agent) fs::remove(bakery_yml, ec);
+    if (!packaged_agent) {
+        XLOG::l.i("Removing '{}'", bakery_yml.u8string());
+        fs::remove(bakery_yml, ec);
+    }
+
+    XLOG::l.i("Removing '{}'", target_ini.u8string());
     fs::remove(target_ini, ec);
 
     // if file doesn't exists we will leave
-    if (!fs::exists(source_ini, ec)) return true;
+    if (!fs::exists(source_ini, ec)) {
+        XLOG::l.i("No source ini, leaving");
+        return true;
+    }
 
     if (!packaged_agent) ConvertIniToBakery(bakery_yml, source_ini);
 
+    XLOG::l.i("Copy init");
     fs::copy_file(source_ini, target_ini, ec);
 
     return true;
@@ -445,8 +456,13 @@ void Install() {
     using namespace cma::cfg;
     using namespace cma::cfg::cap;
 
-    InstallCapFile();
-    InstallIniFile();
+    try {
+        InstallCapFile();
+        InstallIniFile();
+    } catch (const std::exception &e) {
+        XLOG::l.crit("Exception '{}'", e.what());
+        return;
+    }
 
     auto source = GetRootInstallDir();
 
@@ -468,13 +484,18 @@ void ReInstall() {
         {files::kIniFile, ReinstallIni},
     };
 
-    for (const auto [name, func] : data_vector) {
-        auto target = user_dir / name;
-        auto source = root_dir / name;
+    try {
+        for (const auto [name, func] : data_vector) {
+            auto target = user_dir / name;
+            auto source = root_dir / name;
 
-        XLOG::l.i("Forced Reinstalling '{}' with '{}'", target.u8string(),
-                  source.u8string());
-        func(target, source);
+            XLOG::l.i("Forced Reinstalling '{}' with '{}'", target.u8string(),
+                      source.u8string());
+            func(target, source);
+        }
+    } catch (const std::exception &e) {
+        XLOG::l.crit("Exception '{}'", e.what());
+        return;
     }
 
     auto source = GetRootInstallDir();

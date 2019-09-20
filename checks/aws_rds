@@ -54,10 +54,9 @@ def parse_aws_rds(info):
             #"SwapUsage",
             #"FreeStorageSpace",
             #"MaximumUsedTransactionIDs",
-            "AllocatedStorage",
         ],
             parse_aws(info),
-            extra_keys=['DBInstanceIdentifier']).itervalues():
+            extra_keys=['DBInstanceIdentifier', 'AllocatedStorage']).itervalues():
 
         for key, factor in [
             ('AllocatedStorage', 1.074e+9),
@@ -238,7 +237,7 @@ def check_aws_rds_bin_log_usage(item, params, metrics):
 
 check_info['aws_rds.bin_log_usage'] = {
     'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['BinLogDiskUsage', 'AllocatedStorage']),
+        inventory_aws_generic(p, ['BinLogDiskUsage']),
     'check_function': check_aws_rds_bin_log_usage,
     'service_description': 'AWS/RDS %s Binary Log Usage',
     'includes': ['aws.include'],
@@ -285,7 +284,7 @@ def check_aws_rds_transaction_logs_usage(item, params, metrics):
 
 check_info['aws_rds.transaction_logs_usage'] = {
     'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['TransactionLogsDiskUsage', 'AllocatedStorage']),
+        inventory_aws_generic(p, ['TransactionLogsDiskUsage']),
     'check_function': check_aws_rds_transaction_logs_usage,
     'service_description': 'AWS/RDS %s Transaction Logs Usage',
     'includes': ['aws.include'],
@@ -328,7 +327,7 @@ def check_aws_rds_replication_slot_usage(item, params, metrics):
 
 check_info['aws_rds.replication_slot_usage'] = {
     'inventory_function': lambda p:\
-        inventory_aws_generic(p, ['ReplicationSlotDiskUsage', 'AllocatedStorage']),
+        inventory_aws_generic(p, ['ReplicationSlotDiskUsage']),
     'check_function': check_aws_rds_replication_slot_usage,
     'service_description': 'AWS/RDS %s Replication Slot Usage',
     'includes': ['aws.include'],

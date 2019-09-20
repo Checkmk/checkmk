@@ -39,6 +39,7 @@ RUN_CLANG_TIDY ?= \
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet")
 
 GOOGLETEST := $(top_srcdir)/omd/packages/googletest
+PIPENV := LANG=C PIPENV_VENV_IN_PROJECT=true PIPENV_PIPFILE=$(abs_top_srcdir)/virtual-envs/2.7/Pipfile pipenv
 
 bin_PROGRAMS = test_neb
 
@@ -81,7 +82,7 @@ build_googletest:
 compile_commands.json: Makefile $(wildcard *.cc  *.h)
 	$(MAKE) -C $(top_srcdir) .venv
 	$(MAKE) -j4 -C ..
-	LANG=C PIPENV_MAX_DEPTH=4 pipenv run compiledb --no-build make
+	$(PIPENV) run compiledb --no-build make
 
 tidy: compile_commands.json
 	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)

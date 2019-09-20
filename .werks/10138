@@ -1,0 +1,14 @@
+Title: jolokia_jvm_uptime: New plugin
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1568974706
+Class: feature
+
+The Service "JVM MyInstance Uptime" has been moved to a dedicated Plugin.
+Users of the special agent Jolokia or the latest version of the mk_jolokia
+plugin must perform a rediscovery.
+The performance metrics are kept and defined rulesets will apply to the new
+service (by the same name).

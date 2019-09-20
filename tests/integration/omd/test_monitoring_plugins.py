@@ -38,7 +38,6 @@ import os
     "check_ldaps",
     "check_load",
     "check_log",
-    "check_lql_service",
     "check_mail",
     "check_mailboxes",
     "check_mail_loop",

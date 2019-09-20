@@ -1046,7 +1046,7 @@ std::optional<YAML::Node> LoadIni(std::filesystem::path File) {
     std::error_code ec;
 
     if (!fs::exists(File, ec)) {
-        XLOG::l.i("File not found '{}', this is may be ok", File.u8string());
+        XLOG::l.i("File not found '{}', this may be ok", File.u8string());
         return {};
     }
     if (!fs::is_regular_file(File, ec)) {
@@ -1162,14 +1162,16 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
         XLOG::d(
             "You have Baked Agent installed.\nYour legacy configuration file '{}' exists and is {}\n"
             "The Upgrade of above mentioned file is SKIPPED to avoid overriding of your WATO managed configuration file '{}\\{}'\n\n"
-            "If you do want to upgrade legacy configuration file, you have to delete manually the file {}\\{}\n",
+            "If you do want to upgrade legacy configuration file, then you have to:\n"
+            "\t- delete manually the file {}\\{}\n"
+            "\t- call check_mk_agent.exe upgrade -force\n",
             ini_file.u8string(),
 
             IsBakeryIni(ini_file) ? "managed by Bakery/WATO" : "user defined",
             wtools::ConvertToUTF8(cma::cfg::GetBakeryDir()),
             wtools::ConvertToUTF8(files::kBakeryYmlFile),
             wtools::ConvertToUTF8(files::kIniFile),
-            wtools::ConvertToUTF8(cma::cfg::GetFileInstallDir()),
+            wtools::ConvertToUTF8(cma::cfg::GetRootInstallDir()),
             wtools::ConvertToUTF8(files::kWatoIniFile)
             //
         );
@@ -1321,7 +1323,7 @@ std::string GetNewHash(const std::filesystem::path& dat) noexcept {
     try {
         auto yml = YAML::LoadFile(dat.u8string());
         auto hash = GetVal(yml, kHashName.data(), std::string());
-        if (hash == cma::cfg::kBuidlHashValue) {
+        if (hash == cma::cfg::kBuildHashValue) {
             XLOG::l.t("Hash is from packaged agent, ignoring");
             return {};
         }

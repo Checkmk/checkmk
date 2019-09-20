@@ -1,0 +1,13 @@
+Title: Kubernetes checks for jobs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568194926
+Class: feature
+
+The special agent now delivers information for k8s
+jobs.  The check provides information on active and
+terminated jobs and the job containers are counted
+in the HW/SW inventory.

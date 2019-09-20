@@ -39,46 +39,37 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMysqlConnections(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_mysql_connections():
+    return TextAscii(
+        title=_("Instance"),
+        help=_("Only needed if you have multiple MySQL Instances on one server"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "mysql_connections"
 
-    @property
-    def title(self):
-        return _("MySQL Connections")
+def _parameter_valuespec_mysql_connections():
+    return Dictionary(elements=[
+        ("perc_used",
+         Tuple(
+             title=_("Max. parallel connections"),
+             help=_("Compares the maximum number of connections that have been "
+                    "in use simultaneously since the server started with the maximum simultaneous "
+                    "connections allowed by the configuration of the server. This threshold "
+                    "makes the check raise warning/critical states if the percentage is equal to "
+                    "or above the configured levels."),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("perc_used",
-             Tuple(
-                 title=_("Max. parallel connections"),
-                 help=_(
-                     "Compares the maximum number of connections that have been "
-                     "in use simultaneously since the server started with the maximum simultaneous "
-                     "connections allowed by the configuration of the server. This threshold "
-                     "makes the check raise warning/critical states if the percentage is equal to "
-                     "or above the configured levels."),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("Only needed if you have multiple MySQL Instances on one server"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mysql_connections",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_mysql_connections,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mysql_connections,
+        title=lambda: _("MySQL Connections"),
+    ))

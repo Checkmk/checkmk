@@ -26,6 +26,7 @@
 
 import abc
 from typing import List, Optional  # pylint: disable=unused-import
+import six
 
 import cmk.utils.plugin_registry
 
@@ -44,9 +45,7 @@ import cmk.utils.plugin_registry
 #   '----------------------------------------------------------------------'
 
 
-class UserConnector(object):
-    __metaclass__ = abc.ABCMeta
-
+class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, config):
         super(UserConnector, self).__init__()
         self._config = config
@@ -142,9 +141,7 @@ class UserConnector(object):
 #   '----------------------------------------------------------------------'
 
 
-class UserAttribute(object):
-    __metaclass__ = abc.ABCMeta
-
+class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def name(cls):

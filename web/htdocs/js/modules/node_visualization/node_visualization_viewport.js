@@ -1,3 +1,27 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
 import * as node_visualization_utils from "node_visualization_utils"
 import * as node_visualization_datasources from "node_visualization_datasources"
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers"
@@ -16,6 +40,7 @@ export class Viewport {
         this.current_viewport = null
         this._load_viewport_plugins()
         this._set_viewport_plugin(LayeredViewportPlugin.id())
+        this._current_datasource = null
         window.addEventListener("resize", ()=>this._size_changed())
     }
 
@@ -36,15 +61,19 @@ export class Viewport {
     _register_viewport_plugin(viewport_plugin_class) {
         if (viewport_plugin_class.id() in this._viewport_plugins)
             return
-        this._viewport_plugins[viewport_plugin_class.id()] = new viewport_plugin_class(this.main_instance)
+        this._viewport_plugins[viewport_plugin_class.id()] = new viewport_plugin_class(this)
 
     }
 
     // Determines the correct viewport plugin for the given daten
     // Since there is only one plugin right now, its quite pointless :)
     show_data(datasource, node_chunk_list) {
-        // TODO: Determine correct viewport plugin based on datasource
+        this._current_datasource = datasource
         this.current_viewport.feed_data(node_chunk_list)
+    }
+
+    get_current_datasource() {
+        return this._current_datasource
     }
 }
 
@@ -54,13 +83,18 @@ export class AbstractViewportPlugin {
         return "abstract_viewport_plugin"
     }
 
-    constructor(main_instance) {
-        this.main_instance = main_instance
+    constructor(master_viewport) {
+        this._master_viewport = master_viewport
+        this.main_instance = this._master_viewport.main_instance
     }
 
     setup(into_selection) {}
 
     feed_data(json_data) {}
+
+    get_current_datasource() {
+        return this._master_viewport.get_current_datasource()
+    }
 }
 
 
@@ -84,8 +118,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         return "layered_viewport"
     }
 
-    constructor(main_instance) {
-        super(main_instance)
+    constructor(master_viewport) {
+        super(master_viewport)
 
         this._layers = {} // Layer instances
         this._selections_for_layer = {} // Each layer gets a div and svg selection
@@ -103,6 +137,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.scale_y = null
         //////////////////////////////////
 
+        this.always_update_layout = false
 
     }
 
@@ -294,11 +329,9 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this._remove_obsolete_chunks()
         this._arrange_multiple_node_chunks()
 
-        this.update_feed_info()
-
         this.update_layers()
 
-        if (this._chunks_changed)
+        if (this.always_update_layout || this._chunks_changed)
             this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list())
         this.layout_manager.compute_node_positions()
 
@@ -359,16 +392,14 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
     }
 
     _remove_obsolete_chunks() {
-        let removed_chunks = []
+        let new_chunk_list = []
         this._node_chunk_list.forEach(node_chunk=>{
-            if (node_chunk.marked_obsolete)
-                removed_chunks.push(node_chunk)
+            if (!node_chunk.marked_obsolete)
+                new_chunk_list.push(node_chunk)
+            else
+                this._chunks_changed = true
         })
-
-        if (removed_chunks)
-            this._chunks_changed = true
-        while (removed_chunks.length)
-            this._node_chunk_list.splice(removed_chunks.pop(), 1)
+        this._node_chunk_list = new_chunk_list
     }
 
     _add_aggr_path_and_node_id(node, siblings_id_counter) {
@@ -443,18 +474,42 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                 if (node["x"])
                     // This node already has some coordinates
                     return
-                let spawn_coords = {}
-                if (node.parent && node.parent.x) {
-                    spawn_coords.x = node.parent.x
-                    spawn_coords.y = node.parent.y
-                } else
-                    spawn_coords = {x: coords.width/2, y: coords.height/2}
 
+                let spawn_coords = this._compute_spawn_coords(node_chunk, node)
                 node.x = spawn_coords.x + Math.cos(rad) * (30+rad*4)
                 node.y = spawn_coords.y + Math.sin(rad) * (30+rad*4)
                 rad += rad_delta
             })
         }
+    }
+
+    _compute_spawn_coords(node_chunk, node) {
+        let linked_nodes = this._find_linked_nodes(node_chunk, node)
+        // Try to use the coordinates of active linked nodes
+        for (let idx in linked_nodes) {
+            let linked_node = linked_nodes[idx]
+            if (linked_node.x)
+                return {x: linked_node.x, y: linked_node.y}
+        }
+
+        // Try to use the coordinates of the parent node
+        if (node.parent && node.parent.x) {
+            return {x: node.parent.x, y: node.parent.y}
+        }
+
+        // Fallback. Spawn at center
+        return {x: node_chunk.coords.width/2, y: node_chunk.coords.height/2}
+    }
+
+    _find_linked_nodes(node_chunk, node) {
+        let linked_nodes = []
+        node_chunk.links.forEach(link=>{
+            if (node == link.source)
+                linked_nodes.push(link.target)
+            else if (node == link.target)
+                linked_nodes.push(link.source)
+        })
+        return linked_nodes
     }
 
     get_all_links() {
@@ -512,7 +567,11 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                         node.x = old_node_coords[node.data.id].x
                         node.y = old_node_coords[node.data.id].y
                     }
+                    else
+                        this._chunks_changed = true
                 })
+                if (existing_chunk.nodes.length != new_chunk.nodes.length)
+                    this._chunks_changed = true
                 this._node_chunk_list[idx] = new_chunk
                 return
             }
@@ -532,10 +591,6 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
             chunk_links.push({source: node, target: node.parent})
         })
         node_chunk.links = chunk_links
-    }
-
-    update_feed_info() {
-        d3.select("table.header td.heading a").text(this._node_chunk_list[0].tree.data.name)
     }
 
     update_layers() {

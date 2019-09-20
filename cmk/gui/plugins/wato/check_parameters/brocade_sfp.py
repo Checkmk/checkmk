@@ -38,49 +38,37 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBrocadeSfp(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_brocade_sfp():
+    return Dictionary(elements=[
+        ("rx_power",
+         Tuple(
+             title=_("Rx power level"),
+             elements=[
+                 Float(title=_("Critical below"), unit=_("dBm")),
+                 Float(title=_("Warning below"), unit=_("dBm")),
+                 Float(title=_("Warning at"), unit=_("dBm")),
+                 Float(title=_("Critical at"), unit=_("dBm"))
+             ],
+         )),
+        ("tx_power",
+         Tuple(
+             title=_("Tx power level"),
+             elements=[
+                 Float(title=_("Critical below"), unit=_("dBm")),
+                 Float(title=_("Warning below"), unit=_("dBm")),
+                 Float(title=_("Warning at"), unit=_("dBm")),
+                 Float(title=_("Critical at"), unit=_("dBm"))
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "brocade_sfp"
 
-    @property
-    def title(self):
-        return _("Brocade SFPs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("rx_power",
-             Tuple(
-                 title=_("Rx power level"),
-                 elements=[
-                     Float(title=_("Critical below"), unit=_("dBm")),
-                     Float(title=_("Warning below"), unit=_("dBm")),
-                     Float(title=_("Warning at"), unit=_("dBm")),
-                     Float(title=_("Critical at"), unit=_("dBm"))
-                 ],
-             )),
-            ("tx_power",
-             Tuple(
-                 title=_("Tx power level"),
-                 elements=[
-                     Float(title=_("Critical below"), unit=_("dBm")),
-                     Float(title=_("Warning below"), unit=_("dBm")),
-                     Float(title=_("Warning at"), unit=_("dBm")),
-                     Float(title=_("Critical at"), unit=_("dBm"))
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Port index"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="brocade_sfp",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Port index")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_brocade_sfp,
+        title=lambda: _("Brocade SFPs"),
+    ))

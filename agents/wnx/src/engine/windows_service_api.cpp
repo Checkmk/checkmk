@@ -13,6 +13,7 @@
 #include "cap.h"
 #include "cfg.h"
 #include "commander.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
@@ -322,6 +323,21 @@ int TestLegacy() {
             2000ms, [&command](const void* Sp) { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService();
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
+int RestoreWATOConfig() {
+    using namespace std::chrono;
+
+    try {
+        // test for main thread. will be disabled in production
+        // to find file, read and start update POC.
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::setup::DuplicateOnStdio(true);
+        cma::cfg::cap::ReInstall();
     } catch (const std::exception& e) {
         xlog::l("Exception is not allowed here %s", e.what());
     }

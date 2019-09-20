@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "on_start.h"
 #include "onlyfrom.h"
+#include "tools/_misc.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma {
@@ -19,7 +20,7 @@ bool IsTest();
 }  // namespace cma
 
 namespace cma::cfg {
-constexpr std::string_view kBuidlHashValue = "DEFADEFADEFA";
+constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
 // bit mask
 enum LoadCfgStatus {
     kAllFailed = -2,    // root config not found
@@ -123,7 +124,7 @@ std::string GetPathOfLoadedConfigAsString() noexcept;
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
-std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
+std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
@@ -915,23 +916,42 @@ protected:
     bool defined_ = false;
     bool async_ = false;
 
-    int timeout_ = 0;    // from the config file, #TODO use chrono
-    int cache_age_ = 0;  // from the config file, #TODO use chrono
+    int timeout_ =
+        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
+    int cache_age_ = 0;         // from the config file, #TODO use chrono
 
     int retry_ = 0;
 };
+
+template <typename T>
+void ApplyValueIfScalar(const YAML::Node& entry, T& var,
+                        std::string_view name) noexcept {
+    if (!name.data()) {
+        XLOG::l(XLOG_FUNC + "name is null");
+        return;
+    }
+    try {
+        auto v = entry[name.data()];
+        if (v.IsDefined() && v.IsScalar()) var = v.as<T>(var);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + "Exception '{}'", e.what());
+    }
+}
 
 struct Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
         ExeUnit() = default;
+
+        // deprecated
         // Sync
         ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
             : PluginInfo(Timeout, Retry)  //
             , pattern_(Pattern)           //
             , run_(Run) {}
 
+        // deprecated
         // Async
         ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
                 bool Run)
@@ -939,6 +959,14 @@ public:
             , pattern_(Pattern)                //
             , run_(Run) {
             validateAndFix();
+        }
+
+        // only for testing
+        ExeUnit(std::string_view pattern, const std::string& entry)
+            : pattern_(pattern)  //
+        {
+            source_text_ = entry;
+            assign(YAML::Load(entry));
         }
 
         // Only For Testing Automation with Initializer Lists
@@ -959,6 +987,18 @@ public:
 
         auto pattern() const noexcept { return pattern_; }
         auto run() const noexcept { return run_; }
+        void assign(const YAML::Node& node) noexcept;
+        void apply(std::string_view filename, const YAML::Node& node) noexcept;
+        const YAML::Node source() const noexcept { return source_; }
+        const std::string sourceText() const noexcept { return source_text_; }
+
+        void resetConfig() {
+            async_ = false;
+            timeout_ = kDefaultPluginTimeout;
+            cache_age_ = 0;
+            retry_ = 0;
+            run_ = true;
+        }
 
     private:
         void validateAndFix() {
@@ -973,8 +1013,14 @@ public:
             cache_age_ = kMinimumCacheAge;
         }
 
-        const std::string pattern_;
-        bool run_;
+        std::string pattern_;
+        std::string source_text_;
+        bool run_ = true;
+        YAML::Node source_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+        friend class AgentConfig;
+        FRIEND_TEST(AgentConfig, ExeUnitTest);
+#endif
     };
 
     struct CmdLineInfo {

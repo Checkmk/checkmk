@@ -867,7 +867,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     raise
 
         # Reinitialize logging targets
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
 
         try:
             self._do_run()
@@ -984,7 +984,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     # This is done on the central site to initiate the sync process
     def _synchronize_site(self):
-        self._set_result(PHASE_SYNC, _("Sychronizing"))
+        self._set_result(PHASE_SYNC, _("Synchronizing"))
 
         start = time.time()
 

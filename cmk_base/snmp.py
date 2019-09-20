@@ -26,7 +26,6 @@
 
 import os
 import subprocess
-import functools
 from typing import Tuple, Optional, Any, Dict, List  # pylint: disable=unused-import
 
 import cmk.utils.debug
@@ -364,7 +363,7 @@ class StoredWalkSNMPBackend(snmp_utils.ABCSNMPBackend):
             lines = _g_walk_cache[snmp_config.hostname]
         else:
             try:
-                lines = file(path).readlines()
+                lines = open(path).readlines()
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
             _g_walk_cache[snmp_config.hostname] = lines
@@ -514,9 +513,12 @@ def _cmp_oids(o1, o2):
     return (_oid_to_intlist(o1) > _oid_to_intlist(o2)) - (_oid_to_intlist(o1) < _oid_to_intlist(o2))
 
 
-def _cmp_oid_pairs(pair1, pair2):
-    return (_oid_to_intlist(pair1[0].lstrip('.')) > _oid_to_intlist(pair2[0].lstrip('.'))) - (
-        _oid_to_intlist(pair1[0].lstrip('.')) < _oid_to_intlist(pair2[0].lstrip('.')))
+def _key_oids(o1):
+    return _oid_to_intlist(o1)
+
+
+def _key_oid_pairs(pair1):
+    return _oid_to_intlist(pair1[0].lstrip('.'))
 
 
 def _snmpv3_contexts_of(snmp_config, check_plugin_name):
@@ -637,7 +639,7 @@ def _sanitize_snmp_table_columns(columns):
     # The list needs to be sorted to prevent problems when the first
     # column has missing values in the middle of the tree.
     if not _are_ascending_oids(endoids):
-        endoids.sort(key=functools.cmp_to_key(_cmp_oids))
+        endoids.sort(key=_key_oids)
         need_sort = True
     else:
         need_sort = False
@@ -649,7 +651,7 @@ def _sanitize_snmp_table_columns(columns):
         # it comparable to the already sorted endoids list. Otherwise we would get
         # some mixups when filling gaps
         if need_sort:
-            column.sort(key=functools.cmp_to_key(_cmp_oid_pairs))
+            column.sort(key=_key_oid_pairs)
 
         i = 0
         new_column = []
@@ -752,7 +754,7 @@ def do_snmptranslate(walk_filename):
                 oids_for_command.append(line.split(" ")[0])
 
             command = ["snmptranslate", "-m", "ALL",
-                       "-M+%s" % cmk.utils.paths.local_mibs_dir] + oids_for_command
+                       "-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
             p = subprocess.Popen(command,
                                  stdout=subprocess.PIPE,
                                  stderr=open(os.devnull, "w"),
@@ -772,7 +774,7 @@ def do_snmptranslate(walk_filename):
     entries_per_cycle = 500
     translated_lines = []
 
-    walk_lines = file(walk_path).readlines()
+    walk_lines = open(walk_path).readlines()
     console.error("Processing %d lines.\n" % len(walk_lines))
 
     i = 0

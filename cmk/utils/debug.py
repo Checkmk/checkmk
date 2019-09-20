@@ -28,18 +28,22 @@ debug_mode = False
 
 
 def enabled():
+    # type: () -> bool
     return debug_mode
 
 
 def disabled():
+    # type: () -> bool
     return not debug_mode
 
 
 def enable():
+    # type: () -> None
     global debug_mode
     debug_mode = True
 
 
 def disable():
+    # type: () -> None
     global debug_mode
     debug_mode = False

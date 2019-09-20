@@ -1,0 +1,12 @@
+Title: Fixed dashlet refresh.
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567084426
+Class: fix
+
+Various dashlets didn't refresh automatically after they have been
+rendered initially, e.g. the globes for host/service statistics.
+This was a regression in the 1.6.0 branch and has been fixed now.

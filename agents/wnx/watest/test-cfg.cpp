@@ -159,9 +159,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty data to user/public
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
         fs::path dflt = details::GetDefaultLogPath();
         EXPECT_TRUE(!dflt.empty());
@@ -177,9 +177,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty without user gives us default to the public/user
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
 
         fs::path dflt = details::ConvertLocationToLogPath("");
@@ -305,7 +305,7 @@ TEST(CmaCfg, InstallationTypeCheck) {
 
     cma::details::G_Test = false;
 
-    fs::path install_ini = cma::cfg::GetFileInstallDir();
+    fs::path install_ini = cma::cfg::GetRootInstallDir();
     std::error_code ec;
     fs::create_directories(install_ini, ec);
     install_ini /= files::kIniFile;
@@ -366,4 +366,78 @@ TEST(Cma, OnStart) {
     }
 }
 
+TEST(CmaCfg, ReloadCfg) {
+    cma::OnStartTest();
+    auto id = GetCfg().uniqId();
+    EXPECT_TRUE(id > 0);
+    cma::LoadConfig(AppType::test, {});
+    auto id2 = GetCfg().uniqId();
+    EXPECT_TRUE(id2 > id);
+}
+
+TEST(Cma, PushPop) {
+    cma::OnStartTest();
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [r, u] = tst::CreateInOut();
+    auto root = r.wstring();
+    auto user = u.wstring();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    std::error_code ec;
+
+    auto old_root = GetRootDir();
+    auto old_user = GetUserDir();
+
+    ASSERT_TRUE(GetCfg().pushFolders(root, user));
+    EXPECT_EQ(root, GetRootDir());
+    EXPECT_EQ(user, GetUserDir());
+
+    GetCfg().popFolders();
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().pushFolders(root, user));
+        EXPECT_EQ(root, GetRootDir());
+        EXPECT_EQ(user, GetUserDir());
+    }
+    EXPECT_FALSE(GetCfg().pushFolders(root, user));
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().popFolders());
+    }
+    EXPECT_FALSE(GetCfg().popFolders());
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
+}
+
 }  // namespace cma::cfg
+
+namespace cma::cfg {
+TEST(CmaCfg, ConfigManagement) {
+    auto node = CreateNode("test");
+    ASSERT_TRUE(node);
+    node->setLogFileDir(L"test");
+    auto node2 = GetNode("test");
+    EXPECT_EQ(node2->getLogFileDir(), L"test");
+    ASSERT_TRUE(node2);
+    RemoveNode("test");
+    auto node3 = GetNode("test");
+    ASSERT_FALSE(node3);
+}
+
+}  // namespace cma::cfg
+
+namespace cma::srv {
+TEST(CmaCfg, RestartBinaries) {
+    cma::srv::ServiceProcessor sp;
+    uint64_t id = cma::cfg::GetCfg().uniqId();
+    auto old_id = id;
+    EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_EQ(old_id, id);
+    ReloadConfig();
+    EXPECT_TRUE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_NE(old_id, id);
+}
+
+}  // namespace cma::srv

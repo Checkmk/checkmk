@@ -39,68 +39,60 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsxDatabase(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_msx_database():
+    return TextAscii(
+        title=_("Database Name"),
+        help=_("Specify database names that the rule should apply to"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "msx_database"
 
-    @property
-    def title(self):
-        return _("MS Exchange Database")
+def _parameter_valuespec_msx_database():
+    return Dictionary(
+        title=_("Set Levels"),
+        elements=[
+            ('read_attached_latency',
+             Tuple(
+                 title=_("I/O Database Reads (Attached) Average Latency"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
+                     Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
+                 ],
+             )),
+            ('read_recovery_latency',
+             Tuple(
+                 title=_("I/O Database Reads (Recovery) Average Latency"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms'), default_value=150.0),
+                     Float(title=_("Critical at"), unit=_('ms'), default_value=200.0)
+                 ],
+             )),
+            ('write_latency',
+             Tuple(
+                 title=_("I/O Database Writes (Attached) Average Latency"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
+                     Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
+                 ],
+             )),
+            ('log_latency',
+             Tuple(
+                 title=_("I/O Log Writes Average Latency"),
+                 elements=[
+                     Float(title=_("Warning at"), unit=_('ms'), default_value=5.0),
+                     Float(title=_("Critical at"), unit=_('ms'), default_value=10.0)
+                 ],
+             )),
+        ],
+        optional_keys=[],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Set Levels"),
-            elements=[
-                ('read_attached_latency',
-                 Tuple(
-                     title=_("I/O Database Reads (Attached) Average Latency"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
-                         Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
-                     ],
-                 )),
-                ('read_recovery_latency',
-                 Tuple(
-                     title=_("I/O Database Reads (Recovery) Average Latency"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms'), default_value=150.0),
-                         Float(title=_("Critical at"), unit=_('ms'), default_value=200.0)
-                     ],
-                 )),
-                ('write_latency',
-                 Tuple(
-                     title=_("I/O Database Writes (Attached) Average Latency"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
-                         Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
-                     ],
-                 )),
-                ('log_latency',
-                 Tuple(
-                     title=_("I/O Log Writes Average Latency"),
-                     elements=[
-                         Float(title=_("Warning at"), unit=_('ms'), default_value=5.0),
-                         Float(title=_("Critical at"), unit=_('ms'), default_value=10.0)
-                     ],
-                 )),
-            ],
-            optional_keys=[],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Database Name"),
-            help=_("Specify database names that the rule should apply to"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="msx_database",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_msx_database,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_msx_database,
+        title=lambda: _("MS Exchange Database"),
+    ))

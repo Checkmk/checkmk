@@ -46,6 +46,7 @@ from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
 # futurize requires this import:
 import functools
+import six
 
 from dateutil import tz
 from pathlib2 import Path
@@ -527,7 +528,7 @@ def _iter_dicts(keys, data):
     pattern = ".*?".join("<%s>(.*?)</%s>" % (key, key) for key in keys)
     matches = re.finditer(pattern, data, re.DOTALL)
     for match in matches:
-        yield dict(zip(keys, match))
+        yield dict(zip(keys, match.groups()))
 
 
 def eval_sensor_info(_hostname, _current_propname, propset):
@@ -678,6 +679,39 @@ def get_vm_power_states(vms, hostsystems, opt):
     return _format_piggybacked_objects_sections(piggy_data)
 
 
+def _get_vms_by_hostsystem(vms, hostsystems):
+    vms_by_hostsys = {}
+    for vm_name, vm_data in vms.iteritems():
+        runtime_host = vm_data.get("runtime.host")
+        running_on = hostsystems.get(runtime_host, runtime_host)
+        vms_by_hostsys.setdefault(running_on, []).append(vm_name)
+    return vms_by_hostsys
+
+
+def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
+    vms_by_hostsys = _get_vms_by_hostsystem(vms, hostsystems)
+
+    override_hostname = None
+    if opt.hostname and opt.direct and opt.host_pwr_display != "vm":
+        override_hostname = opt.hostname
+
+    piggy_data = {}
+    for data in hostsystems_properties.itervalues():
+        orig_hostname = data["name"][0]
+        used_hostname = override_hostname or convert_hostname(orig_hostname, opt)
+        power_state = data["runtime.powerState"][0]
+        host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
+        if opt.host_pwr_display == "vm":
+            for vm_name in vms_by_hostsys.get(orig_hostname, []):
+                piggy_data.setdefault(vm_name, []).append(host_info)
+        else:
+            piggy_data.setdefault('', []).append(host_info)
+            if opt.host_pwr_display == "esxhost" and not opt.direct:
+                piggy_data.setdefault(used_hostname, []).append(host_info)
+
+    return _format_piggybacked_objects_sections(piggy_data)
+
+
 def _format_piggybacked_objects_sections(piggy_data):
     output = []
     for piggy_target, info in piggy_data.iteritems():
@@ -710,7 +744,7 @@ def write_output(lines, opt):
             sys.stdout.write(chunk)
 
     for line in lines:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
+        sys.stdout.write((line.encode("utf-8") if isinstance(line, six.text_type) else line) + "\n")
     sys.stdout.flush()
 
 
@@ -782,13 +816,6 @@ def get_section_systemtime(connection, opt):
         if opt.debug:
             raise
     return []
-
-
-def find_host(search_hostname, hostsystems_properties):
-    for vm_host_name, attributes in hostsystems_properties.items():
-        if attributes.get("name")[0] == search_hostname:
-            return vm_host_name
-    return None
 
 
 def is_placeholder_vm(devices):
@@ -957,7 +984,7 @@ def get_section_vm(vms):
     return section_lines
 
 
-def get_sections_clusters(connection, vm_esx_host):
+def get_sections_clusters(connection, vm_esx_host, opt):
     section_lines = []
     response = connection.query_server('datacenters')
     datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
@@ -976,10 +1003,10 @@ def get_sections_clusters(connection, vm_esx_host):
                 response)
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
+            cluster_vms = (convert_hostname(cvm, opt) for cvm in cluster_vms)
             section_lines += [
                 "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)),
-                "%s\tvms\t%s\t%s" %
-                (datacenter, cluster[1], "\t".join(map(convert_hostname, cluster_vms))),
+                "%s\tvms\t%s\t%s" % (datacenter, cluster[1], "\t".join(cluster_vms)),
             ]
 
     return section_lines
@@ -1036,40 +1063,14 @@ def fetch_data(connection, opt):
         vms, vm_esx_host = {}, {}
 
     if not opt.direct:
-        output += get_sections_clusters(connection, vm_esx_host)
+        output += get_sections_clusters(connection, vm_esx_host, opt)
 
     ###########################
     # Objects
     ###########################
     output += get_vm_power_states(vms, hostsystems, opt)
-
-    piggy_data = {}
-
-    if "hostsystem" in opt.modules and opt.host_pwr_display != "vm":  # handled later on..
-        override_hostname = opt.hostname if (opt.direct and opt.hostname) else None
-        for data in hostsystems_properties.itervalues():
-            used_hostname = override_hostname or convert_hostname(data["name"][0], opt)
-            power_state = data["runtime.powerState"][0]
-            host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
-            piggy_data.setdefault('', []).append(host_info)
-            if opt.host_pwr_display == "esxhost" and not opt.direct:
-                piggy_data.setdefault(used_hostname, []).append(host_info)
-
-    if ("hostsystem" in opt.modules and opt.host_pwr_display == "vm"):
-        for vm_name, vm_data in vms.iteritems():
-            runtime_host = vm_data.get("runtime.host")
-            running_on = hostsystems.get(runtime_host, runtime_host)
-            vm_host = find_host(running_on, hostsystems_properties)
-            if not vm_host:
-                continue
-
-            data = hostsystems_properties[vm_host]
-            used_hostname = running_on
-            power_state = data["runtime.powerState"][0]
-            vm_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
-            piggy_data.setdefault(vm_name, []).append(vm_info)
-
-    output += _format_piggybacked_objects_sections(piggy_data)
+    if "hostsystem" in opt.modules:
+        output += get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt)
 
     output += get_section_systemtime(connection, opt)
 
@@ -1111,7 +1112,7 @@ def main(argv=None):
     if opt.tracefile:
         tracefile_dir = os.path.dirname(opt.tracefile) or "."
         if os.path.exists(tracefile_dir):
-            opt.tracefile = file(opt.tracefile, "w")
+            opt.tracefile = open(opt.tracefile, "w")
         elif opt.debug:
             sys.stderr.write("Path for tracefile %s does not exist" % opt.tracefile)
             sys.stderr.flush()

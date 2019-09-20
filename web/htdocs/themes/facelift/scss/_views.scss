@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -81,7 +81,7 @@ div.floatfilter {
     width: 300px;
     height: 17px;
     padding: 3px 5px 0;
-    margin-bottom: 1px;
+    //margin-bottom: 1px;
     font-size: 10px;
     color: #fff;
     background-color: $floatfilter-bg-color;
@@ -91,7 +91,7 @@ div.floatfilter {
   .content {
     display: table-cell;
     width: 311px;
-    height: 30px;
+    //height: 30px;
     padding-top: 5px;
     padding-left: 4px;
     margin-top: 0;
@@ -116,7 +116,7 @@ div.floatfilter {
       }
 
       select {
-        width: 156px;
+        width: 150px;
         height: 66px;
       }
     }
@@ -138,7 +138,7 @@ div.floatfilter {
   }
 
   table.vs_duallist {
-    width: 313px;
+    width: 300px;
     border-spacing: 0px 3px !important;
 
     a.control {
@@ -154,6 +154,12 @@ div.floatfilter {
       margin-bottom: 0 !important;
     }
   }
+
+  &.invswpac_version, &.invswpac_package_version {
+    input.text {
+      margin-left: 4px;
+    }
+  }
 }
 
 .filterform > tbody > tr > td div.floatfilter {
@@ -166,17 +172,29 @@ div.floatfilter {
   background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   box-shadow: none;
+  box-sizing: border-box;
+
 
   &.single {
-    height: 50px;
+    height: 60px;
   }
 
   &.double {
-    height: 115px;
+    height: 125px;
 
     &.log_class .content, &.log_state .content {
       table {
 	border-spacing: 6px 0;
+
+	&.alertstatefilter {
+	  td {
+	    vertical-align: top;
+	  }
+
+	  .checkbox {
+	    margin: 3px 8px 0 0;
+	  }
+	}
       }
 
       .checkbox {
@@ -240,6 +258,15 @@ div.floatfilter {
       margin-left: 5px;
     }
 
+    .radiobutton_group{
+
+      &:first-child{
+        input[type=radio] {
+          margin-left: 0;
+        }
+      }
+    }
+
     .valuespec_tuple {
       width: 100%;
       border-spacing: 2px 2px;
@@ -280,13 +307,13 @@ div.floatfilter {
 
   /* TODO: Get rid of this important style */
   &.single > div.content > span.select2 {
-    width: 310px !important;
+    width: 100% !important;
   }
 
   &.single input.neg[type=text] {
     position: relative;
     top: -3px;
-    width: 222px;
+    width: 200px;
   }
 }
 
@@ -307,14 +334,6 @@ table.valuespec_listof.filter {
       width: 1px;
       vertical-align: top;
       border-style: none;
-
-      img {
-        position: relative;
-        top: 2px;
-        left: -28px;
-        width: 16px;
-        height: 16px;
-      }
     }
   }
 }
@@ -330,10 +349,13 @@ table.nform table.valuespec_listof {
     vertical-align: middle;
   }
 
+  .vlof_content, .vlof_buttons {
+    border-bottom: 1px solid $nform-vlof-border-color;
+  }
+
   .vlof_content {
     padding: 8px 0;
     vertical-align: top;
-    border-bottom: 1px solid $theme-color-table-border;
 
     .valuespec_tuple {
       border-spacing: 8px;
@@ -347,10 +369,9 @@ table.nform table.valuespec_listof {
 
   .vlof_buttons {
     width: 1px;
-    padding-top: 8px;
-    padding-bottom: 32px;
+    padding-top: 14px;
+    padding-bottom: 26px;
     vertical-align: middle;
-    border-bottom: 1px solid $theme-color-table-border;
   }
 
   &.filter {
@@ -394,13 +415,15 @@ div.optiondial {
   &, &.num_columns, &.refresh {
     top: 0;
     width: 80.5px;
-    height: 26px;
+    height: 28px;
     margin-right: 5px;
     margin-bottom: 5px;
     color: $theme-color-text;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     box-shadow: none;
+    box-sizing: border-box;
+
 
     div {
       padding: 0;
@@ -429,7 +452,7 @@ div.optiondial {
 
   &.refresh {
     margin-left: -6px;
-    border-radius: $optiondial-refresh-border-radius;
+    border-radius: $last-child-border-radius;
   }
 
   div {
@@ -563,6 +586,11 @@ table.data.tiled td.tiles {
         &.states {
           border-radius: $theme-border-radius;
         }
+
+	&.center {
+	  white-space: break-spaces;
+	  word-wrap: anywhere;
+	}
       }
     }
 
@@ -596,8 +624,32 @@ table.data.single {
 
     td.left {
       width: 10%;
-      padding-right: 20px;
+      padding: $td-single-left-padding;
       white-space: nowrap;
+    }
+
+    td.invtree table {
+      margin: 8px 0 12px;
+      border: 1px solid $theme-color-table-border;
+      box-shadow: none;
+
+      th, td {
+	height: 14px;
+	padding: 2px 6px;
+	background-color: $invtree-td-bg-color;
+	border: 1px solid $theme-color-table-border;
+      }
+
+      th {
+	color: $theme-color-text;
+	background-color: $invtree-th-bg-color;
+      }
+    }
+
+    &.odd0, &.even0 {
+      .state, .svcstate:not(.statex), .badflag {
+	padding-left: 16px;
+      }
     }
   }
 
@@ -613,6 +665,10 @@ table.data.single {
       border-right: $td-single-left-border-right;
       transition: .15s ease-in-out;
     }
+
+    &.perfometer {
+      padding-right: 0;
+    }
   }
 
   td {
@@ -625,6 +681,12 @@ table.data.single {
     &.perfometer div.glass {
       width: 100%;
     }
+
+    /* Make td class of invtree more specific, when shown in single dataset mode */
+    /* td.data.single td.invtree td.number { */
+    &.invtree td.number {
+      text-align: right;
+    }
   }
 }
 
@@ -636,7 +698,7 @@ table.data.matrix {
     > td {
       padding: 8px;
       border: 1px solid $theme-color-table-border;
-      border-left: 0 solid;
+      border-left: none;
 
       &.left {
         font-weight: $theme-font-weight-bold;
@@ -651,10 +713,6 @@ table.data.matrix {
           padding: 0;
         }
       }
-    }
-
-    &:hover td.left {
-      background-color: $theme-color-table-background;
     }
 
     &:first-child {
@@ -797,6 +855,8 @@ table.views {
 /* Availability */
 table.data.availability {
   width: 100%;
+  border: $availability-data-table-border;
+  box-shadow: $availability-data-table-box-shadow;
 
   td.number {
     width: 60px;
@@ -804,27 +864,26 @@ table.data.availability {
 
   td.unused {
     color: #888;
-    text-shadow: 1px 1px 0.5px #fff;
   }
 
-  tr.summary {
-    background-color: #bbb;
-
-    td {
-      padding-top: 1px;
-      padding-bottom: 1px;
-      font-weight: bold;
-      border-top: 1px solid $theme-color-table-border;
-      border-bottom-style: none;
-    }
-  }
-
-  td.number.stats, tr.odd0 td.number:not(.unused) {
-    opacity: .7;
+  tr.summary td {
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-weight: bold;
+    border-top: 1px solid $theme-color-table-border;
+    border-bottom-style: none;
   }
 
   tr.odd0 td.number.stats {
     opacity: .5;
+  }
+
+  td {
+    border-color: $theme-color-table-border !important;
+  }
+
+  th {
+    background: $availability-data-th-bg-color;
   }
 }
 
@@ -834,16 +893,26 @@ table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.st
 table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
   background-color: #0af;
 }
-table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
-  color: #fff;
-  background-color: #048;
+table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
+  color: $white;
+  background-color: $hostdown-bg-color;
 }
 
-table.data td.unmonitored,
+table.data tr.data td.unmonitored,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored {
-  color: #888;
-  background-color: #cacaca;
+  color: $unmonitored-font-color;
+  background-color: $unmonitored-bg-color;
+}
+
+table.data.availability tr.even0 td {
+  &.unmonitored {
+    background-color: $lightened-unmonitored-bg-color;
+  }
+
+  &.hostdown {
+    background-color: $lightened-hostdown-bg-color;
+  }
 }
 
 table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
@@ -886,7 +955,6 @@ table.timeline {
   &.standalone {
     width: 800px;
     margin-bottom: 20px;
-    box-shadow: 0 0 1px #ccf;
   }
 
   &.inline {
@@ -899,10 +967,9 @@ table.timeline {
     padding: 0;
     border-style: none;
 
-    &.hilite {
+    &.hilite, &.hilite.state2 {
       padding: 0;
-      background-color: #0091b6;
-      border-style: none;
+      border: $timeline-hilite-border;
       filter: brightness(80%);
     }
 
@@ -947,12 +1014,24 @@ div.timelinerange {
 
 table.timelineevents {
   width: 800px;
+  border: $wato-data-table-border;
+  box-shadow: $wato-data-table-box-shadow;
+
+  th{
+    background: $timelineevents-data-th-bg-color;
+  }
 }
 
-/* #TODO: Reproduce this html element */
 table.data.oddeven.timelineevents > tbody > tr.hilite {
-  color: #fff;
-  background-color: #6ab;
+  filter: $timetable-hilite-filter;
+
+  &[class*="even"] {
+    background-color: $timetable-hilite-even-bg-color;
+  }
+
+  &[class*="odd"] {
+    background-color: $timetable-hilite-odd-bg-color;
+  }
 }
 
 .timelinerange .from, .timelinerange .until {
@@ -1077,32 +1156,6 @@ td.invtree span.invnew, span.invnew table.data {
   color: #00bf00;
 }
 
-table.data.single {
-  tr.data td.invtree table {
-    margin: 8px 0 12px;
-    border: 1px solid $theme-color-table-border;
-    box-shadow: none;
-
-    th, td {
-      height: 14px;
-      padding: 2px 4px;
-      background-color: $primary-td-bg-color;
-      border: 1px solid $theme-color-table-border;
-    }
-
-    th {
-      color: $theme-color-text;
-      background-color: $primary-th-bg-color;
-    }
-  }
-
-  /* Make td class of invtree more specific, when shown in single dataset mode */
-  /* td.data.single td.invtree td.number { */
-  td.invtree td.number {
-    text-align: right;
-  }
-}
-
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
 div.invtablelink {
   position: absolute;
@@ -1119,6 +1172,7 @@ td.if_state {
 table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
+    color: $if-state-up-font-color;
     background-color: $theme-color-state-success-background;
   }
 
@@ -1408,5 +1462,29 @@ table.agents tbody > tr.data > td {
   &.agent_config {
     line-height: normal;
     vertical-align: middle;
+  }
+}
+
+td.agent_config table.rulesets td {
+  vertical-align: top;
+
+  table {
+    border: none solid;
+    box-shadow: none;
+
+    td {
+      padding: 4px 8px;
+      vertical-align: top;
+
+      td.title {
+        height: auto;
+        color: $primary-font-color;
+        background-color: $agent-config-inner-title-bg-color;
+      }
+
+      table tbody tr td {
+        padding: 1px 6px;
+      }
+    }
   }
 }

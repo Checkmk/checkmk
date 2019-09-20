@@ -28,6 +28,7 @@
 import re
 import abc
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
@@ -64,9 +65,7 @@ def _validate_tag_id(tag_id):
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-class ABCTag(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(ABCTag, self).__init__()
         self._initialize()
@@ -170,10 +169,16 @@ class AuxTagList(object):
         for aux_tag in self._tags:
             aux_tag.validate()
 
-            builtin_config = BuiltinTagConfig()
-            if builtin_config.aux_tag_list.exists(aux_tag.id):
-                raise MKGeneralException(
-                    _("You can not override the builtin auxiliary tag \"%s\".") % aux_tag.id)
+            # Tag groups were made builtin with ~1.4. Previously users could modify
+            # these groups.  These users now have the modified tag groups in their
+            # user configuration and should be able to cleanup this using the GUI
+            # for the moment.
+            # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
+            # Then we can re-enable this consistency check.
+            #builtin_config = BuiltinTagConfig()
+            #if builtin_config.aux_tag_list.exists(aux_tag.id):
+            #    raise MKGeneralException(
+            #        _("You can not override the builtin auxiliary tag \"%s\".") % aux_tag.id)
 
             if aux_tag.id in seen:
                 raise MKGeneralException(_("Duplicate tag ID \"%s\" in auxilary tags") % aux_tag.id)
@@ -486,10 +491,16 @@ class TagConfig(object):
             raise MKGeneralException(
                 _("The tag group \"%s\" is reserved for internal use.") % tag_group.id)
 
-        builtin_config = BuiltinTagConfig()
-        if builtin_config.tag_group_exists(tag_group.id):
-            raise MKGeneralException(
-                _("You can not override the builtin tag group \"%s\".") % tag_group.id)
+        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # these groups.  These users now have the modified tag groups in their
+        # user configuration and should be able to cleanup this using the GUI
+        # for the moment.
+        # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
+        # Then we can re-enable this consistency check.
+        #builtin_config = BuiltinTagConfig()
+        #if builtin_config.tag_group_exists(tag_group.id):
+        #    raise MKGeneralException(
+        #        _("You can not override the builtin tag group \"%s\".") % tag_group.id)
 
         if not tag_group.title:
             raise MKGeneralException(

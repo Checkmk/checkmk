@@ -30,20 +30,22 @@ import json
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import tmp_dir
 
-from cmk_base.config import piggyback_max_cachefile_age
+import cmk_base.config as config
 from cmk_base.piggyback import get_piggyback_raw_data
 
 from .abstract import CheckMKAgentDataSource
 
 
-def _raw_data(name):
-    return get_piggyback_raw_data(piggyback_max_cachefile_age, name)
+def _raw_data(hostname, time_settings):
+    return get_piggyback_raw_data(hostname, time_settings)
 
 
 class PiggyBackDataSource(CheckMKAgentDataSource):
     def __init__(self, hostname, ipaddress):
         super(PiggyBackDataSource, self).__init__(hostname, ipaddress)
-        self._source_hostnames = set()
+        self._processed_file_reasons = set()
+        self._time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings(
+            piggybacked_hostname=self._hostname)
 
     def id(self):
         return "piggyback"
@@ -53,14 +55,25 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
         return "Process piggyback data from %s" % path
 
     def _execute(self):
-        entries = _raw_data(self._hostname) + _raw_data(self._ipaddress)
+        raw_data_from_sources = _raw_data(self._hostname, self._time_settings)\
+                                + _raw_data(self._ipaddress, self._time_settings)
 
         raw_data = ""
-        for source_hostname, source_raw_data in entries:
-            self._source_hostnames.add(source_hostname)
-            raw_data += source_raw_data
+        for source_raw_data in raw_data_from_sources:
+            self._processed_file_reasons.add(
+                (source_raw_data.reason_status, source_raw_data.reason))
+            if source_raw_data.successfully_processed:
+                # !! Important for Check_MK and Check_MK Discovery service !!
+                #   - raw_data_from_sources contains ALL file infos and is not filtered
+                #     in cmk_base/piggyback.py as in previous versions
+                #   - Check_MK gets the processed file info reasons and displays them in
+                #     it's service details
+                #   - Check_MK Discovery: Only shows vanished/new/... if raw data is not
+                #     added; ie. if file_info is not successfully processed
+                raw_data += source_raw_data.raw_data
 
-        return raw_data + self._get_source_labels_section(self._source_hostnames)
+        return raw_data + self._get_source_labels_section(
+            [source_raw_data.source_hostname for source_raw_data in raw_data_from_sources])
 
     def _get_source_labels_section(self, source_hostnames):
         """Return a <<<labels>>> agent section which adds the piggyback sources
@@ -84,9 +97,14 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
         Return only summary information in case there is piggyback data"""
 
-        if self._host_sections and self._host_sections.sections:
-            output = "Processed from: %s" % ", ".join(self._source_hostnames)
-        else:
-            output = ""
+        if not for_checking:
+            # Check_MK Discovery: Do not display information about piggyback files
+            # and source status file
+            return 0, '', []
 
-        return 0, output, []
+        states = [0]
+        infotexts = []
+        for reason_status, reason in self._processed_file_reasons:
+            states.append(reason_status)
+            infotexts.append(reason)
+        return max(states), ", ".join(infotexts), []

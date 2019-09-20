@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -82,7 +82,7 @@ body {
   }
 
   &.main {
-    padding: 68px 16px 60px;
+    padding: $main-body-padding;
     margin: 0;
     font-family: $theme-font;
     font-size: $theme-font-size-main;
@@ -405,7 +405,7 @@ div.contextlink {
   }
 
   &.hot a {
-    color: $hot-color;
+    color: $hot-font-color;
     background-color: $hot-bg-color;
     border-color: $theme-color-nuance-16;
   }
@@ -480,6 +480,7 @@ div.togglebutton {
 '-------------------------------------------------------------------------*/
 
 #data_container {
+  min-width: min-content;
   padding: 10px;
   background: $data-container-bg-color;
   border: $data-container-border;
@@ -522,7 +523,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $primary-font-color;
+      color: $primary-hover-font-color;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -552,6 +553,10 @@ table.data {
       font-family: sans-serif;
       font-weight: bold;
       text-align: right;
+
+      &[class*="state"] {
+        border-color: $data-table-td-count-state-border-color;
+      }
     }
 
     &.number {
@@ -569,7 +574,6 @@ table.data {
 
     &.unused {
       color: #888;
-      text-shadow: 1px 1px 0.5px #fff;
     }
 
     &:not(.state) {
@@ -610,14 +614,14 @@ table.data {
       &:first-child {
         border-radius: $first-child-border-radius;
 
-	&:not(.state):not(.gap):not(.bulksearch) {
+	&:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
 	  border-left: 1px solid $theme-color-table-border;
 	}
       }
 
       &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
-        border-radius: 0 4px 4px 0;
+        border-radius: $table-cell-last-child-border-radius;
       }
 
       &:only-child {
@@ -627,6 +631,10 @@ table.data {
 
       a {
 	color: $secondary-font-color;
+
+	&:hover {
+	  color: $primary-hover-font-color;
+	}
       }
 
       &:not(.gap):not(.last_col) {
@@ -635,8 +643,8 @@ table.data {
       }
 
       &.state {
-	border-top: $data-table-state-border-top !important;
-	border-bottom: $data-table-state-border-bottom !important;
+	border-top: $data-table-state-border-top;
+	border-bottom: $data-table-state-border-bottom;
       }
 
       &:not(.state) {
@@ -935,7 +943,7 @@ table.data.headerleft {
       vertical-align: top;
       background: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;
-      border-bottom: none;
+      border-bottom: $table-headerleft-border-bottom;
       border-left: 1px solid $theme-color-table-border;
       border-radius: 0;
     }
@@ -950,7 +958,7 @@ table.data.headerleft {
     border-right: 1px solid $theme-color-table-border;
 
     &.nowiki p {
-        margin: 0;
+      margin: 0;
     }
   }
 
@@ -981,6 +989,10 @@ select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
+
+  &:focus, &:active {
+    box-shadow: 0 0 1px $input-focus-box-shadow-color inset;
+  }
 }
 
 span.select2 .select2-selection {
@@ -1126,7 +1138,7 @@ table.nform {
     background-image: none;
   }
 
-  tr.closed {
+  tbody.closed {
     display: none;
   }
 
@@ -1168,7 +1180,7 @@ table.nform {
     }
   }
 
-  tr.open td.legend {
+  tr td.legend {
     width: 320px;
     min-width: 320px;
     padding-right: 8px;
@@ -1259,7 +1271,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: #e5e5e5;
+    background-color: $nform-table-hr-color;
   }
 
   .ruleset {
@@ -1311,12 +1323,16 @@ div.really, div.success, div.error, div.message, div.warning {
   }
 }
 
-// TODO: Check whether this must be $primary-font-color as is for .really and .success
+// TODO: Check whether this must be $primary-font-color as is for .success
 div.message {
   color: #000;
 }
 
-div.really, div.success {
+div.really {
+  color: $black;
+}
+
+div.success {
   color: $primary-font-color;
 }
 
@@ -1356,7 +1372,7 @@ div.help {
   font-weight: normal;
   color: #000;
   text-align: left;
-  background-color: #ffc;
+  background-color: $help-bg-color;
   background-image: none;
   border-radius: 5px;
   box-shadow: none;
@@ -1372,8 +1388,8 @@ div.help {
     content: "i";
   }
 
-  a {
-    color: $theme-color-text;
+  a, a:link {
+    color: $help-link-color;
 
     &:hover {
       text-decoration: none;
@@ -1504,7 +1520,7 @@ body.main .popup_menu span {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid $nform-table-hr-color;
   }
 
   li {
@@ -1515,7 +1531,6 @@ body.main .popup_menu span {
       height: 21px;
       padding: 0 5px;
       line-height: 21px;
-      border-right: 1px solid #fff;
 
       &:hover {
         color: #fff;
@@ -1525,7 +1540,7 @@ body.main .popup_menu span {
     }
 
     &.active a {
-      color: #000;
+      color: $primary-font-color;
       border-bottom: 1px solid #508aa1;
     }
   }
@@ -1655,6 +1670,7 @@ a.element_dragger {
 
 .dragging {
   cursor: move;
+  background-color: $dragging-bg-color;
   transform: scale(1.005);
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
   -webkit-transform: scale(1.005);
@@ -1711,28 +1727,50 @@ div.popup_trigger {
 
   img.iconbutton {
     padding: 0;
+    filter: $iconbutton-filter;
+  }
+
+  &[id*="popup_trigger_move"] img.iconbutton {
+    filter: none;
   }
 }
 
-div.pnp_graph a.popup_trigger {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: block;
-  width: 20px;
-  height: 20px;
-  background-image: url("images/icon_menu.png");
-  background-size: contain;
+div.pnp_graph a {
+  &.popup_trigger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url("images/icon_menu.png");
+    background-size: contain;
 
-  &:hover {
-    cursor: pointer;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  img {
+    filter: $pnp4nagios-img-filter;
   }
 }
 
-tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
-  margin: 0;
-  border: none;
-  box-shadow: none;
+table.data tr.data td.pnpgraph {
+  padding: 0;
+
+  div.pnp_graph > a {
+    > img {
+      margin: 4px;
+      border: 1px solid $pnp-graph-img-border-color;
+    }
+
+    &.popup_trigger > img.icon {
+      margin: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
 }
 
 td.job_state {
@@ -1815,6 +1853,14 @@ table.data.job_table {
     display: none;
   }
 
+  &__input::before {
+    color: inherit;
+  }
+
+  &__input:not(:empty)::before {
+    content: none;
+  }
+
   &[readonly] {
     tag > div {
       padding: $tag-padding;
@@ -1843,20 +1889,25 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      opacity: 0.5;
+      opacity: $tag-hover-opacity;
       box-shadow: none;
     }
   }
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before {
-      background: #cccfdb;
+    > div::before, &:hover > div::before {
+      background: $tag-input-bg-color;
+      opacity: 1;
     }
 
     > div {
       color: #000;
     }
+  }
+
+  &__tag-text {
+    color: $tag-dropdown-active-color;
   }
 
   tag, &[readonly] tag {
@@ -1865,21 +1916,19 @@ table.data.job_table {
       right: 0;
       bottom: 0;
       left: 0;
-      background: $tag-bg-color;
+      background: #00a8b5;
+      opacity: $tag-opacity;
       box-shadow: none;
       animation: none;
     }
 
-    &.explicit > div::before {
+    &.explicit > div::before ,
+    &.discovered > div::before {
       background: #774898;
     }
 
     &.ruleset > div::before {
       background: #de4383;
-    }
-
-    &.discovered > div::before {
-      background: #f3ae4b;
     }
   }
 
@@ -1890,9 +1939,25 @@ table.data.job_table {
   a tag {
     cursor: pointer;
   }
+
+  &__dropdown {
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    &__item {
+      margin: 1px;
+
+      &--active {
+	color: $tag-dropdown-active-color;
+	background-color: $tag-dropdown-active-bg-color;
+	border: $primary-table-border;
+      }
+    }
+  }
 }
 
 .tagify.display[readonly] tag {
-    padding: 1px 0px;
-    margin: 0px 0px;
+  padding: 1px 0;
+  margin: 0;
 }

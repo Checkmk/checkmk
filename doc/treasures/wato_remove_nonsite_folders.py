@@ -65,7 +65,7 @@ def remove_nonrelated_site_folders(effective_hosts):
     # look in the logfile
     do_remove_folders = False
 
-    logfile = file(os.path.expanduser("~/var/log/remove_site_folders.log"), "w")
+    logfile = open(os.path.expanduser("~/var/log/remove_site_folders.log"), "w")
 
     def log_info(info):
         logfile.write(info + "\n")

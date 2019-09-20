@@ -278,7 +278,7 @@ class SnapshotCreationBase(object):
                       "Unsupported custom snapshot component: %s.") % str(component))
 
         # Simply compute the checksum of the sitespecific.mk
-        return hashlib.md5(file(
+        return hashlib.md5(open(
             parsed_custom_components.components[0].configured_path).read()).hexdigest()
 
 

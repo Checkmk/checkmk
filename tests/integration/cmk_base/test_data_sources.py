@@ -53,7 +53,7 @@ def test_cfg(web, site):
     for h in ["ds-test-host1", "ds-test-host2", "ds-test-node1", "ds-test-node2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % h,
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
     web.activate_changes()

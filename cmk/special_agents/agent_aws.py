@@ -39,6 +39,8 @@ from typing import (  # pylint: disable=unused-import
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
+import six
+
 from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
 from cmk.special_agents.utils import (
@@ -139,7 +141,6 @@ AWSStrings = Union[bytes, unicode]
 #   |       |_|  \___/|_|    |_|_| |_| |_| .__/ \___/|_|   \__|___/        |
 #   |                                    |_|                               |
 #   '----------------------------------------------------------------------'
-
 #   .--regions--------------------------------------------------------------
 
 AWSRegions = [
@@ -446,6 +447,7 @@ AWSEC2LimitsSpecial = {
 }
 
 #.
+#.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -462,7 +464,16 @@ def _chunks(list_, length=100):
 
 def _get_ec2_piggyback_hostname(inst, region):
     # PrivateIpAddress and InstanceId is available although the instance is stopped
-    return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
+    # When we terminate an instance, the instance gets the state "terminated":
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
+    # The instance remains in this state about 60 minutes, after 60 minutes the
+    # instance is no longer visible in the console.
+    # In this case we do not deliever any data for this piggybacked host such that
+    # the services go stable and Check_MK service reports "CRIT - Got not information".
+    try:
+        return u"%s-%s-%s" % (inst['PrivateIpAddress'], region, inst['InstanceId'])
+    except KeyError:
+        return
 
 
 #.
@@ -539,9 +550,7 @@ AWSComputedContent = NamedTuple("AWSComputedContent", [
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
-class AWSSection(DataCache):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
     def __init__(self, client, region, config, distributor=None):
         cache_dir = AWSCacheFilePath / region / config.hostname
         super(AWSSection, self).__init__(cache_dir, self.name)
@@ -711,9 +720,7 @@ class AWSSection(DataCache):
         return prepared_tags
 
 
-class AWSSectionLimits(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionLimits(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def __init__(self, client, region, config, distributor=None):
         super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
         self._limits = {}
@@ -734,9 +741,7 @@ class AWSSectionLimits(AWSSection):
         ]
 
 
-class AWSSectionLabels(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionLabels(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def _create_results(self, computed_content):
         assert isinstance(
             computed_content.content,
@@ -752,13 +757,11 @@ class AWSSectionLabels(AWSSection):
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
-class AWSSectionGeneric(AWSSection):
-    __metaclass__ = abc.ABCMeta
+class AWSSectionGeneric(six.with_metaclass(abc.ABCMeta, AWSSection)):
+    pass
 
 
-class AWSSectionCloudwatch(AWSSection):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSectionCloudwatch(six.with_metaclass(abc.ABCMeta, AWSSection)):
     def get_live_data(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
@@ -1037,6 +1040,8 @@ class EC2Limits(AWSSectionLimits):
             if inst is None:
                 continue
             inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if not inst_id:
+                continue
             key = (inst_id, vpc_id)
             sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
@@ -1070,8 +1075,11 @@ class EC2Limits(AWSSectionLimits):
             inst = self._get_inst_assignment(instances, 'VpcId', iface.get('VpcId'))
             if inst is None:
                 continue
+            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if not inst_id:
+                continue
             self._add_limit(
-                _get_ec2_piggyback_hostname(inst, self._region),
+                inst_id,
                 AWSLimit(
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s" %
@@ -1189,7 +1197,12 @@ class EC2Summary(AWSSectionGeneric):
                                   raw_content.cache_timestamp)
 
     def _format_instances(self, instances):
-        return {_get_ec2_piggyback_hostname(inst, self._region): inst for inst in instances}
+        formatted_instances = {}
+        for inst in instances:
+            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            if inst_id:
+                formatted_instances[inst_id] = inst
+        return formatted_instances
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content.values())]
@@ -2976,9 +2989,7 @@ class CloudwatchAlarms(AWSSectionGeneric):
 #   '----------------------------------------------------------------------'
 
 
-class AWSSections(object):
-    __metaclass__ = abc.ABCMeta
-
+class AWSSections(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, hostname, session, debug=False):
         self._hostname = hostname
         self._session = session
@@ -3194,8 +3205,8 @@ class AWSSectionsGeneric(AWSSections):
         elb_health = ELBHealth(elb_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
 
-        elbv2_labels = ELBLabelsGeneric(elb_client, region, config, resource='elbv2')
-        elbv2_target_groups = ELBv2TargetGroups(elb_client, region, config)
+        elbv2_labels = ELBLabelsGeneric(elbv2_client, region, config, resource='elbv2')
+        elbv2_target_groups = ELBv2TargetGroups(elbv2_client, region, config)
         elbv2_application = ELBv2Application(cloudwatch_client, region, config)
         elbv2_network = ELBv2Network(cloudwatch_client, region, config)
 

@@ -32,61 +32,49 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVeritasVcs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_veritas_vcs():
+    return Dictionary(elements=[
+        ("map_states",
+         Dictionary(
+             title=_("Map Attribute 'State'"),
+             elements=[
+                 ("ONLINE", MonitoringState(title=_("ONLINE"), default_value=0)),
+                 ("RUNNING", MonitoringState(title=_("RUNNING"), default_value=0)),
+                 ("OK", MonitoringState(title=_("OK"), default_value=0)),
+                 ("OFFLINE", MonitoringState(title=_("OFFLINE"), default_value=1)),
+                 ("EXITED", MonitoringState(title=_("EXITED"), default_value=1)),
+                 ("PARTIAL", MonitoringState(title=_("PARTIAL"), default_value=1)),
+                 ("FAULTED", MonitoringState(title=_("FAULTED"), default_value=2)),
+                 ("UNKNOWN", MonitoringState(title=_("UNKNOWN"), default_value=3)),
+                 ("default", MonitoringState(title=_("States other than the above"),
+                                             default_value=1)),
+             ],
+             optional_keys=False,
+         )),
+        ("map_frozen",
+         Dictionary(
+             title=_("Map Attribute 'Frozen'"),
+             elements=[
+                 ("tfrozen", MonitoringState(title=_("Temporarily frozen"), default_value=1)),
+                 ("frozen", MonitoringState(title=_("Frozen"), default_value=2)),
+             ],
+             optional_keys=False,
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "veritas_vcs"
 
-    @property
-    def title(self):
-        return _("Veritas Cluster Server")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Cluster Name"))
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("map_states",
-             Dictionary(
-                 title=_("Map Attribute 'State'"),
-                 elements=[
-                     ("ONLINE", MonitoringState(title=_("ONLINE"), default_value=0)),
-                     ("RUNNING", MonitoringState(title=_("RUNNING"), default_value=0)),
-                     ("OK", MonitoringState(title=_("OK"), default_value=0)),
-                     ("OFFLINE", MonitoringState(title=_("OFFLINE"), default_value=1)),
-                     ("EXITED", MonitoringState(title=_("EXITED"), default_value=1)),
-                     ("PARTIAL", MonitoringState(title=_("PARTIAL"), default_value=1)),
-                     ("FAULTED", MonitoringState(title=_("FAULTED"), default_value=2)),
-                     ("UNKNOWN", MonitoringState(title=_("UNKNOWN"), default_value=3)),
-                     ("default",
-                      MonitoringState(title=_("States other than the above"), default_value=1)),
-                 ],
-                 optional_keys=False,
-             )),
-            ("map_frozen",
-             Dictionary(
-                 title=_("Map Attribute 'Frozen'"),
-                 elements=[
-                     ("tfrozen", MonitoringState(title=_("Temporarily frozen"), default_value=1)),
-                     ("frozen", MonitoringState(title=_("Frozen"), default_value=2)),
-                 ],
-                 optional_keys=False,
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="veritas_vcs",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Cluster Name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_veritas_vcs,
+        title=lambda: _("Veritas Cluster Server"),
+    ))

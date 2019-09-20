@@ -143,6 +143,7 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
     ("show_checkboxes", bool),
     ("show_parameters", bool),
     ("show_discovered_labels", bool),
+    ("show_plugin_names", bool),
     ("ignore_errors", bool),
 ])
 
@@ -191,15 +192,16 @@ class ModeDiscovery(WatoMode):
         else:
             show_checkboxes = False
 
-        show_parameters = not config.user.load_file("parameter_column", False)
-        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
-                                                           False)
+        show_parameters = config.user.load_file("parameter_column", False)
+        show_discovered_labels = config.user.load_file("discovery_show_discovered_labels", False)
+        show_plugin_names = config.user.load_file("discovery_show_plugin_names", False)
 
         self._options = DiscoveryOptions(
             action=action,
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
             show_discovered_labels=show_discovered_labels,
+            show_plugin_names=show_plugin_names,
             # Continue discovery even when one discovery function raises an exception. The detail
             # output will show which discovery function failed. This is better than failing the
             # whole discovery.
@@ -687,15 +689,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if show_checkboxes != self._options.show_checkboxes:
             config.user.save_file("discovery_checkboxes", self._options.show_checkboxes)
 
-        show_parameters = not config.user.load_file("parameter_column", False)
+        show_parameters = config.user.load_file("parameter_column", False)
         if show_parameters != self._options.show_parameters:
-            config.user.save_file("parameter_column", not self._options.show_parameters)
+            config.user.save_file("parameter_column", self._options.show_parameters)
 
-        show_discovered_labels = not config.user.load_file("discovery_show_discovered_labels",
-                                                           False)
+        show_discovered_labels = config.user.load_file("discovery_show_discovered_labels", False)
         if show_discovered_labels != self._options.show_discovered_labels:
             config.user.save_file("discovery_show_discovered_labels",
-                                  not self._options.show_discovered_labels)
+                                  self._options.show_discovered_labels)
+
+        show_plugin_names = config.user.load_file("discovery_plugin_names", False)
+        if show_plugin_names != self._options.show_plugin_names:
+            config.user.save_file("discovery_show_plugin_names", self._options.show_plugin_names)
 
     def _handle_action(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> DiscoveryResult
@@ -1009,10 +1014,12 @@ class DiscoveryPageRenderer(object):
     def _show_discovery_details(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
         if not discovery_result.check_table and self._is_active(discovery_result):
+            html.br()
             html.show_info(_("Discovered no service yet."))
             return
 
         if not discovery_result.check_table and self._host.is_cluster():
+            html.br()
             url = watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                                   ("varname", "clustered_services")])
             html.show_info(
@@ -1086,6 +1093,7 @@ class DiscoveryPageRenderer(object):
         if not config.user.may("wato.services"):
             return
 
+        html.open_div(class_="action_buttons")
         fixall = 0
         already_has_services = False
         for check in discovery_result.check_table:
@@ -1093,16 +1101,6 @@ class DiscoveryPageRenderer(object):
                 already_has_services = True
             if check[0] in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
                 fixall += 1
-
-        if discovery_result.host_labels:
-            update_host_labels_options = self._options._replace(
-                action=DiscoveryAction.UPDATE_HOST_LABELS)
-            html.jsbutton(
-                "update_host_labels",
-                _("Update host labels"),
-                self._start_js_call(update_host_labels_options),
-                disabled=self._is_active(discovery_result),
-            )
 
         # TODO: Add correct permission checking
         if fixall >= 1:
@@ -1135,18 +1133,38 @@ class DiscoveryPageRenderer(object):
             disabled=self._is_active(discovery_result),
         )
 
+        if discovery_result.host_labels or self._is_active(discovery_result):
+            self._show_button_spacer()
+
+            if discovery_result.host_labels:
+                update_host_labels_options = self._options._replace(
+                    action=DiscoveryAction.UPDATE_HOST_LABELS)
+                html.jsbutton(
+                    "update_host_labels",
+                    _("Update host labels"),
+                    self._start_js_call(update_host_labels_options),
+                    disabled=self._is_active(discovery_result),
+                )
+
+            if self._is_active(discovery_result):
+                stop_options = self._options._replace(action=DiscoveryAction.STOP)
+                html.jsbutton(
+                    "stop",
+                    _("Stop job"),
+                    self._start_js_call(stop_options),
+                )
+
         if already_has_services:
+            self._show_button_spacer()
             self._show_checkbox_button(discovery_result)
             self._show_parameters_button(discovery_result)
             self._show_discovered_labels_button(discovery_result)
+            self._show_plugin_names_button(discovery_result)
 
-        if self._is_active(discovery_result):
-            stop_options = self._options._replace(action=DiscoveryAction.STOP)
-            html.jsbutton(
-                "stop",
-                _("Stop job"),
-                self._start_js_call(stop_options),
-            )
+        html.close_div()
+
+    def _show_button_spacer(self):
+        html.div("", class_=["button_spacer"])
 
     def _show_checkbox_button(self, discovery_result):
         # type: (DiscoveryResult) -> None
@@ -1191,6 +1209,22 @@ class DiscoveryPageRenderer(object):
 
         html.jsbutton(
             "show_discovered_labels",
+            params_title,
+            self._start_js_call(params_options),
+            disabled=self._is_active(discovery_result),
+        )
+
+    def _show_plugin_names_button(self, discovery_result):
+        # type: (DiscoveryResult) -> None
+        if self._options.show_plugin_names:
+            params_options = self._options._replace(show_plugin_names=False)
+            params_title = _("Hide plugin names")
+        else:
+            params_options = self._options._replace(show_plugin_names=True)
+            params_title = _("Show plugin names")
+
+        html.jsbutton(
+            "show_plugin_names",
             params_title,
             self._start_js_call(params_options),
             disabled=self._is_active(discovery_result),
@@ -1268,6 +1302,8 @@ class DiscoveryPageRenderer(object):
             colspan += 1
         if self._options.show_checkboxes:
             colspan += 1
+        if self._options.show_plugin_names:
+            colspan += 1
         return colspan
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
@@ -1299,7 +1335,9 @@ class DiscoveryPageRenderer(object):
             ctype = check_type
         manpage_url = watolib.folder_preserving_link([("mode", "check_manpage"),
                                                       ("check_type", ctype)])
-        table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
+
+        if self._options.show_plugin_names:
+            table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
 
         if self._options.show_parameters:
             table.cell(_("Check parameters"))
@@ -1316,7 +1354,10 @@ class DiscoveryPageRenderer(object):
                 DiscoveryState.CUSTOM_IGNORED,
                 DiscoveryState.ACTIVE_IGNORED,
         ]:
-            html.write_text(output)
+            # Do not show long output
+            service_details = output.split("\n", 1)
+            if service_details:
+                html.write_text(service_details[0])
             return
 
         div_id = "activecheck_%s" % descr
@@ -1335,7 +1376,7 @@ class DiscoveryPageRenderer(object):
         if not varname or varname not in rulespec_registry:
             return
 
-        rulespec = rulespec_registry[varname]()
+        rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text(

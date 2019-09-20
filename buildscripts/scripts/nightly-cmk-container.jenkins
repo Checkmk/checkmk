@@ -10,17 +10,8 @@ properties([
   ])
 ])
 
-def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
-def date = new Date()
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERS = ''
-if(BRANCH == 'master' && VERSION == 'daily') {
-    CMK_VERS = dateFormat.format(date)
-} else if (VERSION == 'daily') {
-    CMK_VERS = BRANCH + '-' + dateFormat.format(date)
-} else {
-    CMK_VERS = VERSION
-}
+def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
@@ -34,6 +25,20 @@ if ((scm.branches[0].name == 'master' || scm.branches[0].name ==~ '[0-9]+\\.[0-9
 } else {
     DAILY_DATA = '/var/jenkins_home/daily-data/testbuild/' + scm.branches[0].name.replaceAll("/","-") + '/' + CMK_VERS
     ARCHIVE_DIR = DAILY_DATA + '/download'
+}
+
+// Duplicate code with nightly-build.jenkins
+def get_cmk_version(BRANCH, VERSION) {
+    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
+    def DATE = new Date()
+
+    if(BRANCH == 'master' && VERSION == 'daily') {
+        return DATE_FORMAT.format(DATE)
+    } else if (VERSION == 'daily') {
+        return BRANCH + '-' + DATE_FORMAT.format(DATE)
+    } else {
+        return VERSION
+    }
 }
 
 
@@ -52,14 +57,11 @@ node {
                 withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
                     sh """
                         cd ${PACKAGE_DIR}/${CMK_VERS}
-                        rm -f HASHES
-                        ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
-                        rsync -av \
+                        rsync -av --relative \
                             --exclude '*dbgsym*.deb' \
-                            -e "ssh -o StrictHostKeyChecking=no \
-                            -i ${RELEASE_KEY_DIR}" \
-	                    ${PACKAGE_DIR}/${CMK_VERS} \
-	                    bauwelt@mathias-kettner.de:${PACKAGE_DIR}
+                            -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR}" \
+                            ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/
                     """
                 }
             }

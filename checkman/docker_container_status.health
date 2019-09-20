@@ -12,7 +12,7 @@ description:
 
  To make this check work the agent plugin {{mk_docker.py}} has to be installed.
  If you are using agent bakery rules, you must enable "Piggybacked docker containers".
- If you are configuring the plugin via the configuration file, make sure you do not skip th
+ If you are configuring the plugin via the configuration file, make sure you do not skip the
  section "docker_container_status" (the default setting is fine).
 
 item:

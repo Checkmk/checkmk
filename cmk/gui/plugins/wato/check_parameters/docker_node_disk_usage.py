@@ -40,70 +40,62 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDockerNodeDiskUsage(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_docker_node_disk_usage():
+    return TextAscii(
+        title=_("Type"),
+        help=_("Either Containers, Images, Local Volumes or Build Cache"),
+        allow_empty=True,
+    )
 
-    @property
-    def check_group_name(self):
-        return "docker_node_disk_usage"
 
-    @property
-    def title(self):
-        return _("Docker node disk usage")
+def _parameter_valuespec_docker_node_disk_usage():
+    return Dictionary(
+        help=
+        _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
+         ),
+        elements=[
+            ("size",
+             Tuple(
+                 title=_("Size"),
+                 elements=[
+                     Filesize(title=_("Warning at"), allow_empty=False),
+                     Filesize(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("reclaimable",
+             Tuple(
+                 title=_("Reclaimable"),
+                 elements=[
+                     Filesize(title=_("Warning at"), allow_empty=False),
+                     Filesize(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("count",
+             Tuple(
+                 title=_("Total count"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+            ("active",
+             Tuple(
+                 title=_("Active"),
+                 elements=[
+                     Integer(title=_("Warning at"), allow_empty=False),
+                     Integer(title=_("Critical at"), allow_empty=False),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=
-            _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
-             ),
-            elements=[
-                ("size",
-                 Tuple(
-                     title=_("Size"),
-                     elements=[
-                         Filesize(title=_("Warning at"), allow_empty=False),
-                         Filesize(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("reclaimable",
-                 Tuple(
-                     title=_("Reclaimable"),
-                     elements=[
-                         Filesize(title=_("Warning at"), allow_empty=False),
-                         Filesize(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("count",
-                 Tuple(
-                     title=_("Total count"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-                ("active",
-                 Tuple(
-                     title=_("Active"),
-                     elements=[
-                         Integer(title=_("Warning at"), allow_empty=False),
-                         Integer(title=_("Critical at"), allow_empty=False),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Type"),
-            help=_("Either Containers, Images, Local Volumes or Build Cache"),
-            allow_empty=True,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="docker_node_disk_usage",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_docker_node_disk_usage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_docker_node_disk_usage,
+        title=lambda: _("Docker node disk usage"),
+    ))

@@ -57,7 +57,7 @@ def check_ups_modulys_battery(item, params, info):
             # we already have configurable levels on remaining capacity which
             # would be superfluous if we reported the discharging state itself
             # as a problem. Thus this reports "OK"
-            yield 0, "discharging for %d minutes" % (elapsed_sec / 60)
+            yield 0, "discharging for %d minutes" % (elapsed_sec // 60)
 
         # test 2: battery health
         if condition == 1:

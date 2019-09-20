@@ -32,6 +32,7 @@ import pprint
 import traceback
 import json
 from typing import Dict, Optional, List  # pylint: disable=unused-import
+import six
 
 import livestatus
 
@@ -323,9 +324,7 @@ class View(object):
         self._user_sorters = user_sorters
 
 
-class ViewRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, view):
         super(ViewRenderer, self).__init__()
         self.view = view
@@ -575,8 +574,14 @@ def transform_old_dict_based_icons():
 
 
 def _register_tag_plugins():
+    if hasattr(_register_tag_plugins, "_config_hash") \
+       and _register_tag_plugins._config_hash == hash(repr(config.tags.get_dict_format())):
+        return  # No re-register needed :-)
+
     _register_host_tag_painters()
     _register_host_tag_sorters()
+
+    _register_tag_plugins._config_hash = hash(repr(config.tags.get_dict_format()))
 
 
 config.register_post_config_load_hook(_register_tag_plugins)
@@ -1307,7 +1312,7 @@ def show_view(view, view_renderer, only_count=False):
     visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
 
     all_active_filters = _get_all_active_filters(view)
-    filterheaders = _get_livestatus_filter_headers(view, all_active_filters)
+    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
@@ -1482,7 +1487,7 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def _get_livestatus_filter_headers(view, all_active_filters):
+def get_livestatus_filter_headers(view, all_active_filters):
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
@@ -2196,7 +2201,7 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                if isinstance(command, unicode):
+                if isinstance(command, six.text_type):
                     command = command.encode("utf-8")
 
                 executor(command, site)

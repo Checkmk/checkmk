@@ -35,7 +35,6 @@ import py_compile
 import struct
 import sys
 import itertools
-import functools
 from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 from pathlib2 import Path
@@ -336,7 +335,7 @@ def _get_config_file_paths(with_conf_d):
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
         list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
-                                key=functools.cmp_to_key(cmk.utils.cmp_config_paths))
+                                key=cmk.utils.key_config_paths)
     for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
         if path.exists():
             list_of_files.append(path)
@@ -608,20 +607,18 @@ def strip_tags(tagged_hostlist):
         return result
 
 
+def _get_shadow_hosts():
+    # Only available with CEE
+    return shadow_hosts if "shadow_hosts" in globals() else {}
+
+
 # This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
 def _all_active_hosts_with_duplicates():
     # type: () -> List[str]
-    # Only available with CEE
-    if "shadow_hosts" in globals():
-        shadow_host_entries = shadow_hosts.keys()
-    else:
-        shadow_host_entries = []
-
-    config_cache = get_config_cache()
-    return _filter_active_hosts(config_cache, strip_tags(all_hosts)  \
-                               + strip_tags(clusters.keys()) \
-                               + strip_tags(shadow_host_entries))
+    return _filter_active_hosts(get_config_cache(),
+                                (strip_tags(all_hosts) + strip_tags(clusters.keys()) +
+                                 strip_tags(_get_shadow_hosts().keys())))
 
 
 def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
@@ -1048,7 +1045,7 @@ def prepare_check_command(command_spec, hostname, description):
             formated.append("%s" % arg)
 
         elif arg_type in [str, unicode]:
-            formated.append(cmk_base.utils.quote_shell_string(arg))
+            formated.append(cmk.utils.quote_shell_string(arg))
 
         elif arg_type == tuple and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
@@ -1067,8 +1064,7 @@ def prepare_check_command(command_spec, hostname, description):
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
-            formated.append(
-                cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
             passwords.append((str(len(formated)), pw_start_index, pw_ident))
 
         else:
@@ -1217,7 +1213,7 @@ def load_all_checks(get_check_api_context):
     global _all_checks_loaded
 
     _initialize_data_structures()
-    filelist = get_plugin_paths(cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+    filelist = get_plugin_paths(str(cmk.utils.paths.local_checks_dir), cmk.utils.paths.checks_dir)
     load_checks(get_check_api_context, filelist)
 
     _all_checks_loaded = True
@@ -1338,7 +1334,8 @@ def load_checks(get_check_api_context, filelist):
             if varname.startswith("_"):
                 continue
 
-            if inspect.isfunction(value) or inspect.ismodule(value):
+            # NOTE: Classes and builtin functions are callable, too!
+            if callable(value) or inspect.ismodule(value):
                 continue
 
             _check_variable_defaults[varname] = value
@@ -1405,9 +1402,9 @@ def load_check_includes(check_file_path, check_context):
 
 
 def check_include_file_path(include_file_name):
-    local_path = os.path.join(cmk.utils.paths.local_checks_dir, include_file_name)
-    if os.path.exists(local_path):
-        return local_path
+    local_path = cmk.utils.paths.local_checks_dir / include_file_name
+    if local_path.exists():
+        return str(local_path)
     return os.path.join(cmk.utils.paths.checks_dir, include_file_name)
 
 
@@ -1455,7 +1452,7 @@ def _write_check_include_cache(cache_file_path, includes):
 
 
 def _include_cache_file_path(path):
-    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.include_cache_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
@@ -1554,7 +1551,7 @@ def _is_plugin_precompiled(path, precompiled_path):
 
 
 def _precompiled_plugin_path(path):
-    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
     return os.path.join(cmk.utils.paths.precompiled_checks_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
@@ -1871,6 +1868,13 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         if item is None and checkgroup not in service_rule_groups:
             return config_cache.host_extra_conf(host, rules)
 
+        # At the moment the items are not validated strictly, this means we can have
+        # integers or something else here. Convert them to unicode for easier handling
+        # in the following code.
+        # TODO: This should be strictly validated by the check API in 1.7.
+        if item is not None and not isinstance(item, six.string_types):
+            item = unicode(item)
+
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(
             host, item, descr)
@@ -1960,6 +1964,9 @@ def filter_by_management_board(hostname,
 
 
 def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
+    # Local import needed to prevent import cycle. Sorry for this hack :-/
+    import cmk_base.inventory_plugins  # pylint: disable=redefined-outer-name
+
     if for_inventory:
         is_snmp_check_f = cmk_base.inventory_plugins.is_snmp_plugin
         plugins_info = cmk_base.inventory_plugins.inv_info
@@ -2097,11 +2104,79 @@ class HostConfig(object):
 
     @property
     def has_piggyback_data(self):
-        if piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname):
+        # type: () -> bool
+        time_settings = {
+            (None, "max_cache_age"): piggyback_max_cachefile_age
+        }  # type: Dict[Tuple[Optional[str], str], int]
+        time_settings.update(self.piggybacked_host_files)
+
+        if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
             return True
 
         from cmk_base.data_sources.abstract import has_persisted_agent_sections
         return has_persisted_agent_sections("piggyback", self.hostname)
+
+    @property
+    def piggybacked_host_files(self):
+        # type: () -> Dict[Tuple[Optional[str], str], int]
+        rules = self._config_cache.host_extra_conf(self.hostname, piggybacked_host_files)
+        if rules:
+            return self._flatten_piggybacked_host_files_rule(rules[0])
+        return {}
+
+    def _flatten_piggybacked_host_files_rule(self, rule):
+        # type: (Dict[str, Any]) -> Dict[Tuple[Optional[str], str], int]
+        """This rule is a first match rule.
+
+        Max cache age, validity period and state are configurable wihtin this
+        rule for all piggybacked host or per piggybacked host of this source.
+        In order to differentiate later for which piggybacked hosts a parameter
+        is used we flat this rule to a homogeneous data structure:
+            (HOST, KEY): VALUE
+        Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
+        parameters generically."""
+        flat_rule = {}  # type: Dict[Tuple[Optional[str], str], int]
+
+        max_cache_age = rule.get('global_max_cache_age')
+        if max_cache_age is not None and max_cache_age != "global":
+            flat_rule[(self.hostname, 'max_cache_age')] = max_cache_age
+
+        global_validity_setting = rule.get('global_validity', {})
+
+        period = global_validity_setting.get("period")
+        if period is not None:
+            flat_rule[(self.hostname, 'validity_period')] = period
+
+        check_mk_state = global_validity_setting.get("check_mk_state")
+        if check_mk_state is not None:
+            flat_rule[(self.hostname, 'validity_state')] = check_mk_state
+
+        for setting in rule.get('per_piggybacked_host', []):
+            piggybacked_hostname = setting["piggybacked_hostname"]
+
+            max_cache_age = setting.get('max_cache_age')
+            if max_cache_age is not None and max_cache_age != "global":
+                flat_rule[(piggybacked_hostname, 'max_cache_age')] = max_cache_age
+
+            validity_setting = setting.get('validity', {})
+            if not validity_setting:
+                continue
+
+            period = validity_setting.get("period")
+            if period is not None:
+                flat_rule[(piggybacked_hostname, 'validity_period')] = period
+
+            check_mk_state = validity_setting.get("check_mk_state")
+            if check_mk_state is not None:
+                flat_rule[(piggybacked_hostname, 'validity_state')] = check_mk_state
+
+        return flat_rule
+
+    @property
+    def check_mk_check_interval(self):
+        # type: () -> int
+        return self._config_cache.extra_attributes_of_service(self.hostname,
+                                                              'Check_MK')['check_interval']
 
     def _primary_ip_address_family_of(self):
         rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
@@ -2555,6 +2630,35 @@ class HostConfig(object):
         return default_value
 
     @property
+    def management_snmp_config(self):
+        # type: () -> cmk_base.snmp_utils.SNMPHostConfig
+        if self.management_protocol != "snmp":
+            raise MKGeneralException("Management board is not configured to be contacted via SNMP")
+
+        address = self.management_address
+        if address is None:
+            raise MKGeneralException("Management board address is not configured")
+
+        return cmk_base.snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=self.is_ipv6_primary,
+            hostname=self.hostname,
+            ipaddress=address,
+            credentials=self.management_credentials,
+            port=self._snmp_port(),
+            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
+            is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
+                self.hostname, snmpv2c_hosts),
+            bulk_walk_size_of=self._bulk_walk_size(),
+            timing=self._snmp_timing(),
+            oid_range_limits=self._config_cache.host_extra_conf(self.hostname,
+                                                                snmp_limit_oid_range),
+            snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
+            character_encoding=self._snmp_character_encoding(),
+            is_usewalk_host=self.is_usewalk_host,
+            is_inline_snmp_host=self._is_inline_snmp_host(),
+        )
+
+    @property
     def additional_ipaddresses(self):
         # type: () -> Tuple[List[str], List[str]]
         #TODO Regarding the following configuration variables from WATO
@@ -2778,6 +2882,12 @@ class ConfigCache(object):
                 host_tags[hostname] = self._tag_list_to_tag_groups(tag_to_group_map,
                                                                    self._hosttags[hostname])
 
+        for shadow_host_name, shadow_host_spec in _get_shadow_hosts().iteritems():
+            self._hosttags[shadow_host_name] = set(
+                shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split())
+            host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
+                tag_to_group_map, self._hosttags[shadow_host_name])
+
     def _tag_groups_to_tag_list(self, host_path, tag_groups):
         # type: (str, Dict[str, str]) -> Set[str]
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
@@ -2985,7 +3095,7 @@ class ConfigCache(object):
         return result
 
     def ruleset_match_object_for_checkgroup_parameters(self, hostname, item, svc_desc):
-        # type: (str, Text, Text) -> RulesetMatchObject
+        # type: (str, Optional[Text], Text) -> RulesetMatchObject
         """Construct the object that is needed to match checkgroup parameters rulesets
 
         Please note that the host attributes like host_folder and host_tags are
@@ -3122,6 +3232,12 @@ class ConfigCache(object):
         monitored on a remote site. Does not return cluster hosts."""
         return set(strip_tags(all_hosts))
 
+    def _get_all_configured_shadow_hosts(self):
+        # type: () -> Set[str]
+        """Returns a set of all shadow host names, regardless if currently disabled or
+        monitored on a remote site"""
+        return set(_get_shadow_hosts().keys())
+
     def all_configured_hosts(self):
         # type: () -> Set[str]
         return self._all_configured_hosts
@@ -3130,7 +3246,8 @@ class ConfigCache(object):
         # type: () -> Set[str]
         """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
         hosts = set()  # type: Set[str]
-        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters())
+        hosts.update(self.all_configured_realhosts(), self.all_configured_clusters(),
+                     self._get_all_configured_shadow_hosts())
         return hosts
 
     def _setup_clusters_nodes_cache(self):
@@ -3210,6 +3327,18 @@ class ConfigCache(object):
             return the_clusters[0]
 
         return hostname
+
+    def get_piggybacked_hosts_time_settings(self, piggybacked_hostname=None):
+        # type: (Optional[str]) -> Dict[Tuple[Optional[str], str], int]
+
+        # From global settings
+        time_settings = {
+            (None, 'max_cache_age'): piggyback_max_cachefile_age,
+        }  # type: Dict[Tuple[Optional[str], str], int]
+
+        for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
+            time_settings.update(self.get_host_config(source_hostname).piggybacked_host_files)
+        return time_settings
 
 
 def get_config_cache():

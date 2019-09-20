@@ -37,35 +37,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSansymphonyAlerts(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_sansymphony_alerts():
+    return Tuple(
+        help=_("This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
+        elements=[
+            Integer(
+                title=_("Warning at"),
+                unit=_("alerts"),
+                default_value=1,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("alerts"),
+                default_value=2,
+            ),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "sansymphony_alerts"
 
-    @property
-    def title(self):
-        return _("Sansymphony: Number of unacknowlegded alerts")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_(
-                "This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
-            elements=[
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("alerts"),
-                    default_value=1,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("alerts"),
-                    default_value=2,
-                ),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="sansymphony_alerts",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_sansymphony_alerts,
+        title=lambda: _("Sansymphony: Number of unacknowlegded alerts"),
+    ))

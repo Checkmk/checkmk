@@ -36,73 +36,57 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
 
 
-@rulespec_registry.register
-class RulespecMssqlTransactionlogsDiscovery(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
-
-    @property
-    def name(self):
-        return "mssql_transactionlogs_discovery"
-
-    @property
-    def valuespec(self):
-        return Dictionary(title=_("MSSQL Datafile and Transactionlog Discovery"),
-                          elements=[
-                              ("summarize_datafiles",
-                               Checkbox(
-                                   title=_("Display only a summary of all Datafiles"),
-                                   label=_("Summarize Datafiles"),
-                               )),
-                              ("summarize_transactionlogs",
-                               Checkbox(
-                                   title=_("Display only a summary of all Transactionlogs"),
-                                   label=_("Summarize Transactionlogs"),
-                               )),
-                          ],
-                          optional_keys=[])
+def _valuespec_mssql_transactionlogs_discovery():
+    return Dictionary(title=_("MSSQL Datafile and Transactionlog Discovery"),
+                      elements=[
+                          ("summarize_datafiles",
+                           Checkbox(
+                               title=_("Display only a summary of all Datafiles"),
+                               label=_("Summarize Datafiles"),
+                           )),
+                          ("summarize_transactionlogs",
+                           Checkbox(
+                               title=_("Display only a summary of all Transactionlogs"),
+                               label=_("Summarize Transactionlogs"),
+                           )),
+                      ],
+                      optional_keys=[])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlTransactionlogs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        name="mssql_transactionlogs_discovery",
+        valuespec=_valuespec_mssql_transactionlogs_discovery,
+    ))
 
-    @property
-    def check_group_name(self):
-        return "mssql_transactionlogs"
 
-    @property
-    def title(self):
-        return _("MSSQL Transactionlog Sizes")
+def _parameter_valuespec_mssql_transactionlogs():
+    return Dictionary(
+        title=_("File Size Levels"),
+        help=_("Specify levels for transactionlogs of a database. Please note that relative "
+               "levels will only work if there is a max_size set for the file on the database "
+               "side."),
+        elements=[
+            ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
+            ("allocated_used_levels",
+             levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
+            ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("allocated"))),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("File Size Levels"),
-            help=_("Specify levels for transactionlogs of a database. Please note that relative "
-                   "levels will only work if there is a max_size set for the file on the database "
-                   "side."),
-            elements=[
-                ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
-                ("allocated_used_levels",
-                 levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
-                ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"),
-                                                                _("allocated"))),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database Name"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_transactionlogs",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database Name"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_transactionlogs,
+        title=lambda: _("MSSQL Transactionlog Sizes"),
+    ))

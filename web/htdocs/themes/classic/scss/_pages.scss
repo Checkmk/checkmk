@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -889,7 +889,7 @@ body.main.screenshotmode table.nform {
     background-image: none;
 }
 
-table.nform tr.closed {
+table.nform tbody.closed {
     display: none;
 }
 
@@ -1412,6 +1412,10 @@ table.agents tbody > tr.data > td.agent_config {
     line-height: normal;
 }
 
+td.agent_config table.rulesets table td.title {
+    background-color: rgb(115, 161, 180);
+    border: 1px solid rgb(204, 204, 204);
+}
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

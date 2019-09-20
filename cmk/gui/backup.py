@@ -40,6 +40,7 @@ import socket
 import subprocess
 import time
 import json
+import six
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -235,7 +236,7 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = json.load(file(self.state_file_path()))
+            state = json.load(open(self.state_file_path()))
         except IOError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
@@ -1217,9 +1218,7 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         raise NotImplementedError()
@@ -1307,7 +1306,7 @@ class BackupTargetLocal(ABCBackupTargetType):
         # Check write access for the site user
         try:
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            file(test_file_path, "w")
+            open(test_file_path, "w")
             os.unlink(test_file_path)
         except IOError:
             if is_cma():
@@ -1348,7 +1347,7 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = json.load(file(path))
+        info = json.load(open(path))
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved

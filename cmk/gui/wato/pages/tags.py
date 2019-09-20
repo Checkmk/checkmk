@@ -29,6 +29,7 @@ to hosts and that is the basis of the rules."""
 from typing import Text, Dict, List  # pylint: disable=unused-import
 import abc
 from enum import Enum
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -76,14 +77,12 @@ from cmk.gui.plugins.wato import (
 )
 
 
-class ABCTagMode(WatoMode):
+class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         super(ABCTagMode, self).__init__()
         self._tag_config_file = TagConfigFile()
@@ -220,8 +219,28 @@ class ModeTags(ABCTagMode):
             ]).show()
             return
 
+        self._show_customized_builtin_warning()
+
         self._render_tag_group_list()
         self._render_aux_tag_list()
+
+    def _show_customized_builtin_warning(self):
+        customized = [
+            tg.id
+            for tg in self._effective_config.tag_groups
+            if self._builtin_config.tag_group_exists(tg.id) and
+            self._tag_config.tag_group_exists(tg.id)
+        ]
+
+        if not customized:
+            return
+
+        html.show_warning(
+            _("You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
+              "In current Checkmk versions these are <i>builtin</i> tag groups which "
+              "can not be customized anymore. Your customized tag group will work for "
+              "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
+              "anymore." % ", ".join(customized)))
 
     def _render_tag_group_list(self):
         with table_element("tags",
@@ -251,7 +270,12 @@ class ModeTags(ABCTagMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_group, nr):
-        if self._builtin_config.tag_group_exists(tag_group.id):
+        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # these groups.  These users now have the modified tag groups in their
+        # user configuration and should be able to cleanup this using the GUI
+        # for the moment. Make the buttons available to the users.
+        if self._builtin_config.tag_group_exists(
+                tag_group.id) and not self._tag_config.tag_group_exists(tag_group.id):
             html.i("(%s)" % _("builtin"))
             return
 
@@ -301,9 +325,7 @@ class ModeTags(ABCTagMode):
         return sorted(used_tags)
 
 
-class ABCEditTagMode(ABCTagMode):
-    __metaclass__ = abc.ABCMeta
-
+class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
@@ -605,24 +627,20 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(object):
+class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
     """Base for all tag cleanup operations"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def confirm_title(self):
         # type: () -> Text
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(ABCOperation):
+class ABCTagGroupOperation(six.with_metaclass(abc.ABCMeta, ABCOperation)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, tag_group_id):
         # type: (str) -> None
         super(ABCTagGroupOperation, self).__init__()

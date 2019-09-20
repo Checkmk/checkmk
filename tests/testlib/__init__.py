@@ -22,6 +22,7 @@ import json
 import fcntl
 from contextlib import contextmanager
 from urlparse import urlparse
+import six
 
 import pathlib2 as pathlib
 import pytest  # type: ignore
@@ -29,6 +30,7 @@ import requests  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
 import freezegun
+import six
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -77,7 +79,7 @@ def current_branch_name():
 def get_cmk_download_credentials():
     cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(file(cred).read().strip().split(":"))
+        return tuple(open(cred).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
@@ -322,7 +324,7 @@ class CMKVersion(object):
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
-        file(temp_package_path, "w").write(response.content)
+        open(temp_package_path, "w").write(response.content)
         return temp_package_path
 
     def _install_package(self, package_path):
@@ -431,26 +433,23 @@ class Site(object):
         if expected_state is None:
             expected_state = state
 
-        last_check_before = self._get_last_check(hostname)
-        schedule_ts, wait_timeout = time.time(), 20
+        last_check_before = self._last_host_check(hostname)
 
         # Ensure the next check result is not in same second as the previous check
+        schedule_ts = time.time()
         while int(last_check_before) == int(schedule_ts):
             schedule_ts = time.time()
             time.sleep(0.1)
 
-        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
-
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
                           (schedule_ts, hostname, state, output))
-        self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout,
-                                  expected_state)
+        self._wait_for_next_host_check(hostname, last_check_before, schedule_ts, expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
-        last_check_before = self._get_last_check(hostname, service_description)
-        schedule_ts, wait_timeout = int(time.time()), 20
+        last_check_before = self._last_service_check(hostname, service_description)
 
         # Ensure the next check result is not in same second as the previous check
+        schedule_ts = int(time.time())
         while int(last_check_before) == int(schedule_ts):
             schedule_ts = time.time()
             time.sleep(0.1)
@@ -459,56 +458,56 @@ class Site(object):
         self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
                           (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
 
-        self._wait_for_next_check(hostname,
-                                  last_check_before,
-                                  schedule_ts,
-                                  wait_timeout,
-                                  expected_state,
-                                  service_description=service_description)
+        self._wait_for_next_service_check(hostname, service_description, last_check_before,
+                                          schedule_ts, expected_state)
 
-    def _wait_for_next_check(self,
-                             hostname,
-                             last_check_before,
-                             schedule_ts,
-                             wait_timeout,
-                             expected_state,
-                             service_description=None):
-        if not service_description:
-            table = "hosts"
-            filt = "Filter: host_name = %s\n" % hostname
-            wait_obj = "%s" % hostname
-        else:
-            table = "services"
-            filt = "Filter: host_name = %s\nFilter: description = %s\n" % (hostname,
-                                                                           service_description)
-            wait_obj = "%s;%s" % (hostname, service_description)
-
+    def _wait_for_next_host_check(self, hostname, last_check_before, schedule_ts, expected_state):
+        wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET %s\n" \
+            "GET hosts\n" \
             "Columns: last_check state plugin_output\n" \
-            "%s" \
+            "Filter: host_name = %s\n" \
             "WaitObject: %s\n" \
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
-            "WaitTrigger: check\n" % (table, filt, wait_obj, wait_timeout*1000, last_check_before, expected_state))
+            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+        self._verify_next_check_output(time.time(), schedule_ts, last_check, last_check_before,
+                                       state, expected_state, plugin_output, wait_timeout)
 
+    def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
+                                     schedule_ts, expected_state):
+        wait_timeout = 20
+        last_check, state, plugin_output = self.live.query_row(
+            "GET services\n" \
+            "Columns: last_check state plugin_output\n" \
+            "Filter: host_name = %s\n" \
+            "Filter: description = %s\n" \
+            "WaitObject: %s;%s\n" \
+            "WaitTimeout: %d\n" \
+            "WaitCondition: last_check > %d\n" \
+            "WaitCondition: state = %d\n" \
+            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
+        self._verify_next_check_output(time.time(), schedule_ts, last_check, last_check_before,
+                                       state, expected_state, plugin_output, wait_timeout)
+
+    def _verify_next_check_output(self, now, schedule_ts, last_check, last_check_before, state,
+                                  expected_state, plugin_output, wait_timeout):
         print("processing check result took %0.2f seconds" % (time.time() - schedule_ts))
-
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
                 (wait_timeout, last_check_before, schedule_ts, last_check)
-
         assert state == expected_state, \
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
-    def _get_last_check(self, hostname, service_description=None):
-        if not service_description:
-            return self.live.query_value(
-                "GET hosts\n" \
-                "Columns: last_check\n" \
-                "Filter: host_name = %s\n" % (hostname))
+    def _last_host_check(self, hostname):
+        return self.live.query_value(
+            "GET hosts\n" \
+            "Columns: last_check\n" \
+            "Filter: host_name = %s\n" % (hostname))
+
+    def _last_service_check(self, hostname, service_description):
         return self.live.query_value(
                 "GET services\n" \
                 "Columns: last_check\n" \
@@ -1836,7 +1835,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, unicode)
+        assert isinstance(result, six.text_type)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -2190,7 +2189,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.
@@ -2240,10 +2239,8 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(object):
+class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for Check and ActiveCheck"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, name):
         import cmk_base.check_api_utils
         self.set_hostname = cmk_base.check_api_utils.set_hostname

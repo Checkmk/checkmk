@@ -1,0 +1,13 @@
+Title: Fixes calculations of latency for netapp_api_vs_traffic
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567676003
+
+Average latency, average read latency, and averate write latency
+are now calculated as a function of the number of ops instead of
+the time. See Werk 8901 for details.

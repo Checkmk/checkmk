@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -248,13 +248,37 @@ body.main.dashlet {
     tr.data {
       border-bottom: $dashboard-tr-border-bottom;
       transition: .15s ease-in-out;
+    }
+  }
 
-      &:hover {
-        background-color: $dashboard-tr-hover-bg-color;
-        &:nth-child(even) {
-          background-color: $dashboard-tr-even-hover-bg-color;
-        }
+  table.data {
+    border-spacing: 0;
+
+    th:nth-child(1) {
+      padding-bottom: 2px;
+      padding-left: 1px;
+    }
+  }
+
+  /* Adapted styling of views in dashlets */
+  tr.data {
+    > td {
+      padding-top: 2px;
+      padding-bottom: 2px;
+      border-bottom: none;
+
+      &.state {
+        border-top: none;
+	border-top-color: $state-border-top-color;
       }
+    }
+
+    &:last-of-type > td:not(.state):not(.gap) {
+      border-bottom: 1px solid $theme-color-table-border;
+    }
+
+    &:nth-child(2) > td.state {
+      border-top-color: $theme-color-table-border !important;
     }
   }
 }
@@ -704,37 +728,4 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
-}
-
-/* Adapted styling of views in dashlets */
-body.main.dashlet {
-  tr.data {
-    > td {
-      padding-top: 2px;
-      padding-bottom: 2px;
-      border-bottom: none;
-
-      &.state {
-        border-top: none;
-	border-top-color: $state-border-top-color;
-      }
-    }
-
-    &:last-of-type > td:not(.state):not(.gap) {
-      border-bottom: 1px solid $theme-color-table-border;
-    }
-
-    &:nth-child(2) > td.state {
-      border-top-color: $theme-color-table-border !important;
-    }
-  }
-
-  table.data {
-    border-spacing: 0;
-
-    th:nth-child(1) {
-      padding-bottom: 2px;
-      padding-left: 1px;
-    }
-  }
 }

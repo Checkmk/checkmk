@@ -36,10 +36,13 @@ from __future__ import (
     print_function,
 )
 
-try:
-    from pathlib import Path  # type: ignore # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+import sys
+
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
 from typing import List  # pylint: disable=unused-import
 import argparse
@@ -49,6 +52,7 @@ from werkzeug.test import create_environ
 import cmk_base.autochecks
 
 import cmk.utils.log as log
+from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils
@@ -57,6 +61,7 @@ import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
 import cmk.gui.modules
 import cmk.gui.config
+import cmk.gui.utils
 import cmk.gui.htmllib as htmllib
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request, Response
@@ -75,19 +80,27 @@ class UpdateConfig(object):
         super(UpdateConfig, self).__init__()
         self._arguments = arguments
         self._logger = logger
+        # TODO: Fix this cruel hack caused by our funny mix of GUI + console
+        # stuff. Currently, we just move the console handler to the top, so
+        # both worlds are happy. We really, really need to split business logic
+        # from presentation code... :-/
+        console_handler = log.logger.handlers[0]
+        del log.logger.handlers[:]
+        logging.getLogger().addHandler(console_handler)
 
     def run(self):
-        self._logger.info("Updating Checkmk configuration with \"cmk-update-config -v\"")
-        self._initialize_gui_environment()
-
+        self._logger.log(VERBOSE, "Initializing application...")
         environ = dict(create_environ(), REQUEST_URI='')
         with AppContext(DummyApplication(environ, None)), \
              RequestContext(htmllib.html(Request(environ), Response(is_secure=False))):
+            self._initialize_gui_environment()
+
+            self._logger.log(VERBOSE, "Updating Checkmk configuration...")
             for step_func, title in self._steps():
-                self._logger.info(" + %s..." % title)
+                self._logger.log(VERBOSE, " + %s..." % title)
                 step_func()
 
-        self._logger.info("Done")
+        self._logger.log(VERBOSE, "Done")
 
     def _steps(self):
         return [
@@ -120,7 +133,17 @@ class UpdateConfig(object):
         all_rulesets.save()
 
     def _initialize_gui_environment(self):
+        self._logger.log(VERBOSE, "Loading GUI plugins...")
         cmk.gui.modules.load_all_plugins()
+        failed_plugins = cmk.gui.utils.get_failed_plugins()
+
+        if failed_plugins:
+            self._logger.error("")
+            self._logger.error("ERROR: Failed to load some GUI plugins. You will either have \n"
+                               "       to remove or update them to be compatible with this \n"
+                               "       Checkmk version.")
+            self._logger.error("")
+
         # TODO: We are about to rewrite parts of the config. Would be better to be executable without
         # loading the configuration first (because the load_config() may miss some conversion logic
         # which is only known to cmk.update_config in the future).
@@ -131,25 +154,20 @@ class UpdateConfig(object):
 def main(args):
     # type: (List[str]) -> int
     arguments = parse_arguments(args)
+    log.setup_console_logging()
+    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+    logger = logging.getLogger("cmk.update_config")
+    if arguments.debug:
+        cmk.utils.debug.enable()
+    logger.debug("parsed arguments: %s", arguments)
 
     try:
-        log.setup_console_logging()
-        log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
-        logger = logging.getLogger("cmk.update_config")
-        if arguments.debug:
-            cmk.utils.debug.enable()
-
-        logger.debug("parsed arguments: %s", arguments)
-
         UpdateConfig(logger, arguments).run()
-
-    except Exception as e:
+    except Exception:
         if arguments.debug:
             raise
-        if logger:
-            logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\"")
-        else:
-            print("ERROR: %s" % e)
+        logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\" "
+                         "BEFORE starting the site again.")
         return 1
     return 0
 
@@ -164,5 +182,4 @@ def parse_arguments(args):
                    default=0,
                    help='Verbose mode (use multiple times for more output)')
 
-    arguments = p.parse_args(args)
-    return arguments
+    return p.parse_args(args)

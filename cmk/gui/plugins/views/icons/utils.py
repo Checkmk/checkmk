@@ -26,6 +26,7 @@
 
 import abc
 from typing import Union, Optional, Tuple  # pylint: disable=unused-import
+import six
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -52,8 +53,7 @@ class PermissionSectionIconsAndActions(PermissionSection):
         return True
 
 
-class Icon(object):
-    __metaclass__ = abc.ABCMeta
+class Icon(six.with_metaclass(abc.ABCMeta, object)):
     _custom_toplevel = None  # type: Optional[bool]
     _custom_sort_index = None  # type: Optional[int]
 

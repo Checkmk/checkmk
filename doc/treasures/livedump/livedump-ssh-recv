@@ -38,13 +38,13 @@ for line in sys.stdin:
         content += line
 
 if mode == "config":
-    file("%s/etc/nagios/conf.d/remote-%s.cfg" % (omd_root, ident), "w").write(content)
+    open("%s/etc/nagios/conf.d/remote-%s.cfg" % (omd_root, ident), "w").write(content)
 
 elif mode == "status":
     fd, path = tempfile.mkstemp('', 'c', "%s/tmp/nagios/checkresults" % omd_root)
     os.write(fd, content)
     os.close(fd)
-    file(path + ".ok", "w")
+    open(path + ".ok", "w")
 else:
     sys.stderr.write("ERROR: Invalid mode\n")
     sys.exit(1)

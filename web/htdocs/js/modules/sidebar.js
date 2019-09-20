@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -30,35 +30,14 @@ var g_content_loc   = null;
 var g_sidebar_folded = false;
 
 export function register_event_handlers() {
-    // First firefox and then IE
-    if (window.addEventListener) {
-        window.addEventListener("mousemove", function(e) {
-            snapinDrag(e);
-            dragScroll(e);
-            return false;
-        }, false);
-        window.addEventListener("mousedown", startDragScroll, false);
-        window.addEventListener("mouseup", stopDragScroll,  false);
-        if (utils.browser.is_firefox()) {
-            window.addEventListener("DOMMouseScroll", scrollWheel,     false);
-        } else {
-            window.addEventListener("mousewheel",     scrollWheel,     false);
-        }
-    }
-    else {
-        document.documentElement.onmousemove = function(e) {
-            // snapin drag 'n drop
-            snapinDrag(e);
-            // drag/drop scrolling
-            dragScroll(e);
-            return false;
-        };
-        // drag/drop scrolling
-        document.documentElement.onmousedown  = startDragScroll;
-        document.documentElement.onmouseup    = stopDragScroll;
-        // mousewheel scrolling
-        document.documentElement.onmousewheel = scrollWheel;
-    }
+    window.addEventListener("mousemove", function(e) {
+        snapinDrag(e);
+        dragScroll(e);
+        return false;
+    }, false);
+    window.addEventListener("mousedown", startDragScroll, false);
+    window.addEventListener("mouseup", stopDragScroll,  false);
+    window.addEventListener("wheel", scrollWheel, false);
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
@@ -117,8 +96,6 @@ export function snapin_start_drag(event) {
     if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
         return true;
 
-    if (event.stopPropagation)
-        event.stopPropagation();
     event.cancelBubble = true;
 
     snapinDragging = target.parentNode;
@@ -130,11 +107,7 @@ export function snapin_start_drag(event) {
     snapinScrollTop = document.getElementById("side_content").scrollTop;
 
     // Disable the default events for all the different browsers
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
-    return false;
+    return utils.prevent_default_events(event);
 }
 
 function snapinDrag(event) {
@@ -196,12 +169,7 @@ function snapinDrop(event, targetpos) {
     // Catch quick clicks without movement on the title bar
     // Don't reposition the object in this case.
     if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
-        if (event.preventDefault)
-            event.preventDefault();
-        if (event.stopPropagation)
-            event.stopPropagation();
-        event.returnValue = false;
-        return false;
+        return utils.prevent_default_events(event);
     }
 
     var par = snapinDragging.parentNode;
@@ -467,12 +435,6 @@ function dragScroll(event) {
     if (dragging === false)
         return true;
 
-    if (event.preventDefault)
-        event.preventDefault();
-    event.returnValue = false;
-
-    if (event.stopPropagation)
-        event.stopPropagation();
     event.cancelBubble = true;
 
     var inhalt = document.getElementById("side_content");
@@ -488,7 +450,7 @@ function dragScroll(event) {
     startY = event.clientY;
 
     dragging = event;
-    return false;
+    return utils.prevent_default_events(event);
 }
 
 function sidebar_width()
@@ -533,42 +495,22 @@ function unfold_sidebar()
  *************************************************/
 
 function handle_scroll(delta) {
-    if (delta < 0) {
-        scrolling = true;
-        scroll_window(-delta*20);
-        scrolling = false;
-    } else {
-        scrolling = true;
-        scroll_window(-delta*20);
-        scrolling = false;
-    }
+    scrolling = true;
+    scroll_window(-delta*20);
+    scrolling = false;
 }
 
 /** Event handler for mouse wheel event.
  */
 function scrollWheel(event){
-    var delta = 0;
-    if (!event)
-        event = window.event;
-
-    if (event.wheelDelta)
-        delta = event.wheelDelta / 120;
-    else if (event.detail)
-        delta = -event.detail / 3;
-
-    if (delta)
-        handle_scroll(delta);
+    // TODO: It's not reliable to detect the scrolling direction with wheel events:
+    // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
+    handle_scroll(event.deltaY < 0 ? 1: -1);
 
     // Opera does not fire onunload event which is used to store the scroll
     // position. So call the store function manually here.
     if (utils.browser.is_opera())
         store_scroll_position();
-
-    if (event.preventDefault)
-        event.preventDefault();
-    else
-        event.returnValue = false;
-    return false;
 }
 
 

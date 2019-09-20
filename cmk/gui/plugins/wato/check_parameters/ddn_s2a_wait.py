@@ -39,81 +39,73 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDdnS2AWait(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_ddn_s2a_wait():
+    return DropdownChoice(title=_(u"Host or Disk"),
+                          choices=[
+                              ("Disk", _(u"Disk")),
+                              ("Host", _(u"Host")),
+                          ])
 
-    @property
-    def check_group_name(self):
-        return "ddn_s2a_wait"
 
-    @property
-    def title(self):
-        return _("Read/write wait for DDN S2A devices")
+def _parameter_valuespec_ddn_s2a_wait():
+    return Dictionary(elements=[
+        ("read_avg",
+         Tuple(
+             title=_(u"Read wait average"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+        ("read_min",
+         Tuple(
+             title=_(u"Read wait minimum"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+        ("read_max",
+         Tuple(
+             title=_(u"Read wait maximum"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+        ("write_avg",
+         Tuple(
+             title=_(u"Write wait average"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+        ("write_min",
+         Tuple(
+             title=_(u"Write wait minimum"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+        ("write_max",
+         Tuple(
+             title=_(u"Write wait maximum"),
+             elements=[
+                 Float(title=_(u"Warning at"), unit="s"),
+                 Float(title=_(u"Critical at"), unit="s"),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("read_avg",
-             Tuple(
-                 title=_(u"Read wait average"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-            ("read_min",
-             Tuple(
-                 title=_(u"Read wait minimum"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-            ("read_max",
-             Tuple(
-                 title=_(u"Read wait maximum"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-            ("write_avg",
-             Tuple(
-                 title=_(u"Write wait average"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-            ("write_min",
-             Tuple(
-                 title=_(u"Write wait minimum"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-            ("write_max",
-             Tuple(
-                 title=_(u"Write wait maximum"),
-                 elements=[
-                     Float(title=_(u"Warning at"), unit="s"),
-                     Float(title=_(u"Critical at"), unit="s"),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return DropdownChoice(title=_(u"Host or Disk"),
-                              choices=[
-                                  ("Disk", _(u"Disk")),
-                                  ("Host", _(u"Host")),
-                              ])
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ddn_s2a_wait",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_ddn_s2a_wait,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ddn_s2a_wait,
+        title=lambda: _("Read/write wait for DDN S2A devices"),
+    ))

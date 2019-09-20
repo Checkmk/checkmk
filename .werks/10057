@@ -1,0 +1,15 @@
+Title: msoffice check works now correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b10
+Date: 1568129838
+Class: fix
+
+Previously bakery generated msoffice check config file with wrong name.
+
+Additionally, bake agent may fail with crash
+
+Now both errors had been fixed and nsoffice check works as intended
+

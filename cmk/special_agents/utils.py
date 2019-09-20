@@ -38,6 +38,7 @@ import time
 
 import requests
 from pathlib2 import Path
+import six
 
 import cmk.utils.store
 
@@ -112,9 +113,7 @@ def datetime_serializer(obj):
     raise TypeError("%r is not JSON serializable" % obj)
 
 
-class DataCache(object):
-    __metaclass__ = abc.ABCMeta
-
+class DataCache(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, cache_file_dir, cache_file_name, debug=False):
         self._cache_file_dir = Path(cache_file_dir)
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)

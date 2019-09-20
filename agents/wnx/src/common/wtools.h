@@ -6,6 +6,7 @@
 
 #ifndef wtools_h__
 #define wtools_h__
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "winperf.h"
@@ -13,12 +14,10 @@
 #define _WIN32_DCOM
 
 #include <Wbemidl.h>
-#include <comdef.h>
-#include <shellapi.h>
 #include <tlhelp32.h>
+#endif
 
 #include <atomic>
-#include <cassert>
 #include <cstdint>
 #include <functional>
 #include <mutex>
@@ -28,13 +27,13 @@
 #include <tuple>
 
 #include "datablock.h"
-#include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "tools/_xlog.h"
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
+
+uint32_t GetParentPid(uint32_t pid);
 
 //
 //   FUNCTION: InstallService
@@ -230,26 +229,10 @@ bool KillProcessFully(const std::wstring& process_name,
 // calculates count of processes in the system
 int FindProcess(std::wstring_view process_name) noexcept;
 
+constexpr bool kProcessTreeKillAllowed = false;
+
 // WIN32 described method of killing process tree
-inline void KillProcessTree(uint32_t ProcessId) {
-    // snapshot
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    ON_OUT_OF_SCOPE(CloseHandle(snapshot));
-
-    // scan and kill
-    // error management is ignored while this is secondary method for now
-    PROCESSENTRY32 process;
-    ZeroMemory(&process, sizeof(process));
-    process.dwSize = sizeof(process);
-    Process32First(snapshot, &process);
-    do {
-        // process.th32ProcessId is the PID.
-        if (process.th32ParentProcessID == ProcessId) {
-            KillProcess(process.th32ProcessID);
-        }
-
-    } while (Process32Next(snapshot, &process));
-}
+void KillProcessTree(uint32_t ProcessId);
 
 class AppRunner {
 public:
@@ -298,7 +281,7 @@ public:
                 CloseHandle(process_handle_);  // must
                 process_handle_ = nullptr;
             } else {
-                KillProcessTree(proc_id);
+                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
             }
 
             return;
@@ -658,23 +641,7 @@ inline int64_t QueryPerformanceCo() {
 
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
-inline std::wstring GetCurrentExePath() noexcept {
-    namespace fs = std::filesystem;
-
-    std::wstring exe_path;
-    int args_count = 0;
-    auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (nullptr == arg_list) return {};
-
-    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
-    fs::path exe = arg_list[0];
-
-    std::error_code ec;
-    if (fs::exists(exe, ec)) return exe.parent_path();
-    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
-
-    return {};
-}
+std::wstring GetCurrentExePath() noexcept;
 
 // wrapper for win32 specific function
 // return 0 when no data or error
@@ -691,37 +658,54 @@ inline int DataCountOnHandle(HANDLE Handle) {
     return read_count;
 }
 
-// templated to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T>& utf16_data) {
+bool IsVectorMarkedAsUTF16(const std::vector<T>& data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
-    if (utf16_data.empty()) return {};
-
     constexpr T char_0 = static_cast<T>('\xFF');
     constexpr T char_1 = static_cast<T>('\xFE');
 
-    bool convert_required = utf16_data.size() > 1 && utf16_data[0] == char_0 &&
-                            utf16_data[1] == char_1;
+    return data.size() > 1 && data[0] == char_0 && data[1] == char_1;
+}
 
-    std::string data;
+template <typename T>
+std::string SmartConvertUtf16toUtf8(const std::vector<T>& original_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    bool convert_required = IsVectorMarkedAsUTF16(original_data);
+
     if (convert_required) {
-        auto raw_data = reinterpret_cast<const wchar_t*>(utf16_data.data() + 2);
+        auto raw_data =
+            reinterpret_cast<const wchar_t*>(original_data.data() + 2);
 
-        std::wstring wdata(raw_data, raw_data + (utf16_data.size() - 2) / 2);
+        std::wstring wdata(raw_data, raw_data + (original_data.size() - 2) / 2);
         if (wdata.empty()) return {};
 
-        data = wtools::ConvertToUTF8(wdata);
-    } else {
-        data.assign(utf16_data.begin(), utf16_data.end());
+        return wtools::ConvertToUTF8(wdata);
     }
 
-    // trick to place in string 0 at the end without changing length
+    std::string data;
+    data.assign(original_data.begin(), original_data.end());
+    return data;
+}
+
+inline void AddSafetyEndingNull(std::string& data) {
+    // trick to place in string 0 at the
+    // end without changing length
     // this is required for some stupid engines like iostream+YAML
     auto length = data.size();
     if (data.capacity() <= length) data.reserve(length + 1);
     data[length] = 0;
+}
 
-    return data;
+// templated to support uint8_t and int8_t and char and unsigned char
+template <typename T>
+std::string ConditionallyConvertFromUTF16(const std::vector<T>& original_data) {
+    static_assert(sizeof(T) == 1, "Invalid Data Type in template");
+    if (original_data.empty()) return {};
+
+    auto d = SmartConvertUtf16toUtf8(original_data);
+    AddSafetyEndingNull(d);
+
+    return d;
 }
 
 // local implementation of shitty registry access functions
@@ -879,18 +863,7 @@ inline uint64_t WmiGetUint64(const VARIANT& Var) noexcept {
     }
 }
 
-// gtest[-]
-inline bool WmiObjectContains(IWbemClassObject* Object,
-                              const std::wstring& Name) {
-    assert(Object);
-    VARIANT value;
-    HRESULT res = Object->Get(Name.c_str(), 0, &value, nullptr, nullptr);
-    if (FAILED(res)) {
-        return false;
-    }
-    ON_OUT_OF_SCOPE(VariantClear(&value));
-    return value.vt != VT_NULL;
-}
+bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name);
 
 std::wstring WmiGetWstring(const VARIANT& Var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject* Object,

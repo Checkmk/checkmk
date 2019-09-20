@@ -24,9 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This agent uses UPNP API calls to the Fritz!Box to gather information
-# about connection configuration and status.
-
 import sys
 import argparse
 import logging

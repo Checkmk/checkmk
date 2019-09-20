@@ -553,7 +553,7 @@ class BILock(object):
 
     def __enter__(self):
         if not os.path.exists(self._filepath):
-            file(self._filepath, "a+")
+            open(self._filepath, "a+")
 
         lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
         lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
@@ -591,13 +591,13 @@ class BILock(object):
 
 
 def marshal_save_data(filepath, data):
-    with file(filepath, "w") as the_file:
+    with open(filepath, "w") as the_file:
         marshal.dump(data, the_file)
         os.fsync(the_file.fileno())
 
 
 def marshal_load_data(filepath):
-    return marshal.load(file(filepath))
+    return marshal.load(open(filepath))
 
 
 # This class allows you to load and save python data
@@ -616,7 +616,7 @@ class BICacheFile(object):
         self._filetime = None
 
         try:
-            file(self._filepath, "a")
+            open(self._filepath, "a")
         except IOError:
             pass
 
@@ -672,7 +672,7 @@ class BICacheFile(object):
     def truncate(self):
         log("Truncate %s" % self._filepath)
         with BILock(self._filepath):
-            file(self._filepath, "w")
+            open(self._filepath, "w")
             self._cached_data = None
             self._filetime = os.stat(self._filepath).st_mtime
 
@@ -2790,9 +2790,7 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-class ABCFoldableTreeRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root

@@ -30,25 +30,34 @@ import json
 import sys
 import requests
 
-Section = namedtuple('Section', ['name', 'uri'])
-
-JenkinsJobInfo = namedtuple("job_info", [
-    "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
-    "build_timestamp"
-])
+Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 
 def main():
     args = parse_arguments()
 
-    sys.stdout.write("<<<check_mk>>>\n")
-
     # Add new queries here
     sections = [
+        Section(name="instance",
+                key=None,
+                uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown"),
         Section(
             name="jobs",
+            key="jobs",
             uri=
-            "/api/json?tree=jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
+            "/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
+        ),
+        Section(
+            name="nodes",
+            key="computer",
+            uri=
+            "/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,offline,offlineCause,offlineCause,temporarilyOffline,monitorData[*]]"
+        ),
+        Section(
+            name="queue",
+            key="items",
+            uri=
+            "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]"
         ),
     ]
 
@@ -67,17 +76,22 @@ def handle_request(args, sections):
     url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
 
     for section in sections:
-        sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
-        try:
-            url = url_base + section.uri
-            response = requests.get(url, auth=(args.user, args.password))
+        if section.name in args.modules:
+            sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
+            try:
+                url = url_base + section.uri
+                response = requests.get(url, auth=(args.user, args.password))
 
-            value = response.json()[section.name]
-            sys.stdout.write("%s\n" % json.dumps(value))
+                if section.name == "instance":
+                    value = response.json()
+                else:
+                    value = response.json()[section.key]
 
-        except requests.exceptions.RequestException:
-            if args.debug:
-                raise
+                sys.stdout.write("%s\n" % json.dumps(value))
+
+            except requests.exceptions.RequestException:
+                if args.debug:
+                    raise
 
 
 def parse_arguments(argv=None):
@@ -101,9 +115,10 @@ def parse_arguments(argv=None):
     parser.add_argument(
         "-m",
         "--modules",
-        default="jobs",
+        default="jobs nodes queue",
         type=lambda x: x.split(' '),
-        help="Space-separated list of data to query. Possible values: 'jobs' (default: all)")
+        help=
+        "Space-separated list of data to query. Possible values: 'jobs nodes queue' (default: all)")
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")

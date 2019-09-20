@@ -260,7 +260,7 @@ g_M = None
 
 def load_expected_mails():
     try:
-        for line in file(status_path):
+        for line in open(status_path):
             ts, key = line.rstrip().split(' ', 1)
             g_expected[ts + '-' + key] = (int(ts), int(key))
     except IOError:
@@ -275,7 +275,7 @@ def save_expected_mails():
     lines = []
     for ts, key in g_expected.values():
         lines.append('%d %s' % (ts, key))
-    file(status_path, 'w').write('\n'.join(lines) + '\n')
+    open(status_path, 'w').write('\n'.join(lines) + '\n')
 
 
 def add_starttls_support(self, keyfile=None, certfile=None):

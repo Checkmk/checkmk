@@ -2,7 +2,9 @@
 // provides basic api to start and stop service
 #include "stdafx.h"
 
-#include "providers/ps.h"
+#if defined(_WIN32)
+#include <shellapi.h>
+#endif
 
 #include <string>
 #include <tuple>
@@ -11,6 +13,7 @@
 #include "common/wtools.h"
 #include "fmt/format.h"
 #include "logger.h"
+#include "providers/ps.h"
 #include "providers/wmi.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"

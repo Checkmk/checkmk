@@ -50,12 +50,12 @@ domain = 'multisite'
 
 
 def _locale_base():
-    return cmk.utils.paths.local_locale_dir
+    return str(cmk.utils.paths.local_locale_dir)
 
 
 def _pot_file():
-    if os.path.exists(cmk.utils.paths.local_locale_dir + '/multisite.pot'):
-        return cmk.utils.paths.local_locale_dir + '/multisite.pot'
+    if os.path.exists(str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'):
+        return str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'
     return _locale_base() + '/multisite.pot'
 
 
@@ -138,7 +138,7 @@ def _write_alias(lang, alias):
     if alias == '-':
         os.remove(_alias_file(lang))
     else:
-        file(_alias_file(lang), 'w').write(alias)
+        open(_alias_file(lang), 'w').write(alias)
 
 
 def _check_binaries():
@@ -180,8 +180,8 @@ def _localize_sniff():
         cmk.utils.paths.web_dir + "/app",
         cmk.utils.paths.lib_dir + "/python/cmk",
     ]
-    if os.path.exists(cmk.utils.paths.local_web_dir):
-        paths.append(cmk.utils.paths.local_web_dir)
+    if cmk.utils.paths.local_web_dir.exists():
+        paths.append(str(cmk.utils.paths.local_web_dir))
 
     sniff_files = []
     for path in paths:
@@ -270,8 +270,8 @@ def _localize_update(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(
-            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        open(po_file, 'w').write(
+            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     _localize_sniff()
@@ -298,8 +298,8 @@ def _localize_compile(lang):
     # the default hierarchy
     if not os.path.exists(po_file) \
        and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        file(po_file, 'w').write(
-            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        open(po_file, 'w').write(
+            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     if not os.path.exists(po_file):

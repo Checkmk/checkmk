@@ -30,7 +30,7 @@ This will create a file called '~/tmp/example_regression.py'.
 
 3) In order to use it as a test case move it to the folder
 [check_mk]/tests/unit/checks/generictests/datasets/.
-Make sure the file(s name) is a valid python module:
+Make sure the file is a valid python module:
 
  mv /tmp/example_regression.py \
  ~/git/check_mk/tests/unit/checks/generictests/datasets/nfsmounts_1.py

@@ -26,13 +26,12 @@
 
 import abc
 from typing import Text, Type, List  # pylint: disable=unused-import
+import six
 
 import cmk.utils.plugin_registry
 
 
-class PermissionSection(object):
-    __metaclass__ = abc.ABCMeta
-
+class PermissionSection(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def name(self):
         # type: () -> str
@@ -74,8 +73,7 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 permission_section_registry = PermissionSectionRegistry()
 
 
-class Permission(object):
-    __metaclass__ = abc.ABCMeta
+class Permission(six.with_metaclass(abc.ABCMeta, object)):
     _sort_index = 0
 
     @abc.abstractproperty
@@ -167,7 +165,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
 # Kept for compatibility with pre 1.6 GUI plugins
 # Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
-    if isinstance(name, unicode):
+    if isinstance(name, six.text_type):
         name = name.encode("utf-8")
 
     section_name, permission_name = name.split(".", 1)

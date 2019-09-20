@@ -5,6 +5,7 @@
 
 // other files
 #include <filesystem>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -35,8 +36,9 @@ public:
     // deprecated API
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
-
-    void createDataFolderStructure(const std::wstring& AgentDataFolder);
+    enum class CreateMode { with_path, direct };
+    void createDataFolderStructure(const std::wstring& AgentDataFolder,
+                                   CreateMode mode);
 
     // for testing and reloading
     void cleanAll();
@@ -107,7 +109,7 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder);
+        std::wstring_view AgentDataFolder, CreateMode mode);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -127,6 +129,7 @@ private:
 
 namespace cma::cfg {
 namespace details {
+constexpr size_t kMaxFoldersStackSize = 10;
 // low level API to combine sequences
 enum class Combine { overwrite, merge, merge_value };
 constexpr Combine GetCombineMode(std::string_view name);
@@ -204,12 +207,21 @@ class ConfigInfo {
     };
 
 public:
+    using sptr = std::shared_ptr<ConfigInfo>;
+    ConfigInfo() {}
+    ConfigInfo(const ConfigInfo&) = delete;
+    ConfigInfo& operator=(const ConfigInfo&) = delete;
     void initFolders(const std::wstring& ServiceValidName,  // look in registry
                      const std::wstring& RootFolder,        // look in disk
                      const std::wstring& AgentDataFolder);  // look in disk
 
     void cleanFolders();
     void cleanConfig();
+
+    bool pushFolders(const std::filesystem::path& root,
+                     const std::filesystem::path& data);
+
+    bool popFolders();
 
     // not so heavy operation, use free
     YAML::Node getConfig() const noexcept {
@@ -359,6 +371,8 @@ public:
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& FullPath);
 
+    uint64_t uniqId() const noexcept { return uniq_id_; }
+
 private:
     void fillExePaths(std::filesystem::path root);
     void fillConfigDirs();
@@ -373,8 +387,6 @@ private:
         exe_command_paths_;  // root/utils, root/plugins etc
     std::vector<std::filesystem::path> config_dirs_;  // root and data
 
-    details::Folders folders_;
-
     std::string host_name_;
     std::wstring cwd_;
     std::wstring logfile_dir_;
@@ -386,6 +398,8 @@ private:
     mutable std::mutex lock_;
 
     YAML::Node yaml_;
+    details::Folders folders_;
+    std::stack<details::Folders> folders_stack_;
 
     std::wstring root_yaml_path_;    // located in root
     std::wstring bakery_yaml_path_;  // located in bakery
@@ -403,6 +417,8 @@ private:
     std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
     std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
 
+    static std::atomic<uint64_t> uniq_id_;
+
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
     FRIEND_TEST(StartTest, CheckStatus);
@@ -413,11 +429,18 @@ private:
 #endif
 };
 
-extern ConfigInfo G_ConfigInfo;
-
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);
 std::filesystem::path GetDefaultLogPath();
 std::wstring FindMsiExec() noexcept;
 std::string FindHostName() noexcept;
 }  // namespace details
+details::ConfigInfo& GetCfg();
+}  // namespace cma::cfg
+
+namespace cma::cfg {
+using CfgNode = cma::cfg::details::ConfigInfo::sptr;
+
+CfgNode CreateNode(const std::string& name);
+CfgNode GetNode(const std::string& name);
+bool RemoveNode(const std::string& name);
 }  // namespace cma::cfg

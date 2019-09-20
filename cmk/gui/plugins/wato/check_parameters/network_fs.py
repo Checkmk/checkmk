@@ -38,39 +38,31 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetworkFs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_network_fs():
+    return TextAscii(title=_("Name of the mount point"),
+                     help=_("For NFS enter the name of the mount point."))
 
-    @property
-    def check_group_name(self):
-        return "network_fs"
 
-    @property
-    def title(self):
-        return _("Network filesystem - overall status (e.g. NFS)")
+def _parameter_valuespec_network_fs():
+    return Dictionary(elements=[
+        (
+            "has_perfdata",
+            DropdownChoice(title=_("Performance data settings"),
+                           choices=[
+                               (True, _("Enable performance data")),
+                               (False, _("Disable performance data")),
+                           ],
+                           default_value=False),
+        ),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "has_perfdata",
-                DropdownChoice(title=_("Performance data settings"),
-                               choices=[
-                                   (True, _("Enable performance data")),
-                                   (False, _("Disable performance data")),
-                               ],
-                               default_value=False),
-            ),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the mount point"),
-                         help=_("For NFS enter the name of the mount point."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="network_fs",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_network_fs,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_network_fs,
+        title=lambda: _("Network filesystem - overall status (e.g. NFS)"),
+    ))

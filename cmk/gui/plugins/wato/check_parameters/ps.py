@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
     ManualCheckParameterRulespec,
     CheckParameterRulespecWithItem,
 )
@@ -444,75 +444,62 @@ def cgroup_match_options():
 
 
 # Rule for discovered process checks
-@rulespec_registry.register_without_manual_check_rulespec
-class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_ps():
+    return TextAscii(title=_("Process name as defined at discovery"),)
 
-    @property
-    def check_group_name(self):
-        return "ps"
 
-    @property
-    def title(self):
-        return _("State and count of processes")
+def _parameter_valuespec_ps():
+    return Transform(
+        Dictionary(elements=process_level_elements(),
+                   ignored_keys=["match_groups", "cgroup"],
+                   required_keys=["cpu_rescale_max"]),
+        forth=ps_convert_inventorized_from_singlekeys,
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(elements=process_level_elements(),
-                       ignored_keys=["match_groups", "cgroup"],
-                       required_keys=["cpu_rescale_max"]),
-            forth=ps_convert_inventorized_from_singlekeys,
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Process name as defined at discovery"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ps",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_ps,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ps,
+        title=lambda: _("State and count of processes"),
+    ))
 
 
 # Rule for static process checks
-@rulespec_registry.register
-class ManualCheckParameterPs(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksApplications
+def _manual_item_spec_ps():
+    return TextAscii(
+        title=_("Process Name"),
+        help=_("This name will be used in the description of the service"),
+        allow_empty=False,
+        regex="^[a-zA-Z_0-9 _./-]*$",
+        regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
+                      "dot, hyphen and slash for your service description"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "ps"
 
-    @property
-    def title(self):
-        return _("State and count of processes")
+def _manual_parameter_valuespec_ps():
+    return Transform(
+        Dictionary(elements=[
+            ("process", process_match_options()),
+            ("user", user_match_options()),
+        ] + process_level_elements(),
+                   ignored_keys=["match_groups"],
+                   required_keys=["cpu_rescale_max"]),
+        forth=ps_cleanup_params,
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(elements=[
-                ("process", process_match_options()),
-                ("user", user_match_options()),
-            ] + process_level_elements(),
-                       ignored_keys=["match_groups"],
-                       required_keys=["cpu_rescale_max"]),
-            forth=ps_cleanup_params,
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Process Name"),
-            help=_("This name will be used in the description of the service"),
-            allow_empty=False,
-            regex="^[a-zA-Z_0-9 _./-]*$",
-            regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
-                          "dot, hyphen and slash for your service description"),
-        )
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="ps",
+        group=RulespecGroupManualChecksApplications,
+        item_spec=_manual_item_spec_ps,
+        parameter_valuespec=_manual_parameter_valuespec_ps,
+        title=lambda: _("State and count of processes"),
+    ))
 
 
 # In version 1.2.4 the check parameters for the resulting ps check
@@ -546,69 +533,61 @@ def convert_inventory_processes(old_dict):
     return new_dict
 
 
-@rulespec_registry.register
-class RulespecInventoryProcessesRules(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
+def _valuespec_inventory_processes_rules():
+    return Transform(
+        Dictionary(
+            title=_('Process Discovery'),
+            help=_("This ruleset defines criteria for automatically creating checks for running "
+                   "processes based upon what is running when the service discovery is "
+                   "done. These services will be created with default parameters. They will get "
+                   "critical when no process is running and OK otherwise. You can parameterize "
+                   "the check with the ruleset <i>State and count of processes</i>."),
+            elements=[
+                ('descr', process_discovery_descr_option()),
+                ('match', process_match_options()),
+                ('user',
+                 user_match_options([
+                     FixedValue(
+                         False,
+                         title=_('Grab user from found processess'),
+                         totext='',
+                         help=_(
+                             'Specifying "grab user" makes the created check expect the process to '
+                             'run as the same user as during inventory: the user name will be '
+                             'hardcoded into the check. In that case if you put %u into the service '
+                             'description, that will be replaced by the actual user name during '
+                             'inventory. You need that if your rule might match for more than one '
+                             'user - your would create duplicate services with the same description '
+                             'otherwise.'))
+                 ])),
+                ("cgroup", cgroup_match_options()),
+                ('default_params',
+                 Dictionary(
+                     title=_("Default parameters for detected services"),
+                     help=
+                     _("Here you can select default parameters that are being set "
+                       "for detected services. Note: the preferred way for setting parameters is to use "
+                       "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
+                       "State and Count of Processes</a> instead. "
+                       "A change there will immediately be active, while a change in this rule "
+                       "requires a re-discovery of the services."),
+                     elements=process_level_elements(),
+                     ignored_keys=["match_groups"],
+                     required_keys=["cpu_rescale_max"])),
+            ],
+            required_keys=["descr", "default_params"],
+        ),
+        forth=convert_inventory_processes,
+    )
 
-    @property
-    def name(self):
-        return "inventory_processes_rules"
 
-    @property
-    def match_type(self):
-        return "all"
-
-    @property
-    def valuespec(self):
-        return Transform(
-            Dictionary(
-                title=_('Process Discovery'),
-                help=_(
-                    "This ruleset defines criteria for automatically creating checks for running "
-                    "processes based upon what is running when the service discovery is "
-                    "done. These services will be created with default parameters. They will get "
-                    "critical when no process is running and OK otherwise. You can parameterize "
-                    "the check with the ruleset <i>State and count of processes</i>."),
-                elements=[
-                    ('descr', process_discovery_descr_option()),
-                    ('match', process_match_options()),
-                    ('user',
-                     user_match_options([
-                         FixedValue(
-                             False,
-                             title=_('Grab user from found processess'),
-                             totext='',
-                             help=
-                             _('Specifying "grab user" makes the created check expect the process to '
-                               'run as the same user as during inventory: the user name will be '
-                               'hardcoded into the check. In that case if you put %u into the service '
-                               'description, that will be replaced by the actual user name during '
-                               'inventory. You need that if your rule might match for more than one '
-                               'user - your would create duplicate services with the same description '
-                               'otherwise.'))
-                     ])),
-                    ("cgroup", cgroup_match_options()),
-                    ('default_params',
-                     Dictionary(
-                         title=_("Default parameters for detected services"),
-                         help=
-                         _("Here you can select default parameters that are being set "
-                           "for detected services. Note: the preferred way for setting parameters is to use "
-                           "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
-                           "State and Count of Processes</a> instead. "
-                           "A change there will immediately be active, while a change in this rule "
-                           "requires a re-discovery of the services."),
-                         elements=process_level_elements(),
-                         ignored_keys=["match_groups"],
-                         required_keys=["cpu_rescale_max"])),
-                ],
-                required_keys=["descr", "default_params"],
-            ),
-            forth=convert_inventory_processes,
-        )
-
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="all",
+        name="inventory_processes_rules",
+        valuespec=_valuespec_inventory_processes_rules,
+    ))
 
 #   .--SNMP processes------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -773,110 +752,91 @@ def hr_process_parameter_elements():
     ]
 
 
-@rulespec_registry.register
-class RulespecDiscoveryHRProcessesRules(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
+def _valuespec_discovery_hr_processes_rules():
+    return Dictionary(
+        title=_('Process Discovery (only SNMP)'),
+        help=_("This ruleset defines criteria for automatically creating checks for running "
+               "SNMP processes based upon the HOST Resource MIB and what is running when the "
+               "service discovery is done. You can either specify the textual description "
+               "or the path of process within the matching criteria."),
+        elements=[
+            ('descr', process_discovery_descr_option()),
+        ] + hr_process_match_elements() + [
+            ('default_params',
+             Dictionary(
+                 title=_("Default parameters for detected services"),
+                 help=
+                 _("Here you can select default parameters that are being set "
+                   "for detected services. Note: the preferred way for setting parameters is to use "
+                   "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
+                   "State and Count of Processes</a> instead. "
+                   "A change there will immediately be active, while a change in this rule "
+                   "requires a re-discovery of the services."),
+                 elements=hr_process_parameter_elements(),
+                 ignored_keys=["match_groups"])),
+        ],
+        required_keys=["descr", "default_params"],
+        ignored_keys=["match_groups"],
+    )
 
-    @property
-    def name(self):
-        return "discovery_hr_processes_rules"
 
-    @property
-    def match_type(self):
-        return "all"
-
-    @property
-    def valuespec(self):
-        return Dictionary(
-            title=_('Process Discovery (only SNMP)'),
-            help=_("This ruleset defines criteria for automatically creating checks for running "
-                   "SNMP processes based upon the HOST Resource MIB and what is running when the "
-                   "service discovery is done. You can either specify the textual description "
-                   "or the path of process within the matching criteria."),
-            elements=[
-                ('descr', process_discovery_descr_option()),
-            ] + hr_process_match_elements() + [
-                ('default_params',
-                 Dictionary(
-                     title=_("Default parameters for detected services"),
-                     help=
-                     _("Here you can select default parameters that are being set "
-                       "for detected services. Note: the preferred way for setting parameters is to use "
-                       "the rule set <a href=\"wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset\"> "
-                       "State and Count of Processes</a> instead. "
-                       "A change there will immediately be active, while a change in this rule "
-                       "requires a re-discovery of the services."),
-                     elements=hr_process_parameter_elements(),
-                     ignored_keys=["match_groups"])),
-            ],
-            required_keys=["descr", "default_params"],
-            ignored_keys=["match_groups"],
-        )
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="all",
+        name="discovery_hr_processes_rules",
+        valuespec=_valuespec_discovery_hr_processes_rules,
+    ))
 
 
 # Rule for discovered process checks
-@rulespec_registry.register_without_manual_check_rulespec
-class RulespecCheckgroupParametersHRPs(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_hr_ps():
+    return TextAscii(title=_("Process name as defined at discovery"),)
 
-    @property
-    def check_group_name(self):
-        return "hr_ps"
 
-    @property
-    def title(self):
-        return _("State and count of processes (only SNMP)")
+def _parameter_valuespec_hr_ps():
+    return Dictionary(help=_(
+        "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."),
+                      elements=hr_process_parameter_elements(),
+                      ignored_keys=["match_name_or_path", "match_status", "match_groups"])
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(help=_(
-            "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."),
-                          elements=hr_process_parameter_elements(),
-                          ignored_keys=["match_name_or_path", "match_status", "match_groups"])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Process name as defined at discovery"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hr_ps",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_hr_ps,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_hr_ps,
+        title=lambda: _("State and count of processes (only SNMP)"),
+    ))
 
 
 # Rule for static process checks
-@rulespec_registry.register
-class ManualCheckParameterHRPs(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksApplications
+def _manual_item_spec_hr_ps():
+    return TextAscii(
+        title=_("Process Name"),
+        help=_("This name will be used in the description of the service"),
+        allow_empty=False,
+        regex="^[a-zA-Z_0-9 _./-]*$",
+        regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
+                      "dot, hyphen and slash for your service description"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "hr_ps"
 
-    @property
-    def title(self):
-        return _("State and count of processes (only SNMP)")
+def _manual_parameter_valuespec_hr_ps():
+    return Dictionary(
+        elements=hr_process_match_elements() + hr_process_parameter_elements(),
+        required_keys=["descr"],
+        ignored_keys=["match_name_or_path", "match_status", "match_groups"],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=hr_process_match_elements() + hr_process_parameter_elements(),
-            required_keys=["descr"],
-            ignored_keys=["match_name_or_path", "match_status", "match_groups"],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Process Name"),
-            help=_("This name will be used in the description of the service"),
-            allow_empty=False,
-            regex="^[a-zA-Z_0-9 _./-]*$",
-            regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
-                          "dot, hyphen and slash for your service description"),
-        )
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="hr_ps",
+        group=RulespecGroupManualChecksApplications,
+        item_spec=_manual_item_spec_hr_ps,
+        parameter_valuespec=_manual_parameter_valuespec_hr_ps,
+        title=lambda: _("State and count of processes (only SNMP)"),
+    ))

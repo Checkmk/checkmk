@@ -38,50 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishBackend(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_backend():
+    return Dictionary(elements=[
+        ("busy",
+         Tuple(
+             title=_("Upper levels for \"backend connections busy/too many\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("fail",
+         Tuple(
+             title=_("Upper levels for \"backend connections failures\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("unhealthy",
+         Tuple(
+             title=_("Upper levels for \"backend connections unhealthy/not attempted\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_backend"
 
-    @property
-    def title(self):
-        return _("Varnish Backend")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("busy",
-             Tuple(
-                 title=_("Upper levels for \"backend connections busy/too many\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("fail",
-             Tuple(
-                 title=_("Upper levels for \"backend connections failures\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("unhealthy",
-             Tuple(
-                 title=_(
-                     "Upper levels for \"backend connections unhealthy/not attempted\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_backend",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_backend,
+        title=lambda: _("Varnish Backend"),
+    ))

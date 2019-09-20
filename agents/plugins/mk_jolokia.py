@@ -262,6 +262,7 @@ class JolokiaInstance(object):
 
         self.base_url = self._get_base_url()
         self.target = self._get_target()
+        self.post_config = {"ignoreErrors": "true"}
         self._session = self._initialize_http_session()
 
     def _get_base_url(self):
@@ -287,6 +288,8 @@ class JolokiaInstance(object):
 
     def _initialize_http_session(self):
         session = requests.Session()
+        # Watch out: we must provide the verify keyword to every individual request call!
+        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
@@ -325,6 +328,7 @@ class JolokiaInstance(object):
         data["type"] = function
         if use_target and self.target:
             data["target"] = self.target
+        data["config"] = self.post_config
         return data
 
     def post(self, data):
@@ -332,7 +336,13 @@ class JolokiaInstance(object):
         if VERBOSE:
             sys.stderr.write("\nDEBUG: POST data: %r\n" % post_data)
         try:
-            raw_response = self._session.post(self.base_url, data=post_data)
+            # Watch out: we must provide the verify keyword to every individual request call!
+            # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
+            raw_response = self._session.post(self.base_url,
+                                              data=post_data,
+                                              verify=self._session.verify)
+        except () if DEBUG else requests.exceptions.ConnectionError:
+            raise SkipInstance("Cannot connect to server at %s" % self.base_url)
         except () if DEBUG else Exception as exc:
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
@@ -461,7 +471,11 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, "search", mbean)
+    try:
+        value = fetch_var(inst, "search", mbean)
+    except () if DEBUG else SkipMBean:
+        return []
+
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:

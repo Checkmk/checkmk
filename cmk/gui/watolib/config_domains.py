@@ -121,7 +121,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         try:
             pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
             try:
-                pid = int(file(pidfile).read().strip())
+                pid = int(open(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
                 # No liveproxyd running: No reload needed.
@@ -218,6 +218,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return multisite_dir()
 
     def config_file(self, site_specific=False):
+        if site_specific:
+            return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False):
@@ -382,7 +384,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             return {}
 
         try:
-            for line in file(path):
+            for line in open(path):
                 line = line.strip()
 
                 if line == "" or line.startswith("#"):

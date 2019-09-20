@@ -137,7 +137,7 @@ class ModeBulkImport(WatoMode):
 
     def _read_csv_file(self):
         try:
-            csv_file = file(self._file_path())
+            csv_file = open(self._file_path())
         except IOError:
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again."))

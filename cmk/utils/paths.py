@@ -26,11 +26,13 @@
 """This module serves the path structure of the Check_MK environment
 to all components of Check_MK."""
 
+import sys
 import os
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
     from pathlib2 import Path
 
 
@@ -96,26 +98,24 @@ notifications_dir = _omd_path("share/check_mk/notifications")
 inventory_dir = _omd_path("share/check_mk/inventory")
 check_manpages_dir = _omd_path("share/check_mk/checkman")
 agents_dir = _omd_path("share/check_mk/agents")
-mibs_dir = _omd_path("share/check_mk/mibs")
 web_dir = _omd_path("share/check_mk/web")
 pnp_templates_dir = _omd_path("share/check_mk/pnp-templates")
 doc_dir = _omd_path("share/doc/check_mk")
 locale_dir = _omd_path("share/check_mk/locale")
 bin_dir = _omd_path("bin")
 lib_dir = _omd_path("lib")
-mib_dir = _omd_path("share/snmp/mibs")
+mib_dir = Path(_omd_path("share/snmp/mibs"))
 
-local_share_dir = _local_path(share_dir)
-local_checks_dir = _local_path(checks_dir)
-local_notifications_dir = _local_path(notifications_dir)
-local_inventory_dir = _local_path(inventory_dir)
-local_check_manpages_dir = _local_path(check_manpages_dir)
-local_agents_dir = _local_path(agents_dir)
-local_mibs_dir = _local_path(mibs_dir)
-local_web_dir = _local_path(web_dir)
-local_pnp_templates_dir = _local_path(pnp_templates_dir)
-local_doc_dir = _local_path(doc_dir)
-local_locale_dir = _local_path(locale_dir)
-local_bin_dir = _local_path(bin_dir)
-local_lib_dir = _local_path(lib_dir)
-local_mib_dir = _local_path(mib_dir)
+local_share_dir = Path(_local_path(share_dir))
+local_checks_dir = Path(_local_path(checks_dir))
+local_notifications_dir = Path(_local_path(notifications_dir))
+local_inventory_dir = Path(_local_path(inventory_dir))
+local_check_manpages_dir = Path(_local_path(check_manpages_dir))
+local_agents_dir = Path(_local_path(agents_dir))
+local_web_dir = Path(_local_path(web_dir))
+local_pnp_templates_dir = Path(_local_path(pnp_templates_dir))
+local_doc_dir = Path(_local_path(doc_dir))
+local_locale_dir = Path(_local_path(locale_dir))
+local_bin_dir = Path(_local_path(bin_dir))
+local_lib_dir = Path(_local_path(lib_dir))
+local_mib_dir = Path(_local_path(mib_dir))

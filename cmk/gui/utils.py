@@ -28,12 +28,12 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import os
 import re
 import uuid
 import marshal
 import urlparse
 import itertools
+from pathlib2 import Path
 
 import cmk.utils.paths
 
@@ -61,6 +61,11 @@ def num_split(s):
 def cmp_num_split(a, b):
     """Compare two strings, separate numbers and non-numbers from before."""
     return (num_split(a) > num_split(b)) - (num_split(a) < num_split(b))
+
+
+def key_num_split(a):
+    """Return a key from a string, separate numbers and non-numbers from before."""
+    return num_split(a)
 
 
 def is_allowed_url(url):
@@ -128,7 +133,7 @@ def saveint(x):
 def get_random_string(size, from_ascii=48, to_ascii=90):
     """Generate a random string (no cryptographic safety)"""
     secret = ""
-    urandom = file("/dev/urandom")
+    urandom = open("/dev/urandom")
     while len(secret) < size:
         c = urandom.read(1)
         if ord(c) >= from_ascii and ord(c) <= to_ascii:
@@ -139,7 +144,7 @@ def get_random_string(size, from_ascii=48, to_ascii=90):
 def gen_id():
     """Generates a unique id"""
     try:
-        return file('/proc/sys/kernel/random/uuid').read().strip()
+        return open('/proc/sys/kernel/random/uuid').read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback
@@ -158,27 +163,25 @@ def load_web_plugins(forwhat, globalvars):
     _failed_plugins[forwhat] = []
 
     for plugins_path in [
-            cmk.utils.paths.web_dir + "/plugins/" + forwhat,
-            cmk.utils.paths.local_web_dir + "/plugins/" + forwhat
+            Path(cmk.utils.paths.web_dir, "plugins", forwhat),
+            cmk.utils.paths.local_web_dir.joinpath("plugins", forwhat),
     ]:
-        if not os.path.exists(plugins_path):
+        if not plugins_path.exists():
             continue
 
-        for fn in sorted(os.listdir(plugins_path)):
-            file_path = plugins_path + "/" + fn
-
+        for file_path in sorted(plugins_path.iterdir()):
             try:
-                if fn.endswith(".py") and not os.path.exists(file_path + "c"):
-                    exec (open(file_path).read(), globalvars)
+                if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
+                    exec (file_path.open().read(), globalvars)
 
-                elif fn.endswith(".pyc"):
-                    code_bytes = file(file_path).read()[8:]
+                elif file_path.suffix == ".pyc":
+                    code_bytes = file_path.open().read()[8:]
                     code = marshal.loads(code_bytes)
                     exec(code, globalvars)  # yapf: disable
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
-                _failed_plugins[forwhat].append((file_path, e))
+                _failed_plugins[forwhat].append((str(file_path), e))
 
 
 def get_failed_plugins():

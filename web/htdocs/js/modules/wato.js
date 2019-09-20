@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -108,7 +108,8 @@ export function fix_visibility() {
             }
             if ( display == "none" ) {
                 // Uncheck checkboxes of hidden fields
-                var chkbox = oAttrDisp.parentNode.childNodes[0].childNodes[1].childNodes[0];
+                var input_fields = oTr.cells[0].getElementsByTagName("input");
+                var chkbox = input_fields[0];
                 chkbox.checked = false;
                 toggle_attribute(chkbox, attrname);
 
@@ -174,24 +175,19 @@ function get_effective_tags()
     var container_ids = [ "wato_host_tags", "data_sources", "address" ];
 
     for (var a = 0; a < container_ids.length; a++) {
-        var container_id = container_ids[a];
-
-        var oHostTags = document.getElementById(container_id);
-
-        if (!oHostTags)
+        var tag_container = document.getElementById(container_ids[a]);
+        if (!tag_container)
             continue;
 
-        var oTable = oHostTags.childNodes[0]; /* tbody */
-
-        for (var i = 0; i < oTable.childNodes.length; i++) {
-            var oTr = oTable.childNodes[i];
+        for (var i = 0; i < tag_container.rows.length; i++) {
+            var row = tag_container.rows[i];
             var add_tag_id = null;
-            if (oTr.tagName == "TR") {
-                var oTdLegend = oTr.childNodes[0];
-                if (oTdLegend.className != "legend") {
+            if (row.tagName == "TR") {
+                var legend_cell = row.cells[0];
+                if (legend_cell.className != "legend") {
                     continue;
                 }
-                var oTdContent = oTr.childNodes[1];
+                var content_cell = row.cells[1];
 
                 /*
                  * If the Checkbox is unchecked try to get a value from the inherited_tags
@@ -199,7 +195,7 @@ function get_effective_tags()
                  * The checkbox may be disabled. In this case there is a hidden field with the original
                  * name of the checkbox. Get that value instead of the checkbox checked state.
                  */
-                var input_fields = oTdLegend.getElementsByTagName("input");
+                var input_fields = legend_cell.getElementsByTagName("input");
                 var checkbox = input_fields[0];
                 var attr_enabled = false;
                 if (checkbox.name.indexOf("ignored_") === 0) {
@@ -216,9 +212,9 @@ function get_effective_tags()
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */
-                    var elements = oTdContent.getElementsByTagName("input");
+                    var elements = content_cell.getElementsByTagName("input");
                     if (elements.length == 0)
-                        elements = oTdContent.getElementsByTagName("select");
+                        elements = content_cell.getElementsByTagName("select");
 
                     if (elements.length == 0)
                         continue;
@@ -322,7 +318,8 @@ export function toggle_folder(event, oDiv, on) {
     }
 }
 
-export function toggle_rule_condition_type(value) {
+export function toggle_rule_condition_type(select_id) {
+    var value = document.getElementById(select_id).value;
     $(".condition").hide();
     $(".condition."+value).show();
 }

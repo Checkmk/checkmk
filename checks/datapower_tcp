@@ -38,9 +38,8 @@
 
 
 def parse_datapower_tcp(info):
-    parsed = {}
-    for tcp_state, tcp_count in info:
-        parsed[int(tcp_state.split(".")[0])] = int(tcp_count)
+    parsed = empty_stats()
+    parsed.update({map_counter_keys.get(int(row[0].split(".")[0])): int(row[1]) for row in info})
     return parsed
 
 

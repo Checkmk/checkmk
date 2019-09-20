@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -236,6 +236,28 @@ table.validationerror  {
     width: auto;
   }
 }
+
+div#service_container {
+  div.action_buttons div.button_spacer {
+    display: inline-block;
+    height: 19px;
+    margin-right: 16px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-right: 2px solid $button-spacer-color;
+  }
+
+  table.data {
+    tr.groupheader {
+      background-color: $service-container-groupheader-bg-color;
+    }
+
+    td h3 {
+      margin-top: $td-h3-margin-top;
+    }
+  }
+}
+
 
 table.data tr.data > td.bulkactions {
   background: transparent;
@@ -457,7 +479,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       left: 0;
       overflow: hidden;
       font-size: $theme-font-size-main;
-      color: #bde;
+      color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -699,13 +721,27 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
-.wato table.data.ruleset tr.disabled td * {
-  color: #999;
-  text-shadow: 0 1px 0 #fff;
+.wato table.data.ruleset tr.disabled td {
+  * {
+    color: #999;
+  }
+
+  .tagify__tag-text {
+    color: inherit;
+  }
+
+  tag > div::before {
+    opacity: .5;
+  }
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-  background-color: $theme-color-nuance-2;
+  color: $matches-search-font-color;
+  background-color: $matches-search-bg-color;
+
+  &.buttons {
+    border-radius: 0;
+  }
 }
 
 /* Special styling for Timeperiods editor */
@@ -991,6 +1027,10 @@ div.varname {
     width: 160px;
     height: 16px;
     text-align: center;
+
+    &.state_success {
+      color: $dark-font-color;
+    }
   }
 
   div.progress {
@@ -1131,7 +1171,7 @@ table.data tr.data.dcd_log_entries {
       div.exc {
         padding: 5px;
         margin: 10px;
-        border: 1px solid #ff0000;
+        border: 1px solid #f00;
       }
     }
 
@@ -1359,6 +1399,7 @@ table.data td.bi_rule_tree {
     &.diag_success {
       background-color: $host-diag-success-bg-color;
     }
+
     &.diag_failed {
       background-color: $host-diag-failed-bg-color;
     }
@@ -1549,11 +1590,6 @@ table.nform.rulesettings td.legend {
     position: absolute;
     right: 0;
     background: transparent;
-  }
-
-  td.state.acknowledged {
-    background-image: url("images/white_60percent.png");
-    background-repeat: repeat;
   }
 
   tr.ac_test_details td a {

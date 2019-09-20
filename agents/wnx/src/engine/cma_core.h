@@ -142,7 +142,9 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
 namespace cma {
 class TheMiniBox {
 public:
-    TheMiniBox() : process_(nullptr), stop_set_(false), proc_id_(0) {}
+    TheMiniBox() : process_(nullptr), stop_set_(false), proc_id_(0) {
+        stop_event_ = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    }
     TheMiniBox(const TheMiniBox&) = delete;
     TheMiniBox& operator=(const TheMiniBox&) = delete;
 
@@ -150,7 +152,10 @@ public:
     TheMiniBox(const TheMiniBox&&) = delete;
     TheMiniBox& operator=(const TheMiniBox&&) = delete;
 
-    ~TheMiniBox() { clean(); }
+    ~TheMiniBox() {
+        clean();
+        CloseHandle(stop_event_);
+    }
 
     //
     bool startBlind(const std::string CommandLine, const std::string User) {
@@ -297,7 +302,9 @@ public:
     // With kGrane interval tries to check running processes
     // returns true if all processes ended
     // returns false on timeout or break;
-    bool waitForEnd(std::chrono::milliseconds Timeout, bool KillWhatLeft);
+    bool waitForEnd(std::chrono::milliseconds Timeout);
+
+    bool waitForEndWindows(std::chrono::milliseconds Timeout);
 
     // normally kill process and associated data
     // also removes and resets other resources
@@ -310,6 +317,7 @@ public:
         id_.clear();
         exec_.clear();
         stop_set_ = false;
+        proc_id_ = 0;
         lk.unlock();
 
         delete process;
@@ -330,6 +338,7 @@ public:
         std::lock_guard lk(lock_);
         stop_set_ = true;
         cv_stop_.notify_one();
+        ::SetEvent(stop_event_);
     }
 
     // get handle to read data from stdio
@@ -342,6 +351,8 @@ public:
     }
 
 private:
+    HANDLE stop_event_;
+    bool waitForStop(std::chrono::milliseconds Timeout);
     wtools::StopWatch sw_;
     // called AFTER process finished!
     void readWhatLeft() {
@@ -437,19 +448,29 @@ private:
 
 namespace cma {
 
+enum class HackDataMode { header, line };
+
+// build correct string for patching
+std::string ConstructPatchString(time_t time_now, int cache_age,
+                                 HackDataMode mode) noexcept;
+
 // 1. replaces '\r' with '\r\n'
-// 2. <<<PLUGIN>>>\nsomething -> <<<PLUGIN:cached(123456789,3600)>>>\nsomething
+// 2a. HackDataMode::header :
+// <<<PLUGIN>>>\nsomething -> <<<PLUGIN:cached(123456789,3600)>>>\nsomething
 //    if header bad or not found - nothing had been done
 // true on success
-// if Legacy time and CacheAge set to 0, no hacking
-bool HackPluginDataWithCacheInfo(std::vector<char>& Out,
-                                 const std::vector<char>& OriginalData,
-                                 time_t LegacyTime, long long CacheAge);
+// 2b. HackDataMode::line :
+// hack every string with patch
+// "string"
+// "patch" + "string"
+bool HackDataWithCacheInfo(std::vector<char>& Out,
+                           const std::vector<char>& OriginalData,
+                           const std::string& patch, HackDataMode mode);
 
 // cleans \r from string
 inline bool HackPluginDataRemoveCR(std::vector<char>& Out,
                                    const std::vector<char>& OriginalData) {
-    return HackPluginDataWithCacheInfo(Out, OriginalData, 0, 0);
+    return HackDataWithCacheInfo(Out, OriginalData, "", HackDataMode::header);
 }
 
 class PluginEntry : public cma::cfg::PluginInfo {
@@ -657,6 +678,8 @@ protected:
     FRIEND_TEST(PluginTest, TimeoutCalc);
     FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
     FRIEND_TEST(PluginTest, Async0DataPickup);
+    FRIEND_TEST(PluginTest, AsyncLocal);
+    FRIEND_TEST(PluginTest, SyncLocal);
 #endif
 };
 
@@ -670,7 +693,17 @@ PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
 
 void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
 
+using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
+
+void RemoveDuplicatedEntriesByName(UnitMap& um, bool local);
+std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
+    const std::vector<std::filesystem::path>& found_files, bool local);
+
 void ApplyEverythingToPluginMap(
+    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
+    const std::vector<std::filesystem::path>& files, bool Local);
+
+void ApplyEverythingToPluginMapDeprecated(
     PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
     const std::vector<std::filesystem::path>& files, bool Local);
 
@@ -705,7 +738,7 @@ namespace tools {
 using StringSet = std::set<std::string>;
 // returns true if string added
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
-                                  const std::string value) noexcept;
+                                  const std::string& value) noexcept;
 // returns true if string added
 bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
 }  // namespace tools

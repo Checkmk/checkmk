@@ -670,7 +670,7 @@ def load_users(lock=False):
 
     def readlines(f):
         try:
-            return file(f)
+            return open(f)
         except IOError:
             return []
 
@@ -734,7 +734,7 @@ def load_users(lock=False):
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                secret = file(directory + d + "/automation.secret").read().strip()
+                secret = open(directory + d + "/automation.secret").read().strip()
             except IOError:
                 secret = None
             if secret:
@@ -759,7 +759,7 @@ def custom_attr_path(userid, key):
 def load_custom_attr(userid, key, conv_func, default=None):
     path = custom_attr_path(userid, key)
     try:
-        return conv_func(file(path).read().strip())
+        return conv_func(open(path).read().strip())
     except IOError:
         return default
 

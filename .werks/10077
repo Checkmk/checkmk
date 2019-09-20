@@ -1,0 +1,16 @@
+Title: Validation of IPv6 address input fields extended by zone/interface index and name
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568892637
+Class: feature
+
+The validation process for the input fields of IPv6 addresses will now allow the extension of the zone/interface index and name.
+For IPv6 addresses you can add the zone index or interface name/index by appending a % to the IP address followed by the value.
+A zone/interface index could be 1, 2, 3 etc. An interface name eth0, wlp5s0, etc.
+Example: fe80::aebc:32ff:fe95:8ac1%3 or fe80::aebc:32ff:fe95:8ac1%eth1
+
+For link-local addresses you may need to define the interface when calling tools like ping or tracroute.
+Otherwise this error might occour: 'connect: Invalid argument'

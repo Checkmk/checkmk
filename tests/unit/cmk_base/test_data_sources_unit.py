@@ -104,11 +104,10 @@ def test_normalize_ip(ip_in, ips_out):
 @pytest.mark.parametrize("result,reported,rule", [
     (None, "127.0.0.1", None),
     (None, None, "127.0.0.1"),
-    ((0, 'allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
-    ((1, 'invalid access configuration:'
-      ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
-    ((1, 'invalid access configuration:'
-      ' agent blocks: 1.2.3.4 1.2.3.5(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
+    ((0, 'Allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
+    ((1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)'), "1.2.{3,4,5}.6",
+     "1.2.3.6"),
+    ((1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
 ])
 def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     ts = Scenario().add_host("hostname")

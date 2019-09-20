@@ -279,7 +279,7 @@ def convert_hostname(h):
 def output_profile():
     g_profile.dump_stats(g_profile_path)
     show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
-    file(show_profile, "w")\
+    open(show_profile, "w")\
         .write("#!/usr/bin/python\n"
                "import pstats\n"
                "stats = pstats.Stats('%s')\n"

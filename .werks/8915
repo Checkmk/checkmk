@@ -1,0 +1,12 @@
+Title: Monitor Kubernetes Pod conditions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568712886
+Class: feature
+
+This adds monitoring of pod conditions in a manner consistent to
+the monitoring of node conditions.  That is, the check is {OK}
+if the pod can be scheduled, {CRIT} otherwise.

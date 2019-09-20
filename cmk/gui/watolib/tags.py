@@ -28,9 +28,11 @@
 import os
 import errno
 from pathlib2 import Path
+import six
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.i18n import _
 
 import cmk.utils.tags
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
@@ -66,6 +68,8 @@ class TagConfigFile(WatoSimpleConfigFile):
         },
                                         lock=lock)
 
+        _migrate_old_sample_config_tag_groups(legacy_cfg["wato_host_tags"],
+                                              legacy_cfg["wato_aux_tags"])
         return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
                                                     legacy_cfg["wato_aux_tags"])
 
@@ -87,6 +91,119 @@ class TagConfigFile(WatoSimpleConfigFile):
         base_config_file = WatoSimpleConfigFile(config_file_path=Path(wato_root_dir()) / "tags.mk",
                                                 config_variable="tag_config")
         base_config_file.save(cfg)
+
+
+# Previous to 1.5 the "Agent type" tag group was created as sample config and was not
+# a builtin tag group (which can not be modified by the user). With werk #5535 we changed
+# the tag scheme and need to deal with the user config (which might extend the original tag group).
+# Use two strategies:
+#
+# a) Check whether or not the tag group has been modified. If not, simply remove it from the user
+#    config and use the builtin tag group in the future.
+# b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
+# TODO: Move to wato/watolib and register using register_post_config_load_hook()
+def _migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
+    _remove_old_sample_config_tag_groups(host_tags, aux_tags_)
+    _extend_user_modified_tag_groups(host_tags)
+
+
+def _remove_old_sample_config_tag_groups(host_tags, aux_tags_):
+    legacy_tag_group_default = (
+        'agent',
+        u'Agent type',
+        [
+            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+            ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping', u'No Agent', []),
+        ],
+    )
+
+    try:
+        host_tags.remove(legacy_tag_group_default)
+
+        # Former tag choices (see above) are added as aux tags to allow the user to migrate
+        # these tags and the objects that use them
+        aux_tags_.insert(0,
+                         ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
+    except ValueError:
+        pass  # Not there or modified
+
+    legacy_aux_tag_ids = [
+        'snmp',
+        'tcp',
+    ]
+
+    for aux_tag in aux_tags_[:]:
+        if aux_tag[0] in legacy_aux_tag_ids:
+            aux_tags_.remove(aux_tag)
+
+
+def _extend_user_modified_tag_groups(host_tags):
+    """This method supports migration from <1.5 to 1.5 in case the user has a customized "Agent type" tag group
+    See help of migrate_old_sample_config_tag_groups() and werk #5535 and #6446 for further information.
+
+    Disclaimer: The host_tags data structure is a mess which will hopefully be cleaned up during 1.6 development.
+    Basically host_tags is a list of configured tag groups. Each tag group is represented by a tuple like this:
+
+    # tag_group_id, tag_group_title, tag_choices
+    ('agent', u'Agent type',
+        [
+            # tag_id, tag_title, aux_tag_ids
+            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
+            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
+            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
+            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
+            ('ping',      u'No Agent', []),
+        ],
+    )
+    """
+    tag_group = None
+    for this_tag_group in host_tags:
+        if this_tag_group[0] == "agent":
+            tag_group = this_tag_group
+
+    if tag_group is None:
+        return  # Tag group does not exist
+
+    # Mark all existing tag choices as legacy to help the user that this should be cleaned up
+    for index, tag_choice in enumerate(tag_group[2][:]):
+        if tag_choice[0] in ["no-agent", "special-agents", "all-agents", "cmk-agent"]:
+            continue  # Don't prefix the standard choices
+
+        if tag_choice[1].startswith("Legacy: "):
+            continue  # Don't prefix already prefixed choices
+
+        tag_choice_list = list(tag_choice)
+        tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
+        tag_group[2][index] = tuple(tag_choice_list)
+
+    tag_choices = [c[0] for c in tag_group[2]]
+
+    if "no-agent" not in tag_choices:
+        tag_group[2].insert(0, ("no-agent", _("No agent"), []))
+
+    if "special-agents" not in tag_choices:
+        tag_group[2].insert(
+            0, ("special-agents", _("No Checkmk agent, all configured special agents"), ["tcp"]))
+
+    if "all-agents" not in tag_choices:
+        tag_group[2].insert(
+            0, ("all-agents", _("Normal Checkmk agent, all configured special agents"), ["tcp"]))
+
+    if "cmk-agent" not in tag_choices:
+        tag_group[2].insert(
+            0, ("cmk-agent", _("Normal Checkmk agent, or special agent if configured"), ["tcp"]))
+    else:
+        # Change title of cmk-agent tag choice and move to top
+        for index, tag_choice in enumerate(tag_group[2]):
+            if tag_choice[0] == "cmk-agent":
+                tag_choice_list = list(tag_group[2].pop(index))
+                tag_choice_list[1] = _("Normal Checkmk agent, or special agent if configured")
+                tag_group[2].insert(0, tuple(tag_choice_list))
+                break
 
 
 # Creates a includable PHP file which provides some functions which
@@ -122,7 +239,7 @@ def _export_hosttags_to_php(cfg):
     # files into php.
     tempfile = path + '.tmp'
     lockfile = path + '.state'
-    file(lockfile, 'a')
+    open(lockfile, 'a')
     store.aquire_lock(lockfile)
 
     # Transform WATO internal data structures into easier usable ones
@@ -138,7 +255,7 @@ def _export_hosttags_to_php(cfg):
 
     # First write a temp file and then do a move to prevent syntax errors
     # when reading half written files during creating that new file
-    file(tempfile, 'w').write('''<?php
+    open(tempfile, 'w').write('''<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
 $mk_hosttags = %s;
@@ -206,7 +323,7 @@ def _format_php(data, lvl=1):
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
         s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, unicode):
+    elif isinstance(data, six.text_type):
         s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'

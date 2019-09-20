@@ -39,7 +39,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 
@@ -49,91 +49,80 @@ def transform_msx_queues(params):
     return params
 
 
-@rulespec_registry.register
-class RulespecWinperfMsxQueuesInventory(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
-
-    @property
-    def name(self):
-        return "winperf_msx_queues_inventory"
-
-    @property
-    def match_type(self):
-        return "all"
-
-    @property
-    def valuespec(self):
-        return ListOf(
-            Tuple(orientation="horizontal",
-                  elements=[
-                      TextAscii(
-                          title=_("Name of Counter"),
-                          help=_("Name of the Counter to be monitored."),
-                          size=50,
-                          allow_empty=False,
-                      ),
-                      Integer(
-                          title=_("Offset"),
-                          help=_("The offset of the information relative to counter base"),
-                          allow_empty=False,
-                      ),
-                  ]),
-            title=_('MS Exchange Message Queues Discovery'),
-            help=
-            _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
-              'If the format of your counters object is not compatible then you can adapt the counter '
-              'offsets manually.'),
-            movable=False,
-            add_label=_("Add Counter"),
-        )
+def _valuespec_winperf_msx_queues_inventory():
+    return ListOf(
+        Tuple(orientation="horizontal",
+              elements=[
+                  TextAscii(
+                      title=_("Name of Counter"),
+                      help=_("Name of the Counter to be monitored."),
+                      size=50,
+                      allow_empty=False,
+                  ),
+                  Integer(
+                      title=_("Offset"),
+                      help=_("The offset of the information relative to counter base"),
+                      allow_empty=False,
+                  ),
+              ]),
+        title=_('MS Exchange Message Queues Discovery'),
+        help=
+        _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
+          'If the format of your counters object is not compatible then you can adapt the counter '
+          'offsets manually.'),
+        movable=False,
+        add_label=_("Add Counter"),
+    )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsxQueues(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="all",
+        name="winperf_msx_queues_inventory",
+        valuespec=_valuespec_winperf_msx_queues_inventory,
+    ))
 
-    @property
-    def check_group_name(self):
-        return "msx_queues"
 
-    @property
-    def title(self):
-        return _("MS Exchange Message Queues")
+def _item_spec_msx_queues():
+    return TextAscii(
+        title=_("Explicit Queue Names"),
+        help=_("Specify queue names that the rule should apply to"),
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                title=_("Set Levels"),
-                elements=[
-                    ('levels',
-                     Tuple(
-                         title=_("Maximum Number of E-Mails in Queue"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("E-Mails")),
-                             Integer(title=_("Critical at"), unit=_("E-Mails"))
-                         ],
-                     )),
-                    ('offset',
-                     Integer(
-                         title=_("Offset"),
-                         help=
-                         _("Use this only if you want to overwrite the postion of the information in the agent "
-                           "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> "
-                          ))),
-                ],
-                optional_keys=["offset"],
-            ),
-            forth=transform_msx_queues,
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Explicit Queue Names"),
-            help=_("Specify queue names that the rule should apply to"),
-        )
+def _parameter_valuespec_msx_queues():
+    return Transform(
+        Dictionary(
+            title=_("Set Levels"),
+            elements=[
+                ('levels',
+                 Tuple(
+                     title=_("Maximum Number of E-Mails in Queue"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("E-Mails")),
+                         Integer(title=_("Critical at"), unit=_("E-Mails"))
+                     ],
+                 )),
+                ('offset',
+                 Integer(
+                     title=_("Offset"),
+                     help=
+                     _("Use this only if you want to overwrite the postion of the information in the agent "
+                       "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> "
+                      ))),
+            ],
+            optional_keys=["offset"],
+        ),
+        forth=transform_msx_queues,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="msx_queues",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_msx_queues,
+        parameter_valuespec=_parameter_valuespec_msx_queues,
+        title=lambda: _("MS Exchange Message Queues"),
+    ))

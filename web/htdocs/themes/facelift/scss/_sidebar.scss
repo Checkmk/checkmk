@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -48,14 +48,15 @@ body.side {
   background: $body-side-bg-color;
 
   p {
-    color: $theme-color-darkgrey; }
+    color: $theme-color-darkgrey;
+  }
 
   .link {
     color: $theme-color-lightgrey;
   }
-  
+
   .title {
-    color: $side-title-color;
+    color: $theme-color-lightgrey;
   }
 
   &.screenshotmode {
@@ -70,7 +71,7 @@ body.side {
   left: 0;
   z-index: 10;
   width: 100%;
-  height: $side-header-height;
+  height: 64px;
   margin: 0;
   background: $theme-color-sidebar-background;
   border: none;
@@ -129,7 +130,7 @@ body.main .popup_menu #side_header > span {
   z-index: 54;
   max-width: 150px;
   font-size: 11px;
-  color: #fff;
+  color: $primary-sidebar-font-color;
   text-align: right;
 
   a {
@@ -153,7 +154,7 @@ body.main .popup_menu #side_header > span {
     right: -12px;
     z-index: 15;
     padding: 2px;
-    color: #fff;
+    color: $primary-sidebar-font-color;
     cursor: pointer;
     background-color: #f00;
     border-radius: 10px;
@@ -176,7 +177,7 @@ body.main .popup_menu #side_header > span {
 
 /* Only put in a top offset when on the sidebar - not for dashlets */
 #side_header + #side_content {
-  top: 66px;
+  top: $side-content-top;
 }
 
 /* The footer of the sidebar */
@@ -251,7 +252,7 @@ span#msg_label {
 body.side div.snapin, div.add_snapin div.snapin  {
   width: 100%;
   padding: 0;
-  margin: 8px 0;
+  margin: $snapin-margin;
   overflow: hidden;
   background: $theme-color-sidebar-background;
   border: $snapin-border;
@@ -260,8 +261,13 @@ body.side div.snapin, div.add_snapin div.snapin  {
   border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
+
   &:first-child {
-    margin-top: 6px;
+    margin-top: $sidebar-ends-margin;
+  }
+
+  &:last-of-type {
+    margin-bottom: $sidebar-ends-margin;
   }
 }
 
@@ -322,7 +328,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: 8px; /* Invisible spacing around hole snapin content */
-    color: #fff;
+    color: $primary-sidebar-font-color;
     background-color: $theme-color-sidebar-background;
     box-sizing: border-box;
   }
@@ -349,23 +355,23 @@ div.snapin {
   }
 
   td {
-    color: #fff;
+    color: $primary-sidebar-font-color;
   }
 
   h3 {
     margin: 2px 0;
     font-size: 100%;
-    color: #fff;
+    color: $primary-sidebar-font-color;
   }
 
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: #fff;
+    color: $primary-sidebar-font-color;
     text-decoration: none;
 
     &:hover {
-      color: #fff;
+      color: $snapin-link-hover-color;
       text-decoration: underline;
     }
 
@@ -383,7 +389,7 @@ div.snapin {
 
   li {
     padding-left: 1px;
-    color: #478;
+    color: $snapin-list-color;
 
     &.sidebar {
       margin-left: 0;
@@ -483,7 +489,8 @@ div.snapin table.allhosts td a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin table.allhosts td body.main .popup_menu span.link,
 body.main .popup_menu div.snapin table.allhosts td span.link {
-  padding: 7px 4px;
+  padding: 2px;
+  padding-left: 4px;
 }
 
 div.snapin div.footnotelink a.link,

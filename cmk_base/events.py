@@ -176,14 +176,6 @@ def raw_context_from_string(data):
     return context
 
 
-def raw_context_from_stdin():
-    context = {}
-    for line in sys.stdin:
-        varname, value = line.strip().split("=", 1)
-        context[varname] = expand_backslashes(value)
-    return context
-
-
 def expand_backslashes(value):
     # We cannot do the following:
     # value.replace(r"\n", "\n").replace("\\\\", "\\")
@@ -217,7 +209,7 @@ def event_log(logfile_path, message):
     if isinstance(message, str):
         message = message.decode("utf-8")
     formatted = u"%s %s\n" % (time.strftime("%F %T", time.localtime()), message)
-    file(logfile_path, "a").write(formatted.encode("utf-8"))
+    open(logfile_path, "a").write(formatted.encode("utf-8"))
 
 
 def find_host_service_in_context(context):
@@ -705,11 +697,6 @@ def add_context_to_environment(plugin_context, prefix):
         os.putenv(prefix + key, plugin_context[key].encode('utf-8'))
 
 
-def remove_context_from_environment(plugin_context, prefix):
-    for key in plugin_context:
-        os.unsetenv(prefix + key)
-
-
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters
 #  into a flat contextlist for use as environment variables in plugins
 #
@@ -717,11 +704,11 @@ def remove_context_from_environment(plugin_context, prefix):
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(plugin_context, prefix, param, log_function):
+def add_to_event_context(plugin_context, prefix, param):
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param):
-            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value, log_function)
+            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
     elif isinstance(param, dict):
         for key, value in param.items():
             varname = "%s_%s" % (prefix, key.upper())
@@ -735,7 +722,7 @@ def add_to_event_context(plugin_context, prefix, param, log_function):
                 if value is None:
                     continue
 
-            add_to_event_context(plugin_context, varname, value, log_function)
+            add_to_event_context(plugin_context, varname, value)
     else:
         plugin_context[prefix] = plugin_param_to_string(param)
 

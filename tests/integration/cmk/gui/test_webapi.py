@@ -10,6 +10,7 @@ from StringIO import StringIO
 import subprocess
 import sys
 import time
+import six
 
 import pytest  # type: ignore
 from PIL import Image  # type: ignore
@@ -39,7 +40,7 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
     yield
@@ -412,8 +413,8 @@ def test_write_host_labels(web, site):
         }
 
         for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
-            assert isinstance(label_id, unicode)
-            assert isinstance(label_value, unicode)
+            assert isinstance(label_id, six.text_type)
+            assert isinstance(label_value, six.text_type)
 
     finally:
         web.delete_hosts(["test-host-lan"])
@@ -503,8 +504,8 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
-        file(dummy_map_filepath1, "w")
-        file(dummy_map_filepath2, "w")
+        open(dummy_map_filepath1, "w")
+        open(dummy_map_filepath2, "w")
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -638,7 +639,7 @@ def _wait_for_bulk_discovery_job(web):
         status = web.bulk_discovery_status()
         return status["job"]["state"] != "initialized" and status["is_active"] is False
 
-    wait_until(job_completed, timeout=15, interval=1)
+    wait_until(job_completed, timeout=30, interval=1)
 
 
 def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
@@ -655,7 +656,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    assert "65 added" in status["job"]["output"]
+    assert "63 added" in status["job"]["output"]
     assert "discovery successful" in status["job"]["output"]
 
 
@@ -731,7 +732,7 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
         web.discover_services("test-host-get-graph")
@@ -1056,7 +1057,7 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'title': u'CPU time in operating system',
                     u'unit': u's'
                 }, {
-                    u'color': u'#00b2ff',
+                    u'color': u'#0093ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
                         None, 1.0

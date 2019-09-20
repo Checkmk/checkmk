@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import json
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -32,6 +33,22 @@
 #   |                     |_|   \__,_|_|  |___/\___|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+def parse_jolokia_json_output(info):
+    for line in info:
+        try:
+            instance, mbean, raw_json_data = line
+            yield instance, mbean, json.loads(raw_json_data)
+        except ValueError:
+            continue
+
+
+def _jolokia_mbean_attribute(attribute, mbean):
+    tmp = mbean.split("%s=" % attribute, 1)[1]
+    for delimiter in (',', '/'):
+        tmp = tmp.split(delimiter, 1)[0]
+    return tmp
 
 
 def jolokia_basic_split(line, expected_length):
@@ -145,29 +162,6 @@ def jolokia_metrics_parse(info):
 #   |            |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def inventory_jolokia_metrics(info, what):
-    parsed = jolokia_metrics_parse(info)
-
-    levels = None
-
-    if what == 'mem':
-        levels = {}
-    elif what == 'threads':
-        levels = 'jolokia_metrics_threads_default_levels'
-
-    for instance, data in parsed.items():
-        if data is None:
-            continue  # No connection to agent currently
-
-        if what == 'uptime' and "Uptime" not in data:
-            continue
-        if what == 'mem' and ("HeapMemoryUsage" not in data or "NonHeapMemoryUsage" not in data or
-                              "HeapMemoryMax" not in data or "NonHeapMemoryMax" not in data):
-            # don't add memory check if we don't have the necessary data
-            continue
-        yield instance, levels
 
 
 def inventory_jolokia_metrics_apps(info, what):

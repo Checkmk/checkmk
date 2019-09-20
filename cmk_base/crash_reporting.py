@@ -99,14 +99,14 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, i
             "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
             "manual_check": is_manual_check,
         })
-    file(crash_dir + "/crash.info",
+    open(crash_dir + "/crash.info",
          "w").write(crash_reporting.crash_info_to_string(crash_info) + "\n")
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name):
     cachefile = "%s/snmp/%s" % (cmk.utils.paths.data_source_cache_dir, hostname)
     if os.path.exists(cachefile):
-        file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
+        open(crash_dir + "/snmp_info", "w").write(open(cachefile).read())
 
 
 def _write_crash_dump_agent_output(crash_dir, hostname):
@@ -116,11 +116,11 @@ def _write_crash_dump_agent_output(crash_dir, hostname):
         real_time_checks = None
 
     if real_time_checks and real_time_checks.is_real_time_check_helper():
-        file(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
+        open(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
     else:
         cachefile = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname)
         if os.path.exists(cachefile):
-            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+            open(crash_dir + "/agent_output", "w").write(open(cachefile).read())
 
 
 def _pack_crash_dump(crash_dir):

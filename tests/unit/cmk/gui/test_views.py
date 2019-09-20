@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 import copy
 import pytest # type: ignore
+import six
 import cmk.gui.config as config
 
 # Make it load all plugins (CEE + CME)
@@ -153,7 +154,7 @@ def test_layout_properties():
 
     for ident, spec in expected.items():
         plugin = cmk.gui.plugins.views.layout_registry[ident]()
-        assert isinstance(plugin.title, unicode)
+        assert isinstance(plugin.title, six.text_type)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
         assert spec["hide"] == plugin.is_hidden
@@ -6040,6 +6041,7 @@ def test_registered_display_hints(load_plugins):
     '.software.',
     '.software.applications.',
     '.software.applications.check_mk.',
+    '.software.applications.check_mk.agent_version',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',
     '.software.applications.check_mk.host_labels:',
@@ -6096,6 +6098,13 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.kubernetes.pod_container:*.name',
     '.software.applications.kubernetes.pod_container:*.ready',
     '.software.applications.kubernetes.pod_container:*.restart_count',
+    '.software.applications.kubernetes.job_container:',
+    '.software.applications.kubernetes.job_container:*.name',
+    '.software.applications.kubernetes.job_container:*.image',
+    '.software.applications.kubernetes.job_container:*.image_pull_policy',
+    '.software.applications.kubernetes.daemon_pod_containers:*.name',
+    '.software.applications.kubernetes.daemon_pod_containers:*.image',
+    '.software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy',
     '.software.applications.kubernetes.pod_info.',
     '.software.applications.kubernetes.pod_info.dns_policy',
     '.software.applications.kubernetes.pod_info.host_ip',

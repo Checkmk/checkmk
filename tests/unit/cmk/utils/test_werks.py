@@ -28,7 +28,7 @@ def test_write_precompiled_werks(edition, tmp_path, monkeypatch):
     cme_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cme"])
 
     assert len(cre_werks) > 1000
-    assert [w for w in cre_werks.keys() if w >= 9000] == []
+    assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
 
     assert len(cee_werks) > 700

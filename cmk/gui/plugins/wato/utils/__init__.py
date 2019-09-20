@@ -127,10 +127,10 @@ from cmk.gui.watolib.rulespecs import (
     TimeperiodValuespec,
     rulespec_registry,
     Rulespec,
-    ABCHostValueRulespec,
-    ABCServiceValueRulespec,
-    ABCBinaryHostRulespec,
-    ABCBinaryServiceRulespec,
+    HostRulespec,
+    ServiceRulespec,
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     ManualCheckParameterRulespec,
@@ -696,32 +696,28 @@ def register_check_parameters(subgroup,
 
     # Register rule for discovered checks
     if has_inventory:
-        class_attrs = {
+        kwargs = {
             "group": subgroup,
-            "title": title,
+            "title": lambda: title,
             "match_type": match_type,
             "is_deprecated": deprecated,
-            "parameter_valuespec": valuespec,
+            "parameter_valuespec": lambda: valuespec,
             "check_group_name": checkgroup,
-            "item_spec": itemspec,
+            "create_manual_check": register_static_check,
         }
+
+        if itemspec:
+            kwargs["item_spec"] = lambda: itemspec
 
         base_class = CheckParameterRulespecWithItem if itemspec is not None else CheckParameterRulespecWithoutItem
 
-        rulespec_class = type("LegacyCheckParameterRulespec%s" % checkgroup.title(), (base_class,),
-                              class_attrs)
-        rulespec_registry.register(rulespec_class)
+        rulespec_registry.register(base_class(**kwargs))
 
     if not (valuespec and has_inventory) and register_static_check:
         raise MKGeneralException("Sorry, registering manual check parameters without discovery "
                                  "check parameters is not supported anymore using the old API. "
                                  "Please register the manual check rulespec using the new API. "
                                  "Checkgroup: %s" % checkgroup)
-
-    if has_inventory and not register_static_check:
-        # Remove the static checks rulespec that was created during the checkgroup
-        # rulespec registration by the registry
-        del rulespec_registry["static_checks:%s" % checkgroup]
 
 
 @rulespec_group_registry.register
@@ -1084,9 +1080,7 @@ class ConfigHostname(TextAsciiAutocomplete):
         return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
 
 
-class EventsMode(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1695,9 +1689,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(object):
-    __metaclass__ = abc.ABCMeta
-
+class NotificationParameter(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -1755,7 +1747,7 @@ class DictHostTagCondition(Transform):
             ListOfMultiple(
                 title=title,
                 help=help_txt,
-                choices=self._get_tag_group_choices(),
+                choices=self._get_cached_tag_group_choices(),
                 choice_page_name="ajax_dict_host_tag_condition_get_choice",
                 add_label=_("Add tag condition"),
                 del_label=_("Remove tag condition"),
@@ -1763,6 +1755,13 @@ class DictHostTagCondition(Transform):
             forth=self._to_valuespec,
             back=self._from_valuespec,
         )
+
+    def _get_cached_tag_group_choices(self):
+        # In case one has configured a lot of tag groups / id recomputing this for
+        # every DictHostTagCondition instance takes a lot of time
+        if "tag_group_choices" not in g:
+            g.tag_group_choices = self._get_tag_group_choices()
+        return g.tag_group_choices
 
     def _get_tag_group_choices(self):
         choices = []

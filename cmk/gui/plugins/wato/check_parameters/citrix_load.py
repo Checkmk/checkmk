@@ -38,28 +38,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCitrixLoad(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_citrix_load():
+    return Transform(Tuple(
+        title=_("Citrix Server load"),
+        elements=[
+            Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
+            Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
+        ],
+    ),
+                     forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
+                     back=lambda x: (int(x[0] * 100), int(x[1] * 100)))
 
-    @property
-    def check_group_name(self):
-        return "citrix_load"
 
-    @property
-    def title(self):
-        return _("Load of Citrix Server")
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(Tuple(
-            title=_("Citrix Server load"),
-            elements=[
-                Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
-                Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
-            ],
-        ),
-                         forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
-                         back=lambda x: (int(x[0] * 100), int(x[1] * 100)))
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="citrix_load",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_citrix_load,
+        title=lambda: _("Load of Citrix Server"),
+    ))

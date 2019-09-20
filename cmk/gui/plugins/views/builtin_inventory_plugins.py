@@ -408,7 +408,8 @@ inventory_displayhints.update({
     ".software.packages:*.size": {"title": _("Size"), "paint": "count"},
     ".software.packages:*.path": {"title": _("Path")},
     ".software.applications.": {"title": _("Applications")},
-    ".software.applications.check_mk.": {"title": _("Check_MK")},
+    ".software.applications.check_mk.": {"title": _("Checkmk")},
+    ".software.applications.check_mk.agent_version": {"title": _("Checkmk Agent Version")},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
     },
@@ -513,6 +514,14 @@ inventory_displayhints.update({
             "container_id",
         ],
     },
+    ".software.applications.kubernetes.job_container:": {
+        "title": _("Containers"),
+        "keyorder": [
+            "name",
+            "image",
+            "image_pull_policy",
+        ],
+    },
     ".software.applications.kubernetes.roles:*.role" : {"title": _("Name")},
     ".software.applications.kubernetes.roles:*.namespace" : {"title": _("Namespace")},
     ".software.applications.kubernetes.nodes:*.name" : {"title": _("Name")},
@@ -523,6 +532,12 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.pod_container:*.ready": {"title": _("Ready"), "paint": "container_ready"},
     ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _("Restart count")},
     ".software.applications.kubernetes.pod_container:*.container_id": {"title": _("Container ID")},
+    ".software.applications.kubernetes.job_container:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.job_container:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.job_container:*.image_pull_policy": {"title": _("Image pull policy")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy": {"title": _("Image pull policy")},
     ".software.applications.kubernetes.pod_info.": {
         "title": _("Pod"),
     },

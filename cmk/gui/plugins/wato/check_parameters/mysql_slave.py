@@ -39,45 +39,37 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMysqlSlave(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_mysql_slave():
+    return TextAscii(
+        title=_("Instance"),
+        help=_("Only needed if you have multiple MySQL Instances on one server"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "mysql_slave"
 
-    @property
-    def title(self):
-        return _("MySQL Slave")
+def _parameter_valuespec_mysql_slave():
+    return Dictionary(elements=[
+        ("seconds_behind_master",
+         Tuple(
+             title=_("Max. time behind the master"),
+             help=_(
+                 "Compares the time which the slave can be behind the master. "
+                 "This rule makes the check raise warning/critical states if the time is equal to "
+                 "or above the configured levels."),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ],
+         )),
+    ],
+                      optional_keys=None)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("seconds_behind_master",
-             Tuple(
-                 title=_("Max. time behind the master"),
-                 help=_(
-                     "Compares the time which the slave can be behind the master. "
-                     "This rule makes the check raise warning/critical states if the time is equal to "
-                     "or above the configured levels."),
-                 elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
-                 ],
-             )),
-        ],
-                          optional_keys=None)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("Only needed if you have multiple MySQL Instances on one server"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mysql_slave",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_mysql_slave,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mysql_slave,
+        title=lambda: _("MySQL Slave"),
+    ))

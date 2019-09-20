@@ -1,0 +1,92 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.14 14
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.15 15
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.2.14 3
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.2.15 3
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.3.14 Volt_VR_DIMM_GH
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.3.15 "56 6F 6C 74 5F 53 41 53 5F 45 58 50 5F 30 56 39 01 "
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.4.14 1220
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.4.15 923
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.6.14 1319
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.6.15 988
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.7.14 -99
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.7.15 -99
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.8.14 -99
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.8.15 -99
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.9.14 1079
+# .1.3.6.1.4.1.7244.1.2.1.3.5.1.9.15 806
+
+
+@get_parsed_item_data
+def check_quanta_voltage(item, params, entry):
+    yield entry.status[0], 'Status: %s' % entry.status[1]
+
+    if entry.value in (-99, None):
+        return
+
+    yield check_levels(
+        entry.value,
+        'voltage',
+        params.get('levels', entry.upper_levels) + params.get('levels_lower', entry.lower_levels),
+        unit='V',
+    )
+
+
+check_info['quanta_voltage'] = {
+        'inventory_function': discover(),
+        'parse_function': parse_quanta,
+        'check_function': check_quanta_voltage,
+        'service_description': 'Voltage %s',
+        'includes': [ 'quanta.include'],
+        'group': 'voltage',
+        'has_perfdata': True,
+        # these is no good oid identifier for quanta devices, thats why the first oid is used here
+        'snmp_scan_function' : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.8072.3.2.10')and \
+                                    ( oid('.1.3.6.1.4.1.7244.1.2.1.1.1.0') is not None),
+        'snmp_info': [
+          (
+              '.1.3.6.1.4.1.7244.1.2.1.3.5.1',
+              [
+                1, # voltageDeviceInfoIndex
+                2, # voltageDeviceInfoStatus
+                3, # voltageDeviceInfoLocationName
+                4, # voltageDeviceReading
+                6, # voltageDeviceUpperCriticalThreshold
+                7, # voltageDeviceUpperNonCriticalThreshold
+                8, # voltageDeviceLowerNonCriticalThreshold
+                9, # voltageDeviceLowerCriticalThreshold
+            ]),
+      ]
+    }

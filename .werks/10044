@@ -1,0 +1,12 @@
+Title: Fix broken "ineffective rules" matching
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568643466
+
+The rule analyzing logic for the "ineffective rules" page in WATO matched on
+rules that were in fact effective.

@@ -1,6 +1,7 @@
 import argparse
 import sys
 import StringIO
+
 import cmk.utils.log
 import cmk.update_config as update_config
 import cmk.gui.config

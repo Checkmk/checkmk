@@ -40,51 +40,42 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWlcClients(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_wlc_clients():
+    return Transform(
+        Dictionary(title=_("Number of connections"),
+                   elements=[
+                       ("levels",
+                        Tuple(title=_("Upper levels"),
+                              elements=[
+                                  Integer(title=_("Warning at"), unit=_("connections")),
+                                  Integer(title=_("Critical at"), unit=_("connections")),
+                              ])),
+                       ("levels_lower",
+                        Tuple(title=_("Lower levels"),
+                              elements=[
+                                  Integer(title=_("Critical if below"), unit=_("connections")),
+                                  Integer(title=_("Warning if below"), unit=_("connections")),
+                              ])),
+                   ]),
+        # old params = (crit_low, warn_low, warn, crit)
+        forth=lambda v: isinstance(v, tuple) and {
+            "levels": (
+                v[2],
+                v[3],
+            ),
+            "levels_lower": (
+                v[1],
+                v[0],
+            )
+        } or v,
+    )
 
-    @property
-    def check_group_name(self):
-        return "wlc_clients"
 
-    @property
-    def title(self):
-        return _("WLC WiFi client connections")
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(title=_("Number of connections"),
-                       elements=[
-                           ("levels",
-                            Tuple(title=_("Upper levels"),
-                                  elements=[
-                                      Integer(title=_("Warning at"), unit=_("connections")),
-                                      Integer(title=_("Critical at"), unit=_("connections")),
-                                  ])),
-                           ("levels_lower",
-                            Tuple(title=_("Lower levels"),
-                                  elements=[
-                                      Integer(title=_("Critical if below"), unit=_("connections")),
-                                      Integer(title=_("Warning if below"), unit=_("connections")),
-                                  ])),
-                       ]),
-            # old params = (crit_low, warn_low, warn, crit)
-            forth=lambda v: isinstance(v, tuple) and {
-                "levels": (
-                    v[2],
-                    v[3],
-                ),
-                "levels_lower": (
-                    v[1],
-                    v[0],
-                )
-            } or v,
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of Wifi"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="wlc_clients",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Name of Wifi")),
+        parameter_valuespec=_parameter_valuespec_wlc_clients,
+        title=lambda: _("WLC WiFi client connections"),
+    ))

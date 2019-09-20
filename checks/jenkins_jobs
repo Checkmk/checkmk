@@ -35,30 +35,34 @@
 import json
 
 JenkinsJobInfo = collections.namedtuple("job_info", [
-    "name", "state", "job_score", "last_suc_build", "build_id", "build_result", "build_duration",
-    "build_timestamp"
+    "display_name", "name", "state", "job_score", "last_suc_build", "build_id", "build_result",
+    "build_duration", "build_timestamp"
 ])
 
 MAP_JOB_STATES = {
-    "aborted": 1,
-    "aborted_anime": 1,
+    "aborted": 0,
+    "aborted_anime": 0,
     "blue": 0,
     "blue_anime": 0,  # running
-    "red": 2,
-    "red_anime": 1,
+    "disabled": 0,
+    "disabled_anime": 0,
+    "grey": 0,
+    "grey_anime": 0,
     "notbuilt": 0,
+    "notbuilt_anime": 0,
+    "red": 2,
+    "red_anime": 0,
     "yellow": 1,
+    "yellow_anime": 0,
 }
 
 MAP_BUILD_STATES = {
-    "0": 0,  # notbuilt
-    "ABORTED": 1,
-    "FAILURE": 2,
-    "None": 0,  # running
-    "SUCCESS": 0,
-    "UNSTABLE": 1,
-    "null": 1,
-    "-1": 0,
+    "success": 0,  # no errors
+    "unstable": 1,  # some errors but not fatal
+    "failure": 2,  # fatal error
+    "aborted": 0,  # manually aborted
+    "null": 1,  # module was not built
+    "none": 0,  # running
 }
 
 
@@ -75,7 +79,15 @@ def parse_jenkins_jobs(info):
 
 @get_parsed_item_data
 def check_jenkins_jobs(item, params, item_data):
-    yield MAP_JOB_STATES[item_data[0].state], "State: %s" % item_data[0].state
+    display_name = item_data[0].display_name
+    if display_name is not None:
+        yield 0, "Display name: %s" % display_name
+
+    job_state = item_data[0].state
+    if job_state is not None:
+        yield params.get("job_state",
+                         {}).get(job_state,
+                                 MAP_JOB_STATES[job_state]), "State: %s" % job_state.title()
 
     time_since_last_suc = None
     if item_data[0].last_suc_build:
@@ -106,14 +118,13 @@ def check_jenkins_jobs(item, params, item_data):
                                param_checking,
                                human_readable_func=hr_func,
                                infoname=infotext)
-        else:
-            yield 0, "%s: not present" % infotext
 
-    if item_data[0].build_result:
-        yield MAP_BUILD_STATES[
-            item_data[0].build_result], "Build result: %s" % item_data[0].build_result.title()
-    else:
-        yield 0, "Build reult: not present"
+    build_result_data = item_data[0].build_result
+    if build_result_data:
+        build_result = build_result_data.lower()
+        yield params.get("build_result", {}).get(
+            build_result,
+            MAP_BUILD_STATES[build_result]), "Build result: %s" % build_result.title()
 
 
 def handle_single_job(job):
@@ -138,15 +149,15 @@ def handle_single_job(job):
         last_br = job["lastBuild"]['result']
         last_bn = job["lastBuild"]['number']
         last_bd = float(job["lastBuild"]["duration"]) / 1000.0
-        last_bt = int(job["lastBuild"]['timestamp']) / 1000
+        last_bt = int(int(job["lastBuild"]['timestamp']) / 1000)
     except (KeyError, TypeError, ValueError):
         last_br = None
         last_bn = None
         last_bd = None
         last_bt = None
 
-    return JenkinsJobInfo(job["name"], job["color"], health_rp, last_sb, last_bn, last_br, last_bd,
-                          last_bt)
+    return JenkinsJobInfo(job["displayNameOrNull"], job["name"], job["color"], health_rp, last_sb,
+                          last_bn, last_br, last_bd, last_bt)
 
 
 def handle_job_type(data, new_dict, folder=""):
@@ -156,7 +167,7 @@ def handle_job_type(data, new_dict, folder=""):
                 "com.cloudbees.hudson.plugins.folder.Folder",
                 "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
         ]:
-            item_name += "%s " % job_type["name"]
+            item_name += "%s/" % job_type["name"]
             if job_type.get("jobs") is not None:
                 handle_job_type(job_type["jobs"], new_dict, item_name)
             continue

@@ -1,3 +1,27 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
 //   .-Toolbar------------------------------------------------------------.
 //   |                 _____           _ _                                |
 //   |                |_   _|__   ___ | | |__   __ _ _ __                 |
@@ -52,24 +76,28 @@ export class Toolbar {
 
         plugin_ids.forEach(plugin_id=>{
             let plugin = this._toolbar_plugins[plugin_id]
-            let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
-            let togglebutton_selection = null
-            if (plugin.has_toggle_button()) {
-                togglebutton_selection = this.plugins_togglebutton_selection.append("div")
-                                                    .classed("togglebutton", true)
-                                                    .classed("noselect", true)
-                                                    .classed("box", true)
-                                                    .classed("on", true)
-                                                    .classed("down", false)
-                                                    .classed("up", true)
-//                                                    .classed("off", true)
-                                                    .on("click", ()=>plugin.toggle_active())
+            if (!plugin.has_content_selection()) {
+                let content_selection = this.plugins_content_selection.append("div").attr("id", plugin_id)
+                let togglebutton_selection = null
+                if (plugin.has_toggle_button()) {
+                    togglebutton_selection = this.plugins_togglebutton_selection.append("div")
+                                                        .classed("togglebutton", true)
+                                                        .classed("noselect", true)
+                                                        .classed("box", true)
+                                                        .classed("on", true)
+                                                        .classed("down", false)
+                                                        .classed("up", true)
+                                                        .on("click", ()=>plugin.toggle_active())
+                }
+                plugin.setup_selections(togglebutton_selection, content_selection)
+                plugin.render_togglebutton()
             }
-
-            plugin.setup_selections(togglebutton_selection, content_selection)
-            plugin.render_togglebutton()
             if (plugin.active)
                 plugin.update_active_state()
         })
+    }
+
+    add_togglebutton() {
+
     }
 }

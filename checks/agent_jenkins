@@ -27,7 +27,7 @@
 # {
 #     'port': 8080,
 #     'password': 'marchingband',
-#     'infos': ['jobs', 'builds'],
+#     'infos': ['instance', 'jobs', 'nodes', 'queue'],
 #     'user': 'kitty'
 # }
 

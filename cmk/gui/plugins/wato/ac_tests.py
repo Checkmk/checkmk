@@ -29,6 +29,7 @@ import subprocess
 
 import requests
 import urllib3  # type: ignore
+import six
 
 from livestatus import LocalConnection
 import cmk.gui.utils
@@ -233,7 +234,7 @@ class ACTestTmpfs(ACTest):
         # then in /proc/mounts the physical path will appear and be
         # different from tmp_path. We just check the suffix therefore.
         path_suffix = "sites/%s/tmp" % site_id
-        for line in file("/proc/mounts"):
+        for line in open("/proc/mounts"):
             try:
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':
@@ -451,14 +452,14 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
-class ABCACApacheTest(ACTest):
+class ABCACApacheTest(six.with_metaclass(abc.ABCMeta, ACTest)):
     """Abstract base class for apache related tests"""
+
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     def _get_number_of_idle_processes(self):
         apache_status = self._get_apache_status()

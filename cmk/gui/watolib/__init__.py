@@ -425,6 +425,11 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         })
 
+        content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
+        content += 'df_use_fs_used_as_metric_name = True\n'
+        store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
+                        content)
+
         # A contact group for all hosts and services
         groups = {
             "contact": {
@@ -496,6 +501,34 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     'description': u'Put all hosts into the contact group "all"'
                 },
             },],
+
+            # Docker container specific host check commands
+            'host_check_commands': [{
+                'condition': {
+                    'host_labels': {
+                        u'cmk/docker_object': u'container'
+                    }
+                },
+                'value': ('service', u'Docker container status'),
+                'options': {
+                    'description': u'Make all docker container host states base on the "Docker container status" service',
+                },
+            },],
+
+            # Enable HW/SW inventory + status data inventory for docker containers by default to
+            # simplify the setup procedure of docker monitoring
+            'active_checks': {
+                'cmk_inv': [{
+                    'condition': {
+                        'host_labels': {
+                            u'cmk/docker_object': u'node'
+                        }
+                    },
+                    'value': {
+                        'status_data_inventory': True
+                    },
+                },]
+            },
 
             # Interval for HW/SW-Inventory check
             'extra_service_conf': {

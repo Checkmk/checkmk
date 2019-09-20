@@ -4,8 +4,10 @@ from __future__ import print_function
 import os
 import re
 import sys
+import locale
 import pytest  # type: ignore
 from testlib import import_module
+import six
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +30,10 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
-    ("fromstart=True", 'fromstart', True),
+    ("fromstart=1", 'fromstart', True),
+    ("fromstart=yEs", 'fromstart', True),
+    ("fromstart=0", 'fromstart', False),
+    ("fromstart=no", 'fromstart', False),
     ("maxoutputsize=1024", 'maxoutputsize', 1024),
 ])
 def test_options_setter(mk_logwatch, option_string, key, expected_value):
@@ -114,7 +119,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 @pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
     (
         [
-            u'',
             u'/var/log/messages',
             u' C Fail event detected on md device',
             u' I mdadm.*: Rebuild.*event detected',
@@ -139,7 +143,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'',
             u'/var/log/auth.log',
             u' W sshd.*Corrupted MAC on input',
         ],
@@ -275,7 +278,7 @@ def test_ip_in_subnetwork(mk_logwatch):
 @pytest.mark.parametrize("buff,encoding,position", [
     ('\xFE\xFF', 'utf_16_be', 2),
     ('\xFF\xFE', 'utf_16', 2),
-    ('no encoding in this file!', 'utf_8', 0),
+    ('no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
@@ -293,7 +296,7 @@ def test_log_lines_iter(mk_logwatch):
     assert log_iter.get_position() == 710
 
     line = log_iter.next_line()
-    assert isinstance(line, unicode)
+    assert isinstance(line, six.text_type)
     assert line == u"# This file is part of Check_MK.\n"
     assert log_iter.get_position() == 743
 
@@ -381,7 +384,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
-    assert all(isinstance(item, unicode) for item in output)
+    assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert logfile in status

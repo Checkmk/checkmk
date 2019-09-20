@@ -38,49 +38,41 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAsmDiskgroup(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_asm_diskgroup():
+    return TextAscii(
+        title=_("ASM Disk Group"),
+        help=_("Specify the name of the ASM Disk Group "),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "asm_diskgroup"
 
-    @property
-    def title(self):
-        return _("ASM Disk Group (used space and growth)")
+def _parameter_valuespec_asm_diskgroup():
+    return Dictionary(
+        elements=filesystem_elements + [
+            ("req_mir_free",
+             DropdownChoice(
+                 title=_("Handling for required mirror space"),
+                 totext="",
+                 choices=[
+                     (False, _("Do not regard required mirror space as free space")),
+                     (True, _("Regard required mirror space as free space")),
+                 ],
+                 help=_(
+                     "ASM calculates the free space depending on free_mb or required mirror "
+                     "free space. Enable this option to set the check against required "
+                     "mirror free space. This only works for normal or high redundancy Disk Groups."
+                 ))),
+        ],
+        hidden_keys=["flex_levels"],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=filesystem_elements + [
-                ("req_mir_free",
-                 DropdownChoice(
-                     title=_("Handling for required mirror space"),
-                     totext="",
-                     choices=[
-                         (False, _("Do not regard required mirror space as free space")),
-                         (True, _("Regard required mirror space as free space")),
-                     ],
-                     help=_(
-                         "ASM calculates the free space depending on free_mb or required mirror "
-                         "free space. Enable this option to set the check against required "
-                         "mirror free space. This only works for normal or high redundancy Disk Groups."
-                     ))),
-            ],
-            hidden_keys=["flex_levels"],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("ASM Disk Group"),
-            help=_("Specify the name of the ASM Disk Group "),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="asm_diskgroup",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_asm_diskgroup,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_asm_diskgroup,
+        title=lambda: _("ASM Disk Group (used space and growth)"),
+    ))

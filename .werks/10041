@@ -1,0 +1,61 @@
+Title: Reduce apache memory usage + Change check parameters API
+Level: 2
+Component: wato
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568368223
+
+We recognized that the 1.6 check parameter (ruleset) plugin mechanism (which
+was based on classes and using the python abc module) consumed a lot more
+memory than the previous plugin API.
+
+The apache processes were ~50% bigger than in previous Checkmk releases which a
+too large growth. The problem is that the apache processes are part of a
+dynamic process pool which can scale from 5 to 64 processes (in the default
+config).  When your apache processes use 130 MB of memory, this means that you
+would need to have ~8 GB of memory available to be able to handle high usage
+peaks. In such a situation a single process growth of 50% is relevant and
+should be avoided if possible.
+
+If you have already ported your WATO check parameter plugins to 1.6 you will
+now have to port it to the new mechanism.
+
+The new plugin API for registering check parameters is similar to the 1.5 API,
+but more explicit to make it easier to understand. For example the 'logins'
+check parameter declaration looks like this:
+
+C:+
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Integer,
+    Tuple,
+)
+
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
+)
+
+
+def _parameter_valuespec_logins():
+    return Tuple(
+        help=_("This rule defines upper limits for the number of logins on a system."),
+        elements=[
+            Integer(title=_("Warning at"), unit=_("users"), default_value=20),
+            Integer(title=_("Critical at"), unit=_("users"), default_value=30)
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="logins",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_logins,
+        title=lambda: _("Number of Logins on System"),
+    ))
+C-:

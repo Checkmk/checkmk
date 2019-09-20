@@ -17,10 +17,12 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
+
+import "core-js/stable";
 
 import $ from "jquery";
 import * as forms from "forms";
@@ -55,8 +57,9 @@ import * as dashboard from "dashboard";
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
 import * as node_visualization from "node_visualization";
+import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
-import * as node_visualization_viewport from "node_visualization_viewport";
+import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 
 // Optional import is currently not possible using the ES6 imports
 var graphs;
@@ -73,7 +76,7 @@ $(() => {
     element_dragging.register_event_handlers();
 });
 
-export default {
+export const cmk_export = {
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -104,9 +107,10 @@ export default {
         graph_integration: graph_integration,
         graphs: graphs,
         dashboard: dashboard,
-        node_visualization: node_visualization,
-        node_visualization_viewport: node_visualization_viewport,
+        node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
+        node_visualization_viewport_utils: node_visualization_viewport_utils,
+        node_visualization: node_visualization,
         d3: d3,
         d3_flextree: d3_flextree,
     }

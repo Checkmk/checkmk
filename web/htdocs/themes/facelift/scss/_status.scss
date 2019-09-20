@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -53,11 +53,6 @@ td.state {
   width: 32px;
   font-weight: bold;
   text-align: center;
-}
-
-td.svcstate.stale {
-  background-image: url("images/white_60percent.png");
-  background-repeat: repeat;
 }
 
 table.data tr.data td.stale,
@@ -231,8 +226,8 @@ img.pluginurl {
   background-position: center center;
   background-repeat: repeat;
 
-  a {
-    color: #000;
+  body.main & a, body.main & a:link {
+    color: $grey-7;
   }
 }
 
@@ -284,7 +279,7 @@ img.pluginurl {
 
   &.online {
     font-weight: 500;
-    color: $theme-color-text !important;
+    color: $hot-font-color !important;
     background-color: $theme-color-state-success-background;
     border-color: $theme-color-state-success-border !important;
   }
@@ -389,7 +384,6 @@ td.perfometer {
     width: 120px;
     height: 22px;
     margin-bottom: 1px;
-    background-image: url(images/perfometer-bg.png);
   }
 
   table {
@@ -432,6 +426,10 @@ td.statex {  /* zero count */
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
+
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
+  }
 }
 
 tr[class*="even"] {
@@ -439,6 +437,10 @@ tr[class*="even"] {
 
   &:last-child {
     border-bottom: none;
+  }
+
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
   }
 }
 
@@ -534,17 +536,6 @@ table.data div.objectlist div {
   border-radius: $theme-border-radius;
 }
 
-/* TODO: Reproduce these pnpgraph elements */
-table.data tr.data td.pnpgraph {
-  padding: 0;
-}
-
-tr.data td.pnpgraph div.pnp_graph > a > img {
-  margin: 4px;
-  border: 1px solid #888;
-  box-shadow: 1px 1px 3px #000;
-}
-
 /*
  Sites can be represented by small icons with a size of 24x24 px.
  This is the styling for these icons.
@@ -578,4 +569,26 @@ td.matchgroups span {
   border: 1px solid #eee;
   border-radius: 3px;
   box-shadow: 0 0 1px #888;
+}
+
+table.data.availability tr.even0 td {
+  &.state0 {
+    background-color: $lightened-state0-bg-color !important;
+  }
+
+  &.state1 {
+    background-color: $lightened-state1-bg-color !important;
+  }
+
+  &.state2 {
+    background-color: $lightened-state2-bg-color !important;
+  }
+
+  &.state3 {
+    background-color: $lightened-state3-bg-color !important;
+  }
+}
+
+div.tile td.hstate0 {
+  color: $dark-font-color;
 }

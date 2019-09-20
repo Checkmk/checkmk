@@ -229,7 +229,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
         if not ios_per_sec:
             latency = 0.0
         else:
-            latency = timems_per_sec / ios_per_sec
+            latency = timems_per_sec / ios_per_sec  # fixed: true-division
         infos.append("Latency: %.2fms" % latency)
         if "latency" in params:
             warn, crit = params["latency"]
@@ -476,15 +476,14 @@ def check_diskstat_dict(item, params, disks):
     for what in "read", "write":
         if what + "_throughput" in disk:
             throughput = disk.pop(what + "_throughput")
-            state, infotext, extraperf = check_levels(throughput,
-                                                      "disk_" + what + "_throughput",
-                                                      params.get(what),
-                                                      unit="/s",
-                                                      scale=1048576,
-                                                      statemarkers=False,
-                                                      human_readable_func=get_bytes_human_readable,
-                                                      infoname=what.title())
-            yield state, infotext, extraperf
+            yield check_levels(throughput,
+                               "disk_" + what + "_throughput",
+                               params.get(what),
+                               unit="/s",
+                               scale=1048576,
+                               statemarkers=False,
+                               human_readable_func=get_bytes_human_readable,
+                               infoname=what.title())
 
     # Average wait from end to end
     for what in ["wait", "read_wait", "write_wait"]:

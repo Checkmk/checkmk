@@ -5,14 +5,14 @@
 checkname = 'oracle_crs_res'
 
 
-info = [['ezszds8c', 'NAME=ora.DG_CLUSTER.dg'],
-        ['ezszds8c', 'TYPE=ora.diskgroup.type'],
-        ['ezszds8c', 'STATE=ONLINE on ezszds8c'],
-        ['ezszds8c', 'TARGET=ONLINE'],
+info = [['oracle_host', 'NAME=ora.DG_CLUSTER.dg'],
+        ['oracle_host', 'TYPE=ora.diskgroup.type'],
+        ['oracle_host', 'STATE=ONLINE on oracle_host'],
+        ['oracle_host', 'TARGET=ONLINE'],
 ]
 
 
 discovery = {'': [('ora.DG_CLUSTER.dg', None)]}
 
 
-checks = {'': [('ora.DG_CLUSTER.dg', {}, [(0, 'on ezszds8c: online', [])])]}
+checks = {'': [('ora.DG_CLUSTER.dg', {}, [(0, 'on oracle_host: online', [])])]}

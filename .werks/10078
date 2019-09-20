@@ -1,0 +1,12 @@
+Title: check_traceroute: Support for IPv6
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568894217
+Class: feature
+
+The active check for traceroute now supports IPv6. In the service parameters you can now specify the IP address familiy.
+For link-local addresses (IP addresses starting with 'fe80') you may need to specify a zone/interface index or name by appending it with a % to the IP address (e.g. fe80::aebc:32ff:fe95:8ac1%eth0)
+Otherwise this error might occur: 'connect: Invalid argument'

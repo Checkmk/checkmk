@@ -25,23 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-
-try:
-    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+import six
+from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.store
 
 
-class WatoSimpleConfigFile(object):
+class WatoSimpleConfigFile(six.with_metaclass(abc.ABCMeta, object)):
     """Manage simple .mk config file containing a single dict variable
 
     The file handling logic is inherited from cmk.utils.store.load_from_mk_file()
     and cmk.utils.store.save_to_mk_file().
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, config_file_path, config_variable):
         # type: (Path, str) -> None
         self._config_file_path = config_file_path

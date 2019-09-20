@@ -35,25 +35,12 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.plugins.wato.check_parameters.ceph_mgrs import ceph_epoch_element
 
-
-@rulespec_registry.register
-class RulespecCheckgroupParametersCephStatus(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "ceph_status"
-
-    @property
-    def title(self):
-        return _("Ceph Status")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=ceph_epoch_element(_("Status epoch levels and average")),)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ceph_status",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=lambda: Dictionary(elements=ceph_epoch_element(
+            _("Status epoch levels and average")),),
+        title=lambda: _("Ceph Status"),
+    ))

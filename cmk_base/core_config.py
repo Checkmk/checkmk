@@ -29,7 +29,9 @@ import numbers
 import os
 import sys
 from typing import Text, Optional, Any, List, Dict  # pylint: disable=unused-import
+import six
 
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
@@ -41,9 +43,7 @@ import cmk_base.ip_lookup as ip_lookup
 from cmk_base.check_utils import Service  # pylint: disable=unused-import
 
 
-class MonitoringCore(object):
-    __metaclass__ = abc.ABCMeta
-
+class MonitoringCore(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def create_config(self):
         pass
@@ -105,15 +105,13 @@ def get_configuration_warnings():
 #                                  Tuple[Literal["custom"], TextAscii]])
 
 
-def _get_host_check_command(host_config):
+def _get_host_check_command(host_config, default_host_check_command):
     explicit_command = host_config.explicit_check_command
     if explicit_command is not None:
         return explicit_command
     if host_config.is_no_ip_host:
         return "ok"
-    if config.monitoring_core == "cmc":
-        return "smart"
-    return "ping"
+    return default_host_check_command
 
 
 def _cluster_ping_command(config_cache, host_config, ip):
@@ -125,26 +123,9 @@ def _cluster_ping_command(config_cache, host_config, ip):
     return None
 
 
-def _service_check_command(host_config, hostcheck_commands_to_define, service):
-    if config.monitoring_core == "cmc":
-        return "check-mk-host-service!" + service
-
-    command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-    hostcheck_commands_to_define.append(
-        (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-         (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
-          host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
-    return command
-
-
-# TODO: Cleanup the hostcheck_commands_to_define, custom_commands_to_define thing
-def host_check_command(config_cache,
-                       host_config,
-                       ip,
-                       is_clust,
-                       hostcheck_commands_to_define=None,
-                       custom_commands_to_define=None):
-    value = _get_host_check_command(host_config)
+def host_check_command(config_cache, host_config, ip, is_clust, default_host_check_command,
+                       host_check_via_service_status, host_check_via_custom_check):
+    value = _get_host_check_command(host_config, default_host_check_command)
 
     if value == "smart":
         if is_clust:
@@ -163,18 +144,17 @@ def host_check_command(config_cache,
         return "check-mk-host-ok"
 
     if value == "agent":
-        return _service_check_command(host_config, hostcheck_commands_to_define, "Check_MK")
+        return host_check_via_service_status("Check_MK")
 
     if value[0] == "service":
-        return _service_check_command(host_config, hostcheck_commands_to_define, value[1])
+        return host_check_via_service_status(value[1])
 
     if value[0] == "tcp":
         return "check-mk-host-tcp!" + str(value[1])
 
     if value[0] == "custom":
-        if custom_commands_to_define is not None:
-            custom_commands_to_define.add("check-mk-custom")
-        return "check-mk-custom!" + autodetect_plugin(value[1])
+        return host_check_via_custom_check("check-mk-custom",
+                                           "check-mk-custom!" + autodetect_plugin(value[1]))
 
     raise MKGeneralException("Invalid value %r for host_check_command of host %s." %
                              (value, host_config.hostname))
@@ -310,7 +290,9 @@ def do_update(core, with_precompile):
 
 
 def active_check_arguments(hostname, description, args):
-    if not isinstance(args, (str, unicode, list)):
+    if not isinstance(
+            args,
+        (six.binary_type, six.text_type, list)):  # TODO: Check if six.binary_type is necessary
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %

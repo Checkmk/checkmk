@@ -18,6 +18,7 @@ import re
 import sys
 import os
 import logging
+import time
 import subprocess
 from shlex import split
 import xml.etree.ElementTree as ET
@@ -33,6 +34,7 @@ import cmk_base.config as config
 import cmk_base.check_api as check_api
 
 import cmk.utils
+import cmk.utils.store as store
 import cmk.utils.debug
 cmk.utils.debug.enable()
 
@@ -61,10 +63,10 @@ CHECKS_USING_DF_INCLUDE = [
 
 def check_df_sources_include_flag():
     """Verify that df.include files are can return fs_used metric name"""
-    checks_dirs = (cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
+    checks_dirs = (cmk.utils.paths.local_checks_dir, Path(cmk.utils.paths.checks_dir))
     logger.info("Looking for df.include files...")
     for path_dir in checks_dirs:
-        df_file = Path(path_dir, 'df.include')
+        df_file = path_dir / 'df.include'
         if df_file.exists():
             logger.info("Inspecting %s", df_file)
             with df_file.open('r') as fid:
@@ -210,14 +212,18 @@ def _ask_for_confirmation_backup(args):
 
 
 def save_new_config():
-    with open(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'), 'w') as fid:
-        fid.write('df_use_fs_used_as_metric_name = True\n')
+    content = "# Written by RRD migration script (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
+    content += "df_use_fs_used_as_metric_name = True\n"
+
+    store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
+                    content)
 
     logger.info(subprocess.check_output(split('cmk -U')))
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-n', '--dry-run', action='store_true', help='Show Files to be updated')
     return parser.parse_args()
 
@@ -242,5 +248,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

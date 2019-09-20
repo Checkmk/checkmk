@@ -197,9 +197,9 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
             pid = int(psinfo["ProcessId"])
             if pid not in seen_pids:
                 seen_pids.add(pid)
-                virt = int(psinfo["VirtualSize"]) / 1024  # Bytes -> KB
-                resi = int(psinfo["WorkingSetSize"]) / 1024  # Bytes -> KB
-                pagefile = int(psinfo["PageFileUsage"]) / 1024  # Bytes -> KB
+                virt = int(psinfo["VirtualSize"]) >> 10  # Bytes -> KB
+                resi = int(psinfo["WorkingSetSize"]) >> 10  # Bytes -> KB
+                pagefile = int(psinfo["PageFileUsage"]) >> 10  # Bytes -> KB
                 userc = int(psinfo["UserModeTime"])  # do not resolve counter here!
                 kernelc = int(psinfo["KernelModeTime"])  # do not resolve counter here!
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions

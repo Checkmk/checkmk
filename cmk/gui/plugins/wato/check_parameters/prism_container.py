@@ -41,56 +41,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPrismContainer(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_prism_container():
+    return TextAscii(
+        title=_("Container Name"),
+        help=_("Name of the container"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "prism_container"
 
-    @property
-    def title(self):
-        return _("Nutanix Prism")
+def _parameter_valuespec_prism_container():
+    return Dictionary(
+        elements=[("levels",
+                   Alternative(
+                       title=_("Usage levels"),
+                       default_value=(80.0, 90.0),
+                       elements=[
+                           Tuple(
+                               title=_("Specify levels in percentage of total space"),
+                               elements=[
+                                   Percentage(title=_("Warning at"), unit=_("%")),
+                                   Percentage(title=_("Critical at"), unit=_("%"))
+                               ],
+                           ),
+                           Tuple(
+                               title=_("Specify levels in absolute usage"),
+                               elements=[
+                                   Filesize(title=_("Warning at"),
+                                            default_value=1000 * 1024 * 1024),
+                                   Filesize(title=_("Critical at"),
+                                            default_value=5000 * 1024 * 1024)
+                               ],
+                           ),
+                       ],
+                   ))],
+        optional_keys=[],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[("levels",
-                       Alternative(
-                           title=_("Usage levels"),
-                           default_value=(80.0, 90.0),
-                           elements=[
-                               Tuple(
-                                   title=_("Specify levels in percentage of total space"),
-                                   elements=[
-                                       Percentage(title=_("Warning at"), unit=_("%")),
-                                       Percentage(title=_("Critical at"), unit=_("%"))
-                                   ],
-                               ),
-                               Tuple(
-                                   title=_("Specify levels in absolute usage"),
-                                   elements=[
-                                       Filesize(title=_("Warning at"),
-                                                default_value=1000 * 1024 * 1024),
-                                       Filesize(title=_("Critical at"),
-                                                default_value=5000 * 1024 * 1024)
-                                   ],
-                               ),
-                           ],
-                       ))],
-            optional_keys=[],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Container Name"),
-            help=_("Name of the container"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="prism_container",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_prism_container,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_prism_container,
+        title=lambda: _("Nutanix Prism"),
+    ))

@@ -1,14 +1,13 @@
 #!/bin/bash
 set -e
 
-TARGET=.
-VERSION=$1
+FILE_PATH=$1
 KEY_ID=434DAC48C4503261
 KEY_DESC="Check_MK Software Release Signing Key (2018) <feedback@check-mk.org>"
 
-if [ -z "$VERSION" ]; then
-    echo "Call with: $0 VERSION"
-    echo "Example: $0 2018.01.19"
+if [ -z "$FILE_PATH" ]; then
+    echo "Call with: $0 FILE_PATH"
+    echo "Example: $0 /path/to/check-mk-enterprise-1.6.0b1.demo_0.bionic_amd64.deb"
     exit 1
 fi
 
@@ -22,7 +21,7 @@ fi
 cp -a /bauwelt/etc/.gnupg /gnupg
 export GNUPGHOME=/gnupg
 
-if ls $TARGET/*.rpm >/dev/null 2>&1; then
+if [[ "$FILE_PATH" == *rpm ]]; then
     echo "+ Sign RPM packages..."
     echo "$GPG_PASSPHRASE" |
         rpm \
@@ -31,39 +30,36 @@ if ls $TARGET/*.rpm >/dev/null 2>&1; then
             -D "%_gpg_name $KEY_DESC" \
             -D "%__gpg /usr/bin/gpg " -D "%_gpg_sign_cmd_extra_args --batch --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback" \
             --resign \
-            $TARGET/*.rpm
+            "$FILE_PATH"
 
     echo "Verify signed RPM packages..."
-    for RPM in $TARGET/*.rpm; do
-        rpm -qp "$RPM" --qf='%-{NAME} %{SIGPGP:pgpsig}\n'
-        if ! rpm -qp "$RPM" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
-            echo "ERROR: RPM not signed: $RPM"
-        fi
-    done
-else
-    echo "+ Found no RPM to sign."
+    rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n'
+    if ! rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
+        echo "ERROR: RPM not signed: $FILE_PATH"
+        exit 1
+    fi
+    exit 0
 fi
 
-if ls $TARGET/*.deb >/dev/null 2>&1; then
+if [[ "$FILE_PATH" == *deb ]]; then
     echo "+ Sign DEB packages..."
     echo "$GPG_PASSPHRASE" |
         dpkg-sig -p \
             -g '--batch --no-tty --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback' \
             --sign builder -k $KEY_ID \
-            $TARGET/*.deb
+            "$FILE_PATH"
 
     echo "Verify singed DEB packages..."
-    for DEB in $TARGET/*.deb; do
-        dpkg-sig --verify "$DEB"
-    done
-else
-    echo "+ Found no DEB to sign."
+    dpkg-sig --verify "$FILE_PATH"
+
+    exit 0
 fi
 
-# Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
-echo "+ Create HASHES file..."
-sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
-sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
-sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
-sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
-sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true
+# TODO
+## Hashes der kopierten Dateien ablegen (werden später auf der Webseite angezeigt)
+#echo "+ Create HASHES file..."
+#sha256sum -- $TARGET/*.cma >>$TARGET/HASHES || true
+#sha256sum -- $TARGET/*.tar.gz >>$TARGET/HASHES || true
+#sha256sum -- $TARGET/*.rpm >>$TARGET/HASHES || true
+#sha256sum -- $TARGET/*.deb >>$TARGET/HASHES || true
+#sha256sum -- $TARGET/*.cmk >>$TARGET/HASHES || true

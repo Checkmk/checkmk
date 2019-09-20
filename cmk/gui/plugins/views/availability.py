@@ -23,9 +23,9 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import functools
 import time
 import itertools
+import six
 
 import cmk
 import cmk.gui.config as config
@@ -372,11 +372,11 @@ def render_availability_tables(availability_tables, what, avoptions):
 
 
 def render_availability_timelines(what, av_data, avoptions):
-    for av_entry in av_data:
-        render_availability_timeline(what, av_entry, avoptions)
+    for timeline_nr, av_entry in enumerate(av_data):
+        render_availability_timeline(what, av_entry, avoptions, timeline_nr)
 
 
-def render_availability_timeline(what, av_entry, avoptions):
+def render_availability_timeline(what, av_entry, avoptions, timeline_nr):
     html.open_h3()
     html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
     html.close_h3()
@@ -393,7 +393,7 @@ def render_availability_timeline(what, av_entry, avoptions):
         avoptions,
         "standalone",
     )
-    render_timeline_bar(timeline_layout, "standalone")
+    render_timeline_bar(timeline_layout, "standalone", timeline_nr)
 
     # TODO: Hier fehlt bei BI der Timewarpcode (also der Baum im Zauberzustand)
     # if what == "bi":
@@ -404,9 +404,10 @@ def render_availability_timeline(what, av_entry, avoptions):
     with table_element("av_timeline", "", css="timelineevents", sortable=False,
                        searchable=False) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
-            table.row(id_="timetable_%d" % row_nr,
-                      onmouseover="cmk.availability.timetable_hover(%d, 1);" % row_nr,
-                      onmouseout="cmk.availability.timetable_hover(%d, 0);" % row_nr)
+            table.row(
+                id_="timetable_%d_entry_%d" % (timeline_nr, row_nr),
+                onmouseover="cmk.availability.timetable_hover(%d, %d, 1);" % (timeline_nr, row_nr),
+                onmouseout="cmk.availability.timetable_hover(%d, %d, 0);" % (timeline_nr, row_nr))
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -442,7 +443,6 @@ def render_availability_timeline(what, av_entry, avoptions):
 
 
 def render_timeline_legend(what):
-
     html.open_div(class_="avlegend timeline")
 
     html.h3(_('Timeline colors'))
@@ -522,7 +522,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 table.cell(title, text, css="heading " + css, help_txt=help_txt)
 
 
-def render_timeline_bar(timeline_layout, style):
+def render_timeline_bar(timeline_layout, style, timeline_nr=0):
     render_date = timeline_layout["render_date"]
     from_time, until_time = timeline_layout["range"]
     html.open_div(class_=["timelinerange", style])
@@ -537,7 +537,7 @@ def render_timeline_bar(timeline_layout, style):
             pixel = timebar_width * position
             html.div('', title=title, class_="timelinechoord", style="left: %dpx" % pixel)
 
-    html.open_table(class_=["timeline", style])
+    html.open_table(id_="timeline_%d" % timeline_nr, class_=["timeline", style])
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
 
@@ -548,12 +548,14 @@ def render_timeline_bar(timeline_layout, style):
         }
 
         if row_nr is not None:
-            td_attrs.update({"id_": "timeline_%d" % row_nr})
+            td_attrs.update({"id_": "timeline_%d_entry_%d" % (timeline_nr, row_nr)})
 
             if style == "standalone":
                 td_attrs.update({
-                    "onmouseover": "cmk.availability.timeline_hover(%d, 1);" % row_nr,
-                    "onmouseout": "cmk.availability.timeline_hover(%d, 0);" % row_nr,
+                    "onmouseover": "cmk.availability.timeline_hover(%d, %d, 1);" %
+                                   (timeline_nr, row_nr),
+                    "onmouseout": "cmk.availability.timeline_hover(%d, %d, 0);" %
+                                  (timeline_nr, row_nr),
                 })
 
         html.td('', **td_attrs)
@@ -794,8 +796,7 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
 
-    annos_to_render.sort(key=functools.cmp_to_key(lambda a, b: ((a[1]["from"] > b[1]["from"]) - (a[
-        1]["from"] < b[1]["from"])) or ((a[0] > b[0]) - (a[0] < b[0]))))
+    annos_to_render.sort(key=lambda x: (x[0], x[1]["from"]))
     return annos_to_render
 
 
@@ -1071,6 +1072,6 @@ def av_output_set_content_disposition(title):
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    if isinstance(filename, unicode):
+    if isinstance(filename, six.text_type):
         filename = filename.encode("utf-8")
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename

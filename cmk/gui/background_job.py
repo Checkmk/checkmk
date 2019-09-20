@@ -212,11 +212,13 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
     def _open_stdout_and_stderr(self):
         """Create a temporary file and use it as stdout / stderr buffer"""
-        # We can not use io.BytesIO() or similar because we need real file descriptors
-        # to be able to catch the (debug) output of libraries like libldap or subproccesses
+        # - We can not use io.BytesIO() or similar because we need real file descriptors
+        #   to be able to catch the (debug) output of libraries like libldap or subproccesses
+        # - Use buffering=0 to make the non flushed output directly visible in
+        #   the job progress dialog
         sys.stdout = sys.stderr = (
             Path(self.get_work_dir()) /  # pylint: disable=no-member
-            BackgroundJobDefines.progress_update_filename).open("wb")
+            BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
@@ -540,7 +542,7 @@ class JobStatus(object):
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
             if field_path.exists():  # pylint: disable=no-member
-                data["loginfo"][field_id] = file(str(field_path)).read().splitlines()
+                data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
             else:
                 data["loginfo"][field_id] = []
 

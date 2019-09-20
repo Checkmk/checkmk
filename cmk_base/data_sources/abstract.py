@@ -31,6 +31,7 @@ import time
 import abc
 import logging
 import sys
+import six
 
 import cmk.utils.log  # TODO: Remove this!
 from cmk.utils.log import VERBOSE
@@ -42,6 +43,7 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 
 import cmk_base.utils
+import cmk_base.agent_simulator
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.cpu_tracking as cpu_tracking
@@ -54,9 +56,8 @@ from cmk_base.check_api_utils import state_markers
 from .host_sections import HostSections
 
 
-class DataSource(object):
+class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all data source classes"""
-    __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = False
 
@@ -522,7 +523,7 @@ class DataSource(object):
         cls._use_outdated_cache_file = state
 
 
-class CheckMKAgentDataSource(DataSource):
+class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     """Abstract base class for all data sources that work with the Check_MK agent data format"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -530,7 +531,6 @@ class CheckMKAgentDataSource(DataSource):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, hostname, ipaddress):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
@@ -582,8 +582,12 @@ class CheckMKAgentDataSource(DataSource):
         # Unparsed info for other hosts. A dictionary, indexed by the piggybacked host name.
         # The value is a list of lines which were received for this host.
         piggybacked_raw_data = {}
+        piggybacked_hostname = None
+        piggybacked_cached_at = int(time.time())
+        # Transform to seconds and give the piggybacked host a little bit more time
+        piggybacked_cache_age = int(1.5 * 60 * self._host_config.check_mk_check_interval)
+
         persisted_sections = {}  # handle sections with option persist(...)
-        host = None
         section_content = []
         section_options = {}
         agent_cache_info = {}
@@ -593,23 +597,15 @@ class CheckMKAgentDataSource(DataSource):
             line = line.rstrip("\r")
             stripped_line = line.strip()
             if stripped_line[:4] == '<<<<' and stripped_line[-4:] == '>>>>':
-                host = stripped_line[4:-4]
-                if not host:
-                    host = None
-                else:
-                    host = config.translate_piggyback_host(self._hostname, host)
-                    if host == self._hostname:
-                        host = None  # unpiggybacked "normal" host
+                piggybacked_hostname =\
+                    self._get_sanitized_and_translated_piggybacked_hostname(stripped_line)
 
-                    # Protect Check_MK against unallowed host names. Normally source scripts
-                    # like agent plugins should care about cleaning their provided host names
-                    # up, but we need to be sure here to prevent bugs in Check_MK code.
-                    # a) Replace spaces by underscores
-                    if host:
-                        host = host.replace(" ", "_")
-
-            elif host:  # processing data for an other host
-                piggybacked_raw_data.setdefault(host, []).append(line)
+            elif piggybacked_hostname:  # processing data for an other host
+                if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
+                    line = self._add_cached_info_to_piggybacked_section_header(
+                        piggybacked_hostname, stripped_line, piggybacked_cached_at,
+                        piggybacked_cache_age)
+                piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
             # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
@@ -663,6 +659,27 @@ class CheckMKAgentDataSource(DataSource):
                 section_content.append(line.split(separator))
 
         return HostSections(sections, agent_cache_info, piggybacked_raw_data, persisted_sections)
+
+    def _get_sanitized_and_translated_piggybacked_hostname(self, orig_piggyback_header):
+        piggybacked_hostname = orig_piggyback_header[4:-4]
+        if not piggybacked_hostname:
+            return
+
+        piggybacked_hostname = config.translate_piggyback_host(self._hostname, piggybacked_hostname)
+        if piggybacked_hostname == self._hostname or not piggybacked_hostname:
+            return  # unpiggybacked "normal" host
+
+        # Protect Check_MK against unallowed host names. Normally source scripts
+        # like agent plugins should care about cleaning their provided host names
+        # up, but we need to be sure here to prevent bugs in Check_MK code.
+        # a) Replace spaces by underscores
+        return piggybacked_hostname.replace(" ", "_")
+
+    def _add_cached_info_to_piggybacked_section_header(self, piggybacked_hostname,
+                                                       orig_section_header, cached_at, cache_age):
+        if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
+            return orig_section_header
+        return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)
 
     # TODO: refactor
     def _summary_result(self, for_checking):
@@ -742,17 +759,17 @@ class CheckMKAgentDataSource(DataSource):
         allowed_nets = set(_normalize_ip_addresses(agent_only_from))
         expected_nets = set(_normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
+            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
         if exceeding:
-            infotexts.append("agent allows extra: %s" % " ".join(sorted(exceeding)))
+            infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
         missing = expected_nets - allowed_nets
         if missing:
-            infotexts.append("agent blocks: %s" % " ".join(sorted(missing)))
+            infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        return 1, "invalid access configuration: %s%s" % (", ".join(infotexts), state_markers[1])
+        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts), state_markers[1])
 
     def _is_expected_agent_version(self, agent_version, expected_version):
         try:
@@ -794,7 +811,7 @@ class CheckMKAgentDataSource(DataSource):
                 (agent_version, expected_version, e))
 
 
-class ManagementBoardDataSource(DataSource):
+class ManagementBoardDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
     """Abstract base class for all data sources that work with the management board configuration"""
 
     # NOTE: This class is obviously still abstract, but pylint fails to see
@@ -802,7 +819,6 @@ class ManagementBoardDataSource(DataSource):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     _for_mgmt_board = True
 

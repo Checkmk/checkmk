@@ -276,7 +276,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     }
 
     auto proc_id = minibox.getProcessId();
-    auto success = minibox.waitForEnd(timeout, true);
+    auto success = minibox.waitForEnd(timeout);
     ON_OUT_OF_SCOPE(minibox.clean());
     if (!success) {
         //

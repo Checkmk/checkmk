@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
 import gettext as gettext_module
 from typing import (  # pylint: disable=unused-import
     Dict, NamedTuple, Optional, List, Tuple, Text,
 )
+from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.utils.paths
 
@@ -69,31 +69,27 @@ def get_current_language():
 
 
 def _get_language_dirs():
-    # type: () -> List[str]
+    # type: () -> List[Path]
     return _get_base_language_dirs() + _get_package_language_dirs()
 
 
 def _get_base_language_dirs():
-    # type: () -> List[str]
-    return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
+    # type: () -> List[Path]
+    return [Path(cmk.utils.paths.locale_dir), cmk.utils.paths.local_locale_dir]
 
 
 def _get_package_language_dirs():
-    # type: () -> List[str]
+    # type: () -> List[Path]
     """Return a list of extension package specific localization directories
 
     It's possible for extension packages to provide custom localization files
     which are meant for localizing extension specific texts. These localizations
     are then used in addition to the builtin and local localization files.
     """
-    package_locale_dir = cmk.utils.paths.local_locale_dir + "/packages"
-    if not os.path.exists(package_locale_dir):
+    package_locale_dir = cmk.utils.paths.local_locale_dir.joinpath("packages")
+    if not package_locale_dir.exists():
         return []
-
-    dirs = []
-    for package_name in os.listdir(package_locale_dir):
-        dirs.append(package_locale_dir + "/" + package_name)
-    return dirs
+    return list(package_locale_dir.iterdir())
 
 
 def get_language_alias(lang):
@@ -104,10 +100,11 @@ def get_language_alias(lang):
     alias = lang
     for lang_dir in _get_base_language_dirs():
         try:
-            alias = open('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
+            with lang_dir.joinpath(lang, "alias").open(encoding="utf-8") as f:
+                alias = f.read().strip()
         except (OSError, IOError):
             pass
-    return alias.decode("utf-8")
+    return alias
 
 
 def get_languages():
@@ -119,9 +116,9 @@ def get_languages():
 
     for lang_dir in _get_language_dirs():
         try:
-            languages.update([(val, _("%s") % get_language_alias(val))
-                              for val in os.listdir(lang_dir)
-                              if val != "packages" and os.path.isdir(lang_dir + "/" + val)])
+            languages.update([(val.name, _("%s") % get_language_alias(val.name))
+                              for val in lang_dir.iterdir()
+                              if val.name != "packages" and val.is_dir()])
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
@@ -161,7 +158,7 @@ def _init_language(lang):
     for locale_base_dir in _get_language_dirs():
         try:
             translation = gettext_module.translation("multisite",
-                                                     locale_base_dir,
+                                                     str(locale_base_dir),
                                                      languages=[lang],
                                                      codeset='UTF-8')
 

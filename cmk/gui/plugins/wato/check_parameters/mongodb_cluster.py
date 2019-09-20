@@ -33,38 +33,28 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMongodbCollectionCluster(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _mongodb_cluster_count_tuple(title, course):
+    return Tuple(title=_(title),
+                 elements=[
+                     Integer(title=_("Warning if %s") % course, unit=_("count"), minvalue=0),
+                     Integer(title=_("Critical if %s") % course, unit=_("count"), minvalue=0),
+                 ])
 
-    @property
-    def check_group_name(self):
-        return "mongodb_cluster"
 
-    @property
-    def title(self):
-        return _("MongoDB Cluster")
+def _parameter_valuespec_mongodb_cluster():
+    return Dictionary(elements=[
+        ("levels_number_jumbo",
+         _mongodb_cluster_count_tuple("Number of jumbo chunks per shard per collection", "above")),
+    ])
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels_number_jumbo",
-             self._count_tuple("Number of jumbo chunks per shard per collection", "above")),
-        ])
-
-    def _count_tuple(self, title, course):
-        return Tuple(title=_(title),
-                     elements=[
-                         Integer(title=_("Warning if %s") % course, unit=_("count"), minvalue=0),
-                         Integer(title=_("Critical if %s") % course, unit=_("count"), minvalue=0),
-                     ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database/Collection name ('<DB name> <collection name>')"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mongodb_cluster",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_(
+            "Database/Collection name ('<DB name> <collection name>')"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mongodb_cluster,
+        title=lambda: _("MongoDB Cluster"),
+    ))

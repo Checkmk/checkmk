@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 import os
+import six
 
 import pytest
 
@@ -61,7 +62,7 @@ def test_load_data_from_file_dict(tmp_path):
     data = store.load_data_from_file(str(locked_file))
     assert isinstance(data, dict)
     assert data["1"] == 2
-    assert isinstance(data["ä"], unicode)
+    assert isinstance(data["ä"], six.text_type)
     assert data["ä"] == u"ß"
 
 
@@ -84,7 +85,7 @@ def test_save_data_to_file_pretty(tmp_path):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_data_to_file(path, data)
-    assert file(path).read().count("\n") > 4
+    assert open(path).read().count("\n") > 4
     assert store.load_data_from_file(path) == data
 
 
@@ -100,7 +101,7 @@ def test_save_data_to_file_not_pretty(tmp_path):
         "5asdasaaaaaaaaaaaaaaaaaaaad": "asbbbbbbbbbbbbbbbbbbd",
     }
     store.save_data_to_file(path, data, pretty=False)
-    assert file(path).read().count("\n") == 1
+    assert open(path).read().count("\n") == 1
     assert store.load_data_from_file(path) == data
 
 

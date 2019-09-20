@@ -61,29 +61,29 @@ class PackageException(Exception):
 # order matters! See function _get_permissions
 PERM_MAP = (
     (cmk.utils.paths.checks_dir, 0o644),
-    (cmk.utils.paths.local_checks_dir, 0o644),
+    (str(cmk.utils.paths.local_checks_dir), 0o644),
     (cmk.utils.paths.notifications_dir, 0o755),
-    (cmk.utils.paths.local_notifications_dir, 0o755),
+    (str(cmk.utils.paths.local_notifications_dir), 0o755),
     (cmk.utils.paths.inventory_dir, 0o644),
-    (cmk.utils.paths.local_inventory_dir, 0o644),
+    (str(cmk.utils.paths.local_inventory_dir), 0o644),
     (cmk.utils.paths.check_manpages_dir, 0o644),
-    (cmk.utils.paths.local_check_manpages_dir, 0o644),
+    (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
     (cmk.utils.paths.agents_dir, 0o755),
-    (cmk.utils.paths.local_agents_dir, 0o755),
+    (str(cmk.utils.paths.local_agents_dir), 0o755),
     (cmk.utils.paths.web_dir, 0o644),
-    (cmk.utils.paths.local_web_dir, 0o644),
+    (str(cmk.utils.paths.local_web_dir), 0o644),
     (cmk.utils.paths.pnp_templates_dir, 0o644),
-    (cmk.utils.paths.local_pnp_templates_dir, 0o644),
+    (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
     (cmk.utils.paths.doc_dir, 0o644),
-    (cmk.utils.paths.local_doc_dir, 0o644),
+    (str(cmk.utils.paths.local_doc_dir), 0o644),
     (cmk.utils.paths.locale_dir, 0o644),
-    (cmk.utils.paths.local_locale_dir, 0o644),
-    (cmk.utils.paths.local_bin_dir, 0o755),
-    (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0o755),
-    (cmk.utils.paths.local_lib_dir, 0o644),
-    (cmk.utils.paths.local_mib_dir, 0o644),
+    (str(cmk.utils.paths.local_locale_dir), 0o644),
+    (str(cmk.utils.paths.local_bin_dir), 0o755),
+    (str(cmk.utils.paths.local_lib_dir.joinpath("nagios", "plugins")), 0o755),
+    (str(cmk.utils.paths.local_lib_dir), 0o644),
+    (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-    (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0o755),
+    (str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers")), 0o755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
 )
 
@@ -103,20 +103,22 @@ PackagePart = NamedTuple("PackagePart", [
 ])
 
 _package_parts = [
-    PackagePart("checks", "Checks", cmk.utils.paths.local_checks_dir),
-    PackagePart("notifications", "Notification scripts", cmk.utils.paths.local_notifications_dir),
-    PackagePart("inventory", "Inventory plugins", cmk.utils.paths.local_inventory_dir),
-    PackagePart("checkman", "Checks' man pages", cmk.utils.paths.local_check_manpages_dir),
-    PackagePart("agents", "Agents", cmk.utils.paths.local_agents_dir),
-    PackagePart("web", "Multisite extensions", cmk.utils.paths.local_web_dir),
-    PackagePart("pnp-templates", "PNP4Nagios templates", cmk.utils.paths.local_pnp_templates_dir),
-    PackagePart("doc", "Documentation files", cmk.utils.paths.local_doc_dir),
-    PackagePart("locales", "Localizations", cmk.utils.paths.local_locale_dir),
-    PackagePart("bin", "Binaries", cmk.utils.paths.local_bin_dir),
-    PackagePart("lib", "Libraries", cmk.utils.paths.local_lib_dir),
-    PackagePart("mibs", "SNMP MIBs", cmk.utils.paths.local_mib_dir),
+    PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
+    PackagePart("notifications", "Notification scripts",
+                str(cmk.utils.paths.local_notifications_dir)),
+    PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
+    PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
+    PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
+    PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
+    PackagePart("pnp-templates", "PNP4Nagios templates",
+                str(cmk.utils.paths.local_pnp_templates_dir)),
+    PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
+    PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
+    PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
+    PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
+    PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
     PackagePart("alert_handlers", "Alert handlers",
-                cmk.utils.paths.local_share_dir + "/alert_handlers"),
+                str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers"))),
 ]
 
 config_parts = [
@@ -363,7 +365,7 @@ def package_pack(args):
             raise PackageException(
                 "You are in %s!\n"
                 "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % p)
+                "a packet file. Foreign files lying around here will mix up things." % abs_curdir)
 
     pacname = args[0]
     package = read_package_info(pacname)
@@ -380,7 +382,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
 
     def create_tar_info(filename, size):
         info = tarfile.TarInfo()
-        info.mtime = time.time()
+        info.mtime = int(time.time())
         info.uid = 0
         info.gid = 0
         info.size = size
@@ -713,7 +715,7 @@ def packaged_files_in_dir(part):
 
 def read_package_info(pacname):
     try:
-        package = parse_package_info(file(_pac_dir() + pacname).read())
+        package = parse_package_info(open(_pac_dir() + pacname).read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
@@ -727,7 +729,7 @@ def read_package_info(pacname):
 
 
 def write_package_info(package):
-    file(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
+    open(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
 
 
 def remove_package_info(pacname):

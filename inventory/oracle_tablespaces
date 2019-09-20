@@ -105,7 +105,7 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
                     #    # increment max_size ueberschreiten würde? Das geht ja wohl
                     #    # nicht oder??
                     #    # incs += 1 ### Dann wuerde max_size überschritten!
-                    incs = free_extension / incsize
+                    incs = int(free_extension / incsize)
                     num_increments += incs
                     increment_size += incsize * incs
 

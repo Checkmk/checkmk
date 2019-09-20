@@ -1,0 +1,11 @@
+Title: quanta checks: Monitor fan speed/temperature/voltage for Quanta Cloud Technology systems
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566486639
+Class: feature
+
+You can now monitor the fan speed/temperature/voltage devices for Quanta Cloud Technology systems.
+

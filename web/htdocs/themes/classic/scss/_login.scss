@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -37,139 +37,155 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 body.login {
-    background-image: none;
-    background-color: #285069;
-    text-align: center;
-    vertical-align: middle;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #285069;
+  background-image: none;
 }
 
 body.login.screenshotmode div#login {
-    background-image: url("");
+  background-image: url("");
 }
 
 body.login {
-    div#login {
-        width: 770px;
-        height: 605px;
-        position: absolute;
-        top:0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: auto;
-    }
+  div#login {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 770px;
+    height: 605px;
+    margin: auto;
 
-    #login_window {
-        background-image: url("images/login_window.png");
-        width: 370px;
-        height: 230px;
-        left: 10px;
-        top: 187px;
-        position: relative;
-        margin: -30px auto 10px auto;
+    #version::before {
+      position: absolute;
+      top: 16px;
+      left: -138px;
+      width: 200px;
+      height: 42px;
+      background-image: url("images/mk-logo.png");
+      background-position: 16px center;
+      background-repeat: no-repeat;
+      background-size: auto 42px;
+      content: " ";
     }
+  }
 
-    label {
-        color: white;
-    }
+  #login_window {
+    position: relative;
+    top: 187px;
+    left: 10px;
+    width: 355px;
+    height: 225px;
+    margin: -30px auto 10px;
+    background-color: rgb(73, 138, 166);
+    border: 1px solid rgb(73, 138, 166);
+    border-radius: 15px;
+    box-shadow: 0 0 1px #fff inset;
+  }
 
-    #version {
-        position: absolute;
-        text-align: right;
-        width: 150px;
-        top: 15px;
-        right: 20px;
-        color: white;
-        font-size: 8pt;
-    }
+  label {
+    color: #fff;
+  }
 
-    #label_user, #label_pass {
-        left: 55px;
-    }
+  #version {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    width: 150px;
+    font-size: 11px;
+    color: #fff;
+    text-align: right;
+  }
 
-    #input_user, #input_pass {
-        left: 121px;
-    }
+  #label_user, #label_pass {
+    left: 55px;
+  }
 
-    #label_user {
-        position: absolute;
-        top: 115px;
-    }
-    #input_user {
-        position: absolute;
-        top: 110px;
-    }
+  #input_user, #input_pass {
+    left: 120px;
+  }
 
-    #label_pass {
-        position: absolute;
-        top: 155px;
-    }
-    #input_pass {
-        position: absolute;
-        top: 150px;
-    }
+  #label_user {
+    position: absolute;
+    top: 95px;
+  }
 
-    #input_user, #input_pass {
-        width: 150px;
-        height: 17px;
-        border: none;
-        border-radius: 0px;
-        outline: none;
-        padding: 3px 5px 3px 5px;
-        background-image: url("images/login_input_normal.png");
-        background-repeat: no-repeat;
-        box-shadow: none;
-    }
+  #input_user {
+    position: absolute;
+    top: 90px;
+  }
 
-    .inputerror #input_user, .inputerror #input_pass {
-        background-image: url("images/login_input_error.png");
-        background-repeat: no-repeat;
-    }
+  #label_pass {
+    position: absolute;
+    top: 135px;
+  }
 
-    #_login {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-    }
+  #input_pass {
+    position: absolute;
+    top: 130px;
+  }
 
-    #login_error {
-        position: absolute;
-        bottom: 15px;
-        left: 105px;
-        width: 180px;
-        height: 30px;
-        z-index: 100;
-        background-image: url("images/login_error_message.png");
-        background-repeat: no-repeat;
-        border: none;
-        margin: 0px;
-        padding: 0px;
-    }
+  #input_user, #input_pass {
+    width: 150px;
+    height: 17px;
+    padding: 3px 5px;
+    background-image: url("images/login_input_normal.png");
+    background-repeat: no-repeat;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
+  }
 
-    #login_error div.error {
-        border-style: none;
-        background-color: transparent;
-        margin: 0px;
-        padding: 8px 0px 0px 0px;
-        color: black;
-        border-radius: 0;
-        box-shadow: 0 0 0;
-    }
+  .inputerror #input_user, .inputerror #input_pass {
+    background-image: url("images/login_input_error.png");
+    background-repeat: no-repeat;
+  }
 
-    #foot {
-        text-align: center;
-        width: 350px;
-        color: white;
-        font-size: 8pt;
+  #_login {
+    position: absolute;
+    right: 140px;
+    bottom: 30px;
+  }
 
-        position: relative;
-        left: 10px;
-        top: 187px;
-        margin: 0 auto 10px auto;
-    }
+  #login_error {
+    position: absolute;
+    bottom: 15px;
+    left: 105px;
+    z-index: 100;
+    width: 180px;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    background-image: url("images/login_error_message.png");
+    background-repeat: no-repeat;
+    border: none;
+  }
 
+  #login_error div.error {
+    padding: 8px 0 0;
+    margin: 0;
+    color: #000;
+    background-color: transparent;
+    border-style: none;
+    border-radius: 0;
+    box-shadow: 0 0 0;
+  }
 
-    #foot a, #foot a:hover {
-        color: white;
-    }
+  #foot {
+    position: relative;
+    top: 187px;
+    left: 10px;
+    width: 350px;
+    margin: 0 auto 10px;
+    font-size: 11px;
+    color: #fff;
+    text-align: center;
+  }
+
+  #foot a, #foot a:hover {
+    color: #fff;
+  }
 }

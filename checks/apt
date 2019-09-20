@@ -38,17 +38,40 @@
 # Inst libpolkit-gobject-1-0 [0.105-4ubuntu2] (0.105-4ubuntu2.14.04.1 Ubuntu:14.04/trusty-updates [amd64])
 # Inst libxext-dev [2:1.3.2-1] (2:1.3.2-1ubuntu0.0.14.04.1 Ubuntu:14.04/trusty-security [amd64]) []
 
+# or
+
+# <<<apt:sep(0)>>>
+# Remv default-java-plugin [2:1.8-58]
+# Remv icedtea-8-plugin [1.6.2-3.1]
+# Inst default-jre [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64]) []
+# Inst default-jre-headless [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64])
+
 factory_settings["apt_default_levels"] = {
     "normal": 1,
+    "removals": 1,
     "security": 2,
 }
+
+NOTHING_PENDING_FOR_INSTALLATION = "No updates pending for installation"
 
 
 # Check that the apt section is in valid format of mk_apt plugin and not
 # from the apt agent plugin which can be found on the Check_MK exchange.
 def apt_valid_info(info):
-    return info and len(info[0]) == 1 and \
-        (len(info[0][0].split(None, 3)) == 4 or info[0][0] == "No updates pending for installation")
+    if not info:
+        return False
+
+    first_line = info[0]
+    if len(first_line) != 1:
+        return False
+
+    if first_line[0] == NOTHING_PENDING_FOR_INSTALLATION:
+        return True
+
+    parts = first_line[0].split()
+    action = parts[0]
+    version = parts[2]
+    return action in ('Inst', 'Remv') and version.startswith("[") and version.endswith("]")
 
 
 def inventory_apt(info):
@@ -56,22 +79,33 @@ def inventory_apt(info):
         yield None, {}
 
 
+def _format(action, packages, verbose=False):
+    message = '%d %s' % (len(packages), action)
+    if verbose and packages:
+        message += ' (%s)' % (', '.join(packages,))
+
+    return message
+
+
 def check_apt(_no_item, params, info):
     if not apt_valid_info(info):
         return
 
-    if info[0][0] == "No updates pending for installation":
-        yield 0, "No updates pending for installation"
+    if info[0][0] == NOTHING_PENDING_FOR_INSTALLATION:
+        yield 0, NOTHING_PENDING_FOR_INSTALLATION
         return
 
     sec_regex = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")
     updates = []
+    removals = []
     sec_updates = []
     for line in info:
-        if not line[0].startswith("Inst"):
+        if not line[0].startswith(("Inst", "Remv")):
             continue
-        _inst, packet, _version, _hints = line[0].split(None, 3)
-        if sec_regex.match(line[0]):
+        _inst, packet, _version = line[0].split(None, 2)
+        if line[0].startswith("Remv"):
+            removals.append(packet)
+        elif sec_regex.match(line[0]):
             sec_updates.append(packet)
         else:
             updates.append(packet)
@@ -79,17 +113,18 @@ def check_apt(_no_item, params, info):
     state = 0
     if updates:
         state = params["normal"]
-    yield state, "%d normal updates" % len(updates), [("normal_updates", len(updates))]
+    yield state, _format("normal updates", updates), [("normal_updates", len(updates))]
+
+    # Only show removals when necessary as they are very rare.
+    if removals:
+        state = params["removals"]
+        yield state, _format("auto removals", removals, verbose=True), [("removals", len(removals))]
 
     state = 0
     if sec_updates:
         state = params["security"]
-        text = " (%s)" % ", ".join(sec_updates)
-    else:
-        text = ""
-
-    yield state, "%d security updates%s" % (len(sec_updates), text), [("security_updates",
-                                                                       len(sec_updates))]
+    yield state, _format("security updates", sec_updates,
+                         verbose=True), [("security_updates", len(sec_updates))]
 
 
 check_info['apt'] = {

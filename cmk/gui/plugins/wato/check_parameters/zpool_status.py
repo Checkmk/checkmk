@@ -31,17 +31,9 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-
-@rulespec_registry.register
-class ManualCheckParameterVMState(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksStorage
-
-    @property
-    def check_group_name(self):
-        return "zpool_status"
-
-    @property
-    def title(self):
-        return _("ZFS storage pool status")
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="zpool_status",
+        group=RulespecGroupManualChecksStorage,
+        title=lambda: _("ZFS storage pool status"),
+    ))

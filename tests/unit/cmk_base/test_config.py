@@ -238,7 +238,7 @@ def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     }),
 ])
 def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
-    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
+    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
     assert config_cache.get_host_config(hostname).is_piggyback_host == result
 
@@ -321,6 +321,74 @@ def test_host_config_management_address(monkeypatch, attrs, result):
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.get_host_config("hostname").management_address == result
+
+
+def _management_config_ruleset():
+    return [
+        {
+            'condition': {},
+            'value': ('snmp', 'eee')
+        },
+        {
+            'condition': {},
+            'value': ('ipmi', {
+                'username': 'eee',
+                'password': 'eee'
+            })
+        },
+    ]
+
+
+@pytest.mark.parametrize("expected_result,protocol,credentials,ruleset", [
+    (None, None, None, []),
+    ("public", "snmp", None, []),
+    (None, "ipmi", None, []),
+    ("aaa", "snmp", "aaa", []),
+    ({
+        'username': 'aaa',
+        'password': 'aaa'
+    }, "ipmi", {
+        'username': 'aaa',
+        'password': 'aaa'
+    }, []),
+    (None, None, None, _management_config_ruleset()),
+    ("eee", "snmp", None, _management_config_ruleset()),
+    ({
+        'username': 'eee',
+        'password': 'eee'
+    }, "ipmi", None, _management_config_ruleset()),
+    ("aaa", "snmp", "aaa", _management_config_ruleset()),
+    ({
+        'username': 'aaa',
+        'password': 'aaa'
+    }, "ipmi", {
+        'username': 'aaa',
+        'password': 'aaa'
+    }, _management_config_ruleset()),
+])
+def test_host_config_management_credentials(monkeypatch, protocol, credentials, expected_result,
+                                            ruleset):
+    ts = Scenario().add_host("hostname")
+    ts.set_option("host_attributes", {"hostname": {"management_address": "127.0.0.1"}})
+    ts.set_option("management_protocol", {"hostname": protocol})
+
+    if credentials is not None:
+        if protocol == "snmp":
+            ts.set_option("management_snmp_credentials", {"hostname": credentials})
+        elif protocol == "ipmi":
+            ts.set_option("management_ipmi_credentials", {"hostname": credentials})
+        else:
+            raise NotImplementedError()
+
+    ts.set_ruleset("management_board_config", ruleset)
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config("hostname")
+
+    assert host_config.management_credentials == expected_result
+
+    # Test management_snmp_config on the way...
+    if protocol == "snmp":
+        assert host_config.management_snmp_config.credentials == expected_result
 
 
 @pytest.mark.parametrize("attrs,result", [

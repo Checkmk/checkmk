@@ -5,6 +5,7 @@ import os
 import ast
 import subprocess
 import pytest  # type: ignore
+import six
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 
@@ -41,13 +42,13 @@ def test_cfg(web, site):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/modes-test-host",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host2",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host3",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -302,7 +303,7 @@ def test_automation_get_check_information(test_cfg, site):
     assert len(data) > 1000
 
     for _check_type, info in data.items():
-        assert isinstance(info["title"], unicode)
+        assert isinstance(info["title"], six.text_type)
         assert "service_description" in info
         assert "snmp" in info
 
@@ -314,7 +315,7 @@ def test_automation_get_real_time_checks(test_cfg, site):
 
     for check_type, title in data:
         assert isinstance(check_type, str)
-        assert isinstance(title, unicode)
+        assert isinstance(title, six.text_type)
 
 
 def test_automation_get_check_manpage(test_cfg, site):

@@ -27,29 +27,29 @@
 # Original version by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 
 # <<<oracle_crs_res:sep(124)>>>
-# ezszds8c|NAME=ora.DG_CLUSTER.dg
-# ezszds8c|TYPE=ora.diskgroup.type
-# ezszds8c|STATE=ONLINE on ezszds8c
-# ezszds8c|TARGET=ONLINE
-# ezszds8c|NAME=ora.I31_ARCH.dg
-# ezszds8c|TYPE=ora.diskgroup.type
-# ezszds8c|STATE=ONLINE on ezszds8c
-# ezszds8c|TARGET=ONLINE
-# ezszds8c|NAME=ora.I31_DATA.dg
-# ezszds8c|TYPE=ora.diskgroup.type
-# ezszds8c|STATE=ONLINE on ezszds8c
-# ezszds8c|TARGET=ONLINE
-# ezszds8c|NAME=ora.I31_MLOG.dg
-# ezszds8c|TYPE=ora.diskgroup.type
-# ezszds8c|STATE=ONLINE on ezszds8c
-# ezszds8c|TARGET=ONLINE
+# oracle_host|NAME=ora.DG_CLUSTER.dg
+# oracle_host|TYPE=ora.diskgroup.type
+# oracle_host|STATE=ONLINE on oracle_host
+# oracle_host|TARGET=ONLINE
+# oracle_host|NAME=ora.I31_ARCH.dg
+# oracle_host|TYPE=ora.diskgroup.type
+# oracle_host|STATE=ONLINE on oracle_host
+# oracle_host|TARGET=ONLINE
+# oracle_host|NAME=ora.I31_DATA.dg
+# oracle_host|TYPE=ora.diskgroup.type
+# oracle_host|STATE=ONLINE on oracle_host
+# oracle_host|TARGET=ONLINE
+# oracle_host|NAME=ora.I31_MLOG.dg
+# oracle_host|TYPE=ora.diskgroup.type
+# oracle_host|STATE=ONLINE on oracle_host
+# oracle_host|TARGET=ONLINE
 # ...usw...
 
 
 # Parse output into dict of dicts of dicts:
 # nodename -> ressource name -> entry
 # ressource. Example:
-# { 'ezszds8c' :
+# { 'oracle_host' :
 #     { 'ora.I31_ARCH.dg' : {
 #           'state': 'ONLINE on ezszds9c',
 #           'target': 'ONLINE',

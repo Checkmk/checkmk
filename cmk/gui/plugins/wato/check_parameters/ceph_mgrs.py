@@ -49,24 +49,12 @@ def ceph_epoch_element(title):
                    ]))]
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCephMgrs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "ceph_mgrs"
-
-    @property
-    def title(self):
-        return _("Ceph MGRs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=ceph_epoch_element(_("MGRs epoch levels and average")),)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ceph_mgrs",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=lambda: Dictionary(elements=ceph_epoch_element(
+            _("MGRs epoch levels and average")),),
+        title=lambda: _("Ceph MGRs"),
+    ))

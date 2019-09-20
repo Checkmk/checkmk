@@ -49,54 +49,46 @@ def transform_humidity(p):
     return p
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHumidity(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_humidity():
+    return TextAscii(
+        title=_("Sensor name"),
+        help=_("The identifier of the sensor."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "humidity"
 
-    @property
-    def title(self):
-        return _("Humidity Levels")
+def _parameter_valuespec_humidity():
+    return Transform(
+        Dictionary(
+            help=_("This Ruleset sets the threshold limits for humidity sensors"),
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Upper levels"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+                ("levels_lower",
+                 Tuple(
+                     title=_("Lower levels"),
+                     elements=[
+                         Percentage(title=_("Warning below")),
+                         Percentage(title=_("Critical below")),
+                     ],
+                 )),
+            ],
+        ),
+        forth=transform_humidity,
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                help=_("This Ruleset sets the threshold limits for humidity sensors"),
-                elements=[
-                    ("levels",
-                     Tuple(
-                         title=_("Upper levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
-                         ],
-                     )),
-                    ("levels_lower",
-                     Tuple(
-                         title=_("Lower levels"),
-                         elements=[
-                             Percentage(title=_("Warning below")),
-                             Percentage(title=_("Critical below")),
-                         ],
-                     )),
-                ],
-            ),
-            forth=transform_humidity,
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Sensor name"),
-            help=_("The identifier of the sensor."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="humidity",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_humidity,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_humidity,
+        title=lambda: _("Humidity Levels"),
+    ))

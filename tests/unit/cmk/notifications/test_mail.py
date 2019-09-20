@@ -1,9 +1,151 @@
 # -*- coding: utf-8 -*-
 
-from cmk.notification_plugins.mail import SingleEmailContent
+import pytest  # type: ignore
+
+import cmk.notification_plugins.mail as mail
 
 
-def mock_context():
+@pytest.mark.parametrize("notification_type, expected", [
+    ("PROBLEM", (
+        "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
+    )),
+    ("RECOVERY", (
+        "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        '<span class="state$PREVIOUS@HARDSTATE$">$PREVIOUS@HARDSTATE$</span> &rarr; <span class="state$@STATE$">$@STATE$</span>',
+    )),
+    ("FLAPPINGSTART", (
+        "Started Flapping",
+        "Started Flapping",
+    )),
+    ("FLAPPINGSTOP", (
+        'Stopped Flapping ($@SHORTSTATE$)',
+        'Stopped Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("FLAPPINGDISABLED", (
+        'Disabled Flapping ($@SHORTSTATE$)',
+        'Disabled Flapping (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMESTART", (
+        "Downtime Start ($@SHORTSTATE$)",
+        'Downtime Start (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMEEND", (
+        "Downtime End ($@SHORTSTATE$)",
+        'Downtime End (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("DOWNTIMECANCELLED", (
+        "Downtime Cancelled ($@SHORTSTATE$)",
+        'Downtime Cancelled (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("ACKNOWLEDGEMENT", (
+        "Acknowledged ($@SHORTSTATE$)",
+        'Acknowledged (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("CUSTOM", (
+        "Custom Notification ($@SHORTSTATE$)",
+        'Custom Notification (while <span class="state$@STATE$">$@STATE$</span>)',
+    )),
+    ("ALERTHANDLER (OK)", (
+        "ALERTHANDLER (OK)",
+        'ALERTHANDLER (OK)',
+    )),
+    ('UNKNOWN', (
+        "UNKNOWN",
+        "UNKNOWN",
+    )),
+])
+def test_event_templates(notification_type, expected):
+    assert mail.event_templates(notification_type) == expected
+
+
+HOSTNAME_ELEMENT = (
+    "hostname",
+    "both",
+    True,
+    "all",
+    "Host",
+    "$HOSTNAME$ ($HOSTALIAS$)",
+    "$LINKEDHOSTNAME$ ($HOSTALIAS$)",
+)
+SERVICEDESC_ELEMENT = (
+    "servicedesc",
+    "service",
+    True,
+    "all",
+    "Service",
+    "$SERVICEDESC$",
+    "$LINKEDSERVICEDESC$",
+)
+
+ALERTHANDLER_NAME_ELEMENT = (
+    "alerthandler_name",
+    "both",
+    True,
+    "alerthandler",
+    "Name of alert handler",
+    "$ALERTHANDLERNAME$",
+    "$ALERTHANDLERNAME$",
+)
+
+
+@pytest.mark.parametrize(
+    "args, expected",
+    [
+        (  # Show the hostname column in host notifications
+            ("host", False, ['hostname'], [HOSTNAME_ELEMENT]),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
+            ),
+        ),
+        (  # Show the hostname column in service notifications
+            ("service", False, ['hostname'], [HOSTNAME_ELEMENT]),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr>',
+            ),
+        ),
+        (  # Don't show the servicedesc column in host notifications
+            ("host", False, ['servicedesc'], [SERVICEDESC_ELEMENT]),
+            ('', ''),
+        ),
+        (  # Show the servicedesc column in service notifications
+            ("service", False, ['servicedesc'], [SERVICEDESC_ELEMENT]),
+            (
+                'Service:             $SERVICEDESC$\n',
+                '<tr class="even0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
+            ),
+        ),
+        (  # Columns are concatenated, the order is determined by the body elements
+            (
+                "service",
+                False,
+                ['servicedesc', 'hostname'],
+                [HOSTNAME_ELEMENT, SERVICEDESC_ELEMENT],
+            ),
+            (
+                'Host:                $HOSTNAME$ ($HOSTALIAS$)\nService:             $SERVICEDESC$\n',
+                '<tr class="even0"><td class=left>Host</td><td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td></tr><tr class="odd0"><td class=left>Service</td><td>$LINKEDSERVICEDESC$</td></tr>',
+            ),
+        ),
+        (  # Don't show the alerthandler_name if is_alert_handler is False
+            ("service", False, ['alerthandler_name'], [ALERTHANDLER_NAME_ELEMENT]),
+            ('', ''),
+        ),
+        (  # Show the alerthandler_name if is_alert_handler is True
+            ("service", True, ['alerthandler_name'], [ALERTHANDLER_NAME_ELEMENT]),
+            (
+                'Name of alert handler: $ALERTHANDLERNAME$\n',
+                '<tr class="even0"><td class=left>Name of alert handler</td><td>$ALERTHANDLERNAME$</td></tr>',
+            ),
+        ),
+    ])
+def test_body_templates(args, expected):
+    assert mail.body_templates(*args) == expected
+
+
+def mock_service_context():
     return {
         'CONTACTALIAS': u'cmkadmin',
         'CONTACTEMAIL': u'test@abc.de',
@@ -56,8 +198,6 @@ def mock_context():
         'LASTSERVICESTATECHANGE': u'1553097106',
         'LASTSERVICESTATECHANGE_REL': u'0d 00:00:00',
         'LASTSERVICESTATEID': u'0',
-        'LINKEDHOSTNAME': u'heute',
-        'LINKEDSERVICEDESC': u'CPU utilization',
         'LOGDIR': u'/omd/sites/heute/var/check_mk/notify',
         'LONGDATETIME': u'Wed Mar 20 16:51:46 CET 2019',
         'LONGHOSTOUTPUT': u'',
@@ -113,7 +253,7 @@ def mock_context():
     }
 
 
-CONTENT_TXT = """\
+SERVICE_CONTENT_TXT = """\
 Host:                heute (heute)
 Service:             CPU utilization
 Event:               OK -> WARN
@@ -128,18 +268,20 @@ Service Metrics:     \n\
 
 
 # TODO: validate the HTML content
-def test_mail_content_from_context(mocker):
+def test_mail_content_from_service_context(mocker):
     mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
 
     # The items below are added by the mail plugin
-    context = mock_context()
+    context = mock_service_context()
     assert "EVENT_TXT" not in context
     assert "EVENT_HTML" not in context
     assert "HOSTOUTPUT_HTML" not in context
     assert "SERVICEOUTPUT_HTML" not in context
     assert "LONGSERVICEOUTPUT_HTML" not in context
+    assert "LINKEDHOSTNAME" not in context
+    assert "LINKEDSERVICEDESC" not in context
 
-    content = SingleEmailContent(mock_context)
+    content = mail.SingleEmailContent(mock_service_context)
 
     # The state markers (!) and (!!) as well as the states in EVENT_TXT have to be
     # replaced with HTML, but raw input from plugins has to be escaped.
@@ -169,5 +311,120 @@ def test_mail_content_from_context(mocker):
     assert content.subject == 'Check_MK: heute/CPU utilization OK -> WARN'
     assert content.from_address == u'check_mk@myinstance.com'
     assert content.reply_to == u'reply@myinstance.com'
-    assert content.content_txt == CONTENT_TXT
+    assert content.content_txt == SERVICE_CONTENT_TXT
+    assert content.attachments == []
+
+
+def mock_host_context():
+    return {
+        'CONTACTALIAS': u'cmkadmin',
+        'CONTACTEMAIL': u'test@abc.de',
+        'CONTACTNAME': u'cmkadmin',
+        'CONTACTPAGER': u'',
+        'CONTACTS': u'cmkadmin',
+        'DATE': u'2019-08-23',
+        'HOSTACKAUTHOR': u'',
+        'HOSTACKCOMMENT': u'',
+        'HOSTADDRESS': u'127.0.0.1',
+        'HOSTALIAS': u'heute',
+        'HOSTATTEMPT': u'1',
+        'HOSTCHECKCOMMAND': u'check-mk-host-smart',
+        'HOSTCONTACTGROUPNAMES': u'all',
+        'HOSTDOWNTIME': u'0',
+        'HOSTFORURL': u'heute',
+        'HOSTGROUPNAMES': u'check_mk',
+        'HOSTNAME': u'heute',
+        'HOSTNOTES': u'',
+        'HOSTNOTESURL': u'',
+        'HOSTNOTIFICATIONNUMBER': u'1',
+        'HOSTOUTPUT': u'Packet received via smart PING',
+        'HOSTPERFDATA': u'',
+        'HOSTPROBLEMID': u'10',
+        'HOSTSHORTSTATE': u'UP',
+        'HOSTSTATE': u'UP',
+        'HOSTSTATEID': u'0',
+        'HOSTTAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp',
+        'HOSTURL': u'/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dheute%26site%3Dheute',
+        'HOST_ADDRESS_4': u'127.0.0.1',
+        'HOST_ADDRESS_6': u'',
+        'HOST_ADDRESS_FAMILY': u'4',
+        'HOST_EC_CONTACT': u'',
+        'HOST_FILENAME': u'/wato/hosts.mk',
+        'HOST_SL': u'',
+        'HOST_TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp',
+        'LASTHOSTPROBLEMID': u'10',
+        'LASTHOSTSHORTSTATE': u'DOWN',
+        'LASTHOSTSTATE': u'DOWN',
+        'LASTHOSTSTATECHANGE': u'1566551597',
+        'LASTHOSTSTATECHANGE_REL': u'0d 00:00:00',
+        'LASTHOSTSTATEID': u'1',
+        'LASTHOSTUP': u'1566551597',
+        'LASTHOSTUP_REL': u'0d 00:00:00',
+        'LOGDIR': u'/omd/sites/heute/var/check_mk/notify',
+        'LONGDATETIME': u'Fri Aug 23 11:13:17 CEST 2019',
+        'LONGHOSTOUTPUT': u'',
+        'MAIL_COMMAND': u"mail -s '$SUBJECT$' '$CONTACTEMAIL$'",
+        'MAXHOSTATTEMPTS': u'1',
+        'MICROTIME': u'1566551597286646',
+        'MONITORING_HOST': u'Klappschloss',
+        'NOTIFICATIONAUTHOR': u'',
+        'NOTIFICATIONAUTHORALIAS': u'',
+        'NOTIFICATIONAUTHORNAME': u'',
+        'NOTIFICATIONCOMMENT': u'',
+        'NOTIFICATIONTYPE': u'RECOVERY',
+        'OMD_ROOT': u'/omd/sites/heute',
+        'OMD_SITE': u'heute',
+        'PARAMETER_URL_PREFIX_AUTOMATIC': u'https',
+        'PREVIOUSHOSTHARDSHORTSTATE': u'DOWN',
+        'PREVIOUSHOSTHARDSTATE': u'DOWN',
+        'PREVIOUSHOSTHARDSTATEID': u'1',
+        'SHORTDATETIME': u'2019-08-23 11:13:17',
+        'WHAT': u'HOST',
+    }
+
+
+HOST_CONTENT_TXT = """\
+Host:                heute (heute)
+Event:               DOWN -> UP
+Address:             127.0.0.1
+Date / Time:         Fri Aug 23 11:13:17 CEST 2019
+Plugin Output:       Packet received via smart PING
+Metrics:             \n\
+"""
+
+
+def test_mail_content_from_host_context(mocker):
+    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
+    mocker.patch("cmk.notification_plugins.mail.socket.getfqdn", lambda: 'mysite.com')
+
+    context = mock_host_context()
+    assert "EVENT_TXT" not in context
+    assert "EVENT_HTML" not in context
+    assert "HOSTOUTPUT_HTML" not in context
+    assert "SERVICEOUTPUT_HTML" not in context
+    assert "LONGSERVICEOUTPUT_HTML" not in context
+    assert "LINKEDHOSTNAME" not in context
+    assert "LINKEDSERVICEDESC" not in context
+
+    content = mail.SingleEmailContent(mock_host_context)
+
+    assert content.context["EVENT_TXT"] == "DOWN -> UP"
+    assert content.context[
+        "EVENT_HTML"] == '<span class="stateDOWN">DOWN</span> &rarr; <span class="stateUP">UP</span>'
+    assert content.context["HOSTOUTPUT"] == 'Packet received via smart PING'
+    assert content.context["HOSTOUTPUT_HTML"] == 'Packet received via smart PING'
+    assert "SERVICEOUTPUT" not in content.context
+    assert "SERVICEOUTPUT_HTML" not in content.context
+    assert "LONGSERVICEOUTPUT" not in content.context
+    assert "LONGSERVICEOUTPUT_HTML" not in content.context
+
+    assert content.context[
+        'LINKEDHOSTNAME'] == '<a href="https://Klappschloss/heute/check_mk/index.py?start_url=view.py%3Fview_name%3Dhoststatus%26host%3Dheute%26site%3Dheute">heute</a>'
+    assert content.context['LINKEDSERVICEDESC'] == ''
+
+    assert content.mailto == 'test@abc.de'
+    assert content.subject == 'Check_MK: heute - DOWN -> UP'
+    assert content.from_address == u'checkmk@mysite.com'
+    assert content.reply_to is None
+    assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []

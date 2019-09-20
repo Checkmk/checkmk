@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -240,6 +240,10 @@ function update_site_activation_state(site_state)
     // Show status text (overlay text on the progress bar)
     var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
+
+    if (site_state["_phase"] == "done") {
+        utils.add_class(msg, "state_" + site_state["_state"]);
+    }
 
     // Show status details
     if (site_state["_status_details"]) {

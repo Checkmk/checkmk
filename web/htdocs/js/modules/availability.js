@@ -17,16 +17,16 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
 import * as utils from "utils";
 
-export function timeline_hover(row_nr, onoff)
+export function timeline_hover(timeline_nr, row_nr, onoff)
 {
-    var row = document.getElementById("timetable_" + row_nr);
+    var row = document.getElementById("timetable_" + timeline_nr + "_entry_" + row_nr);
     if (!row)
         return;
 
@@ -37,9 +37,9 @@ export function timeline_hover(row_nr, onoff)
     }
 }
 
-export function timetable_hover(row_nr, onoff)
+export function timetable_hover(timeline_nr, row_nr, onoff)
 {
-    var slice = document.getElementById("timeline_" + row_nr);
+    var slice = document.getElementById("timeline_" + timeline_nr + "_entry_" + row_nr);
     if (!slice)
         return;
 

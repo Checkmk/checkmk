@@ -18,7 +18,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -32,7 +32,7 @@ import * as quicksearch from "quicksearch";
 import * as visibility_detection from "visibility_detection";
 import * as valuespecs from "valuespecs";
 
-export default {
+export const cmk_export = {
     get_url: ajax.get_url,
     post_url: ajax.post_url,
     call_ajax: ajax.call_ajax,

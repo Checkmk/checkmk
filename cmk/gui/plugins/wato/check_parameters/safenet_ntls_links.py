@@ -34,27 +34,18 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSafenetNtlsLinks(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_safenet_ntls_links():
+    return Levels(
+        title=_(u"NTLS Links"),
+        default_value=None,
+    )
 
-    @property
-    def check_group_name(self):
-        return "safenet_ntls_links"
 
-    @property
-    def title(self):
-        return _("Safenet NTLS Links")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Levels(
-            title=_(u"NTLS Links"),
-            default_value=None,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="safenet_ntls_links",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_safenet_ntls_links,
+        title=lambda: _("Safenet NTLS Links"),
+    ))

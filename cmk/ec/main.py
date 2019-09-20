@@ -154,7 +154,7 @@ def decode_from_bytes(string_as_bytes):
     # conversions between str and unicode are a fundamentally broken idea, just
     # like all implicit things and "helpful" ideas in general. :-P For further
     # info see e.g. http://nedbatchelder.com/text/unipain.html
-    if isinstance(string_as_bytes, unicode):
+    if isinstance(string_as_bytes, six.text_type):
         return string_as_bytes
 
     try:
@@ -775,7 +775,7 @@ class EventServer(ECServerThread):
         ]
 
     def _virtual_memory_size(self):
-        parts = file('/proc/self/stat').read().split()
+        parts = open('/proc/self/stat').read().split()
         return int(parts[22])  # in Bytes
 
     def _add_replication_status(self):
@@ -1547,12 +1547,6 @@ class EventServer(ECServerThread):
                     # Remember the rule id that this event originated from
                     event["rule_id"] = rule["id"]
 
-                    # Lookup the monitoring core hosts and add the core host
-                    # name to the event when one can be matched
-                    # For the moment we have no rule/condition matching on this
-                    # field. So we only add the core host info for matched events.
-                    self._add_core_host_to_new_event(event)
-
                     # Attach optional contact group information for visibility
                     # and eventually for notifications
                     self._add_rule_contact_groups_to_event(rule, event)
@@ -1564,6 +1558,16 @@ class EventServer(ECServerThread):
                     event["match_groups_syslog_application"] = match_groups.get(
                         "match_groups_syslog_application", ())
                     self.rewrite_event(rule, event, match_groups)
+
+                    # Lookup the monitoring core hosts and add the core host
+                    # name to the event when one can be matched.
+                    #
+                    # Needs to be done AFTER event rewriting, because the rewriting
+                    # may change the "host" field.
+                    #
+                    # For the moment we have no rule/condition matching on this
+                    # field. So we only add the core host info for matched events.
+                    self._add_core_host_to_new_event(event)
 
                     if "count" in rule:
                         count = rule["count"]
@@ -3185,7 +3189,7 @@ class StatusServer(ECServerThread):
         # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with file(str(self.settings.paths.event_pipe.value), "w") as pipe:
+        with open(str(self.settings.paths.event_pipe.value), "w") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):

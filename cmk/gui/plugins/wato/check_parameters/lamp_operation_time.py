@@ -37,31 +37,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLampOperationTime(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_lamp_operation_time():
+    return Tuple(elements=[
+        Age(
+            title=_("Warning at"),
+            default_value=1000 * 3600,
+            display=["hours"],
+        ),
+        Age(
+            title=_("Critical at"),
+            default_value=1500 * 3600,
+            display=["hours"],
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "lamp_operation_time"
 
-    @property
-    def title(self):
-        return _("Beamer lamp operation time")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Age(
-                title=_("Warning at"),
-                default_value=1000 * 3600,
-                display=["hours"],
-            ),
-            Age(
-                title=_("Critical at"),
-                default_value=1500 * 3600,
-                display=["hours"],
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="lamp_operation_time",
+        group=RulespecGroupCheckParametersEnvironment,
+        parameter_valuespec=_parameter_valuespec_lamp_operation_time,
+        title=lambda: _("Beamer lamp operation time"),
+    ))

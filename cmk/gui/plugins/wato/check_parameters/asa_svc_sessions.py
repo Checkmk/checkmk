@@ -36,35 +36,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAsaSvcSessions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_asa_svc_sessions():
+    return Tuple(
+        title=_("Number of active sessions"),
+        help=_("This check monitors the current number of active sessions"),
+        elements=[
+            Integer(
+                title=_("Warning at"),
+                unit=_("sessions"),
+                default_value=100,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("sessions"),
+                default_value=200,
+            ),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "asa_svc_sessions"
 
-    @property
-    def title(self):
-        return _("Cisco SSl VPN Client Sessions")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Number of active sessions"),
-            help=_("This check monitors the current number of active sessions"),
-            elements=[
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("sessions"),
-                    default_value=100,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("sessions"),
-                    default_value=200,
-                ),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="asa_svc_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_asa_svc_sessions,
+        title=lambda: _("Cisco SSl VPN Client Sessions"),
+    ))

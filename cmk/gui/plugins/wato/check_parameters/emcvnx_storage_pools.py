@@ -39,37 +39,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEmcvnxStoragePools(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_emcvnx_storage_pools():
+    return Dictionary(elements=[
+        ("percent_full",
+         Tuple(
+             title=_("Upper levels for physical capacity in percent"),
+             elements=[
+                 Percentage(title=_("Warning at"), default_value=70.0),
+                 Percentage(title=_("Critical at"), default_value=90.0),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "emcvnx_storage_pools"
 
-    @property
-    def title(self):
-        return _("EMC VNX storage pools")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("percent_full",
-             Tuple(
-                 title=_("Upper levels for physical capacity in percent"),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=70.0),
-                     Percentage(title=_("Critical at"), default_value=90.0),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Pool name"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="emcvnx_storage_pools",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Pool name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_emcvnx_storage_pools,
+        title=lambda: _("EMC VNX storage pools"),
+    ))

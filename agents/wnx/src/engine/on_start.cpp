@@ -47,8 +47,8 @@ std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
 namespace cfg {
 
 void LogFolders() {
-    auto root_dir = details::G_ConfigInfo.getRootDir();
-    auto data_dir = details::G_ConfigInfo.getDataDir();
+    auto root_dir = GetCfg().getRootDir();
+    auto data_dir = GetCfg().getDataDir();
     XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir.u8string(),
               data_dir.u8string());
 }
@@ -61,16 +61,16 @@ bool FindAndPrepareWorkingFolders(AppType Type) {
         case AppType::exe:  // main exe
         {
             auto [r, d] = FindAlternateDirs(kTemporaryRoot);
-            details::G_ConfigInfo.initFolders(L"", r.wstring(), d.wstring());
+            GetCfg().initFolders(L"", r.wstring(), d.wstring());
             break;
         }
         case AppType::srv:
-            details::G_ConfigInfo.initFolders(cma::srv::kServiceName, L"", L"");
+            GetCfg().initFolders(cma::srv::kServiceName, L"", L"");
             break;
         case AppType::test:  // only watest
         {
             auto [r, d] = FindAlternateDirs(kRemoteMachine);
-            details::G_ConfigInfo.initFolders(L"", r.wstring(), d.wstring());
+            GetCfg().initFolders(L"", r.wstring(), d.wstring());
             break;
         }
         case AppType::automatic:

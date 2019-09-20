@@ -27,7 +27,7 @@
 from contextlib import contextmanager
 import re
 import json
-import functools
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -142,7 +142,7 @@ class Table(object):
         else:
             if isinstance(text, HTML):
                 text = "%s" % text
-            if not isinstance(text, unicode):
+            if not isinstance(text, six.text_type):
                 text = str(text)
 
         htmlcode = text + html.drain()
@@ -505,8 +505,7 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # sorting. This gives the user the chance to change the sorting and
     # see the table in the first place.
     try:
-        rows.sort(key=functools.cmp_to_key(lambda a, b: utils.cmp_num_split(
-            html.strip_tags(a[0][sort_col][0]), html.strip_tags(b[0][sort_col][0]))),
+        rows.sort(key=lambda x: utils.key_num_split(html.strip_tags(x[0][sort_col][0])),
                   reverse=sort_reverse == 1)
     except IndexError:
         pass

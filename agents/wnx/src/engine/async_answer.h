@@ -71,6 +71,8 @@ public:
                     const std::vector<uint8_t> data         // data for section
     );
 
+    std::vector<std::string> segmentNameList();
+
     // #TODO gtest
     auto awaitingSegments() const {
         std::lock_guard lk(lock_);

@@ -16,11 +16,13 @@ def test_cpu_util_core_name(check_manager, data, result):
 
 
 def cpu_info(t):
-    return [
-        ["cpu", 10 * t, 4 * t, 6 * t, 8 * t, 5 * t, 8 * t, 3 * t, 6 * t, 2 * t, 4 * t],
-        ["cpu-a", 6 * t, 3 * t, 3 * t, 2 * t, 3 * t, 3 * t, 1 * t, 5 * t, 1 * t, 2 * t],
-        ["cpu-b", 4 * t, 1 * t, 3 * t, 6 * t, 2 * t, 5 * t, 2 * t, 1 * t, 1 * t, 2 * t],
-    ]
+    return None, {
+        "Cpu Utilization": [
+            ("cpu", [10 * t, 4 * t, 6 * t, 8 * t, 5 * t, 8 * t, 3 * t, 6 * t, 2 * t, 4 * t]),
+            ("cpu-a", [6 * t, 3 * t, 3 * t, 2 * t, 3 * t, 3 * t, 1 * t, 5 * t, 1 * t, 2 * t]),
+            ("cpu-b", [4 * t, 1 * t, 3 * t, 6 * t, 2 * t, 5 * t, 2 * t, 1 * t, 1 * t, 2 * t]),
+        ]
+    }
 
 
 def reference_result(deviation):

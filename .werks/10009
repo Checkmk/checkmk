@@ -1,0 +1,13 @@
+Title: mk_logwatch: Empty lines in config files are ignored entirely
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568179958
+
+From version 1.6.0b1 to version 1.6.0b9 a configuration block was started
+by an empty line. This beaviour was incompatible with the previous one.
+mk_logwatch ignores empty lines in all configuration files.

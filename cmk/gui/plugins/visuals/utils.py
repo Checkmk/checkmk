@@ -30,6 +30,8 @@
 import abc
 import time
 from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+import six
+
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
@@ -40,10 +42,8 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 
-class VisualInfo(object):
+class VisualInfo(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all visual info classes"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -97,10 +97,8 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
 visual_info_registry = VisualInfoRegistry()
 
 
-class VisualType(object):
+class VisualType(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all filters"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -181,10 +179,8 @@ class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 visual_type_registry = VisualTypeRegistry()
 
 
-class Filter(object):
+class Filter(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all filters"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

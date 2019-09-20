@@ -17,6 +17,8 @@ ifneq ($(filter $(DISTRO_CODE),sles15),)
 $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	cd $(LIBGSF_DIR) && ./configure --prefix=$(OMD_ROOT)
 	$(MAKE) -C $(LIBGSF_DIR)
+# Package msitools needs some stuff during the build.
+	$(MAKE) -C $(LIBGSF_DIR) prefix=$(PACKAGE_LIBGSF_DESTDIR) install
 	$(TOUCH) $@
 else
 $(LIBGSF_BUILD):

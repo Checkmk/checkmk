@@ -46,47 +46,38 @@ bvip_link_states = [
 ]
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBvipLink(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_bvip_link():
+    return Dictionary(
+        title=_("Update State"),
+        elements=[
+            ("ok_states",
+             ListChoice(
+                 title=_("States which result in OK"),
+                 choices=bvip_link_states,
+                 default_value=[0, 4, 5],
+             )),
+            ("warn_states",
+             ListChoice(
+                 title=_("States which result in Warning"),
+                 choices=bvip_link_states,
+                 default_value=[7],
+             )),
+            ("crit_states",
+             ListChoice(
+                 title=_("States which result in Critical"),
+                 choices=bvip_link_states,
+                 default_value=[1, 2, 3],
+             )),
+        ],
+        optional_keys=None,
+    )
 
-    @property
-    def check_group_name(self):
-        return "bvip_link"
 
-    @property
-    def title(self):
-        return _("Allowed Network states on Bosch IP Cameras")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Update State"),
-            elements=[
-                ("ok_states",
-                 ListChoice(
-                     title=_("States which result in OK"),
-                     choices=bvip_link_states,
-                     default_value=[0, 4, 5],
-                 )),
-                ("warn_states",
-                 ListChoice(
-                     title=_("States which result in Warning"),
-                     choices=bvip_link_states,
-                     default_value=[7],
-                 )),
-                ("crit_states",
-                 ListChoice(
-                     title=_("States which result in Critical"),
-                     choices=bvip_link_states,
-                     default_value=[1, 2, 3],
-                 )),
-            ],
-            optional_keys=None,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="bvip_link",
+        group=RulespecGroupCheckParametersEnvironment,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_bvip_link,
+        title=lambda: _("Allowed Network states on Bosch IP Cameras"),
+    ))

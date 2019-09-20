@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import functools
 import os
 import json
 import pprint
@@ -1611,8 +1610,7 @@ class ModeBIRules(ModeBI):
         rules_refs = [
             (rule_id, rule, self.count_rule_references(rule_id)) for (rule_id, rule) in rules
         ]
-        rules_refs.sort(key=functools.cmp_to_key(lambda a, b: (a[2][2] > b[2][2]) - (a[2][2] < b[2][
-            2]) or (a[1]["title"] > b[1]["title"]) - (a[1]["title"] < b[1]["title"])))
+        rules_refs.sort(key=lambda x: (x[1]["title"], x[2][2]))
 
         with table_element("bi_rules", title) as table:
             for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:

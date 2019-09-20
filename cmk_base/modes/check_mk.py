@@ -342,7 +342,7 @@ def mode_list_checks():
                 ty_color = tty.yellow
 
             if man_filename:
-                title = file(man_filename).readlines()[0].split(":", 1)[1].strip()
+                title = open(man_filename).readlines()[0].split(":", 1)[1].strip()
             else:
                 title = "(no man page present)"
 
@@ -520,20 +520,22 @@ def mode_paths():
          "Unacknowledged logfiles of logwatch extension"),
         (cmk.utils.paths.livestatus_unix_socket, fil, pipe,
          "Socket of Check_MK's livestatus module"),
-        (cmk.utils.paths.local_checks_dir, directory, local, "Locally installed checks"),
-        (cmk.utils.paths.local_notifications_dir, directory, local,
+        (str(cmk.utils.paths.local_checks_dir), directory, local, "Locally installed checks"),
+        (str(cmk.utils.paths.local_notifications_dir), directory, local,
          "Locally installed notification scripts"),
-        (cmk.utils.paths.local_inventory_dir, directory, local,
+        (str(cmk.utils.paths.local_inventory_dir), directory, local,
          "Locally installed inventory plugins"),
-        (cmk.utils.paths.local_check_manpages_dir, directory, local,
+        (str(cmk.utils.paths.local_check_manpages_dir), directory, local,
          "Locally installed check man pages"),
-        (cmk.utils.paths.local_agents_dir, directory, local,
+        (str(cmk.utils.paths.local_agents_dir), directory, local,
          "Locally installed agents and plugins"),
-        (cmk.utils.paths.local_web_dir, directory, local, "Locally installed Multisite addons"),
-        (cmk.utils.paths.local_pnp_templates_dir, directory, local,
+        (str(cmk.utils.paths.local_web_dir), directory, local,
+         "Locally installed Multisite addons"),
+        (str(cmk.utils.paths.local_pnp_templates_dir), directory, local,
          "Locally installed PNP templates"),
-        (cmk.utils.paths.local_doc_dir, directory, local, "Locally installed documentation"),
-        (cmk.utils.paths.local_locale_dir, directory, local, "Locally installed localizations"),
+        (str(cmk.utils.paths.local_doc_dir), directory, local, "Locally installed documentation"),
+        (str(cmk.utils.paths.local_locale_dir), directory, local,
+         "Locally installed localizations"),
     ]
 
     def show_paths(title, t):
@@ -727,7 +729,8 @@ modes.register(
 
 def mode_cleanup_piggyback():
     from cmk_base.piggyback import cleanup_piggyback_files
-    cleanup_piggyback_files(config.piggyback_max_cachefile_age)
+    time_settings = config.get_config_cache().get_piggybacked_hosts_time_settings()
+    cleanup_piggyback_files(time_settings)
 
 
 modes.register(
@@ -808,7 +811,7 @@ modes.register(Mode(
     long_help=[
         "Does not contact the host again, but reuses the hosts walk from the "
         "directory %s. You can add further MIBs to the directory %s." % \
-         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mibs_dir)
+         (cmk.utils.paths.snmpwalks_dir, cmk.utils.paths.local_mib_dir)
     ],
 ))
 

@@ -39,53 +39,45 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmUptime(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_jvm_uptime():
+    return TextAscii(
+        title=_("Name of the virtual machine"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "jvm_uptime"
 
-    @property
-    def title(self):
-        return _("JVM uptime (since last reboot)")
+def _parameter_valuespec_jvm_uptime():
+    return Dictionary(
+        help=_("This rule sets the warn and crit levels for the uptime of a JVM. "
+               "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        elements=[
+            ("min",
+             Tuple(
+                 title=_("Minimum required uptime"),
+                 elements=[
+                     Age(title=_("Warning if below")),
+                     Age(title=_("Critical if below")),
+                 ],
+             )),
+            ("max",
+             Tuple(
+                 title=_("Maximum allowed uptime"),
+                 elements=[
+                     Age(title=_("Warning at")),
+                     Age(title=_("Critical at")),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule sets the warn and crit levels for the uptime of a JVM. "
-                   "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
-            elements=[
-                ("min",
-                 Tuple(
-                     title=_("Minimum required uptime"),
-                     elements=[
-                         Age(title=_("Warning if below")),
-                         Age(title=_("Critical if below")),
-                     ],
-                 )),
-                ("max",
-                 Tuple(
-                     title=_("Maximum allowed uptime"),
-                     elements=[
-                         Age(title=_("Warning at")),
-                         Age(title=_("Critical at")),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_uptime",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_jvm_uptime,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_jvm_uptime,
+        title=lambda: _("JVM uptime (since last reboot)"),
+    ))

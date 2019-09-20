@@ -1174,6 +1174,18 @@ metric_info["major_page_faults"] = {
     "color": "#20ff80",
 }
 
+metric_info["page_swap_in"] = {
+    "title": _("Page Swap In"),
+    "unit": "1/s",
+    "color": "33/a",
+}
+
+metric_info["page_swap_out"] = {
+    "title": _("Page Swap Out"),
+    "unit": "1/s",
+    "color": "36/a",
+}
+
 metric_info["process_creations"] = {
     "title": _("Process creations"),
     "unit": "1/s",
@@ -2819,13 +2831,13 @@ metric_info["livestatus_overflows_rate"] = {
 metric_info["cmk_time_agent"] = {
     "title": _("Time spent waiting for Check_MK agent"),
     "unit": "s",
-    "color": "35/a",
+    "color": "36/a",
 }
 
 metric_info["cmk_time_snmp"] = {
     "title": _("Time spent waiting for SNMP responses"),
     "unit": "s",
-    "color": "36/a",
+    "color": "32/a",
 }
 
 metric_info["cmk_time_ds"] = {
@@ -3706,6 +3718,18 @@ metric_info["harddrive_udma_crc_errors"] = {
     "title": _("Harddrive UDMA CRC errors"),
     "unit": "count",
     "color": "46/a",
+}
+
+metric_info["harddrive_crc_errors"] = {
+    "title": _("Harddrive CRC errors"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["harddrive_uncorrectable_errors"] = {
+    "title": _("Harddrive uncorrectable errors"),
+    "unit": "count",
+    "color": "13/a",
 }
 
 metric_info["nvme_media_and_data_integrity_errors"] = {
@@ -4791,6 +4815,42 @@ metric_info["k8s_roles"] = {
     "title": _("Roles"),
     "unit": "",
     "color": "21/b",
+}
+
+metric_info["k8s_daemon_pods_ready"] = {
+    "title": _("Number of nodes ready"),
+    "unit": "",
+    "color": "23/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_desired"] = {
+    "title": _("Desired number of nodes scheduled"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_current"] = {
+    "title": _("Current number of nodes scheduled"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_updated"] = {
+    "title": _("Number of nodes scheduled with up-to-date pods"),
+    "unit": "",
+    "color": "22/a",
+}
+
+metric_info["k8s_daemon_pods_available"] = {
+    "title": _("Number of nodes scheduled with available pods"),
+    "unit": "",
+    "color": "35/a",
+}
+
+metric_info["k8s_daemon_pods_unavailable"] = {
+    "title": _("Number of nodes scheduled with unavailable pods"),
+    "unit": "",
+    "color": "14/a",
 }
 
 metric_info["ready_replicas"] = {
@@ -5934,7 +5994,7 @@ metric_info["avg_flush_time"] = {
 
 metric_info["jenkins_job_score"] = {
     "title": _("Job score"),
-    "unit": "count",
+    "unit": "%",
     "color": "11/a",
 }
 
@@ -5948,6 +6008,42 @@ metric_info["jenkins_build_duration"] = {
     "title": _("Build duration"),
     "unit": "s",
     "color": "31/a",
+}
+
+metric_info["jenkins_numexecutors"] = {
+    "title": _("Number of executers"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["jenkins_clock"] = {
+    "title": _("Clock difference"),
+    "unit": "s",
+    "color": "43/a",
+}
+
+metric_info["jenkins_temp"] = {
+    "title": _("Available temp space"),
+    "unit": "bytes",
+    "color": "53/a",
+}
+
+metric_info["jenkins_stuck_tasks"] = {
+    "title": _("Number of stuck tasks"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["jenkins_blocked_tasks"] = {
+    "title": _("Number of blocked tasks"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["jenkins_pending_tasks"] = {
+    "title": _("Number of pending tasks"),
+    "unit": "count",
+    "color": "51/a",
 }
 
 for nimble_op_ty in ["read", "write"]:
@@ -5972,6 +6068,56 @@ for nimble_op_ty in ["read", "write"]:
             "unit": "s",
             "color": nimble_color,
         }
+
+# DRBD metrics
+metric_info['activity_log_updates'] = {
+    "title": _("Activity log updates"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['bit_map_updates'] = {
+    "title": _("Bit map updates"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info['local_count_requests'] = {
+    "title": _("Local count requests"),
+    "unit": "count",
+    "color": "24/b",
+}
+
+metric_info['pending_requests'] = {
+    "title": _("Pending requests"),
+    "unit": "count",
+    "color": "16/a",
+}
+metric_info['unacknowledged_requests'] = {
+    "title": _("Unacknowledged requests"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info['application_pending_requests'] = {
+    "title": _("Application pending requests"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info['epoch_objects'] = {
+    "title": _("Epoch objects"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+# In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
+# 1024) which means an invalidation of historic values.
+metric_info['kb_out_of_sync'] = {
+    "title": _("KiB out of sync"),  # according to documentation
+    "unit": "count",
+    "color": "14/a",
+}
 
 #.
 #   .--Checks--------------------------------------------------------------.
@@ -6001,13 +6147,13 @@ check_metrics["check_mk_active-icmp"] = {
 # This metric is not for an official Check_MK check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
-    "rta": {
+    "~.*rta": {
         "scale": m
     },
-    "rtmax": {
+    "~.*rtmax": {
         "scale": m
     },
-    "rtmin": {
+    "~.*rtmin": {
         "scale": m
     },
 }
@@ -8071,6 +8217,12 @@ check_metrics["check_mk-smart.stats"] = {
     "UDMA_CRC_Error_Count": {
         "name": "harddrive_udma_crc_errors"
     },
+    "CRC_Error_Count": {
+        "name": "harddrive_crc_errors",
+    },
+    "Uncorrectable_Error_Cnt": {
+        "name": "harddrive_uncorrectable_errors",
+    },
     "Power_Cycles": {
         "name": "harddrive_power_cycles"
     },
@@ -8496,21 +8648,7 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "context_switches",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
-    "metric": "process_creations",
     "half_value": 1000.0,
     "exponent": 2.0
 })
@@ -10752,6 +10890,7 @@ graph_info["tcp_connection_states"] = {
         ("tcp_idle", "stack"),
     ],
     "omit_zero_metrics": True,
+    "optional_metrics": ["tcp_bound", "tcp_idle"]
 }
 
 graph_info["cluster_hosts"] = {
@@ -11100,8 +11239,8 @@ graph_info["packet_loss"] = {
     "title": _("Packet loss"),
     "metrics": [("pl", "area"),],
     "scalars": [
-        "rta:warn",
-        "rta:crit",
+        "pl:warn",
+        "pl:crit",
     ]
 }
 

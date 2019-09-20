@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersKasperskyAvClient(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_kaspersky_av_client():
+    return Dictionary(elements=[
+        ("signature_age",
+         Tuple(
+             title=_("Time Settings for Signature"),
+             elements=[
+                 Age(title=_("Warning at"), default_value=86400),
+                 Age(title=_("Critical at"), default_value=7 * 86400),
+             ],
+         )),
+        ("fullscan_age",
+         Tuple(
+             title=_("Time Settings for Fullscan"),
+             elements=[
+                 Age(title=_("Warning at"), default_value=86400),
+                 Age(title=_("Critical at"), default_value=7 * 86400),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "kaspersky_av_client"
 
-    @property
-    def title(self):
-        return _("Kaspersky Anti-Virus Time Settings")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("signature_age",
-             Tuple(
-                 title=_("Time Settings for Signature"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=86400),
-                     Age(title=_("Critical at"), default_value=7 * 86400),
-                 ],
-             )),
-            ("fullscan_age",
-             Tuple(
-                 title=_("Time Settings for Fullscan"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=86400),
-                     Age(title=_("Critical at"), default_value=7 * 86400),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="kaspersky_av_client",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_kaspersky_av_client,
+        title=lambda: _("Kaspersky Anti-Virus Time Settings"),
+    ))

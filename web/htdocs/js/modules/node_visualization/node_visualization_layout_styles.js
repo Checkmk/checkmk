@@ -1,3 +1,27 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
 import * as d3 from "d3";
 
 import * as node_visualization_layouting_utils from "node_visualization_layouting_utils"
@@ -84,6 +108,7 @@ export class AbstractLayoutStyle {
         this._update_options_in_input_field(varprefix)
     }
 
+    generate_overlay() {}
 
     _update_options_in_input_field(varprefix="") {
         if (!this.options_selection)
@@ -497,7 +522,10 @@ class ForceSimulation {
 
     _update_charge_force() {
         let charge_force = d3.forceManyBody().strength((d) => {
-            if (d._children)
+            let explicit_force = this._get_explicit_force_option(d.data, "repulsion")
+            if (explicit_force != null)
+                return explicit_force
+            else if (d._children)
                 return d.data.force_options.force_aggregator
             else
                 return d.data.force_options.force_node})
@@ -522,12 +550,20 @@ class ForceSimulation {
         let forceX = d3.forceX(d=>{
                 return d.data.chunk.coords.x + d.data.chunk.coords.width/2
         }).strength(d=>{
+                let explicit_force = this._get_explicit_force_option(d.data, "center_force")
+                if (explicit_force != null)
+                    return explicit_force / 100
+
                 if (d.parent != null)
                     return d.data.force_options.center_force / 300
                 return d.data.force_options.center_force / 100})
+
         let forceY = d3.forceY(d=>{
                 return d.data.chunk.coords.y + d.data.chunk.coords.height/2
         }).strength(d=>{
+                let explicit_force = this._get_explicit_force_option(d.data, "center_force")
+                if (explicit_force != null)
+                    return explicit_force / 100
                 if (d.parent != null)
                     return d.data.force_options.center_force / 300
                 return d.data.force_options.center_force / 100})
@@ -541,12 +577,23 @@ class ForceSimulation {
         let link_force = d3.forceLink(this._all_links)
                             .id(function (d) {return d.data.id})
                             .distance(d=>{
+                                let explicit_force = this._get_explicit_force_option(d.source.data, "link_distance")
+                                if (explicit_force != null)
+                                    return explicit_force
+
                                 if (d.source._children)
-                                    return d.source.data.force_options.link_force_aggregator
+                                    return d.source.data.force_options.link_force_aggregator;
                                 else
-                                    return d.source.data.force_options.link_force_node})
+                                    return d.source.data.force_options.link_force_node;})
                             .strength(d=>d.source.data.force_options.link_strength/100)
         this._simulation.force("links", link_force);
+    }
+
+    _get_explicit_force_option(data, force_name) {
+        if (data.explicit_force_options && data.explicit_force_options[force_name]) {
+            return data.explicit_force_options[force_name]
+        }
+        return null
     }
 
     update_nodes_and_links(all_nodes, all_links) {

@@ -239,6 +239,7 @@ def test_registered_permissions():
         'icons_and_actions.status_shadow',
         'icons_and_actions.status_stale',
         'icons_and_actions.wato',
+        'icons_and_actions.parent_child_topology',
         'mkeventd.actions',
         'mkeventd.activate',
         'mkeventd.archive_events_of_hosts',
@@ -344,6 +345,8 @@ def test_registered_permissions():
         'view.downtimes_of_service',
         'view.docker_containers',
         'view.docker_nodes',
+        'view.vpshere_vms',
+        'view.vsphere_servers',
         'view.ec_event',
         'view.ec_event_mobile',
         'view.ec_events',
@@ -474,6 +477,8 @@ def test_registered_permissions():
         'view.svcnotifications',
         'view.svcproblems',
         'view.svcproblems_dash',
+        'view.topology_hover_host',
+        'view.topology_filters',
         'view.uncheckedsvc',
         'view.unmonitored_services',
         'wato.activate',
@@ -779,7 +784,7 @@ def theme_dirs(tmp_path, monkeypatch):
     local_theme_path.mkdir(parents=True)
 
     monkeypatch.setattr(cmk.utils.paths, "web_dir", str(tmp_path))
-    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", str(tmp_path / "local"))
+    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", tmp_path / "local")
 
     return theme_path, local_theme_path
 

@@ -83,7 +83,7 @@ class Wiki(SidebarSnapin):
         ul_started = False
         try:
             title = None
-            for line in file(filename).readlines():
+            for line in open(filename).readlines():
                 line = line.strip()
                 if line == "":
                     if ul_started:

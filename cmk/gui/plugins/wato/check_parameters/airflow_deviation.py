@@ -37,35 +37,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAirflowDeviation(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_airflow_deviation():
+    return TextAscii(
+        title=_("Detector ID"),
+        help=_("The identifier of the detector."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "airflow_deviation"
 
-    @property
-    def title(self):
-        return _("Airflow Deviation in Percent")
+def _parameter_valuespec_airflow_deviation():
+    return Tuple(
+        help=_("Levels for Airflow Deviation measured at airflow sensors "),
+        elements=[
+            Float(title=_("critical if below or equal"), unit=u"%", default_value=-20),
+            Float(title=_("warning if below or equal"), unit=u"%", default_value=-20),
+            Float(title=_("warning if above or equal"), unit=u"%", default_value=20),
+            Float(title=_("critical if above or equal"), unit=u"%", default_value=20),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Levels for Airflow Deviation measured at airflow sensors "),
-            elements=[
-                Float(title=_("critical if below or equal"), unit=u"%", default_value=-20),
-                Float(title=_("warning if below or equal"), unit=u"%", default_value=-20),
-                Float(title=_("warning if above or equal"), unit=u"%", default_value=20),
-                Float(title=_("critical if above or equal"), unit=u"%", default_value=20),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Detector ID"),
-            help=_("The identifier of the detector."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="airflow_deviation",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_airflow_deviation,
+        parameter_valuespec=_parameter_valuespec_airflow_deviation,
+        title=lambda: _("Airflow Deviation in Percent"),
+    ))

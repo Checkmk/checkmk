@@ -38,41 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVarnishObjects(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_varnish_objects():
+    return Dictionary(elements=[
+        ("expired",
+         Tuple(
+             title=_("Upper levels for \"expired objects\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+        ("lru_nuked",
+         Tuple(
+             title=_("Upper levels for \"LRU nuked objects\" per second"),
+             elements=[
+                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "varnish_objects"
 
-    @property
-    def title(self):
-        return _("Varnish Objects")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("expired",
-             Tuple(
-                 title=_("Upper levels for \"expired objects\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-            ("lru_nuked",
-             Tuple(
-                 title=_("Upper levels for \"LRU nuked objects\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="varnish_objects",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_varnish_objects,
+        title=lambda: _("Varnish Objects"),
+    ))

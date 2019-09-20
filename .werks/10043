@@ -1,0 +1,12 @@
+Title: Trusted certificate authorities were not correctly synchronized to remote sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568375773
+
+The site specific settings were always overwriting the global settings, even when no
+site specific settings were configured.

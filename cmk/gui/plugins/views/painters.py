@@ -27,6 +27,7 @@
 import abc
 import os
 import time
+import six
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -1596,7 +1597,7 @@ def paint_custom_notes(what, row):
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
 
     for f in files:
-        contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
+        contents.append(replace_tags(unicode(open(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)
 
 
@@ -1735,9 +1736,7 @@ class PainterServiceCustomVariables(Painter):
         return paint_custom_vars('service', row)
 
 
-class ABCPainterCustomVariable(Painter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCPainterCustomVariable(six.with_metaclass(abc.ABCMeta, Painter)):
     @property
     def title(self):
         return self._dynamic_title
@@ -5031,9 +5030,7 @@ class PainterHostTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
 
 
-class ABCPainterTagsWithTitles(Painter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCPainterTagsWithTitles(six.with_metaclass(abc.ABCMeta, Painter)):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()

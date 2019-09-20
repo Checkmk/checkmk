@@ -35,6 +35,7 @@ b) A edit mode which can be used to create and edit an object.
 import abc
 import copy
 from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
+import six
 
 from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
@@ -60,9 +61,7 @@ from cmk.gui.valuespec import (
 )
 
 
-class SimpleModeType(object):
-    __metaclass__ = abc.ABCMeta
-
+class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def type_name(self):
         # type: () -> str
@@ -130,14 +129,12 @@ class SimpleModeType(object):
         return None
 
 
-class SimpleWatoModeBase(WatoMode):
+class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
     """Base for specific WATO modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, mode_type, store):
         # type: (SimpleModeType, WatoSimpleConfigFile) -> None
         self._mode_type = mode_type
@@ -278,10 +275,8 @@ class SimpleListMode(SimpleWatoModeBase):
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
 
-class SimpleEditMode(SimpleWatoModeBase):
+class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
     """Base class for edit modes"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def _vs_individual_elements(self):
         # type () -> list

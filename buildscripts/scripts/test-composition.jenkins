@@ -33,7 +33,7 @@ if(BRANCH == 'master') {
     CMK_VERSION = VERSION
 }
 
-def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
+def TEST_DATA = '/var/jenkins_home/composition-test-data/' + CMK_VERSION
 def OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
 node {
@@ -149,7 +149,6 @@ try {
                                 rm -rf $DISTRO
                                 mkdir -p $DISTRO
                                 cp /omd/sites/${OMD_SITE}/junit.xml $DISTRO/
-                                cp -r /omd/sites/${OMD_SITE}/var/log $DISTRO/
                                 chown -R 112:120 $DISTRO
                             """
                             stash name: "$DISTRO-results", includes: "$DISTRO/**/*"

@@ -42,87 +42,78 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.db2_tablespaces import db_levels_common
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleTablespaces(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_oracle_tablespaces():
+    return TextAscii(
+        title=_("Explicit tablespaces"),
+        help=
+        _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"
+         ),
+        regex=r'.+\..+',
+        allow_empty=False)
 
-    @property
-    def check_group_name(self):
-        return "oracle_tablespaces"
 
-    @property
-    def title(self):
-        return _("Oracle Tablespaces")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("A tablespace is a container for segments (tables, indexes, etc). A "
-                   "database consists of one or more tablespaces, each made up of one or "
-                   "more data files. Tables and indexes are created within a particular "
-                   "tablespace. "
-                   "This rule allows you to define checks on the size of tablespaces."),
-            elements=db_levels_common() + [
-                ("autoextend",
-                 DropdownChoice(
-                     title=_("Expected autoextend setting"),
-                     choices=[
-                         (True, _("Autoextend is expected to be ON")),
-                         (False, _("Autoextend is expected to be OFF")),
-                         (None, _("Autoextend will be ignored")),
+def _parameter_valuespec_oracle_tablespaces():
+    return Dictionary(
+        help=_("A tablespace is a container for segments (tables, indexes, etc). A "
+               "database consists of one or more tablespaces, each made up of one or "
+               "more data files. Tables and indexes are created within a particular "
+               "tablespace. "
+               "This rule allows you to define checks on the size of tablespaces."),
+        elements=db_levels_common() + [
+            ("autoextend",
+             DropdownChoice(
+                 title=_("Expected autoextend setting"),
+                 choices=[
+                     (True, _("Autoextend is expected to be ON")),
+                     (False, _("Autoextend is expected to be OFF")),
+                     (None, _("Autoextend will be ignored")),
+                 ],
+             )),
+            ("autoextend_severity",
+             MonitoringState(
+                 title=_("Severity of invalid autoextend setting"),
+                 default_value=2,
+             )),
+            ("defaultincrement",
+             DropdownChoice(
+                 title=_("Default Increment"),
+                 choices=[
+                     (True, _("State is WARNING in case the next extent has the default size.")),
+                     (False, _("Ignore default increment")),
+                 ],
+             )),
+            ("map_file_online_states",
+             ListOf(
+                 Tuple(
+                     orientation="horizontal",
+                     elements=[
+                         DropdownChoice(choices=[
+                             ("RECOVER", _("Recover")),
+                             ("OFFLINE", _("Offline")),
+                         ],),
+                         MonitoringState()
                      ],
-                 )),
-                ("autoextend_severity",
-                 MonitoringState(
-                     title=_("Severity of invalid autoextend setting"),
-                     default_value=2,
-                 )),
-                ("defaultincrement",
-                 DropdownChoice(
-                     title=_("Default Increment"),
-                     choices=[
-                         (True,
-                          _("State is WARNING in case the next extent has the default size.")),
-                         (False, _("Ignore default increment")),
-                     ],
-                 )),
-                ("map_file_online_states",
-                 ListOf(
-                     Tuple(
-                         orientation="horizontal",
-                         elements=[
-                             DropdownChoice(choices=[
-                                 ("RECOVER", _("Recover")),
-                                 ("OFFLINE", _("Offline")),
-                             ],),
-                             MonitoringState()
-                         ],
-                     ),
-                     title=_('Map file online states'),
-                 )),
-                ("temptablespace",
-                 DropdownChoice(
-                     title=_("Monitor temporary Tablespace"),
-                     choices=[
-                         (False, _("Ignore temporary Tablespaces (Default)")),
-                         (True, _("Apply rule to temporary Tablespaces")),
-                     ],
-                 )),
-            ],
-        )
+                 ),
+                 title=_('Map file online states'),
+             )),
+            ("temptablespace",
+             DropdownChoice(
+                 title=_("Monitor temporary Tablespace"),
+                 choices=[
+                     (False, _("Ignore temporary Tablespaces (Default)")),
+                     (True, _("Apply rule to temporary Tablespaces")),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Explicit tablespaces"),
-            help=
-            _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"
-             ),
-            regex=r'.+\..+',
-            allow_empty=False)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="oracle_tablespaces",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_oracle_tablespaces,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_oracle_tablespaces,
+        title=lambda: _("Oracle Tablespaces"),
+    ))

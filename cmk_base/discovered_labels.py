@@ -27,13 +27,12 @@
 import abc
 import collections
 from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+import six
 
 from cmk.utils.exceptions import MKGeneralException
 
 
-class ABCDiscoveredLabels(collections.MutableMapping, object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
     def __init__(self, *args):
         super(ABCDiscoveredLabels, self).__init__()
         self._labels = {}
@@ -97,11 +96,11 @@ class ABCLabel(object):
     def __init__(self, name, value):
         # type: (Text, Text) -> None
 
-        if not isinstance(name, unicode):
+        if not isinstance(name, six.text_type):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
         self._name = name
 
-        if not isinstance(value, unicode):
+        if not isinstance(value, six.text_type):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
         self._value = value
 

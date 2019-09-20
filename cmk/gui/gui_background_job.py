@@ -200,7 +200,7 @@ class PermissionBackgroundJobsDeleteForeignJobs(Permission):
 class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background_process")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
@@ -385,8 +385,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         job_class_infos = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
-            jobs_info = self._get_job_infos(all_job_ids)
-            job_class_infos[job_class] = jobs_info
+            if not all_job_ids:
+                continue  # Skip job classes without current jobs
+            job_class_infos[job_class] = self._get_job_infos(all_job_ids)
+
         JobRenderer.show_job_class_infos(job_class_infos, **kwargs)
 
     def get_status_all_jobs(self, job_class):

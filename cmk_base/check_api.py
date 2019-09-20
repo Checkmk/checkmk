@@ -93,6 +93,7 @@ Global variables:
 # We import several modules here for the checks
 
 # TODO: Move imports directly to checks?
+from __future__ import division  # pylint: disable=misplaced-future
 import collections  # pylint: disable=unused-import
 import enum  # pylint: disable=unused-import
 import fnmatch  # pylint: disable=unused-import
@@ -121,6 +122,7 @@ import cmk.utils.rulesets.tuple_rulesets as _tuple_rulesets
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
+import cmk.utils as _cmk_utils
 import cmk_base.utils as _utils
 import cmk_base.config as _config
 import cmk_base.console as _console  # pylint: disable=unused-import
@@ -274,7 +276,7 @@ get_age_human_readable = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
 get_percent_human_readable = render.percent
 get_number_with_precision = render.fmt_number_with_precision
-quote_shell_string = _utils.quote_shell_string
+quote_shell_string = _cmk_utils.quote_shell_string
 
 
 def get_checkgroup_parameters(group, deflt=None):
@@ -394,6 +396,19 @@ def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
                                                    human_readable_func(crit), unit_info)
 
 
+def _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value=None):
+    if not dsname:
+        return []
+
+    perf_list = [dsname, value, levels[0], levels[1]]
+    if isinstance(boundaries, tuple) and len(boundaries) == 2:
+        perf_list.extend(map(scale_value, boundaries))
+    perfdata = [tuple(perf_list)]
+    if ref_value:
+        perfdata.append(('predict_' + dsname, ref_value))
+    return perfdata
+
+
 def check_levels(value,
                  dsname,
                  params,
@@ -469,9 +484,10 @@ def check_levels(value,
 
     # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
     if not params or set(params) <= {None}:
-        if dsname:
-            return 0, infotext, [(dsname, value)]
-        return 0, infotext, []
+        # always add warn/crit, because the call-site may not know it passed None,
+        # and therefore expect a quadruple.
+        perf = _build_perfdata(dsname, value, scale_value, (None, None), boundaries)
+        return 0, infotext, perf
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
@@ -508,16 +524,7 @@ def check_levels(value,
     if statemarkers:
         infotext += state_markers[state]
 
-    if dsname:
-        if isinstance(boundaries, tuple) and len(boundaries) == 2:
-            min_, max_ = map(scale_value, boundaries)
-            perfdata = [(dsname, value, levels[0], levels[1], min_, max_)]
-        else:
-            perfdata = [(dsname, value, levels[0], levels[1])]
-        if ref_value:
-            perfdata.append(('predict_' + dsname, ref_value))
-    else:
-        perfdata = []
+    perfdata = _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value)
 
     return state, infotext, perfdata
 

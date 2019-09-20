@@ -210,8 +210,24 @@ void ServiceProcessor::preLoadConfig() {
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
 }
 
-void ServiceProcessor::preStart() {
+static void ReloadConfigInServiceMode() {
+    // service may install cap, install ini or upgrade installation and
+    // continue to work, config must be reloaded
+    auto app_type = AppDefaultType();
+    if (app_type == AppType::srv) {
+        XLOG::l.i("Reloading config for SERVICE is required");
+        cma::ReloadConfig();  // service on start
+        return;
+    }
+
+    XLOG::l.i("Reloading config for application type [{}] is NOT required",
+              static_cast<int>(app_type));
+}
+
+void ServiceProcessor::preStartBinaries() {
     XLOG::l.i("Pre Start actions");
+
+    //
     cma::cfg::SetupPluginEnvironment();
     ohm_started_ = conditionallyStartOhm();
 
@@ -252,6 +268,17 @@ void ServiceProcessor::resetOhm() noexcept {
     cma::tools::RunStdCommand(cmd_line, true);
 }
 
+bool ServiceProcessor::stopRunningOhmProcess() noexcept {
+    auto running = ohm_process_.running();
+    if (running) {
+        XLOG::l.i("Stopping running OHM");
+        ohm_process_.stop();
+        return true;
+    }
+
+    return false;
+}
+
 // conditions are: yml + exists(ohm) + elevated
 // true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {
@@ -260,6 +287,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     auto& ohm_engine = ohm_provider_.getEngine();
     if (!ohm_engine.isAllowedByCurrentConfig()) {
         XLOG::t.i("OHM starting skipped due to config");
+        stopRunningOhmProcess();
         return false;
     }
 
@@ -273,6 +301,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     auto ohm_exe = cma::provider::GetOhmCliPath();
     if (!IsValidRegularFile(ohm_exe)) {
         XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+        stopRunningOhmProcess();
         return false;
     }
 
@@ -282,8 +311,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
             "Too many errors [{}] on the OHM, stopping, cleaning and starting",
             error_count);
         // no ohm, nop reset
-        auto running = ohm_process_.running();
-        if (running) ohm_process_.stop();
+        auto running = stopRunningOhmProcess();
 
         resetOhm();
 
@@ -308,7 +336,7 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     using namespace cma::cfg;
 
     vf_.clear();
-    max_timeout_ = 0;
+    max_wait_time_ = 0;
 
     preLoadConfig();
     // sections to be kicked out
@@ -354,10 +382,12 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     }
 #endif
 
-    if (max_timeout_ <= 0) {
-        max_timeout_ = cma::cfg::kDefaultAgentMinWait;
-        XLOG::l.i("Max Timeout set to valid value {}", max_timeout_);
-    }
+    if (max_wait_time_ <= 0) {
+        max_wait_time_ = cma::cfg::kDefaultAgentMinWait;
+        XLOG::l.i("Max Wiat Time for Answer set to valid value [{}]",
+                  max_wait_time_);
+    } else
+        XLOG::l.i("Max Wiat Time for Answer is [{}]", max_wait_time_);
 
     return static_cast<int>(vf_.size());
 }
@@ -384,7 +414,7 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
 
     if (cma::cfg::ReloadConfigAutomatically() ||
         cma::tools::IsEqual(value, L"yes"))
-        cma::ReloadConfig();
+        cma::ReloadConfig();  // automatic config reload
 
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
     ohm_started_ = conditionallyStartOhm();  // start may happen when
@@ -406,6 +436,18 @@ cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
 
     XLOG::l.crit("Can't open Answer");
     return makeTestString("No Answer");
+}
+
+bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t& last_cfg_id) {
+    // this may race condition, still probability is zero
+    // Config Reload is for manual usage
+    auto new_cfg_id = cma::cfg::GetCfg().uniqId();
+    if (last_cfg_id == new_cfg_id) return false;  // same config
+
+    XLOG::l.i("NEW CONFIG with id [{}] prestart binaries", new_cfg_id);
+    last_cfg_id = new_cfg_id;
+    preStartBinaries();
+    return true;
 }
 
 // <HOSTING THREAD>
@@ -448,7 +490,9 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any
-        preStart();
+        ReloadConfigInServiceMode();
+        preStartBinaries();
+        // *******************
 
         // check that we have something for testing
         if (ex_port == nullptr) {
@@ -593,8 +637,9 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
     if (process_handle_ != INVALID_HANDLE_VALUE) {
         // check status and reset handle if required
         DWORD exit_code = STILL_ACTIVE;
-        if (!::GetExitCodeProcess(process_handle_, &exit_code) ||  // no access
-            exit_code != STILL_ACTIVE) {                           // exit?
+        if (!::GetExitCodeProcess(process_handle_,
+                                  &exit_code) ||  // no access
+            exit_code != STILL_ACTIVE) {          // exit?
             if (exit_code != STILL_ACTIVE) {
                 XLOG::l.i("Finished with {} code", exit_code);
             }
@@ -655,7 +700,8 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        wtools::KillProcessTree(pid);
+        if (wtools::kProcessTreeKillAllowed) wtools::KillProcessTree(pid);
+
         wtools::KillProcess(pid);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
         return true;

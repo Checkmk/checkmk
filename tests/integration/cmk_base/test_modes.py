@@ -1,6 +1,7 @@
 from __future__ import print_function
 # pylint: disable=redefined-outer-name
 
+import collections
 import re
 import subprocess
 import pytest
@@ -37,13 +38,13 @@ def test_cfg(web, site):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/modes-test-host",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host2",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host3",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -65,6 +66,25 @@ def test_cfg(web, site):
     web.delete_host("modes-test-host2")
     web.delete_host("modes-test-host3")
     web.delete_host("modes-test-host4")
+
+    web.activate_changes()
+
+
+CommandOutput = collections.namedtuple('CommandOutput', [
+    'returncode',
+    'stdout',
+    'stderr',
+])
+
+
+@pytest.fixture
+def execute(test_cfg, site):
+    def _execute(command, cwd=None):
+        p = site.execute(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+        stdout, stderr = p.communicate()
+        return CommandOutput(returncode=p.returncode, stdout=stdout, stderr=stderr)
+
+    return _execute
 
 
 #.
@@ -89,12 +109,11 @@ def test_cfg(web, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_list_hosts(test_cfg, site):
+def test_list_hosts(execute):
     for opt in ["--list-hosts", "-l"]:
-        p = site.execute(["cmk", opt], stdout=subprocess.PIPE)
-        assert p.wait() == 0
-        output = p.stdout.read()
-        assert output == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
+        p = execute(["cmk", opt])
+        assert p.returncode == 0
+        assert p.stdout == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
 
 
 # TODO: add host to group and test the group filtering of --list-hosts
@@ -110,42 +129,35 @@ def test_list_hosts(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_list_tag_all(test_cfg, site):
-    p = site.execute(["cmk", "--list-tag"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert output == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
+def test_list_tag_all(execute):
+    p = execute(["cmk", "--list-tag"])
+    assert p.returncode == 0
+    assert p.stdout == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
 
 
-def test_list_tag_single_tag_filter(test_cfg, site):
-    p = site.execute(["cmk", "--list-tag", "test"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert output == "modes-test-host2\nmodes-test-host3\n"
+def test_list_tag_single_tag_filter(execute):
+    p = execute(["cmk", "--list-tag", "test"])
+    assert p.returncode == 0
+    assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
 
 
-def test_list_tag_offline(test_cfg, site):
-    p = site.execute(["cmk", "--list-tag", "offline"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert output == "modes-test-host4\n"
+def test_list_tag_offline(execute):
+    p = execute(["cmk", "--list-tag", "offline"])
+    assert p.returncode == 0
+    assert p.stdout == "modes-test-host4\n"
 
 
-def test_list_tag_multiple_tags(test_cfg, site):
-    p = site.execute(["cmk", "--list-tag", "test", "xyz"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert output == ""
+def test_list_tag_multiple_tags(execute):
+    p = execute(["cmk", "--list-tag", "test", "xyz"])
+    assert p.returncode == 0
+    assert p.stdout == ""
 
 
-def test_list_tag_multiple_tags_2(test_cfg, site):
-    p = site.execute(["cmk", "--list-tag", "test", "cmk-agent"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    assert p.wait() == 0
-    assert p.stderr.read() == ""
-    output = p.stdout.read()
-    assert output == "modes-test-host2\nmodes-test-host3\n"
+def test_list_tag_multiple_tags_2(execute):
+    p = execute(["cmk", "--list-tag", "test", "cmk-agent"])
+    assert p.returncode == 0
+    assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
+    assert p.stderr == ""
 
 
 #.
@@ -159,22 +171,21 @@ def test_list_tag_multiple_tags_2(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_list_checks(test_cfg, site):
+def test_list_checks(execute):
     output_long = None
     for opt in ["--list-checks", "-L"]:
-        p = site.execute(["cmk", opt], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert "zypper" in output
-        assert "Check for (security) updates via Zypper" in output
-        assert output.count(" snmp ") > 300
-        assert output.count(" tcp ") > 200
+        p = execute(["cmk", opt])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert "zypper" in p.stdout
+        assert "Check for (security) updates via Zypper" in p.stdout
+        assert p.stdout.count(" snmp ") > 300
+        assert p.stdout.count(" tcp ") > 200
 
         if output_long is None:
-            output_long = output
+            output_long = p.stdout
         else:
-            assert output == output_long
+            assert p.stdout == output_long
 
 
 #.
@@ -188,40 +199,33 @@ def test_list_checks(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_dump_agent_missing_arg(test_cfg, site):
-    output_long = None
+def test_dump_agent_missing_arg(execute):
     for opt in ["--dump-agent", "-d"]:
-        p = site.execute(["cmk", opt], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        assert p.wait() == 1
-
-
-def test_dump_agent_error(test_cfg, site):
-    output_long = None
-    for opt in ["--dump-agent", "-d"]:
-        p = site.execute(["cmk", opt, "modes-test-host4"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        p = execute(["cmk", opt])
         assert p.returncode == 1
-        assert stdout == ""
-        assert "[agent]: Agent exited " in stderr
+
+
+def test_dump_agent_error(execute):
+    output_long = None
+    for opt in ["--dump-agent", "-d"]:
+        p = execute(["cmk", opt, "modes-test-host4"])
+        assert p.returncode == 1
+        assert p.stdout == ""
+        assert "[agent]: Agent exited " in p.stderr
 
         if output_long is None:
-            output_long = stdout
+            output_long = p.stdout
         else:
-            assert stdout == output_long
+            assert p.stdout == output_long
 
 
-def test_dump_agent_test(test_cfg, site):
+def test_dump_agent_test(execute):
     for opt in ["--dump-agent", "-d"]:
-        p = site.execute(["cmk", opt, "modes-test-host"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
+        p = execute(["cmk", opt, "modes-test-host"])
         assert p.returncode == 0
-        assert stderr == ""
-        assert stdout == file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
-                              repo_path()).read()
+        assert p.stderr == ""
+        assert p.stdout == open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+                                repo_path()).read()
 
 
 #.
@@ -235,26 +239,22 @@ def test_dump_agent_test(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_dump_agent_dump_all_hosts(test_cfg, site):
+def test_dump_agent_dump_all_hosts(execute):
     for opt in ["--dump", "-D"]:
-        p = site.execute(["cmk", opt], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert stdout.count("Addresses: ") == 3
+        p = execute(["cmk", opt])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert p.stdout.count("Addresses: ") == 3
 
 
-def test_dump_agent(test_cfg, site):
+def test_dump_agent(execute):
     for opt in ["--dump", "-D"]:
-        p = site.execute(["cmk", opt, "modes-test-host"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert "Addresses: " in stdout
-        assert "Type of agent: " in stdout
-        assert "Services:" in stdout
+        p = execute(["cmk", opt, "modes-test-host"])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert "Addresses: " in p.stdout
+        assert "Type of agent: " in p.stdout
+        assert "Services:" in p.stdout
 
 
 #.
@@ -268,14 +268,13 @@ def test_dump_agent(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_paths(test_cfg, site):
-    p = site.execute(["cmk", "--paths"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert "Main components of check_mk" in stdout
-    assert "Locally installed " in stdout
-    assert len(stdout.split("\n")) > 40
+def test_paths(execute):
+    p = execute(["cmk", "--paths"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert "Main components of check_mk" in p.stdout
+    assert "Locally installed " in p.stdout
+    assert len(p.stdout.split("\n")) > 40
 
 
 #.
@@ -289,28 +288,24 @@ def test_paths(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def _create_cmk_backup(site):
-    p = site.execute(["cmk", "--backup", "x.tgz"],
-                     cwd=site.root,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0, "Command failed: %r, %r" % (stdout, stderr)
-    assert stderr == ""
-    assert stdout == ""
+def _create_cmk_backup(site, execute):
+    p = execute(["cmk", "--backup", "x.tgz"], cwd=site.root)
+    assert p.returncode == 0, "Command failed: %r, %r" % (p.stdout, p.stderr)
+    assert p.stderr == ""
+    assert p.stdout == ""
     assert site.file_exists("x.tgz")
 
 
-def test_backup(request, test_cfg, site):
+def test_backup(request, site, execute):
     def cleanup():
         site.delete_file("x.tgz")
 
     request.addfinalizer(cleanup)
 
-    _create_cmk_backup(site)
+    _create_cmk_backup(site, execute)
 
 
-def test_restore(request, test_cfg, site):
+def test_restore(request, site, execute):
     def cleanup():
         if site.file_exists("etc/check_mk.sav"):
             site.delete_dir("etc/check_mk.sav")
@@ -318,28 +313,19 @@ def test_restore(request, test_cfg, site):
 
     request.addfinalizer(cleanup)
 
-    _create_cmk_backup(site)
+    _create_cmk_backup(site, execute)
 
     # First copy the whole etc/check_mk dir, then restore, then compare
-    assert site.execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"],
-                        cwd=site.root).wait() == 0
-    assert site.execute(["rm", "etc/check_mk/main.mk"], cwd=site.root).wait() == 0
+    assert execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root).returncode == 0
+    assert execute(["rm", "etc/check_mk/main.mk"], cwd=site.root).returncode == 0
 
-    p = site.execute(["cmk", "--restore", "x.tgz"],
-                     cwd=site.root,
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout == ""
+    p = execute(["cmk", "--restore", "x.tgz"], cwd=site.root)
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout == ""
 
-    p = site.execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT,
-                     cwd=site.root)
-    stdout = p.communicate()[0]
-    assert p.wait() == 0, "Found differences after restore: %s" % stdout
+    p = execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root)
+    assert p.returncode == 0, "Found differences after restore: %s" % p.stdout
 
 
 #.
@@ -443,22 +429,18 @@ def test_restore(request, test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_flush_existing_host(test_cfg, site):
-    p = site.execute(["cmk", "--flush", "modes-test-host4"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout == "modes-test-host4    : (nothing)\n"
+def test_flush_existing_host(execute):
+    p = execute(["cmk", "--flush", "modes-test-host4"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout == "modes-test-host4    : (nothing)\n"
 
 
-def test_flush_not_existing_host(test_cfg, site):
-    p = site.execute(["cmk", "--flush", "bums"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout == "bums                : (nothing)\n"
+def test_flush_not_existing_host(execute):
+    p = execute(["cmk", "--flush", "bums"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout == "bums                : (nothing)\n"
 
 
 #.
@@ -549,47 +531,37 @@ def test_flush_not_existing_host(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_inventory_all_hosts(test_cfg, site):
+def test_inventory_all_hosts(execute):
     for opt in ["--inventory", "-i"]:
-        p = site.execute(["cmk", opt], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert stdout == ""
+        p = execute(["cmk", opt])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert p.stdout == ""
 
 
-def test_inventory_single_host(test_cfg, site):
+def test_inventory_single_host(execute):
     for opt in ["--inventory", "-i"]:
-        p = site.execute(["cmk", opt, "modes-test-host"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert stdout == ""
+        p = execute(["cmk", opt, "modes-test-host"])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert p.stdout == ""
 
 
-def test_inventory_multiple_hosts(test_cfg, site):
+def test_inventory_multiple_hosts(execute):
     for opt in ["--inventory", "-i"]:
-        p = site.execute(["cmk", opt, "modes-test-host", "modes-test-host2"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert stdout == ""
+        p = execute(["cmk", opt, "modes-test-host", "modes-test-host2"])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert p.stdout == ""
 
 
-def test_inventory_verbose(test_cfg, site):
+def test_inventory_verbose(execute):
     for opt in ["--inventory", "-i"]:
-        p = site.execute(["cmk", "-v", opt, "modes-test-host"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        assert p.wait() == 0
-        assert stderr == ""
-        assert stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
-        stdout_words = stdout.split()
+        p = execute(["cmk", "-v", opt, "modes-test-host"])
+        assert p.returncode == 0
+        assert p.stderr == ""
+        assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
+        stdout_words = p.stdout.split()
         assert "check_mk" in stdout_words
         assert "lnx_if" in stdout_words
         assert "mem" in stdout_words
@@ -606,24 +578,18 @@ def test_inventory_verbose(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_inventory_as_check_unknown_host(test_cfg, site):
-    p = site.execute(["cmk", "--inventory-as-check", "xyz."],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert stdout.startswith("CRIT - Failed to lookup IPv4 address of")
-    assert stderr == ""
-    assert p.wait() == 2
+def test_inventory_as_check_unknown_host(execute):
+    p = execute(["cmk", "--inventory-as-check", "xyz."])
+    assert p.returncode == 2
+    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address of")
+    assert p.stderr == ""
 
 
-def test_inventory_as_check(test_cfg, site):
-    p = site.execute(["cmk", "--inventory-as-check", "modes-test-host"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert re.match("OK - Found \d+ inventory entries", stdout)
+def test_inventory_as_check(execute):
+    p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
+    assert p.returncode == 0
+    assert re.match(r"OK - Found \d+ inventory entries", p.stdout)
+    assert p.stderr == ""
 
 
 #.
@@ -670,24 +636,18 @@ def test_inventory_as_check(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_check_discovery_host(test_cfg, site):
-    p = site.execute(["cmk", "--check-discovery", "xyz."],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert stdout.startswith("CRIT - Failed to lookup IPv4 address")
-    assert stderr == ""
-    assert p.wait() == 2
+def test_check_discovery_host(execute):
+    p = execute(["cmk", "--check-discovery", "xyz."])
+    assert p.returncode == 2
+    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address")
+    assert p.stderr == ""
 
 
-def test_check_discovery(test_cfg, site):
-    p = site.execute(["cmk", "--check-discovery", "modes-test-host"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout.startswith("OK - ")
+def test_check_discovery(execute):
+    p = execute(["cmk", "--check-discovery", "modes-test-host"])
+    assert p.returncode == 0
+    assert p.stdout.startswith("OK - ")
+    assert p.stderr == ""
 
 
 #.
@@ -712,30 +672,27 @@ def test_check_discovery(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_check(test_cfg, site):
+def test_check(execute):
     for opt in [["--check"], []]:
-        p = site.execute(["cmk"] + opt + ["modes-test-host"], stdout=subprocess.PIPE)
-        assert p.wait() == 0
-        output = p.stdout.read()
-        assert output.startswith("OK - [agent] Version:")
+        p = execute(["cmk"] + opt + ["modes-test-host"])
+        assert p.returncode == 0
+        assert p.stdout.startswith("OK - [agent] Version:")
 
 
-def test_check_verbose_perfdata(test_cfg, site):
-    p = site.execute(["cmk", "-v", "-p", "modes-test-host"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert "Temperature Zone 0" in output
-    assert "temp=32.4;" in output
-    assert "OK - [agent] Version:" in output
+def test_check_verbose_perfdata(execute):
+    p = execute(["cmk", "-v", "-p", "modes-test-host"])
+    assert p.returncode == 0
+    assert "Temperature Zone 0" in p.stdout
+    assert "temp=32.4;" in p.stdout
+    assert "OK - [agent] Version:" in p.stdout
 
 
-def test_check_verbose_only_check(test_cfg, site):
-    p = site.execute(["cmk", "-v", "--checks=lnx_if", "modes-test-host"], stdout=subprocess.PIPE)
-    assert p.wait() == 0
-    output = p.stdout.read()
-    assert "Temperature Zone 0" not in output
-    assert "Interface 2" in output
-    assert "OK - [agent] Version:" in output
+def test_check_verbose_only_check(execute):
+    p = execute(["cmk", "-v", "--checks=lnx_if", "modes-test-host"])
+    assert p.returncode == 0
+    assert "Temperature Zone 0" not in p.stdout
+    assert "Interface 2" in p.stdout
+    assert "OK - [agent] Version:" in p.stdout
 
 
 #.
@@ -749,12 +706,11 @@ def test_check_verbose_only_check(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_version(test_cfg, site):
-    p = site.execute(["cmk", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert "This is Check_MK" in stdout
+def test_version(execute):
+    p = execute(["cmk", "--version"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert "This is Check_MK" in p.stdout
 
 
 #.
@@ -768,19 +724,17 @@ def test_version(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 
-def test_help(test_cfg, site):
-    p = site.execute(["cmk", "--help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout.startswith("WAYS TO CALL:")
-    assert "--snmpwalk" in stdout
+def test_help(execute):
+    p = execute(["cmk", "--help"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout.startswith("WAYS TO CALL:")
+    assert "--snmpwalk" in p.stdout
 
 
-def test_help_without_args(test_cfg, site):
-    p = site.execute(["cmk"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 0
-    assert stderr == ""
-    assert stdout.startswith("WAYS TO CALL:")
-    assert "--snmpwalk" in stdout
+def test_help_without_args(execute):
+    p = execute(["cmk"])
+    assert p.returncode == 0
+    assert p.stderr == ""
+    assert p.stdout.startswith("WAYS TO CALL:")
+    assert "--snmpwalk" in p.stdout

@@ -49,6 +49,7 @@ from typing import Dict  # pylint: disable=unused-import
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
 from pathlib2 import Path
+import six
 
 import omdlib
 import omdlib.certs
@@ -729,7 +730,7 @@ def calculate_admin_password(options):
 
 
 def set_admin_password(site, pw):
-    file("%s/etc/htpasswd" % site.dir, "w").write("cmkadmin:%s\n" % hash_password(pw))
+    open("%s/etc/htpasswd" % site.dir, "w").write("cmkadmin:%s\n" % hash_password(pw))
 
 
 def file_owner_verify(path, uid, gid):
@@ -810,7 +811,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     elif os.path.isdir(skel_path):
         os.makedirs(user_path)
     else:
-        file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
+        open(user_path, "w").write(replace_tags(open(skel_path).read(), replacements))
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
@@ -843,7 +844,7 @@ def try_chown(filename, user):
 
 def instantiate_skel(site, path):
     try:
-        t = file(path).read()
+        t = open(path).read()
         return replace_tags(t, site.replacements)
     except Exception:
         return ""  # e.g. due to permission error
@@ -958,16 +959,16 @@ def patch_skeleton_files(old_site, new_site):
 
 def patch_template_file(src, dst, old_site, new_site):
     # Create patch from old instantiated skeleton file to new one
-    content = file(src).read()
+    content = open(src).read()
     for site in [old_site, new_site]:
         filename = "%s.skel.%s" % (dst, site.name)
-        file(filename, "w").write(replace_tags(content, site.replacements))
+        open(filename, "w").write(replace_tags(content, site.replacements))
         try_chown(filename, new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = "%s.skel.%s" % (dst, old_site.name)
     new_orig_path = "%s.skel.%s" % (dst, new_site.name)
-    if file(old_orig_path).read() == file(new_orig_path).read():
+    if open(old_orig_path).read() == open(new_orig_path).read():
         os.remove(old_orig_path)
         os.remove(new_orig_path)
         return
@@ -1133,7 +1134,7 @@ def merge_update_file(site, relpath, old_version, new_version):
                 (user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
-                sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
+                sys.stdout.write(tty_bgblue + tty_white + open(reject_file).read() + tty_normal)
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -1193,7 +1194,7 @@ def _try_merge(site, relpath, old_version, new_version):
         p = "%s/%s" % (skelroot, relpath)
         while True:
             try:
-                skel_content = file(p).read()
+                skel_content = open(p).read()
                 break
             except Exception:
                 # Do not ask the user in non-interactive mode.
@@ -1212,7 +1213,7 @@ def _try_merge(site, relpath, old_version, new_version):
                         "ignore", "Assume the file to be empty"):
                     skel_content = ""
                     break
-        file("%s-%s" % (user_path, version),
+        open("%s-%s" % (user_path, version),
              "w").write(replace_tags(skel_content, site.replacements))
     version_patch = os.popen(  # nosec
         "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
@@ -1571,7 +1572,7 @@ def filetype(p):
 def file_contents(site, path):
     if '/skel/' in path:
         return instantiate_skel(site, path)
-    return file(path).read()
+    return open(path).read()
 
 
 #.
@@ -1592,7 +1593,7 @@ def tmpfs_mounted(sitename):
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
-    for line in file("/proc/mounts"):
+    for line in open("/proc/mounts"):
         try:
             _device, mp, fstype, _options, _dump, _fsck = line.split()
             if mp.endswith(path_suffix) and fstype == 'tmpfs':
@@ -1752,10 +1753,10 @@ def add_to_fstab(site, tmpfs_size=None):
         sizespec = ',size=%s' % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = file(fstab_path()).read()
+    previous_fstab = open(fstab_path()).read()
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
-    with file(fstab_path(), "a+") as fstab:
+    with open(fstab_path(), "a+") as fstab:
         if complete_last_line:
             fstab.write("\n")
 
@@ -1769,8 +1770,8 @@ def remove_from_fstab(site):
 
     mountpoint = site.tmp_dir
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = file("/etc/fstab.new", "w")
-    for line in file("/etc/fstab"):
+    newtab = open("/etc/fstab.new", "w")
+    for line in open("/etc/fstab"):
         if "uid=%s," % site.name in line and mountpoint in line:
             continue
         newtab.write(line)
@@ -1946,7 +1947,7 @@ def save_site_conf(site):
     if not os.path.exists(confdir):
         os.mkdir(confdir)
 
-    f = file(site.dir + "/etc/omd/site.conf", "w")
+    f = open(site.dir + "/etc/omd/site.conf", "w")
 
     for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
         f.write("CONFIG_%s='%s'\n" % (hook_name, value))
@@ -1979,7 +1980,7 @@ def config_load_hook(site, hook_name):
 
     description = ""
     description_active = False
-    for line in file(site.dir + "/lib/omd/hooks/" + hook_name):
+    for line in open(site.dir + "/lib/omd/hooks/" + hook_name):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -2354,7 +2355,7 @@ def fstab_verify(site):
         return True
 
     mountpoint = site.tmp_dir
-    for line in file("/etc/fstab"):
+    for line in open("/etc/fstab"):
         if "uid=%s," % site.name in line and mountpoint in line:
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint)
@@ -2404,7 +2405,7 @@ def set_environment(site):
     envfile = site.dir + "/etc/environment"
     if os.path.exists(envfile):
         lineno = 0
-        for line in file(envfile):
+        for line in open(envfile):
             lineno += 1
             line = line.strip()
             if line == "" or line[0] == "#":
@@ -2438,7 +2439,7 @@ def hostname():
 
 
 def create_apache_hook(site):
-    file("/omd/apache/%s.conf" % site.name, "w")\
+    open("/omd/apache/%s.conf" % site.name, "w")\
         .write("Include %s/etc/apache/mode.conf\n" % site.dir)
 
 
@@ -3342,7 +3343,10 @@ def initialize_livestatus_tcp_tls_after_update(site):
     encryption for compatibility. Only enable it for new sites (by the
     default setting)."""
     if site.conf["LIVESTATUS_TCP"] != "on":
-        return
+        return  # Livestatus TCP not enabled, no need to set this option
+
+    if "LIVESTATUS_TCP_TLS" in site.read_site_config():
+        return  # Is already set in this site
 
     config_set_value(site, {}, "LIVESTATUS_TCP_TLS", value="off", save=True)
 
@@ -3606,7 +3610,7 @@ def main_backup(site, args, options=None):
     else:
         if dest[0] != '/':
             dest = g_orig_wd + '/' + dest
-        fh = file(dest, 'w')
+        fh = open(dest, 'w')
         tar_mode = 'w:'
 
     if "no-compression" not in options:
@@ -3633,7 +3637,7 @@ def main_restore(site, args, options=None):
         fh = sys.stdin
         tar_mode = 'r|*'
     elif os.path.exists(source):
-        fh = file(source)
+        fh = open(source)
         tar_mode = 'r:*'
     else:
         bail_out("The backup archive does not exist.")
@@ -3975,9 +3979,7 @@ def _cleanup_global_files():
         groupdel("omd")
 
 
-class PackageManager(object):
-    __metaclass__ = abc.ABCMeta
-
+class PackageManager(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     def factory(cls):
         if os.path.exists("/etc/cma"):
@@ -4049,10 +4051,8 @@ class PackageManagerRPM(PackageManager):
         return output.strip().split("\n")
 
 
-class AbstractSiteContext(object):
+class AbstractSiteContext(six.with_metaclass(abc.ABCMeta, object)):
     """Object wrapping site specific information"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, sitename):
         super(AbstractSiteContext, self).__init__()
         self._sitename = sitename
@@ -4133,7 +4133,7 @@ class SiteContext(AbstractSiteContext):
 
         Puts these variables into the config dict without the CONFIG_. Also
         puts the variables into the process environment."""
-        self._config = self._read_site_config()
+        self._config = self.read_site_config()
 
         # Get the default values of all config hooks that are not contained
         # in the site configuration. This can happen if there are new hooks
@@ -4147,14 +4147,14 @@ class SiteContext(AbstractSiteContext):
 
         self._config_loaded = True
 
-    def _read_site_config(self):
+    def read_site_config(self):
         """Read and parse the file site.conf of a site into a dictionary and returns it"""
         config = {}
         confpath = "%s/etc/omd/site.conf" % (self.dir)
         if not os.path.exists(confpath):
             return {}
 
-        for line in file(confpath):
+        for line in open(confpath):
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue
@@ -4293,7 +4293,7 @@ class VersionInfo(object):
         info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
         for f in os.listdir(info_dir):
             if f.endswith(".info"):
-                for line in file(info_dir + "/" + f):
+                for line in open(info_dir + "/" + f):
                     try:
                         line = line.strip()
                         # Skip comment and empty lines

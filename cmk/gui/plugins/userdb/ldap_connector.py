@@ -377,7 +377,7 @@ class LDAPUserConnector(UserConnector):
 
     def _get_nearest_dc_from_cache(self):
         try:
-            return file(self._nearest_dc_cache_filepath()).read()
+            return open(self._nearest_dc_cache_filepath()).read()
         except IOError:
             pass
 
@@ -543,10 +543,10 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if isinstance(base, unicode):
+        if isinstance(base, six.text_type):
             base = base.encode("utf-8")
 
-        if isinstance(filt, unicode):
+        if isinstance(filt, six.text_type):
             filt = filt.encode("utf-8")
 
         results = []
@@ -1296,7 +1296,7 @@ class LDAPUserConnector(UserConnector):
         self._group_search_cache.clear()
 
     def _set_last_sync_time(self):
-        file(self._sync_time_file, 'w').write('%s\n' % time.time())
+        open(self._sync_time_file, 'w').write('%s\n' % time.time())
 
     # no ldap check, just check the WATO attribute. This handles setups where
     # the locked attribute is not synchronized and the user is enabled in LDAP
@@ -1319,7 +1319,7 @@ class LDAPUserConnector(UserConnector):
 
     def _get_last_sync_time(self):
         try:
-            return float(file(self._sync_time_file).read().strip())
+            return float(open(self._sync_time_file).read().strip())
         except Exception:
             return 0
 
@@ -1864,10 +1864,8 @@ class LDAPConnectionValuespec(Transform):
 #   '----------------------------------------------------------------------'
 
 
-class LDAPAttributePlugin(object):
+class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all LDAP attribute synchronization plugins"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str

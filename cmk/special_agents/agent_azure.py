@@ -37,17 +37,22 @@ class ApiError(RuntimeError):
 class RestApiClient(object):
 
     AUTHORITY = 'https://login.microsoftonline.com'
+    RESOURCE = 'https://management.azure.com'
 
-    def __init__(self, resource, uri_end, tenant, client, secret):
-        context = adal.AuthenticationContext('%s/%s' % (RestApiClient.AUTHORITY, tenant))
-        token = context.acquire_token_with_client_credentials(resource, client, secret)
-
+    def __init__(self):
         self._ratelimit = float('Inf')
-        self._base_url = resource + uri_end
-        self._headers = {
+        self._base_url = None
+        self._headers = {}
+
+    def login(self, tenant, client, secret, subscription):
+        context = adal.AuthenticationContext('%s/%s' % (RestApiClient.AUTHORITY, tenant))
+        token = context.acquire_token_with_client_credentials(RestApiClient.RESOURCE, client,
+                                                              secret)
+        self._headers.update({
             'Authorization': 'Bearer %s' % token['accessToken'],
             'Content-Type': 'application/json',
-        }
+        })
+        self._base_url = '%s/subscriptions/%s/' % (RestApiClient.RESOURCE, subscription)
 
     @property
     def ratelimit(self):
@@ -62,7 +67,7 @@ class RestApiClient(object):
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
-    def get(self, uri_end, key=None, params=None):
+    def _get(self, uri_end, key=None, params=None):
         request_url = self._base_url + uri_end
         response = requests.get(request_url, params=params, headers=self._headers)
         self._update_ratelimit(response)
@@ -77,27 +82,25 @@ class RestApiClient(object):
             error = json_data.get('error', json_data)
             raise ApiError(error.get('message', json_data))
 
-
-class ManagementRestApi(object):
-    def __init__(self, client):
-        self.client = client
-
     def resourcegroups(self):
-        return self.client.get('resourcegroups', key='value', params={'api-version': '2019-05-01'})
+        return self._get('resourcegroups', key='value', params={'api-version': '2019-05-01'})
 
     def resources(self):
-        return self.client.get('resources', key='value', params={'api-version': '2019-05-01'})
+        return self._get('resources', key='value', params={'api-version': '2019-05-01'})
 
     def vmview(self, group, name):
         temp = 'resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView'
-        return self.client.get(temp % (group, name), params={'api-version': '2018-06-01'})
+        return self._get(temp % (group, name), params={'api-version': '2018-06-01'})
 
     def usagedetails(self):
-        return self.client.get('providers/Microsoft.Consumption/usageDetails',
-                               key='value',
-                               params={'api-version': '2019-01-01'})
+        return self._get('providers/Microsoft.Consumption/usageDetails',
+                         key='value',
+                         params={'api-version': '2019-01-01'})
 
     def metrics(self, resource_id, **params):
         url = resource_id.split('/', 3)[-1] + "/providers/microsoft.insights/metrics"
         params['api-version'] = '2018-01-01'
-        return self.client.get(url, key='value', params=params)
+        return self._get(url, key='value', params=params)
+
+
+rest_client = RestApiClient()

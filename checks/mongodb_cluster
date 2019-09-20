@@ -189,7 +189,7 @@ def check_mongodb_cluster_shards(item, params, databases_dict):
         databases_dict.get("databases").get(database_name).get("collstats",
                                                                {}).get(collection_name, {}),
         databases_dict.get("databases").get(database_name).get("primary", "unknown"),
-        databases_dict.get("settings", {}), perf_data)
+        databases_dict.get("settings", {}), databases_dict.get("shards", {}), perf_data)
 
 
 def _check_mongodb_cluster_is_balancer_disabled(collection_dict):
@@ -288,13 +288,14 @@ def _is_balanced(total_number_of_chunks, average_chunks_per_shard, number_of_chu
 
 
 def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_shard_name,
-                                          settings_dict, perf_data):
+                                          settings_dict, shards_dict, perf_data):
     """
     create long output with collection and shard information
     :param is_sharded: flag if collection is sharded
     :param collection_dict: dictionary holding collections information
     :param primary_shard_name: name of the primary shard of the collection
-    :param settings_dict: dictionary holding settings information
+    :param shards_dict: shards dictionary (mondoDB config.shards)
+    :param settings_dict: dictionary holding settings information (mondoDB config.settings)
     :return:
     """
     # set flags
@@ -304,7 +305,7 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
     # retrieve information from dictionary
     total_number_of_chunks = collection_dict.get("nchunks", 0)
     chunk_size = settings_dict.get("chunkSize", 65536)
-    shards_dict = collection_dict.get("shards", 0)
+    collection_shards_dict = collection_dict.get("shards", {})
     total_number_of_documents = collection_dict.get("count", 0)
     total_collection_size = collection_dict.get("size", 0)
     storage_size = collection_dict.get("storageSize", 0)
@@ -314,7 +315,7 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
     # output per collection
     collections_info = ["Collection"]
     if has_shards:
-        collections_info.append("- Shards: %d" % len(shards_dict))
+        collections_info.append("- Shards: %d" % len(collection_shards_dict))
     if has_chunks:
         collections_info.append("- Chunks: %d (Default chunk size: %s)" %
                                 (total_number_of_chunks, get_bytes_human_readable(chunk_size)))
@@ -327,12 +328,12 @@ def _generate_mongodb_cluster_long_output(is_sharded, collection_dict, primary_s
     # output per shard
     shard_info = []
     for shard_name in sorted(collection_dict.get("shards", {})):
-        shard_dict = collection_dict.get("shards").get(shard_name).copy()
-        shard_dict["hostname"] = shards_dict.get(shard_name, {}).get("host", "unknown")
-        shard_dict["name"] = shard_name
-        shard_dict["is_primary"] = shard_name == primary_shard_name
+        aggregated_shards_dict = collection_dict.get("shards").get(shard_name).copy()
+        aggregated_shards_dict["hostname"] = shards_dict.get(shard_name, {}).get("host", "unknown")
+        aggregated_shards_dict["name"] = shard_name
+        aggregated_shards_dict["is_primary"] = shard_name == primary_shard_name
         shard_info.append("\n" + _get_shard_statistic_info(
-            is_sharded, shard_dict, total_collection_size, total_number_of_documents))
+            is_sharded, aggregated_shards_dict, total_collection_size, total_number_of_documents))
 
     return 0, "\n%s\n%s" % ("\n".join(collections_info), "\n".join(shard_info)), perf_data
 

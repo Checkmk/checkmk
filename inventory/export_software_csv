@@ -57,7 +57,7 @@ def inv_export_software_csv(hostname, params, tree):
                 raise
             raise MKGeneralException("Cannot create missing directory %s: %s" % (dirname, e))
 
-    out = file(filename, "w")
+    out = open(filename, "w")
     keys = ["name", "version", "arch"]
 
     if headers:

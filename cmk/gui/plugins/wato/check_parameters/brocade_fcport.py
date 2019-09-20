@@ -42,7 +42,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     CheckParameterRulespecWithItem,
     rulespec_registry,
-    ABCHostValueRulespec,
+    HostRulespec,
 )
 
 _brocade_fcport_adm_choices = [
@@ -77,211 +77,195 @@ _brocade_fcport_phy_choices = [
 ]
 
 
-@rulespec_registry.register
-class RulespecBrocadeFcportInventory(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
-
-    @property
-    def name(self):
-        return "brocade_fcport_inventory"
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def valuespec(self):
-        return Dictionary(
-            title=_("Brocade Port Discovery"),
-            elements=[
-                ("use_portname",
-                 Checkbox(title=_("Use port name as service name"),
-                          label=_("use port name"),
-                          default_value=True,
-                          help=_(
-                              "This option lets Check_MK use the port name as item instead of the "
-                              "port number. If no description is available then the port number is "
-                              "used anyway."))),
-                ("show_isl",
-                 Checkbox(title=_("add \"ISL\" to service description for interswitch links"),
-                          label=_("add ISL"),
-                          default_value=True,
-                          help=_("This option lets Check_MK add the string \"ISL\" to the service "
-                                 "description for interswitch links."))),
-                ("admstates",
-                 ListChoice(
-                     title=_("Administrative port states to discover"),
-                     help=_(
-                         "When doing service discovery on brocade switches only ports with the given administrative "
-                         "states will be added to the monitoring system."),
-                     choices=_brocade_fcport_adm_choices,
-                     columns=1,
-                     toggle_all=True,
-                     default_value=['1', '3', '4'],
-                 )),
-                ("phystates",
-                 ListChoice(
-                     title=_("Physical port states to discover"),
-                     help=_(
-                         "When doing service discovery on brocade switches only ports with the given physical "
-                         "states will be added to the monitoring system."),
-                     choices=_brocade_fcport_phy_choices,
-                     columns=1,
-                     toggle_all=True,
-                     default_value=[3, 4, 5, 6, 7, 8, 9, 10])),
-                ("opstates",
-                 ListChoice(
-                     title=_("Operational port states to discover"),
-                     help=_(
-                         "When doing service discovery on brocade switches only ports with the given operational "
-                         "states will be added to the monitoring system."),
-                     choices=_brocade_fcport_op_choices,
-                     columns=1,
-                     toggle_all=True,
-                     default_value=[1, 2, 3, 4])),
-            ],
-            help=_('This rule can be used to control the service discovery for brocade ports. '
-                   'You can configure the port states for inventory '
-                   'and the use of the description as service name.'),
-        )
-
-
-@rulespec_registry.register
-class RulespecCheckgroupParametersBrocadeFcport(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "brocade_fcport"
-
-    @property
-    def title(self):
-        return _("Brocade FibreChannel ports")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("bw",
-             Alternative(
-                 title=_("Throughput levels"),
-                 help=_("Please note: in a few cases the automatic detection of the link speed "
-                        "does not work. In these cases you have to set the link speed manually "
-                        "below if you want to monitor percentage values"),
-                 elements=[
-                     Tuple(title=_("Used bandwidth of port relative to the link speed"),
-                           elements=[
-                               Percentage(title=_("Warning at"), unit=_("percent")),
-                               Percentage(title=_("Critical at"), unit=_("percent")),
-                           ]),
-                     Tuple(title=_("Used Bandwidth of port in megabyte/s"),
-                           elements=[
-                               Integer(title=_("Warning at"), unit=_("MByte/s")),
-                               Integer(title=_("Critical at"), unit=_("MByte/s")),
-                           ])
-                 ])),
-            ("assumed_speed",
-             Float(title=_("Assumed link speed"),
-                   help=_("If the automatic detection of the link speed does "
-                          "not work you can set the link speed here."),
-                   unit=_("GByte/s"))),
-            ("rxcrcs",
-             Tuple(title=_("CRC errors rate"),
-                   elements=[
-                       Percentage(title=_("Warning at"), unit=_("percent")),
-                       Percentage(title=_("Critical at"), unit=_("percent")),
-                   ])),
-            ("rxencoutframes",
-             Tuple(title=_("Enc-Out frames rate"),
-                   elements=[
-                       Percentage(title=_("Warning at"), unit=_("percent")),
-                       Percentage(title=_("Critical at"), unit=_("percent")),
-                   ])),
-            ("rxencinframes",
-             Tuple(title=_("Enc-In frames rate"),
-                   elements=[
-                       Percentage(title=_("Warning at"), unit=_("percent")),
-                       Percentage(title=_("Critical at"), unit=_("percent")),
-                   ])),
-            ("notxcredits",
-             Tuple(title=_("No-TxCredits errors"),
-                   elements=[
-                       Percentage(title=_("Warning at"), unit=_("percent")),
-                       Percentage(title=_("Critical at"), unit=_("percent")),
-                   ])),
-            ("c3discards",
-             Tuple(title=_("C3 discards"),
-                   elements=[
-                       Percentage(title=_("Warning at"), unit=_("percent")),
-                       Percentage(title=_("Critical at"), unit=_("percent")),
-                   ])),
-            ("average",
-             Integer(
-                 title=_("Averaging"),
-                 help=_("If this parameter is set, all throughputs will be averaged "
-                        "over the specified time interval before levels are being applied. Per "
-                        "default, averaging is turned off. "),
-                 unit=_("minutes"),
-                 minvalue=1,
-                 default_value=60,
+def _valuespec_brocade_fcport_inventory():
+    return Dictionary(
+        title=_("Brocade Port Discovery"),
+        elements=[
+            ("use_portname",
+             Checkbox(title=_("Use port name as service name"),
+                      label=_("use port name"),
+                      default_value=True,
+                      help=_("This option lets Check_MK use the port name as item instead of the "
+                             "port number. If no description is available then the port number is "
+                             "used anyway."))),
+            ("show_isl",
+             Checkbox(title=_("add \"ISL\" to service description for interswitch links"),
+                      label=_("add ISL"),
+                      default_value=True,
+                      help=_("This option lets Check_MK add the string \"ISL\" to the service "
+                             "description for interswitch links."))),
+            ("admstates",
+             ListChoice(
+                 title=_("Administrative port states to discover"),
+                 help=_(
+                     "When doing service discovery on brocade switches only ports with the given administrative "
+                     "states will be added to the monitoring system."),
+                 choices=_brocade_fcport_adm_choices,
+                 columns=1,
+                 toggle_all=True,
+                 default_value=['1', '3', '4'],
              )),
-            ("phystate",
-             Optional(
-                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
-                            choices=[
-                                (1, _("noCard")),
-                                (2, _("noTransceiver")),
-                                (3, _("laserFault")),
-                                (4, _("noLight")),
-                                (5, _("noSync")),
-                                (6, _("inSync")),
-                                (7, _("portFault")),
-                                (8, _("diagFault")),
-                                (9, _("lockRef")),
-                            ]),
-                 title=_("Physical state of port"),
-                 negate=True,
-                 label=_("ignore physical state"),
-             )),
-            ("opstate",
-             Optional(
-                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
-                            choices=[
-                                (0, _("unknown")),
-                                (1, _("online")),
-                                (2, _("offline")),
-                                (3, _("testing")),
-                                (4, _("faulty")),
-                            ]),
-                 title=_("Operational state"),
-                 negate=True,
-                 label=_("ignore operational state"),
-             )),
-            ("admstate",
-             Optional(
-                 ListChoice(title=_("Allowed states (otherwise check will be critical)"),
-                            choices=[
-                                (1, _("online")),
-                                (2, _("offline")),
-                                (3, _("testing")),
-                                (4, _("faulty")),
-                            ]),
-                 title=_("Administrative state"),
-                 negate=True,
-                 label=_("ignore administrative state"),
-             )),
-        ],)
+            ("phystates",
+             ListChoice(
+                 title=_("Physical port states to discover"),
+                 help=_(
+                     "When doing service discovery on brocade switches only ports with the given physical "
+                     "states will be added to the monitoring system."),
+                 choices=_brocade_fcport_phy_choices,
+                 columns=1,
+                 toggle_all=True,
+                 default_value=[3, 4, 5, 6, 7, 8, 9, 10])),
+            ("opstates",
+             ListChoice(
+                 title=_("Operational port states to discover"),
+                 help=_(
+                     "When doing service discovery on brocade switches only ports with the given operational "
+                     "states will be added to the monitoring system."),
+                 choices=_brocade_fcport_op_choices,
+                 columns=1,
+                 toggle_all=True,
+                 default_value=[1, 2, 3, 4])),
+        ],
+        help=_('This rule can be used to control the service discovery for brocade ports. '
+               'You can configure the port states for inventory '
+               'and the use of the description as service name.'),
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("port name"),
-            help=_("The name of the switch port"),
-        )
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="dict",
+        name="brocade_fcport_inventory",
+        valuespec=_valuespec_brocade_fcport_inventory,
+    ))
+
+
+def _item_spec_brocade_fcport():
+    return TextAscii(
+        title=_("port name"),
+        help=_("The name of the switch port"),
+    )
+
+
+def _parameter_valuespec_brocade_fcport():
+    return Dictionary(elements=[
+        ("bw",
+         Alternative(title=_("Throughput levels"),
+                     help=_("Please note: in a few cases the automatic detection of the link speed "
+                            "does not work. In these cases you have to set the link speed manually "
+                            "below if you want to monitor percentage values"),
+                     elements=[
+                         Tuple(title=_("Used bandwidth of port relative to the link speed"),
+                               elements=[
+                                   Percentage(title=_("Warning at"), unit=_("percent")),
+                                   Percentage(title=_("Critical at"), unit=_("percent")),
+                               ]),
+                         Tuple(title=_("Used Bandwidth of port in megabyte/s"),
+                               elements=[
+                                   Integer(title=_("Warning at"), unit=_("MByte/s")),
+                                   Integer(title=_("Critical at"), unit=_("MByte/s")),
+                               ])
+                     ])),
+        ("assumed_speed",
+         Float(title=_("Assumed link speed"),
+               help=_("If the automatic detection of the link speed does "
+                      "not work you can set the link speed here."),
+               unit=_("GByte/s"))),
+        ("rxcrcs",
+         Tuple(title=_("CRC errors rate"),
+               elements=[
+                   Percentage(title=_("Warning at"), unit=_("percent")),
+                   Percentage(title=_("Critical at"), unit=_("percent")),
+               ])),
+        ("rxencoutframes",
+         Tuple(title=_("Enc-Out frames rate"),
+               elements=[
+                   Percentage(title=_("Warning at"), unit=_("percent")),
+                   Percentage(title=_("Critical at"), unit=_("percent")),
+               ])),
+        ("rxencinframes",
+         Tuple(title=_("Enc-In frames rate"),
+               elements=[
+                   Percentage(title=_("Warning at"), unit=_("percent")),
+                   Percentage(title=_("Critical at"), unit=_("percent")),
+               ])),
+        ("notxcredits",
+         Tuple(title=_("No-TxCredits errors"),
+               elements=[
+                   Percentage(title=_("Warning at"), unit=_("percent")),
+                   Percentage(title=_("Critical at"), unit=_("percent")),
+               ])),
+        ("c3discards",
+         Tuple(title=_("C3 discards"),
+               elements=[
+                   Percentage(title=_("Warning at"), unit=_("percent")),
+                   Percentage(title=_("Critical at"), unit=_("percent")),
+               ])),
+        ("average",
+         Integer(
+             title=_("Averaging"),
+             help=_("If this parameter is set, all throughputs will be averaged "
+                    "over the specified time interval before levels are being applied. Per "
+                    "default, averaging is turned off. "),
+             unit=_("minutes"),
+             minvalue=1,
+             default_value=60,
+         )),
+        ("phystate",
+         Optional(
+             ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                        choices=[
+                            (1, _("noCard")),
+                            (2, _("noTransceiver")),
+                            (3, _("laserFault")),
+                            (4, _("noLight")),
+                            (5, _("noSync")),
+                            (6, _("inSync")),
+                            (7, _("portFault")),
+                            (8, _("diagFault")),
+                            (9, _("lockRef")),
+                        ]),
+             title=_("Physical state of port"),
+             negate=True,
+             label=_("ignore physical state"),
+         )),
+        ("opstate",
+         Optional(
+             ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                        choices=[
+                            (0, _("unknown")),
+                            (1, _("online")),
+                            (2, _("offline")),
+                            (3, _("testing")),
+                            (4, _("faulty")),
+                        ]),
+             title=_("Operational state"),
+             negate=True,
+             label=_("ignore operational state"),
+         )),
+        ("admstate",
+         Optional(
+             ListChoice(title=_("Allowed states (otherwise check will be critical)"),
+                        choices=[
+                            (1, _("online")),
+                            (2, _("offline")),
+                            (3, _("testing")),
+                            (4, _("faulty")),
+                        ]),
+             title=_("Administrative state"),
+             negate=True,
+             label=_("ignore administrative state"),
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="brocade_fcport",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_brocade_fcport,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_brocade_fcport,
+        title=lambda: _("Brocade FibreChannel ports"),
+    ))

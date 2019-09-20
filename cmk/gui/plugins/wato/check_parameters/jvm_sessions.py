@@ -38,53 +38,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmSessions(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_jvm_sessions():
+    return TextAscii(
+        title=_("Name of the virtual machine"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "jvm_sessions"
 
-    @property
-    def title(self):
-        return _("JVM session count")
+def _parameter_valuespec_jvm_sessions():
+    return Tuple(
+        help=_("This rule sets the warn and crit levels for the number of current "
+               "connections to a JVM application on the servlet level."),
+        elements=[
+            Integer(
+                title=_("Warning if below"),
+                unit=_("sessions"),
+                default_value=-1,
+            ),
+            Integer(
+                title=_("Critical if below"),
+                unit=_("sessions"),
+                default_value=-1,
+            ),
+            Integer(
+                title=_("Warning at"),
+                unit=_("sessions"),
+                default_value=800,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("sessions"),
+                default_value=1000,
+            ),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets the warn and crit levels for the number of current "
-                   "connections to a JVM application on the servlet level."),
-            elements=[
-                Integer(
-                    title=_("Warning if below"),
-                    unit=_("sessions"),
-                    default_value=-1,
-                ),
-                Integer(
-                    title=_("Critical if below"),
-                    unit=_("sessions"),
-                    default_value=-1,
-                ),
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("sessions"),
-                    default_value=800,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("sessions"),
-                    default_value=1000,
-                ),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_jvm_sessions,
+        parameter_valuespec=_parameter_valuespec_jvm_sessions,
+        title=lambda: _("JVM session count"),
+    ))

@@ -25,13 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-import errno
 import logging
 import os
 import re
 import time
 import zipfile
 import cStringIO
+from typing import Union, Dict, Text  # pylint: disable=unused-import
+from pathlib2 import Path  # pylint: disable=unused-import
 
 from pysmi.compiler import MibCompiler  # type: ignore
 from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore
@@ -126,8 +127,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     RulespecGroup,
     rulespec_registry,
-    ABCHostValueRulespec,
-    ABCServiceValueRulespec,
+    HostRulespec,
+    ServiceRulespec,
     main_module_registry,
     MainModule,
     wato_confirm,
@@ -144,7 +145,10 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-mkeventd_status_file = cmk.utils.paths.omd_root + "/var/mkeventd/status"
+
+def _compiled_mibs_dir():
+    return cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.
@@ -1032,14 +1036,12 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 #   '----------------------------------------------------------------------'
 
 
-class ABCEventConsoleMode(WatoMode):
+class ABCEventConsoleMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     # NOTE: This class is obviously still abstract, but pylint fails to see
     # this, even in the presence of the meta class assignment below, see
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         self._rule_packs = load_mkeventd_rules()
         super(ABCEventConsoleMode, self).__init__()
@@ -2343,7 +2345,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def action(self):
         if html.request.has_var("_delete"):
             filename = html.request.var("_delete")
-            mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
+            mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
             if filename in mibs:
                 c = wato_confirm(
                     _("Confirm MIB deletion"),
@@ -2423,7 +2425,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        file(cmk.gui.mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
+        with cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).open("w") as f:
+            f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
 
@@ -2435,12 +2438,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         defaultMibPackages = PySnmpCodeGen.defaultMibPackages
         baseMibs = PySnmpCodeGen.baseMibs
 
-        store.mkdir(cmk.gui.mkeventd.compiled_mibs_dir)
+        compiled_mibs_dir = _compiled_mibs_dir()
+        store.mkdir(compiled_mibs_dir)
 
         # This object manages the compilation of the uploaded SNMP mib
         # but also resolving dependencies and compiling dependents
         compiler = MibCompiler(SmiV1CompatParser(), PySnmpCodeGen(),
-                               PyFileWriter(cmk.gui.mkeventd.compiled_mibs_dir))
+                               PyFileWriter(compiled_mibs_dir))
 
         # FIXME: This is a temporary local fix that should be removed once
         # handling of file contents uses a uniformly encoded representation
@@ -2454,10 +2458,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs])
+        compiler.addSources(*[FileReader(path) for path, _title in cmk.gui.mkeventd.mib_dirs()])
 
         # check for already compiled MIBs
-        compiler.addSearchers(PyFileSearcher(cmk.gui.mkeventd.compiled_mibs_dir))
+        compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
 
         # and also check PySNMP shipped compiled MIBs
         compiler.addSearchers(*[PyPackageSearcher(x) for x in defaultMibPackages])
@@ -2493,7 +2497,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             raise Exception(_('Failed to process your MIB file (%s): %s') % (mibname, e))
 
     def _bulk_delete_custom_mibs_after_confirm(self):
-        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
+        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
         selected_custom_mibs = []
         for varname, _value in html.request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
@@ -2517,15 +2521,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
 
         # Delete the uploaded mib file
-        os.remove(cmk.gui.mkeventd.mib_upload_dir + "/" + filename)
+        cmk.gui.mkeventd.mib_upload_dir().joinpath(filename).unlink()
 
         # Also delete the compiled files
+        compiled_mibs_dir = _compiled_mibs_dir()
         for f in [
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".py",
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + mib_name + ".pyc",
-                cmk.gui.mkeventd.compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() +
-                ".py", cmk.gui.mkeventd.compiled_mibs_dir + "/" +
-                filename.rsplit('.', 1)[0].upper() + ".pyc"
+                compiled_mibs_dir + "/" + mib_name + ".py",
+                compiled_mibs_dir + "/" + mib_name + ".pyc",
+                compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".py",
+                compiled_mibs_dir + "/" + filename.rsplit('.', 1)[0].upper() + ".pyc",
         ]:
             if os.path.exists(f):
                 os.remove(f)
@@ -2551,20 +2555,19 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         html.hidden_fields()
         html.end_form()
 
-        if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir):
-            os.makedirs(cmk.gui.mkeventd.mib_upload_dir
-                       )  # Let exception happen if this fails. Never happens on OMD
+        cmk.gui.mkeventd.mib_upload_dir().mkdir(parents=True, exist_ok=True)
 
-        for path, title in cmk.gui.mkeventd.mib_dirs:
+        for path, title in cmk.gui.mkeventd.mib_dirs():
             self._show_mib_table(path, title)
 
     def _show_mib_table(self, path, title):
-        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir
+        # type: (Path, Text) -> None
+        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
 
         if is_custom_dir:
             html.begin_form("bulk_delete_form", method="POST")
 
-        with table_element("mibs_" + path, title, searchable=False) as table:
+        with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
                 table.row()
 
@@ -2598,36 +2601,34 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             html.end_form()
 
     def _load_snmp_mibs(self, path):
-        found = {}
-        try:
-            file_names = os.listdir(path)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return found
-            else:
-                raise
+        # type: (Path) -> Dict[str, Dict]
+        found = {}  # type: Dict[str, Dict]
 
-        for fn in file_names:
-            mib_path = path + "/" + fn
-            if os.path.isdir(mib_path):
+        if not path.exists():
+            return found
+
+        for file_obj in path.iterdir():
+            if file_obj.is_dir():
                 continue
 
-            if fn[0] != '.':
-                mib = self._parse_snmp_mib_header(mib_path)
-                found[fn] = mib
+            if file_obj.name.startswith("."):
+                continue
+
+            found[file_obj.name] = self._parse_snmp_mib_header(file_obj)
         return found
 
     def _parse_snmp_mib_header(self, path):
-        mib = {}
-        mib["size"] = os.stat(path).st_size
+        # type: (Path) -> Dict[str, Union[int, str]]
+        mib = {"size": path.stat().st_size}  # type: Dict[str, Union[int, str]]
 
         # read till first "OBJECT IDENTIFIER" declaration
         head = ''
-        for line in file(path):
-            if not line.startswith("--"):
-                if 'OBJECT IDENTIFIER' in line:
-                    break  # seems the header is finished
-                head += line
+        with path.open() as f:
+            for line in f:
+                if not line.startswith("--"):
+                    if 'OBJECT IDENTIFIER' in line:
+                        break  # seems the header is finished
+                    head += line
 
         # now try to extract some relevant information from the header
 
@@ -3787,145 +3788,136 @@ def convert_mkevents_hostspec(value):
     return value
 
 
-@rulespec_registry.register
-class RulespecExtraHostConfEcEventLimit(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupEventConsole
-
-    @property
-    def name(self):
-        return "extra_host_conf:_ec_event_limit"
-
-    @property
-    def valuespec(self):
-        return Transform(
-            vs_ec_host_limit(title=_("Host event limit")),
-            forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
-            back=lambda x: "%d:%s" % (x["limit"], x["action"]),
-        )
+def _valuespec_extra_host_conf__ec_event_limit():
+    return Transform(
+        vs_ec_host_limit(title=_("Host event limit")),
+        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
+    )
 
 
-@rulespec_registry.register
-class RulespecActiveChecksMkevents(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupEventConsole
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupEventConsole,
+        name="extra_host_conf:_ec_event_limit",
+        valuespec=_valuespec_extra_host_conf__ec_event_limit,
+    ))
 
-    @property
-    def name(self):
-        return "active_checks:mkevents"
 
-    @property
-    def match_type(self):
-        return "all"
-
-    @property
-    def valuespec(self):
-        return Dictionary(
-            title=_("Check event state in Event Console"),
-            help=_("This check is part of the Check_MK Event Console and will check "
-                   "if there are any open events for a certain host (and maybe a certain "
-                   "application on that host. The state of the check will reflect the status "
-                   "of the worst open event for that host."),
-            elements=[
-                ("hostspec",
-                 Transform(
-                     Alternative(title=_("Host specification"),
-                                 elements=[
-                                     ListChoice(title=_("Match the hosts with..."),
-                                                choices=[
-                                                    ('$HOSTNAME$', _("Hostname")),
-                                                    ('$HOSTADDRESS$', _("IP address")),
-                                                    ('$HOSTALIAS$', _("Alias")),
-                                                ]),
-                                     TextAscii(allow_empty=False,
-                                               attrencode=True,
-                                               title="Specify host explicitely"),
-                                 ],
-                                 default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
-                     help=_(
-                         "When quering the event status you can either use the monitoring "
-                         "host name, the IP address, the host alias or a custom host name for referring to a "
-                         "host. This is needed in cases where the event source (syslog, snmptrapd) "
-                         "do not send a host name that matches the monitoring host name."),
-                     forth=convert_mkevents_hostspec)),
-                ("item",
-                 TextAscii(
-                     title=_("Item (used in service description)"),
-                     help=_("If you enter an item name here, this will be used as "
-                            "part of the service description after the prefix \"Events \". "
-                            "The prefix plus the configured item must result in an unique "
-                            "service description per host. If you leave this empty either the "
-                            "string provided in \"Application\" is used as item or the service "
-                            "gets no item when the \"Application\" field is also not configured."),
-                     allow_empty=False,
-                 )),
-                ("application",
-                 RegExp(
-                     title=_("Application (regular expression)"),
-                     help=_("If you enter an application name here then only "
-                            "events for that application name are counted. You enter "
-                            "a regular expression here that must match a <b>part</b> "
-                            "of the application name. Use anchors <tt>^</tt> and <tt>$</tt> "
-                            "if you need a complete match."),
-                     allow_empty=False,
-                     mode=RegExp.infix,
-                     case_sensitive=False,
-                 )),
-                ("ignore_acknowledged",
-                 FixedValue(
-                     True,
-                     title=_("Ignore acknowledged events"),
-                     help=_("If you check this box then only open events are honored when "
-                            "determining the event state. Acknowledged events are displayed "
-                            "(i.e. their count) but not taken into account."),
-                     totext=_("acknowledged events will not be honored"),
-                 )),
-                ("remote",
-                 Alternative(
-                     title=_("Access to the Event Console"),
-                     style="dropdown",
-                     elements=[
-                         FixedValue(
-                             None,
-                             title=_("Connect to the local Event Console"),
-                             totext=_("local connect"),
-                         ),
-                         Tuple(
+def _valuespec_active_checks_mkevents():
+    return Dictionary(
+        title=_("Check event state in Event Console"),
+        help=_("This check is part of the Check_MK Event Console and will check "
+               "if there are any open events for a certain host (and maybe a certain "
+               "application on that host. The state of the check will reflect the status "
+               "of the worst open event for that host."),
+        elements=[
+            ("hostspec",
+             Transform(
+                 Alternative(title=_("Host specification"),
                              elements=[
-                                 TextAscii(
-                                     title=_("Hostname/IP address of Event Console:"),
-                                     allow_empty=False,
-                                     attrencode=True,
-                                 ),
-                                 Integer(
-                                     title=_("TCP Port number:"),
-                                     minvalue=1,
-                                     maxvalue=65535,
-                                     default_value=6558,
-                                 ),
+                                 ListChoice(title=_("Match the hosts with..."),
+                                            choices=[
+                                                ('$HOSTNAME$', _("Hostname")),
+                                                ('$HOSTADDRESS$', _("IP address")),
+                                                ('$HOSTALIAS$', _("Alias")),
+                                            ]),
+                                 TextAscii(allow_empty=False,
+                                           attrencode=True,
+                                           title="Specify host explicitely"),
                              ],
-                             title=_("Access via TCP"),
-                             help=
-                             _("In a distributed setup where the Event Console is not running in the same "
-                               "site as the host is monitored you need to access the remote Event Console "
-                               "via TCP. Please make sure that this is activated in the global settings of "
-                               "the event console. The default port number is 6558."),
-                         ),
-                         TextAscii(
-                             title=_("Access via UNIX socket"),
-                             allow_empty=False,
-                             size=64,
-                             attrencode=True,
-                         ),
-                     ],
-                     default_value=None,
-                 )),
-            ],
-            optional_keys=["application", "remote", "ignore_acknowledged", "item"],
-            ignored_keys=["less_verbose"],  # is deprecated
-        )
+                             default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
+                 help=_(
+                     "When quering the event status you can either use the monitoring "
+                     "host name, the IP address, the host alias or a custom host name for referring to a "
+                     "host. This is needed in cases where the event source (syslog, snmptrapd) "
+                     "do not send a host name that matches the monitoring host name."),
+                 forth=convert_mkevents_hostspec)),
+            ("item",
+             TextAscii(
+                 title=_("Item (used in service description)"),
+                 help=_("If you enter an item name here, this will be used as "
+                        "part of the service description after the prefix \"Events \". "
+                        "The prefix plus the configured item must result in an unique "
+                        "service description per host. If you leave this empty either the "
+                        "string provided in \"Application\" is used as item or the service "
+                        "gets no item when the \"Application\" field is also not configured."),
+                 allow_empty=False,
+             )),
+            ("application",
+             RegExp(
+                 title=_("Application (regular expression)"),
+                 help=_("If you enter an application name here then only "
+                        "events for that application name are counted. You enter "
+                        "a regular expression here that must match a <b>part</b> "
+                        "of the application name. Use anchors <tt>^</tt> and <tt>$</tt> "
+                        "if you need a complete match."),
+                 allow_empty=False,
+                 mode=RegExp.infix,
+                 case_sensitive=False,
+             )),
+            ("ignore_acknowledged",
+             FixedValue(
+                 True,
+                 title=_("Ignore acknowledged events"),
+                 help=_("If you check this box then only open events are honored when "
+                        "determining the event state. Acknowledged events are displayed "
+                        "(i.e. their count) but not taken into account."),
+                 totext=_("acknowledged events will not be honored"),
+             )),
+            ("remote",
+             Alternative(
+                 title=_("Access to the Event Console"),
+                 style="dropdown",
+                 elements=[
+                     FixedValue(
+                         None,
+                         title=_("Connect to the local Event Console"),
+                         totext=_("local connect"),
+                     ),
+                     Tuple(
+                         elements=[
+                             TextAscii(
+                                 title=_("Hostname/IP address of Event Console:"),
+                                 allow_empty=False,
+                                 attrencode=True,
+                             ),
+                             Integer(
+                                 title=_("TCP Port number:"),
+                                 minvalue=1,
+                                 maxvalue=65535,
+                                 default_value=6558,
+                             ),
+                         ],
+                         title=_("Access via TCP"),
+                         help=
+                         _("In a distributed setup where the Event Console is not running in the same "
+                           "site as the host is monitored you need to access the remote Event Console "
+                           "via TCP. Please make sure that this is activated in the global settings of "
+                           "the event console. The default port number is 6558."),
+                     ),
+                     TextAscii(
+                         title=_("Access via UNIX socket"),
+                         allow_empty=False,
+                         size=64,
+                         attrencode=True,
+                     ),
+                 ],
+                 default_value=None,
+             )),
+        ],
+        optional_keys=["application", "remote", "ignore_acknowledged", "item"],
+        ignored_keys=["less_verbose"],  # is deprecated
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupEventConsole,
+        match_type="all",
+        name="active_checks:mkevents",
+        valuespec=_valuespec_active_checks_mkevents,
+    ))
 
 
 def _sl_help():
@@ -3942,47 +3934,38 @@ def _sl_help():
             "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"
 
 
-@rulespec_registry.register
-class RulespecExtraHostConfEcSl(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupGrouping
-
-    @property
-    def name(self):
-        return "extra_host_conf:_ec_sl"
-
-    @property
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Service Level of hosts"),
-            help=_sl_help(),
-            choices=cmk.gui.mkeventd.service_levels,
-        )
+def _valuespec_extra_host_conf__ec_sl():
+    return DropdownChoice(
+        title=_("Service Level of hosts"),
+        help=_sl_help(),
+        choices=cmk.gui.mkeventd.service_levels,
+    )
 
 
-@rulespec_registry.register
-class RulespecExtraServiceConfEcSl(ABCServiceValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupGrouping
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupGrouping,
+        name="extra_host_conf:_ec_sl",
+        valuespec=_valuespec_extra_host_conf__ec_sl,
+    ))
 
-    @property
-    def name(self):
-        return "extra_service_conf:_ec_sl"
 
-    @property
-    def item_type(self):
-        return "service"
+def _valuespec_extra_service_conf__ec_sl():
+    return DropdownChoice(
+        title=_("Service Level of services"),
+        help=_sl_help() + _(" Note: if no service level is configured for a service "
+                            "then that of the host will be used instead (if configured)."),
+        choices=cmk.gui.mkeventd.service_levels,
+    )
 
-    @property
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Service Level of services"),
-            help=_sl_help() + _(" Note: if no service level is configured for a service "
-                                "then that of the host will be used instead (if configured)."),
-            choices=cmk.gui.mkeventd.service_levels,
-        )
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupGrouping,
+        item_type="service",
+        name="extra_service_conf:_ec_sl",
+        valuespec=_valuespec_extra_service_conf__ec_sl,
+    ))
 
 
 def _vs_contact(title):
@@ -4001,38 +3984,29 @@ def _vs_contact(title):
     )
 
 
-@rulespec_registry.register
-class RulespecExtraHostConfEcContact(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupEventConsole
-
-    @property
-    def name(self):
-        return "extra_host_conf:_ec_contact"
-
-    @property
-    def valuespec(self):
-        return _vs_contact(_("Host contact information"))
+def _valuespec_extra_host_conf__ec_contact():
+    return _vs_contact(_("Host contact information"))
 
 
-@rulespec_registry.register
-class RulespecExtraServiceConfEcContact(ABCServiceValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupEventConsole
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupEventConsole,
+        name="extra_host_conf:_ec_contact",
+        valuespec=_valuespec_extra_host_conf__ec_contact,
+    ))
 
-    @property
-    def name(self):
-        return "extra_service_conf:_ec_contact"
 
-    @property
-    def item_type(self):
-        return "service"
+def _valuespec_extra_service_conf__ec_contact():
+    return _vs_contact(title=_("Service contact information"))
 
-    @property
-    def valuespec(self):
-        return _vs_contact(title=_("Service contact information"))
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupEventConsole,
+        item_type="service",
+        name="extra_service_conf:_ec_contact",
+        valuespec=_valuespec_extra_service_conf__ec_contact,
+    ))
 
 
 #.
@@ -4057,7 +4031,7 @@ def mkeventd_update_notifiation_configuration(hosts):
     if not contactgroup and os.path.exists(path):
         os.remove(path)
     elif contactgroup:
-        file(path, "w").write(
+        open(path, "w").write(
             """# Created by Check_MK Event Console
 # This configuration will send notifications about hosts and
 # services in the contact group '%(group)s' to the Event Console.

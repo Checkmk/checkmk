@@ -145,7 +145,7 @@ def check_mysql_iostat(item, params, data):
     if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
         return
 
-    line = [None, None, data["Innodb_data_read"] / 512, data["Innodb_data_written"] / 512]
+    line = [None, None, data["Innodb_data_read"] // 512, data["Innodb_data_written"] // 512]
     return check_diskstat_line(time.time(), 'innodb_io' + item, params, line)
 
 

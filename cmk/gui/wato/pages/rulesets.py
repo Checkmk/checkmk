@@ -28,7 +28,6 @@
 import abc
 import itertools
 import pprint
-import json
 import re
 from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
 
@@ -501,9 +500,11 @@ class ModeEditRuleset(WatoMode):
                 self._name = "active_checks:" + check_command
 
         try:
-            self._rulespec = rulespec_registry[self._name]()
+            self._rulespec = rulespec_registry[self._name]
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
+
+        self._valuespec = self._rulespec.valuespec
 
         if not self._item:
             self._item = None
@@ -764,7 +765,7 @@ class ModeEditRuleset(WatoMode):
 
     def _match(self, match_state, rule):
         reasons = [_("This rule is disabled")] if rule.is_disabled() else \
-                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item, self._service))
+                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item, self._service, only_host_conditions=False))
         if reasons:
             return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
         ruleset = rule.ruleset
@@ -815,7 +816,6 @@ class ModeEditRuleset(WatoMode):
 
     # TODO: Refactor this whole method
     def _rule_cells(self, table, rule):
-        rulespec = rule.ruleset.rulespec
         value = rule.value
         rule_options = rule.rule_options
 
@@ -826,11 +826,11 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = rulespec.valuespec.value_to_text(value)
+            value_html = self._valuespec.value_to_text(value)
         except Exception as e:
             try:
                 reason = "%s" % e
-                rulespec.valuespec.validate_datatype(value, "")
+                self._valuespec.validate_datatype(value, "")
             except Exception as e:
                 reason = "%s" % e
 
@@ -852,8 +852,7 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
         html.write(
-            VSExplicitConditions(rulespec=rule.ruleset.rulespec).value_to_text(
-                rule.get_rule_conditions()))
+            VSExplicitConditions(rulespec=self._rulespec).value_to_text(rule.get_rule_conditions()))
 
     def _predefined_condition_info(self, rule):
         condition_id = rule.predefined_condition_id()
@@ -1119,7 +1118,7 @@ class EditRuleMode(WatoMode):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
         try:
-            self._rulespec = rulespec_registry[self._name]()
+            self._rulespec = rulespec_registry[self._name]
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
@@ -1332,7 +1331,7 @@ class EditRuleMode(WatoMode):
         self._vs_condition_type().render_input(varprefix="condition_type", value=condition_type)
         self._show_predefined_conditions()
         self._show_explicit_conditions()
-        html.javascript("cmk.wato.toggle_rule_condition_type(%s)" % json.dumps(condition_type))
+        html.javascript("cmk.wato.toggle_rule_condition_type(\"condition_type\")")
 
     def _vs_condition_type(self):
         return DropdownChoice(
@@ -1344,7 +1343,7 @@ class EditRuleMode(WatoMode):
                 ("explicit", _("Explicit conditions")),
                 ("predefined", _("Predefined conditions")),
             ],
-            on_change="cmk.wato.toggle_rule_condition_type(this.value)",
+            on_change="cmk.wato.toggle_rule_condition_type(\"condition_type\")",
             encode_value=False,
         )
 
@@ -1371,8 +1370,24 @@ class EditRuleMode(WatoMode):
                         _("You can create predefined conditions <a href=\"%s\">here</a>.") % url))
 
     def _show_explicit_conditions(self):
-        self._vs_explicit_conditions(render="form_part").render_input(
-            "explicit_conditions", self._rule.get_rule_conditions())
+        vs = self._vs_explicit_conditions(render="form_part")
+        value = self._rule.get_rule_conditions()
+
+        try:
+            vs.validate_datatype(value, "explicit_conditions")
+            vs.render_input("explicit_conditions", value)
+        except Exception as e:
+            forms.section("", css="condition explicit")
+            html.show_warning(
+                _('Unable to read current conditions of this rule. Falling back to '
+                  'default values. When saving this rule now, your previous settings '
+                  'will be overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>'
+                  'Such an issue may be caused by an inconsistent configuration, e.g. when '
+                  'rules refer to tag groups or tags that do not exist anymore.') %
+                (e, value.to_config_with_folder()))
+
+            # In case of validation problems render the input with default values
+            vs.render_input("explicit_conditions", RuleConditions(host_folder=self._folder.path()))
 
     def _vs_explicit_conditions(self, **kwargs):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
@@ -1470,7 +1485,6 @@ class VSExplicitConditions(Transform):
         return self._rulespec.name not in [
             "host_label_rules",
             "service_label_rules",
-            "active_checks:cmk_inv",
         ]
 
     def _service_elements(self):
@@ -1767,9 +1781,9 @@ class RuleConditionRenderer(object):
             return HTML(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            return HTML(_("Host has <b>not</b> the tag <tt>%s</tt>")) % tag_id
+            return HTML(_("Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>") % tag_id)
 
-        return HTML(_("Host has the tag <tt>%s</tt>")) % tag_id
+        return HTML(_("Unknown tag: Host has the tag <tt>%s</tt>") % tag_id)
 
     def _host_label_conditions(self, conditions):
         # type: (RuleConditions) -> Generator

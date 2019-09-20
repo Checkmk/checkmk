@@ -35,7 +35,7 @@ from cmk.gui.valuespec import (
     ListChoice,
 )
 from cmk.gui.plugins.wato import (
-    ABCHostValueRulespec,
+    HostRulespec,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
@@ -87,63 +87,49 @@ def _vs_cisco_dom(which_levels):
             ]))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCiscoDOM(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
-
-    @property
-    def check_group_name(self):
-        return "cisco_dom"
-
-    @property
-    def title(self):
-        return _("CISCO Digital Optical Monitoring (DOM)")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (_vs_cisco_dom("upper")),
-            (_vs_cisco_dom("lower")),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
+def _item_spec_cisco_dom():
+    return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
 
 
-@rulespec_registry.register
-class RulespecDiscoveryCiscoDomRules(ABCHostValueRulespec):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersDiscovery
+def _parameter_valuespec_cisco_dom():
+    return Dictionary(elements=[
+        (_vs_cisco_dom("upper")),
+        (_vs_cisco_dom("lower")),
+    ],)
 
-    @property
-    def name(self):
-        return "discovery_cisco_dom_rules"
 
-    @property
-    def match_type(self):
-        return "dict"
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="cisco_dom",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_cisco_dom,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cisco_dom,
+        title=lambda: _("CISCO Digital Optical Monitoring (DOM)"),
+    ))
 
-    @property
-    def valuespec(self):
-        return Dictionary(title=_("Cisco DOM Discovery"),
-                          elements=[
-                              ("admin_states",
-                               ListChoice(
-                                   title=_("Admin states to discover"),
-                                   choices={
-                                       1: _("up"),
-                                       2: _("down"),
-                                       3: _("testing"),
-                                   },
-                                   toggle_all=True,
-                                   default_value=['1', '2', '3'],
-                               )),
-                          ])
+
+def _valuespec_discovery_cisco_dom_rules():
+    return Dictionary(title=_("Cisco DOM Discovery"),
+                      elements=[
+                          ("admin_states",
+                           ListChoice(
+                               title=_("Admin states to discover"),
+                               choices={
+                                   1: _("up"),
+                                   2: _("down"),
+                                   3: _("testing"),
+                               },
+                               toggle_all=True,
+                               default_value=['1', '2', '3'],
+                           )),
+                      ])
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="dict",
+        name="discovery_cisco_dom_rules",
+        valuespec=_valuespec_discovery_cisco_dom_rules,
+    ))

@@ -1,0 +1,17 @@
+Title: Improved the handling of host checks via service status in CMC.
+Level: 1
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1568895722
+Class: feature
+
+Previously the CMC used an active check (check_lql_service) for this,
+querying itself via Livestatus.  This is quite inefficient and convoluted:
+The CMC already knows everything it needs internally.
+
+Now the CMC simply propagates every check result of the service in question
+directly to the configured host, too.  This is much more efficient, and we
+even get all information from the check now, including e.g. the long
+output.

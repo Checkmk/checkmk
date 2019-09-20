@@ -1,0 +1,12 @@
+Title: docker_container_diskstat: Plugin no longer requires agent in container
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567547832
+
+The diskstat service corresponding to the plugin docker_container_diskstat no longer
+requires the Checkmk agent to be installed on the monitored container.

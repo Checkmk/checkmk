@@ -23,7 +23,7 @@ module.exports = {
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
         libraryTarget: "window",
-        libraryExport: "default"
+        libraryExport: "cmk_export"
     },
     resolve: {
         modules: [
@@ -69,13 +69,15 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
-                            // Hand over build options from webpack to SASS
-                            data: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
+                            prependData: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
                                 + "$MANAGED: " + process.env.MANAGED + ";",
-                            "includePaths": ["node_modules"],
-                            // See https://github.com/sass/node-sass/blob/master/README.md#options
-                            outputStyle: "expanded",
-                            precision: 10
+                            sassOptions: {
+                                // Hand over build options from webpack to SASS
+                                "includePaths": ["node_modules"],
+                                // See https://github.com/sass/node-sass/blob/master/README.md#options
+                                outputStyle: "expanded",
+                                precision: 10
+                            }
                         }
                     }
                 ]
@@ -89,18 +91,33 @@ module.exports = {
 };
 
 
-if (process.env.NO_BABEL_LOADER == undefined) {
+if (process.env.WEBPACK_MODE === "quick") {
+    console.log("not using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "', let's hope you know what your're doing...");
+} else {
+    console.log("using Babel in Webpack mode '" + process.env.WEBPACK_MODE + "'");
     let babel_loader = {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader",
-                    options: {
-                        presets: ["@babel/preset-env"],
-                    }
-                }
+        test: /\.js$/,
+        // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
+        include: [
+            path.resolve(__dirname, "web/htdocs/js"),
+            path.resolve(__dirname, "node_modules/d3"),
+        ],
+        use: {
+            loader: "babel-loader",
+            options: {
+                presets: [
+                    ["@babel/preset-env", {
+                        //debug: true,
+                        // This adds polyfills when needed. Requires core-js dependency.
+                        // See https://babeljs.io/docs/en/babel-preset-env#usebuiltins
+                        useBuiltIns: "usage",
+                        corejs: 3
+                    }]
+                ],
             }
-    module.exports.module.rules.unshift(babel_loader)
+        }
+    };
+    module.exports.module.rules.unshift(babel_loader);
 }
 
 

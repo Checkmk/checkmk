@@ -159,7 +159,7 @@ else:
 
 # Load the state file into memory
 try:
-    states = eval(file(STATE_FILE).read())
+    states = eval(open(STATE_FILE).read())
 except IOError:
     states = {}
 

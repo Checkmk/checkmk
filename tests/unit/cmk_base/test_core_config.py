@@ -2,6 +2,7 @@
 import pytest  # type: ignore
 from testlib import CheckManager
 from testlib.base import Scenario
+import six
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
@@ -103,5 +104,5 @@ def test_get_tag_attributes(tag_groups, result):
     attributes = core_config._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result
     for k, v in attributes.items():
-        assert isinstance(k, unicode)
-        assert isinstance(v, unicode)
+        assert isinstance(k, six.text_type)
+        assert isinstance(v, six.text_type)

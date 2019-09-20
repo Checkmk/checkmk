@@ -155,30 +155,21 @@ def transform_legacy_cpu_utilization_os(params):
     return params
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCpuUtilizationOs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_cpu_utilization_os():
+    return Transform(
+        cpu_util_common_dict,
+        forth=transform_legacy_cpu_utilization_os,
+    )
 
-    @property
-    def check_group_name(self):
-        return "cpu_utilization_os"
 
-    @property
-    def title(self):
-        return _("CPU utilization for simple devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            cpu_util_common_dict,
-            forth=transform_legacy_cpu_utilization_os,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cpu_utilization_os",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cpu_utilization_os,
+        title=lambda: _("CPU utilization for simple devices"),
+    ))
 
 
 def transform_cpu_iowait(params):
@@ -187,55 +178,39 @@ def transform_cpu_iowait(params):
     return params
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCpuIowait(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "cpu_iowait"
-
-    @property
-    def title(self):
-        return _("CPU utilization on Linux/UNIX")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            cpu_util_common_dict,
-            forth=transform_cpu_iowait,
-        )
+def _parameter_valuespec_cpu_iowait():
+    return Transform(
+        cpu_util_common_dict,
+        forth=transform_cpu_iowait,
+    )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCpuUtilization(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cpu_iowait",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cpu_iowait,
+        title=lambda: _("CPU utilization on Linux/UNIX"),
+    ))
 
-    @property
-    def check_group_name(self):
-        return "cpu_utilization"
 
-    @property
-    def title(self):
-        return _("CPU utilization for Appliances")
+def _parameter_valuespec_cpu_utilization():
+    return Optional(Tuple(elements=[
+        Percentage(title=_("Warning at a utilization of")),
+        Percentage(title=_("Critical at a utilization of"))
+    ]),
+                    label=_("Alert on too high CPU utilization"),
+                    help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                           "for user processes and kernel routines over all available cores within "
+                           "the last check interval. The possible range is from 0% to 100%"),
+                    default_value=(90.0, 95.0))
 
-    @property
-    def parameter_valuespec(self):
-        return Optional(
-            Tuple(elements=[
-                Percentage(title=_("Warning at a utilization of")),
-                Percentage(title=_("Critical at a utilization of"))
-            ]),
-            label=_("Alert on too high CPU utilization"),
-            help=_("The CPU utilization sums up the percentages of CPU time that is used "
-                   "for user processes and kernel routines over all available cores within "
-                   "the last check interval. The possible range is from 0% to 100%"),
-            default_value=(90.0, 95.0))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="cpu_utilization",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_cpu_utilization,
+        title=lambda: _("CPU utilization for Appliances"),
+    ))

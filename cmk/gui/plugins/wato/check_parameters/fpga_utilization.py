@@ -39,43 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFpgaUtilization(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
-
-    @property
-    def check_group_name(self):
-        return "fpga_utilization"
-
-    @property
-    def title(self):
-        return _("FPGA utilization")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "Give FPGA utilization levels in percent. The possible range is from 0% to 100%."),
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Alert on too high FPGA utilization"),
-                        elements=[
-                            Percentage(title=_("Warning at a utilization of"), default_value=80.0),
-                            Percentage(title=_("Critical at a utilization of"), default_value=90.0)
-                        ],
-                    ),
+def _parameter_valuespec_fpga_utilization():
+    return Dictionary(
+        help=_("Give FPGA utilization levels in percent. The possible range is from 0% to 100%."),
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Alert on too high FPGA utilization"),
+                    elements=[
+                        Percentage(title=_("Warning at a utilization of"), default_value=80.0),
+                        Percentage(title=_("Critical at a utilization of"), default_value=90.0)
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("FPGA"), allow_empty=False)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="fpga_utilization",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=lambda: TextAscii(title=_("FPGA"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fpga_utilization,
+        title=lambda: _("FPGA utilization"),
+    ))

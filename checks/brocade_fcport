@@ -146,8 +146,8 @@ def parse_brocade_fcport(info):
             for oidend, tx_elements, rx_elements, bbcredits_64 in if64_info:
                 if index == oidend.split(".")[-1]:
                     fcmgmt_portstats = [
-                        binstring_to_int(''.join(map(chr, tx_elements))) / 4,
-                        binstring_to_int(''.join(map(chr, rx_elements))) / 4,
+                        int(binstring_to_int(''.join(map(chr, tx_elements))) / 4),
+                        int(binstring_to_int(''.join(map(chr, rx_elements))) / 4),
                         binstring_to_int(''.join(map(chr, bbcredits_64))),
                     ]
                     break
@@ -232,7 +232,7 @@ def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, if_speed, params)
 
     if if_speed:
         # use actual speed of port if available
-        return "Speed: %g Gbit/s", if_speed / 1000
+        return "Speed: %g Gbit/s", if_speed / 1000.0
 
     # let user specify assumed speed via check parameter, default is 2.0
     return "Assumed speed: %g Gbit/s", params["assumed_speed"]
@@ -349,7 +349,7 @@ def check_brocade_fcport(item, params, parsed):
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
-            rate = per_sec / (ref + per_sec)
+            rate = per_sec / (ref + per_sec)  # fixed: true-division
         else:
             rate = 0
         text = "%s: %.2f%%" % (descr, rate * 100.0)

@@ -72,6 +72,7 @@ import traceback
 import subprocess
 import collections
 import multiprocessing
+import six
 
 import psutil
 import npyscreen
@@ -925,7 +926,7 @@ class Measurement(object):
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, unicode):
+                            if isinstance(value, six.text_type):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values
@@ -1052,7 +1053,7 @@ class Measurement(object):
 
     def _get_site_state(self):
         self.site_state = subprocess.call(["omd", "status", "--bare"],
-                                          stdout=file(os.devnull, "w"),
+                                          stdout=open(os.devnull, "w"),
                                           close_fds=True)
 
     def _get_site_stats(self):
@@ -3266,7 +3267,7 @@ def verify_is_site():
 
 def verify_site_is_running():
     site_state = subprocess.call(["omd", "status", "--bare"],
-                                 stdout=file(os.devnull, "w"),
+                                 stdout=open(os.devnull, "w"),
                                  close_fds=True)
     if site_state != 0:
         raise MKGeneralException("Site needs to be running")

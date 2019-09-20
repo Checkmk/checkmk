@@ -13,7 +13,7 @@ import cmk_base.config as config
 
 @pytest.fixture(autouse=True)
 def patch_cmk_paths(monkeypatch, tmp_path):
-    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", str(tmp_path))
+    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", tmp_path)
 
 
 def test_man_page_exists_only_shipped():

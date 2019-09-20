@@ -55,8 +55,8 @@ def compress_history_file(input_path, output_path):
     known_services = {}
     machine_state = "START"
 
-    output = file(output_path, "w")
-    for line in file(input_path):
+    output = open(output_path, "w")
+    for line in open(input_path):
         skip_this_line = False
         timestamp = int(line[1:11])
         line_type, host, service = parse_history_line(line)

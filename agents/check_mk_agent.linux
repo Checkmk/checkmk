@@ -479,17 +479,19 @@ fi
 echo '<<<mounts>>>'
 grep ^/dev </proc/mounts | grep -v " squashfs "
 
-# processes including username, without kernel processes
-echo '<<<ps>>>'
-echo 'dummy section -- refer to section ps_lnx'
-echo '<<<ps_lnx>>>'
-CGROUP=""
-if [ -e /sys/fs/cgroup ]; then
-    CGROUP="cgroup:512,"
+if inpath ps; then
+    # processes including username, without kernel processes
+    echo '<<<ps>>>'
+    echo 'dummy section -- refer to section ps_lnx'
+    echo '<<<ps_lnx>>>'
+    CGROUP=""
+    if [ -e /sys/fs/cgroup ]; then
+        CGROUP="cgroup:512,"
+    fi
+    echo -n '[header] '
+    ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
+    echo
 fi
-echo -n '[header] '
-ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000
-echo
 
 # Memory usage
 section_mem
@@ -858,6 +860,9 @@ fi
 
 # Check status of OMD sites and Check_MK Notification spooler
 if inpath omd; then
+    echo '<<<labels:sep(0)>>>'
+    echo '{"cmk/check_mk_server": "yes"}'
+
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
     for statefile in /omd/sites/*/var/log/mknotifyd.state; do
@@ -908,8 +913,9 @@ fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 perl -e '
+use File::Glob "bsd_glob";
 my @patterns = ();
-foreach (<"$ARGV[0]/fileinfo.cfg">, <"$ARGV[0]/fileinfo.d/*">) {
+foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
     open my $handle, "<", $_ or next;
     while (<$handle>) {
         chomp;
@@ -926,7 +932,7 @@ exit if ! @patterns;
 print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
 
 foreach (@patterns) {
-    while (<"$_">) {
+    foreach (bsd_glob("$_")) {
         if (! -f) {
             print "$_|missing\n" if ! -d;
         } elsif (my @infos = stat) {

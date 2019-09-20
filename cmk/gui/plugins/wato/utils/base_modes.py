@@ -26,15 +26,14 @@
 
 import abc
 from typing import List  # pylint: disable=unused-import
+import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from .context_buttons import global_buttons
 
 
-class WatoMode(object):
-    __metaclass__ = abc.ABCMeta
-
+class WatoMode(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(WatoMode, self).__init__()
         self._from_vars()

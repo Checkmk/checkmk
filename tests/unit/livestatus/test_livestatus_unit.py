@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=redefined-outer-name
+
 import errno
 import socket
 import ssl
 from contextlib import closing
-try:
-    from pathlib import Path  # Py3 first
-except ImportError:
-    from pathlib2 import Path
 
+import six
 import pytest  # type: ignore
 
 import omdlib.certs as certs
@@ -65,7 +64,7 @@ def test_lqencode(query_part):
 ])
 def test_quote_dict(inp, expected_result):
     result = livestatus.quote_dict(inp)
-    assert isinstance(result, unicode)
+    assert isinstance(result, six.text_type)
     assert result == expected_result
 
 

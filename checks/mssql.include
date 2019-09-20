@@ -46,7 +46,7 @@ def _mssql_datafiles_process_sizes(params, used_size, allocated_size, max_size, 
     def calculate_levels(levels, reference_value):
         if isinstance(levels[0], float):
             if reference_value != -1:
-                return [(x * reference_value) / 100 for x in levels]
+                return [(x * reference_value) / 100.0 for x in levels]
         elif levels[0] is not None:
             return [x * 1024 * 1024 for x in levels]
 

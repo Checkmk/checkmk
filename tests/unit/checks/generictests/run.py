@@ -191,7 +191,11 @@ def run(check_manager, dataset, write=False):
 
     with optional_freeze_time(dataset):
         # test the parse function
+        if hasattr(dataset, 'info'):
+            immu.register(dataset.info, 'info')
         parsed = parse(check_manager, dataset)
+        immu.test(' after parse function ')
+
         immu.register(parsed, 'parsed')
 
         # get the expected check results, if present

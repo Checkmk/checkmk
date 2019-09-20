@@ -69,6 +69,7 @@ import pprint
 from contextlib import contextmanager
 # suppress missing import error from mypy
 from html import escape as html_escape  # type: ignore
+from pathlib2 import Path
 
 import six
 
@@ -116,10 +117,8 @@ class Escaper(object):
         super(Escaper, self).__init__()
         self._unescaper_text = re.compile(
             r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-        self._unescaper_href = re.compile(r'&lt;a href=(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)&gt;')
-        self._unescaper_href_target = re.compile(
-            r'&lt;a href=(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;) target=(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)&gt;'
-        )
+        self._quote = re.compile(r"(?:&quot;|&#x27;)")
+        self._a_href = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
     # For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -151,15 +150,14 @@ class Escaper(object):
     # options. (Formerly known as 'permissive_attrencode') """
     # for the escaping functions
     def escape_text(self, text):
-
         if isinstance(text, HTML):
             return "%s" % text  # This is HTML code which must not be escaped
 
         text = self.escape_attribute(text)
         text = self._unescaper_text.sub(r'<\1\2>', text)
-        # Also repair link definitions
-        text = self._unescaper_href_target.sub(r'<a href="\1" target="\2">', text)
-        text = self._unescaper_href.sub(r'<a href="\1">', text)
+        for a_href in self._a_href.finditer(text):
+            text = text.replace(a_href.group(0),
+                                "<a href=%s>" % self._quote.sub("\"", a_href.group(1)))
         return text.replace("&amp;nbsp;", "&nbsp;")
 
 
@@ -191,7 +189,7 @@ class Encoder(object):
 
             if isinstance(value, int):
                 value = str(value)
-            elif isinstance(value, unicode):
+            elif isinstance(value, six.text_type):
                 value = value.encode("utf-8")
             elif value is None:
                 # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
@@ -213,7 +211,7 @@ class Encoder(object):
         Note: This should be changed once we change everything to
         unicode internally.
         """
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
         elif value is None:
             return ""
@@ -363,9 +361,7 @@ class HTML(object):
 #   '----------------------------------------------------------------------'
 
 
-class OutputFunnel(object):
-    __metaclass__ = abc.ABCMeta
-
+class OutputFunnel(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self):
         super(OutputFunnel, self).__init__()
         self.plug_text = []
@@ -389,7 +385,7 @@ class OutputFunnel(object):
             # encode when really writing out the data. Not when writing plugged,
             # because the plugged code will be handled somehow by our code. We
             # only encode when leaving the pythonic world.
-            if isinstance(text, unicode):
+            if isinstance(text, six.text_type):
                 text = text.encode("utf-8")
             self._lowlevel_write(text)
 
@@ -439,7 +435,7 @@ class OutputFunnel(object):
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(OutputFunnel):
+class ABCHTMLGenerator(six.with_metaclass(abc.ABCMeta, OutputFunnel)):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -479,7 +475,6 @@ class ABCHTMLGenerator(OutputFunnel):
     # https://github.com/PyCQA/pylint/issues/179.
 
     # pylint: disable=abstract-method
-    __metaclass__ = abc.ABCMeta
 
     # TODO: Replace u, i, b with underline, italic, bold, usw.
 
@@ -490,8 +485,8 @@ class ABCHTMLGenerator(OutputFunnel):
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = {
         'html', 'head', 'body', 'header', 'footer', 'a', 'b', 'sup', 'script', 'form', 'button',
-        'p', 'select', 'fieldset', 'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input',
-        'span', 'tags', 'tag'
+        'p', 'select', 'fieldset', 'table', 'tbody', 'thead', 'row', 'ul', 'li', 'br', 'nobr',
+        'input', 'span', 'tags', 'tag'
     }
 
     # Of course all shortcut tags can be used as well.
@@ -1652,13 +1647,13 @@ class html(ABCHTMLGenerator):
     def _plugin_stylesheets(self):
         plugin_stylesheets = set([])
         for directory in [
-                cmk.utils.paths.web_dir + "/htdocs/css",
-                cmk.utils.paths.local_web_dir + "/htdocs/css",
+                Path(cmk.utils.paths.web_dir, "htdocs", "css"),
+                cmk.utils.paths.local_web_dir.joinpath("htdocs", "css"),
         ]:
-            if os.path.exists(directory):
-                for fn in os.listdir(directory):
-                    if fn.endswith(".css"):
-                        plugin_stylesheets.add(fn)
+            if directory.exists():
+                for entry in directory.iterdir():
+                    if entry.suffix == ".css":
+                        plugin_stylesheets.add(entry.name)
         return plugin_stylesheets
 
     # Make the browser load specified javascript files. We have some special handling here:
@@ -2231,7 +2226,7 @@ class html(ABCHTMLGenerator):
             attrs = {}
 
         # Model
-        value = self.request.var(varname, deflt)
+        value = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
 
         self.form_vars.append(varname)
@@ -2458,8 +2453,8 @@ class html(ABCHTMLGenerator):
         add_attr["id"] = id_
         add_attr["CHECKED"] = '' if value else None
 
-        code = self.render_input(name=varname, type_="checkbox", **add_attr)\
-             + self.render_label(label, for_=id_)
+        code = self.render_input(name=varname, type_="checkbox", **add_attr) + self.render_label(
+            label, for_=id_)
         code = self.render_span(code, class_="checkbox")
 
         if error:
@@ -2493,12 +2488,15 @@ class html(ABCHTMLGenerator):
                     % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
 
         img_id = "treeimg.%s.%s" % (treename, id_)
+        container_id = "tree.%s.%s" % (treename, id_)
 
         if indent == "nform":
+            self.open_thead()
             self.open_tr(class_="heading")
             self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
             if icon:
-                self.img(class_=["treeangle", "title"],
+                self.img(id_=img_id,
+                         class_=["treeangle", "title"],
                          src="themes/%s/images/icon_%s.png" % (self._theme, icon))
             else:
                 self.img(id_=img_id,
@@ -2508,11 +2506,13 @@ class html(ABCHTMLGenerator):
             self.write_text(title)
             self.close_td()
             self.close_tr()
+            self.close_thead()
+            self.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
         else:
             self.open_div(class_="foldable")
 
             if not icon:
-                self.img(id_="treeimg.%s.%s" % (treename, id_),
+                self.img(id_=img_id,
                          class_=["treeangle", "open" if isopen else "closed"],
                          src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
                          align="absbottom",
@@ -2543,7 +2543,7 @@ class html(ABCHTMLGenerator):
                 self.close_tr()
                 self.close_table()
                 indent_style += "margin: 0; "
-            self.open_ul(id_="tree.%s.%s" % (treename, id_),
+            self.open_ul(id_=container_id,
                          class_=["treeangle", "open" if isopen else "closed"],
                          style=indent_style)
 
@@ -2880,7 +2880,7 @@ class html(ABCHTMLGenerator):
             for k, v in self.page_context.items():
                 if v is None:
                     v = ''
-                elif isinstance(v, unicode):
+                elif isinstance(v, six.text_type):
                     v = v.encode('utf-8')
                 encoded_vars[k] = v
 

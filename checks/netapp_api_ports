@@ -1,0 +1,62 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# consideration of health status and port speed availability status quo
+discovery_netapp_api_ports_ignored = []
+
+
+def parse_netapp_ports(info):
+    return netapp_api_parse_lines(info, ports=True)
+
+
+def _identify_ignored_port_types(discovery_ignored):
+    return host_extra_conf_merged(host_name(), discovery_ignored).get("ignored_ports", ())
+
+
+def discovery_netapp_api_port(parsed):
+    ignored_ports = _identify_ignored_port_types(discovery_netapp_api_ports_ignored)
+    for item, values in parsed.iteritems():
+        if values.get("port-type") in ignored_ports:
+            continue
+        if "health-status" in values:
+            yield item, {}
+
+
+@get_parsed_item_data
+def check_netapp_api_port(item, params, data):
+    health_state = data.get("health-status", "unknown")
+    status = {"healthy": 0, "unknown": 3}.get(health_state, 2)
+    yield status, "Health status: %s, Operational speed: %s" % (
+        health_state, data.get("operational-speed", "undetermined"))
+
+
+check_info["netapp_api_ports"] = {
+    'check_function': check_netapp_api_port,
+    'inventory_function': discovery_netapp_api_port,
+    'parse_function': parse_netapp_ports,
+    'service_description': '%s',
+    'includes': ['netapp_api.include'],
+}

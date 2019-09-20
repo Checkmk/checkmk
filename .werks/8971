@@ -1,0 +1,10 @@
+Title: sophos_cpu: Monitoring of cpu percentage usage for Sophos devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566888377
+Class: feature
+
+This check plugin allows the user to monitor cpu usage for Sophos devices. Upper levels can be defined through the WATO.

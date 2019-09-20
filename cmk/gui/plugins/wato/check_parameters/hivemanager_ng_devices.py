@@ -39,38 +39,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHivemanagerNgDevices(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_hivemanager_ng_devices():
+    return Dictionary(elements=[
+        ('max_clients',
+         Tuple(
+             title=_("Number of clients"),
+             help=_("Number of clients connected to a Device."),
+             elements=[
+                 Integer(title=_("Warning at"), unit=_("clients")),
+                 Integer(title=_("Critical at"), unit=_("clients")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "hivemanager_ng_devices"
 
-    @property
-    def title(self):
-        return _("HiveManager NG Devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('max_clients',
-             Tuple(
-                 title=_("Number of clients"),
-                 help=_("Number of clients connected to a Device."),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=_("clients")),
-                     Integer(title=_("Critical at"), unit=_("clients")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Hostname of the Device"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hivemanager_ng_devices",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Hostname of the Device")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_hivemanager_ng_devices,
+        title=lambda: _("HiveManager NG Devices"),
+    ))

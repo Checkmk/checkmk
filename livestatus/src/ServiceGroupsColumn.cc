@@ -39,6 +39,7 @@ std::vector<std::string> ServiceGroupsColumn::getValue(
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
 #ifdef CMC
+    (void)_mc; // HACK
     if (auto object = columnData<Object>(row)) {
         for (const auto &og : object->_groups) {
             if (og->isContactAuthorized(auth_user)) {

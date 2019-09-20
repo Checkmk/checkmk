@@ -1,0 +1,14 @@
+Title: graylog_messages: New check for message count of graylog indices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568965274
+Class: feature
+
+This check monitors the count of messages over all indices of a graylog
+instance. It outputs the total number of messages and the average rate of
+messages in a given timeframe.
+
+CMK-2768

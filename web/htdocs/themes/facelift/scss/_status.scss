@@ -226,13 +226,15 @@ img.pluginurl {
   background-position: center center;
   background-repeat: repeat;
 
-  body.main & a, body.main & a:link {
-    color: $grey-7;
+  body.main & a, table.data tr.data > & a {
+    &, &:hover, &:link, &:link:hover {
+      color: $grey-7;
+    }
   }
 }
 
 .states {
-  background-color: $hot-bg-color;
+  background-color: $theme-color-nuance-6;
   background-image: none;
   transition: background-color .15s ease-in-out;
 }
@@ -488,8 +490,12 @@ table.data {
     color: $theme-color-text;
   }
 
-  td.state{
+  td.state {
     border-top: none;
+  }
+
+  tr.data td.states {
+    background-color: $theme-color-nuance-6;
   }
 }
 

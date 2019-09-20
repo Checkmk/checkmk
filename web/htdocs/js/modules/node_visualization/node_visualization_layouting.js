@@ -180,8 +180,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
         this.translate_layout()
         this.compute_node_positions()
-
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(2)
         this._mouse_events_overlay.update_data()
     }
 
@@ -928,25 +926,27 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     _save_layout_clicked() {
-       let new_id = this.content_selection.select("#layout_name").property("value");
-       let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
-       let new_layout = {}
-       new_layout[new_id] = current_layout_group
-       this.layout_manager.save_layout_template(new_layout)
-       this.layout_manager.layout_applier.current_layout_group.id = new_id
+        let new_id = this.content_selection.select("#layout_name").property("value");
+        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
+        let new_layout = {}
+        new_layout[new_id] = current_layout_group
+        this.layout_manager.save_layout_template(new_layout)
+        this.layout_manager.layout_applier.current_layout_group.id = new_id
     }
 
     _save_explicit_layout_clicked(){
-       let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
-       let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
-       let new_layout = {}
-       new_layout[aggr_name] = current_layout_group
-       this.layout_manager.save_layout_for_aggregation(new_layout, aggr_name)
+        let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
+        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
+        let new_layout = {}
+        new_layout[aggr_name] = current_layout_group
+        this.layout_manager.save_layout_for_aggregation(new_layout, aggr_name)
     }
 
     _delete_explicit_layout_clicked(){
-       let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
-       this.layout_manager.delete_layout_for_aggregation(aggr_name)
+        let node_chunks = this.layout_manager.viewport.get_hierarchy_list()
+        let aggr_name = node_chunks[0].tree.data.name
+        node_chunks.forEach(chunk=>{chunk.layout_instance=null})
+        this.layout_manager.delete_layout_for_aggregation(aggr_name)
     }
 
     add_text_input(into_selection, value) {
@@ -1021,13 +1021,17 @@ class LayoutingMouseEventsOverlay {
         if (!this.layout_manager.is_node_drag_allowed())
             return
         d3.event.sourceEvent.stopPropagation();
-        this._dragged_node = d3.select(d3.event.sourceEvent.target).datum()
-        this._apply_drag_force(this._dragged_node, d3.event.x, d3.event.y)
+        this._dragged_node = d3.select(d3.event.sourceEvent.target)
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        this._apply_drag_force(dragged_node_datum, d3.event.x, d3.event.y)
         this.drag_start_x = d3.event.x
         this.drag_start_y = d3.event.y
 
-        if (this._dragged_node.data.use_style) {
-            this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(this._dragged_node.data.use_style)
+        if (dragged_node_datum.data.use_style) {
+            this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(dragged_node_datum.data.use_style)
         }
 
         this.layout_manager.dragging = true
@@ -1049,12 +1053,16 @@ class LayoutingMouseEventsOverlay {
         if (!this.layout_manager.is_node_drag_allowed())
             return
 
-        if (this._dragged_node.data.use_style) {
-            if (!this._dragged_node.data.use_style.style_config.options.detach_from_parent) {
-                this._dragged_node.data.use_style.style_config.options.detach_from_parent = true
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        if (dragged_node_datum.data.use_style) {
+            if (!dragged_node_datum.data.use_style.style_config.options.detach_from_parent) {
+                dragged_node_datum.data.use_style.style_config.options.detach_from_parent = true
                 // TODO: fix refresh
                 this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(null);
-                this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(this._dragged_node.data.use_style);
+                this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(dragged_node_datum.data.use_style);
             }
         }
 
@@ -1066,16 +1074,16 @@ class LayoutingMouseEventsOverlay {
         let last_zoom = this.layout_manager.viewport.last_zoom
         scale = 1/last_zoom.k
 
-        this._apply_drag_force(this._dragged_node, this.drag_start_x + (delta_x * scale),
+        this._apply_drag_force(dragged_node_datum, this.drag_start_x + (delta_x * scale),
                                                  this.drag_start_y + (delta_y * scale))
 
         let node_data = d3.select(d3.event.sourceEvent.target).datum()
         node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
-        if (this._dragged_node.data.use_style) {
-            this._dragged_node.data.use_style.force_style_translation()
-            this._dragged_node.data.use_style.translate_coords()
+        if (dragged_node_datum.data.use_style) {
+            dragged_node_datum.data.use_style.force_style_translation()
+            dragged_node_datum.data.use_style.translate_coords()
         }
-        this.layout_manager.compute_node_position(this._dragged_node)
+        this.layout_manager.compute_node_position(dragged_node_datum)
 
 
         // TODO: EXPERIMENTAL, will be removed in later commit
@@ -1094,21 +1102,25 @@ class LayoutingMouseEventsOverlay {
         if (!this.layout_manager.is_node_drag_allowed())
             return
 
-        if (this._dragged_node.data.use_style) {
-            let new_position = this.layout_manager.get_viewport_percentage_of_node(this._dragged_node)
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        if (dragged_node_datum.data.use_style) {
+            let new_position = this.layout_manager.get_viewport_percentage_of_node(dragged_node_datum)
             node_visualization_utils.log(7, "dragended: new position", new_position)
-            this._dragged_node.data.use_style.style_config.position = new_position
-            this._dragged_node.data.use_style.force_style_translation()
+            dragged_node_datum.data.use_style.style_config.position = new_position
+            dragged_node_datum.data.use_style.force_style_translation()
         }
 
-        if (this._dragged_node.data.use_style && this._dragged_node.data.use_style.type() == "fixed") {
-            this._dragged_node.data.use_style.fix_node(this._dragged_node)
+        if (dragged_node_datum.data.use_style && dragged_node_datum.data.use_style.type() == "fixed") {
+            dragged_node_datum.data.use_style.fix_node(dragged_node_datum)
         } 
 
-        delete this._dragged_node.data.node_positioning["drag"]
+        delete dragged_node_datum.data.node_positioning["drag"]
         this.layout_manager.translate_layout()
 
-        this.layout_manager.compute_node_position(this._dragged_node)
+        this.layout_manager.compute_node_position(dragged_node_datum)
         this.layout_manager.create_undo_step()
     }
 }
@@ -1242,14 +1254,13 @@ class LayoutApplier{
         this.apply_multiple_layouts(this.viewport.get_hierarchy_list())
     }
 
-    apply_multiple_layouts(node_chunk_list) {
+    apply_multiple_layouts(node_chunk_list, update_layouts=true) {
         let nodes_with_style = []
         let skip_layout_alignment = false
 
         let used_layout_id = null
 
         node_chunk_list.forEach(node_chunk=>{
-
             let layout_settings = node_chunk.layout_settings
             let node_matcher = new node_visualization_utils.NodeMatcher([node_chunk])
             // TODO: When removing an explicit layout, the new layout should replace the explicit one
@@ -1316,6 +1327,8 @@ class LayoutApplier{
         if (this.layout_manager.edit_layout)
             this.layout_manager.allow_layout_updates = false
 
+        if (update_layouts)
+            node_visualization_layout_styles.force_simulation.restart_with_alpha(2)
     }
 
     _get_grouped_styles(nodes_with_style) {
@@ -1336,8 +1349,15 @@ class LayoutApplier{
                 if (!node.data.box_leaf_nodes)
                     return
                 node.count()
-                if (node.value == node._children.length)
-                    box_candidates.push(node)
+                if (node.value == node._children.length) {
+                    let child_with_childs = false
+                    node._children.forEach(child=>{
+                        if (child._children)
+                            child_with_childs = true
+                    })
+                    if (!child_with_childs)
+                        box_candidates.push(node)
+                }
             })
         })
 
@@ -1427,11 +1447,13 @@ class LayoutApplier{
                 d.node.data.use_style.style_root_node = d.node
                 d.node.data.use_style.force_style_translation()
 
-                let abs_coords = this.layout_manager.get_absolute_node_coords({x: style.style_config.position.x, y: style.style_config.position.y}, d.node)
-                d.node.fx = abs_coords.x
-                d.node.fy = abs_coords.y
-                d.node.x  = abs_coords.x
-                d.node.y  = abs_coords.y
+                if (style.type() != node_visualization_layout_styles.LayoutStyleForce.prototype.type()) {
+                    let abs_coords = this.layout_manager.get_absolute_node_coords({x: style.style_config.position.x, y: style.style_config.position.y}, d.node)
+                    d.node.fx = abs_coords.x
+                    d.node.fy = abs_coords.y
+                    d.node.x  = abs_coords.x
+                    d.node.y  = abs_coords.y
+                }
             })
 
 
@@ -1445,7 +1467,6 @@ class LayoutApplier{
 
         node_visualization_layout_styles.force_simulation.register_viewport(this.layout_manager.viewport)
         node_visualization_layout_styles.force_simulation.update_nodes_and_links(all_nodes, all_links)
-        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
         this.layout_manager.update_data()
 
         // Experimental

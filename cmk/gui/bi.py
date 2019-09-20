@@ -463,6 +463,7 @@ class JobWorker(multiprocessing.Process):
         new_entries = [e for e in new_entries if len(e["nodes"]) > 0]
         for entry in new_entries:
             entry["aggr_group_tree"] = groups
+            entry["aggr_type"] = "multi" if aggr_type == AGGR_MULTI else "single"
 
         # Generates a unique id for the given entry
         def get_hash(entry):
@@ -3239,6 +3240,7 @@ def create_aggregation_row(tree, status_info=None):
         "aggr_output": output,
         "aggr_hosts": node["reqhosts"],
         "aggr_function": node["func"],
+        "aggr_type": node["aggr_type"],
     }
 
 

@@ -26,6 +26,7 @@ import * as node_visualization_utils from "node_visualization_utils"
 import * as node_visualization_datasources from "node_visualization_datasources"
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers"
 import * as node_visualization_layouting from "node_visualization_layouting"
+import * as node_visualization_layout_styles from "node_visualization_layout_styles"
 import * as d3 from "d3"
 
 // The main viewport
@@ -189,8 +190,6 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this.main_zoom.filter(()=>{return d3.event.button === 0 || d3.event.button === 1})
         this.svg_content_selection.call(this.main_zoom).on("dblclick.zoom", null)
 
-        this.layer_toggle = this.div_layers_selection.append("div").attr("id", "togglebox_choices")
-
         // Initialize viewport size and scales before loading the layers
         this.size_changed()
         this._load_layers()
@@ -286,7 +285,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         }
 
         // Update toggleboxes
-        let toggleboxes = this.layer_toggle.selectAll("div.togglebox").data(configurable_overlays, d=>d.layer.id())
+        let togglebuttons = d3.select("div#togglebuttons")
+        let toggleboxes = togglebuttons.selectAll("div.togglebox").data(configurable_overlays, d=>d.layer.id())
         toggleboxes.exit().remove()
         toggleboxes = toggleboxes.enter().append("div").text(d=>d.layer.name())
                         .attr("layer_id", d=>d.layer.id())
@@ -330,11 +330,8 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         this._arrange_multiple_node_chunks()
 
         this.update_layers()
-
-        if (this.always_update_layout || this._chunks_changed)
-            this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list())
+        this.layout_manager.layout_applier.apply_multiple_layouts(this.get_hierarchy_list(),  this._chunks_changed || this.always_update_layout)
         this.layout_manager.compute_node_positions()
-
     }
 
     _consume_chunk_rawdata(chunk_rawdata) {
@@ -363,6 +360,9 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
 
         // Compute path and id to identify the nodes
         this._add_aggr_path_and_node_id(hierarchy, {})
+
+        if (chunk_rawdata["aggr_type"])
+            chunk.aggr_type = chunk_rawdata["aggr_type"]
 
         chunk.tree = hierarchy
         chunk.nodes = chunk.tree.descendants()
@@ -428,9 +428,9 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
         })
 
 
-        if (node.data.hostname)
+        if (node.data.hostname && !node.data.service)
             node_id += node.data.hostname + "(" + this._get_siblings_index("hostname", node.data.hostname, siblings_id_counter) + ")"
-         if (node.data.service)
+        if (node.data.service)
             node_id += node.data.service + "(" + this._get_siblings_index("service", node.data.service, siblings_id_counter) + ")"
         node.data.id = node_id
 
@@ -557,8 +557,7 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
                     old_node_coords[node.data.id] = {x: node.x, y: node.y}
                 })
 
-                if (!this.layout_manager.allow_layout_updates)
-                    new_chunk.layout_instance = existing_chunk.layout_instance
+                new_chunk.layout_instance = existing_chunk.layout_instance
 
                 new_chunk.coords = existing_chunk.coords
                 new_chunk.nodes.forEach((node, idx)=>{
@@ -591,6 +590,11 @@ class LayeredViewportPlugin extends AbstractViewportPlugin {
             chunk_links.push({source: node, target: node.parent})
         })
         node_chunk.links = chunk_links
+
+        let all_nodes = this.get_all_nodes()
+        let all_links = this.get_all_links()
+        node_visualization_layout_styles.force_simulation.update_nodes_and_links(all_nodes, all_links)
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
     }
 
     update_layers() {

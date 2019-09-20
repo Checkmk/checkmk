@@ -1,0 +1,12 @@
+title: Graylog: Messages
+agents: jenkins
+catalog: app/graylog
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the count of messages over all indices of a graylog
+ instance. It outputs the total number of messages and the average rate of
+ messages in a given timeframe.
+
+inventory:
+ One service {"Graylog Messages"} will be created

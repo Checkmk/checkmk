@@ -233,8 +233,9 @@ export class AbstractLayoutStyle {
         this.force_style_translation()
 
         this._layout_manager.compute_node_positions_from_list_of_nodes(this.style_root_node.descendants())
-        this._layout_manager.viewport.update_data_of_layers()
-        this._layout_manager.viewport.update_gui_of_layers()
+
+        force_simulation.restart_with_alpha(0.5)
+        this._layout_manager.viewport.update_layers()
     }
 
     get_size() {
@@ -499,6 +500,7 @@ class ForceSimulation {
         })
         return force_nodes
     }
+
     _enforce_free_float_styles_retranslation() {
         for (let idx in this._viewport.layout_manager._active_styles) {
             let style = this._viewport.layout_manager._active_styles[idx]
@@ -510,7 +512,6 @@ class ForceSimulation {
                 style.filtered_descendants.forEach(node=>node.use_transition=false)
             }
         }
-//        this._viewport.layout_manager.translate_layout()
     }
 
     _setup_forces() {
@@ -640,7 +641,6 @@ export class LayoutStyleForce extends AbstractLayoutStyle {
 
     force_style_translation() {
         force_simulation._setup_forces()
-        force_simulation.restart_with_alpha(0.5)
     }
 
     get_style_options() {
@@ -1226,9 +1226,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         let coords = d3.mouse(this.selection.node())
         let offset_x = (this.drag_start_info.start_coords[1] - coords[1]) * this._layout_manager.viewport.last_zoom.k
         this.style_config.options.radius = parseInt(Math.min(500, Math.max(10, this.drag_start_info.options.radius + offset_x)))
-
-        // TODO: check this
-        this._layout_manager.viewport.update_data_of_layers()
+        this.changed_options()
     }
 
     change_degree() {
@@ -1238,8 +1236,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         let offset_x = (this.drag_start_info.start_coords[1] - coords[1]) * 2 * this._layout_manager.viewport.last_zoom.k
         let degree = parseInt(Math.min(360, Math.max(10, this.drag_start_info.options.degree + offset_x)))
         this.style_config.options.degree = degree
-        // TODO: check this
-        this._layout_manager.viewport.update_data_of_layers()
+        this.changed_options()
     }
 }
 

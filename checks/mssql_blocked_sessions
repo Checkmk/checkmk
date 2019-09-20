@@ -127,7 +127,7 @@ def check_mssql_blocked_sessions(item, params, parsed):
 
     if summary:
         yield params['state'], "Summary: %s" % (", ".join(
-            ["%s blocked by %s ID(s)" % (k, v) for k, v in summary.iteritems()]))
+            ["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.iteritems())]))
 
         max_state = max([state for state, _infotext in details])
         if max_state:

@@ -394,6 +394,18 @@ class Site(object):
         live.set_timeout(2)
         return live
 
+    def url_for_path(self, path):
+        """
+        Computes a full URL inkl. http://... from a URL starting with the path.
+        In case no path component is in URL, prepend "/[site]/check_mk" to the path.
+        """
+        assert not path.startswith("http")
+        assert "://" not in path
+
+        if "/" not in urlparse(path).path:
+            path = "/%s/check_mk/%s" % (self.id, path)
+        return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
+
     def wait_for_core_reloaded(self, after):
         # Activating changes can involve an asynchronous(!) monitoring
         # core restart/reload, so e.g. querying a Livestatus table immediately
@@ -1028,21 +1040,14 @@ class Site(object):
         print "Livestatus ports already in use: %r, using port: %d" % (used_ports, port)
         return port
 
-    # Problem: The group change only affects new sessions of the test_user
-    #def add_test_user_to_site_group(self):
-    #    test_user = pwd.getpwuid(os.getuid())[0]
 
-    #    if os.system("sudo usermod -a -G %s %s" % (self.id, test_user)) >> 8 != 0:
-    #        raise Exception("Failed to add test user \"%s\" to site group")
-
-
-class WebSession(object):
-    def __init__(self):
-        super(WebSession, self).__init__()
+class CMKWebSession(object):
+    def __init__(self, site):
+        super(CMKWebSession, self).__init__()
         self.transids = []
         # Resources are only fetched and verified once per session
         self.verified_resources = set()
-        self.via_system_apache = False
+        self.site = site
         self.session = requests.Session()
 
     def check_redirect(self, path, expected_target=None):
@@ -1062,7 +1067,6 @@ class WebSession(object):
     def request(self,
                 method,
                 path,
-                proto="http",
                 expected_code=200,
                 expect_redirect=None,
                 allow_errors=False,
@@ -1070,8 +1074,7 @@ class WebSession(object):
                 allow_redirect_to_login=False,
                 allow_retry=True,
                 **kwargs):
-        url = self.url(proto, path)
-
+        url = self.site.url_for_path(path)
         if add_transid:
             url = self._add_transid(url)
 
@@ -1199,7 +1202,7 @@ class WebSession(object):
             self.verified_resources.add(url)
 
             assert not url.startswith("/")
-            req = self.get(base_url + "/" + url, proto=parsed_url.scheme, verify=False)
+            req = self.get(base_url + "/" + url, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
@@ -1221,33 +1224,6 @@ class WebSession(object):
                 pass
 
         return urls
-
-    def login(self, username=None, password=None):
-        raise NotImplementedError()
-
-    def logout(self):
-        raise NotImplementedError()
-
-
-class CMKWebSession(WebSession):
-    def __init__(self, site):
-        self.site = site
-        super(CMKWebSession, self).__init__()
-
-    # Computes a full URL inkl. http://... from a URL starting with the path.
-    def url(self, proto, path):
-        assert not path.startswith("http")
-        assert "://" not in path
-
-        # In case no path component is in URL, add the path to the "/[site]/check_mk"
-        if "/" not in urlparse(path).path:
-            path = "/%s/check_mk/%s" % (self.site.id, path)
-
-        if self.via_system_apache:
-            return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
-
-        return '%s://%s:%d%s' % (self.site.http_proto, self.site.http_address,
-                                 self.site.apache_port, path)
 
     def login(self, username="cmkadmin", password="cmk"):
         login_page = self.get("", allow_redirect_to_login=True).text

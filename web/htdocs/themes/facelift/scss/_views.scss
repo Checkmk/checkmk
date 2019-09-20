@@ -703,9 +703,12 @@ table.data.matrix {
       &.left {
         font-weight: $theme-font-weight-bold;
         background-color: $theme-color-white;
-        border-right: 1px solid $theme-color-table-border;
-        border-left: 1px solid $theme-color-table-border;
         transition: .15s ease-in-out;
+
+	&:not(.state) {
+	  border-right: 1px solid $theme-color-table-border;
+	  border-left: 1px solid $theme-color-table-border;
+	}
       }
 
       &.cell td.perfometer {
@@ -718,16 +721,17 @@ table.data.matrix {
     &:first-child {
       background: transparent;
 
-      td {
-        background: transparent;
-        border: none;
-
-        &.matrixhead {
-          font-size: $theme-font-size-global;
-          letter-spacing: $theme-letter-spacing-table;
-          text-transform: uppercase;
-        }
+      td.matrixhead {
+	font-size: $theme-font-size-global;
+	letter-spacing: $theme-letter-spacing-table;
+	text-transform: uppercase;
       }
+    }
+  }
+
+  td.minority {
+    &, a, a:link {
+      color: $minority-font-color;
     }
   }
 
@@ -735,19 +739,11 @@ table.data.matrix {
     td.left.minority {
       background-color: #bdd;
     }
-
-    td.matrixhead {
-      background-color: #888;
-    }
   }
 
   tr.odd0 {
     td.left.minority {
       background-color: #cee;
-    }
-
-    td.matrixhead {
-      background-color: #999;
     }
   }
 

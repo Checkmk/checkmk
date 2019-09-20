@@ -275,6 +275,7 @@ $toggle-button-down-bg-color:		    $grey-3;
 $toggle-button-down-border-color:	    null;
 $toggle-button-down-hover-bg-color:	    lighten($grey-3, 10%);
 $toggle-button-down-hover-border-color:	    null;
+$toggle-button-search-img-filter:	    invert(20%);
 
 $success-bg-color:			    $primary-bg-color;
 
@@ -489,6 +490,10 @@ $node-vis-menu-bg-color:		    $grey-5;
 $node-vis-history-bg-color:		    $grey-1;
 $node-vis-history-border-color:		    $grey-1;
 $node-vis-history-filter:		    invert(70%);
+$node-vis-growth-img-filter:		    invert(100%);
+$node-vis-growth-root-color:		    $node-vis-darkgrey; // blue
+$topology-filter-bg-color:		    $grey-5;
+$topology-filter-border-color:		    $grey-7;
 
 $host-folder-font-color:		    $theme-color-text;
 

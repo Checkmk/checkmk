@@ -296,7 +296,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     RS.Close
 
     RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
-            "FROM sys.dm_os_waiting_tasks ", CONN
+            "FROM sys.dm_os_waiting_tasks " & _
+            "WHERE blocking_session_id <> 0 ", CONN
     addOutput(sections("blocked_sessions"))
     Dim session_id, wait_duration_ms, wait_type, blocking_session_id
     Do While NOT RS.Eof

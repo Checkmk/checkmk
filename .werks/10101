@@ -1,0 +1,12 @@
+Title: aws_rds.{bin_log_usage,transaction_logs_usage,replication_slot_usage}: Fixed discovering services
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568987389
+
+The services 'AWS/RDS %s Binary Log Usage', 'AWS/RDS %s Transaction Logs Usage'
+and 'AWS/RDS %s Replication Slot Usage' were not discovered.

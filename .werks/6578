@@ -1,4 +1,4 @@
-Title: Agent access config can now be monitored
+Title: Agent IP access restriction (only_from) can now be monitored
 Level: 1
 Component: checks
 Compatible: incomp
@@ -7,12 +7,16 @@ Version: 1.6.0b1
 Date: 1538054461
 Class: feature
 
-The functionality of the service "Check_MK Agent Access" has
-been incorporated in the "Check_MK" service.
-The corresponding global config option "check_mk_only_from_default"
-will no longer work; please remove it from your main.mk file if
-you have been using the service "Check_MK Agent Access".
-From now on this feature can be configured via WATO using the
-ruleset "Allowed IP addresses for agent access" - the same rule that
-will be used for the agent bakery (if available).
+The functionality of the service "Check_MK Agent Access" (which could be
+enabled manually using the global setting check_mk_only_from_default, see
+check_mk.only_from check) has been incorporated in the "Check_MK" service.
+
+The corresponding global config option "check_mk_only_from_default" will no
+longer work; please remove it from your main.mk file if you have been using the
+service "Check_MK Agent Access".
+
+From now on this feature can be configured via WATO using the ruleset "Allowed
+IP addresses for agent access" - the same rule that was already available to
+Agent Bakery users for configuring the IP restrictions for baked agents. This
+ruleset is now available in all Checkmk Editions
 The check state will be displayed as part of the "Check_MK" service.

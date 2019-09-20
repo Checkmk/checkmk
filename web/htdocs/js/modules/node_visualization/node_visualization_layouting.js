@@ -577,8 +577,6 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
                 .style("opacity", 1)
                 .style("display", null)
-
-        this.fetch_all_layouts()
     }
 
     disable_actions() {
@@ -789,8 +787,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     fetch_all_layouts() {
-        // TODO: Currently disabled
-        return
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
         // d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
     }
 

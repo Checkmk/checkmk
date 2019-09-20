@@ -4736,7 +4736,13 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed."),
+               "access the agent. IPv6 addresses and networks are also allowed.") \
+            + _("If you are using the Agent bakery, the configuration will be "
+                "used for restricting network access to the baked agents. Even "
+                "if you don't use the bakery, the configured IP address "
+                "restrictions of a host will be verified against the allowed "
+                "IP addresses reported by the agent. This is done during "
+                "monitoring by the Check_MK service."),
     )
 
 

@@ -2869,7 +2869,7 @@ class PainterNumProblems(Painter):
 
     @property
     def short_title(self):
-        return _("Pro.")
+        return _("Prob.")
 
     @property
     def columns(self):

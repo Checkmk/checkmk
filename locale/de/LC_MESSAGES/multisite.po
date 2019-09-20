@@ -8770,6 +8770,11 @@ msgstr "Diskrepanz konfigurierter Features"
 msgid "Configured timeperiod parameters"
 msgstr "Konfigurierte Parameter der Zeitperiode"
 
+msgid "Configures the number of available filters in the network topology view."
+msgstr ""
+"Konfiguriert die Anzahl der verfügbaren Filter in der "
+"Netzwerktopologieanzeige."
+
 msgid ""
 "Configures the permission to delete background jobs. Note: some jobs cannot "
 "be deleted."
@@ -17085,6 +17090,9 @@ msgstr "Wachsend"
 msgid "Growth"
 msgstr "Wachstum"
 
+msgid "Growth interrupted"
+msgstr ""
+
 msgid "Guest operating system is responding normally."
 msgstr "Das Gast-Betriebssystem antwortet normal."
 
@@ -22038,6 +22046,10 @@ msgstr ""
 msgid "Invalid topic"
 msgstr "Ungültiges Thema"
 
+#, python-format
+msgid "Invalid topology_config %r"
+msgstr "Ungültige topology_config %r"
+
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
 
@@ -25181,6 +25193,10 @@ msgstr "Maximale Anzahl von passenden Tasks für WARN"
 msgid "Maximum number of messages"
 msgstr "Maximale Anzahl von Meldungen"
 
+#, python-format
+msgid "Maximum number of nodes exceeded %d/%d"
+msgstr "Maximale Anzahl von Knoten überschritten %d/%d"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Datei gelesen werden"
 
@@ -25662,6 +25678,10 @@ msgstr "Fehlender Schlüssel \"metric\" in logarithmischem Perfometer: %r"
 
 msgid "Missing mandatory \"host\" parameter"
 msgstr "Der Parameter \"host\" ist nicht gesetzt."
+
+#, python-format
+msgid "Missing mandatory topology keys: %r"
+msgstr "Fehlende Plichtfelder für Topologie: %r"
 
 msgid "Missing needed custom_graph parameter."
 msgstr "Der Parameter custom_graph fehlt."
@@ -35792,6 +35812,10 @@ msgstr "Sirene"
 
 msgid "Site"
 msgstr "Instanz"
+
+#, python-format
+msgid "Site %s"
+msgstr "Site %s"
 
 #, python-format
 msgid "Site %s is dead"
@@ -46239,6 +46263,12 @@ msgstr "Thema"
 
 msgid "Topic:"
 msgstr "Thema:"
+
+msgid "Topology"
+msgstr "Topologie"
+
+msgid "Topology filters"
+msgstr "Topologie-Filter"
 
 msgid "Topology host details"
 msgstr "Details zum Topologie-Host"

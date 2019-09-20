@@ -302,18 +302,18 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
-        addOutput("||" & instance_id & "||" & errMsg)
+        addOutput("||" & instance_id & "|" & errMsg)
     Else
-        Dim objectName, counterName, instanceName, value
+        Dim objectName, counterName, counters_inst_name, value
         Do While NOT RS.Eof
             objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
             counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
-            instanceName = Replace(Trim(RS("instance_name")), " ", "_")
-            If instanceName = "" Then
-                instanceName = "None"
+            counters_inst_name = Replace(Trim(RS("instance_name")), " ", "_")
+            If counters_inst_name = "" Then
+                counters_inst_name = "None"
             End If
             value = Trim(RS("cntr_value"))
-            addOutput( objectName & "|" & counterName & "|" & instanceName & "|" & value )
+            addOutput( objectName & "|" & counterName & "|" & counters_inst_name & "|" & value )
             RS.MoveNext
         Loop
     End If
@@ -326,17 +326,19 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
-        addOutput("||" & instance_id & "||" & errMsg)
-    Else
+        addOutput(instance_id & "|" & errMsg)
+    ElseIf Not RS.Eof Then
         Dim session_id, wait_duration_ms, wait_type, blocking_session_id
         Do While NOT RS.Eof
             session_id = Trim(RS("session_id"))
             wait_duration_ms = Trim(RS("wait_duration_ms"))
             wait_type = Trim(RS("wait_type"))
             blocking_session_id = Trim(RS("blocking_session_id"))
-            addOutput(session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
+            addOutput(instance_id & "|" & session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
             RS.MoveNext
         Loop
+    Else
+        addOutput(instance_id & "|No blocking sessions")
     End If
     RS.Close
 

@@ -1,0 +1,13 @@
+Title: mssql_blocked_sessions: Fixed vanished services if no blocked sessions are sent from agent plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568980722
+Class: fix
+
+Previously the mssql.vbs ignored empty blocked session (==0).
+This causes vanished services on the Checkmk server.
+Now the blocked sessions or 'No blocked sessions' are delievered.
+You have to deploy the mssql.vbs in order to make this work.

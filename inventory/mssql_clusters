@@ -40,9 +40,17 @@ def inv_mssql_clusters(info):
         return node[-1]
 
     for line in info:
-        instance_id = line[0]
-        active_node = line[2]
-        nodes = line[3].split(",")
+        if len(line) == 4:
+            instance_id = line[0]
+            active_node = line[2]
+            nodes = line[3].split(",")
+        elif len(line) == 3:
+            # BD name may be ''
+            instance_id = line[0]
+            active_node = line[1]
+            nodes = line[2].split(",")
+        else:
+            continue
 
         instance = get_list_item("name", instance_id)
         instance.update({

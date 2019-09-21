@@ -1,0 +1,21 @@
+Title: mk_logwatch: Fix "random" missing logfile when monitoring through xinetd
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0
+Date: 1569064522
+Class: fix
+
+When executing the agent through xinetd, the environment is initialized in
+a different way than when executing the agent manually from the command line.
+This can lead to different locale settings making mk_logwatch use a different
+default encoding on linux systems.
+
+Instead of the widely used UTF-8 encoding it assumed ANSI_X3.4-1968 encoding.
+With this encoding it was not possible to process UTF-8 encoded log files. The
+log file processing was terminated while reading the file, making the GUI show
+it as UNKNOWN service.
+
+In the moment we see a ANSI_X3.4-1968 default encoding in mk_logwatch, we
+replace this with UTF-8 now.

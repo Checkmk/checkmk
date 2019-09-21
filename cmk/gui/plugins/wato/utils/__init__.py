@@ -35,6 +35,7 @@ import subprocess
 import time  # pylint: disable=unused-import
 # NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
+from typing import Tuple as TypingOptional, Callable, Text, Union  # pylint: disable=unused-import
 
 import six
 
@@ -597,10 +598,18 @@ def passwordstore_choices():
             for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
 
 
-class PasswordFromStore(CascadingDropdown):
-    def __init__(self, *args, **kwargs):
-        kwargs["choices"] = [
-            ("password", _("Explicit"), Password(allow_empty=kwargs.get("allow_empty", True),)),
+def PasswordFromStore(  # pylint: disable=redefined-builtin
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        allow_empty=True,  # type: bool
+        size=25,  # type: int
+):  # -> CascadingDropdown
+    return CascadingDropdown(
+        choices=[
+            ("password", _("Explicit"), Password(
+                allow_empty=allow_empty,
+                size=size,
+            )),
             ("store", _("From password store"),
              DropdownChoice(
                  choices=passwordstore_choices,
@@ -611,15 +620,24 @@ class PasswordFromStore(CascadingDropdown):
                                         "are not permitted to use this password. Please choose "
                                         "another one."),
              )),
-        ]
-        kwargs["orientation"] = "horizontal"
+        ],
+        orientation="horizontal",
+    )
 
-        CascadingDropdown.__init__(self, *args, **kwargs)
 
-
-def IndividualOrStoredPassword(*args, **kwargs):
+def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        allow_empty=True,  # type: bool
+        size=25,  # type: int
+):
     return Transform(
-        PasswordFromStore(*args, **kwargs),
+        PasswordFromStore(
+            title=title,
+            help=help,
+            allow_empty=allow_empty,
+            size=size,
+        ),
         forth=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )
 

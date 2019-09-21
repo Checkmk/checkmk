@@ -1,0 +1,11 @@
+Title: BI: Fix exception in BI status GUI when loading configs created with 1.4 or older
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.6.0
+Date: 1569079759
+Class: fix
+
+An exception like "unhashable type 'list'" could appear when opening BI views
+while the BI configuration was created in 1.4 or older.

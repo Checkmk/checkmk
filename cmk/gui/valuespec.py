@@ -85,6 +85,9 @@ def _type_name(v):
 
 seconds_per_day = 86400
 
+# Some arbitrary object for checking whether or not default_value was set
+_DEF_VALUE = object()
+
 
 class ValueSpec(object):
     """Abstract base class of all value declaration classes"""
@@ -1174,19 +1177,25 @@ class ListOfStrings(ValueSpec):
                 self._valuespec.validate_value(s, varprefix + "_%d" % nr)
 
 
-class ListOfIntegers(ListOfStrings):
-    def __init__(self, **kwargs):
-        int_args = {}
-        for key in ["minvalue", "maxvalue"]:
-            if key in kwargs:
-                int_args[key] = kwargs[key]
-        int_args["display_format"] = "%s"
-        int_args["convfunc"] = lambda x: x if x == '' else utils.saveint(x)
-        int_args["minvalue"] = 17
-        int_args["default_value"] = 34
-        valuespec = Integer(**int_args)
-        kwargs["valuespec"] = valuespec
-        super(ListOfIntegers, self).__init__(**kwargs)
+# TODO: Spread use of this valuespec
+def NetworkPort(title, default_value=_DEF_VALUE):
+    # type: (TypingOptional[Text], Union[object, int]) -> Integer
+    return Integer(
+        title=title,
+        minvalue=1,
+        maxvalue=65535,
+        default_value=default_value,
+    )
+
+
+def ListOfNetworkPorts(title, default_value):
+    # type: (TypingOptional[Text], List[int]) -> ListOfStrings
+    return ListOfStrings(
+        valuespec=NetworkPort(title=_("Port")),
+        title=title,
+        orientation="horizontal",
+        default_value=default_value,
+    )
 
 
 class ListOf(ValueSpec):

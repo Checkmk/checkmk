@@ -253,18 +253,14 @@ a.service_button.disabled {
     -webkit-filter: grayscale(1);
 }
 
-div#service_container div.action_buttons {
-  div.left {
-    float: left;
-  }
-
-  div.right {
-    float: right;
-  }
-
-  span.button_spacer {
+div#service_container {
+  div.action_buttons div.button_spacer {
     display: inline-block;
-    width: 12px;
+    height: 19px;
+    margin-right: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-right: 2px solid $button-spacer-color;
   }
 }
 

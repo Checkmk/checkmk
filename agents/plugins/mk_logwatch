@@ -409,14 +409,31 @@ class LogLinesIter(object):
     def close(self):
         os.close(self._fd)
 
+    # TODO: Add an encoding-Option to the logfile section to enable the
+    # user telling us the correct encoding of a file.
     def _get_encoding(self):
+        # In 1.5 this was only used when logwatch is executed on windows.
+        # On linux the log lines were not decoded at all.
+        #
+        # For 1.6 we want to follow the standard approach to decode things read
+        # from external sources as soon as possible. We also want to ensure that
+        # the output of this script is always UTF-8 encoded later.
+        #
+        # In case the current approach does not work out, then have a look here
+        # for possible more robust solutions:
+        # http://python-notes.curiousefficiency.org/en/latest/python3/text_file_processing.html
         enc_bytes_len = max(len(bom) for bom, _enc in ENCODINGS)
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
                 self._buffer = self._buffer[len(bom):]
+                LOGGER.debug("Detected %r encoding by BOM", encoding)
                 return encoding
-        return locale.getpreferredencoding() or 'utf_8'
+
+        pref_encoding = locale.getpreferredencoding()
+        encoding = "utf_8" if not pref_encoding or pref_encoding == "ANSI_X3.4-1968" else pref_encoding
+        LOGGER.debug("Locale Preferred encoding is %s, using %s", pref_encoding, encoding)
+        return encoding
 
     def _update_lines(self):
         """

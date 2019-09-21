@@ -1927,7 +1927,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     if icon:
         aggregation["icon"] = icon
 
-    aggregation["rule_id"] = [_rule_to_pack_lookup[rulename], rulename, funcname]
+    aggregation["rule_id"] = [_rule_to_pack_lookup.get(rulename, "default"), rulename, funcname]
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -3599,33 +3599,47 @@ def migrate_bi_configuration():
 
 
 def _convert_aggregation(aggr_tuple):
-    old_groups = aggr_tuple[1]
+    """ The first values in the tuple may indicate a special handling
+    The job of this function is to extract these special keys and put them into a dict
+    Furthermore, outdated aggregation group formats will be fixed too."""
+
+    special_values = {
+        config.DISABLED: "disabled",
+        config.HARD_STATES: "hard_states",
+        config.DT_AGGR_WARN: "downtime_aggr_warn",
+    }
+
+    old_groups = None
+    options = {}
+    for idx, token in enumerate(list(aggr_tuple)):
+        if token in special_values.keys():
+            options[special_values[token]] = True
+            continue
+        if isinstance(token, dict):
+            # Should be a dictionary at the start of the tuple -> new format
+            # All options are specified within this dict
+            options = token
+            continue
+
+        # The aggregation groups
+        old_groups = token
+        aggr_tuple = aggr_tuple[idx:]
+        break
+
+    # The data type of the old_groups was a string or a list. Unify them into this
+    # groups = ["group1", "group2", "sub1/sub2/group3"]
     updated_groups = []
     if isinstance(old_groups, list):
         updated_groups.extend(old_groups)
     else:
         updated_groups.append(old_groups)
-
     updated_groups.sort()
+
+    # Create new tuple with the updated groups
     tmp_aggr_list = list(aggr_tuple)
-    tmp_aggr_list[1] = updated_groups
+    tmp_aggr_list[0] = updated_groups
     aggr_tuple = tuple(tmp_aggr_list)
 
-    if isinstance(aggr_tuple[0], dict):
-        return aggr_tuple  # already converted
-
-    options = {}
-    map_class_to_key = {
-        config.DISABLED: "disabled",
-        config.HARD_STATES: "hard_states",
-        config.DT_AGGR_WARN: "downtime_aggr_warn",
-    }
-    for idx, token in enumerate(list(aggr_tuple)):
-        if token in map_class_to_key:
-            options[map_class_to_key[token]] = True
-        else:
-            aggr_tuple = aggr_tuple[idx:]
-            break
     return (options,) + aggr_tuple
 
 

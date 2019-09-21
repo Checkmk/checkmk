@@ -968,7 +968,7 @@ def main():
     for pattern in non_matching_patterns:
         sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
 
-    for logfile, (patterns, options) in found_sections:
+    for logfile, (patterns, options) in sorted(found_sections, key=lambda k: k[0]):
         output = process_logfile(logfile, patterns, options, status)
         write_output(output, options.maxoutputsize)
 

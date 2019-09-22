@@ -81,8 +81,11 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
         return 0;
     }
 
-    const std::wstring_view folders[] = {L"config", L"plugins", L"local",
-                                         L"mrpe",   L"state",   L"bin"};
+    static const std::wstring_view folders[] = {
+        L"config", L"plugins", L"local",
+        L"spool",  // may contain important files
+        L"mrpe",   L"state",   L"bin"};
+
     auto count = 0;
     for_each(folders, std::end(folders),
 
@@ -90,7 +93,8 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
               copy_mode](std::wstring_view sub_folder) {
                  auto src = legacy_root / sub_folder;
                  auto tgt = program_data / sub_folder;
-                 XLOG::l.t("Processing '{}':", src.u8string());  //
+                 XLOG::l.t("Processing '{}', mode [{}]:", src.u8string(),
+                           static_cast<int>(copy_mode));  //
                  if (copy_mode == CopyFolderMode::remove_old)
                      fs::remove_all(tgt);
                  auto folder_exists = CreateFolderSmart(tgt);
@@ -109,6 +113,7 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
                      });
                  count += c;
              });
+
     return count;
 }
 

@@ -1232,6 +1232,12 @@ std::wstring WmiStringFromObject(IWbemClassObject* object,
     for (auto& name : names) {
         // data
         VARIANT value;
+
+        // clearing of the value
+        memset(&value, 0,
+               sizeof(value));  // prevents potential usage
+                                // of the non-initialized data
+                                // when converting I4 to UI4
         // Get the value of the Name property
         auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {

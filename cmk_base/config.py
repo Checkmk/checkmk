@@ -2047,9 +2047,6 @@ class HostConfig(object):
 
         self._config_cache = config_cache
 
-        self.alias = self._get_alias()
-        self.parents = self._get_parents()
-
         self.is_cluster = self._is_cluster()
         # TODO: Rename this to self.clusters?
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
@@ -2187,7 +2184,8 @@ class HostConfig(object):
             return rules[0]
         return "ipv4"
 
-    def _get_alias(self):
+    @property
+    def alias(self):
         # type: () -> Text
         aliases = self._config_cache.host_extra_conf(self.hostname,
                                                      extra_host_conf.get("alias", []))
@@ -2197,7 +2195,8 @@ class HostConfig(object):
         return aliases[0]
 
     # TODO: Move cluster/node parent handling to this function
-    def _get_parents(self):
+    @property
+    def parents(self):
         # type: () -> List[str]
         """Returns the parents of a host configured via ruleset "parents"
 

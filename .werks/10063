@@ -1,0 +1,15 @@
+Title: FIX upgrade of the Windows Agent 1.5 to version 1.6 includes the spool directory too
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0
+Date: 1569247349
+Class: fix
+
+Previously the spool directory had been ignored during upgrade from Windows
+Agent 1.5 to Windows Agent 1.6. It may lead to failing spool checks.
+
+Now the problem has been fixed: spool directory and all its content are
+copied to the working folder of the new Agent
+

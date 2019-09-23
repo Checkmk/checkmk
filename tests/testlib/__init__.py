@@ -368,8 +368,6 @@ class Site(object):
         self._apache_port = None  # internal cache for the port
         self._livestatus_port = None
 
-        #self._gather_livestatus_port()
-
     @property
     def apache_port(self):
         if self._apache_port is None:
@@ -1182,8 +1180,6 @@ class CMKWebSession(object):
         return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
     def _handle_http_response(self, response, expected_code, allow_redirect_to_login):
-        assert "Content-Type" in response.headers
-
         assert response.status_code == expected_code, \
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \
                   (response.status_code, expected_code,
@@ -1195,29 +1191,27 @@ class CMKWebSession(object):
                 (response.history[0].status_code, response.history[0].url, response.url)
 
         if self._get_mime_type(response) == "text/html":
-            self._extract_transids(response.text)
+            self.transids += self._extract_transids(response.text)
             self._find_errors(response.text)
-            self._check_html_page_resources(response)
+            self._check_html_page_resources(response.url, response.text)
 
     def _get_mime_type(self, response):
+        assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
     def _extract_transids(self, body):
-        # Extract transids from the pages to be used in later actions
-        # issued by the tests
-        matches = re.findall('name="_transid" value="([^"]+)"', body)
-        matches += re.findall('_transid=([0-9/]+)', body)
-        for match in matches:
-            self.transids.append(match)
+        """Extract transids from pages used in later actions issued by tests."""
+        return re.findall('name="_transid" value="([^"]+)"', body) + \
+               re.findall('_transid=([0-9/]+)', body)
 
     def _find_errors(self, body):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
         assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, response):
-        soup = BeautifulSoup(response.text, "lxml")
+    def _check_html_page_resources(self, url, body):
+        soup = BeautifulSoup(body, "lxml")
 
-        base_url = urlparse(response.url).path
+        base_url = urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 
@@ -1973,7 +1967,6 @@ class CMKEventConsole(object):
     def activate_changes(self, web):
         old_t = web.site.live.query_value(
             "GET eventconsolestatus\nColumns: status_config_load_time\n")
-        #print("Old config load time: %s" % old_t)
         assert old_t > time.time() - 86400
 
         self.web_session.activate_changes(allow_foreign_changes=True)
@@ -1981,7 +1974,6 @@ class CMKEventConsole(object):
         def config_reloaded():
             new_t = web.site.live.query_value(
                 "GET eventconsolestatus\nColumns: status_config_load_time\n")
-            #print("New config load time: %s" % new_t)
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10
@@ -1994,14 +1986,15 @@ class CMKEventConsole(object):
 
     @classmethod
     def new_event(cls, attrs):
+        now = time.time()
         default_event = {
             "rule_id": 815,
             "text": "",
             "phase": "open",
             "count": 1,
-            "time": time.time(),
-            "first": time.time(),
-            "last": time.time(),
+            "time": now,
+            "first": now,
+            "last": now,
             "comment": "",
             "host": "test-host",
             "ipaddress": "127.0.0.1",
@@ -2115,10 +2108,7 @@ def web(site):
 
 @pytest.fixture(scope="module")
 def ec(site, web):
-    ec = CMKEventConsole(site)
-    #ec.enable_remote_status_port(web)
-    #ec.activate_changes(web)
-    return ec
+    return CMKEventConsole(site)
 
 
 def create_linux_test_host(request, web, site, hostname):

@@ -123,7 +123,7 @@ node {
                     if (DEMO == 'yes') {
                         sh '''sed -ri 's/^(DEMO_SUFFIX[[:space:]]*:?= *).*/\\1'" .demo/" defines.make'''
                         sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
-                        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,State}.cc'''
+                        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{Core,World}.cc'''
                     }
                     sh "make NEW_VERSION=${CMK_VERS} setversion"
 

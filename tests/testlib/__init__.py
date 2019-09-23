@@ -1069,7 +1069,6 @@ class CMKWebSession(object):
                 path,
                 expected_code=200,
                 expect_redirect=None,
-                allow_errors=False,
                 add_transid=False,
                 allow_redirect_to_login=False,
                 allow_retry=True,
@@ -1096,32 +1095,18 @@ class CMKWebSession(object):
             else:
                 raise
 
-        self._handle_http_response(response, expected_code, allow_errors, expect_redirect,
+        self._handle_http_response(response, expected_code, expect_redirect,
                                    allow_redirect_to_login)
         return response
 
     def _add_transid(self, url):
         if not self.transids:
             raise Exception('Tried to add a transid, but none available at the moment')
+        return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
-        if "?" in url:
-            url += "&"
-        else:
-            url += "?"
-        url += "_transid=" + self.transids.pop()
-        return url
-
-    def _handle_http_response(self, response, expected_code, allow_errors, expect_redirect,
+    def _handle_http_response(self, response, expected_code, expect_redirect,
                               allow_redirect_to_login):
         assert "Content-Type" in response.headers
-
-        # TODO: Copied from CMA tests. Needed?
-        # Apache error responses are sent as ISO-8859-1. Ignore these pages.
-        #if r.status_code == 200 \
-        #   and (not self._allow_wrong_encoding and not mime_type.startswith("image/")):
-        #    assert r.encoding == "UTF-8", "Got invalid encoding (%s) for URL %s" % (r.encoding, r.url))
-
-        mime_type = self._get_mime_type(response)
 
         if expect_redirect:
             expected_code, redirect_target = expect_redirect
@@ -1143,15 +1128,15 @@ class CMKWebSession(object):
                        "Followed redirect (%d) %s -> %s" % \
                     (response.history[0].status_code, response.history[0].url, response.url)
 
-        if mime_type == "text/html":
-            self._check_html_page(response, allow_errors)
+        if self._get_mime_type(response) == "text/html":
+            self._check_html_page(response)
 
     def _get_mime_type(self, response):
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _check_html_page(self, response, allow_errors):
+    def _check_html_page(self, response):
         self._extract_transids(response.text)
-        self._find_errors(response.text, allow_errors)
+        self._find_errors(response.text)
         self._check_html_page_resources(response)
 
     def _extract_transids(self, body):
@@ -1162,12 +1147,9 @@ class CMKWebSession(object):
         for match in matches:
             self.transids.append(match)
 
-    def _find_errors(self, body, allow_errors):
+    def _find_errors(self, body):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
-        if allow_errors and matches:
-            print "Found error message, but it's allowed: %s" % matches.groups()
-        else:
-            assert not matches, "Found error message: %s" % matches.groups()
+        assert not matches, "Found error message: %s" % matches.groups()
 
     def _check_html_page_resources(self, response):
         soup = BeautifulSoup(response.text, "lxml")

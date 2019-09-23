@@ -127,7 +127,7 @@ multisite_builtin_views.update({
         'datasource': 'hosts',
         'description': _("Host hover menu shown in topolgoy visualization"),
         'hidden': True,
-        'hidebutton': False,
+        'hidebutton': True,
         'hide_filters': [],
         'hard_filters': [],
         'hard_filtervars': [],

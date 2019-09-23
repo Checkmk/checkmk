@@ -106,6 +106,8 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
      ([u'util1', u'util15'], None, ['util_average_2']), ([u'util'], None, ['util_fallback']),
      ([u'util', u'util_average'], None, ['util_average_1']),
      ([u'user', u'util_numcpu_as_max'], None, ['cpu_utilization_numcpus']),
+     ([u'user', u'util'], None, ['util_fallback', 'METRIC_user']),  # METRIC_user has no recipe
+     ([u'user', u'util'], 'check_mk-winperf_processor.util', ['cpu_utilization_numcpus']),
      ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
      ([u'user', u'system', u'idle', u'io_wait'], None, ['cpu_utilization_4']),
      ([u'user', u'system', u'io_wait'], None, ['cpu_utilization_5']),

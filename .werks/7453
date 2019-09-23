@@ -1,0 +1,8 @@
+Title: Fix CPU utilization graph winperf_processor.util
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0
+Date: 1569234622
+Class: fix

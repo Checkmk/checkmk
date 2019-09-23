@@ -1567,6 +1567,12 @@ metric_info["util"] = {
     "color": "26/a",
 }
 
+metric_info["util_numcpu_as_max"] = {
+    "title": _("CPU utilization"),
+    "unit": "%",
+    "color": "#004080",
+}
+
 metric_info["util_average"] = {
     "title": _("CPU utilization (average)"),
     "unit": "%",
@@ -5884,6 +5890,8 @@ for check in [
         },
     }
 
+check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
+
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
         "name": "citrix_load",
@@ -7052,7 +7060,7 @@ check_metrics["check_mk-vms_sys.util"] = {
 
 check_metrics["check_mk-winperf.cpuusage"] = {
     "cpuusage": {
-        "name": "util_numcpu_as_max"
+        "name": "util"
     },
 }
 
@@ -9703,9 +9711,9 @@ graph_info["util_average_2"] = {
 graph_info["cpu_utilization_numcpus"] = {
     "title": _("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
     "metrics": [
-        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
         ("user", "area"),
-        ("util_numcpu_as_max#008000", "line", _("Total")),
+        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
+        ("util_numcpu_as_max#004080", "line", _("Total")),
     ],
     "scalars": [
         "util_numcpu_as_max:warn",

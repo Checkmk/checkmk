@@ -61,6 +61,9 @@ import cmk_base.export
 # to_config_with_folder_macro() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
+# Make the GUI config module reset the base config to always get the latest state of the config
+config.register_post_config_load_hook(cmk_base.export.reset_config)
+
 
 class RuleConditions(object):
     def __init__(self,

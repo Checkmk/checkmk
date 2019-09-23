@@ -1163,7 +1163,7 @@ class AutomationDiagHost(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                output = ""
+                state, output = 0, ""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.DSProgramDataSource) and cmd:
                         source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
@@ -1176,9 +1176,10 @@ class AutomationDiagHost(Automation):
 
                     output += source.run_raw()
                     if source.exception():
+                        state = 1
                         output += "%s" % source.exception()
 
-                return 0, output
+                return state, output
 
             elif test == 'traceroute':
                 family_flag = "-6" if host_config.is_ipv6_primary else "-4"

@@ -1068,18 +1068,12 @@ class CMKWebSession(object):
                 method,
                 path,
                 expected_code=200,
-                expect_redirect=None,
                 add_transid=False,
                 allow_redirect_to_login=False,
-                allow_retry=True,
                 **kwargs):
         url = self.site.url_for_path(path)
         if add_transid:
             url = self._add_transid(url)
-
-        # Enforce non redirect following in case of expecting one
-        if expect_redirect:
-            kwargs["allow_redirects"] = False
 
         # May raise "requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",))"
         # suddenly without known reason. This may be related to some
@@ -1090,13 +1084,12 @@ class CMKWebSession(object):
         try:
             response = self.session.request(method, url, **kwargs)
         except requests.ConnectionError as e:
-            if allow_retry and "Connection aborted" in "%s" % e:
+            if "Connection aborted" in "%s" % e:
                 response = self.session.request(method, url, **kwargs)
             else:
                 raise
 
-        self._handle_http_response(response, expected_code, expect_redirect,
-                                   allow_redirect_to_login)
+        self._handle_http_response(response, expected_code, allow_redirect_to_login)
         return response
 
     def _add_transid(self, url):
@@ -1104,16 +1097,8 @@ class CMKWebSession(object):
             raise Exception('Tried to add a transid, but none available at the moment')
         return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
-    def _handle_http_response(self, response, expected_code, expect_redirect,
-                              allow_redirect_to_login):
+    def _handle_http_response(self, response, expected_code, allow_redirect_to_login):
         assert "Content-Type" in response.headers
-
-        if expect_redirect:
-            expected_code, redirect_target = expect_redirect
-            assert response.headers["Location"] == redirect_target, \
-                "Expected %d redirect to %s but got this location: %s" % \
-                    (expected_code, redirect_target,
-                     response.headers.get('Location', "None"))
 
         assert response.status_code == expected_code, \
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \

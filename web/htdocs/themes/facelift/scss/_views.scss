@@ -1486,6 +1486,7 @@ table.agents tbody > tr.data > td {
 }
 
 td.agent_config table.rulesets td {
+  color: $agent-config-td-color;
   vertical-align: top;
 
   table {

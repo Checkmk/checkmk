@@ -506,6 +506,7 @@ $foldertree-snapin-font-color:		    $theme-color-nuance-7;
 $table-headerleft-border-bottom:	    none;
 
 $agent-config-inner-title-bg-color:	    $grey-1;
+$agent-config-td-color:			    rgb(42, 42, 42);
 
 $service-container-groupheader-bg-color:    null;
 
@@ -529,3 +530,7 @@ $timetable-hilite-even-bg-color:	    null;
 $timetable-hilite-odd-bg-color:		    null;
 
 $pnp-graph-img-border-color:		    $theme-color-table-border;
+$graph-hover-popup-font-color:		    #1a243d;
+$graph-hover-popup-bg-color:		    #f0f2f4;
+$graph-hover-popup-border:		    1px solid #cccfdb;
+$graph-hover-popup-box-shadow:		    0.5px 0.5px 2px #ccc;

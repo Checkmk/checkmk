@@ -35,6 +35,7 @@ check_info["cifsmounts"] = {
     'check_function':          check_network_fs_mounts,
     'inventory_function':      inventory_network_fs_mounts,
     'service_description':     'CIFS mount %s',
+    'has_perfdata':            True,
     'group':                   'network_fs',
     'includes':                 [ 'network_fs.include' ],
 }

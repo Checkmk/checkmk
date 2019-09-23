@@ -1,0 +1,11 @@
+Title: cifsmounts: Now displays performance data as check plugin nfsmounts does
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1569236355
+
+

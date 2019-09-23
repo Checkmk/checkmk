@@ -455,12 +455,8 @@ tr[class*="even"] {
 }
 
 table.data {
-  border-collapse: $data-table-border-collapse;
-
-  // TODO: Is this supposed to be aligned to the right?
   td.age {
     color: $age-font-color;
-    text-align: right;
     white-space: nowrap;
 
     &.staletime {
@@ -472,14 +468,6 @@ table.data {
       font-weight: bold;
       color: $primary-font-color;
     }
-  }
-
-  td.nowrap {
-    white-space: nowrap;
-  }
-
-  td.buttons.visuals {
-    width: 75px;
   }
 
   .state2 *, .state3 * {

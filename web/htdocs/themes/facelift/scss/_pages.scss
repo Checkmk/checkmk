@@ -492,6 +492,7 @@ table.data {
   padding: 0;
   margin: 0;
   color: $theme-color-text;
+  border-collapse: $data-table-border-collapse;
   border-spacing: $data-table-border-spacing;
   empty-cells: show;
 
@@ -546,6 +547,10 @@ table.data {
     &.buttons {
       width: 1%;
       white-space: nowrap;
+
+      &.visuals {
+	width: 75px;
+      }
     }
 
     /* TODO: Reproduce this html element */
@@ -578,6 +583,10 @@ table.data {
 
     &:not(.state) {
       color: $secondary-font-color;
+    }
+
+    &.nowrap {
+      white-space: nowrap;
     }
   }
 
@@ -1884,13 +1893,15 @@ table.data.job_table {
       line-height: 14px;
     }
 
-    &:hover:not([readonly]) div::before {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      opacity: $tag-hover-opacity;
-      box-shadow: none;
+    &, &.discovered {
+      &:hover:not([readonly]) div::before {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	opacity: $tag-hover-opacity;
+	box-shadow: none;
+      }
     }
   }
 
@@ -1922,9 +1933,13 @@ table.data.job_table {
       animation: none;
     }
 
-    &.explicit > div::before ,
-    &.discovered > div::before {
+    &.explicit > div::before {
       background: #774898;
+    }
+
+    &.discovered > div::before {
+      background: #f3ae4b;
+      opacity: $tag-discovered-opacity;
     }
 
     &.ruleset > div::before {

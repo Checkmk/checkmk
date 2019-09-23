@@ -59,7 +59,6 @@ function unmount()
     fi
 }
 
-unmount $CHROOT_PATH/dev/pts
 unmount $CHROOT_PATH/dev
 unmount $CHROOT_PATH/proc
 unmount $CHROOT_PATH/$CHROOT_BUILD_DIR

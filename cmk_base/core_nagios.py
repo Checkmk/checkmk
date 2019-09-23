@@ -493,16 +493,11 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             # write service dependencies for custom checks
             outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
-    # FIXME: Remove old name one day
-    service_discovery_name = 'Check_MK inventory'
-    if 'cmk-inventory' in config.use_new_descriptions_for:
-        service_discovery_name = 'Check_MK Discovery'
+    service_discovery_name = config_cache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
     params = host_config.discovery_check_parameters
-    if params and params["check_interval"] \
-        and not config.service_ignored(hostname, None, service_discovery_name) \
-        and not host_config.is_ping_host:
+    if host_config.add_service_discovery_check(params, service_discovery_name):
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,

@@ -70,7 +70,8 @@ div.floatfilter {
   }
 
   input[type=text] {
-    width: 294px;
+    width: 100%;
+    box-sizing: border-box;
 
     &.neg {
       width: 229px;
@@ -99,7 +100,10 @@ div.floatfilter {
     text-align: left;
 
     > select {
-      width: 300px;
+      width: 100%;
+      padding: 0 8px;
+      line-height: 18px;
+      box-sizing: border-box;
 
       &.neg,
       &#opthost_group,
@@ -112,7 +116,7 @@ div.floatfilter {
 
     .multigroup {
       table {
-        margin-top: -6px;
+        margin-top: -3px;
       }
 
       select {
@@ -127,6 +131,10 @@ div.floatfilter {
   }
 
   &.service_custom_variable, &.host_custom_variable {
+    .select2-container {
+      max-width: 55%;
+    }
+
     input, select {
       display: inline-block;
       width: 45%;
@@ -157,6 +165,16 @@ div.floatfilter {
 
   &.invswpac_version, &.invswpac_package_version {
     input.text {
+      margin-left: 4px;
+    }
+  }
+
+  div.service_level {
+    display: block;
+    float: left;
+    margin: 0 8px 2px 0;
+
+    .select2-container {
       margin-left: 4px;
     }
   }
@@ -192,7 +210,7 @@ div.floatfilter {
 	  }
 
 	  .checkbox {
-	    margin: 3px 8px 0 0;
+	    margin: 3px 3px 0 0;
 	  }
 	}
       }
@@ -200,6 +218,10 @@ div.floatfilter {
       .checkbox {
 	margin-bottom: 4px;
       }
+    }
+
+    &.log_class .content table td {
+      padding-bottom: 6px;
     }
 
     &.log_state .content table td {
@@ -219,27 +241,19 @@ div.floatfilter {
   .content {
     display: block;
     width: 100%;
-    padding: 3px 8px;
+    padding: 2px 8px;
     box-sizing: border-box;
 
     select {
       box-sizing: border-box;
     }
 
-    table {
-      border-spacing: 8px 4px;
-
-      /* TODO: Get rid of this important style */
-      td input.text {
-        width: 96px !important;
-      }
-    }
-
     .checkbox {
-      display: block;
-      float: left;
-      margin-right: 8px;
-      margin-bottom: 8px;
+      margin: 3px 0;
+
+      &:not(:last-of-type) {
+	margin-right: 8px;
+      }
     }
 
     input, select, textarea, #mk_side_search_field {
@@ -258,18 +272,25 @@ div.floatfilter {
       margin-left: 5px;
     }
 
-    .radiobutton_group{
+    .radiobutton_group {
+      display: inline-block;
 
-      &:first-child{
-        input[type=radio] {
-          margin-left: 0;
-        }
+      input[type=radio] {
+	margin-left: 0;
+      }
+
+      &:not(:last-of-type) label {
+	margin-right: 5px;
       }
     }
 
     .valuespec_tuple {
       width: 100%;
       border-spacing: 2px 2px;
+    }
+
+    nobr {
+      margin-left: 4px;
     }
   }
 
@@ -278,13 +299,17 @@ div.floatfilter {
   }
 
   &.svchardstate .content, &.svcstate .content {
-    .checkbox {
-      margin-right: 5px;
+    .checkbox:not(:last-of-type) {
+      margin-right: 8px;
     }
 
     input[type="checkbox"] + label::before {
       margin: 0 4px 0 0;
     }
+  }
+
+  &.invswpac .content span.radiobutton_group {
+    display: inline;
   }
 
   .select2-container .select2-selection--single {
@@ -302,17 +327,16 @@ div.floatfilter {
 
   &.single span.select2 {
     position: relative;
-    top: -2px;
   }
 
   /* TODO: Get rid of this important style */
-  &.single > div.content > span.select2 {
+  &.single > div.content > span.select2:last-child {
     width: 100% !important;
   }
 
   &.single input.neg[type=text] {
     position: relative;
-    top: -3px;
+    top: -2px;
     width: 200px;
   }
 }

@@ -512,9 +512,12 @@ class FilterMultigroup(Filter):
         return True
 
     def valuespec(self):
-        return DualListChoice(choices=sites.all_groups(self.what),
+        return DualListChoice(choices=self._get_choices(),
                               rows=3 if self.negateable else 4,
                               enlarge_active=True)
+
+    def _get_choices(self):
+        return sites.all_groups(self.what)
 
     def selection(self):
         current = html.request.var(self.htmlvar, "").strip().split("|")
@@ -525,7 +528,7 @@ class FilterMultigroup(Filter):
     def display(self):
         html.open_div(class_="multigroup")
         self.valuespec().render_input(self.htmlvar, self.selection())
-        if self.negateable:
+        if self._get_choices() and self.negateable:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
@@ -2798,10 +2801,14 @@ class FilterECServiceLevelRange(Filter):
 
     def display(self):
         selection = [("", "")] + self._prepare_choices()
+        html.open_div(class_="service_level min")
         html.write_text("From")
         html.dropdown(self.lower_bound_varname, selection)
+        html.close_div()
+        html.open_div(class_="service_level max")
         html.write_text("To")
         html.select(self.upper_bound_varname, selection)
+        html.close_div()
 
     def filter(self, infoname):
         lower_bound = html.request.var(self.lower_bound_varname)

@@ -70,12 +70,21 @@ from cmk_base.discovered_labels import (
 
 
 class DiscoveryAutomation(Automation):
-    # if required, schedule an inventory check
-    def _trigger_discovery_check(self, host_config):
-        # TODO: Check the last condition ("or host_config.nodes"). Is this really correct?
-        if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-                (not host_config.is_cluster or host_config.nodes):
-            discovery.schedule_discovery_check(host_config.hostname)
+    def _trigger_discovery_check(self, config_cache, host_config):
+        # type: (config.ConfigCache, config.HostConfig) -> None
+        """if required, schedule the "Check_MK Discovery" check"""
+        if not config.inventory_check_autotrigger:
+            return
+
+        service_discovery_name = config_cache.service_discovery_name()
+        disc_check_params = host_config.discovery_check_parameters
+        if not host_config.add_service_discovery_check(disc_check_params, service_discovery_name):
+            return
+
+        if host_config.is_cluster:
+            return
+
+        discovery.schedule_discovery_check(host_config.hostname)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -141,7 +150,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if error is not None:
                 failed_hosts[hostname] = error
             else:
-                self._trigger_discovery_check(host_config)
+                self._trigger_discovery_check(config_cache, host_config)
 
         return counts, failed_hosts
 
@@ -242,7 +251,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                                             service_labels))
 
         autochecks.set_autochecks_of(host_config, new_services)
-        self._trigger_discovery_check(host_config)
+        self._trigger_discovery_check(config_cache, host_config)
         return None
 
 
@@ -262,7 +271,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        self._trigger_discovery_check(host_config)
+        self._trigger_discovery_check(config_cache, host_config)
         return None
 
 

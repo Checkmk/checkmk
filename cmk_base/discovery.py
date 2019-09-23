@@ -1338,7 +1338,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         else:
             checkgroup = config.check_info[discovered_service.check_plugin_name]["group"]
 
-        if isinstance(params, cmk_base.config.TimespecificParamList):
+        if isinstance(params, config.TimespecificParamList):
             params = {
                 "tp_computed_params": {
                     "params": checking.determine_check_params(params),

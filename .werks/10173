@@ -1,0 +1,11 @@
+Title: Host diagnose: Agent status was shown green even in case of errors
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1569228760
+
+

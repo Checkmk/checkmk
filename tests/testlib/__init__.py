@@ -1105,24 +1105,18 @@ class CMKWebSession(object):
                   (response.status_code, expected_code,
                    response.url, response.headers.get('Location', "None"))
 
-        if response.history:
-            #print "Followed redirect (%d) %s -> %s" % \
-            #    (response.history[0].status_code, response.history[0].url, response.url)
-            if not allow_redirect_to_login:
-                assert "check_mk/login.py" not in response.url, \
-                       "Followed redirect (%d) %s -> %s" % \
-                    (response.history[0].status_code, response.history[0].url, response.url)
+        if not allow_redirect_to_login and response.history:
+            assert "check_mk/login.py" not in response.url, \
+                    "Followed redirect (%d) %s -> %s" % \
+                (response.history[0].status_code, response.history[0].url, response.url)
 
         if self._get_mime_type(response) == "text/html":
-            self._check_html_page(response)
+            self._extract_transids(response.text)
+            self._find_errors(response.text)
+            self._check_html_page_resources(response)
 
     def _get_mime_type(self, response):
         return response.headers["Content-Type"].split(";", 1)[0]
-
-    def _check_html_page(self, response):
-        self._extract_transids(response.text)
-        self._find_errors(response.text)
-        self._check_html_page_resources(response)
 
     def _extract_transids(self, body):
         # Extract transids from the pages to be used in later actions
@@ -1139,29 +1133,26 @@ class CMKWebSession(object):
     def _check_html_page_resources(self, response):
         soup = BeautifulSoup(response.text, "lxml")
 
-        # There might be other resources like iframe, audio, ... but we don't care about them
+        base_url = urlparse(response.url).path
+        if ".py" in base_url:
+            base_url = os.path.dirname(base_url)
 
-        self._check_resources(soup, response, "img", "src", ["image/png"])
-        self._check_resources(soup, response, "script", "src",
+        # There might be other resources like iframe, audio, ... but we don't care about them
+        self._check_resources(soup, base_url, "img", "src", ["image/png"])
+        self._check_resources(soup, base_url, "script", "src",
                               ["application/javascript", "text/javascript"])
         self._check_resources(soup,
-                              response,
+                              base_url,
                               "link",
                               "href", ["text/css"],
                               filters=[("rel", "stylesheet")])
         self._check_resources(soup,
-                              response,
+                              base_url,
                               "link",
                               "href", ["image/vnd.microsoft.icon"],
                               filters=[("rel", "shortcut icon")])
 
-    def _check_resources(self, soup, response, tag, attr, allowed_mime_types, filters=None):
-        parsed_url = urlparse(response.url)
-
-        base_url = parsed_url.path
-        if ".py" in base_url:
-            base_url = os.path.dirname(base_url)
-
+    def _check_resources(self, soup, base_url, tag, attr, allowed_mime_types, filters=None):
         for url in self._find_resource_urls(tag, attr, soup, filters):
             # Only check resources once per session
             if url in self.verified_resources:

@@ -1,0 +1,10 @@
+Title: ps: Create Host Labels on process discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569245439
+Class: feature
+
+In the Process Discovery you can now set host labels that automatically get created on a successful service discovery.

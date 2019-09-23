@@ -3,6 +3,7 @@ from collections import namedtuple
 from six.moves import zip_longest
 import pytest
 from cmk_base.check_api import MKGeneralException
+from cmk_base.discovered_labels import DiscoveredHostLabels, HostLabel
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
@@ -224,6 +225,17 @@ PS_DISCOVERY_WATO_RULES = [
     }),
     ({
         "default_params": {
+            "process_info": "text"
+        },
+        "match": "~.*(fire)fox",
+        "descr": "firefox is on %s",
+        "user": None,
+        "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo'), HostLabel(u'peter', u'pan')),
+    }, [], ["@all"], {
+        "description": u"Firefox with host labels"
+    }),
+    ({
+        "default_params": {
             "cpu_rescale_max": True,
             "cpu_average": 15,
             "process_info": "html",
@@ -294,10 +306,10 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, (None, False), {
+    ("smss", "~smss.exe", None, (None, False), DiscoveredHostLabels(), {
         'cpu_rescale_max': None
     }),
-    ("svchost", "svchost.exe", None, (None, False), {
+    ("svchost", "svchost.exe", None, (None, False), {}, {
         "cpulevels": (90.0, 98.0),
         'cpu_rescale_max': None,
         "handle_count": (1000, 2000),
@@ -308,11 +320,15 @@ PS_DISCOVERY_SPECS = [
         "single_cpulevels": (90.0, 98.0),
         "virtual_levels": (1073741824000, 2147483648000),
     }),
-    ("firefox is on %s", "~.*(fire)fox", None, (None, False), {
+    ("firefox is on %s", "~.*(fire)fox", None, (None, False), {}, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("emacs %u", "emacs", False, (None, False), {
+    ("firefox is on %s", "~.*(fire)fox", None, (None, False), DiscoveredHostLabels(HostLabel(u'marco', u'polo'), HostLabel(u'peter', u'pan')), {
+        "process_info": "text",
+        'cpu_rescale_max': None,
+    }),
+    ("emacs %u", "emacs", False, (None, False), {}, {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "process_info": "html",
@@ -321,24 +337,24 @@ PS_DISCOVERY_SPECS = [
         "resident_levels": (1024**3, 2 * 1024**3),
         "icon": "emacs.png",
     }),
-    ("cron", "~.*cron", "root", (None, False), {
+    ("cron", "~.*cron", "root", (None, False), {}, {
         "max_age": (3600, 7200),
         'cpu_rescale_max': None,
         "resident_levels_perc": (25.0, 50.0),
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, (None, False), {
+    ("sshd", "~.*sshd", None, (None, False), {}, {
         'cpu_rescale_max': None
     }),
-    ('PS counter', None, 'zombie', (None, False), {
+    ('PS counter', None, 'zombie', (None, False), {}, {
         'cpu_rescale_max': None
     }),
-    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, (None, False), {
+    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, (None, False), {}, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, (None, False), {
+    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, (None, False), {}, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
@@ -546,6 +562,18 @@ PS_DISCOVERED_ITEMS = [
     }),
 ]
 
+PS_DISCOVERED_HOST_LABELS = [
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+    DiscoveredHostLabels(),
+]
+
 
 def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
@@ -553,7 +581,7 @@ def test_inventory_common(check_manager):
     info = sum(generate_inputs(), [])
     parsed = check.context['parse_ps'](info)[1]
     assert sorted(check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
-                                                parsed)) == sorted(PS_DISCOVERED_ITEMS)
+                                                parsed)) == sorted(PS_DISCOVERED_ITEMS + PS_DISCOVERED_HOST_LABELS)
 
 
 @pytest.mark.parametrize("service_description, matches, result", [
@@ -816,6 +844,9 @@ def test_subset_patterns(check_manager):
             'user': None,
             'cgroup': (None, False),
         }),
+        DiscoveredHostLabels(),
+        DiscoveredHostLabels(),
+        DiscoveredHostLabels(),
     ]
 
     assert check.context["inventory_ps_common"](wato_rule, parsed) == discovered

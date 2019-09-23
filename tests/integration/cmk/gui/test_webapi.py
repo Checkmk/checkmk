@@ -1098,6 +1098,69 @@ def test_get_graph_recipes(web, graph_test_config):
         ]
 
 
+def test_get_combined_graph_identifications(web, graph_test_config):
+    result = web.get_combined_graph_identifications(
+        request={
+            "single_infos": ["host"],
+            "datasource": "services",
+            "context": {
+                "service": {
+                    "service": "CPU load"
+                },
+                "site": {
+                    "site": web.site.id
+                },
+                "host_name": "test-host-get-graph",
+            },
+        })
+
+    assert result == [
+        {
+            u'identification': [
+                u'combined', {
+                    u'context': {
+                        u'host_name': u'test-host-get-graph',
+                        u'service': {
+                            u'service': u'CPU load'
+                        },
+                        u'site': {
+                            u'site': u'int_160'
+                        }
+                    },
+                    u'datasource': u'services',
+                    u'graph_template': u'cpu_load',
+                    u'presentation': u'sum',
+                    u'single_infos': [u'host']
+                }
+            ],
+            u'title': u'CPU Load - %(load1:max@count) CPU Cores'
+        },
+    ]
+
+
+def test_get_graph_annotations(web, graph_test_config):
+    now = time.time()
+    start_time, end_time = now - 3601, now
+
+    result = web.get_graph_annotations(
+        request={
+            "context": {
+                "site": {
+                    "site": web.site.id,
+                },
+                "service": {
+                    "service": "CPU load",
+                },
+                "host_name": "test-host-get-graph",
+            },
+            "start_time": start_time,
+            "end_time": end_time,
+        })
+
+    assert len(result["availability_timelines"]) == 1
+    assert result["availability_timelines"][0]["display_name"] == "CPU load"
+
+
 def test_get_hosttags(web):
     host_tags = web.get_hosttags()
     assert isinstance(host_tags["configuration_hash"], str)

@@ -1710,6 +1710,28 @@ class CMKWebSession(object):
         assert isinstance(result, list)
         return result
 
+    def get_combined_graph_identifications(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_combined_graph_identifications",
+            {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error,
+        )
+        assert isinstance(result, list)
+        return result
+
+    def get_graph_annotations(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_graph_annotations",
+            {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error,
+        )
+        assert isinstance(result, dict)
+        return result
+
     def activate_changes(self, mode=None, allow_foreign_changes=None):
         request = {}
 

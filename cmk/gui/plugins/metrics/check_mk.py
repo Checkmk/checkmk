@@ -6058,6 +6058,90 @@ metric_info["msgs_avg"] = {
     "color": "23/a",
 }
 
+metric_info["index_count"] = {
+    "title": _("Indices"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["store_size"] = {
+    "title": _("Store size"),
+    "unit": "bytes",
+    "color": "32/a",
+}
+
+metric_info["id_cache_size"] = {
+    "title": _("ID cache size"),
+    "unit": "bytes",
+    "color": "25/a",
+}
+
+metric_info["field_data_size"] = {
+    "title": _("Field data size"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
+metric_info["avg_doc_size"] = {
+    "title": _("Average document size"),
+    "unit": "bytes",
+    "color": "25/b",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["num_collections"] = {
+    "title": _("Collections"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_objects"] = {
+    "title": _("Objects"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_input"] = {
+    "title": _("Inputs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_output"] = {
+    "title": _("Outputs"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_stream_rule"] = {
+    "title": _("Stream rules"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_extractor"] = {
+    "title": _("Extractors"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["num_user"] = {
+    "title": _("User"),
+    "unit": "count",
+    "color": "23/a",
+}
+
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
         ("total", "Total", "11/a"),

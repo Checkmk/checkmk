@@ -210,7 +210,7 @@ def process_level_elements():
                  ("text", _("Text output")),
                  ("html", _("HTML output")),
              ],
-             default_value="Disable",
+             default_value=None,
          )),
         ('process_info_arguments',
          Integer(

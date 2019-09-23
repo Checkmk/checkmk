@@ -1,0 +1,10 @@
+Title: WATO performance improvements: do not initialize all hosts on fetching information for a single host
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569240687
+Class: fix
+
+

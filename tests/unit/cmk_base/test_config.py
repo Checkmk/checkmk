@@ -1570,7 +1570,6 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     cache = ts.apply(monkeypatch)
 
     assert cache.__class__.__name__ == expected_cache_class_name
-    assert cache._host_configs.keys() == ["xyz"]
 
     host_config = cache.get_host_config("xyz")
     assert host_config.__class__.__name__ == expected_host_class_name

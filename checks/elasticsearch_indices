@@ -73,7 +73,7 @@ def check_elasticsearch_indices(item, params, item_data):
                            infoname="Total %s" % infotext)
 
         this_time = time.time()
-        rate = get_rate("elasticsearch_indices.%s.%s" % (name, item), this_time, value) * 60
+        rate = get_rate("elasticsearch_indices.%s.%s" % (name, item), this_time, value)
 
         avg_rate = get_average("elasticsearch_indices.%s.%s.avg" % (name, item), this_time, rate,
                                avg)

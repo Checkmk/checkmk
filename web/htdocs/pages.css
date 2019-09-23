@@ -1386,6 +1386,10 @@ td.rule_conditions table td {
     background-color: #fff;
 }
 
+td.agent_config table.rulesets td {
+    color: #000;
+}
+
 td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,

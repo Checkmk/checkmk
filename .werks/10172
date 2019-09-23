@@ -1,0 +1,14 @@
+Title: Discovery service is now correctly operating on the WATO config instead of core config
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0
+Date: 1569225415
+
+The Check_MK Discovery service needs to work with the WATO configuration world
+instead of the "activated config" world. For example, if you edit the services
+on the WATO service discovery page, you want the discovery service to be
+updated right after editing the services in WATO.

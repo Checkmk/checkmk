@@ -651,8 +651,8 @@ def _filter_active_hosts(config_cache, hostlist, keep_offline_hosts=False):
 def _host_is_member_of_site(config_cache, hostname, site):
     # type: (ConfigCache, str, str) -> bool
     # hosts without a site: tag belong to all sites
-    return config_cache.get_host_config(hostname).tag_groups.get(
-        "site", distributed_wato_site) == distributed_wato_site
+    return config_cache.tags_of_host(hostname).get("site",
+                                                   distributed_wato_site) == distributed_wato_site
 
 
 def duplicate_hosts():
@@ -2790,6 +2790,7 @@ class ConfigCache(object):
             all_configured_hosts=self._all_configured_hosts,
         )
 
+        # Warning: do not change call order. all_active_hosts relies on the other values
         self._all_active_clusters = self._get_all_active_clusters()
         self._all_active_realhosts = self._get_all_active_realhosts()
         self._all_active_hosts = self._get_all_active_hosts()

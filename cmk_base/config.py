@@ -2484,6 +2484,22 @@ class HostConfig(object):
             "inventory_check_do_scan": inventory_check_do_scan,
         }
 
+    def add_service_discovery_check(self, params, service_discovery_name):
+        # type: (Optional[Dict[Text, Any]], Text) -> bool
+        if not params:
+            return False
+
+        if not params["check_interval"]:
+            return False
+
+        if service_ignored(self.hostname, None, service_discovery_name):
+            return False
+
+        if self.is_ping_host:
+            return False
+
+        return True
+
     def inventory_parameters(self, section_name):
         # type: (str) -> Dict
         return self._config_cache.host_extra_conf_merged(self.hostname,
@@ -3342,6 +3358,13 @@ class ConfigCache(object):
         for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
             time_settings.update(self.get_host_config(source_hostname).piggybacked_host_files)
         return time_settings
+
+    # TODO: Remove old name one day
+    def service_discovery_name(self):
+        # type: () -> Text
+        if 'cmk-inventory' in use_new_descriptions_for:
+            return 'Check_MK Discovery'
+        return 'Check_MK inventory'
 
 
 def get_config_cache():

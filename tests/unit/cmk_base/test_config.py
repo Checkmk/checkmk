@@ -1578,6 +1578,19 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
+@pytest.mark.parametrize("use_new_descr,result", [
+    (True, "Check_MK Discovery"),
+    (False, "Check_MK inventory"),
+])
+def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result):
+    ts = Scenario()
+    if use_new_descr:
+        ts.set_option("use_new_descriptions_for", ["cmk-inventory"])
+    config_cache = ts.apply(monkeypatch)
+
+    assert config_cache.service_discovery_name() == result
+
+
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
     ts.add_host("xyz")
@@ -1648,3 +1661,51 @@ def test_host_config_service_level(monkeypatch, hostname, result):
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).service_level == result
+
+
+@pytest.mark.parametrize("params,ignored,ping,result", [
+    (None, False, False, False),
+    ({
+        "check_interval": 0
+    }, False, False, False),
+    ({
+        "check_interval": 3600
+    }, False, False, True),
+    ({
+        "check_interval": 3600
+    }, True, False, False),
+    ({
+        "check_interval": 3600
+    }, False, True, False),
+])
+def test_host_config_add_discovery_check(monkeypatch, params, ignored, ping, result):
+    if ping:
+        tags = {
+            "agent": "no-agent",
+            "snmp_ds": "no-snmp",
+            "piggyback": "no-piggyback",
+        }
+    else:
+        tags = {}
+
+    ts = Scenario().add_host("xyz", tags=tags)
+
+    if ignored:
+        ts.set_ruleset(
+            "ignored_services",
+            [
+                {
+                    'condition': {
+                        'service_description': [{
+                            '$regex': u'Check_MK Discovery'
+                        }],
+                        'host_name': ['xyz'],
+                    },
+                    'value': True
+                },
+            ],
+        )
+    config_cache = ts.apply(monkeypatch)
+
+    host_config = config_cache.get_host_config("xyz")
+    assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result

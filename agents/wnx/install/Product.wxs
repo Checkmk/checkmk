@@ -97,6 +97,7 @@ just to signal that real build script was not called -->
       <ComponentRef Id="install"/>
     </Feature>
     <Feature Id="clean_feature" Title="Program Data Folder Clean" Level="1">
+      <!--      
       <ComponentRef Id="remove_install_protocol"/>
 
       <ComponentRef Id="clean_update"/>
@@ -106,6 +107,7 @@ just to signal that real build script was not called -->
       <ComponentRef Id="clean_backup"/>
       <ComponentRef Id="clean_spool"/>
       <ComponentRef Id="clean_tmp"/>
+      -->
     </Feature>
     
 
@@ -113,9 +115,12 @@ just to signal that real build script was not called -->
       <Directory Id="ProgramFilesFolder">
         <Directory Id="INSTALLFOLDER_ROOT" Name="$(var.CompanyFolderName)">
           <Directory Id="INSTALLFOLDER_SERVICE" Name="$(var.ServiceFolderName)">
+            <!--      
+
             <Component Id="remove_install_protocol" Guid="{C0E6D8DD-1895-4947-80BE-A7B4F0129C60}">
               <RemoveFile Id="RemoveInstallProtocol" On ="uninstall" Name="install.protocol"/>
             </Component>
+            -->
             <Directory Id="providers" Name="providers">
               <Component Id="providers" Guid="{E639320D-8326-49BC-84E4-4D9218333E3F}"
                 SharedDllRefCount="no" KeyPath="no" NeverOverwrite="no" Permanent="no" Transitive="no"
@@ -150,6 +155,7 @@ just to signal that real build script was not called -->
       <Directory Id="CommonAppDataFolder">
         <Directory Id="CmkFolder" Name="checkmk">
           <Directory Id="UserFolder" Name="agent">
+            <!--      
             
             <Directory Id="BakeryFolder" Name="bakery">
               <Component Id="clean_bakery" Guid="{3593E36E-BC8C-4951-8ED8-8522D6205D3A}">
@@ -199,7 +205,6 @@ just to signal that real build script was not called -->
                 <RemoveFolder Id ="RemoveTmpFolder" On ="uninstall" />
               </Component>
             </Directory>
-            <!--      
             -->
           
           </Directory>

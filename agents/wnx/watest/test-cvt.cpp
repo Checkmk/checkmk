@@ -524,9 +524,9 @@ TEST(CvtTest, GlobalSection) {
             auto onlyfrom = GetInternalArray(g, vars::kOnlyFrom);
 
             ASSERT_TRUE(onlyfrom.size() == 3);
-            EXPECT_EQ(onlyfrom[0], "127.0.0.1/32");
+            EXPECT_EQ(onlyfrom[0], "127.0.0.1");
             EXPECT_EQ(onlyfrom[1], "192.168.56.0/24");
-            EXPECT_EQ(onlyfrom[2], "0:0:0:0:0:0:0:1/128");
+            EXPECT_EQ(onlyfrom[2], "::1");
         }
         {
             auto execute =
@@ -611,9 +611,9 @@ TEST(CvtTest, GlobalSectionOld) {
             auto onlyfrom = GetInternalArray(g, vars::kOnlyFrom);
 
             ASSERT_TRUE(onlyfrom.size() == 3);
-            EXPECT_EQ(onlyfrom[0], "127.0.0.1/32");
+            EXPECT_EQ(onlyfrom[0], "127.0.0.1");
             EXPECT_EQ(onlyfrom[1], "192.168.56.0/24");
-            EXPECT_EQ(onlyfrom[2], "0:0:0:0:0:0:0:1/128");
+            EXPECT_EQ(onlyfrom[2], "::1");
         }
         {
             auto execute =

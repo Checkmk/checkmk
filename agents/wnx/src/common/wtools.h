@@ -789,9 +789,9 @@ inline int64_t WmiGetInt64_KillNegatives(const VARIANT& Var) noexcept {
         case VT_I1:
             return Var.iVal;
         case VT_I2:
-            return Var.intVal;
+            return Var.intVal & 0xFFFF;
         case VT_I4:
-            return Var.llVal;
+            return Var.llVal & 0xFFFF'FFFF; // we have seen 0x00DD'0000'0000
 
             // 8 bits values
         case VT_UI1:

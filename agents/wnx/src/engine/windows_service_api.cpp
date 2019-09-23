@@ -937,6 +937,11 @@ void DeleteServiceFailureActions(SERVICE_FAILURE_ACTIONS* actions) {
     if (actions) ::LocalFree(actions);
 }
 
+// Service Global Control
+bool global_stop_signaled = false;
+
+bool IsGlobalStopSignaled() { return global_stop_signaled; }
+
 // returns true ALSO on error(to avoid useless attempts to configure
 // non-configurable)
 bool IsServiceConfigured(SC_HANDLE handle) {

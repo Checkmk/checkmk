@@ -109,7 +109,6 @@ public:
         const std::string SectionName =
             std::string(cma::section::kUseEmbeddedName)) {
         engine_.loadConfig();
-        engine_.updateSectionStatus();
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             Async ? std::launch::async : std::launch::deferred,
@@ -117,6 +116,7 @@ public:
                    const AnswerId Tp,              //
                    const ServiceProcessor* Proc,   //
                    const std::string SectionName) {
+                engine_.updateSectionStatus();  // actual data gathering is here
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
                 auto id = Tp.time_since_epoch().count();

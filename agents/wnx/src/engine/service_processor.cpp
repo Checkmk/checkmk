@@ -18,7 +18,8 @@
 #include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
-
+extern bool global_stop_signaled;  // semi-hidden global variable for global
+                                   // status #TODO ???
 // Implementation of the Windows signals
 
 // starter
@@ -44,7 +45,8 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 }
 
 void ServiceProcessor::stopService() {
-    XLOG::t(XLOG_FUNC + " called");
+    XLOG::l.i("Stop Service called");
+    cma::srv::global_stop_signaled = true;
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up
@@ -384,10 +386,10 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
 
     if (max_wait_time_ <= 0) {
         max_wait_time_ = cma::cfg::kDefaultAgentMinWait;
-        XLOG::l.i("Max Wiat Time for Answer set to valid value [{}]",
+        XLOG::l.i("Max Wait Time for Answer set to valid value [{}]",
                   max_wait_time_);
     } else
-        XLOG::l.i("Max Wiat Time for Answer is [{}]", max_wait_time_);
+        XLOG::l.i("Max Wait Time for Answer is [{}]", max_wait_time_);
 
     return static_cast<int>(vf_.size());
 }

@@ -335,8 +335,11 @@ int CheckMainService(const std::wstring &What, int Interval) {
 int MainFunction(int argc, wchar_t const *Argv[]) {
     std::set_terminate([]() {
         //
+        XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
         XLOG::l.bp("Win Agent is Terminated.");
+        abort();
     });
+
     if (argc == 1) {
         // entry from the service engine
 

@@ -1,0 +1,16 @@
+Title: Windows Agent doesn't send anymore very high WMI values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569248267
+Class: fix
+
+Previously, on some versions of Windows, the WMI API call may not clean
+data structures correctly. As result the Agent may send extremally high 
+values for CPU load, RPC latency and so on.
+
+Now Windows Agent cleans WMI data structures automatically and also cuts all 
+received data according to  the length defined by Windows API thus preventing 
+such type of error.

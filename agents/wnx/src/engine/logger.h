@@ -495,6 +495,8 @@ public:
     auto exec(int Modifications, const std::string& Format, T... args) {
         try {
             auto s = fmt::format(Format, args...);
+            // check construction
+            if (this == nullptr || !this->constructed_) return s;
             auto e = *this;
             e.mods_ |= Modifications;
             e.postProcessAndPrint(s);
@@ -502,6 +504,7 @@ public:
         } catch (...) {
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
+            if (this == nullptr || !this->constructed_) return s;
             auto e = *this;
             e.mods_ |= XLOG::kCritError;
             e.postProcessAndPrint(s);

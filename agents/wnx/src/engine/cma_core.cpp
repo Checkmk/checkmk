@@ -17,6 +17,7 @@
 #include "common/wtools.h"
 #include "glob_match.h"
 #include "section_header.h"  // we have logging here
+#include "windows_service_api.h"
 
 namespace cma {
 // we are counting threads in to have control exit/stop/wait
@@ -678,7 +679,8 @@ bool TheMiniBox::waitForEnd(std::chrono::milliseconds timeout) {
 
     for (;;) {
         auto grane = kGraneLong;
-        auto ready = checkProcessExit(pi.waiting_processes);
+        auto ready = checkProcessExit(pi.waiting_processes) ||  // process exit?
+                     cma::srv::IsGlobalStopSignaled();  // agent is exiting?
         auto buf = readFromHandle<std::vector<char>>(read_handle);
         if (!buf.empty()) {
             pi.added += buf.size();

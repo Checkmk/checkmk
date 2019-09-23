@@ -43,10 +43,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
+    ListOf,
     ListChoice,
     MonitoringState,
-    ListOf,
     CascadingDropdown,
+    Labels,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,
@@ -560,6 +561,14 @@ def _valuespec_inventory_processes_rules():
                              'otherwise.'))
                  ])),
                 ("cgroup", cgroup_match_options()),
+                ("label",
+                 Labels(
+                     Labels.World.CONFIG,
+                     title=_("Host Label"),
+                     help=
+                     _("Here you can set host labels that automatically get created when discovering the services."
+                      ),
+                 )),
                 ('default_params',
                  Dictionary(
                      title=_("Default parameters for detected services"),

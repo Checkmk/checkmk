@@ -856,41 +856,35 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
         self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
 
 
-class IPNetwork(TextAscii):
+# TODO: Do not use kwargs here. Find out the arguments that are used
+def IPNetwork(ip_class=None, **kwargs):
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
-    def __init__(self, **kwargs):
-        kwargs.setdefault("size", 34)
-        super(IPNetwork, self).__init__(**kwargs)
-
-    def _ip_class(self):
-        return ipaddress.ip_interface
+    if ip_class is None:
+        ip_class = ipaddress.ip_interface
 
     def _validate_value(self, value, varprefix):
         super(IPNetwork, self)._validate_value(value, varprefix)
 
         try:
-            self._ip_class()(value.decode("utf-8"))
+            ip_class()(value.decode("utf-8"))
         except ValueError as e:
             raise MKUserError(varprefix, _("Invalid address: %s") % e)
 
+    kwargs.setdefault("size", 34)
+    return TextAscii(validate=_validate_value, **kwargs)
 
-class IPv4Network(IPNetwork):
+
+# TODO: Do not use kwargs here. Find out the arguments that are used
+def IPv4Network(**kwargs):
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
-    def __init__(self, **kwargs):
-        kwargs.setdefault("size", 18)
-        super(IPv4Network, self).__init__(**kwargs)
-
-    def _ip_class(self):
-        return ipaddress.IPv4Interface
+    kwargs.setdefault("size", 18)
+    return IPNetwork(ip_class=ipaddress.IPv4Interface, **kwargs)
 
 
-class IPv4Address(IPNetwork):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("size", 16)
-        super(IPv4Address, self).__init__(**kwargs)
-
-    def _ip_class(self):
-        return ipaddress.IPv4Address
+# TODO: Do not use kwargs here. Find out the arguments that are used
+def IPv4Address(**kwargs):
+    kwargs.setdefault("size", 16)
+    return IPNetwork(ip_class=ipaddress.IPv4Address, **kwargs)
 
 
 class TextAsciiAutocomplete(TextAscii):

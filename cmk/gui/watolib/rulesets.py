@@ -496,7 +496,8 @@ class Ruleset(object):
 
         self.tuple_transformer.transform_in_place(rules_config,
                                                   is_service=self.rulespec.is_for_services,
-                                                  is_binary=self.rulespec.is_binary_ruleset)
+                                                  is_binary=self.rulespec.is_binary_ruleset,
+                                                  use_ruleset_id_cache=False)
 
         for rule_config in rules_config:
             rule = Rule(folder, self)

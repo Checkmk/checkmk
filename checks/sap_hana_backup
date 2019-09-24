@@ -29,6 +29,14 @@ factory_settings['sap_hana_backup'] = {
 }
 
 
+def _get_sap_hana_backup_timestamp(backup_time_readable):
+    try:
+        t_struct = time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return None
+    return time.mktime(t_struct)
+
+
 def parse_sap_hana_backup(info):
     parsed = {}
     for (sid_instance, node), lines in parse_sap_hana_cluster_aware(info).iteritems():
@@ -37,10 +45,10 @@ def parse_sap_hana_backup(info):
                 continue
 
             backup_time_readable = line[1].rsplit(".", 1)[0]
+            backup_time_stamp = _get_sap_hana_backup_timestamp(backup_time_readable)
             parsed.setdefault("%s - %s" % (sid_instance, line[0]), {}).setdefault(
                 node, {
-                    "sys_end_time": time.mktime(
-                        time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")),
+                    "sys_end_time": backup_time_stamp,
                     "backup_time_readable": backup_time_readable,
                     "state_name": line[2],
                     "comment": line[3],
@@ -74,12 +82,14 @@ def check_sap_hana_backup(item, params, node_data):
             state = 3
         yield state, "Status: %s" % state_name
 
-        yield 0, "Last: %s" % data['backup_time_readable']
-        yield check_levels(now - data['sys_end_time'],
-                           "backup_age",
-                           params['backup_age'],
-                           human_readable_func=get_age_human_readable,
-                           infoname="Age")
+        sys_end_time = data.get('sys_end_time')
+        if sys_end_time is not None:
+            yield 0, "Last: %s" % data['backup_time_readable']
+            yield check_levels(now - sys_end_time,
+                               "backup_age",
+                               params['backup_age'],
+                               human_readable_func=get_age_human_readable,
+                               infoname="Age")
 
         comment = data["comment"]
         if comment:

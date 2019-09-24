@@ -196,7 +196,6 @@ def _valuespec_inventory_if_rules():
                          "When doing discovery on switches or other devices with network interfaces "
                          "then only ports of the specified types will be created services for."),
                      choices=defines.interface_port_types(),
-                     custom_order=True,
                      rows=40,
                      toggle_all=True,
                      default_value=[

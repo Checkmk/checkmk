@@ -2297,12 +2297,12 @@ class ListChoice(ValueSpec):
 
 
 # Implements a choice of items which is realized with
-# two ListChoices select fields. One contains all available
-# items and one contains all selected items.
-# Optionally you can have the user influance the order of
+# two ListChoices select fields. One contains every unselected
+# item and the other one contains the selected items.
+# Optionally you can have the user influence the order of
 # the entries by simply clicking them in a certain order.
 # If that feature is not being used, then the original order
-# of the elements is always being kept.
+# of the elements is kept.
 # TODO: Beware: the keys in this choice are not type safe.
 # They can only be strings. They must not contain | or other
 # dangerous characters. We should fix this and make it this

@@ -1,0 +1,11 @@
+Title: Tactical overview: Show stale events as 0 instead of empty columns
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1569338621
+
+The empty column which was shown before in the event row looked like a bug.

@@ -338,7 +338,7 @@ table.tacticaloverview {
       box-shadow: none;
 
       a.link {
-	color: $tactical-overview-prob-link-color;
+        color: $tactical-overview-prob-link-color;
       }
     }
 
@@ -351,7 +351,7 @@ table.tacticaloverview {
     }
   }
 
-  a {
+  a, span {
     display: block;
     margin-right: 2px;
   }
@@ -360,6 +360,7 @@ table.tacticaloverview {
 table.tacticaloverview td a,
 table.tacticaloverview td a.link,
 table.tacticaloverview td a:hover,
+table.tacticaloverview td span,
 /* TODO: Reproduce these two html elements */
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {

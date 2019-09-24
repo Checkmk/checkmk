@@ -556,3 +556,28 @@ export function tag_update_value(object_type, prefix, grp) {
         value_select.appendChild(opt);
     }
 }
+
+export function hide_on_click_click_outside_of(origin_element) {
+    const outside_click_listener = evt => {
+        let target_element = evt.target;
+
+        do {
+            if (target_element == origin_element) {
+                return; // This click inside
+            }
+            target_element = target_element.parentNode;
+        } while (target_element);
+
+        // Click outside!
+        if (origin_element.parentNode) {
+            origin_element.parentNode.removeChild(origin_element);
+        }
+        remove_click_listener();
+    };
+
+    const remove_click_listener = () => {
+        document.removeEventListener("click", outside_click_listener);
+    };
+
+    document.addEventListener("click", outside_click_listener);
+}

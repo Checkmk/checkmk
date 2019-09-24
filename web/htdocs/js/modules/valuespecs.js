@@ -159,6 +159,12 @@ function list_of_strings_add_new_field(input) {
     new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + ">", "=" + new_name + ">");
     container.appendChild(new_div);
 
+    // In case there was some TextAsciiAutocomplete popup menu cloned, remove it!
+    var popup_menus = new_div.getElementsByClassName("vs_autocomplete");
+    for (var i = 0; i < popup_menus.length; i++) {
+        popup_menus[i].parentNode.removeChild(popup_menus[i]);
+    }
+
     return new_div.getElementsByTagName("input")[0];
 }
 

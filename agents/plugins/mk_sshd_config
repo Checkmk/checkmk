@@ -25,7 +25,11 @@
 
 SSHD_CONFIG=/etc/ssh/sshd_config
 
+drop_comments_whitespace(){
+    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' $1
+}
+
 if [ -f $SSHD_CONFIG ] ; then
     echo "<<<sshd_config>>>"
-    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' $SSHD_CONFIG
+    drop_comments_whitespace $SSHD_CONFIG
 fi

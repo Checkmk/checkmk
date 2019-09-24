@@ -1,7 +1,7 @@
 throttle(['Gerrit']){
 node {
     def WORKSPACE = pwd()
-    
+
     try {
         stage("Auschecken: Checkmk") {
             checkout([$class: 'GitSCM',
@@ -30,7 +30,7 @@ node {
                 ]
             ])
         }
-        
+
         // Creates a \n separated list of changed files
         def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
         def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
@@ -61,8 +61,8 @@ node {
                 println "No python files changed. Skipping."
             }
         }
-        
-        
+
+
         stage("Python format") {
             if (CHANGED_PYTHON_FILES != "") {
                 dir('tests') {
@@ -72,7 +72,7 @@ node {
                 println "No python files changed. Skipping."
             }
         }
-        
+
         stage("Python futurize") {
             CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
             if (CHANGED_TEST_FUTURIZE_FILE != "") {
@@ -90,7 +90,7 @@ node {
                 }
             }
         }
-        
+
         stage("Python linting") {
             if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON_FILES == "") {
                 println "Neither .pylintrc nor python files changed. Skipping."
@@ -105,7 +105,7 @@ node {
                 }
             }
         }
-        
+
         stage("Python3 linting") {
             if (CHANGED_PYLINT_RC_FILE == "" && CHANGED_PYTHON3_FILES == "") {
                 println "Neither .pylintrc nor python3 files changed. Skipping."
@@ -145,7 +145,13 @@ node {
                 sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-format-shell"
             }
         }
-        
+
+        stage("Shell Unit Tests") {
+            dir('tests') {
+                sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-unit-sh"
+            }
+        }
+
         stage("Agent integration tests") {
             if (CHANGED_AGENT_PLUGINS != "") {
                 dir('tests') {

@@ -11,7 +11,7 @@ FUTURIZE := $(PIPENV2) run ./test-futurize
 .PHONY: help pipenv-check test-bandit test-format-python \
         test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
         test-pylint test-python-futurize test-shellcheck test-unit \
-        list-unit-tests test-unit-one-by-one test-unit-coverage-html
+        list-unit-tests test-unit-one-by-one test-unit-coverage-html test-unit-sh
 
 help:
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
@@ -26,9 +26,10 @@ help:
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
-	@echo "test-unit                 - Run unit tests"
+	@echo "test-unit                 - Run Python unit tests"
 	@echo "test-unit-one-by-one      - Run unit tests one by one"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
+	@echo "test-unit-sh              - Run shell unit tests"
 
 $(NODE_MODULES):
 	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
@@ -113,3 +114,6 @@ test-unit-one-by-one:
 test-unit-coverage-html:
 	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit unit
 	$(COVERAGE) html
+
+test-unit-sh:
+	./sh_test_runner.sh

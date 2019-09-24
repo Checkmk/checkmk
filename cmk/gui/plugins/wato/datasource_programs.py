@@ -2185,7 +2185,7 @@ def _valuespec_special_agents_jenkins():
                  default_value=443,
                  allow_empty=False,
              )),
-            ("infos",
+            ("sections",
              ListChoice(
                  title=_("Informations to query"),
                  help=_("Defines what information to query. You can choose "

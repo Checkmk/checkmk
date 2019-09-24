@@ -33,8 +33,11 @@ import requests
 Section = namedtuple('Section', ['name', 'key', 'uri'])
 
 
-def main():
-    args = parse_arguments()
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    args = parse_arguments(argv)
 
     # Add new queries here
     sections = [
@@ -61,42 +64,42 @@ def main():
         ),
     ]
 
-    args = parse_arguments()
-
-    sys.stdout.write("<<<check_mk>>>\n")
-
     try:
         handle_request(args, sections)
     except Exception:
         if args.debug:
             return 1
 
+    return 0
+
 
 def handle_request(args, sections):
     url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
 
     for section in sections:
-        if section.name in args.modules:
-            sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
-            try:
-                url = url_base + section.uri
-                response = requests.get(url, auth=(args.user, args.password))
+        if section.name not in args.sections:
+            continue
 
-                if section.name == "instance":
-                    value = response.json()
-                else:
-                    value = response.json()[section.key]
+        sys.stdout.write("<<<jenkins_%s:sep(0)>>>\n" % section.name)
 
-                sys.stdout.write("%s\n" % json.dumps(value))
+        url = url_base + section.uri
+        try:
+            response = requests.get(url, auth=(args.user, args.password))
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write("Error: %s\n" % e)
+            if args.debug:
+                raise
 
-            except requests.exceptions.RequestException:
-                if args.debug:
-                    raise
+        if section.name == "instance":
+            value = response.json()
+        else:
+            value = response.json()[section.key]
+
+        sys.stdout.write("%s\n" % json.dumps(value))
 
 
-def parse_arguments(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def parse_arguments(argv):
+    sections = ["instance", "jobs", "nodes", "queue"]
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -114,11 +117,10 @@ def parse_arguments(argv=None):
                         help="Use alternative port (default: 443)")
     parser.add_argument(
         "-m",
-        "--modules",
-        default="jobs nodes queue",
-        type=lambda x: x.split(' '),
-        help=
-        "Space-separated list of data to query. Possible values: 'jobs nodes queue' (default: all)")
+        "--sections",
+        default=sections,
+        help="Comma separated list of data to query. Possible values: %s (default: all)" %
+        ",".join(sections))
     parser.add_argument("--debug",
                         action="store_true",
                         help="Debug mode: let Python exceptions come through")

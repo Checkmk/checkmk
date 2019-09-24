@@ -160,7 +160,7 @@ def check_heartbeat_crm(_no_item, params, info):
             "critical") or 'connection to cluster failed' in first_line.lower():
         yield 2, first_line
 
-    last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
+    last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
 
     # Convert old tuple params (pre 1.5.0p14)
     params = _transform_heartbeat_crm(params)
@@ -183,17 +183,17 @@ def check_heartbeat_crm(_no_item, params, info):
 
     # Check for number of nodes when enabled
     if params['num_nodes'] is not None:
-        if numNodes == params['num_nodes']:
-            yield 0, u'Nodes: %d' % (numNodes,)
+        if num_nodes == params['num_nodes']:
+            yield 0, u'Nodes: %d' % (num_nodes,)
         else:
-            yield 2, u'Nodes: %d (Expected %d)' % (numNodes, params['num_nodes'])
+            yield 2, u'Nodes: %d (Expected %d)' % (num_nodes, params['num_nodes'])
 
     # Check for number of resources when enabled
     if params['num_resources'] is not None:
-        if numResources == params['num_resources']:
-            yield 0, u'Resources: %d' % (numResources,)
+        if num_resources == params['num_resources']:
+            yield 0, u'Resources: %d' % (num_resources,)
         else:
-            yield 2, u'Resources: %d (Expected %d)' % (numResources, params['num_resources'])
+            yield 2, u'Resources: %d (Expected %d)' % (num_resources, params['num_resources'])
 
 
 check_info["heartbeat_crm"] = {
@@ -216,7 +216,7 @@ check_info["heartbeat_crm"] = {
 
 
 def heartbeat_crm_parse_resources(info):
-    blockStart = False
+    block_start = False
     resources = {}
     resource = ''
     mode = 'single'
@@ -224,10 +224,10 @@ def heartbeat_crm_parse_resources(info):
         line = " ".join(parts)
 
         if "failed" in line.lower() and "actions" in line.lower():
-            blockStart = False
-        elif not blockStart and line == 'Full list of resources:':
-            blockStart = True
-        elif blockStart:
+            block_start = False
+        elif not block_start and line == 'Full list of resources:':
+            block_start = True
+        elif block_start:
             if line.startswith('Resource Group:'):
                 # Resource group
                 resources[parts[2]] = []

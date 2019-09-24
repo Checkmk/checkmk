@@ -640,13 +640,19 @@ class S3Summary(AWSSectionGeneric):
         found_buckets = []
         for bucket in self._list_buckets():
             bucket_name = bucket['Name']
-            response = self._client.get_bucket_location(Bucket=bucket_name)
+            try:
+                response = self._client.get_bucket_location(Bucket=bucket_name)
+            except botocore.exceptions.ClientError as e:
+                # An error occurred (AccessDenied) when calling the GetBucketLocation operation: Access Denied
+                logging.info("%s/%s: Access denied, %s", self.name, bucket_name, e)
+                continue
+
             try:
                 location = response['LocationConstraint']
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
                              response.keys())
-                location = None
+                continue
 
             # We can request buckets globally but if a bucket is located in
             # another region we do not get any results

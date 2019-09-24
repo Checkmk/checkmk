@@ -1,0 +1,10 @@
+Title: agent_aws: Skip S3 buckets for which the location cannot be retrieved (AccessDenied)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1569305759
+Class: fix
+
+

@@ -1669,7 +1669,13 @@ class S3BucketHelper(object):
             bucket_name = bucket['Name']
 
             # request additional LocationConstraint information
-            response = client.get_bucket_location(Bucket=bucket_name)
+            try:
+                response = client.get_bucket_location(Bucket=bucket_name)
+            except botocore.exceptions.ClientError as e:
+                # An error occurred (AccessDenied) when calling the GetBucketLocation operation: Access Denied
+                logging.info("S3BucketHelper/%s: Access denied, %s", bucket_name, e)
+                continue
+
             if response and response['LocationConstraint']:
                 bucket['LocationConstraint'] = response['LocationConstraint']
         return bucket_list['Buckets'] if bucket_list else []

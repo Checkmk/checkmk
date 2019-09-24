@@ -97,7 +97,8 @@ def heartbeat_crm_parse_general(info):
             num_nodes = int(line[0])
         elif ' '.join(line[1:3]).rstrip('.,').lower() == 'resources configured':
             num_resources = int(line[0])
-    return (last_updated, dc, num_nodes, num_resources)
+
+    return last_updated, dc, num_nodes, num_resources
 
 
 #   .--CRM-----------------------------------------------------------------.
@@ -152,12 +153,12 @@ def _transform_heartbeat_crm(params):
 
 def check_heartbeat_crm(_no_item, params, info):
     if not info:
-        return None
+        return
 
-    first_line = ' '.join(info[0])
+    first_line = u' '.join(info[0])
     if first_line.lower().startswith(
             "critical") or 'connection to cluster failed' in first_line.lower():
-        return 2, first_line
+        yield 2, first_line
 
     last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
@@ -170,35 +171,29 @@ def check_heartbeat_crm(_no_item, params, info):
     now = time.time()
     delta = now - dt
     if delta > params['max_age']:
-        return 3, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(
-            delta)
-
-    status, output = 0, ''
+        yield 3, u'Ignoring reported data (Status output too old: %s)' % (
+            get_age_human_readable(delta),)
+        return
 
     # Check for correct DC when enabled
     if params.get('dc') is None or dc == params['dc']:
-        output += 'DC: %s, ' % dc
+        yield 0, u'DC: %s' % (dc,)
     else:
-        output += 'DC: %s (Expected %s (!!)), ' % (dc, params['dc'])
-        status = 2
+        yield 2, u'DC: %s (Expected %s)' % (dc, params['dc'])
 
     # Check for number of nodes when enabled
     if params['num_nodes'] is not None:
         if numNodes == params['num_nodes']:
-            output += 'Nodes: %d, ' % numNodes
+            yield 0, u'Nodes: %d' % (numNodes,)
         else:
-            output += 'Nodes: %d (Expected %d (!!)), ' % (numNodes, params['num_nodes'])
-            status = 2
+            yield 2, u'Nodes: %d (Expected %d)' % (numNodes, params['num_nodes'])
 
     # Check for number of resources when enabled
     if params['num_resources'] is not None:
         if numResources == params['num_resources']:
-            output += 'Resources: %d, ' % numResources
+            yield 0, u'Resources: %d' % (numResources,)
         else:
-            output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_resources'])
-            status = 2
-
-    return (status, output.rstrip(', '))
+            yield 2, u'Resources: %d (Expected %d)' % (numResources, params['num_resources'])
 
 
 check_info["heartbeat_crm"] = {
@@ -293,30 +288,25 @@ def inventory_heartbeat_crm_resources(info):
 
 
 def check_heartbeat_crm_resources(item, target_node, info):
-    output = ''
-    status = 0
-
     resources = None
     for name, this_resources in heartbeat_crm_parse_resources(info).items():
         if name == item:
             resources = this_resources
+
     if resources is None:
         return
 
+    if not len(resources):
+        yield 0, u"no resources found"
+
     for resource in resources:
-        output += ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
+        yield 0, ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
+
         if len(resource) == 3 and resource[2] != 'Started':
-            status = 2
-            output += ' (Resource is in state "%s" (!!))' % resource[2]
+            yield 2, u'Resource is in state "%s"' % (resource[2],)
         elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[
                 1] != 'Clone':
-            status = 2
-            output += ' (Expected node: %s (!!))' % target_node
-        output += ', '
-
-    if not output:
-        output = "no resources found"
-    return (status, output.rstrip(', '))
+            yield 2, u'Expected node: %s' % (target_node,)
 
 
 check_info["heartbeat_crm.resources"] = {

@@ -1,0 +1,12 @@
+Title: View editor: The option "Add context information to title" was not applied
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569313928
+Class: fix
+
+The new option introduced with werk #8871 was not applied when editing or creating
+views. When the option was set by hand or in builtin views, it was applied as
+intended.

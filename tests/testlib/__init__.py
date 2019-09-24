@@ -2062,41 +2062,34 @@ class CMKEventConsoleStatus(object):
 
 class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
-    def __init__(self, site, rel_path, default_timeout=5):
+    def __init__(self, site, log_path, default_timeout=5):
         self._site = site
-        self._rel_path = rel_path
+        self._log_path = log_path
         self._log = self._open_log()
         self._default_timeout = default_timeout
-        self._buf = []
-
-    def _log_path(self):
-        return self._rel_path
 
     def _open_log(self):
-        if not self._site.file_exists(self._log_path()):
-            self._site.write_file(self._log_path(), "")
+        if not self._site.file_exists(self._log_path):
+            self._site.write_file(self._log_path, "")
 
-        fobj = open(self._site.path(self._log_path()), "r")
+        fobj = open(self._site.path(self._log_path), "r")
         fobj.seek(0, 2)  # go to end of file
         return fobj
 
     def check_logged(self, match_for, timeout=None):
-        if timeout is None:
-            timeout = self._default_timeout
-
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
-                            (match_for, self._log_path(), timeout))
+                            (match_for, self._log_path, timeout))
 
     def check_not_logged(self, match_for, timeout=None):
+        if self._check_for_line(match_for, timeout):
+            raise Exception("Found %r in %s after %d seconds" %
+                            (match_for, self._log_path, timeout))
+
+    def _check_for_line(self, match_for, timeout):
         if timeout is None:
             timeout = self._default_timeout
 
-        if self._check_for_line(match_for, timeout):
-            raise Exception("Found %r in %s after %d seconds" %
-                            (match_for, self._log_path(), timeout))
-
-    def _check_for_line(self, match_for, timeout):
         timeout_at = time.time() + timeout
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))

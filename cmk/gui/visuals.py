@@ -929,6 +929,7 @@ def page_edit_visual(what,
                     'description',
                     'linktitle',
                     'icon',
+                    'add_context_to_title',
             ]:
                 visual[key] = general_properties[key]
 

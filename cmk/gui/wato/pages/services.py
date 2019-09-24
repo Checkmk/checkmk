@@ -980,8 +980,7 @@ class DiscoveryPageRenderer(object):
     def render(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
         with html.plugged():
-            if discovery_result.check_table or self._is_active(discovery_result):
-                self._show_action_buttons(discovery_result)
+            self._show_action_buttons(discovery_result)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, request)
             return html.drain()

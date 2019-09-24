@@ -1420,7 +1420,7 @@ class EBSSummary(AWSSectionGeneric):
             volumes = colleague.content
 
         colleague = self._received_results.get('ec2_summary')
-        instances = []
+        instances = {}
         if colleague and colleague.content:
             max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
             instances = colleague.content

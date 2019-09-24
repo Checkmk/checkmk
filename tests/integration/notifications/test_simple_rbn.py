@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name
 
 import time
-import pytest
+import pytest  # type: ignore
 
 from testlib import web, WatchLog  # pylint: disable=unused-import
 
@@ -22,15 +22,18 @@ def test_config(web, site):
     all_users = web.get_all_users()
     assert not expected_users - set(all_users.keys())
 
-    # Notify
+    site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
+    site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+
     web.add_host("notify-test", attributes={
         "ipaddress": "127.0.0.1",
     })
     web.activate_changes()
 
-    site.live.command("[%d] DISABLE_HOST_CHECK;notify-test" % time.time())
-
     yield
+
+    site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
+    site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     web.delete_host("notify-test")
     web.delete_htpasswd_users(users.keys())
@@ -43,14 +46,9 @@ def test_config(web, site):
 ])
 def test_simple_rbn_host_notification(test_config, site, core, log):
     site.set_config("CORE", core, with_restart=True)
-
-    # Open the log file and scan to end
     l = WatchLog(site, log)
-
-    # Set object down to trigger a notification
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
-    # Now check for appearing log lines - one after the other
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     l.check_logged(
         "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",

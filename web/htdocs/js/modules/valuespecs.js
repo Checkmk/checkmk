@@ -793,6 +793,12 @@ function autocomplete_show(input_id, inner_html)
     }
 
     popup.innerHTML = inner_html;
+
+    // Register some unfocus handlers for hiding
+    utils.hide_on_click_click_outside_of(popup);
+    document.getElementById(input_id).addEventListener("blur", function() {
+        autocomplete_close(input_id);
+    });
 }
 
 function autocomplete_close(input_id)

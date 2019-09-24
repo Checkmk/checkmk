@@ -720,7 +720,7 @@ class AWSSection(six.with_metaclass(abc.ABCMeta, DataCache)):
         return prepared_tags
 
 
-class AWSSectionLimits(six.with_metaclass(abc.ABCMeta, AWSSection)):
+class AWSSectionLimits(AWSSection):
     def __init__(self, client, region, config, distributor=None):
         super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
         self._limits = {}
@@ -741,7 +741,7 @@ class AWSSectionLimits(six.with_metaclass(abc.ABCMeta, AWSSection)):
         ]
 
 
-class AWSSectionLabels(six.with_metaclass(abc.ABCMeta, AWSSection)):
+class AWSSectionLabels(AWSSection):
     def _create_results(self, computed_content):
         assert isinstance(
             computed_content.content,
@@ -757,11 +757,11 @@ class AWSSectionLabels(six.with_metaclass(abc.ABCMeta, AWSSection)):
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
-class AWSSectionGeneric(six.with_metaclass(abc.ABCMeta, AWSSection)):
+class AWSSectionGeneric(AWSSection):
     pass
 
 
-class AWSSectionCloudwatch(six.with_metaclass(abc.ABCMeta, AWSSection)):
+class AWSSectionCloudwatch(AWSSection):
     def get_live_data(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
@@ -3494,45 +3494,34 @@ class AWSConfig(object):
         self.service_config.setdefault(key, value)
 
 
-def sort_services(g_services, r_services):
+def _sanitize_aws_services_params(g_aws_services, r_aws_services):
     """
-    sort service keys into global and regional services by checking the service configuration of AWSServices.
-    this abstracts the AWS structure from the GUI configuration.
-    :param g_services: all services in --global-services
-    :param r_services: all services in --services
+    Sort service keys into global and regional services by checking
+    the service configuration of AWSServices.
+    This abstracts the AWS structure from the GUI configuration.
+    :param g_aws_services: all services in --global-services
+    :param r_aws_services: all services in --services
     :return: two lists of global and regional services
     """
+    aws_service_keys = set()
+    if g_aws_services is not None:
+        aws_service_keys = aws_service_keys.union(g_aws_services)
+
+    if r_aws_services is not None:
+        aws_service_keys = aws_service_keys.union(r_aws_services)
+
+    aws_services_map = {e.key: e for e in AWSServices}
     global_services = []
     regional_services = []
-    for service_key in merge_to_set(g_services, r_services):
-        if service_key:
-            if is_global_service(service_key):
-                global_services.append(service_key)
-            else:
-                regional_services.append(service_key)
+    for service_key in aws_service_keys:
+        service_attrs = aws_services_map.get(service_key)
+        if service_attrs is None:
+            continue
+        if service_attrs.global_service:
+            global_services.append(service_key)
+        else:
+            regional_services.append(service_key)
     return global_services, regional_services
-
-
-def merge_to_set(list1, list2):
-    """
-    merges two lists in one set
-    :param list1: list A, can be None
-    :param list2: List B, can be None
-    :return: set
-    """
-    return set(list1 if list1 else [] + list2 if list2 else [])
-
-
-def is_global_service(service_key):
-    """
-    checks AWSServices if service is a global service
-    :param service_key: key of the AWS Service
-    :return: true if service is a global service
-    """
-    for service_attribute in AWSServices:
-        if service_attribute.key == service_key and service_attribute.global_service:
-            return True
-    return False
 
 
 def main(args=None):
@@ -3562,11 +3551,10 @@ def main(args=None):
     aws_config.add_single_service_config("s3_requests", args.s3_requests)
     aws_config.add_single_service_config("cloudwatch_alarms", args.cloudwatch_alarms)
 
+    global_services, regional_services =\
+        _sanitize_aws_services_params(args.global_services, args.services)
+
     has_exceptions = False
-
-    # services are sorted into global and regional services
-    global_services, regional_services = sort_services(args.global_services, args.services)
-
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),

@@ -445,6 +445,21 @@ class Site(object):
         self._wait_for_next_host_check(hostname, last_check_before, command_timestamp,
                                        expected_state)
 
+    def send_service_check_result(self,
+                                  hostname,
+                                  service_description,
+                                  state,
+                                  output,
+                                  expected_state=None):
+        if expected_state is None:
+            expected_state = state
+        last_check_before = self._last_service_check(hostname, service_description)
+        command_timestamp = self._command_timestamp(last_check_before)
+        self.live.command("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s" %
+                          (command_timestamp, hostname, service_description, state, output))
+        self._wait_for_next_service_check(hostname, service_description, last_check_before,
+                                          command_timestamp, expected_state)
+
     def schedule_check(self, hostname, service_description, expected_state):
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)

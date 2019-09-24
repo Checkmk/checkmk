@@ -198,7 +198,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     link(str(stales), url)
                     html.close_td()
                 else:
-                    html.td('')
+                    html.td(html.render_span("0"))
 
             html.close_tr()
         html.close_table()

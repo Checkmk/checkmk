@@ -197,7 +197,6 @@ def _valuespec_inventory_if_rules():
                          "then only ports of the specified types will be created services for."),
                      choices=defines.interface_port_types(),
                      rows=40,
-                     toggle_all=True,
                      default_value=[
                          '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
                          '229'

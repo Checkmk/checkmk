@@ -1,0 +1,13 @@
+Title: View group filters showed equal named groups multiple times
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1569333012
+
+In distributed setups the view filters "Several host groups" and "Several service groups"
+were showing equal named groups once per site instead of deduplicating them as inteded.
+This was a 1.6 regression.

@@ -137,7 +137,7 @@ endif
 
 PYTHON_MODULES_LIST += certifi-2018.10.15.tar.gz
 PYTHON_MODULES_LIST += chardet-3.0.4.tar.gz
-PYTHON_MODULES_LIST += urllib3-1.24.1.tar.gz
+PYTHON_MODULES_LIST += urllib3-1.24.2.tar.gz
 # Added for check_bi_aggr with kerberos support
 PYTHON_MODULES_LIST += pykerberos-1.2.1.tar.gz
 PYTHON_MODULES_LIST += requests-kerberos-0.12.0.tar.gz

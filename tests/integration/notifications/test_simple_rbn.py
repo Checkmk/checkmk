@@ -62,3 +62,27 @@ def test_simple_rbn_host_notification(test_config, site, core, log):
         "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;",
         timeout=20,
     )
+
+
+@pytest.mark.parametrize("core,log", [
+    ("nagios", "var/log/nagios.log"),
+    ("cmc", "var/check_mk/core/history"),
+])
+def test_simple_rbn_service_notification(test_config, site, core, log):
+    site.set_config("CORE", core, with_restart=True)
+    l = WatchLog(site, log)
+    site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
+
+    # NOTE: "] " is necessary to get the actual log line and not the external command execution
+    l.check_logged(
+        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT",
+        timeout=20,
+    )
+    l.check_logged(
+        "] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT",
+        timeout=20,
+    )
+    l.check_logged(
+        "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;",
+        timeout=20,
+    )

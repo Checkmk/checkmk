@@ -1,0 +1,14 @@
+Title: mk_logwatch: be more robust against unexpected file encoding
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569418383
+Class: fix
+
+In version 1.6.0 the mk_logwatch plugin crashed if a processed logfile could
+not be correctly encoded.
+
+We now replace all characters that can not be encoded with the U+FFFD replacement
+character. In addition, in case of an exception we now continue processing the next file.

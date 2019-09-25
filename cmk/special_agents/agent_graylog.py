@@ -26,6 +26,7 @@
 
 from typing import NamedTuple, Text
 import argparse
+import time
 import json
 import sys
 import requests
@@ -42,6 +43,9 @@ def main(argv=None):
 
     args = parse_arguments(argv)
 
+    # calculate time difference from now and args.since in ISO8601 Format
+    since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - args.since))
+
     # Add new queries here
     sections = [
         GraylogSection(name="alerts", uri="/streams/alerts?limit=300"),
@@ -50,7 +54,7 @@ def main(argv=None):
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
         GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic"),
-        GraylogSection(name="failures", uri="/system/indexer/failures?limit=300"),
+        GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/stats/jvm"),
         GraylogSection(name="messages", uri="/count/total"),
         GraylogSection(name="nodes", uri="/cluster"),
@@ -76,20 +80,29 @@ def handle_request(args, sections):
         sys.stdout.write("<<<graylog_%s:sep(0)>>>\n" % section.name)
         url = url_base + section.uri
 
-        try:
-            response = requests.get(url, auth=(args.user, args.password))
-        except requests.exceptions.RequestException as e:
-            sys.stderr.write("Error: %s\n" % e)
-            if args.debug:
-                raise
+        value = handle_response(url, args).json()
 
-        if section.name == "lbstatus":
-            # no json output
-            value = {"lb_state": response.text}
-        else:
-            value = response.json()
+        # add failure details
+        if section.name == "failures":
+            url_failures = url_base + "/system/indexer/failures?limit=30"
+
+            value.update(handle_response(url_failures, args).json())
+
+            # add param from datasource for use in check output
+            value.update({"ds_param_since": args.since})
 
         sys.stdout.write("%s\n" % json.dumps(value))
+
+
+def handle_response(url, args):
+    try:
+        response = requests.get(url, auth=(args.user, args.password))
+    except requests.exceptions.RequestException as e:
+        sys.stderr.write("Error: %s\n" % e)
+        if args.debug:
+            raise
+
+    return response
 
 
 def parse_arguments(argv):
@@ -112,6 +125,11 @@ def parse_arguments(argv):
                         default=443,
                         type=int,
                         help="Use alternative port (default: 443)")
+    parser.add_argument("-t",
+                        "--since",
+                        default=1800,
+                        type=int,
+                        help="The time in seconds, since when failures should be covered")
     parser.add_argument(
         "-m",
         "--sections",

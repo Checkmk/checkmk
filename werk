@@ -138,6 +138,10 @@ def werk_is_modified(werkid):
     return werkid in g_modified
 
 
+def werk_exists(werkid):
+    return os.path.exists(str(werkid))
+
+
 def load_werk(werkid):
     werk = {
         "id": werkid,
@@ -599,9 +603,22 @@ def main_resolve(args):
 
 
 def main_delete(args):
-    for ids in args:
-        if 0 == os.system("git rm %s" % ids):  # nosec
-            sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
+    if len(args) == 0:
+        if g_last_werk is None:
+            bail_out("Please specify the werks to delete.")
+        args = [g_last_werk]
+    for werk_id in args:
+        if not werk_exists(werk_id):
+            bail_out("There is no werk %s." % format_werk_id(werk_id))
+
+        if 0 == os.system("git rm -f %s" % werk_id):  # nosec
+            sys.stdout.write("Deleted werk %s (%s).\n" %
+                             (format_werk_id(werk_id), g_werks[int(werk_id)]["title"]))
+            my_ids = get_werk_ids()
+            my_ids.append(werk_id)
+            store_werk_ids(my_ids)
+            sys.stdout.write("You lucky bastard now own the werk ID %s.\n" %
+                             format_werk_id(werk_id))
 
 
 def grep(line, kw, n):

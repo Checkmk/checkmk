@@ -1124,7 +1124,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
                             u'service': u'CPU load'
                         },
                         u'site': {
-                            u'site': u'int_160'
+                            u'site': web.site.id,
                         }
                     },
                     u'datasource': u'services',

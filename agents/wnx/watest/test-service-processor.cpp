@@ -144,7 +144,7 @@ TEST(ServiceProcessorTest, Base) {
         std::filesystem::path tmp = cma::cfg::GetTempDir();
         tmp /= "out.txt";
 
-        SectionProvider<provider::Uptime> uptime_provider;
+        SectionProvider<provider::UptimeSync> uptime_provider;
         AsyncAnswer a;
         a.prepareAnswer("aaa");
         sp.internal_port_ = cma::carrier::BuildPortName(
@@ -165,7 +165,7 @@ TEST(ServiceProcessorTest, Base) {
         cfg["global"]["disabled_sections"] = YAML::Load("[uptime]");
         cfg::ProcessKnownConfigGroups();
 
-        SectionProvider<provider::Uptime> uptime_provider;
+        SectionProvider<provider::UptimeSync> uptime_provider;
         AsyncAnswer a;
         a.prepareAnswer("aaa");
         sp.internal_port_ = cma::carrier::BuildPortName(
@@ -186,7 +186,7 @@ TEST(ServiceProcessorTest, DirectCall) {
     std::filesystem::path tmp = cma::cfg::GetTempDir();
     tmp /= "out.txt";
     {
-        SectionProvider<provider::Uptime> uptime_provider;
+        SectionProvider<provider::UptimeSync> uptime_provider;
         AsyncAnswer a;
         a.prepareAnswer("aaa");
         uptime_provider.directCall(

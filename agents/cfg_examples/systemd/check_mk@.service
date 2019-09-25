@@ -4,7 +4,7 @@ Description=Check_MK
 
 [Service]
 ExecStart=/usr/bin/check_mk_agent
-KillMode=process
+Type=forking
 
 User=root
 Group=root

@@ -1,0 +1,10 @@
+Title: netapp_api_vs_traffic: Prevent service from going stale if no IO operations took place
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569415650
+Class: fix
+
+

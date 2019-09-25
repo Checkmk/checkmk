@@ -163,8 +163,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP avg. Read latency: 0.00 ms",
-                    [("fcp_read_latency", 0.0, None, None, None, None)],
+                    "FCP avg. read latency: N/A",
                 ),
                 (
                     0,
@@ -173,8 +172,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP avg. Write latency: 0.00 ms",
-                    [("fcp_write_latency", 0.0, None, None, None, None)],
+                    "FCP avg. write latency: N/A",
                 ),
             ],
         ),
@@ -189,7 +187,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP avg. Read latency: 0.00 ms",
+                    "FCP avg. read latency: 0.00 ms",
                     [("fcp_read_latency", 0.0, None, None, None, None)],
                 ),
                 (
@@ -199,7 +197,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP avg. Write latency: 0.00 ms",
+                    "FCP avg. write latency: 0.00 ms",
                     [("fcp_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
@@ -224,8 +222,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI avg. Read latency: 0.00 ms",
-                    [("iscsi_read_latency", 0.0, None, None, None, None)],
+                    "iSCSI avg. read latency: N/A",
                 ),
                 (
                     0,
@@ -243,8 +240,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI avg. Write latency: 0.00 ms",
-                    [("iscsi_write_latency", 0.0, None, None, None, None)],
+                    "iSCSI avg. write latency: N/A",
                 ),
             ],
         ),
@@ -268,7 +264,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI avg. Read latency: 0.00 ms",
+                    "iSCSI avg. read latency: 0.00 ms",
                     [("iscsi_read_latency", 0.0, None, None, None, None)],
                 ),
                 (
@@ -287,7 +283,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI avg. Write latency: 0.00 ms",
+                    "iSCSI avg. write latency: 0.00 ms",
                     [("iscsi_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
@@ -452,8 +448,7 @@ checks = {
                 ),
                 (
                     0,
-                    "CIFS read latency: 0.00 ms",
-                    [("cifs_read_latency", 0.0, None, None, None, None)],
+                    "CIFS read latency: N/A",
                 ),
                 (
                     0,
@@ -462,8 +457,7 @@ checks = {
                 ),
                 (
                     0,
-                    "CIFS write latency: 0.00 ms",
-                    [("cifs_write_latency", 0.0, None, None, None, None)],
+                    "CIFS write latency: N/A",
                 ),
             ],
         ),

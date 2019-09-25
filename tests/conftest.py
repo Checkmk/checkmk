@@ -133,6 +133,7 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
     monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
                         Path(tmp_dir) / "var/check_mk/piggyback_sources")
+    monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
 
 
 # Cleanup temporary directory created above

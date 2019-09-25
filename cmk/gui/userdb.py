@@ -1037,17 +1037,27 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     config.save_user_file("cached_profile", cache, user_id=user_id)
 
 
-def load_cached_profile():
-    return config.user.load_file("cached_profile", None)
+def _load_cached_profile(user_id):
+    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
+    return user.load_file("cached_profile", None)
 
 
 def contactgroups_of_user(user_id):
-    user = load_cached_profile()
+    user = _load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
 
     return user.get("contactgroups", [])
+
+
+def connection_id_of_user(user_id):
+    user = _load_cached_profile(user_id)
+    if user is None:
+        # No cached profile present. Load all users to get the users data
+        user = load_users(lock=False).get(user_id, {})
+
+    return user.get("connector")
 
 
 def convert_idle_timeout(value):

@@ -107,6 +107,9 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
                                                                          ]),
         ([u'util1', u'util15'], None, ['util_average_2']),
         ([u'util'], None, ['util_fallback']),
+        ([u'util'], "check_mk-lxc_container_cpu", ['util_fallback']),
+        ([u'wait', u'util', 'user', 'system'
+         ], 'check_mk-lxc_container_cpu', ['cpu_utilization_5_util']),
         ([u'util', u'util_average'], None, ['util_average_1']),
         ([u'user', u'util_numcpu_as_max'], None, ['cpu_utilization_numcpus']),
         ([u'user', u'util'], None, ['util_fallback', 'METRIC_user']),  # METRIC_user has no recipe

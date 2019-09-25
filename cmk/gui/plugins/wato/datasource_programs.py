@@ -154,6 +154,7 @@ def _valuespec_special_agents_kubernetes():
                  ListChoice(choices=[
                      ("nodes", _("Nodes")),
                      ("services", _("Services")),
+                     ("ingresses", _("Ingresses")),
                      ("deployments", _("Deployments")),
                      ("pods", _("Pods")),
                      ("endpoints", _("Endpoints")),
@@ -164,6 +165,7 @@ def _valuespec_special_agents_kubernetes():
                             default_value=[
                                 "nodes",
                                 "endpoints",
+                                "ingresses",
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),

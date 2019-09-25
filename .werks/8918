@@ -1,0 +1,15 @@
+Title: Inventory Kubernetes ingresses
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1569489519
+Class: feature
+
+This adds entries under the Kubernetes.Ingress node of the
+software inventory.  The load balancers, the backends,
+and the hosts are listed.
+
+<b>Note</b> Users must apply the new version of
+check_mk_rbac.yml to access the ingresses.

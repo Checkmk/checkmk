@@ -2074,6 +2074,7 @@ class HostConfig(object):
 
         self._config_cache = config_cache
 
+        self._explicit_attributes_lookup = None
         self.is_cluster = self._is_cluster()
         # TODO: Rename this to self.clusters?
         self.part_of_clusters = self._config_cache.clusters_of(hostname)
@@ -2214,11 +2215,21 @@ class HostConfig(object):
     @property
     def alias(self):
         # type: () -> Text
+
+        # Alias by explicit matching
+        alias = self._explicit_host_attributes.get("alias")
+        if alias:
+            return alias
+
+        # Alias by rule matching
         aliases = self._config_cache.host_extra_conf(self.hostname,
                                                      extra_host_conf.get("alias", []))
+
+        # Fallback alias
         if not aliases:
             return self.hostname
 
+        # First rule match
         return aliases[0]
 
     # TODO: Move cluster/node parent handling to this function
@@ -2473,16 +2484,37 @@ class HostConfig(object):
     @property
     def extra_host_attributes(self):
         # type: () -> Dict[str, str]
-        attrs = {}
+        attrs = {}  # type: Dict
+        attrs.update(self._explicit_host_attributes)
+
         for key, ruleset in extra_host_conf.items():
-            values = self._config_cache.host_extra_conf(self.hostname, ruleset)
+            if key in attrs:
+                # An explicit value is already set
+                values = [attrs[key]]
+            else:
+                values = self._config_cache.host_extra_conf(self.hostname, ruleset)
+
             if values:
                 if key[0] == "_":
                     key = key.upper()
 
                 if values[0] is not None:
                     attrs[key] = values[0]
+
         return attrs
+
+    @property
+    def _explicit_host_attributes(self):
+        if self._explicit_attributes_lookup is not None:
+            return self._explicit_attributes_lookup
+
+        hostname = self.hostname
+        cache = {}
+        for key, hostnames in explicit_host_conf.iteritems():
+            if hostname in hostnames:
+                cache[key] = hostnames[hostname]
+        self._explicit_attributes_lookup = cache
+        return self._explicit_attributes_lookup
 
     @property
     def discovery_check_parameters(self):

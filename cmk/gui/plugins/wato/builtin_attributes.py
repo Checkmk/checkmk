@@ -93,6 +93,9 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def nagios_name(self):
         return "alias"
 
+    def is_explicit(self):
+        return True
+
     def title(self):
         return _("Alias")
 

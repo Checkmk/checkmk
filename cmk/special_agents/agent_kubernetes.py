@@ -34,7 +34,8 @@ from __future__ import (
 )
 
 import argparse
-from collections import OrderedDict, MutableSequence
+from collections import OrderedDict, MutableSequence, defaultdict
+import contextlib
 import functools
 import itertools
 import json
@@ -54,6 +55,15 @@ from kubernetes.client.rest import ApiException  # type: ignore
 
 import cmk.utils.profile
 import cmk.utils.password_store
+
+
+@contextlib.contextmanager
+def suppress(*exc):
+    # This is contextlib.suppress from Python 3.2
+    try:
+        yield
+    except exc:
+        pass
 
 
 class PathPrefixAction(argparse.Action):
@@ -354,6 +364,53 @@ class Deployment(Metadata):
             'strategy_type': self._strategy_type,
             'max_surge': self._max_surge,
             'max_unavailable': self._max_unavailable,
+        }
+
+
+class Ingress(Metadata):
+    def __init__(self, ingress):
+        super(Ingress, self).__init__(ingress.metadata)
+        self._backends = []  # list of (path, service_name, service_port)
+        self._hosts = defaultdict(list)  # secret -> list of hosts
+        self._load_balancers = []
+
+        spec = ingress.spec
+        if spec:
+            if spec.backend:
+                self._backends.append(
+                    ("(default)", spec.backend.service_name, spec.backend.service_port))
+            for rule in spec.rules if spec.rules else ():
+                if rule.http:
+                    for path in rule.http.paths:
+                        path_ = {
+                            (True, True): rule.host + path.path,
+                            (True, False): rule.host,
+                            (False, True): path.path,
+                            (False, False): "/"
+                        }[(rule.host is not None, path.path is not None)]
+                        self._backends.append(
+                            (path_, path.backend.service_name, path.backend.service_port))
+            for tls in spec.tls if spec.tls else ():
+                self._hosts[tls.secret_name if tls.secret_name else ""].extend(
+                    tls.hosts if tls.hosts else ())
+
+        status = ingress.status
+        if status:
+            with suppress(AttributeError):
+                # Anything along the path to status..ingress is optional (aka may be None).
+                self._load_balancers.extend([{
+                    "hostname": _.hostname if _.hostname else "",
+                    "ip": _.ip if _.ip else "",
+                } for _ in status.load_balancer.ingress])
+
+    @property
+    def info(self):
+        return {
+            self.name: {
+                "backends": self._backends,
+                "hosts": self._hosts,
+                "load_balancers": self._load_balancers,
+            }
         }
 
 
@@ -863,6 +920,11 @@ class DeploymentList(K8sList[Deployment]):
         return {deployment.name: deployment.replicas for deployment in self}
 
 
+class IngressList(K8sList[Ingress]):
+    def infos(self):
+        return {ingress.name: ingress.info for ingress in self}
+
+
 class DaemonSetList(K8sList[DaemonSet]):
     def info(self):
         return {daemon_set.name: daemon_set.info for daemon_set in self}
@@ -1160,6 +1222,7 @@ class ApiData(object):
         jobs = batch_api.list_job_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
         deployments = ext_api.list_deployment_for_all_namespaces()
+        ingresses = ext_api.list_ingress_for_all_namespaces()
         daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
         stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
@@ -1179,6 +1242,7 @@ class ApiData(object):
         self.jobs = JobList(map(Job, jobs.items))
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
+        self.ingresses = IngressList(map(Ingress, ingresses.items))
         self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
         self.stateful_sets = StatefulSetList(map(StatefulSet, stateful_sets.items))
 
@@ -1315,11 +1379,18 @@ class ApiData(object):
         return '\n'.join(g.output(piggyback_prefix="service_"))
 
     def deployment_sections(self):
-        logging.info('Output node sections')
+        logging.info('Output deployment sections')
         g = PiggybackGroup()
         g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
         return '\n'.join(g.output(piggyback_prefix="deployment_"))
+
+    def ingress_sections(self):
+        logging.info('Output ingress sections')
+        g = PiggybackGroup()
+        g.join('labels', self.ingresses.labels())
+        g.join('k8s_ingress_infos', self.ingresses.infos())
+        return '\n'.join(g.output(piggyback_prefix="ingress_"))
 
     def daemon_set_sections(self):
         logging.info('Daemon set sections')
@@ -1387,6 +1458,8 @@ def main(args=None):
                 print(api_data.job_sections())
             if 'deployments' in arguments.infos:
                 print(api_data.deployment_sections())
+            if 'ingresses' in arguments.infos:
+                print(api_data.ingress_sections())
             if 'services' in arguments.infos:
                 print(api_data.service_sections())
             if 'daemon_sets' in arguments.infos:

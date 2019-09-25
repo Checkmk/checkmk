@@ -369,31 +369,31 @@ def _save_inventory_tree(hostname, inventory_tree):
     # type: (str, StructuredDataTree) -> Optional[float]
     cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
 
-    old_time = None
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
-    if not inventory_tree.is_empty():
-        old_tree = StructuredDataTree().load_from(filepath)
-        old_tree.normalize_nodes()
-        if old_tree.is_equal(inventory_tree):
-            console.verbose("Inventory was unchanged\n")
-        else:
-            if old_tree.is_empty():
-                console.verbose("New inventory tree\n")
-            else:
-                console.verbose("Inventory tree has changed\n")
-                old_time = os.stat(filepath).st_mtime
-                arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
-                cmk.utils.store.makedirs(arcdir)
-                os.rename(filepath, arcdir + ("/%d" % old_time))
-            inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
-
-    else:
-        if os.path.exists(
-                filepath):  # Remove empty inventory files. Important for host inventory icon
+    if inventory_tree.is_empty():
+        # Remove empty inventory files. Important for host inventory icon
+        if os.path.exists(filepath):
             os.remove(filepath)
         if os.path.exists(filepath + ".gz"):
             os.remove(filepath + ".gz")
+        return None
 
+    old_tree = StructuredDataTree().load_from(filepath)
+    old_tree.normalize_nodes()
+    if old_tree.is_equal(inventory_tree):
+        console.verbose("Inventory was unchanged\n")
+        return None
+
+    if old_tree.is_empty():
+        console.verbose("New inventory tree\n")
+        old_time = None
+    else:
+        console.verbose("Inventory tree has changed\n")
+        old_time = os.stat(filepath).st_mtime
+        arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
+        cmk.utils.store.makedirs(arcdir)
+        os.rename(filepath, arcdir + ("/%d" % old_time))
+    inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
     return old_time
 
 

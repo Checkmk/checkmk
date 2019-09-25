@@ -1,5 +1,5 @@
 Title: cmk-update-config: fixed exception during ruleset conversion
-Level: 1
+Level: 2
 Component: wato
 Class: fix
 Compatible: compat

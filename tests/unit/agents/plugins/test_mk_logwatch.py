@@ -6,7 +6,7 @@ import re
 import sys
 import locale
 
-import pytest
+import pytest  # type: ignore
 
 from testlib import cmk_path  # pylint: disable=import-error
 
@@ -56,7 +56,7 @@ def test_options_setter(mk_logwatch, option_string, key, expected_value):
     opt = mk_logwatch.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
-    assert type(actual_value) == type(expected_value)
+    assert isinstance(actual_value, type(expected_value))
     assert actual_value == expected_value
 
 
@@ -189,7 +189,7 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
     for actual, expected in zip(logfiles.patterns, logfiles_patterns):
-        assert type(actual) == type(expected)
+        assert isinstance(actual, type(expected))
         assert actual == expected
 
 
@@ -300,7 +300,7 @@ def test_log_lines_iter(mk_logwatch):
     assert log_iter.get_position() == 710
 
     line = log_iter.next_line()
-    assert type(line) == unicode
+    assert isinstance(line, unicode)
     assert line == u"# This file is part of Check_MK.\n"
     assert log_iter.get_position() == 743
 
@@ -311,6 +311,62 @@ def test_log_lines_iter(mk_logwatch):
     log_iter.skip_remaining()
     assert log_iter.next_line() is None
     assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+
+
+@pytest.mark.parametrize(
+    "use_specific_encoding,lines,expected_result",
+    [
+        # UTF-8 encoding works by default
+        (None, [
+            b"abc1",
+            u"äbc2".encode("utf-8"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+        # Replace characters that can not be decoded
+        (None, [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"\ufffdbc2\n",
+            u"abc3\n",
+        ]),
+        # Set custom encoding
+        ("latin-1", [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+    ])
+def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
+                                   expected_result):
+    # Write test logfile first
+    log_path = tmp_path.joinpath("testlog")
+    with log_path.open("wb") as f:
+        f.write(b"\n".join(lines) + "\n")
+
+    # Now test processing
+    log_iter = mk_logwatch.LogLinesIter(str(log_path))
+    if use_specific_encoding:
+        log_iter._enc = use_specific_encoding
+
+    result = []
+    while True:
+        l = log_iter.next_line()
+        if l is None:
+            break
+        result.append(l)
+
+    assert result == expected_result
 
 
 class MockStdout(object):
@@ -449,20 +505,3 @@ def fake_filesystem(tmp_path):
     assert os.stat(str(hard_linked_file_a)) == os.stat(str(hard_linked_file_b))
 
     return fake_fs
-
-
-def _print_tree(directory, resolve=True):
-    """
-    Print fake filesystem with optional expansion of symlinks.
-    Don't remove this helper function. Used for debugging.
-    """
-    print('%s' % directory)
-    for path in sorted(directory.rglob('*')):
-        if resolve:
-            try:  # try resolve symlinks
-                path = path.resolve()
-            except Exception:
-                pass
-        depth = len(path.relative_to(directory).parts)
-        spacer = '    ' * depth
-        print('%s%s' % (spacer, path.name))

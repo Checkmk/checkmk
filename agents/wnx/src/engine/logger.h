@@ -492,7 +492,8 @@ public:
     // #TODO please, Sergey, this is copy-paste and copy-paste is streng
     // verboten by Check MK
     template <typename... T>
-    auto exec(int Modifications, const std::string& Format, T... args) {
+    auto exec(int Modifications, const std::string& Format,
+              T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
             // check construction
@@ -502,6 +503,7 @@ public:
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
+            // we do not want any exceptions during logging
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
             if (this == nullptr || !this->constructed_) return s;

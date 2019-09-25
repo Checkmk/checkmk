@@ -89,50 +89,68 @@ class ServiceProcessor;
 template <typename T>
 class SectionProvider {
 public:
-    SectionProvider() : section_expected_timeout_(0) {
-        provider_uniq_name_ = engine_.getUniqName();
-    }
+    // engine is default constructed
+    SectionProvider() { provider_uniq_name_ = engine_.getUniqName(); }
 
-    // rarely used constructor, probably for tests only
-    SectionProvider(const std::string UniqName,  // id for the provider
-                    char Separator)
-        : provider_uniq_name_(UniqName), engine_(UniqName, Separator) {
+    // with engine init
+    SectionProvider(const std::string& uniq_name,  // id for the provider
+                    char separator)
+        : engine_(uniq_name, separator) {
         provider_uniq_name_ = engine_.getUniqName();
     }
 
     // #TODO this function is not simple enough
     std::future<bool> kick(
-        bool Async,                 // type of execution
-        const std::string CmdLine,  // command line, first is Ip address
-        const AnswerId Tp,          // expected id
-        ServiceProcessor* Proc,     // hosting object
-        const std::string SectionName =
-            std::string(cma::section::kUseEmbeddedName)) {
+        std::launch mode,             // type of execution
+        const std::string& cmd_line,  // command line, first is Ip address
+        const AnswerId Tp,            // expected id
+        ServiceProcessor* processor   // hosting object
+    ) {
         engine_.loadConfig();
         section_expected_timeout_ = engine_.timeout();
         return std::async(
-            Async ? std::launch::async : std::launch::deferred,
+            mode,
             [this](const std::string CommandLine,  //
                    const AnswerId Tp,              //
-                   const ServiceProcessor* Proc,   //
-                   const std::string SectionName) {
+                   const ServiceProcessor* Proc) {
                 engine_.updateSectionStatus();  // actual data gathering is here
+                                                // for plugins and local
+
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
                 auto id = Tp.time_since_epoch().count();
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
-                goGoGo(SectionName, CommandLine, port_name, id);
+                goGoGo(std::string(section::kUseEmbeddedName), CommandLine,
+                       port_name, id);
 
                 return true;
             },
-            CmdLine,     //
-            Tp,          // param 1
-            Proc,        // param 2
-            SectionName  // section name
+            cmd_line,  //
+            Tp,        // param 1
+            processor  // param 2
 
         );
+    }
+
+    // used to call complicated providers directly without any threads
+    // to obtain maximally correct results
+    bool directCall(
+        const std::string& cmd_line,  // command line, first is Ip address
+        const AnswerId timestamp,     // expected id
+        const std::string& port_name  // port to report results
+    ) {
+        engine_.loadConfig();
+        section_expected_timeout_ = engine_.timeout();
+        engine_.updateSectionStatus();
+        engine_.registerCommandLine(cmd_line);
+        auto id = timestamp.time_since_epoch().count();
+        XLOG::d.t("Provider '{}' is direct called, id '{}' port [{}]",
+                  provider_uniq_name_, id, port_name);
+        goGoGo(std::string(section::kUseEmbeddedName), cmd_line, port_name, id);
+
+        return true;
     }
 
     const T& getEngine() const { return engine_; }
@@ -143,7 +161,7 @@ public:
 protected:
     std::string provider_uniq_name_;
     T engine_;
-    int section_expected_timeout_;
+    int section_expected_timeout_ = 0;
 
     void goGoGo(const std::string& SectionName,  //
                 const std::string& CommandLine,  //
@@ -196,10 +214,8 @@ public:
     const wchar_t* getMainLogName() const { return cma::srv::kMainLogName; }
 
     // internal port means internal transport
-    const std::string getInternalPort() const { return internal_port_; }
-    const std::wstring getInternalPortWide() const {
-        std::wstring port(internal_port_.begin(), internal_port_.end());
-        return port;
+    const std::string getInternalPort() const noexcept {
+        return internal_port_;
     }
 
     // functions for testing/verifying
@@ -343,7 +359,7 @@ private:
     }
 
     //
-    int startProviders(AnswerId Tp, std::string Ip);
+    int startProviders(AnswerId Tp, const std::string& Ip);
 
     // all pre operation required for normal functionality
     void preStartBinaries();
@@ -352,11 +368,13 @@ private:
 private:
     void preLoadConfig();
     TheMiniProcess ohm_process_;
+    void updateMaxWaitTime(int timeout_seconds) noexcept;
+    void checkMaxWaitTime() noexcept;
+    std::mutex max_wait_time_lock_;
     int max_wait_time_;  // this is waiting time for all section to run
-    template <typename T>
-    bool tryToKick(T& SecProv, AnswerId Tp, const std::string& Ip) {
-        const auto& engine = SecProv.getEngine();
 
+    template <typename T>
+    bool isAllowed(const T& engine) {
         // check time
         auto allowed_by_time = engine.isAllowedByTime();
         if (!allowed_by_time) {
@@ -371,14 +389,34 @@ private:
             return false;
         }
 
+        return true;
+    }
+
+    template <typename T>
+    bool tryToKick(T& section_provider, AnswerId stamp,
+                   const std::string& cmdline) {
+        const auto& engine = section_provider.getEngine();
+
+        if (!isAllowed(engine)) return false;
+
         // success story...
-        vf_.emplace_back(SecProv.kick(true, Ip, Tp, this));
-        auto expected_timeout = SecProv.expectedTimeout();
-        if (expected_timeout > 0) {
-            max_wait_time_ = std::max(expected_timeout, max_wait_time_);
-            XLOG::t.i("Max Wait Time for Answer is set to [{}]",
-                      max_wait_time_);
-        }
+        vf_.emplace_back(
+            section_provider.kick(std::launch::async, cmdline, stamp, this));
+        auto expected_timeout = section_provider.expectedTimeout();
+        updateMaxWaitTime(expected_timeout);
+
+        return true;
+    }
+
+    template <typename T>
+    bool tryToDirectCall(T& section_provider, AnswerId stamp,
+                         const std::string& cmdline) {
+        const auto& engine = section_provider.getEngine();
+
+        if (!isAllowed(engine)) return false;
+
+        // success story...
+        section_provider.directCall(cmdline, stamp, getInternalPort());
 
         return true;
     }
@@ -576,14 +614,14 @@ private:
                 }
 
                 // make command line
-
-                auto cmd_line = fmt::format(
-                    L"\"{}\" -runonce {} {} id:{} timeout:{} {}",
-                    full_path,                      // exe
-                    SegmentName,                    // name of peer
-                    Proc->getInternalPortWide(),    // port to communicate
-                    Tp.time_since_epoch().count(),  // answer id
-                    Timeout, CommandLine);
+                auto port = wtools::ConvertToUTF16(Proc->getInternalPort());
+                auto cmd_line =
+                    fmt::format(L"\"{}\" -runonce {} {} id:{} timeout:{} {}",
+                                full_path,    // exe
+                                SegmentName,  // name of peer
+                                port,         // port to communicate
+                                Tp.time_since_epoch().count(),  // answer id
+                                Timeout, CommandLine);
 
                 XLOG::d.i("async RunStdCmd: {}",
                           wtools::ConvertToUTF8(cmd_line));
@@ -643,6 +681,10 @@ private:
 
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, RestartBinaries);
+
+    friend class ServiceProcessorTest;
+    FRIEND_TEST(ServiceProcessorTest, Base);
+
 #endif
 };
 

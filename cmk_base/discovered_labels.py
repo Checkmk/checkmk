@@ -81,6 +81,16 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
     def to_dict(self):
         return {label.name: label.to_dict() for label in self._labels.itervalues()}
 
+    def to_list(self):
+        return [label for label in self._labels.itervalues()]
+
+    def __add__(self, other):
+        if not isinstance(other, DiscoveredHostLabels):
+            raise TypeError('%s not type DiscoveredHostLabels' % other)
+        data = self.to_dict().copy()
+        data.update(other.to_dict())
+        return DiscoveredHostLabels.from_dict(data)
+
 
 class ABCLabel(object):
     """Representing a service label in Checkmk
@@ -152,6 +162,21 @@ class HostLabel(ABCLabel):
             "value": self.value,
             "plugin_name": self.plugin_name,
         }
+
+    def __repr__(self):
+        return "HostLabel(%r, %r)" % (self.name, self.value)
+
+    def __eq__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name == other.name and self.value == other.value and
+                self.plugin_name == other.plugin_name)
+
+    def __ne__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name != other.name or self.value != other.value or
+                self.plugin_name != other.plugin_name)
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):

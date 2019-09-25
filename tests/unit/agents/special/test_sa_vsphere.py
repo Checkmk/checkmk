@@ -5,6 +5,7 @@ import os
 
 import pytest
 
+from cmk.special_agents import agent_vsphere
 from testlib import cmk_path  # pylint: disable=import-error
 
 DEFAULT_AGRS = {
@@ -28,26 +29,6 @@ DEFAULT_AGRS = {
     "user": None,
     "secret": None,
 }
-
-
-@pytest.fixture(scope="module")
-def agent_vsphere(request):
-    """
-    Fixture to inject special agent as module
-
-    imp.load_source() has the side effect of creating a .*c file, so remove it
-    before and after importing it (just to be safe).
-    """
-    src_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'special', 'agent_vsphere'))
-
-    for action in ('setup', 'teardown'):
-        try:
-            os.remove(src_path + "c")
-        except OSError:
-            pass
-
-        if action == 'setup':
-            yield imp.load_source("agent_vsphere", src_path)
 
 
 @pytest.mark.parametrize("argv, expected_non_default_args", [
@@ -134,7 +115,7 @@ def agent_vsphere(request):
         "secret": "I like listening to Folk music"
     }),
 ])
-def test_parse_arguments(agent_vsphere, argv, expected_non_default_args):
+def test_parse_arguments(argv, expected_non_default_args):
     args = agent_vsphere.parse_arguments(["./agent_vsphere"] + argv + ["test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
@@ -151,6 +132,6 @@ def test_parse_arguments(agent_vsphere, argv, expected_non_default_args):
     ['--snapshot_display', 'whoopdeedoo'],
     ['--vm_piggyname', 'MissPiggy'],
 ])
-def test_parse_arguments_invalid(agent_vsphere, invalid_argv):
+def test_parse_arguments_invalid(invalid_argv):
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(["./agent_vsphere"] + invalid_argv)

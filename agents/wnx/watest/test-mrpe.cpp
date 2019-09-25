@@ -54,7 +54,7 @@ TEST(SectionProviderMrpe, Construction) {
     EXPECT_EQ(mrpe.includes_.size(), 0);
     auto out = mrpe.makeBody();
     EXPECT_TRUE(out.empty());
-    out = mrpe.generateContent(cma::section::kUseEmbeddedName);
+    out = mrpe.generateContent();
 
     EXPECT_TRUE(out.empty());
 }

@@ -79,8 +79,8 @@ private:
 // ASSORTED
 constexpr const wchar_t* kMainLogName = L"cmk_service.log";
 
-bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                           void* Context);
+bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
+                           void* context);
 
 class ServiceProcessor;
 
@@ -223,14 +223,14 @@ public:
     void stopTestingMainThread();
 
     // called by callbacks from Internal Transport section providers
-    bool addSectionToAnswer(const std::string& Name, const AnswerId Tp,
-                            const AsyncAnswer::DataBlock& Data) {
-        return answer_.addSegment(Name, Tp, Data);
+    bool addSectionToAnswer(const std::string& name, const AnswerId timestamp,
+                            const AsyncAnswer::DataBlock& data) {
+        return answer_.addSegment(name, timestamp, data);
     }
 
     // called when no data for section generated - this is ok
-    bool addSectionToAnswer(const std::string& Name, const AnswerId Tp) {
-        return answer_.addSegment(Name, Tp, std::vector<uint8_t>());
+    bool addSectionToAnswer(const std::string& name, const AnswerId timestamp) {
+        return answer_.addSegment(name, timestamp, std::vector<uint8_t>());
     }
 
     static void resetOhm() noexcept;
@@ -298,53 +298,18 @@ private:
     enum class Signal { restart, quit };
 
     // returns break type(what todo)
-    Signal mainWaitLoop() {
-        using namespace cma::cfg;
-        XLOG::l.i("main Wait Loop");
-        // memorize vars to check for changes in loop below
-        auto ipv6 = groups::global.ipv6();
-        auto port = groups::global.port();
-        auto uniq_cfg_id = GetCfg().uniqId();
-        while (1) {
-            using namespace std::chrono;
-
-            // Perform main service function here...
-
-            // special case when thread is one time run
-            if (!callback_(static_cast<const void*>(this))) break;
-            if (delay_ == 0ms) break;
-
-            // check for config update and inform external port
-            auto new_ipv6 = groups::global.ipv6();
-            auto new_port = groups::global.port();
-            if (new_ipv6 != ipv6 || new_port != port) {
-                XLOG::l.i(
-                    "Restarting server with new parameters [{}] ipv6:[{}]",
-                    new_port, new_port);
-                return Signal::restart;
-            }
-
-            // wait and check
-            if (timedWaitForStop()) {
-                XLOG::l.t("Stop request is set");
-                break;  // signaled stop
-            }
-            restartBinariesIfCfgChanged(uniq_cfg_id);
-        }
-        XLOG::l.t("main Wait Loop END");
-        return Signal::quit;
-    }
+    Signal mainWaitLoop();
 
     AsyncAnswer answer_;  // queue in the future, now only one answer for all
 
     std::vector<std::future<bool>> vf_;
 
     // called from the network callbacks in ExternalPort
-    std::optional<AnswerId> openAnswer(const std::string Ip) {
+    std::optional<AnswerId> openAnswer(const std::string ip_addr) {
         // race condition below
         using namespace std::chrono;
         if (answer_.isAnswerInUse() &&
-            !answer_.isAnswerOlder(30000ms))  // answer is in process
+            !answer_.isAnswerOlder(60s))  // answer is in process
         {
             XLOG::l("Answer is in use and too young - to be fixed");
             return {};  // #TODO make async here
@@ -352,14 +317,14 @@ private:
 
         // answer may be reused
         answer_.dropAnswer();
-        answer_.prepareAnswer(Ip);  // is temporary
+        answer_.prepareAnswer(ip_addr);  // is temporary
         auto tp = answer_.getId();
 
         return tp;
     }
 
     //
-    int startProviders(AnswerId Tp, const std::string& Ip);
+    int startProviders(AnswerId timestamp, std::string ip_addr);
 
     // all pre operation required for normal functionality
     void preStartBinaries();
@@ -424,31 +389,34 @@ private:
     void kickWinPerf(const AnswerId Tp, const std::string& Ip);
     void kickPlugins(const AnswerId Tp, const std::string& Ip);
 
+    template <typename T>
+    std::string generate() {
+        static_assert(std::is_base_of<cma::provider::Synchronous, T>::value,
+                      "Must be Synchronous based");
+        T section;
+        section.updateSectionStatus();
+        return section.generateContent();
+    }
+
     // Answer must be build in specific order:
     // <pre sections[s]> - usually Check_MK
     // body from answer
     // <post sections[s]>- usually system time
-    AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock& Block) {
+    AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock& block) {
         // pre sections generation
-        provider::CheckMk check_mk;
-        check_mk.updateSectionStatus();
-        auto pre = check_mk.generateContent(section::kUseEmbeddedName);
-
-        // post sections generation
-        provider::SystemTime system_time;
-        system_time.updateSectionStatus();
-        auto post = system_time.generateContent(section::kUseEmbeddedName);
+        auto pre = generate<provider::CheckMk>();
+        auto post = generate<provider::SystemTime>();
 
         // concatenating
         AnswerDataBlock result;
         try {
-            result.reserve(pre.size() + Block.size() + post.size());
+            result.reserve(pre.size() + block.size() + post.size());
 
             result.insert(result.end(), pre.begin(), pre.end());
-            result.insert(result.end(), Block.begin(), Block.end());
+            result.insert(result.end(), block.begin(), block.end());
             result.insert(result.end(), post.begin(), post.end());
         } catch (std::exception& e) {
-            XLOG::l.crit(XLOG_FUNC + "Weird exception {}", e.what());
+            XLOG::l.crit(XLOG_FUNC + "Weird exception '{}'", e.what());
         }
 
         return result;
@@ -644,7 +612,7 @@ private:
 #endif
 
     // Dynamic Internal sections
-    SectionProvider<provider::Uptime> uptime_provider_;
+    SectionProvider<provider::UptimeAsync> uptime_provider_;
     SectionProvider<provider::Df> df_provider_;
     SectionProvider<provider::Mem> mem_provider_;
     SectionProvider<provider::Services> services_provider_;
@@ -673,8 +641,9 @@ private:
         provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class ServiceControllerTest;
-    FRIEND_TEST(ServiceControllerTest, StartStopExe);
+    friend class ServiceProcessorTest;
+    FRIEND_TEST(ServiceProcessorTest, StartStopExe);
+    FRIEND_TEST(ServiceProcessorTest, Generate);
 
     friend class SectionProviderOhm;
     FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhm);

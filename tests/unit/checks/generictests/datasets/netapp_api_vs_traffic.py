@@ -158,23 +158,23 @@ checks = {
             [
                 (
                     0,
-                    "FCP avg. Read latency: 0.00 ms",
-                    [("fcp_read_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "FCP avg. Write latency: 0.00 ms",
-                    [("fcp_write_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
                     "FCP read data: 0.00 B",
                     [("fcp_read_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
                     0,
+                    "FCP avg. Read latency: 0.00 ms",
+                    [("fcp_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
                     "FCP write data: 0.00 B",
                     [("fcp_write_data", 9.000180003600072e-06, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "FCP avg. Write latency: 0.00 ms",
+                    [("fcp_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),
@@ -184,23 +184,23 @@ checks = {
             [
                 (
                     0,
-                    "FCP avg. Read latency: 0.00 ms",
-                    [("fcp_read_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "FCP avg. Write latency: 0.00 ms",
-                    [("fcp_write_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
                     "FCP read data: 0.00 B",
                     [("fcp_read_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
                     0,
+                    "FCP avg. Read latency: 0.00 ms",
+                    [("fcp_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
                     "FCP write data: 0.00 B",
                     [("fcp_write_data", 9.000180003600072e-06, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "FCP avg. Write latency: 0.00 ms",
+                    [("fcp_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),
@@ -210,16 +210,6 @@ checks = {
             [
                 (
                     0,
-                    "iSCSI avg. Read latency: 0.00 ms",
-                    [("iscsi_read_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "iSCSI avg. Write latency: 0.00 ms",
-                    [("iscsi_write_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
                     "iSCSI read data: 0.00 B",
                     [
                         (
@@ -234,6 +224,11 @@ checks = {
                 ),
                 (
                     0,
+                    "iSCSI avg. Read latency: 0.00 ms",
+                    [("iscsi_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
                     "iSCSI write data: 0.00 B",
                     [
                         (
@@ -245,6 +240,11 @@ checks = {
                             None,
                         )
                     ],
+                ),
+                (
+                    0,
+                    "iSCSI avg. Write latency: 0.00 ms",
+                    [("iscsi_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),
@@ -254,16 +254,6 @@ checks = {
             [
                 (
                     0,
-                    "iSCSI avg. Read latency: 0.00 ms",
-                    [("iscsi_read_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "iSCSI avg. Write latency: 0.00 ms",
-                    [("iscsi_write_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
                     "iSCSI read data: 0.00 B",
                     [
                         (
@@ -278,6 +268,11 @@ checks = {
                 ),
                 (
                     0,
+                    "iSCSI avg. Read latency: 0.00 ms",
+                    [("iscsi_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
                     "iSCSI write data: 0.00 B",
                     [
                         (
@@ -289,6 +284,11 @@ checks = {
                             None,
                         )
                     ],
+                ),
+                (
+                    0,
+                    "iSCSI avg. Write latency: 0.00 ms",
+                    [("iscsi_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),
@@ -339,11 +339,6 @@ checks = {
                 ),
                 (
                     0,
-                    "NFS write OPs: 0",
-                    [("nfs_write_ios", 9.000180003600072e-06, None, None, None, None)],
-                ),
-                (
-                    0,
                     "NFS read throughput: 0.00 B/s",
                     [
                         (
@@ -355,6 +350,11 @@ checks = {
                             None,
                         )
                     ],
+                ),
+                (
+                    0,
+                    "NFS write OPs: 0",
+                    [("nfs_write_ios", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
                     0,
@@ -447,23 +447,23 @@ checks = {
             [
                 (
                     0,
-                    "CIFS read latency: 0.00 ms",
-                    [("cifs_read_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "CIFS write latency: 0.00 ms",
-                    [("cifs_write_latency", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
                     "CIFS read OPs: 0",
                     [("cifs_read_ios", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
                     0,
+                    "CIFS read latency: 0.00 ms",
+                    [("cifs_read_latency", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
                     "CIFS write OPs: 0",
                     [("cifs_write_ios", 9.000180003600072e-06, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "CIFS write latency: 0.00 ms",
+                    [("cifs_write_latency", 0.0, None, None, None, None)],
                 ),
             ],
         ),

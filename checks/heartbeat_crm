@@ -69,6 +69,8 @@ factory_settings["heartbeat_crm_default_levels"] = {
     "max_age": heartbeat_crm_default_max_age,
 }
 
+_FAILED_ACTIONS_KEY = '__failed_actions__'
+
 
 def heartbeat_crm_parse_general(info):
     last_updated = None
@@ -140,8 +142,10 @@ def inventory_heartbeat_crm(info):
 
 def _transform_heartbeat_crm(params):
     if isinstance(params, dict):
-        return params
-    par_dict = {'max_age': params[0]}
+        _params = params.copy()
+        _params.setdefault('show_failed_actions', False)
+        return _params
+    par_dict = {'max_age': params[0], 'show_failed_actions': False}
     if params[1]:
         par_dict['dc'] = params[1]
     if params[2] > -1:
@@ -195,6 +199,13 @@ def check_heartbeat_crm(_no_item, params, info):
         else:
             yield 2, u'Resources: %d (Expected %d)' % (num_resources, params['num_resources'])
 
+    res = heartbeat_crm_parse_resources(info, show='all')
+    failed_actions = res.get(_FAILED_ACTIONS_KEY, [])
+
+    if params.get('show_failed_actions'):
+        for action in failed_actions:
+            yield 1, "Failed: %s" % (action,)
+
 
 check_info["heartbeat_crm"] = {
     'check_function': check_heartbeat_crm,
@@ -215,18 +226,83 @@ check_info["heartbeat_crm"] = {
 #   '----------------------------------------------------------------------'
 
 
-def heartbeat_crm_parse_resources(info):
+def _join_lines(lines):
+    """Join lines with the help of some helper characters.
+
+    :param lines:
+        List of strings
+
+    :returns:
+        List of joined strings
+
+    Examples:
+
+        >>> _join_lines(["* 1, 2,", "_ 3"])
+        ['1, 2, 3']
+
+        >>> _join_lines(["* 1, 2,", "_ 3,", "_ 4", "* 1, 2,", "_ 3"])
+        ['1, 2, 3, 4', '1, 2, 3']
+
+        >>> _join_lines(["1, 2, 3", "1, 2, 3", "* 1,", "_ 2, 3"])
+        ['1, 2, 3', '1, 2, 3', '1, 2, 3']
+
+        >>> _join_lines(["1, 2,", "  3"])
+        ['1, 2, 3']
+
+        >>> _join_lines([])
+        []
+
+    """
+    joined = []
+    line = ''
+    for part in lines:
+        if part.startswith("*"):
+            if line:
+                joined.append(line)
+            line = part[2:]
+        elif part.startswith(("_ ", "  ")):
+            line += part[1:]
+        else:
+            if line:
+                joined.append(line)
+            line = part
+
+    if line:
+        joined.append(line)
+    return joined
+
+
+def heartbeat_crm_parse_resources(info, show='resources'):
+    """
+
+    :param info:
+        An info list of lists from the check system.
+
+    :param show:
+        Can be either 'all', then it shows some additional information or
+        'resources' then it shows only resources.
+
+    :return:
+        A dict of resources and possibly additional information (like error messages).
+    """
     block_start = False
     resources = {}
     resource = ''
+    list_start = False
+    lines = []
     mode = 'single'
     for parts in info:
         line = " ".join(parts)
 
         if "failed" in line.lower() and "actions" in line.lower():
             block_start = False
+            list_start = True
         elif not block_start and line == 'Full list of resources:':
             block_start = True
+            list_start = False
+        elif list_start:
+            lines.append(line)
+            mode = 'failedaction'
         elif block_start:
             if line.startswith('Resource Group:'):
                 # Resource group
@@ -263,6 +339,9 @@ def heartbeat_crm_parse_resources(info):
             else:
                 # Single resource
                 resources[parts[0]] = [parts]
+
+    if show == 'all':
+        resources[_FAILED_ACTIONS_KEY] = _join_lines(lines)
 
     return resources
 

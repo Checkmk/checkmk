@@ -25,13 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    Integer,
-    TextAscii,
-    Transform,
-)
+from cmk.gui.valuespec import (Checkbox, Dictionary, Integer, TextAscii, Transform, RadioChoice)
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
@@ -79,8 +73,10 @@ rulespec_registry.register(
 
 def _heartbeat_crm_transform_heartbeat_crm(params):
     if isinstance(params, dict):
-        return params
-    par_dict = {'max_age': params[0]}
+        _params = params.copy()
+        _params.setdefault('show_failed_actions', False)
+        return _params
+    par_dict = {'max_age': params[0], 'show_failed_actions': False}
     if params[1]:
         par_dict['dc'] = params[1]
     if params[2] > -1:
@@ -119,8 +115,20 @@ def _parameter_valuespec_heartbeat_crm():
                  title=_("Number of Resources"),
                  help=_("The expected number of resources in the cluster"),
              )),
+            ("show_failed_actions",
+             RadioChoice(
+                 title=_('Show "Failed Actions"'),
+                 orientation='vertical',
+                 choices=[
+                     (False, _('Don\'t show or warn if "Failed Actions" are present (default)')),
+                     (True, _('Show "Failed Actions" and warn if any is present')),
+                 ],
+                 default_value=False,
+                 help=_('If activated, any "Failed Action" entry will be shown in the main check '
+                        'and the check will go to the WARN state.'),
+             )),
         ],
-        optional_keys=["dc", "num_nodes", "num_resources"],
+        optional_keys=["dc", "num_nodes", "num_resources", "show_failed_actions"],
     ),
                      forth=_heartbeat_crm_transform_heartbeat_crm)
 

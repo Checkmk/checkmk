@@ -1,0 +1,14 @@
+Title: heartbeat_crm check: Add "Failed Actions" part to main check, which can now warn if any are present.
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569395118
+Class: feature
+
+By default there is no behaviour change. A new GUI-rule was introduced to allow the user to
+switch to the new behaviour. When the user activates "show Failed Actions", any Failed Action
+entries will be listed in the status-detail column of the Heartbeat CRM General check and the
+check will transition to the WARNING level. If no Failed Action is present, the check will be
+in the OK state.

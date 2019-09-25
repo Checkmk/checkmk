@@ -5004,7 +5004,7 @@ msgid "Auth"
 msgstr "Auth"
 
 msgid "Authenticate users by incoming HTTP requests"
-msgstr "Benutzer anhand von eingehenden HTTP-Requests authentifizieren"
+msgstr "Benutzer anhand eingehender HTTP-Requests authentifizieren"
 
 msgid "Authentication"
 msgstr "Anmeldung"
@@ -18182,10 +18182,10 @@ msgid "History entries of one specific host"
 msgstr "Historie eines bestimmten Hosts"
 
 msgid "History log rotation: Regular interval of rotations"
-msgstr "Rotation der Historie: Regelmäßige rotation"
+msgstr "Rotation der Historie: Regelmäßige Rotation"
 
 msgid "History log rotation: Rotate by size (Limit of the size)"
-msgstr "Rotation der Historie: Nach Größe (Limitiert Größe der Dateien)"
+msgstr "Rotation der Historie: Nach Größe (limitierte Dateigröße)"
 
 msgid "History of Event"
 msgstr "Historie von Ereignis"
@@ -27901,7 +27901,7 @@ msgid "Number of columns: "
 msgstr "Spaltenzahl:"
 
 msgid "Number of configuration snapshots to keep"
-msgstr "Anzahl von Konfigurations-Sicherungen, die aufbewahrt werden sollen"
+msgstr "Anzahl der aufzubewahrenden Konfigurations-Sicherungen"
 
 msgid "Number of connected clients"
 msgstr "Anzahl der verbundenen Clients"
@@ -36892,7 +36892,7 @@ msgid "Staleness"
 msgstr "Veraltung"
 
 msgid "Staleness value to mark hosts / services stale"
-msgstr "Veraltungswert, ab dem Hosts/Services als veraltet angezeigt werden."
+msgstr "Veraltungswert, ab dem Hosts/Services als veraltet gelten"
 
 msgid "Standalone"
 msgstr "Allein stehend"

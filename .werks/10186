@@ -1,0 +1,17 @@
+Title: Windows Agent executes 'wmi_cpuload' section separately
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569399398
+Class: fix
+
+Previously the 'wmi_cpuload' section had been executed together with all other
+sections and plugins. This could result in realistic looking, but definitely
+too high numbers for the CPU load especially when the CPU is weak.
+
+Now the Windows Agent launches the 'wmi_cpuload' section at the very beginning of
+the processing cycle, both alone and synchronous, thus providing precise
+results for the CPU-load.
+

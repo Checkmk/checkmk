@@ -677,7 +677,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     EXPECT_EQ(states[system_index].level_, cma::cfg::EventLevels::kWarn);
 
     lwe.updateSectionStatus();
-    auto result = lwe.generateContent(cma::section::kUseEmbeddedName);
+    auto result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     if (lwe.sendAll()) {
         EXPECT_TRUE(result.size() > 100000);
@@ -715,7 +715,7 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     LogWatchEvent lwe;
     lwe.loadConfig();
     lwe.updateSectionStatus();
-    auto result = lwe.generateContent(cma::section::kUseEmbeddedName);
+    auto result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog <GTEST>") != std::string::npos);
@@ -744,7 +744,7 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
 
     LogWatchEvent lwe;
     lwe.loadConfig();
-    auto result = lwe.generateContent(cma::section::kUseEmbeddedName);
+    auto result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog Vista <GTEST>") != std::string::npos);

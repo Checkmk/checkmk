@@ -23,7 +23,7 @@ std::string UptimeSync::makeBody() {
     return s;
 }
 
-std::string Uptime::makeBody() {
+std::string UptimeAsync::makeBody() {
     auto count = GetTickCount64();
     count /= 1000;  // time in milliseconds
     std::string s = std::to_string(count);

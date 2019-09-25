@@ -38,7 +38,7 @@ TEST(SectionProviders, BasicUptime) {
     using namespace cma::section;
     using namespace cma::provider;
 
-    cma::srv::SectionProvider<Uptime> uptime_provider;
+    cma::srv::SectionProvider<UptimeSync> uptime_provider;
     EXPECT_EQ(uptime_provider.getEngine().getUniqName(), kUptimeName);
 
     auto& e3 = uptime_provider.getEngine();

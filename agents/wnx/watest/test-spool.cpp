@@ -104,7 +104,7 @@ TEST(SectionProviderSpool, ReadFiles) {
     RemoveAllSectionsNodes();
     tst::EnableSectionsNode(cma::section::kSpool);
 
-    auto ex = spool.generateContent(section::kUseEmbeddedName);
+    auto ex = spool.generateContent();
     EXPECT_TRUE(!ex.empty());
     auto table = cma::tools::SplitString(ex, "\n");
     EXPECT_EQ(table.size(), 4);

@@ -80,7 +80,7 @@ TEST(DfTest, Integration) {
 TEST(DfTest, Full) {
     {
         cma::provider::Df df;
-        auto result = df.generateContent(cma::section::kUseEmbeddedName);
+        auto result = df.generateContent();
         ASSERT_TRUE(!result.empty());
 
         auto rows = cma::tools::SplitString(result, "\n");

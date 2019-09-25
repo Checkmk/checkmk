@@ -11,6 +11,14 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
+namespace cma::provider {
+class Empty : public Synchronous {
+public:
+    Empty() : Synchronous("empty") {}
+    std::string makeBody() override { return "****"; }
+};
+}  // namespace cma::provider
+
 namespace cma::srv {
 
 TEST(AsyncAnswerTest, Base) {
@@ -37,7 +45,31 @@ TEST(AsyncAnswerTest, Base) {
     EXPECT_FALSE(aa.prepareAnswer("aaa"));
 }
 
-TEST(ServiceControllerTest, StartStopExe) {
+TEST(ServiceProcessorTest, Generate) {
+    ServiceProcessor sp;
+    auto s1 = sp.generate<cma::provider::CheckMk>();
+    auto t1 = cma::tools::SplitString(s1, "\n");
+    ASSERT_FALSE(t1.empty());
+
+    auto s2 = sp.generate<cma::provider::SystemTime>();
+    auto t2 = cma::tools::SplitString(s2, "\n");
+    ASSERT_FALSE(t2.empty());
+
+    auto s3 = sp.generate<cma::provider::Empty>();
+    auto t3 = cma::tools::SplitString(s3, "\n");
+    ASSERT_TRUE(t3.empty());
+
+    AsyncAnswer::DataBlock db;
+    auto ret = sp.wrapResultWithStaticSections(db);
+    std::string data = reinterpret_cast<const char*>(ret.data());
+    ASSERT_TRUE(ret.size() > 5);
+    auto t = cma::tools::SplitString(data, "\n");
+    EXPECT_EQ(t[0] + "\n", cma::section::MakeHeader(cma::section::kCheckMk));
+    EXPECT_EQ(t[t.size() - 2] + "\n",
+              cma::section::MakeHeader(cma::section::kSystemTime));
+}
+
+TEST(ServiceProcessorTest, StartStopExe) {
     using namespace cma::srv;
     using namespace cma::cfg;
     using namespace std::chrono;

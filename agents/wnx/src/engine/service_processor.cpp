@@ -473,6 +473,43 @@ bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t& last_cfg_id) {
     return true;
 }
 
+// returns break type(what todo)
+ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
+    using namespace cma::cfg;
+    XLOG::l.i("main Wait Loop");
+    // memorize vars to check for changes in loop below
+    auto ipv6 = groups::global.ipv6();
+    auto port = groups::global.port();
+    auto uniq_cfg_id = GetCfg().uniqId();
+    while (1) {
+        using namespace std::chrono;
+
+        // Perform main service function here...
+
+        // special case when thread is one time run
+        if (!callback_(static_cast<const void*>(this))) break;
+        if (delay_ == 0ms) break;
+
+        // check for config update and inform external port
+        auto new_ipv6 = groups::global.ipv6();
+        auto new_port = groups::global.port();
+        if (new_ipv6 != ipv6 || new_port != port) {
+            XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
+                      new_port, new_port);
+            return Signal::restart;
+        }
+
+        // wait and check
+        if (timedWaitForStop()) {
+            XLOG::l.t("Stop request is set");
+            break;  // signaled stop
+        }
+        restartBinariesIfCfgChanged(uniq_cfg_id);
+    }
+    XLOG::l.t("main Wait Loop END");
+    return Signal::quit;
+}
+
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
@@ -531,15 +568,15 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
             // this is main processing loop
             rt_device.start();
             auto io_started = ex_port->startIo(
-                [this,
-                 &rt_device](const std::string Ip) -> std::vector<uint8_t> {
+                [this, &rt_device](
+                    const std::string ip_addr) -> std::vector<uint8_t> {
                     // most important entry point for external port io
                     // this is internal implementation of the io_context
                     // called upon kicking in port, i.e. LATER. NOT NOW.
 
-                    prepareAnswer(Ip, rt_device);
+                    prepareAnswer(ip_addr, rt_device);
                     XLOG::d.i("Generating answer number [{}]", answer_.num());
-                    return generateAnswer(Ip);
+                    return generateAnswer(ip_addr);
                 });
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
@@ -568,22 +605,23 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
 void ServiceProcessor::startTestingMainThread() {
     if (thread_.joinable()) {
-        xlog::l("Attempt to start service twice, no way!").print();
+        XLOG::l("Attempt to start service twice, no way!");
         return;
     }
+
     thread_ = std::thread(&ServiceProcessor::mainThread, this, nullptr);
-    XLOG::l(XLOG::kStdio)("Successful start of thread");
+    XLOG::l.i("Successful start of main thread");
 }
 
 // Implementation of the Windows signals
 // ---------------- END ----------------
 
-bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                           void* Context) {
+bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
+                           void* context) {
     using namespace std::chrono;
-    auto processor = static_cast<cma::srv::ServiceProcessor*>(Context);
+    auto processor = static_cast<cma::srv::ServiceProcessor*>(context);
     if (!processor) {
-        xlog::l("error in param\n");
+        XLOG::l("error in param");
         return false;
     }
 
@@ -591,15 +629,15 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    XLOG::d.i("Received [{}] bytes from '{}'\n", Len, dt->providerId());
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(data);
+    XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             {
-                std::string to_log;
                 if (dt->data()) {
+                    std::string to_log;
                     auto data = static_cast<const char*>(dt->data());
                     to_log.assign(data, data + dt->length());
                     XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(),

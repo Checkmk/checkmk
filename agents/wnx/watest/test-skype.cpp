@@ -10,16 +10,12 @@
 #include <future>
 #include <string_view>
 
-#include "common/cfg_info.h"
-
-#include "read_file.h"
-
 #include "cfg.h"
 #include "cfg_details.h"
-
 #include "cma_core.h"
-
+#include "common/cfg_info.h"
 #include "providers/skype.h"
+#include "read_file.h"
 
 namespace cma::provider {  // to become friendly for wtools classes
 auto SkypeCounters = internal::GetSkypeCountersVector();
@@ -50,7 +46,7 @@ TEST(SectionProviderSkype, Api) {
     SkypeCounters->push_back(L"510");
 
     // run
-    auto ret = skype.generateContent(section::kUseEmbeddedName);
+    auto ret = skype.generateContent();
     ASSERT_FALSE(ret.empty());
 
     // verify

@@ -277,33 +277,30 @@ class DiscoveryResult(object):
     """
 
     # TODO: Add some more consistency checks here.
-    def __init__(self, result):
+    def __init__(self, result=()):
         self.entries = []
-        if result is None:
+        self.labels = DiscoveredHostLabels()
+        if not result:
             # discovering nothing is valid!
             return
         for entry in result:
-            # TODO: Silently skip host label results for the moment
-            if isinstance(entry, (DiscoveredHostLabels, HostLabel)):
-                continue
-            self.entries.append(DiscoveryEntry(entry))
+            if isinstance(entry, DiscoveredHostLabels):
+                self.labels += entry
+            elif isinstance(entry, HostLabel):
+                self.labels.add_label(entry)
+            else:
+                self.entries.append(DiscoveryEntry(entry))
         self.entries.sort(key=repr)
 
-    def __eq__(self, other_value):
-        return all(entry in other_value for entry in self) and \
-               all(other_entry in self for other_entry in other_value)
-
-    def __contains__(self, value):
-        return value in self.entries
-
-    def __iter__(self):
-        return iter(self.entries)
+    def __eq__(self, other):
+        return (self.entries == other.entries and self.labels == other.labels)
 
     def __repr__(self):
-        return "DiscoveryResult(%r)" % map(repr, self)
+        args = self.entries + [HostLabel(unicode(k), unicode(self.labels[k])) for k in self.labels]
+        return "DiscoveryResult(%r)" % (args,)
 
     def __str__(self):
-        return "%s" % map(tuple, self)
+        return "%s%s" % (map(tuple, self.entries), [self.labels[k].label for k in self.labels])
 
 
 def assertDiscoveryResultsEqual(check, actual, expected):
@@ -317,8 +314,9 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     assert isinstance(expected, DiscoveryResult), \
            "%r is not a DiscoveryResult instance" % expected
     assert len(actual.entries) == len(expected.entries), \
-           "DiscoveryResults are not of equal length: %s != %s" % (actual, expected)
-    for enta, ente in zip(actual, expected):
+           "DiscoveryResults entries are not of equal length: %s != %s" % (actual, expected)
+
+    for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
         if isinstance(default_params_a, str):
             default_params_a = eval(default_params_a, check.context, check.context)
@@ -330,6 +328,13 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         assert item_a == item_e, "items differ: %r != %r" % (item_a, item_e)
         assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (
             default_params_a, default_params_e)
+
+    assert len(actual.labels) == len(expected.labels), \
+           "DiscoveryResults labels are not of equal length: %s != %s" % (actual.labels.to_dict(), expected.labels.to_dict())
+
+    # iterate over the HostLabels in DiscoveredHostLabels, not lable string
+    for laba, labe in zip(actual.labels.to_list(), expected.labels.to_list()):
+        assert laba == labe, "discovered host labels differ: expected %r got %r" % (laba, labe)
 
 
 class BasicItemState(object):

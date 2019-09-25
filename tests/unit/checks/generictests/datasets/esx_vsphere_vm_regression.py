@@ -1,6 +1,6 @@
 # -*- encoding: utf-8
 # yapf: disable
-
+from cmk_base.discovered_labels import HostLabel
 
 checkname = 'esx_vsphere_vm'
 
@@ -76,7 +76,9 @@ discovery = {'cpu': [(None, None)],
              'mem_usage': [(None, {})],
              'mounted_devices': [(None, None)],
              'name': [(None, None)],
-             'running_on': [(None, None)],
+             'running_on': [(None, None),
+                            HostLabel(u'cmk/vsphere_object', u'vm')
+                           ],
              'snapshots': [(None, {})]}
 
 

@@ -1,5 +1,5 @@
 # yapf: disable
-
+from cmk_base.discovered_labels import HostLabel
 
 checkname = 'docker_node_info'
 
@@ -13,7 +13,9 @@ info = [
 
 
 discovery = {
-    '': [(None, {})],
+    '': [(None, {}),
+         HostLabel(u'cmk/docker_object', u'node')
+        ],
     'containers': [(None, {})],
 }
 

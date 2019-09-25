@@ -1,6 +1,6 @@
 # -*- encoding: utf-8
 # yapf: disable
-
+from cmk_base.discovered_labels import HostLabel
 
 checkname = 'docker_container_status'
 
@@ -14,7 +14,7 @@ freeze_time = "2019-06-05T09:40:06.893459004Z"
 
 
 discovery = {
-    '': [(None, {})],
+    '': [(None, {}), HostLabel(u'cmk/docker_object', u'container')],
     'health': [(None, {})],
     'uptime': [(None, {})],
 }

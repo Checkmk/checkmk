@@ -1,0 +1,10 @@
+Title: HW/SW Inventory History: Skip delta trees if no changes
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p23
+Date: 1569416369
+Class: fix
+
+

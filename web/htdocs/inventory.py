@@ -221,9 +221,9 @@ def get_history_deltas(hostname, search_timestamp = None):
             current_tree = get_tree(timestamp)
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
-
-            cmk.store.save_file(cached_delta_path, repr((new, changed, removed, delta_tree.get_raw_tree())))
-            delta_history.append((timestamp, delta_data))
+            if new or changed or removed:
+                cmk.store.save_file(cached_delta_path, repr((new, changed, removed, delta_tree.get_raw_tree())))
+                delta_history.append((timestamp, delta_data))
         except htmllib.RequestTimeout:
             raise
         except Exception, e:

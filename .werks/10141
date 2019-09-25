@@ -9,7 +9,9 @@ Version: 1.7.0i1
 Date: 1569418383
 
 In version 1.6.0 the mk_logwatch plugin crashed if a processed logfile could
-not be correctly encoded.
+not be correctly decoded. This lead to log services not being updated. Even
+worse a single logfile with this issue could affect other logfiles.
 
-We now replace all characters that can not be encoded with the U+FFFD replacement
-character. In addition, in case of an exception we now continue processing the next file.
+We now replace all characters that can not be encoded with the U+FFFD
+replacement character. In addition, in case of an exception we now continue
+processing the next file.

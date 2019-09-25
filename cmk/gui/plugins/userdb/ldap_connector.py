@@ -1072,25 +1072,37 @@ class LDAPUserConnector(UserConnector):
         if enforce_this_connection is False:
             return None  # Skip this connection, another one is enforced
         else:
+            # Always use the stripped user ID for communication with the LDAP server
             user_id = self._strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the user_id as tuple which are both needed for
         # the further login process.
-        result = self._get_user(user_id, True)
-        if not result:
+        fetch_user_result = self._get_user(user_id, True)
+        if not fetch_user_result:
             # The user does not exist
             if enforce_this_connection:
                 return False  # Refuse login
             return None  # Try next connection (if available)
 
-        user_dn, user_id = result
+        user_dn, user_id = fetch_user_result
 
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, password)
-            result = user_id
+            if not self._has_suffix():
+                result = user_id
+            else:
+                # Does the user without suffix exist and is it related to this connection? Always
+                # use it in case it exists. If not, use the user with the suffix. A connection may
+                # have created users while the connection had no suffix and a suffix has been added
+                # to the connection later.
+                import cmk.gui.userdb as userdb  # TODO: Cleanup
+                if userdb.connection_id_of_user(user_id) == self.id():
+                    result = user_id
+                else:
+                    result = self._add_suffix(user_id)
         except:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False

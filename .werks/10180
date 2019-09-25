@@ -1,0 +1,13 @@
+Title: LDAP: Fix name clashes when using multiple LDAPs with suffix and without
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569398032
+Class: fix
+
+When using the LDAP authentication with multiple LDAP servers where one of the
+connections has a connection suffix configured and another does not have one
+configured, it could happen that users authenticating with the suffixed
+connection end up as authenticated user of the not suffixed connection.

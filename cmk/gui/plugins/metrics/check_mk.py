@@ -6052,7 +6052,7 @@ metric_info["jenkins_pending_tasks"] = {
     "color": "51/a",
 }
 
-metric_info["msg_count_avg"] = {
+metric_info["msgs_avg"] = {
     "title": _("Average number of messages"),
     "unit": "count",
     "color": "23/a",

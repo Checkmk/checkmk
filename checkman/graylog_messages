@@ -1,5 +1,5 @@
 title: Graylog: Messages
-agents: jenkins
+agents: graylog
 catalog: app/graylog
 license: GPL
 distribution: check_mk

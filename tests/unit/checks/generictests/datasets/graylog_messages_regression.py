@@ -18,4 +18,4 @@ checks = {'': [(None,
                   [('messages', 8569688, None, None, None, None)]),
                  (0,
                   'Average number of messages (30 m): 0.00',
-                  [('msg_count_avg', 0, None, None, None, None)])])]}
+                  [('msgs_avg', 0, None, None, None, None)])])]}

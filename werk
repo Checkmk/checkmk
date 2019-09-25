@@ -172,7 +172,7 @@ def load_werk(werkid):
 def save_werk(werk):
     f = open(str(werk["id"]), "w")
     f.write("Title: %s\n" % werk["title"])
-    for key, val in werk.items():
+    for key, val in sorted(werk.items()):
         if key not in ["title", "description", "id"]:
             f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
     f.write("\n")

@@ -40,7 +40,7 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_graylog_messages():
     return Dictionary(elements=[
-        ("messages_upper",
+        ("msgs_upper",
          Tuple(
              title=_("Total message count upper levels"),
              elements=[
@@ -48,7 +48,7 @@ def _parameter_valuespec_graylog_messages():
                  Integer(title=_("Critical at"), allow_empty=False),
              ],
          )),
-        ("messages_lower",
+        ("msgs_lower",
          Tuple(
              title=_("Total message count lower levels"),
              elements=[
@@ -56,7 +56,7 @@ def _parameter_valuespec_graylog_messages():
                  Integer(title=_("Critical if below"), allow_empty=False),
              ],
          )),
-        ("avg",
+        ("msgs_avg",
          Integer(
              title=_("Message averaging"),
              help=_("By activating averaging, Check_MK will compute the average of "
@@ -67,7 +67,7 @@ def _parameter_valuespec_graylog_messages():
              minvalue=1,
              default_value=30,
          )),
-        ("msg_count_avg_upper",
+        ("msgs_avg_upper",
          Tuple(
              title=_("Average message count upper levels"),
              elements=[
@@ -75,7 +75,7 @@ def _parameter_valuespec_graylog_messages():
                  Integer(title=_("Critical at"), allow_empty=False),
              ],
          )),
-        ("msg_count_avg_lower",
+        ("msgs_avg_lower",
          Tuple(
              title=_("Average message count lower levels"),
              elements=[

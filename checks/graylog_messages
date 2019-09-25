@@ -39,43 +39,46 @@ def parse_graylog_messages(info):
     return parsed
 
 
+def inventory_graylog_messages(parsed):
+    events = parsed.get("events")
+    if events is not None:
+        return [(None, {})]
+
+
 def check_graylog_messages(no_item, params, parsed):
-    # possible output without events
-    # {"message": "Couldn't collect aliases for index pattern graylog_*",
-    # "type": "DetailedError", "details": []}
-    if not parsed or not "events" in parsed:
+    messages = parsed.get("events")
+    if messages is None:
         return
 
-    for perf_name, infotext, human_func in [
-        ("messages", "Total number of messages", int),
-        ("msg_count_avg", "Average number of messages", None),
-    ]:
+    msgs_levels_upper = params.get('msgs_upper', (None, None))
+    msgs_levels_lower = params.get('msgs_lower', (None, None))
 
-        msg_data = parsed["events"]
-        levels = params.get('%s_upper' % perf_name, (None, None))
-        levels_lower = params.get('%s_lower' % perf_name, (None, None))
+    yield check_levels(messages,
+                       "messages",
+                       msgs_levels_upper + msgs_levels_lower,
+                       human_readable_func=int,
+                       infoname="Total number of messages")
 
-        if perf_name == "msg_count_avg":
-            avg = params.get(perf_name, 30)
+    avg_key = "msgs_avg"
+    avg = params.get(avg_key, 30)
+    msgs_avg_levels_upper = params.get('msgs_avg_upper', (None, None))
+    msgs_avg_levels_lower = params.get('msgs_avg_lower', (None, None))
+    this_time = time.time()
 
-            this_time = time.time()
-            rate = get_rate("graylog_%s.rate" % perf_name, this_time, msg_data) * 60
+    rate = get_rate("graylog_%s.rate" % avg_key, this_time, messages)
+    avg_rate = get_average("graylog_%s.avg" % avg_key, this_time, rate, avg)
 
-            avg_rate = get_average("graylog_%s.avg" % perf_name, this_time, rate, avg)
-            msg_data = avg_rate
-            infotext += " (%s)" % get_age_human_readable(avg * 60)
-
-        yield check_levels(msg_data,
-                           perf_name,
-                           levels + levels_lower,
-                           human_readable_func=human_func,
-                           infoname=infotext)
+    yield check_levels(avg_rate,
+                       avg_key,
+                       msgs_avg_levels_upper + msgs_avg_levels_lower,
+                       infoname="Average number of messages (%s)" %
+                       get_age_human_readable(avg * 60))
 
 
 check_info["graylog_messages"] = {
     "parse_function": parse_graylog_messages,
     "check_function": check_graylog_messages,
-    "inventory_function": discover_single,
+    "inventory_function": inventory_graylog_messages,
     "service_description": "Graylog Messages",
     "has_perfdata": True,
     "group": "graylog_messages",

@@ -259,7 +259,7 @@ def check_cpu_util_linux_container(_no_item, params, parsed):
 
     cpu_usage = cpu_tick_rate * num_cpus * 100.0
 
-    return check_cpu_util(cpu_usage, params)
+    return check_cpu_util(cpu_usage, params, perf_max=num_cpus * 100)
 
 
 #   .--helper--------------------------------------------------------------.

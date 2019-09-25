@@ -358,8 +358,9 @@ def _frexp10(x):
 
 
 def _frexpb(x, base):
+    # type: (float, int) -> Tuple[float, int]
     exp = int(math.log(x, base))
-    mantissa = int(x / base**exp)
+    mantissa = x / base**exp
     if mantissa < 1:
         mantissa *= base
         exp -= 1

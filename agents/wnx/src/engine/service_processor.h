@@ -324,7 +324,7 @@ private:
     }
 
     //
-    int startProviders(AnswerId timestamp, std::string ip_addr);
+    int startProviders(AnswerId timestamp, const std::string& ip_addr);
 
     // all pre operation required for normal functionality
     void preStartBinaries();

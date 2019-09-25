@@ -38,6 +38,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import (
     ID,
+    Age,
     Alternative,
     CascadingDropdown,
     Checkbox,
@@ -2263,6 +2264,14 @@ def _valuespec_special_agents_graylog():
                  help=_(
                      "Use this option to query a port which is different from standard port 443."),
                  default_value=443,
+                 allow_empty=False,
+             )),
+            ("since",
+             Age(
+                 title=_("Time for coverage of failures"),
+                 help=_(
+                     "Use this option to set the timeframe in which failures should be covered."),
+                 default_value=1800,
                  allow_empty=False,
              )),
             ("sections",

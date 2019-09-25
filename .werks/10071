@@ -1,0 +1,14 @@
+Title: graylog_failures: New check to monitor the number of failures across all indices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569412184
+Class: feature
+
+With this check you can monitor the number of failures across all indices of a
+graylog instance. It outputs the total number of failures and the number of
+failures in a given timeframe (default: last 30m). Also the number of affected
+indices of the last failures are shown. The long output shows detailed
+information of the last 30 failures.

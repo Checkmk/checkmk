@@ -28,6 +28,7 @@
 #     'port': 9000,
 #     'password': 'yeah',
 #     'sections': ['jvm', 'cluster_health', 'failures'],
+#     'since': 30,
 #     'user': 'hell'
 # }
 
@@ -38,6 +39,8 @@ def agent_graylog_arguments(params, hostname, ipaddress):
         params["protocol"],
         "-m",
         ','.join(params["sections"]),
+        "-t",
+        params["since"],
         "-u",
         params["user"],
         "-s",

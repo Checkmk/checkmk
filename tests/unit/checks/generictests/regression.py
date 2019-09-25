@@ -37,6 +37,7 @@ Make sure the file is a valid python module:
 
 """
 import os
+import ast
 import sys
 import pprint
 import time
@@ -77,6 +78,7 @@ class WritableDataset(object):
 
     def write(self, directory):
         content = []
+        imports = set()
         for k in self.writelist:
             v = getattr(self, k)
             if not v:
@@ -84,6 +86,7 @@ class WritableDataset(object):
             k_str = '%s = ' % k
             v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
             content += ['', '', k_str + v_str]
+            imports |= self.get_imports(v)
 
         if not content:
             return
@@ -91,7 +94,30 @@ class WritableDataset(object):
         with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
+
+            for item in imports:
+                f.write('%s\n' % item)
+
             f.write('\n'.join(content))
+
+    def get_imports(self, value):
+        try:
+            ast.literal_eval(repr(value))
+            return set()
+        except ValueError:
+            pass
+
+        if isinstance(value, dict):
+            iterate = value.iteritems()
+        elif isinstance(value, (tuple, list)):
+            iterate = value
+        else:
+            return {"from %s import %s" % (value.__module__, value.__class__.__name__)}
+
+        imports = set()
+        for val in iterate:
+            imports |= self.get_imports(val)
+        return imports
 
 
 def test_main(check_manager, datasetfile):

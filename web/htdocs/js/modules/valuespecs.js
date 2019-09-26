@@ -801,10 +801,33 @@ function autocomplete_show(input_id, inner_html)
     popup.innerHTML = inner_html;
 
     // Register some unfocus handlers for hiding
-    utils.hide_on_click_click_outside_of(popup);
-    document.getElementById(input_id).addEventListener("blur", function() {
-        autocomplete_close(input_id);
-    });
+    autocomplete_hide_on_unrelated_events(popup);
+}
+
+export function autocomplete_hide_on_unrelated_events(origin_element) {
+    const outside_click_listener = evt => {
+        let target_element = evt.target;
+
+        do {
+            if (target_element == origin_element) {
+                return; // This click inside
+            }
+            target_element = target_element.parentNode;
+        } while (target_element);
+
+        // Click outside!
+        if (origin_element.parentNode) {
+            origin_element.parentNode.removeChild(origin_element);
+        }
+        remove_click_listener();
+    };
+
+    const remove_click_listener = () => {
+        document.removeEventListener("click", outside_click_listener);
+    };
+
+    document.addEventListener("click", outside_click_listener);
+    origin_element.addEventListener("blur", outside_click_listener);
 }
 
 function autocomplete_close(input_id)

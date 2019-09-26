@@ -1047,6 +1047,7 @@ class AutomationGetCheckManPage(Automation):
 
         # Add a few informations from check_info. Note: active checks do not
         # have an entry in check_info
+
         if check_plugin_name in config.check_info:
             manpage["type"] = "check_mk"
             info = config.check_info[check_plugin_name]
@@ -1065,6 +1066,12 @@ class AutomationGetCheckManPage(Automation):
         # Assume active check
         elif check_plugin_name.startswith("check_"):
             manpage["type"] = "active"
+        elif check_plugin_name in ['check-mk', "check-mk-inventory"]:
+            manpage["type"] = "check_mk"
+            if check_plugin_name == "check-mk":
+                manpage["service_description"] = "Check_MK"
+            if check_plugin_name == "check-mk-inventory":
+                manpage["service_description"] = "Check_MK Discovery"
         else:
             raise MKAutomationError("Could not detect type of manpage: %s. "
                                     "Maybe the check is missing." % check_plugin_name)

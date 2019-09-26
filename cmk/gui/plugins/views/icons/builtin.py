@@ -299,9 +299,14 @@ class ManpageIcon(Icon):
                 check_type = command[9:]
             elif command.startswith("check_mk_active-"):
                 check_name = command[16:].split("!")[0]
-                if check_name == "cmk_inv":
-                    return
                 check_type = "check_" + check_name
+            elif command in ["check-mk", "check-mk-inventory"]:
+                if command == "check-mk":
+                    check_type = "check-mk"
+                elif command == "check-mk-inventory":
+                    check_type = "check-mk-inventory"
+                else:
+                    return
             else:
                 return
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]

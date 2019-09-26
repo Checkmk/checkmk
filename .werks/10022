@@ -1,0 +1,13 @@
+Title: checkman: Addition of checkman pages for check-mk services
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569477627
+Class: feature
+
+ Checkman pages for two check-mk services (Check_MK and Check_MK Discovery) have been added.
+ In addition, the checkman link in the options dropdown of the service has been added for both
+ checks along with the Check_MK Inventory SW/HW service. The checkman description is also shown
+ in the table within the service details.

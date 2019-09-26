@@ -564,8 +564,12 @@ def install_package(file_name=None, file_object=None):
 
             tarsource = tar.extractfile(part.ident + ".tar")
 
-            tardest = subprocess.Popen(["tar", "xf", "-", "-C", part.path] + filenames,
-                                       stdin=subprocess.PIPE)
+            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+            # been installed for cache invalidation.
+            tardest = subprocess.Popen(["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                                       stdin=subprocess.PIPE,
+                                       shell=False,
+                                       close_fds=True)
             while True:
                 data = tarsource.read(4096)
                 if not data:

@@ -1,0 +1,12 @@
+Title: Inventory Kubernetes endpoints
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569501312
+Class: feature
+
+This adds entries under the Kubernetes.Endpoints node of the
+software inventory.  The addresses, the non-ready addresses,
+and the ports are listed.

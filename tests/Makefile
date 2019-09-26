@@ -10,7 +10,7 @@ YAPF     := $(PIPENV) run yapf
 include ../defines.make
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
-        test-gui-crawl test-integration test-packaging test-pylint \
+        test-gui-crawl test-integration test-agent-integration test-packaging test-pylint \
         test-shellcheck test-format-shell \
 	test-unit test-unit-coverage-html
 
@@ -22,6 +22,8 @@ help:
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-gui-crawl            - Run GUI crawl test"
 	@echo "test-integration          - Run integration tests"
+	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
+	@echo "test-format-python        - Test the python formatting"
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
@@ -72,6 +74,9 @@ test-gui-crawl: $(VENV) $(NODE_MODULES)
 
 test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
+
+test-agent-integration: $(VENV)
+	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
 test-packaging: $(VENV)
 	$(PYTEST) -T packaging packaging

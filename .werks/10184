@@ -1,4 +1,4 @@
-Title: mtr mk_jolokia apache_status: Fixed Python 2.5 compatibility of agent plugins
+Title: mtr mk_jolokia apache_status mk_mongodb: Fixed Python 2.5 compatibility of agent plugins
 Level: 1
 Component: checks
 Compatible: compat

@@ -1,11 +1,11 @@
-Title: Windows Agent reinstalls files using also content of those files
-Level: 1
+Title: Windows Agent: Fix possible update / downgrade problems
+Level: 2
 Component: checks
 Compatible: compat
 Edition: cre
 Version: 1.6.0p2
 Date: 1569511775
-Class: feature
+Class: fix
 
 Previously Windows Agent used only the file timestamp to determine whether 
 the file have to be reinstalled. 

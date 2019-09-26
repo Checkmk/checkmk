@@ -1710,6 +1710,25 @@ def test_host_config_add_discovery_check(monkeypatch, params, ignored, ping, res
     assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
 
 
+def test_get_config_file_paths_with_confd(folder_path_test_config):
+    rel_paths = [
+        #"%s" % p.relative_to(cmk.utils.paths.default_config_dir)
+        "%s" % p.replace(cmk.utils.paths.default_config_dir + "/", "")
+        for p in config._get_config_file_paths(with_conf_d=True)
+    ]
+    assert rel_paths == [
+        'main.mk',
+        'conf.d/wato/hosts.mk',
+        'conf.d/wato/rules.mk',
+        'conf.d/wato/lvl1/hosts.mk',
+        'conf.d/wato/lvl1/rules.mk',
+        'conf.d/wato/lvl1/lvl2/hosts.mk',
+        'conf.d/wato/lvl1/lvl2/rules.mk',
+        'conf.d/wato/lvl1_aaa/hosts.mk',
+        'conf.d/wato/lvl1_aaa/rules.mk',
+    ]
+
+
 def test_load_config_folder_paths(folder_path_test_config):
     assert config.host_paths == {
         'lvl1-host': '/wato/lvl1/hosts.mk',

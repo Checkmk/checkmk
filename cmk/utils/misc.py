@@ -66,4 +66,4 @@ def key_config_paths(a):
        the *.mk files in that directory.
     """
     pa = a.parts
-    return pa, len(pa), pa[:-1]
+    return pa[:-1], len(pa), pa

@@ -364,7 +364,7 @@ int ServiceProcessor::startProviders(AnswerId Tp, const std::string& Ip) {
     preLoadConfig();
 
     // call of sensible to CPU-load sections
-    tryToDirectCall(wmi_cpuload_provider_, Tp, Ip);
+    bool started_sync = tryToDirectCall(wmi_cpuload_provider_, Tp, Ip);
 
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
@@ -412,7 +412,7 @@ int ServiceProcessor::startProviders(AnswerId Tp, const std::string& Ip) {
 
     checkMaxWaitTime();
 
-    return static_cast<int>(vf_.size());
+    return static_cast<int>(vf_.size()) + (started_sync ? 1 : 0);
 }
 
 // test function to be used when no real connection

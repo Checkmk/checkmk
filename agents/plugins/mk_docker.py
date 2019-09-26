@@ -39,6 +39,8 @@ This plugin it will be called by the agent without any arguments.
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
 
+from __future__ import with_statement
+
 import os
 import sys
 import time
@@ -181,11 +183,11 @@ class MKDockerClient(docker.DockerClient):
         super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
-            self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
+            self.all_containers = dict([(c.attrs["Name"].lstrip('/'), c) for c in all_containers])
         elif config['container_id'] == "long":
-            self.all_containers = {c.attrs["Id"]: c for c in all_containers}
+            self.all_containers = dict([(c.attrs["Id"], c) for c in all_containers])
         else:
-            self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
+            self.all_containers = dict([(c.attrs["Id"][:12], c) for c in all_containers])
         self._env = {"REMOTE": os.getenv("REMOTE", "")}
         self._container_stats = {}
         self._device_map = None
@@ -306,7 +308,7 @@ def section_node_disk_usage(client):
     section = Section('node_disk_usage')
     try:
         data = client.df()
-    except () if DEBUG else docker.errors.APIError as exc:
+    except () if DEBUG else docker.errors.APIError, exc:
         section.write()
         LOGGER.exception(exc)
         return
@@ -491,7 +493,7 @@ def call_node_sections(client, config):
             continue
         try:
             section(client)
-        except () if DEBUG else Exception as exc:
+        except () if DEBUG else Exception, exc:
             report_exception_to_server(exc, section.func_name)
 
 
@@ -514,14 +516,14 @@ def _call_single_containers_sections(client, config, container_id):
             continue
         try:
             section(client, container_id)
-        except () if DEBUG else Exception as exc:
+        except () if DEBUG else Exception, exc:
             report_exception_to_server(exc, section.func_name)
 
     agent_success = False
     if not is_disabled_section(config, 'docker_container_agent'):
         try:
             agent_success = section_container_agent(client, container_id)
-        except () if DEBUG else Exception as exc:
+        except () if DEBUG else Exception, exc:
             report_exception_to_server(exc, "section_container_agent")
     if agent_success:
         return
@@ -531,7 +533,7 @@ def _call_single_containers_sections(client, config, container_id):
             continue
         try:
             section(client, container_id)
-        except () if DEBUG else Exception as exc:
+        except () if DEBUG else Exception, exc:
             report_exception_to_server(exc, section.func_name)
 
 
@@ -555,7 +557,7 @@ def main():
 
     try:  # first calls by docker-daemon: report failure
         client = MKDockerClient(config)
-    except () if DEBUG else Exception as exc:
+    except () if DEBUG else Exception, exc:
         report_exception_to_server(exc, "MKDockerClient.__init__")
         sys.exit(1)
 

@@ -1,0 +1,19 @@
+Title: mtr mk_jolokia apache_status: Fixed Python 2.5 compatibility of agent plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1569496749
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The agent plugins need to be executed on older Linux systems which may
+have very old Python versions available. For this reason we need to use
+old Python 2 syntax here.
+
+Python plugins that are incompatible to 2.5, for example because some
+3rd party library is not available with 2.5, need to be syntax
+compatible with 2.5 for the moment, but are allowed to terminate with a
+helpful error message about this incompatibility.

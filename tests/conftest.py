@@ -39,6 +39,7 @@ test_types = collections.OrderedDict([
     ("unit", EXECUTE_IN_VENV),
     ("pylint", EXECUTE_IN_VENV),
     ("docker", EXECUTE_IN_VENV),
+    ("agent-integration", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl", EXECUTE_IN_SITE),
     ("packaging", EXECUTE_IN_VENV),
@@ -86,6 +87,8 @@ def pytest_collection_modifyitems(items):
             ty = "pylint"
         elif "tests/docker" in file_path:
             ty = "docker"
+        elif "tests/agent-integration" in file_path:
+            ty = "agent-integration"
         elif "tests/integration" in file_path:
             ty = "integration"
         elif "tests/composition" in file_path:

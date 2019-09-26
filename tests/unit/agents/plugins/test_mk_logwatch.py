@@ -19,12 +19,13 @@ def mk_logwatch():
 
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
-    for attribute in ('maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex', 'overflow',
-                      'nocontext', 'maxoutputsize'):
+    for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
+                      'overflow', 'nocontext', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
 @pytest.mark.parametrize("option_string, key, expected_value", [
+    ("encoding=utf8", 'encoding', 'utf8'),
     ("maxfilesize=42", 'maxfilesize', 42),
     ("maxlines=23", 'maxlines', 23),
     ("maxlinesize=13", 'maxlinesize', 13),
@@ -286,13 +287,13 @@ def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, posit
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    log_iter = mk_logwatch.LogLinesIter('void')
+    log_iter = mk_logwatch.LogLinesIter('void', None)
     assert log_iter._enc == encoding
     assert log_iter.get_position() == position
 
 
 def test_log_lines_iter(mk_logwatch):
-    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__)
+    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__, None)
 
     log_iter.set_position(710)
     assert log_iter.get_position() == 710
@@ -353,7 +354,7 @@ def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_speci
         f.write(b"\n".join(lines) + "\n")
 
     # Now test processing
-    log_iter = mk_logwatch.LogLinesIter(str(log_path))
+    log_iter = mk_logwatch.LogLinesIter(str(log_path), None)
     if use_specific_encoding:
         log_iter._enc = use_specific_encoding
 

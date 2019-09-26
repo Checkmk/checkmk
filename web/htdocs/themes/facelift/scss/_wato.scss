@@ -926,15 +926,15 @@ div.varname {
   td.content a.modified > table {
     padding: 1px 4px 2px;
     margin-left: -4px;
-    border: 1px solid #cdf;
+    border: 1px solid $globalvars-modified-border-color;
     border-radius: 5px;
-    box-shadow: 3px 3px 5px #eee inset;
+    box-shadow: $globalvars-modified-box-shadow;
   }
 
   td.simple a.modified.globally,
   td.simple div.toggle_switch_container.modified.globally,
   td.content a.modified.globally > table {
-    box-shadow: 3px 3px 5px #8bc7e5 inset;
+    box-shadow: $globalvars-modified-globally-box-shadow;
   }
 
   td.simple div.toggle_switch_container {
@@ -958,11 +958,11 @@ div.varname {
   }
 
   td.legend {
-    width: 320px;
+    width: 400px;
     padding-top: 0;
 
     div.title {
-      max-width: 284px;
+      max-width: 390px;
     }
   }
 }

@@ -478,6 +478,48 @@ class Pod(Metadata):
         }
 
 
+class Endpoint(Metadata):
+    # See Also:
+    #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
+
+    def __init__(self, endpoint):
+        super(Endpoint, self).__init__(endpoint.metadata)
+        # There is no spec here.
+        self._subsets = [
+            self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
+        ]
+
+    @staticmethod
+    def _parse_subset(subset):
+        # Silent false positive from pylint.
+        #  - https://github.com/PyCQA/pylint/issues/574
+        #  - https://github.com/PyCQA/pylint/issues/2818
+        # pylint: disable=superfluous-parens
+        addresses = [{
+            "hostname": _.hostname if _.hostname else "",
+            "ip": _.ip if _.ip else "",
+            "node_name": _.node_name if _.node_name else "",
+        } for _ in (subset.addresses if subset.addresses else ())]
+        not_ready_addresses = [{
+            "hostname": _.hostname if _.hostname else "",
+            "ip": _.ip if _.ip else "",
+            "node_name": _.node_name if _.node_name else "",
+        } for _ in (subset.not_ready_addresses if subset.not_ready_addresses else ())]
+        ports = [
+            {
+                "name": _.name if _.name else "",
+                "port": _.port,  # not optional
+                "protocol": _.protocol if _.protocol else "TCP",
+            } for _ in (subset.ports if subset.ports else ())
+        ]
+        # pylint: enable=superfluous-parens
+        return {"addresses": addresses, "not_ready_addresses": not_ready_addresses, "ports": ports}
+
+    @property
+    def infos(self):
+        return {"subsets": self._subsets}
+
+
 class Job(Metadata):
     def __init__(self, job):
         super(Job, self).__init__(job.metadata)
@@ -884,6 +926,11 @@ class PodList(K8sList[Pod]):
         return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
+class EndpointList(K8sList[Endpoint]):
+    def info(self):
+        return {endpoint.name: endpoint.infos for endpoint in self}
+
+
 class JobList(K8sList[Job]):
     def info(self):
         return {job.name: job.infos for job in self}
@@ -1109,6 +1156,7 @@ class ApiData(object):
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
+        endpoints = core_api.list_endpoints_for_all_namespaces()
         jobs = batch_api.list_job_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
         deployments = ext_api.list_deployment_for_all_namespaces()
@@ -1127,6 +1175,7 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+        self.endpoints = EndpointList(map(Endpoint, endpoints.items))
         self.jobs = JobList(map(Job, jobs.items))
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
@@ -1234,6 +1283,13 @@ class ApiData(object):
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output(piggyback_prefix="pod_"))
 
+    def endpoint_sections(self):
+        logging.info('Output endpoint sections')
+        g = PiggybackGroup()
+        g.join('labels', self.endpoints.labels())
+        g.join('k8s_endpoint_info', self.endpoints.info())
+        return '\n'.join(g.output(piggyback_prefix="endpoint_"))
+
     def job_sections(self):
         logging.info('Output job sections')
         g = PiggybackGroup()
@@ -1325,6 +1381,8 @@ def main(args=None):
                 print(api_data.node_sections())
             if 'pods' in arguments.infos:
                 print(api_data.pod_sections())
+            if 'endpoints' in arguments.infos:
+                print(api_data.endpoint_sections())
             if 'jobs' in arguments.infos:
                 print(api_data.job_sections())
             if 'deployments' in arguments.infos:

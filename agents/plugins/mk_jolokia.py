@@ -31,7 +31,7 @@ import urllib2
 
 try:
     try:
-        from simplejson import json
+        import simplejson as json
     except ImportError:
         import json
 except ImportError, import_error:

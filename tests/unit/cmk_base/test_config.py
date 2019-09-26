@@ -1816,7 +1816,19 @@ cmc_host_rrd_config = [
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
     config.load()
+
     yield
+
+    # Cleanup after the test. Would be better to use a dedicated test directory
+    Path(cmk.utils.paths.main_config_file).unlink()  # pylint: disable=no-member
+    wato_main_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_main_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1a_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1a_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl2_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl2_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
     config._initialize_config()
 
 

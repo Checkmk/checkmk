@@ -1708,3 +1708,134 @@ def test_host_config_add_discovery_check(monkeypatch, params, ignored, ping, res
 
     host_config = config_cache.get_host_config("xyz")
     assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
+
+
+def test_load_config_folder_paths(folder_path_test_config):
+    assert config.host_paths == {
+        'lvl1-host': '/wato/lvl1/hosts.mk',
+        'lvl1aaa-host': '/wato/lvl1_aaa/hosts.mk',
+        'lvl2-host': '/wato/lvl1/lvl2/hosts.mk',
+        'lvl0-host': '/wato/hosts.mk',
+    }
+
+    config_cache = config.get_config_cache()
+
+    assert config_cache.host_path("main-host") == "/"
+    assert config_cache.host_path("lvl0-host") == "/wato/"
+    assert config_cache.host_path("lvl1-host") == "/wato/lvl1/"
+    assert config_cache.host_path("lvl1aaa-host") == "/wato/lvl1_aaa/"
+    assert config_cache.host_path("lvl2-host") == "/wato/lvl1/lvl2/"
+
+    assert config.cmc_host_rrd_config[0]["condition"]["host_folder"] == "/wato/lvl1_aaa/"
+    assert config.cmc_host_rrd_config[1]["condition"]["host_folder"] == "/wato/lvl1/lvl2/"
+    assert config.cmc_host_rrd_config[2]["condition"]["host_folder"] == "/wato/lvl1/"
+    assert "host_folder" not in config.cmc_host_rrd_config[3]["condition"]
+    assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
+
+    assert config_cache.host_extra_conf("main-host", config.cmc_host_rrd_config) == ["LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl0-host", config.cmc_host_rrd_config) == ["LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl1-host",
+                                        config.cmc_host_rrd_config) == ["LVL1", "LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl1aaa-host",
+                                        config.cmc_host_rrd_config) == ["LVL1aaa", "LVL0", "MAIN"]
+    assert config_cache.host_extra_conf(
+        "lvl2-host", config.cmc_host_rrd_config) == ["LVL2", "LVL1", "LVL0", "MAIN"]
+
+
+@pytest.fixture()
+def folder_path_test_config(monkeypatch):
+    config_dir = Path(cmk.utils.paths.check_mk_config_dir)
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    with Path(cmk.utils.paths.main_config_file).open("w", encoding="utf-8") as f:
+        f.write(u"""
+all_hosts += ['%(name)s']
+
+host_tags.update({'%(name)s': {}})
+
+ipaddresses.update({'%(name)s': '127.0.0.1'})
+
+host_tags.update({
+    '%(name)s': {
+        'piggyback': 'auto-piggyback',
+        'networking': 'lan',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'snmp_ds': 'no-snmp',
+        'ip-v4': 'ip-v4',
+        'ip-v6': 'ip-v6',
+        'site': 'unit',
+        'tcp': 'tcp',
+        'address_family': 'ip-v4v6',
+    }
+})
+
+cmc_host_rrd_config = [
+{'condition': {}, 'value': 'MAIN'},
+] + cmc_host_rrd_config
+
+""" % {"name": "main-host"})
+
+    wato_main_folder = config_dir.joinpath("wato")
+    wato_main_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_main_folder, "lvl0-host")
+    _add_rule_in_folder(wato_main_folder, "LVL0")
+
+    wato_lvl1_folder = wato_main_folder.joinpath("lvl1")
+    wato_lvl1_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl1_folder, "lvl1-host")
+    _add_rule_in_folder(wato_lvl1_folder, "LVL1")
+
+    wato_lvl1a_folder = wato_main_folder.joinpath("lvl1_aaa")
+    wato_lvl1a_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl1a_folder, "lvl1aaa-host")
+    _add_rule_in_folder(wato_lvl1a_folder, "LVL1aaa")
+
+    wato_lvl2_folder = wato_main_folder.joinpath("lvl1", "lvl2")
+    wato_lvl2_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
+    _add_rule_in_folder(wato_lvl2_folder, "LVL2")
+
+    config.load()
+    yield
+    config._initialize_config()
+
+
+def _add_host_in_folder(folder_path, name):
+    with folder_path.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
+        f.write(u"""
+all_hosts += ['%(name)s']
+
+host_tags.update({'%(name)s': {}})
+
+ipaddresses.update({'%(name)s': '127.0.0.1'})
+
+host_tags.update({
+    '%(name)s': {
+        'piggyback': 'auto-piggyback',
+        'networking': 'lan',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'snmp_ds': 'no-snmp',
+        'ip-v4': 'ip-v4',
+        'ip-v6': 'ip-v6',
+        'site': 'unit',
+        'tcp': 'tcp',
+        'address_family': 'ip-v4v6',
+    }
+})
+""" % {"name": name})
+
+
+def _add_rule_in_folder(folder_path, value):
+    with folder_path.joinpath("rules.mk").open("w", encoding="utf-8") as f:
+        if value == "LVL0":
+            condition = "{}"
+        else:
+            condition = "{'host_folder': '/%s/' % FOLDER_PATH}"
+
+        f.write(u"""
+cmc_host_rrd_config = [
+{'condition': %s, 'value': '%s'},
+] + cmc_host_rrd_config
+""" % (condition, value))

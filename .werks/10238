@@ -1,0 +1,13 @@
+Title: Fix rule matching issue on subfolders with common prefix
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569515292
+Class: fix
+
+When having a folder named "prefix" together with a folder named
+"prefix_suffix" on the same folder level with a rule on the
+"prefix" folder, this rule matched on the "prefix_suffix" folder
+accidentally.

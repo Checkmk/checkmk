@@ -287,7 +287,7 @@ class RulesetCollection(object):
         # Adding this instead of the full path makes it easy to move config
         # files around. The real FOLDER_PATH will be added dynamically while
         # loading the file in cmk_base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
+        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 

@@ -1,0 +1,10 @@
+Title: Fix graph hover box background
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0p2
+Date: 1569485411
+Class: fix
+
+

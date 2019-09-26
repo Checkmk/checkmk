@@ -60,6 +60,14 @@ div.dashlet {
     &.background {
       background-color: $dashlet-inner-bg-color;
     }
+
+    > div {
+      color: $primary-font-color;
+
+      &[id*="dashlet_graph"] img[id*="dashlet_img"] {
+	filter: $pnp4nagios-img-filter;
+      }
+    }
   }
 
   /* TODO: Reproduce these html elements */

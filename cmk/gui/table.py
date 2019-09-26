@@ -282,7 +282,8 @@ class Table(object):
         num_cols = self._get_num_cols(rows)
 
         empty_columns = self._get_empty_columns(rows, num_cols)
-        num_cols -= len([v for v in empty_columns if v])
+        if self.options["omit_empty_columns"]:
+            num_cols -= len([v for v in empty_columns if v])
 
         html.open_table(class_=["data", "oddeven", self.css])
 

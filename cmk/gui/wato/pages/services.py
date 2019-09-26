@@ -1043,7 +1043,11 @@ class DiscoveryPageRenderer(object):
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
+            with table_element(css="data",
+                               searchable=False,
+                               limit=None,
+                               sortable=False,
+                               omit_headers=True) as table:
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:

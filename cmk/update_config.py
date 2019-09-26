@@ -85,9 +85,10 @@ class UpdateConfig(object):
         # stuff. Currently, we just move the console handler to the top, so
         # both worlds are happy. We really, really need to split business logic
         # from presentation code... :-/
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
+        if log.logger.handlers:
+            console_handler = log.logger.handlers[0]
+            del log.logger.handlers[:]
+            logging.getLogger().addHandler(console_handler)
 
     def run(self):
         self._logger.log(VERBOSE, "Initializing application...")

@@ -1190,8 +1190,8 @@ table.nform {
   }
 
   tr td.legend {
-    width: 320px;
-    min-width: 320px;
+    width: 400px;
+    min-width: 400px;
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
@@ -1202,7 +1202,7 @@ table.nform {
 
     div.title {
       float: left;
-      max-width: 278px;
+      max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
       font-weight: $theme-font-weight-bold;
@@ -1213,7 +1213,7 @@ table.nform {
       }
 
       &.withcheckbox {
-        max-width: 278px;
+        max-width: 361px;
         margin: 5px 6px 5px 0;
       }
     }
@@ -1244,6 +1244,14 @@ table.nform {
 
     &.simple {
       padding-bottom: 0;
+    }
+
+    span.checkbox {
+      display: inline-block;
+
+      &:not(first-of-type) {
+	margin-top: 4px;
+      }
     }
   }
 

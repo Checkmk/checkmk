@@ -295,7 +295,7 @@ $data-td-bg-color:			    $white;
 $data-table-border-collapse:		    null;
 $data-table-border-spacing:		    0 2px;
 $data-table-border-topmost:		    $primary-table-border;
-$data-table-border-top:			    null;
+$data-table-border-top:			    $primary-table-border;
 $data-table-border-bottom:		    $primary-table-border;
 $data-table-state-border-top:		    null;
 $data-table-state-border-bottom:	    null;
@@ -538,3 +538,5 @@ $graph-hover-popup-box-shadow:		    0.5px 0.5px 2px #ccc;
 $globalvars-modified-border-color:	    #cdf;
 $globalvars-modified-box-shadow:	    3px 3px 5px #eee inset;
 $globalvars-modified-globally-box-shadow:   3px 3px 5px #8bc7e5 inset;
+
+$dashlet-inner-bg-color:		    #cbd6da;

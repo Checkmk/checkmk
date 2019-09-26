@@ -34,7 +34,7 @@ try:
         from simplejson import json
     except ImportError:
         import json
-except ImportError as import_error:
+except ImportError, import_error:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
@@ -46,7 +46,7 @@ try:
     import requests
     from requests.auth import HTTPDigestAuth
     from requests.packages import urllib3
-except ImportError as import_error:
+except ImportError, import_error:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
                      " Please install it on the monitored system.\n")
@@ -514,7 +514,7 @@ def generate_jolokia_info(inst):
     # Determine type of server
     try:
         data = fetch_var(inst, "version", "")
-    except (SkipInstance, SkipMBean) as exc:
+    except (SkipInstance, SkipMBean), exc:
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 

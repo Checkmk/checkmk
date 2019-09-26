@@ -4342,8 +4342,14 @@ def _valuespec_snmp_timing():
                 Float(
                     title=_("Response timeout for a single query"),
                     help=_(
-                        "After a request is sent to the remote SNMP agent we will wait up to this "
-                        "number of seconds until assuming the answer get lost and retrying."),
+                        "After a request is sent to the remote SNMP agent, the service will wait "
+                        "up to the provided timeout limit before assuming that the answer got "
+                        "lost. It will then retry to obtain an answer by sending another "
+                        "request.\n"
+                        "In the worst case, the total duration of the service can take up to the "
+                        "product of the number of retries and the timeout duration. In "
+                        "consequence, you should provide combined reasonable values for both "
+                        "parameters."),
                     default_value=1,
                     minvalue=0.1,
                     maxvalue=60,

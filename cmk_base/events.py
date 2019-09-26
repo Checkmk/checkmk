@@ -728,15 +728,24 @@ def remove_context_from_environment(plugin_context, prefix):
 # recursively turns a python object (with lists, dictionaries and pods) containing parameters
 #  into a flat contextlist for use as environment variables in plugins
 #
-# this: { "LVL1": [{"VALUE": 42}, {"VALUE": 13}] }
+# this: { "LVL1": [{"VALUE": 42}, {"VALUE": 13}], "LVL2": [("VALUEA", "VALUEB"),("VALUEA", "VALUEB")] }
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
+#   PARAMETER_LVL2_1_1 = "VALUEA"
+#   PARAMETER_LVL2_1_2 = "VALUEB"
+#   PARAMETER_LVL2_2_1 = "VALUEA"
+#   PARAMETER_LVL2_2_2 = "VALUEB"
+#   
 def add_to_event_context(plugin_context, prefix, param, log_function):
     if isinstance(param, list):
-        plugin_context[prefix + "S"] = " ".join(param)
+        plugin_context[prefix + "S"] = " ".join(str(v) for v in param)
         for nr, value in enumerate(param):
-            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value, log_function)
+            if isinstance(value, tuple):
+                for item_nr, item in enumerate(value):
+                    add_to_event_context(plugin_context, "%s_%d_%d" % (prefix, nr + 1, item_nr + 1), item, log_function)
+            else:
+                add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value, log_function)
     elif isinstance(param, dict):
         for key, value in param.items():
             varname = "%s_%s" % (prefix, key.upper())

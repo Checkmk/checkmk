@@ -1,0 +1,12 @@
+Title: Minor fixes for different tables
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569489463
+Class: fix
+
+Search rows in WATO tables now span over the full table width instead of a reduced number of columns.
+Widened title cells in settings tables ensure full display of titles and check boxes have vertical spacing.
+The title column in the WATO table for backup job statuses is now slimmer.

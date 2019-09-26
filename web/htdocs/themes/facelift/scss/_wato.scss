@@ -1368,8 +1368,16 @@ table.data td.bi_rule_tree {
   resize: both;
 }
 
-.backup_job .log pre {
-  margin: 2px;
+.backup_job {
+
+  .log pre {
+    margin: 2px;
+  }
+
+  td.left {
+    min-width: 200px;
+    width: 12%;
+  }
 }
 
 .wato .diag_host {

@@ -17,6 +17,28 @@
 
 namespace cma::cfg::cap {
 
+TEST(CapTest, CheckIsFilesTheSame) {
+    EXPECT_TRUE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                               "c:\\windows\\explorer.exe"));
+    EXPECT_FALSE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                                "c:\\windows\\HelpPane.exe"));
+
+    EXPECT_FALSE(
+        IsFilesTheSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [file1, file2] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    // source without target
+    std::string name = "a.txt";
+    {
+        tst::ConstructFile(file1 / name, "abcde0");
+        tst::ConstructFile(file2 / name, "abcde1");
+        EXPECT_FALSE(IsFilesTheSame(file1 / name, file2 / name));
+        EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
+    }
+}
+
 TEST(CapTest, Reinstall) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
@@ -58,6 +80,14 @@ TEST(CapTest, Reinstall) {
         tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
+
+    // source is older than target, but content is not the same
+    {
+        cma::tools::sleep(100);
+        tst::ConstructFile(source / name, "b");
+        EXPECT_TRUE(NeedReinstall(source / name, target / name));
+    }
+
     tst::SafeCleanTempDir();
 }
 

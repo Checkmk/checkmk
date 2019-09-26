@@ -32,6 +32,9 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
 
+bool IsFilesTheSame(const std::filesystem::path &Target,
+                    const std::filesystem::path &Src);
+
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
 

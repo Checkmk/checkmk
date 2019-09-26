@@ -236,6 +236,32 @@ bool Process(const std::string CapFileName, ProcMode Mode,
     return false;
 }
 
+bool IsFilesTheSame(const std::filesystem::path &Target,
+                    const std::filesystem::path &Src) {
+    try {
+        std::ifstream f1(Target, std::ifstream::binary | std::ifstream::ate);
+        std::ifstream f2(Src, std::ifstream::binary | std::ifstream::ate);
+
+        if (f1.fail() || f2.fail()) {
+            return false;  // file problem
+        }
+
+        if (f1.tellg() != f2.tellg()) {
+            return false;  // size mismatch
+        }
+
+        // seek back to beginning and use std::equal to compare contents
+        f1.seekg(0, std::ifstream::beg);
+        f2.seekg(0, std::ifstream::beg);
+        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                          std::istreambuf_iterator<char>(),
+                          std::istreambuf_iterator<char>(f2.rdbuf()));
+    } catch (const std::exception &e) {
+        XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
+        return false;
+    }
+}
+
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src) {
     namespace fs = std::filesystem;
@@ -256,7 +282,9 @@ bool NeedReinstall(const std::filesystem::path &Target,
     // now both file are present
     auto target_time = fs::last_write_time(Target, ec);
     auto src_time = fs::last_write_time(Src, ec);
-    return src_time > target_time;
+    if (src_time > target_time) return true;
+    XLOG::d.i("Timestamp OK, checking file content...");
+    return !IsFilesTheSame(Target, Src);
 }
 
 // returns true when changes had been done

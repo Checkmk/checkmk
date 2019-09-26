@@ -173,8 +173,8 @@ def test_basic_get_host_ruleset_values(monkeypatch):
 def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
     ts = Scenario().add_host("abc")
     ts.add_host("xyz")
-    ts.add_host("lvl1", host_path="/level1/hosts.mk")
-    ts.add_host("lvl2", host_path="/level1/level2/hosts.mk")
+    ts.add_host("lvl1", host_path="/lvl1/hosts.mk")
+    ts.add_host("lvl2", host_path="/lvl1/lvl2/hosts.mk")
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
@@ -187,12 +187,12 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
         matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl1",
                                                            service_description=None),
                                         ruleset=ruleset,
-                                        is_binary=False)) == []
+                                        is_binary=False)) == ["LEVEL1"]
     assert list(
         matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl2",
                                                            service_description=None),
                                         ruleset=ruleset,
-                                        is_binary=False)) == []
+                                        is_binary=False)) == ["LEVEL1", "LEVEL2"]
 
 
 dict_ruleset = [

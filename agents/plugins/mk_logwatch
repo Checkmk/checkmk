@@ -485,7 +485,7 @@ class LogLinesIter(object):
 
         if self._lines:
             # in case of decoding error, replace with U+FFFD REPLACEMENT CHARACTER
-            return self._lines.pop(0).decode(self._enc, errors="replace")
+            return self._lines.pop(0).decode(self._enc, "replace")
 
         self._reached_end = True
         return None

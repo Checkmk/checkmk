@@ -1206,7 +1206,7 @@ a.iconlink img, body.main .popup_menu span.iconlink img {
 div.graph {
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 
 
   &.preview {
@@ -1240,6 +1240,13 @@ div.graph {
       color: $graph-time-color;
     }
   }
+}
+
+div.graph_hover_popup {
+  color: $graph-hover-popup-font-color;
+  background-color: $graph-hover-popup-bg-color;
+  border: $graph-hover-popup-border;
+  box-shadow: $graph-hover-popup-box-shadow;
 }
 
 .graph {

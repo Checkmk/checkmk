@@ -3875,6 +3875,26 @@ rulespec_registry.register(
     ))
 
 
+def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+    global_max_cache_age = params.get("global_max_cache_age")
+    global_period = params.get("global_validity", {}).get('period')
+    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
+
+    for exception in params.get("per_piggybacked_host", []):
+        max_cache_age = exception.get("max_cache_age")
+        period = exception.get("validity", {}).get('period', global_period)
+        if max_cache_age == "global":
+            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
+        else:
+            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
+
+
+def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+    if isinstance(max_cache_age, int) and isinstance(period, int)\
+       and max_cache_age < period:
+        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
+
+
 def _valuespec_piggybacked_host_files():
     return Dictionary(
         title=_("Piggybacked Host Files"),
@@ -3908,6 +3928,7 @@ def _valuespec_piggybacked_host_files():
             "data is missing within a check interval. "
             "This rule helps you to get more control over the piggybacked host data handling. "
             "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
+        validate=_validate_max_cache_ages_and_validity_periods,
     )
 
 
@@ -3918,7 +3939,6 @@ def _vs_max_cache_age(additional_title=None):
         title = _("Use maximum age from global settings %s" % additional_title)
     return Alternative(
         title=_("Set maximum age how long piggyback files are kept"),
-        style="dropdown",
         elements=[
             FixedValue(
                 "global",

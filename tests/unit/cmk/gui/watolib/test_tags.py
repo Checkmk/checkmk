@@ -99,12 +99,14 @@ def test_tag_config_save(mocker):
     export_mock = mocker.patch.object(cmk.gui.watolib.tags, "_export_hosttags_to_php")
 
     config_file = TagConfigFile()
+    base_config_mock = mocker.patch.object(config_file, "_save_base_config")
 
     cfg = tags.TagConfig()
     cfg.insert_tag_group(tags.TagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
     config_file.save(cfg.get_dict_format())
 
     export_mock.assert_called_once()
+    base_config_mock.assert_called_once()
 
     cfg = tags.TagConfig()
     cfg.parse_config(config_file.load_for_reading())

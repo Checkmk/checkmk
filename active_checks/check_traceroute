@@ -101,8 +101,8 @@ def check_traceroute(lines, routes):
         parts = line.strip().split()
         for part in parts:
             try:
-                ipaddress.ip_interface(unicode(part))
                 part = part.lstrip("(").rstrip(",").rstrip(")")
+                ipaddress.ip_interface(unicode(part))
                 routers.add(part)
             except ValueError:
                 pass

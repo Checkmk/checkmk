@@ -46,22 +46,22 @@ def test_config(web, site):
 ])
 def test_simple_rbn_host_notification(test_config, site, core, log):
     site.set_config("CORE", core, with_restart=True)
-    with WatchLog(site, log) as l:
-        site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
+    l = WatchLog(site, log)
+    site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
-        # NOTE: "] " is necessary to get the actual log line and not the external command execution
-        l.check_logged(
-            "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
-            timeout=20,
-        )
-        l.check_logged(
-            "] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
-            timeout=20,
-        )
-        l.check_logged(
-            "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;",
-            timeout=20,
-        )
+    # NOTE: "] " is necessary to get the actual log line and not the external command execution
+    l.check_logged(
+        "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN",
+        timeout=20,
+    )
+    l.check_logged(
+        "] HOST NOTIFICATION: hh;notify-test;DOWN;mail;FAKE DOWN",
+        timeout=20,
+    )
+    l.check_logged(
+        "] HOST NOTIFICATION RESULT: hh;notify-test;OK;mail;Spooled mail to local mail transmission agent;",
+        timeout=20,
+    )
 
 
 @pytest.mark.parametrize("core,log", [
@@ -70,19 +70,19 @@ def test_simple_rbn_host_notification(test_config, site, core, log):
 ])
 def test_simple_rbn_service_notification(test_config, site, core, log):
     site.set_config("CORE", core, with_restart=True)
-    with WatchLog(site, log) as l:
-        site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
+    l = WatchLog(site, log)
+    site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
 
-        # NOTE: "] " is necessary to get the actual log line and not the external command execution
-        l.check_logged(
-            "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT",
-            timeout=20,
-        )
-        l.check_logged(
-            "] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT",
-            timeout=20,
-        )
-        l.check_logged(
-            "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;",
-            timeout=20,
-        )
+    # NOTE: "] " is necessary to get the actual log line and not the external command execution
+    l.check_logged(
+        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT",
+        timeout=20,
+    )
+    l.check_logged(
+        "] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT",
+        timeout=20,
+    )
+    l.check_logged(
+        "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;",
+        timeout=20,
+    )

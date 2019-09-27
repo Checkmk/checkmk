@@ -1957,22 +1957,16 @@ class WatchLog(object):
     def __init__(self, site, log_path, default_timeout=5):
         self._site = site
         self._log_path = log_path
-        self._log = None
+        self._log = self._open_log()
         self._default_timeout = default_timeout
 
-    def __enter__(self):
+    def _open_log(self):
         if not self._site.file_exists(self._log_path):
             self._site.write_file(self._log_path, "")
 
-        self._log = open(self._site.path(self._log_path), "r")
-        self._log.seek(0, 2)  # go to end of file
-        return self
-
-    def __exit__(self, *exc_info):
-        try:
-            self._log.close()
-        except AttributeError:
-            pass
+        fobj = open(self._site.path(self._log_path), "r")
+        fobj.seek(0, 2)  # go to end of file
+        return fobj
 
     def check_logged(self, match_for, timeout=None):
         if not self._check_for_line(match_for, timeout):

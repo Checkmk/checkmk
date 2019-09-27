@@ -83,6 +83,11 @@ class Service(object):
         For this the parameters and similar need to be ignored."""
         return hash((self.check_plugin_name, self.item))
 
+    def __repr__(self):
+        return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_lables=%r)" % (
+            self._check_plugin_name, self._item, self._description, self._parameters,
+            self._service_labels)
+
 
 CheckTable = Dict[Tuple[CheckPluginName, Item], Service]
 
@@ -119,6 +124,11 @@ class DiscoveredService(Service):
         execution. The parameter must not be resolved during discovery.
         """
         return self._parameters
+
+    def __repr__(self):
+        return "DiscoveredService(check_plugin_name=%r, item=%r, description=%r, parameters_unresolved=%r, service_lables=%r)" % (
+            self._check_plugin_name, self._item, self._description, self._parameters,
+            self._service_labels)
 
 
 def section_name_of(check_plugin_name):

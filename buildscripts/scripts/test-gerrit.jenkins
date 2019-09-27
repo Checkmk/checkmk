@@ -44,7 +44,7 @@ node {
         CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
 
         // Gather the list of changed agent plugins
-        CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
 
         stage("Python typing") {

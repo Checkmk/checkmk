@@ -3,7 +3,7 @@ import subprocess
 import pytest
 from testlib import cmk_path
 
-PLUGIN = os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch.aix')
+PLUGIN = os.path.join(cmk_path(), 'agents', 'plugins', 'mk_errpt.aix')
 
 ERRPT_OUTPUT = [
     'IDENTIFIER TIMESTAMP  T C RESOURCE_NAME  DESCRIPTION',
@@ -32,7 +32,7 @@ def _get_env(tmp_path):
 class StateFile(object):
     def __init__(self, tmp_path):
         super(StateFile, self).__init__()
-        self.name = str(tmp_path.joinpath('mk_logwatch_aix.last_reported'))
+        self.name = str(tmp_path.joinpath('mk_errpt_aix.last_reported'))
 
     def set(self, state):
         if state is None:
@@ -74,7 +74,7 @@ def _format_expected(lines):
             [[], [], []],
         ),
     ])
-def test_mk_logwatch_aix(tmp_path, errpt_output, last_reported, expectations):
+def test_mk_errpt_aix(tmp_path, errpt_output, last_reported, expectations):
 
     _prepare_mock_errpt(tmp_path, errpt_output)
     env = _get_env(tmp_path)

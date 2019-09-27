@@ -13,11 +13,16 @@ node {
         // Gather the list of changed python files
         def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
         def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
-        print "Changed python files: ${CHANGED_PYTHON_FILES}"
 
         // Gather the list of changed agent plugins
-        CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
+        // Gather the list of changed livestatus / core files
+        def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
+        print "Changed python files: ${CHANGED_PYTHON_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
+        print "Changed core files: ${CHANGED_CORE_FILES}"
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
@@ -80,38 +85,54 @@ node {
         }
 
         stage("Cppcheck") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
-            }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("Clang-Tidy") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
-            }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("IWYU") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
-            }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("NEB/CMC Unit Tests") {
-            dir("livestatus/src/test") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
-            }
-            dir("enterprise/core/src/test") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src/test") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                }
+                dir("enterprise/core/src/test") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 

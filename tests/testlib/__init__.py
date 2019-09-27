@@ -2083,19 +2083,20 @@ class WatchLog(object):
             pass
 
     def check_logged(self, match_for, timeout=None):
+        if timeout is None:
+            timeout = self._default_timeout
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
                             (match_for, self._log_path, timeout))
 
     def check_not_logged(self, match_for, timeout=None):
+        if timeout is None:
+            timeout = self._default_timeout
         if self._check_for_line(match_for, timeout):
             raise Exception("Found %r in %s after %d seconds" %
                             (match_for, self._log_path, timeout))
 
     def _check_for_line(self, match_for, timeout):
-        if timeout is None:
-            timeout = self._default_timeout
-
         timeout_at = time.time() + timeout
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))

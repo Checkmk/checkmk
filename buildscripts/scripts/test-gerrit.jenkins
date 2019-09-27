@@ -1,15 +1,23 @@
 throttle(['Gerrit']){
 node {
-    def WORKSPACE = pwd() 
+    def WORKSPACE = pwd()
     try {
-        stage("Auschecken: Check_MK") {
+        stage("Auschecken: Checkmk") {
             checkout(scm)
         }
         
-        CHANGED_FILES = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
-        GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        // Creates a \n separated list of changed files
+        def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
+        def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
+
+        // Gather the list of changed python files
+        def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         print "Changed python files: ${CHANGED_PYTHON_FILES}"
+
+        // Gather the list of changed agent plugins
+        CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
@@ -59,6 +67,18 @@ node {
             }
         }
         
+        stage("Agent integration tests") {
+            if (CHANGED_AGENT_PLUGINS != "") {
+                dir('tests') {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit-agent-integration.xml'\""]) {
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-agent-integration"
+                    }
+                }
+            } else {
+                println "No agent files changed. Skipping."
+            }
+        }
+
         stage("Cppcheck") {
             dir("livestatus/src") {
                 sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
@@ -101,7 +121,7 @@ node {
     } finally {
         step([
             $class: 'WarningsPublisher',
-            canComputeNew: false, 
+            canComputeNew: false,
             canResolveRelativePaths: false,
             canRunOnFailed: true,
             defaultEncoding: '',

@@ -446,7 +446,7 @@ class SidebarRenderer(object):
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
-        html.b(HTML(snapin_class.title()), class_=["heading"], **toggle_actions)
+        html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
 
         # End of header
         html.close_div()

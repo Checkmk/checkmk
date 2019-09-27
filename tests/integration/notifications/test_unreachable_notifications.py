@@ -26,6 +26,13 @@ class Scenario(object):
         self.core = core
         self.unreachable_enabled = unreachable_enabled
 
+        if core == "cmc":
+            self.log = "var/check_mk/core/history"
+        elif core == "nagios":
+            self.log = "var/nagios/nagios.log"
+        else:
+            self.log = None
+
 
 @pytest.fixture(scope="module",
                 params=[
@@ -127,19 +134,6 @@ def initial_state(site, scenario):
     time.sleep(1)  # TODO: Add check for rotation
 
 
-class HistoryLog(WatchLog):
-    def __init__(self, site, core):
-        super(HistoryLog, self).__init__(site, self._history_log_path(core), default_timeout=10)
-
-    def _history_log_path(self, core):
-        if core == "cmc":
-            return "var/check_mk/core/history"
-        elif core == "nagios":
-            return "var/nagios/nagios.log"
-        else:
-            raise NotImplementedError()
-
-
 def _send_child_down(scenario, site, log):
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
@@ -191,7 +185,7 @@ def _send_child_down_expect_unreachable(scenario, site, log):
 # b) Parent goes down
 # c) child becomes unreachable
 def test_unreachable_child_down_before_parent_down(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set child down, expect DOWN notification
     _send_child_down(scenario, site, log)
@@ -235,7 +229,7 @@ def test_unreachable_child_down_before_parent_down(scenario, site, initial_state
 # a) Parent goes down
 # b) Child goes down, becomes unreachable
 def test_unreachable_child_after_parent_is_down(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set parent down, expect DOWN notification
     _send_parent_down(scenario, site, log)
@@ -250,7 +244,7 @@ def test_unreachable_child_after_parent_is_down(scenario, site, initial_state):
 # b) Parent goes down
 # c) Child goes up while parent is down
 def test_parent_down_child_up_on_up_result(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set child down, expect DOWN notification
     _send_child_down(scenario, site, log)
@@ -269,7 +263,7 @@ def test_parent_down_child_up_on_up_result(scenario, site, initial_state):
 # c) Child goes up while parent is down
 # d) Child goes down and becomes unreachable while parent is down
 def test_parent_down_child_state_changes(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set parent down, expect DOWN notification
     _send_parent_down(scenario, site, log)
@@ -321,7 +315,7 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
 # c) Parent goes up
 # d) Child is still down and becomes down
 def test_child_down_after_parent_recovers(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set parent down, expect DOWN notification
     _send_parent_down(scenario, site, log)
@@ -350,7 +344,7 @@ def test_child_down_after_parent_recovers(scenario, site, initial_state):
 # c) Parent goes up
 # d) Child goes up
 def test_child_up_after_parent_recovers(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set parent down, expect DOWN notification
     _send_parent_down(scenario, site, log)
@@ -382,7 +376,7 @@ def test_child_up_after_parent_recovers(scenario, site, initial_state):
 # c) Child goes up
 # d) Parent goes up
 def test_child_down_and_up_while_not_reachable(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set parent down, expect DOWN notification
     _send_parent_down(scenario, site, log)
@@ -409,7 +403,7 @@ def test_child_down_and_up_while_not_reachable(scenario, site, initial_state):
 # b) Parent goes down, child becomes unreachable
 # d) Parent goes up, child becomes down
 def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set child down, expect DOWN notification
     _send_child_down(scenario, site, log)
@@ -425,7 +419,7 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
         if scenario.unreachable_enabled:
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
-        # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
         # with this by readding the read lines after succeeded test or similar
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
@@ -469,7 +463,7 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
 # c) Child goes up
 # d) Parent goes up
 def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
-    log = HistoryLog(site, scenario.core)
+    log = WatchLog(site, scenario.log, default_timeout=10)
 
     # - Set child down, expect DOWN notification
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
@@ -494,7 +488,7 @@ def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
         if scenario.unreachable_enabled:
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
-        # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
         # with this by readding the read lines after succeeded test or similar
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")

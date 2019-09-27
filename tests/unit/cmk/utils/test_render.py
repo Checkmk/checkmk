@@ -15,3 +15,23 @@ import cmk.utils.render
 ])
 def test_fmt_bytes(entry, result):
     assert cmk.utils.render.fmt_bytes(*entry) == result
+
+
+@pytest.mark.parametrize("value, kwargs, result", [
+    (10000486, {
+        'precision': 5
+    }, "10.00049 M"),
+    (100000000, {
+        'drop_zeroes': False
+    }, "100.00 M"),
+])
+def test_fmt_number_with_precision(value, kwargs, result):
+    assert cmk.utils.render.fmt_number_with_precision(value, **kwargs) == result
+
+
+@pytest.mark.parametrize("entry, result", [(10000000, "10 Mbit/s"), (100000000, "100 Mbit/s"),
+                                           (1000000000, "1 Gbit/s"), (1400, "1.4 kbit/s"),
+                                           (8450, "8.45 kbit/s"), (26430, "26.43 kbit/s"),
+                                           (8583000, "8.58 Mbit/s"), (7.84e9, "7.84 Gbit/s")])
+def test_fmt_nic_speed(entry, result):
+    assert cmk.utils.render.fmt_nic_speed(entry) == result

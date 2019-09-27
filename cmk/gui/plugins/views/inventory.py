@@ -354,25 +354,9 @@ def inv_paint_count(b):
     return "number", str(b)
 
 
-def _nic_speed_human_readable(bits_per_second):
-    if bits_per_second == 10000000:
-        return "10 Mbit/s"
-    elif bits_per_second == 100000000:
-        return "100 Mbit/s"
-    elif bits_per_second == 1000000000:
-        return "1 Gbit/s"
-    elif bits_per_second < 1500:
-        return "%d bit/s" % bits_per_second
-    elif bits_per_second < 1000000:
-        return "%s Kbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000.0, digits=1)
-    elif bits_per_second < 1000000000:
-        return "%s Mbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000.0, digits=2)
-    return "%s Gbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
-
-
 @decorate_inv_paint
 def inv_paint_nic_speed(bits_per_second):
-    return "number", _nic_speed_human_readable(int(bits_per_second))
+    return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
 
 
 @decorate_inv_paint

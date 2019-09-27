@@ -83,7 +83,7 @@ checks = {
         'errors': (0.01, 0.1),
         'state': ['1'],
         'speed': 10000000000
-    }, [(0, u'[A B-C] (Connected) 10.00 Gbit/s', [])]),
+    }, [(0, u'[A B-C] (Connected) 10 Gbit/s', [])]),
          ('2', {
              'errors': (0.01, 0.1),
              'state': ['1'],
@@ -93,7 +93,7 @@ checks = {
              'errors': (0.01, 0.1),
              'state': ['1'],
              'speed': 10000000000
-         }, [(0, u'[A B-C 3] (Connected) 10.00 Gbit/s', [])]),
+         }, [(0, u'[A B-C 3] (Connected) 10 Gbit/s', [])]),
          ('4', {
              'errors': (0.01, 0.1),
              'state': ['1'],

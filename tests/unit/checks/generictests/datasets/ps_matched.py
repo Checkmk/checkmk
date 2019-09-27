@@ -37,7 +37,7 @@ checks = {
         }, [
             (0, '1 process', [('count', 1, 2, 2, 0)]),
             (0, '30.38 MB virtual', [('vsz', 31108)]),
-            (0, '6.00 MB physical', [('rss', 6140)]),
+            (0, '6 MB physical', [('rss', 6140)]),
             (0, '0.0% CPU', [('pcpu', 0.0)]),
             (0, '105 process handles', [('process_handles', 105)]),
             (0, 'running for 275 m', []),

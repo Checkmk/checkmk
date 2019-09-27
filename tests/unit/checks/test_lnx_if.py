@@ -56,7 +56,7 @@ DISCOVERY = [
         'state': ['1']
     }, [(
         0,
-        '[vboxnet0] (up) MAC: 0A:00:27:00:00:00, 10 Mbit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)',
+        '[vboxnet0] (up) MAC: 0A:00:27:00:00:00, 10 Mbit/s, In: 0 B/s (0.0%), Out: 0 B/s (0.0%)',
         [
             ('in', 0.0, 62500.0, 250000.0, 0, 1250000.0),
             ('inucast', 0.0, None, None, None, None),

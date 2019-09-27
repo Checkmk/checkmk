@@ -255,7 +255,7 @@ df_params = {
         info_df_lnx,
         [(
             0,
-            '75.79% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours',
+            '75.79% used (103.92 of 137.13 GB), trend: 0 B / 24 hours',
             [
                 (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
                 ('fs_size', 140416.6953125),
@@ -271,7 +271,7 @@ df_params = {
         info_df_lnx,
         [(
             0,
-            '75.79% used (103.92 of 137.13 GB), trend: 0.00 B / 24 hours',
+            '75.79% used (103.92 of 137.13 GB), trend: 0 B / 24 hours',
             [
                 (u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
                 ('fs_size', 140416.6953125),
@@ -287,7 +287,7 @@ df_params = {
         info_df_win,
         [(
             0,
-            '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
+            '1.82% used (181.89 MB of 9.77 GB), trend: 0 B / 24 hours',
             [
                 (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                 ('fs_size', 10000.77734375),
@@ -302,7 +302,7 @@ df_params = {
         info_df_win,
         [(
             0,
-            '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
+            '1.82% used (181.89 MB of 9.77 GB), trend: 0 B / 24 hours',
             [
                 (u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
                 ('fs_size', 10000.77734375, None, None, None, None),
@@ -317,7 +317,7 @@ df_params = {
         info_df_btrfs,
         [(
             0,
-            '21.13% used (4.23 of 20.00 GB), trend: 0.00 B / 24 hours',
+            '21.13% used (4.23 of 20 GB), trend: 0 B / 24 hours',
             [
                 (u'btrfs_/dev/sda1', 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
                 ('fs_size', 20479.0, None, None, None, None),

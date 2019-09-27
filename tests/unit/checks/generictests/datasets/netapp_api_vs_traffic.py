@@ -158,7 +158,7 @@ checks = {
             [
                 (
                     0,
-                    "FCP read data: 0.00 B",
+                    "FCP read data: 0 B",
                     [("fcp_read_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
@@ -167,7 +167,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP write data: 0.00 B",
+                    "FCP write data: 0 B",
                     [("fcp_write_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
@@ -182,7 +182,7 @@ checks = {
             [
                 (
                     0,
-                    "FCP read data: 0.00 B",
+                    "FCP read data: 0 B",
                     [("fcp_read_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
@@ -192,7 +192,7 @@ checks = {
                 ),
                 (
                     0,
-                    "FCP write data: 0.00 B",
+                    "FCP write data: 0 B",
                     [("fcp_write_data", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
@@ -208,7 +208,7 @@ checks = {
             [
                 (
                     0,
-                    "iSCSI read data: 0.00 B",
+                    "iSCSI read data: 0 B",
                     [
                         (
                             "iscsi_read_data",
@@ -226,7 +226,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI write data: 0.00 B",
+                    "iSCSI write data: 0 B",
                     [
                         (
                             "iscsi_write_data",
@@ -250,7 +250,7 @@ checks = {
             [
                 (
                     0,
-                    "iSCSI read data: 0.00 B",
+                    "iSCSI read data: 0 B",
                     [
                         (
                             "iscsi_read_data",
@@ -269,7 +269,7 @@ checks = {
                 ),
                 (
                     0,
-                    "iSCSI write data: 0.00 B",
+                    "iSCSI write data: 0 B",
                     [
                         (
                             "iscsi_write_data",
@@ -294,12 +294,12 @@ checks = {
             [
                 (
                     0,
-                    "Ethernet received data: 0.00 B",
+                    "Ethernet received data: 0 B",
                     [("if_in_octets", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
                     0,
-                    "Ethernet sent data: 0.00 B",
+                    "Ethernet sent data: 0 B",
                     [("if_out_octets", 9.000180003600072e-06, None, None, None, None)],
                 ),
                 (
@@ -335,7 +335,7 @@ checks = {
                 ),
                 (
                     0,
-                    "NFS read throughput: 0.00 B/s",
+                    "NFS read throughput: 0 B/s",
                     [
                         (
                             "nfs_read_throughput",
@@ -354,7 +354,7 @@ checks = {
                 ),
                 (
                     0,
-                    "NFS write throughput: 0.00 B/s",
+                    "NFS write throughput: 0 B/s",
                     [
                         (
                             "nfs_write_throughput",
@@ -409,7 +409,7 @@ checks = {
             [
                 (
                     0,
-                    "NFSv4.1 read throughput: 0.00 B/s",
+                    "NFSv4.1 read throughput: 0 B/s",
                     [
                         (
                             "nfsv4_1_read_throughput",
@@ -423,7 +423,7 @@ checks = {
                 ),
                 (
                     0,
-                    "NFSv4.1 write throughput: 0.00 B/s",
+                    "NFSv4.1 write throughput: 0 B/s",
                     [
                         (
                             "nfsv4_1_write_throughput",

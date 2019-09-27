@@ -64,7 +64,7 @@ checks = {
                 ('if_total_octets', 0.0, None, None, None, None),
                 ('if_total_pkts', 0.0, None, None, None, None),
             ]),
-            (1, 'Incoming bytes: 0.00 B/sec (warn/crit at -23.00 B/sec/42.00 B/sec)', []),
+            (1, 'Incoming bytes: 0 B/sec (warn/crit at -23 B/sec/42 B/sec)', []),
             (2, 'Total packets: 0.0/sec (warn/crit below 100.0/sec/200.0/sec)', []),
         ]),
     ],

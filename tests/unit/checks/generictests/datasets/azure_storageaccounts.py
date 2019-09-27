@@ -55,14 +55,14 @@ checks = {
             'used_capacity_levels': (2 * MB, 4 * MB)
         }, [
             (0, u'Kind: BlobStorage', []),
-            (1, 'Used capacity: 3.65 MB (warn/crit at 2.00 MB/4.00 MB)',
+            (1, 'Used capacity: 3.65 MB (warn/crit at 2 MB/4 MB)',
              [('used_space', 3822551, 2 * MB, 4 * MB, 0, None)]),
             (0, u'Location: westeurope', []),
             (0, u'Monitoring: some value', []),
         ]),
     ],
     'flow': [(u'glastonburydiag381', {}, [
-        (0, 'Ingress: 41.20 MB', [('ingress', 43202937, None, None, 0, None)]),
+        (0, 'Ingress: 41.2 MB', [('ingress', 43202937, None, None, 0, None)]),
         (0, 'Egress: 5.57 MB', [('egress', 5835881, None, None, 0, None)]),
         (0, 'Transactions: 1907', [('transactions', 1907.0, None, None, 0, None)]),
     ]),
@@ -70,7 +70,7 @@ checks = {
                  'egress_levels': (100 * MB, 200 * MB)
              }, [
                  (0, 'Ingress: 30.88 kB', [('ingress', 31620, None, None, 0, None)]),
-                 (2, 'Egress: 226.03 MB (warn/crit at 100.00 MB/200.00 MB)', [
+                 (2, 'Egress: 226.03 MB (warn/crit at 100 MB/200 MB)', [
                      ('egress', 237007090, 100 * MB, 200 * MB, 0, None),
                  ]),
                  (0, 'Transactions: 62', [('transactions', 62.0, None, None, 0, None)]),

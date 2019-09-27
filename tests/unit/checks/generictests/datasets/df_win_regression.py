@@ -20,7 +20,7 @@ checks = {
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
         },
-         [(2, '94.28% used (7.37 of 7.81 GB), (warn/crit at 80.0%/90.0%), trend: 0.00 B / 24 hours',
+         [(2, '94.28% used (7.37 of 7.81 GB), (warn/crit at 80.0%/90.0%), trend: 0 B / 24 hours',
            [(u'C:/', 7543.23046875, 6400.484375, 7200.544921875, 0, 8000.60546875),
             ('fs_size', 8000.60546875, None, None, None, None),
             ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -35,7 +35,7 @@ checks = {
             'show_reserved': False,
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
-        }, [(0, '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
+        }, [(0, '1.82% used (181.89 MB of 9.77 GB), trend: 0 B / 24 hours',
              [(u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
               ('fs_size', 10000.77734375, None, None, None, None),
               ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -50,7 +50,7 @@ checks = {
             'show_reserved': False,
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
-        }, [(0, '1.82% used (181.89 MB of 9.77 GB), trend: 0.00 B / 24 hours',
+        }, [(0, '1.82% used (181.89 MB of 9.77 GB), trend: 0 B / 24 hours',
              [(u'E:/', 181.890625, 8000.621875, 9000.699609375, 0, 10000.77734375),
               ('fs_size', 10000.77734375, None, None, None, None),
               ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -65,7 +65,7 @@ checks = {
             'show_reserved': False,
             'levels_low': (50.0, 60.0),
             'trend_perfdata': True
-        }, [(0, '40.7% used (48.49 of 119.14 GB), trend: 0.00 B / 24 hours',
+        }, [(0, '40.7% used (48.49 of 119.14 GB), trend: 0 B / 24 hours',
              [(u'F:/', 49648.859375, 97601.246875, 109801.402734375, 0, 122001.55859375),
               ('fs_size', 122001.55859375, None, None, None, None),
               ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,

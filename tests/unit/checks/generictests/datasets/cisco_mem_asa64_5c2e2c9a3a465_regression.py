@@ -14,5 +14,5 @@ discovery = {'': [(u'System memory', {})]}
 checks = {'': [(u'System memory',
                 {'levels': (80.0, 90.0)},
                 [(0,
-                  '0.0% (0.00 B) of 1.57 GB used',
+                  '0.0% (0 B) of 1.57 GB used',
                   [('mem_used', 0.0, 80.0, 90.0, 0, 100)])])]}

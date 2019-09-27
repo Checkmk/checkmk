@@ -21,14 +21,14 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/diskstat.inclu
 
 @pytest.mark.parametrize('args,expected_result', [
     ((1, '', {}, [None, None, 101, 201]),
-     CheckResult((0, '50.50 kB/sec read, 0.00 MB/s, 100.50 kB/sec write, 0.00 MB/s', [
+     CheckResult((0, '50.5 kB/sec read, 0.00 MB/s, 100.5 kB/sec write, 0.00 MB/s', [
          ('read', 51712),
          ('write', 102912),
      ]))),
     ((1, '', {
         'average': 1
     }, [None, None, 101, 201]),
-     CheckResult((0, '50.50 kB/sec read, 0.05 MB/s, 100.50 kB/sec write, 0.10 MB/s', [
+     CheckResult((0, '50.5 kB/sec read, 0.05 MB/s, 100.5 kB/sec write, 0.10 MB/s', [
          ('read', 51712),
          ('write', 102912),
          ('read.avg', 51710.0),

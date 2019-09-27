@@ -61,16 +61,16 @@ discovery = {'': [('SUMMARY', 'diskstat_default_levels')]}
 checks = {
     '': [
         ('SUMMARY', {}, [
-            (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None, None, None)]),
-            (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None, None, None)]),
+            (0, 'Read: 0 B/s', [('disk_read_throughput', 0.0, None, None, None, None)]),
+            (0, 'Write: 0 B/s', [('disk_write_throughput', 0.0, None, None, None, None)]),
             (0, 'Average Read Queue Length: 0.00', [('disk_read_ql', 0.0, None, None, None, None)]),
             (0, 'Average Write Queue Length: 0.00', [('disk_write_ql', 0.0, None, None, None, None)]),
             (0, 'Read operations: 0.00 1/s', [('disk_read_ios', 0.0, None, None, None, None)]),
             (0, 'Write operations: 0.00 1/s', [('disk_write_ios', 0.0, None, None, None, None)]),
         ]),
         ('SUMMARY', {"read_ios": (-2, 2), "write_ios": (-4, -2)}, [
-            (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None, None, None)]),
-            (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None, None, None)]),
+            (0, 'Read: 0 B/s', [('disk_read_throughput', 0.0, None, None, None, None)]),
+            (0, 'Write: 0 B/s', [('disk_write_throughput', 0.0, None, None, None, None)]),
             (0, 'Average Read Queue Length: 0.00', [('disk_read_ql', 0.0, None, None, None, None)]),
             (0, 'Average Write Queue Length: 0.00', [('disk_write_ql', 0.0, None, None, None, None)]),
             (1, 'Read operations: 0.00 1/s (warn/crit at -2.00 1/s/2.00 1/s)', [

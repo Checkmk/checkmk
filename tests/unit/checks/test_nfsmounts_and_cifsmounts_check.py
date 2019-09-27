@@ -16,7 +16,7 @@ pytestmark = pytest.mark.checks
         (  # single mountpoint with data
             [[u'/ABCshare', u'ok', u'491520', u'460182', u'460182', u'65536']], [
                 ('/ABCshare', {})
-            ], [('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", None)),
+            ], [('/ABCshare', {}, BasicCheckResult(0, "6.4% used (1.91 GB of 30 GB)", None)),
                 ('/ZZZshare', {}, BasicCheckResult(3, "/ZZZshare not mounted", None))]),
         (  # two mountpoints with empty data
             [[u'/AB', u'ok', u'-', u'-', u'-', u'-'], [u'/ABC', u'ok', u'-', u'-', u'-', u'-']], [
@@ -28,14 +28,14 @@ pytestmark = pytest.mark.checks
              [u'/var/dbaexport', u'ok', u'201326592', u'170803720', u'170803720', u'32768']], [
                  ('/var/dbaexport', {}), ('/var/dba export', {})
              ], [('/var/dba export', {}, BasicCheckResult(2, 'Permission denied', None)),
-                 ('/var/dbaexport', {},
-                  BasicCheckResult(0, '15.2% used (931.48 GB of 6.00 TB)', None))]),
+                 ('/var/dbaexport', {}, BasicCheckResult(0, '15.2% used (931.48 GB of 6 TB)', None))
+                ]),
         (  # with perfdata
             [[u'/PERFshare', u'ok', u'491520', u'460182', u'460182', u'65536']
             ], [('/PERFshare', {})], [('/PERFshare', {
                 'has_perfdata': True
             },
-                                       BasicCheckResult(0, "6.4% used (1.91 GB of 30.00 GB)", [
+                                       BasicCheckResult(0, "6.4% used (1.91 GB of 30 GB)", [
                                            PerfValue('fs_size', 491520 * 65536),
                                            PerfValue('fs_used', 491520 * 65536 - 460182 * 65536)
                                        ]))]),

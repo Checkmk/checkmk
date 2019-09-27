@@ -44,7 +44,7 @@ checks = {
         'show_reserved': False,
         'trend_perfdata': True,
         'trend_range': 24
-    }, [(0, '17.91% used (1.75 of 9.78 GB), trend: 0.00 B / 24 hours',
+    }, [(0, '17.91% used (1.75 of 9.78 GB), trend: 0 B / 24 hours',
          [('/', 1793.4736328125, 8012.215625, 9013.742578125, 0, 10015.26953125),
           ('fs_size', 10015.26953125, None, None, None, None),
           ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,
@@ -81,7 +81,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.0002% used (232.00 kB of 146.37 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.0002% used (232 kB of 146.37 GB), trend: 0 B / 24 hours',
               [('/etc/svc/volatile', 0.2265625, 119906.7125, 134895.0515625, 0, 149883.390625),
                ('fs_size', 149883.390625, None, None, None, None),
                ('growth', 0.0, None, None, None, None),
@@ -96,7 +96,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.0004% used (21.00 kB of 4.89 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.0004% used (21 kB of 4.89 GB), trend: 0 B / 24 hours',
               [('/export', 0.0205078125, 4006.8, 4507.65, 0, 5008.5),
                ('fs_size', 5008.5, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 208.6875)])]),
@@ -110,7 +110,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.001% used (55.00 kB of 4.89 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.001% used (55 kB of 4.89 GB), trend: 0 B / 24 hours',
               [('/home', 0.0537109375, 4006.8, 4507.65, 0, 5008.5),
                ('fs_size', 5008.5, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 208.6875)])]),
@@ -124,7 +124,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '2.84% used (142.33 MB of 4.89 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '2.84% used (142.33 MB of 4.89 GB), trend: 0 B / 24 hours',
               [('/opt', 142.3271484375, 4006.8, 4507.65, 0, 5008.5),
                ('fs_size', 5008.5, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 208.6875)])]),
@@ -171,7 +171,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.53% used (10.80 MB of 2.00 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.53% used (10.8 MB of 2 GB), trend: 0 B / 24 hours',
               [('/tmp', 10.8046875, 1638.4, 1843.2, 0, 2048.0),
                ('fs_size', 2048.0, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 85.33333333333333)])]),
@@ -185,7 +185,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.0004% used (21.00 kB of 4.89 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.0004% used (21 kB of 4.89 GB), trend: 0 B / 24 hours',
               [('/tsrdb10exp', 0.0205078125, 4006.8, 4507.65, 0, 5008.5),
                ('fs_size', 5008.5, None, None, None, None), ('growth', 0.0, None, None, None, None),
                ('trend', 0, None, None, 0, 208.6875)])]),
@@ -199,7 +199,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '64.85% used (18.99 of 29.29 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '64.85% used (18.99 of 29.29 GB), trend: 0 B / 24 hours',
               [('/u01', 19447.615234375, 23990.4, 26989.2, 0, 29988.0),
                ('fs_size', 29988.0, None, None, None, None), ('growth', 0.0, None, None, None,
                                                               None),
@@ -214,7 +214,7 @@ checks = {
              'show_reserved': False,
              'trend_perfdata': True,
              'trend_range': 24
-         }, [(0, '0.00002% used (24.00 kB of 146.37 GB), trend: 0.00 B / 24 hours',
+         }, [(0, '0.00002% used (24 kB of 146.37 GB), trend: 0 B / 24 hours',
               [('/var/run', 0.0234375, 119906.55, 134894.86875, 0, 149883.1875),
                ('fs_size', 149883.1875, None, None, None, None),
                ('growth', 0.0, None, None, None, None), ('trend', 0, None, None, 0,

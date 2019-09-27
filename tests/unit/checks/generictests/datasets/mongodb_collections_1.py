@@ -41,20 +41,20 @@ discovery = {'': [(u'admin system.version', {}),
 checks = {
     '': [
         (u'admin system.version', {}, [
-            (0, 'Uncompressed size in memory: 59.00 B', []),
-            (0, 'Allocated for document storage: 16.00 kB', []),
+            (0, 'Uncompressed size in memory: 59 B', []),
+            (0, 'Allocated for document storage: 16 kB', []),
         ]),
         (u'config system.sessions', {}, [
-            (0, 'Uncompressed size in memory: 594.00 B', []),
-            (0, 'Allocated for document storage: 24.00 kB', []),
+            (0, 'Uncompressed size in memory: 594 B', []),
+            (0, 'Allocated for document storage: 24 kB', []),
         ]),
         (u'local startup_log', {}, [
             (0, 'Uncompressed size in memory: 5.71 kB', []),
-            (0, 'Allocated for document storage: 36.00 kB', []),
+            (0, 'Allocated for document storage: 36 kB', []),
         ]),
         (u'test zips', {"levels_size": (1, 2), "levels_storagesize": (1, 2)}, [
-            (2, 'Uncompressed size in memory: 2.65 MB (warn/crit at 1.00 MB/2.00 MB)', []),
-            (1, 'Allocated for document storage: 1.39 MB (warn/crit at 1.00 MB/2.00 MB)', []),
+            (2, 'Uncompressed size in memory: 2.65 MB (warn/crit at 1 MB/2 MB)', []),
+            (1, 'Allocated for document storage: 1.39 MB (warn/crit at 1 MB/2 MB)', []),
         ]),
     ],
 }

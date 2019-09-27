@@ -93,7 +93,7 @@ def test_df_check(check_manager):
             u'raidtype': u'RAID0',
         }
     }
-    expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours',
+    expected_result = (0, '57.81% used (1.16 of 2 TB), trend: 0 B / 24 hours',
                        [('VMFS_01', 1212896, 1678313.6, 1888102.8, 0, 2097892),
                         ('fs_size', 2097892), ('growth', 0.0), ('trend', 0, None, None, 0, 87412)])
     _, result = check.run_check(item_1st, params, parsed)
@@ -132,5 +132,5 @@ def test_io_check(check_manager):
         }
     }
     _, read, written = check.run_check(item_1st, params, parsed)
-    assert read == (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)])
-    assert written == (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)])
+    assert read == (0, 'Read: 0 B/s', [('disk_read_throughput', 0.0)])
+    assert written == (0, 'Write: 0 B/s', [('disk_write_throughput', 0.0)])

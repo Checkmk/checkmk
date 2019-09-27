@@ -95,7 +95,7 @@ checks = {
         ('SUMMARY', {}, [
             (0, 'Read: 15.37 MB/s', [
                 ('disk_read_throughput', 16119296.0, None, None, None, None)]),
-            (0, 'Write: 0.00 B/s', [
+            (0, 'Write: 0 B/s', [
                 ('disk_write_throughput', 0.0, None, None, None, None)]),
             (0, 'Read operations: 527.50 1/s', [
                 ('disk_read_ios', 527.5, None, None, None, None)]),

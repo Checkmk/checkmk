@@ -29,7 +29,7 @@ checks = {'': [('Full VServer Name',
                   'Type: cache redirection, Protocol: http, Socket: 123.456.78.9:80',
                   []),
                  (0,
-                  'Request rate: 200/s, In: 100.00 B/s, Out: 300.00 B/s',
+                  'Request rate: 200/s, In: 100 B/s, Out: 300 B/s',
                   [('request_rate', 200, None, None, None, None),
                    ('if_in_octets', 100, None, None, None, None),
                    ('if_out_octets', 300, None, None, None, None)])])]}

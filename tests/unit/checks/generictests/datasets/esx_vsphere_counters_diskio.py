@@ -28,10 +28,10 @@ discovery = {
 checks = {
     'diskio': [
         ('SUMMARY', {}, [
-            (0, 'Read: 12.00 kB/s', [
+            (0, 'Read: 12 kB/s', [
                 ('disk_read_throughput', 12288.0, None, None, None, None),
             ]),
-            (0, 'Write: 51.00 kB/s', [
+            (0, 'Write: 51 kB/s', [
                 ('disk_write_throughput', 52224.0, None, None, None, None),
             ]),
             (0, 'Latency: 900.00 ms', [

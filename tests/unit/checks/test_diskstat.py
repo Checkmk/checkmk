@@ -33,8 +33,8 @@ pytestmark = pytest.mark.checks
             'queue_length': 0.0,
         }
     }, [(0, 'Utilization: 0%', [('disk_utilization', 0.0)]),
-        (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)]),
-        (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)]),
+        (0, 'Read: 0 B/s', [('disk_read_throughput', 0.0)]),
+        (0, 'Write: 0 B/s', [('disk_write_throughput', 0.0)]),
         (0, 'Average Wait: 0.00 ms', [('disk_average_wait', 0.0)]),
         (0, 'Average Read Wait: 0.00 ms', [('disk_average_read_wait', 0.0)]),
         (0, 'Average Write Wait: 0.00 ms', [('disk_average_write_wait', 0.0)]),
@@ -75,8 +75,8 @@ pytestmark = pytest.mark.checks
             'queue_length': 0.0,
         }
     }, [(0, 'Utilization: 0%', [('disk_utilization', 0.0)]),
-        (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)]),
-        (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)]),
+        (0, 'Read: 0 B/s', [('disk_read_throughput', 0.0)]),
+        (0, 'Write: 0 B/s', [('disk_write_throughput', 0.0)]),
         (0, 'Average Wait: 0.00 ms', [('disk_average_wait', 0.0)]),
         (0, 'Average Read Wait: 0.00 ms', [('disk_average_read_wait', 0.0)]),
         (0, 'Average Write Wait: 0.00 ms', [('disk_average_write_wait', 0.0)]),

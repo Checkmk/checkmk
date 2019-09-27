@@ -57,7 +57,7 @@ checks = {
         ('SHREK', {'age': (0, 0)}, [
             (0, '[NODE1] Exit-Code: 0, Started: 2019-01-12 14:53:21, Real-Time: 120 s,'
                 ' User-Time: 1.00 s, System-Time: 0.00 s, Filesystem Reads: 0,'
-                ' Filesystem Writes: 0, Max. Memory: 1.23 MB, Avg. Memory: 1.00 kB,'
+                ' Filesystem Writes: 0, Max. Memory: 1.23 MB, Avg. Memory: 1 kB,'
                 ' Vol. Context Switches: 23, Invol. Context Switches: 12', [
                     ('start_time', 1547301201),
                     ('real_time', 120.0),
@@ -76,7 +76,7 @@ checks = {
                 ' Previous result (considered OK): Exit-Code: 1 (!!),'
                 ' Started: 2019-05-08 09:40:01, Real-Time: 6 m,'
                 ' User-Time: 0.00 s, System-Time: 0.00 s, Filesystem Reads: 0,'
-                ' Filesystem Writes: 0, Max. Memory: 2.22 MB, Avg. Memory: 0.00 B,'
+                ' Filesystem Writes: 0, Max. Memory: 2.22 MB, Avg. Memory: 0 B,'
                 ' Vol. Context Switches: 2, Invol. Context Switches: 1', [
                     ('start_time', 1557301201.),
                     ('real_time', 360.0),

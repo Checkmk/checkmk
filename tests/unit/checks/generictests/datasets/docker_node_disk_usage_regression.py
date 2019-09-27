@@ -21,8 +21,8 @@ info = [[
 discovery = {'': [('build cache', {}), ('containers', {}), ('images', {}), ('local volumes', {})]}
 
 checks = {
-    '': [('build cache', {}, [(0, 'Size: 0.00 B', [('size', 0, None, None, None, None)]),
-                              (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None, None)]),
+    '': [('build cache', {}, [(0, 'Size: 0 B', [('size', 0, None, None, None, None)]),
+                              (0, 'Reclaimable: 0 B', [('reclaimable', 0, None, None, None, None)]),
                               (0, 'Count: 0', [('count', 0, None, None, None, None)]),
                               (0, 'Active: 0', [('active', 0, None, None, None, None)])]),
          ('containers', {},
@@ -36,7 +36,7 @@ checks = {
                          (0, 'Count: 15', [('count', 15, None, None, None, None)]),
                          (0, 'Active: 2', [('active', 2, None, None, None, None)])]),
          ('local volumes', {}, [(0, 'Size: 8.89 MB', [('size', 9323000, None, None, None, None)]),
-                                (0, 'Reclaimable: 0.00 B', [('reclaimable', 0, None, None, None,
+                                (0, 'Reclaimable: 0 B', [('reclaimable', 0, None, None, None,
                                                           None)]),
                                 (0, 'Count: 1', [('count', 1, None, None, None, None)]),
                                 (0, 'Active: 1', [('active', 1, None, None, None, None)])])]

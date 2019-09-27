@@ -163,7 +163,7 @@ def fmt_number_with_precision(v, *args, **kwargs):
     factor, prefix = scale_factor_prefix(v, base=kwargs.get('base', 1000.0))
     value = float(v) / factor
     precision = kwargs.get("precision", 2)
-    if kwargs.get("drop_zeroes", False):
+    if kwargs.get("drop_zeroes", True):
         number = drop_dotzero(value, precision)
     else:
         number = '%.*f' % (precision, value)
@@ -351,11 +351,7 @@ def fmt_nic_speed(speed):
     """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
-        speed = fmt_number_with_precision(speedi,
-                                          base=1000.0,
-                                          precision=2,
-                                          unit="bit/s",
-                                          drop_zeroes=True)
+        speed = fmt_number_with_precision(speedi, base=1000.0, precision=2, unit="bit/s")
     except:
         pass
     return speed

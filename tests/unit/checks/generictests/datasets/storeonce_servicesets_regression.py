@@ -63,7 +63,7 @@ checks = {
     ],
     'capacity': [
         ('1', {}, [
-            (0, '71.5% used (24.70 of 34.54 PB), trend: 0.00 B / 24 hours', [
+            (0, '71.5% used (24.7 of 34.54 PB), trend: 0 B / 24 hours', [
                 ('1', 26516458472.0, 29669065864.704296, 33377699097.792336, 0, 37086332330.88037),
                 ('fs_size', 37086332330.88037, None, None, None, None),
                 ('growth', 0.0, None, None, None, None),

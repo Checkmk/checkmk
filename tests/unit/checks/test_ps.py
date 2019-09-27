@@ -583,7 +583,7 @@ def test_replace_service_description_exception(check_manager):
 check_results = [
     CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (1, "1.00 GB virtual: (warn/crit at 1.00 GB/2.00 GB)", [("vsz", 1050360, 1073741824,
+        (1, "1 GB virtual: (warn/crit at 1 GB/2 GB)", [("vsz", 1050360, 1073741824,
                                                                  2147483648, None, None)]),
         (0, "296.14 MB physical", [("rss", 303252, 1073741824, 2147483648, None, None)]),
         (1, "28.92% of total RAM: (warn/crit at 25.0%/50.0%)"),
@@ -654,7 +654,7 @@ check_results = [
     CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0, None)]),
         (0, "4.47 MB virtual", [("vsz", 4576, None, None, None, None)]),
-        (0, "316.00 kB physical", [("rss", 316, None, None, None, None)]),
+        (0, "316 kB physical", [("rss", 316, None, None, None, None)]),
         (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
         (0, "53 process handles", [("process_handles", 53, None, None, None, None)]),
     ]),
@@ -735,8 +735,8 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 
     reference = CheckResult([
         (0, "1 process", [("count", 1, 100000, 100000, 0)]),
-        (0, "105.00 kB virtual", [("vsz", 105, None, None, None, None)]),
-        (0, "30.00 kB physical", [("rss", 30, None, None, None, None)]),
+        (0, "105 kB virtual", [("vsz", 105, None, None, None, None)]),
+        (0, "30 kB physical", [("rss", 30, None, None, None, None)]),
         check.context["cpu_check"](data.exp_load, inv_item[0], inv_item[1]),
         (0, "running for 239 m", []),
     ])
@@ -865,7 +865,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
     single_msg = '%.1f%% CPU for firefox with PID 25898: (warn/crit at 45.0%%/80.0%%)' % cpu_util
     reference = [
         (0, "4 processes", [("count", 4, 100000, 100000, 0)]),
-        (0, "13.00 GB virtual", [("vsz", 13631104, None, None, None, None)]),
+        (0, "13 GB virtual", [("vsz", 13631104, None, None, None, None)]),
         (0, "1.06 GB physical", [("rss", 1106568, None, None, None, None)]),
         (0, "%.1f%% CPU" % cpu_util, [('pcpu', cpu_util, None, None, None, None)]),
         (0, 'youngest running for 6 m, oldest running for 26 m', []),

@@ -176,3 +176,9 @@ def InterProcessLock(filename):
         print("[%0.2f] Released lock: %s" % (time.time(), filename))
         if fd:
             os.close(fd)
+
+
+class DummyApplication(object):
+    def __init__(self, environ, start_response):
+        self._environ = environ
+        self._start_response = start_response

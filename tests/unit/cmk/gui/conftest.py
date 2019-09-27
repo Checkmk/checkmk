@@ -9,13 +9,7 @@ import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 from cmk.gui.http import Request, Response
 from cmk.gui.globals import AppContext, RequestContext
-
-
-# TODO: Better make our application available?
-class DummyApplication(object):
-    def __init__(self, environ, start_response):
-        self._environ = environ
-        self._start_response = start_response
+from testlib.utils import DummyApplication
 
 
 @pytest.fixture()

@@ -442,6 +442,11 @@ def wmi_fix_levels(levels):
 
 
 def wmi_yield_raw_persec(table, row, column, label, perfvar, levels=None, perfscale=1.0):
+    if table is None:
+        # This case may be when a check was discovered with a table which subsequently
+        # disappeared again. We expect to get None in this case and return some "nothing happened"
+        return 0, "", []
+
     if row == "":
         row = 0
 

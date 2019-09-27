@@ -353,7 +353,7 @@ check_results_winperf_if_group_patterns = [
     )]),
     CheckResult([(
         0,
-        "Teaming Status (up), Members: [isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected)] 600.0 Kbit/s",
+        "Teaming Status (up), Members: [isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected)] 600 kbit/s",
         [],
     )]),
     CheckResult([(
@@ -482,7 +482,7 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
     assert result_3 == CheckResult([
         BasicCheckResult(
             0,
-            u'[SLOT 6 Port 1 DAG] (Connected) MAC: A0:36:9F:B0:A3:60, 10.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
+            u'[SLOT 6 Port 1 DAG] (Connected) MAC: A0:36:9F:B0:A3:60, 10 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
             [
                 PerfValue('in', 0.0, None, None, 0, 1250000000.0),
                 PerfValue('inucast', 0.0, None, None, None, None),
@@ -500,7 +500,7 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
     assert result_8 == CheckResult([
         BasicCheckResult(
             0,
-            u'[SLOT 4 Port 2 DAG] (Connected) MAC: A0:36:9F:B0:B3:66, 10.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
+            u'[SLOT 4 Port 2 DAG] (Connected) MAC: A0:36:9F:B0:B3:66, 10 Gbit/s, In: 0.00 B/s (0.0%), Out: 1.00 GB/s (85.9%)',
             [
                 PerfValue('in', 0.0, None, None, 0, 1250000000.0),
                 PerfValue('inucast', 0.0, None, None, None, None),
@@ -518,7 +518,7 @@ def test_winperf_if_teaming_performance_data(check_manager, monkeypatch):
     assert result_dag_net == CheckResult([
         BasicCheckResult(
             0,
-            'Teaming Status (up), Members: [8 (Connected), 3 (Connected)] 20.00 Gbit/s, In: 0.00 B/s (0.0%), Out: 2.00 GB/s (85.9%)',
+            'Teaming Status (up), Members: [8 (Connected), 3 (Connected)] 20 Gbit/s, In: 0.00 B/s (0.0%), Out: 2.00 GB/s (85.9%)',
             [
                 PerfValue('in', 0.0, None, None, 0, 2500000000.0),
                 PerfValue('inucast', 0.0, None, None, None, None),

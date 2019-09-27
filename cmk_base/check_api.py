@@ -274,6 +274,7 @@ is_cmc = _config.is_cmc
 
 get_age_human_readable = lambda secs: "%s" % render.Age(secs)
 get_bytes_human_readable = render.fmt_bytes
+get_nic_speed_human_readable = render.fmt_nic_speed
 get_percent_human_readable = render.percent
 get_number_with_precision = render.fmt_number_with_precision
 quote_shell_string = _cmk_utils.quote_shell_string
@@ -297,30 +298,6 @@ def get_filesize_human_readable(size):
     elif size < 4 * 1024 * 1024 * 1024:
         return "%.2f MB" % (float(size) / (1024 * 1024))
     return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_nic_speed_human_readable(speed):
-    """Format network speed (bit/s) for humans."""
-    try:
-        speedi = int(speed)
-    except ValueError:
-        return speed
-
-    if speedi == 10000000:
-        return "10 Mbit/s"
-    elif speedi == 100000000:
-        return "100 Mbit/s"
-    elif speedi == 1000000000:
-        return "1 Gbit/s"
-    elif speedi < 1500:
-        return "%d bit/s" % speedi
-    elif speedi < 1000000:
-        return "%.1f Kbit/s" % (speedi / 1000.0)
-    elif speedi < 1000000000:
-        return "%.2f Mbit/s" % (speedi / 1000000.0)
-
-    return "%.2f Gbit/s" % (speedi / 1000000000.0)
 
 
 # TODO: Replace by some render.* function / move to render module?

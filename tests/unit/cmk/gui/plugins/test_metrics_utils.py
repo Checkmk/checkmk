@@ -135,7 +135,7 @@ def test_replace_expression():
     perfdata = [(n, len(n), u'', 120, 240, 0, 25) for n in ['load1']]
     translated_metrics = utils.translate_metrics(perfdata, 'check_mk-cpu.loads')
     assert utils.replace_expressions("CPU Load - %(load1:max@count) CPU Cores",
-                                     translated_metrics) == 'CPU Load - 25.0  CPU Cores'
+                                     translated_metrics) == 'CPU Load - 25  CPU Cores'
 
 
 @pytest.mark.parametrize("text, out", [

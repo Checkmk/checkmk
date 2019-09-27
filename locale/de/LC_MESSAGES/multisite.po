@@ -179,6 +179,10 @@ msgstr ""
 "register_manual_check_rulespec %r"
 
 #, python-format
+msgid "\"%s\" is not a valid python encoding."
+msgstr "'%s' ist keine gültiges Python-Encoding."
+
+#, python-format
 msgid ""
 "\"%s\" is not allowed inside the regular expression group %s. Bounding "
 "characters inside groups will vanish after discovery, because processes are "
@@ -3281,6 +3285,15 @@ msgstr ""
 "Nachdem eine SNMP-Anfrage zum Agenten gesendet wurde, werden wir diese Anzahl "
 "von Sekunden warten, bevor wir davon ausgehen, dass die Antwort verloren "
 "gegangen ist und es nochmal versuchen."
+
+msgid ""
+"After a request is sent to the remote SNMP agent, the service will wait up to "
+"the provided timeout limit before assuming that the answer got lost. It will "
+"then retry to obtain an answer by sending another request.\n"
+"In the worst case, the total duration of the service can take up to the "
+"product of the number of retries and the timeout duration. In consequence, "
+"you should provide combined reasonable values for both parameters."
+msgstr ""
 
 msgid ""
 "After creating a rule that deploys the agent updater you need to bake agents. "
@@ -8272,6 +8285,9 @@ msgstr "Cluster: Bevorzugtes Checkergebnis von Local-Checks"
 
 msgid "Cnt."
 msgstr "Zln."
+
+msgid "Codec that should be used to decode the matching files"
+msgstr ""
 
 msgid "Cold HDD space"
 msgstr "Unvorbereiteter Festplattenspeicher"
@@ -22439,6 +22455,14 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "Kaspersky Anti-Virus: Zeiteinstellungen"
+
+msgid "Keep hosts while piggyback source sends no piggyback data at all for"
+msgstr ""
+
+msgid ""
+"Keep hosts while piggyback source sends piggyback data only for other hosts "
+"for"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -49276,14 +49300,14 @@ msgstr ""
 msgid "WATO"
 msgstr "WATO"
 
-msgid "WATO &middot; Configuration"
-msgstr "WATO &middot; Einstellungen"
-
-msgid "WATO &middot; Quickaccess"
-msgstr "WATO &middot; Schnelleinstieg"
-
 msgid "WATO - Check_MK's Web Administration Tool"
 msgstr "WATO - Check_MK's Web Administration Tool"
+
+msgid "WATO - Configuration"
+msgstr "WATO - Einstellungen"
+
+msgid "WATO - Quickaccess"
+msgstr "WATO - Schnelleinstieg"
 
 msgid "WATO Folder"
 msgstr "WATO Ordner"
@@ -53775,6 +53799,12 @@ msgstr "Minute"
 msgid "minutes"
 msgstr "Minuten"
 
+msgid ""
+"mk_logwatch tries its best to determine the correct encoding of a file, and "
+"to recover from errors if it is wrong. If that does not work for you, you can "
+"configure a specific encoding."
+msgstr ""
+
 msgid "mm"
 msgstr "mm"
 
@@ -57839,9 +57869,6 @@ msgstr "z/OS"
 
 #~ msgid "&ne;"
 #~ msgstr "&ne;"
-
-#~ msgid "'%s' is not a valid email address."
-#~ msgstr "'%s' ist keine gültige E-Mailadresse."
 
 #~ msgid "="
 #~ msgstr "="

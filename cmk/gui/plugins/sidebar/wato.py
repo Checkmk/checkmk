@@ -80,7 +80,7 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO &middot; Configuration")
+        return _("WATO - Configuration")
 
     @classmethod
     def description(cls):
@@ -107,7 +107,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO &middot; Quickaccess")
+        return _("WATO - Quickaccess")
 
     @classmethod
     def description(cls):

@@ -36,6 +36,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
     Dictionary,
@@ -3896,11 +3897,20 @@ def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix
 
 
 def _valuespec_piggybacked_host_files():
+    global_max_cache_age_uri = html.makeuri_contextless(
+        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
+        filename="wato.py")
+
+    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
+                                   global_max_cache_age_uri)
+    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
+                            global_max_cache_age_uri)
+
     return Dictionary(
         title=_("Piggybacked Host Files"),
         optional_keys=[],
         elements=[
-            ("global_max_cache_age", _vs_max_cache_age()),
+            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
             ("global_validity", _vs_validity()),
             ("per_piggybacked_host",
              ListOf(
@@ -3912,7 +3922,7 @@ def _valuespec_piggybacked_host_files():
                               title=_("Piggybacked host name"),
                               allow_empty=False,
                           )),
-                         ("max_cache_age", _vs_max_cache_age(additional_title=_("or above"))),
+                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
                          ("validity", _vs_validity()),
                      ],
                  ),
@@ -3932,17 +3942,13 @@ def _valuespec_piggybacked_host_files():
     )
 
 
-def _vs_max_cache_age(additional_title=None):
-    if additional_title is None:
-        title = _("Use maximum age from global settings")
-    else:
-        title = _("Use maximum age from global settings %s" % additional_title)
+def _vs_max_cache_age(max_cache_age_title):
     return Alternative(
         title=_("Set maximum age how long piggyback files are kept"),
         elements=[
             FixedValue(
                 "global",
-                title=title,
+                title=max_cache_age_title,
                 totext="",
             ),
             Age(

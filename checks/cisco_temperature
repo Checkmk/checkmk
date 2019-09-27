@@ -382,7 +382,8 @@ def check_cisco_temperature_dom(item, params, parsed):
     state, state_readable = data['dev_state']
     yield state, 'Status: %s' % state_readable
 
-    device_levels = data.get('dev_levels', (None, None, None, None))
+    # get won't save you, because 'dev_levels' may be present, but None.
+    device_levels = data.get('dev_levels') or (None, None, None, None)
 
     # Map WATO configuration of levels to check_levels() compatible tuple.
     # Default value in case of missing WATO config is use device levels.

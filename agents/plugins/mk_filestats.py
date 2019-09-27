@@ -108,6 +108,8 @@ import glob
 import shlex
 import logging
 
+from stat import S_ISREG, S_ISDIR
+
 try:
     import ConfigParser as configparser
 except NameError:  # Python3
@@ -153,8 +155,7 @@ def parse_arguments(argv=None):
 class FileStat(object):
     """Wrapper arount os.stat
 
-    Only call os.stat once, and not until corresponding attributes
-    are actually needed.
+    Only call os.stat once.
     """
     def __init__(self, path):
         super(FileStat, self).__init__()
@@ -162,17 +163,15 @@ class FileStat(object):
         if not isinstance(path, unicode):  # pylint: disable=bad-builtin
             path = path.decode('utf8')
         self.path = path
-        self.stat_status = None
-        self._size = None
-        self._age = None
+        self.stat_status = 'ok'
+        self.size = None
+        self.age = None
         self._m_time = None
-
-    def _stat(self):
-        if self.stat_status is not None:
-            return
+        # report on errors, regard failure as 'file'
+        self.isfile = True
+        self.isdir = False
 
         LOGGER.debug("os.stat(%r)", self.path)
-
         path = self.path.encode('utf8')
         try:
             stat = os.stat(path)
@@ -181,29 +180,20 @@ class FileStat(object):
             return
 
         try:
-            self._size = int(stat.st_size)
+            self.size = int(stat.st_size)
         except ValueError as exc:
             self.stat_status = str(exc)
             return
 
         try:
             self._m_time = int(stat.st_mtime)
-            self._age = int(time.time()) - self._m_time
+            self.age = int(time.time()) - self._m_time
         except ValueError as exc:
             self.stat_status = str(exc)
             return
 
-        self.stat_status = 'ok'
-
-    @property
-    def size(self):
-        self._stat()
-        return self._size
-
-    @property
-    def age(self):
-        self._stat()
-        return self._age
+        self.isfile = S_ISREG(stat.st_mode)
+        self.isdir = S_ISDIR(stat.st_mode)
 
     def __repr__(self):
         return "FileStat(%r)" % self.path
@@ -241,10 +231,10 @@ class PatternIterator(object):
 
     def _iter_files(self, pattern):
         for item in glob.iglob(pattern):
-            if os.path.isfile(item):
-                yield FileStat(item)
-            # for now, we recurse unconditionally
-            else:
+            filestat = FileStat(item)
+            if filestat.isfile:
+                yield filestat
+            elif filestat.isdir:
                 for filestat in self._iter_files(os.path.join(item, '*')):
                     yield filestat
 

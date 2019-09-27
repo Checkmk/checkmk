@@ -1,0 +1,11 @@
+Title: Periodic service discovery: Set minimum group time to 5 minutes
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p3
+Date: 1569596677
+Class: fix
+
+The cron job is executed every 5 minutes, a lower grouping value does not
+make sense.

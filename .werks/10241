@@ -1,0 +1,12 @@
+Title: Report scheduler: The scheduler and stored report cleanup jobs were not triggered
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1569591471
+Edition: cee
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 1.7.0i1
+
+The scheduled reports were not triggered in previous 1.6 releases.

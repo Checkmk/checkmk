@@ -228,7 +228,7 @@ def _parameter_valuespec_fileinfo_groups():
                      MonitoringState(title=_("Monitoring state"), default_value=2),
                      ListOf(
                          CascadingDropdown(
-                             orientation="hroizontal",
+                             orientation="horizontal",
                              choices=[
                                  ("count", _("File count at"), Integer()),
                                  ("count_lower", _("File count below"), Integer()),

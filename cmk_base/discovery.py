@@ -1250,8 +1250,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     params = discovered_service.parameters_unresolved
             except Exception:
-                raise MKGeneralException("Invalid check parameter string '%s'" %
-                                         discovered_service.parameters_unresolved)
+                raise MKGeneralException(
+                    "Invalid check parameter string '%s' found in discovered service %r" %
+                    (discovered_service.parameters_unresolved, discovered_service))
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)

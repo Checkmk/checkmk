@@ -1172,7 +1172,7 @@ class AutomationDiagHost(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                state, output = 0, ""
+                state, output = 0, u""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.DSProgramDataSource) and cmd:
                         source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
@@ -1183,7 +1183,18 @@ class AutomationDiagHost(Automation):
                     elif isinstance(source, data_sources.snmp.SNMPDataSource):
                         continue
 
-                    output += source.run_raw()
+                    source_output = source.run_raw()
+
+                    # We really receive a byte string here. The agent sections
+                    # may have different encodings and are normally decoded one
+                    # by one (CheckMKAgentDataSource._parse_info).  For the
+                    # moment we use UTF-8 with fallback to latin-1 by default,
+                    # similar to the CheckMKAgentDataSource, but we do not
+                    # respect the ecoding options of sections.
+                    # If this is a problem, we would have to apply parse and
+                    # decode logic and unparse the decoded output again.
+                    output += config.decode_incoming_string(source_output)
+
                     if source.exception():
                         state = 1
                         output += "%s" % source.exception()

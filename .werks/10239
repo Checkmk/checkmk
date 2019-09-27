@@ -1,0 +1,19 @@
+Title: Fix agent host diagnose mostly affecting windows hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569564917
+Class: fix
+
+The "Agent" box of the host diagnose page was not returning a result
+when contacting some hosts. This was mostly affecting windows hosts,
+but could also affect other hosts.
+
+The problem was caused by non ASCII characters in the agent output,
+which made the processing fail.
+
+We now first try to decode the agent output with UTF-8, in case this fail we
+fallback to the "fallback agent output encoding", which is latin-1. When this
+also fails we replace the non decodable characters with some place holder.

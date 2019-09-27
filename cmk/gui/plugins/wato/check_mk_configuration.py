@@ -3726,15 +3726,18 @@ def _valuespec_automatic_rediscover_parameters():
                  orientation="vertical",
                  default_value=0,
              )),
-            ("group_time",
-             Age(
-                 title=_("Group discovery and activation for up to"),
-                 help=_("A delay can be configured here so that multiple "
-                        "discoveries can be activated in one go. This avoids frequent core "
-                        "restarts in situations with frequent services changes."),
-                 default_value=15 * 60,
-                 display=["hours", "minutes"],
-             )),
+            (
+                "group_time",
+                Age(
+                    title=_("Group discovery and activation for up to"),
+                    help=_("A delay can be configured here so that multiple "
+                           "discoveries can be activated in one go. This avoids frequent core "
+                           "restarts in situations with frequent services changes."),
+                    default_value=15 * 60,
+                    # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
+                    minvalue=5 * 60,
+                    display=["hours", "minutes"],
+                )),
             ("excluded_time",
              ListOfTimeRanges(
                  title=_("Never do discovery or activate changes in the following time ranges"),

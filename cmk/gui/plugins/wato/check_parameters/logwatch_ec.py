@@ -407,7 +407,8 @@ def _parameter_valuespec_logwatch_ec():
                            "Reinventorize this check in order to make it OK again."),
                      )),
                     ('expected_logfiles',
-                     ListOfStrings(
+                     ListOf(
+                         TextUnicode(),
                          title=_("List of expected logfiles"),
                          help=
                          _("When the monitoring of forwarded logfiles is enabled, the check verifies that "

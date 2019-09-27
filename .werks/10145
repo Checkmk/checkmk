@@ -1,0 +1,13 @@
+Title: logwatch_ec: Unjustified 'Invalid parameter' warning
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p3
+Date: 1569592362
+
+When trying to view the parameters of newly discoverd logwatch service,
+a 'Invalid parameters' message was issued. This was purely a rendering
+problem, and was not affecting your monitoring.

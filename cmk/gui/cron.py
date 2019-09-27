@@ -27,6 +27,7 @@
 import os
 import time
 
+import cmk
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -42,6 +43,9 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
     multisite_cronjobs, register_job,
 )
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.cron
 
 loaded_with_language = False
 

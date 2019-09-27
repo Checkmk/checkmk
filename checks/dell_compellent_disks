@@ -42,6 +42,11 @@ dell_compellent_disks_health_map = {
 }
 
 
+def inventory_dell_compellent_disks(info):
+    for elem in info:
+        yield (elem, None)
+
+
 def parse_dell_compellent_disks(info):
     # Need to be compatible with shared inventory function
     parsed = {}
@@ -74,7 +79,7 @@ def check_dell_compellent_disks(item, _no_params, data):
 
 check_info['dell_compellent_disks'] = {
     'parse_function': parse_dell_compellent_disks,
-    'inventory_function': inventory_dell_compellent,
+    'inventory_function': inventory_dell_compellent_disks,
     'check_function': check_dell_compellent_disks,
     'service_description': 'Disk %s',
     'snmp_info': [

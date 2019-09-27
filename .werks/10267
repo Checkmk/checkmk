@@ -1,0 +1,13 @@
+Title: dell_complellent_disks would not see more than 9 disks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1569584218
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Fix the inventory function to dell_compellent_disks
+and test that the error is not present in the other
+Compellent checks.

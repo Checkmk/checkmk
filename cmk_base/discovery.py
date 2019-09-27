@@ -1238,6 +1238,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         exitcode = None
         perfdata = []  # type: List[Tuple]
         if check_source not in ['legacy', 'active', 'custom']:
+            if discovered_service.check_plugin_name not in config.check_info:
+                continue  # Skip not existing check silently
+
             # apply check_parameters
             try:
                 if isinstance(discovered_service.parameters_unresolved, str):
@@ -1254,9 +1257,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                                         discovered_service.description)
             section_name = cmk_base.check_utils.section_name_of(
                 discovered_service.check_plugin_name)
-
-            if discovered_service.check_plugin_name not in config.check_info:
-                continue  # Skip not existing check silently
 
             try:
                 try:

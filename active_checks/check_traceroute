@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -86,7 +86,7 @@ def _execute_traceroute(target, nodns, method, address_family):
     if address_family:
         cmd.append(address_family)
     cmd.append(target)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf8")
     sto, ste = p.communicate()
     if p.returncode:
         sys.stdout.write("UNKNOWN - " + ste.replace("\n", " "))
@@ -102,7 +102,7 @@ def check_traceroute(lines, routes):
         for part in parts:
             try:
                 part = part.lstrip("(").rstrip(",").rstrip(")")
-                ipaddress.ip_interface(unicode(part))
+                ipaddress.ip_interface(part)
                 routers.add(part)
             except ValueError:
                 pass
@@ -138,12 +138,12 @@ def bail_out(reason):
     sys.exit(3)
 
 
-def valid_ip_version(address, flag_version):
+def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    unicode_address = unicode(address.split('%')[0])
-    address_version = str(ipaddress.ip_interface(unicode_address).ip.version)
-    is_valid = address_version == flag_version.lstrip('-')
-    return address_version, is_valid
+    ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    if not ip_address_version == ip_version_arg:
+        bail_out('IP protocol version "%s" not the same as the IP address version "%s".' %
+                 (ip_version_arg, ip_address_version))
 
 
 def usage():
@@ -214,11 +214,7 @@ def main(args=None):
             elif o in ['-4', '-6']:
                 if opt_address_family:
                     bail_out('Cannot use both IPv4 and IPv6')
-                target_address_version, is_valid_version = valid_ip_version(target_address, o)
-                if not is_valid_version:
-                    bail_out(
-                        'IP protocol version (%s) not the same as the IP address version (%s).' %
-                        (o[1], target_address_version))
+                validate_ip_version(target_address, int(o.lstrip("-")))
                 opt_address_family = o
 
         # now handle action options

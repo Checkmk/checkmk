@@ -237,6 +237,7 @@ class Age(ValueSpec):
         super(Age, self).__init__(**kwargs)
         self._label = kwargs.get("label")
         self._minvalue = kwargs.get("minvalue")
+        self._maxvalue = kwargs.get("maxvalue")
         self._display = kwargs.get("display", ["days", "hours", "minutes", "seconds"])
 
     def canonical_value(self):
@@ -305,6 +306,10 @@ class Age(ValueSpec):
             raise MKUserError(
                 varprefix,
                 _("%s is too low. The minimum allowed value is %s.") % (value, self._minvalue))
+        if self._maxvalue is not None and value > self._maxvalue:
+            raise MKUserError(
+                varprefix,
+                _("%s is too high. The maximum allowed value is %s.") % (value, self._maxvalue))
 
 
 class Integer(ValueSpec):

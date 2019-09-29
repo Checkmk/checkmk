@@ -74,7 +74,7 @@ node {
         }
         
         stage("Python futurize") {
-            CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
+            CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
             if (CHANGED_TEST_FUTURIZE_FILE != "") {
                 dir('tests') {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-python-futurize"

@@ -45,7 +45,7 @@ def get_database_info(client):
     else:
         db_names = []
 
-    databases = dict.fromkeys(db_names, {})
+    databases = defaultdict(dict)
     for name in db_names:
         database = client[name]
         databases[name]["collections"] = database.collection_names()

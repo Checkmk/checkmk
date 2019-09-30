@@ -598,7 +598,7 @@ def vs_mkeventd_rule(customer=None):
                         ("interval",
                          CascadingDropdown(
                              title=_("Interval"),
-                             html_separator="&nbsp;",
+                             separator="&nbsp;",
                              choices=[
                                  (7 * 86400, _("week"),
                                   Integer(
@@ -3466,7 +3466,6 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                  ],)),
             ],),
             title=_("Translate SNMP traps"),
-            label=_("Use the available SNMP MIBs to translate contents of the SNMP traps"),
             help=_("When this option is enabled all available SNMP MIB files will be used "
                    "to translate the incoming SNMP traps. Information which can not be "
                    "translated, e.g. because a MIB is missing, are written untouched to "

@@ -59,8 +59,8 @@ def _parameter_valuespec_jvm_gc():
                      Tuple(
                          title=_("Time of garbage collection in ms per minute"),
                          elements=[
-                             Integer(title=_("Warning at"), unit=_("ms"), allow_empty=False),
-                             Integer(title=_("Critical at"), unit=_("ms"), allow_empty=False),
+                             Integer(title=_("Warning at"), unit=_("ms")),
+                             Integer(title=_("Critical at"), unit=_("ms")),
                          ],
                      )
                  ],
@@ -72,8 +72,8 @@ def _parameter_valuespec_jvm_gc():
                      Tuple(
                          title=_("Count of garbage collection per minute"),
                          elements=[
-                             Integer(title=_("Warning at"), allow_empty=False),
-                             Integer(title=_("Critical at"), allow_empty=False),
+                             Integer(title=_("Warning at")),
+                             Integer(title=_("Critical at")),
                          ],
                      )
                  ],

@@ -266,11 +266,10 @@ def _parameter_valuespec_logwatch_ec():
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextAscii(),
+                                        TextAscii(allow_empty=False,),
                                         title=
                                         _("Local: Spooling - Send events to local Event Console into given spool directory"
                                          ),
-                                        allow_empty=False,
                                         forth=lambda x: x[6:],
                                         # remove prefix
                                         back=lambda x: "spool:" + x,  # add prefix
@@ -291,7 +290,6 @@ def _parameter_valuespec_logwatch_ec():
                                                         ("port",
                                                          Integer(
                                                              title=_("Port"),
-                                                             allow_empty=False,
                                                              default_value=514,
                                                              minvalue=1,
                                                              maxvalue=65535,
@@ -355,7 +353,6 @@ def _parameter_valuespec_logwatch_ec():
                                                      ("port",
                                                       Integer(
                                                           title=_("Port"),
-                                                          allow_empty=False,
                                                           default_value=514,
                                                           minvalue=1,
                                                           maxvalue=65535,

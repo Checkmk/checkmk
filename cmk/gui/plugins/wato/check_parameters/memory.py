@@ -91,10 +91,14 @@ def _parameter_valuespec_memory():
                                         Tuple(
                                             title=_("Specify levels in percentage of total RAM"),
                                             elements=[
-                                                Percentage(title=_("Warning if less than"),
-                                                           maxvalue=None),
-                                                Percentage(title=_("Critical if less than"),
-                                                           maxvalue=None)
+                                                Percentage(
+                                                    title=_("Warning if less than"),
+                                                    maxvalue=None,
+                                                ),
+                                                Percentage(
+                                                    title=_("Critical if less than"),
+                                                    maxvalue=None,
+                                                )
                                             ],
                                         ),
                                         Tuple(
@@ -112,9 +116,9 @@ def _parameter_valuespec_memory():
                                   "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                   "The free memory levels do not work with the fortigate check, because it does "
                                   "not provide total memory data."),
-                                allow_empty=False,
                                 forth=lambda val: tuple(-x for x in val),
-                                back=lambda val: tuple(-x for x in val))
+                                back=lambda val: tuple(-x for x in val),
+                            )
                         ],
                     ),
                 ),

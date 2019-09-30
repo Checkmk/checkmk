@@ -1162,7 +1162,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                      'has a sort index of <tt>10</tt>, the graph icon a sort index '
                                      'of <tt>20</tt>. All other default icons have a sort index of '
                                      '<tt>30</tt> configured.'),
-                                 min_value=0,
+                                 minvalue=0,
                                  default_value=15,
                              )),
                         ],
@@ -1511,7 +1511,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
                                      'has a sort index of <tt>10</tt>, the graph icon a sort index '
                                      'of <tt>20</tt>. All other default icons have a sort index of '
                                      '<tt>30</tt> configured.'),
-                                 min_value=0,
+                                 minvalue=0,
                              )),
                         ],
                         optional_keys=['toplevel', 'sort_index'],
@@ -2687,7 +2687,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
         return Optional(
             Integer(title=_("Perform service discovery check every"),
                     unit=_("minutes"),
-                    min_value=1,
+                    minvalue=1,
                     default_value=720),
             title=_("Enable regular service discovery checks (deprecated)"),
             help=_("If enabled, Check_MK will create one additional service per host "
@@ -3349,7 +3349,6 @@ def _valuespec_extra_service_conf_first_notification_delay():
             minvalue=0,
             default_value=300,
             label=_("Delay:"),
-            unit=_("minutes"),
             title=_("Delay service notifications"),
             help=_("This setting delays notifications about service problems by the "
                    "specified amount of time. If the service is OK again within that "
@@ -3653,7 +3652,10 @@ def _vs_periodic_discovery():
             elements=[
                 ("check_interval",
                  Transform(
-                     Age(minvalue=1, display=["days", "hours", "minutes"]),
+                     Age(
+                         minvalue=1,
+                         display=["days", "hours", "minutes"],
+                     ),
                      forth=lambda v: int(v * 60),
                      back=lambda v: float(v) / 60.0,
                      title=_("Perform service discovery every"),
@@ -3697,9 +3699,80 @@ def _vs_periodic_discovery():
                 ("inventory_check_do_scan",
                  DropdownChoice(
                      title=_("Service discovery check for SNMP devices"),
-                     choices=[(True, _("Perform full SNMP scan always, detect new check types")),
-                              (False, _("Just rely on existing check files, detect new items only"))
-                             ],
+                     choices=[
+                         (True, _("Perform full SNMP scan always, detect new check types")),
+                         (False, _("Just rely on existing check files, detect new items only")),
+                     ],
+                 )),
+                ("inventory_rediscovery",
+                 Dictionary(
+                     title=_("Automatically update service configuration"),
+                     help=_("If active the check will not only notify about un-monitored services, "
+                            "it will also automatically add/remove them as neccessary."),
+                     elements=[
+                         ("mode",
+                          DropdownChoice(
+                              title=_("Mode"),
+                              choices=[
+                                  (0, _("Add unmonitored services, new host labels")),
+                                  (1, _("Remove vanished services")),
+                                  (2,
+                                   _("Add unmonitored & remove vanished services and host labels")),
+                                  (3, _("Refresh all services and host labels (tabula rasa)"))
+                              ],
+                              default_value=0,
+                          )),
+                         ("group_time",
+                          Age(
+                              title=_("Group discovery and activation for up to"),
+                              help=_(
+                                  "A delay can be configured here so that multiple "
+                                  "discoveries can be activated in one go. This avoids frequent core "
+                                  "restarts in situations with frequent services changes."),
+                              default_value=15 * 60,
+                              display=["hours", "minutes"],
+                          )),
+                         ("excluded_time",
+                          ListOfTimeRanges(
+                              title=
+                              _("Never do discovery or activate changes in the following time ranges"
+                               ),
+                              help=_("This avoids automatic changes during these times so "
+                                     "that the automatic system doesn't interfere with "
+                                     "user activity."),
+                          )),
+                         ("activation",
+                          DropdownChoice(
+                              title=_("Automatic activation"),
+                              choices=[
+                                  (True, _("Automatically activate changes")),
+                                  (False, _("Do not activate changes")),
+                              ],
+                              default_value=True,
+                              help=_("Here you can have the changes activated whenever services "
+                                     "have been added or removed."),
+                          )),
+                         ("service_whitelist",
+                          ListOfStrings(
+                              title=_("Activate only services matching"),
+                              allow_empty=False,
+                              help=_(
+                                  "Set service names or regular expression patterns here to "
+                                  "allow only matching services to be activated automatically. "
+                                  "If you set both this and \'Don't activate services matching\', "
+                                  "both rules have to apply for a service to be activated."),
+                          )),
+                         ("service_blacklist",
+                          ListOfStrings(
+                              title=_("Don't activate services matching"),
+                              allow_empty=False,
+                              help=_(
+                                  "Set service names or regular expression patterns here to "
+                                  "prevent matching services from being activated automatically. "
+                                  "If you set both this and \'Activate only services matching\', "
+                                  "both rules have to apply for a service to be activated."),
+                          )),
+                     ],
                  )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
@@ -3719,11 +3792,12 @@ def _valuespec_automatic_rediscover_parameters():
             ("mode",
              DropdownChoice(
                  title=_("Mode"),
-                 choices=[(0, _("Add unmonitored services, new host labels")),
-                          (1, _("Remove vanished services")),
-                          (2, _("Add unmonitored & remove vanished services and host labels")),
-                          (3, _("Refresh all services and host labels (tabula rasa)"))],
-                 orientation="vertical",
+                 choices=[
+                     (0, _("Add unmonitored services, new host labels")),
+                     (1, _("Remove vanished services")),
+                     (2, _("Add unmonitored & remove vanished services and host labels")),
+                     (3, _("Refresh all services and host labels (tabula rasa)")),
+                 ],
                  default_value=0,
              )),
             (
@@ -4875,7 +4949,7 @@ def _valuespec_snmp_check_interval():
             Integer(
                 title=_("Do check every"),
                 unit=_("minutes"),
-                min_value=1,
+                minvalue=1,
                 default_value=1,
             ),
         ])

@@ -59,9 +59,8 @@ def _parameter_valuespec_netapp_luns():
                  title=_("Ignore used space (this option disables any other options)"),
                  help=_(
                      "Some luns, e.g. jfs formatted, tend to report incorrect used space values"),
-                 label=_("Ignore used space"),
+                 totext=_("Ignore used space"),
                  value=True,
-                 totext="",
              )),
             ("levels",
              Alternative(
@@ -73,7 +72,6 @@ def _parameter_valuespec_netapp_luns():
                      get_free_used_dynamic_valuespec("used", "LUN"),
                      Transform(
                          get_free_used_dynamic_valuespec("free", "LUN", default_value=(20.0, 10.0)),
-                         allow_empty=False,
                          forth=transform_filesystem_free,
                          back=transform_filesystem_free,
                      )

@@ -44,16 +44,16 @@ def _parameter_valuespec_varnish_client():
          Tuple(
              title=_("Upper levels for \"clients dropped\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
         ("req",
          Tuple(
              title=_("Upper levels for \"client requests\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
     ],)

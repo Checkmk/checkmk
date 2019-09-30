@@ -1027,7 +1027,6 @@ def Levels(**kwargs):
     return Alternative(
         title=title,
         help=help_txt,
-        show_titles=False,
         style="dropdown",
         elements=[
             FixedValue(
@@ -1038,14 +1037,18 @@ def Levels(**kwargs):
             Tuple(
                 title=_("Fixed Levels"),
                 elements=[
-                    Float(unit=unit,
-                          title=_("Warning at"),
-                          default_value=default_levels[0],
-                          allow_int=True),
-                    Float(unit=unit,
-                          title=_("Critical at"),
-                          default_value=default_levels[1],
-                          allow_int=True),
+                    Float(
+                        unit=unit,
+                        title=_("Warning at"),
+                        default_value=default_levels[0],
+                        allow_int=True,
+                    ),
+                    Float(
+                        unit=unit,
+                        title=_("Critical at"),
+                        default_value=default_levels[1],
+                        allow_int=True,
+                    ),
                 ],
             ),
             PredictiveLevels(default_difference=default_difference,),
@@ -1203,7 +1206,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                             ( "match_id",    _("Match the internal identifier")),
                             ( "match_alias", _("Match the alias"))
                         ],
-                        default = "match_id"
+                        default_value = "match_id"
                       ),
                       ListOfStrings(
                           help = _("The service group alias must match one of the following regular expressions."
@@ -1226,7 +1229,7 @@ class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
                             ( "match_id",    _("Match the internal identifier")),
                             ( "match_alias", _("Match the alias"))
                         ],
-                        default = "match_id"
+                        default_value = "match_id"
                       ),
                       ListOfStrings(
                           help = _("The service group alias must not match one of the following regular expressions. "
@@ -1875,7 +1878,6 @@ class DictHostTagCondition(Transform):
                     ("or", _("one of"), tag_id_choice),
                     ("nor", _("none of"), tag_id_choice),
                 ],
-                show_titles=False,
                 orientation="horizontal",
                 default_value=("is", tag_choices[0][0]),
             ),

@@ -104,14 +104,14 @@ def _parameter_valuespec_heartbeat_crm():
              )),
             ("num_nodes",
              Integer(
-                 min_value=0,
+                 minvalue=0,
                  default_value=2,
                  title=_("Number of Nodes"),
                  help=_("The expected number of nodes in the cluster"),
              )),
             ("num_resources",
              Integer(
-                 min_value=0,
+                 minvalue=0,
                  title=_("Number of Resources"),
                  help=_("The expected number of resources in the cluster"),
              )),

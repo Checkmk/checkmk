@@ -51,20 +51,21 @@ def transform_msx_queues(params):
 
 def _valuespec_winperf_msx_queues_inventory():
     return ListOf(
-        Tuple(orientation="horizontal",
-              elements=[
-                  TextAscii(
-                      title=_("Name of Counter"),
-                      help=_("Name of the Counter to be monitored."),
-                      size=50,
-                      allow_empty=False,
-                  ),
-                  Integer(
-                      title=_("Offset"),
-                      help=_("The offset of the information relative to counter base"),
-                      allow_empty=False,
-                  ),
-              ]),
+        Tuple(
+            orientation="horizontal",
+            elements=[
+                TextAscii(
+                    title=_("Name of Counter"),
+                    help=_("Name of the Counter to be monitored."),
+                    size=50,
+                    allow_empty=False,
+                ),
+                Integer(
+                    title=_("Offset"),
+                    help=_("The offset of the information relative to counter base"),
+                ),
+            ],
+        ),
         title=_('MS Exchange Message Queues Discovery'),
         help=
         _('Per default the offsets of all Windows performance counters are preconfigured in the check. '

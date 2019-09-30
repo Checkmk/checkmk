@@ -44,8 +44,8 @@ def _parameter_valuespec_varnish_backend_success_ratio():
          Tuple(
              title=_("Lower levels"),
              elements=[
-                 Percentage(title=_("Warning if below"), default_value=70.0, allow_empty=False),
-                 Percentage(title=_("Critical if below"), default_value=60.0, allow_empty=False)
+                 Percentage(title=_("Warning if below"), default_value=70.0),
+                 Percentage(title=_("Critical if below"), default_value=60.0)
              ],
          )),
     ],)

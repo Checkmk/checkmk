@@ -115,8 +115,8 @@ def test_discovered_host_labels_to_list():
     labels.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
 
     assert labels.to_list() == [
-        HostLabel(u"äbc", u"123", "plugin_1"),
-        HostLabel(u"xyz", u"blä", "plugin_2")
+        HostLabel(u"xyz", u"blä", "plugin_2"),
+        HostLabel(u"äbc", u"123", "plugin_1")
     ]
 
 

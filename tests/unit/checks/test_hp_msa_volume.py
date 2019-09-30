@@ -1,5 +1,5 @@
 import pytest
-from testlib import cmk_path
+from checktestlib import CheckResult, assertCheckResultsEqual
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks
@@ -96,8 +96,8 @@ def test_df_check(check_manager):
     expected_result = (0, '57.81% used (1.16 of 2.00 TB), trend: 0.00 B / 24 hours',
                        [('VMFS_01', 1212896, 1678313.6, 1888102.8, 0, 2097892),
                         ('fs_size', 2097892), ('growth', 0.0), ('trend', 0, None, None, 0, 87412)])
-    _, result = check.run_check(item_1st, params, parsed)
-    assert result == expected_result
+    _, trend_result = check.run_check(item_1st, params, parsed)
+    assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))
 
 
 ##### hp_msa_io.io  #####
@@ -132,5 +132,9 @@ def test_io_check(check_manager):
         }
     }
     _, read, written = check.run_check(item_1st, params, parsed)
-    assert read == (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None)])
-    assert written == (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None)])
+    assertCheckResultsEqual(
+        CheckResult(read),
+        CheckResult((0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None)])))
+    assertCheckResultsEqual(
+        CheckResult(written),
+        CheckResult((0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None)])))

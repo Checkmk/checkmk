@@ -473,7 +473,6 @@ def get_av_computation_options():
              title=_("Query Time Limit"),
              help=_("Limit the execution time of the query, in order to "
                     "avoid a hanging system."),
-             unit=_("sec"),
              default_value=30,
          )),
         ("logrow_limit", "single", True,

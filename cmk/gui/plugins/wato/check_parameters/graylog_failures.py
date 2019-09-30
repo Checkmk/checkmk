@@ -44,8 +44,8 @@ def _parameter_valuespec_graylog_failures():
          Tuple(
              title=_("Total index failure count upper levels"),
              elements=[
-                 Integer(title=_("Warning at"), allow_empty=False),
-                 Integer(title=_("Critical at"), allow_empty=False),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("failures_last",
@@ -54,8 +54,8 @@ def _parameter_valuespec_graylog_failures():
              help=_("Here you can set levels on failures in the timerange "
                     "specified in the datasource (default: 30m)."),
              elements=[
-                 Integer(title=_("Warning at"), allow_empty=False),
-                 Integer(title=_("Critical at"), allow_empty=False),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
     ],)

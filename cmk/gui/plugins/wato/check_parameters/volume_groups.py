@@ -45,26 +45,29 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _parameter_valuespec_volume_groups():
-    return Dictionary(elements=[
-        ("levels",
-         Alternative(
-             title=_("Levels for volume group"),
-             show_alternative_title=True,
-             default_value=(80.0, 90.0),
-             match=match_dual_level_type,
-             elements=[
-                 get_free_used_dynamic_valuespec("used", "volume group"),
-                 Transform(get_free_used_dynamic_valuespec("free",
-                                                           "volume group",
-                                                           default_value=(20.0, 10.0)),
-                           title=_("Levels for volume group free space"),
-                           allow_empty=False,
-                           forth=transform_filesystem_free,
-                           back=transform_filesystem_free)
-             ],
-         )),
-    ],
-                      optional_keys=False)
+    return Dictionary(
+        elements=[
+            ("levels",
+             Alternative(
+                 title=_("Levels for volume group"),
+                 show_alternative_title=True,
+                 default_value=(80.0, 90.0),
+                 match=match_dual_level_type,
+                 elements=[
+                     get_free_used_dynamic_valuespec("used", "volume group"),
+                     Transform(
+                         get_free_used_dynamic_valuespec("free",
+                                                         "volume group",
+                                                         default_value=(20.0, 10.0)),
+                         title=_("Levels for volume group free space"),
+                         forth=transform_filesystem_free,
+                         back=transform_filesystem_free,
+                     )
+                 ],
+             )),
+        ],
+        optional_keys=False,
+    )
 
 
 rulespec_registry.register(

@@ -122,20 +122,21 @@ def transform_filesystem_free(value):
 
 fs_levels_elements = [
     ("levels",
-     Alternative(title=_("Levels for filesystem"),
-                 show_alternative_title=True,
-                 default_value=(80.0, 90.0),
-                 match=match_dual_level_type,
-                 elements=[
-                     get_free_used_dynamic_valuespec("used", "filesystem"),
-                     Transform(get_free_used_dynamic_valuespec("free",
-                                                               "filesystem",
-                                                               default_value=(20.0, 10.0)),
-                               title=_("Levels for filesystem free space"),
-                               allow_empty=False,
-                               forth=transform_filesystem_free,
-                               back=transform_filesystem_free)
-                 ])),
+     Alternative(
+         title=_("Levels for filesystem"),
+         show_alternative_title=True,
+         default_value=(80.0, 90.0),
+         match=match_dual_level_type,
+         elements=[
+             get_free_used_dynamic_valuespec("used", "filesystem"),
+             Transform(
+                 get_free_used_dynamic_valuespec("free", "filesystem", default_value=(20.0, 10.0)),
+                 title=_("Levels for filesystem free space"),
+                 forth=transform_filesystem_free,
+                 back=transform_filesystem_free,
+             )
+         ],
+     )),
     ("show_levels",
      DropdownChoice(
          title=_("Display warn/crit levels in check output..."),
@@ -145,7 +146,7 @@ fs_levels_elements = [
              ("always", _("Always")),
          ],
          default_value="onmagic",
-     ))
+     )),
 ]
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)

@@ -35,7 +35,7 @@ import cmk.utils.store as store
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 else:
-    managed = None
+    managed = None  # type: ignore
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -47,27 +47,10 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (
-    ValueSpec,
-    Tuple,
-    Transform,
-    Percentage,
-    Integer,
-    Alternative,
-    FixedValue,
-    TextAscii,
-    Dictionary,
-    MonitoringState,
-    IconSelector,
-    ListOf,
-    CascadingDropdown,
-    ListOfStrings,
-    Checkbox,
-    TextUnicode,
-    TextAreaUnicode,
-    Optional,
-    ID,
-    DropdownChoice,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Text, ValueSpec, Tuple, Transform, Percentage, Integer, Alternative, FixedValue, TextAscii,
+    Dictionary, MonitoringState, IconSelector, ListOf, CascadingDropdown, ListOfStrings, Checkbox,
+    TextUnicode, TextAreaUnicode, Optional, ID, DropdownChoice,
 )
 
 from cmk.gui.i18n import _
@@ -2227,16 +2210,18 @@ bi_aggregation_functions = {}
 bi_aggregation_functions["worst"] = {
     "title": _("Worst - take worst of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(help=_(
-            "Normally this value is <tt>1</tt>, which means that the worst state "
-            "of all child nodes is being used as the total state. If you set it for example "
-            "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-            "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-            "resulting state would be WARN. Or you could say that the worst to nodes are "
-            "first dropped and then the worst of the remaining nodes defines the state. "),
-                title=_("Take n'th worst state for n = "),
-                default_value=1,
-                min_value=1),
+        Integer(
+            help=_(
+                "Normally this value is <tt>1</tt>, which means that the worst state "
+                "of all child nodes is being used as the total state. If you set it for example "
+                "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+                "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                "resulting state would be WARN. Or you could say that the worst to nodes are "
+                "first dropped and then the worst of the remaining nodes defines the state. "),
+            title=_("Take n'th worst state for n = "),
+            default_value=1,
+            minvalue=1,
+        ),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2249,15 +2234,16 @@ bi_aggregation_functions["worst"] = {
 bi_aggregation_functions["best"] = {
     "title": _("Best - take best of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(help=_(
-            "Normally this value is <tt>1</tt>, which means that the best state "
-            "of all child nodes is being used as the total state. If you set it for example "
-            "to <tt>2</tt>, then the node with the best state is not being regarded. "
-            "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-            "state would be WARN."),
-                title=_("Take n'th best state for n = "),
-                default_value=1,
-                min_value=1),
+        Integer(
+            help=_("Normally this value is <tt>1</tt>, which means that the best state "
+                   "of all child nodes is being used as the total state. If you set it for example "
+                   "to <tt>2</tt>, then the node with the best state is not being regarded. "
+                   "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                   "state would be WARN."),
+            title=_("Take n'th best state for n = "),
+            default_value=1,
+            minvalue=1,
+        ),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2269,23 +2255,30 @@ bi_aggregation_functions["best"] = {
 
 
 def vs_count_ok_count(title, defval, defvalperc):
-    return Alternative(title=title,
-                       style="dropdown",
-                       match=lambda x: str(x).endswith("%") and 1 or 0,
-                       elements=[
-                           Integer(title=_("Explicit number"),
-                                   label=_("Number of OK-nodes"),
-                                   min_value=0,
-                                   default_value=defval),
-                           Transform(
-                               Percentage(label=_("Percent of OK-nodes"),
-                                          display_format="%.0f",
-                                          default_value=defvalperc),
-                               title=_("Percentage"),
-                               forth=lambda x: float(x[:-1]),
-                               back=lambda x: "%d%%" % x,
-                           ),
-                       ])
+    # type: (Text, int, int) -> Alternative
+    return Alternative(
+        title=title,
+        style="dropdown",
+        match=lambda x: str(x).endswith("%") and 1 or 0,
+        elements=[
+            Integer(
+                title=_("Explicit number"),
+                label=_("Number of OK-nodes"),
+                minvalue=0,
+                default_value=defval,
+            ),
+            Transform(
+                Percentage(
+                    label=_("Percent of OK-nodes"),
+                    display_format="%.0f",
+                    default_value=defvalperc,
+                ),
+                title=_("Percentage"),
+                forth=lambda x: float(x[:-1]),
+                back=lambda x: "%d%%" % x,
+            ),
+        ],
+    )
 
 
 bi_aggregation_functions["count_ok"] = {
@@ -2293,7 +2286,7 @@ bi_aggregation_functions["count_ok"] = {
     "valuespec": Tuple(elements=[
         vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
         vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
-    ]),
+    ],),
 }
 
 #.

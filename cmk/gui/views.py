@@ -697,7 +697,6 @@ def DatasourceSelection():
         title=_('Datasource'),
         help=_('The datasources define which type of objects should be displayed with this view.'),
         choices=data_source_registry.data_source_choices(),
-        columns=1,
         default_value='services',
     )
 

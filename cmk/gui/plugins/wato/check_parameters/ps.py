@@ -302,7 +302,6 @@ def validate_process_discovery_descr_option(description, varprefix):
 def process_discovery_descr_option():
     return TextAscii(
         title=_('Process Name'),
-        style="dropdown",
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
         help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
@@ -337,11 +336,11 @@ def process_match_options():
             Transform(
                 RegExp(
                     size=50,
+                    label=_("Command line:"),
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
                 ),
                 title=_("Regular expression matching command line"),
-                label=_("Command line:"),
                 help=_("This regex must match the <i>beginning</i> of the complete "
                        "command line of the process including arguments.<br>"
                        "When using groups, matches will be instantiated "

@@ -52,7 +52,6 @@ def _parameter_valuespec_asm_diskgroup():
             ("req_mir_free",
              DropdownChoice(
                  title=_("Handling for required mirror space"),
-                 totext="",
                  choices=[
                      (False, _("Do not regard required mirror space as free space")),
                      (True, _("Regard required mirror space as free space")),

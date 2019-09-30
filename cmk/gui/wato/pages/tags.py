@@ -583,24 +583,29 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(title=_("Tag ID"),
-                                  size=16,
-                                  regex="^[-a-z0-9A-Z_]*$",
-                                  none_is_empty=True,
-                                  regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                                "0-9, _ and - are allowed.")),
-                        TextUnicode(title=_("Title") + "*", allow_empty=False, size=40),
+                        TextAscii(
+                            title=_("Tag ID"),
+                            size=16,
+                            regex="^[-a-z0-9A-Z_]*$",
+                            none_is_empty=True,
+                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                          "0-9, _ and - are allowed."),
+                        ),
+                        TextUnicode(
+                            title=_("Title") + "*",
+                            allow_empty=False,
+                            size=40,
+                        ),
                         Foldable(
                             ListChoice(
                                 title=_("Auxiliary tags"),
                                 choices=self._effective_config.aux_tag_list.get_choices(),
-                            )),
+                            ),),
                     ],
                     show_titles=True,
                     orientation="horizontal",
                 ),
                 add_label=_("Add tag choice"),
-                row_label="@. Choice",
                 sort_by=1,  # sort by description
                 help=_("The first choice of a tag group will be its default value. "
                        "If a tag group has only one choice, it will be displayed "

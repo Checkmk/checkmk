@@ -44,16 +44,16 @@ def _parameter_valuespec_graylog_messages():
          Tuple(
              title=_("Total message count upper levels"),
              elements=[
-                 Integer(title=_("Warning at"), allow_empty=False),
-                 Integer(title=_("Critical at"), allow_empty=False),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("msgs_lower",
          Tuple(
              title=_("Total message count lower levels"),
              elements=[
-                 Integer(title=_("Warning if below"), allow_empty=False),
-                 Integer(title=_("Critical if below"), allow_empty=False),
+                 Integer(title=_("Warning if below")),
+                 Integer(title=_("Critical if below")),
              ],
          )),
         ("msgs_avg",
@@ -71,16 +71,16 @@ def _parameter_valuespec_graylog_messages():
          Tuple(
              title=_("Average message count upper levels"),
              elements=[
-                 Integer(title=_("Warning at"), allow_empty=False),
-                 Integer(title=_("Critical at"), allow_empty=False),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ("msgs_avg_lower",
          Tuple(
              title=_("Average message count lower levels"),
              elements=[
-                 Integer(title=_("Warning if below"), allow_empty=False),
-                 Integer(title=_("Critical if below"), allow_empty=False),
+                 Integer(title=_("Warning if below")),
+                 Integer(title=_("Critical if below")),
              ],
          )),
     ],)

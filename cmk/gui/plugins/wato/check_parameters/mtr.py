@@ -55,8 +55,8 @@ def _parameter_valuespec_mtr():
              Tuple(
                  title=_("Average roundtrip time in ms"),
                  elements=[
-                     Integer(title=_("Warning at"), default_value=150, unit=_("ms"), min_value=0),
-                     Integer(title=_("Critical at"), default_value=250, unit=_("ms"), min_value=0),
+                     Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
+                     Integer(title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0),
                  ],
                  help=_(
                      "The maximum average roundtrip time in ms before this service goes into warning/critical. "
@@ -66,8 +66,8 @@ def _parameter_valuespec_mtr():
              Tuple(
                  title=_("Standard deviation of roundtrip times in ms"),
                  elements=[
-                     Integer(title=_("Warning at"), default_value=150, unit=_("ms"), min_value=0),
-                     Integer(title=_("Critical at"), default_value=250, unit=_("ms"), min_value=0),
+                     Integer(title=_("Warning at"), default_value=150, unit=_("ms"), minvalue=0),
+                     Integer(title=_("Critical at"), default_value=250, unit=_("ms"), minvalue=0),
                  ],
                  help=
                  _("The maximum standard deviation on the roundtrip time in ms before this service goes into"
@@ -78,8 +78,8 @@ def _parameter_valuespec_mtr():
              Tuple(
                  title=_("Packet loss in percentage"),
                  elements=[
-                     Integer(title=_("Warning at"), default_value=10, unit=_("%"), min_value=0),
-                     Integer(title=_("Critical at"), default_value=25, unit=_("%"), min_value=0),
+                     Integer(title=_("Warning at"), default_value=10, unit=_("%"), minvalue=0),
+                     Integer(title=_("Critical at"), default_value=25, unit=_("%"), minvalue=0),
                  ],
                  help=_(
                      "The maximum allowed percentage of packet loss to the destination before this service "

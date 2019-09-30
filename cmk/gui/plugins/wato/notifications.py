@@ -157,7 +157,6 @@ class NotificationParameterMail(NotificationParameter):
              )),
             ("url_prefix",
              Transform(CascadingDropdown(
-                 style="dropdown",
                  title=_("URL prefix for links to Check_MK"),
                  help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
                         "host and service links within the notification mail "
@@ -205,7 +204,8 @@ class NotificationParameterMail(NotificationParameter):
                      "the newest notification should get shown at the top of the notification mail."
                  ),
                  title=_("Notification sort order for bulk notifications"),
-                 default="oldest_first")),
+                 default_value="oldest_first",
+             )),
             ("disable_multiplexing",
              FixedValue(
                  True,
@@ -318,7 +318,6 @@ class NotificationParameterVictorOPS(NotificationParameter):
                  )),
                 ("url_prefix",
                  Transform(CascadingDropdown(
-                     style="dropdown",
                      title=_("URL prefix for links to Check_MK"),
                      help=_(
                          "If you use <b>Automatic HTTP/s</b> the URL prefix for "
@@ -374,7 +373,6 @@ class NotificationParameterPagerDuty(NotificationParameter):
                             title=_("API Endpoint from PagerDuty V2"))),
                 ("url_prefix",
                  Transform(CascadingDropdown(
-                     style="dropdown",
                      title=_("URL prefix for links to Check_MK"),
                      help=_(
                          "If you use <b>Automatic HTTP/s</b> the URL prefix for "
@@ -486,7 +484,8 @@ $LONGSERVICEOUTPUT$
                      "the newest notification should get shown at the top of the notification mail."
                  ),
                  title=_("Notification sort order for bulk notifications"),
-                 default="oldest_first")),
+                 default_value="oldest_first",
+             )),
             ("disable_multiplexing",
              FixedValue(
                  True,
@@ -826,8 +825,8 @@ class NotificationParameterOpsgenie(NotificationParameter):
                 ("owner",
                  TextUnicode(
                      title=_("Owner"),
-                     help_=("Sets the user of the alert. "
-                            "Display name of the request owner."),
+                     help=("Sets the user of the alert. "
+                           "Display name of the request owner."),
                      size=100,
                      allow_empty=False,
                  )),
@@ -839,15 +838,17 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=16,
                  )),
                 ('priority',
-                 DropdownChoice(title=_("Priority"),
-                                choices=[
-                                    ('P1', _('P1 - Critical')),
-                                    ('P2', _('P2 - High')),
-                                    ('P3', _('P3 - Moderate')),
-                                    ('P4', _('P4 - Low')),
-                                    ('P5', _('P5 - Informational')),
-                                ],
-                                default="P3")),
+                 DropdownChoice(
+                     title=_("Priority"),
+                     choices=[
+                         ('P1', _('P1 - Critical')),
+                         ('P2', _('P2 - High')),
+                         ('P3', _('P3 - Moderate')),
+                         ('P4', _('P4 - Low')),
+                         ('P5', _('P5 - Informational')),
+                     ],
+                     default_value="P3",
+                 )),
                 ("note_created",
                  TextUnicode(
                      title=_("Note while creating"),

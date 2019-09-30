@@ -245,8 +245,10 @@ class ModeDiagHost(WatoMode):
     def _vs_host(self):
         return Dictionary(required_keys=['hostname'],
                           elements=[
-                              ('hostname',
-                               FixedValue(self._hostname, title=_('Hostname'), allow_empty=False)),
+                              ('hostname', FixedValue(
+                                  self._hostname,
+                                  title=_('Hostname'),
+                              )),
                               ('ipaddress',
                                HostAddress(
                                    title=_("IPv4 Address"),
@@ -281,7 +283,6 @@ class ModeDiagHost(WatoMode):
             optional_keys = False,
             elements = [
                 ('agent_port', Integer(
-                    allow_empty = False,
                     minvalue = 1,
                     maxvalue = 65535,
                     default_value = 6556,
@@ -291,7 +292,6 @@ class ModeDiagHost(WatoMode):
                              "be used to connect to the agent on a per-host-basis.")
                 )),
                 ('tcp_connect_timeout', Float(
-                    allow_empty = False,
                     minvalue = 1.0,
                     default_value = 5.0,
                     unit = _("sec"),
@@ -304,7 +304,6 @@ class ModeDiagHost(WatoMode):
                             "If the agent does not respond within this time, it is considered to be unreachable.")
                 )),
                 ('snmp_timeout', Integer(
-                    allow_empty = False,
                     title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                     help = _("After a request is sent to the remote SNMP agent we will wait up to this "
@@ -315,7 +314,6 @@ class ModeDiagHost(WatoMode):
                     unit = _("sec"),
                 )),
                 ('snmp_retries', Integer(
-                    allow_empty = False,
                     title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
                         watolib.folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
                     default_value = 5,

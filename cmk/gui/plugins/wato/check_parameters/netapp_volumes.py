@@ -62,12 +62,11 @@ def _parameter_valuespec_netapp_volumes():
              match=match_dual_level_type,
              elements=[
                  get_free_used_dynamic_valuespec("used", "volume"),
-                 Transform(get_free_used_dynamic_valuespec("free",
-                                                           "volume",
-                                                           default_value=(20.0, 10.0)),
-                           allow_empty=False,
-                           forth=transform_filesystem_free,
-                           back=transform_filesystem_free)
+                 Transform(
+                     get_free_used_dynamic_valuespec("free", "volume", default_value=(20.0, 10.0)),
+                     forth=transform_filesystem_free,
+                     back=transform_filesystem_free,
+                 )
              ],
          )),
         ("perfdata",

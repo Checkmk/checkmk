@@ -294,10 +294,9 @@ class ModeAuditLog(WatoMode):
                          ("daily", _("Daily paged display")),
                          ("number_of_days", _("Number of days from now (single page)"),
                           Integer(
-                              minval=1,
+                              minvalue=1,
                               unit=_("days"),
                               default_value=1,
-                              allow_empty=False,
                           )),
                      ],
                  )),

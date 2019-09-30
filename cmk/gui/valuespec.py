@@ -645,14 +645,9 @@ class RegExp(TextAscii):
                   "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
 
 
+# TODO: Cleanup this multiple inheritance
 class RegExpUnicode(TextUnicode, RegExp):
-    def __init__(self, **kwargs):
-        TextUnicode.__init__(self, attrencode=True, **kwargs)
-        RegExp.__init__(self, **kwargs)
-
-    def _validate_value(self, value, varprefix):
-        TextUnicode.validate_value(self, value, varprefix)
-        RegExp.validate_value(self, value, varprefix)
+    pass
 
 
 class EmailAddress(TextAscii):

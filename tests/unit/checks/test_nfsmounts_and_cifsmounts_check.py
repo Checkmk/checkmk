@@ -1,5 +1,12 @@
 import pytest  # type: ignore
-from checktestlib import BasicCheckResult, PerfValue, DiscoveryResult, assertDiscoveryResultsEqual
+from checktestlib import (
+    BasicCheckResult,
+    CheckResult,
+    DiscoveryResult,
+    PerfValue,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+)
 
 # since both nfsmounts and cifsmounts use the parse, inventory
 # and check functions from network_fs.include unchanged we test
@@ -80,5 +87,5 @@ def test_nfsmounts(check_manager, info, discovery_expected, check_expected):
         DiscoveryResult(discovery_expected))
 
     for item, params, result_expected in check_expected:
-        result = BasicCheckResult(*check_nfs.run_check(item, params, parsed))
-        assert result == result_expected
+        result = CheckResult(check_nfs.run_check(item, params, parsed))
+        assertCheckResultsEqual(result, CheckResult([result_expected]))

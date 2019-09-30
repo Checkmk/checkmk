@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 # FIXME: Cleanups
-# - Change all class to be "new style" classes
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name
 # - Consolidate RadioChoice and DropdownChoice to use same class
@@ -34,6 +33,9 @@
 # - Checkbox
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
+# - Some reordering, e.g. move specific valuspecs / factories to the bottom of
+#   the file
+# - Refactor "orientation" argument to use some Enum, similar to Labels.World
 
 from __future__ import division
 import abc
@@ -77,14 +79,6 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.plugins.metrics import metric_info
 
 import livestatus
-
-
-def _type_name(v):
-    try:
-        return type(v).__name__
-    except Exception:
-        return html.attrencode(type(v))
-
 
 seconds_per_day = 86400
 
@@ -624,6 +618,7 @@ class TextUnicode(TextAscii):
                 _type_name(value))
 
 
+# TODO: Cleanup kwargs
 def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextAscii(regex=re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$'),
@@ -632,6 +627,7 @@ def ID(**kwargs):
                      **kwargs)
 
 
+# TODO: Cleanup kwargs
 def UnicodeID(**kwargs):
     """Same as the ID class, but allowing unicode objects"""
     return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
@@ -640,6 +636,7 @@ def UnicodeID(**kwargs):
                        **kwargs)
 
 
+# TODO: Cleanup kwargs
 def UserID(**kwargs):
     return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
                        regex_error=_(
@@ -850,6 +847,7 @@ class EmailAddress(TextAscii):
         return value
 
 
+# TODO: Cleanup kwargs
 class EmailAddressUnicode(TextUnicode, EmailAddress):
     def __init__(self, **kwargs):
         super(EmailAddressUnicode, self).__init__(**kwargs)
@@ -988,6 +986,7 @@ class TextAsciiAutocomplete(TextAscii):
         raise NotImplementedError()
 
 
+# TODO: Cleanup kwargs
 class MonitoredHostname(TextAsciiAutocomplete):
     """Hostname input with dropdown completion
 
@@ -1021,15 +1020,13 @@ class PageVsAutocomplete(Page):
         TextAsciiAutocomplete.ajax_handler()
 
 
-class Hostname(TextAscii):
+# TODO: Cleanup kwargs
+def Hostname(allow_empty=False, **kwargs):
     """A host name with or without domain part. Also allow IP addresses"""
-    def __init__(self, **kwargs):
-        super(Hostname, self).__init__(**kwargs)
-        self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
-        self._regex_error = _("Please enter a valid hostname or IPv4 address. "
-                              "Only letters, digits, dash, underscore and dot are allowed.")
-        if "allow_empty" not in kwargs:
-            self._allow_empty = False
+    return TextAscii(regex=re.compile('^[-0-9a-zA-Z_.]+$'),
+                     regex_error=_("Please enter a valid hostname or IPv4 address. "
+                                   "Only letters, digits, dash, underscore and dot are allowed."),
+                     **kwargs)
 
 
 class HostAddress(TextAscii):
@@ -1160,11 +1157,12 @@ class HostAddress(TextAscii):
         return allowed
 
 
-class AbsoluteDirname(TextAscii):
-    def __init__(self, **kwargs):
-        super(AbsoluteDirname, self).__init__(**kwargs)
-        self._regex = re.compile('^(/|(/[^/]+)+)$')
-        self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
+# TODO: Cleanup kwargs
+def AbsoluteDirname(**kwargs):
+    return TextAscii(
+        regex=re.compile('^(/|(/[^/]+)+)$'),
+        regex_error=_("Please enter a valid absolut pathname with / as a path separator."),
+        **kwargs)
 
 
 class Url(TextAscii):
@@ -1270,20 +1268,20 @@ class Url(TextAscii):
         return value
 
 
-class HTTPUrl(Url):
+# TODO: cleanup kwargs
+def HTTPUrl(show_as_link=True, **kwargs):
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
-    def __init__(self, **kwargs):
-        kwargs.setdefault("show_as_link", True)
-        super(HTTPUrl, self).__init__(allowed_schemes=["http", "https"],
-                                      default_scheme="http",
-                                      **kwargs)
+    return Url(allowed_schemes=["http", "https"],
+               default_scheme="http",
+               show_as_link=show_as_link,
+               **kwargs)
 
 
-def CheckMKVersion(**args):
-    args = args.copy()
-    args["regex"] = r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$"
-    args["regex_error"] = _("This is not a valid Check_MK version number")
-    return TextAscii(**args)
+# TODO: cleanup kwargs
+def CheckMKVersion(**kwargs):
+    return TextAscii(regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
+                     regex_error=_("This is not a valid Checkmk version number"),
+                     **kwargs)
 
 
 class TextAreaUnicode(TextUnicode):
@@ -1386,6 +1384,7 @@ class TextAreaUnicode(TextUnicode):
 
 
 # TODO: Rename the valuespec here to ExistingFilename or somehting similar
+# TODO: Change to factory?
 class Filename(TextAscii):
     """A variant of TextAscii() that validates a path to a filename that lies in an existing directory."""
 
@@ -3229,6 +3228,7 @@ def today():
     return round_date(time.time())
 
 
+# TODO: Cleanup kwargs
 def Weekday(**kwargs):
     return DropdownChoice(choices=sorted(defines.weekdays().items()), **kwargs)
 
@@ -3863,32 +3863,34 @@ class Timerange(CascadingDropdown):
             return (prev_time, from_time), titles[1] or prev_time_str
 
 
-def DateFormat(**args):
+# TODO: Cleanup kwargs
+def DateFormat(**kwargs):
     """A selection of various date formats"""
-    args.setdefault("title", _("Date format"))
-    args.setdefault("default_value", "%Y-%m-%d")
-    args["choices"] = [
+    kwargs.setdefault("title", _("Date format"))
+    kwargs.setdefault("default_value", "%Y-%m-%d")
+    return DropdownChoice(choices=[
         ("%Y-%m-%d", "1970-12-18"),
         ("%d.%m.%Y", "18.12.1970"),
         ("%m/%d/%Y", "12/18/1970"),
         ("%d.%m.", "18.12."),
         ("%m/%d", "12/18"),
-    ]
-    return DropdownChoice(**args)
+    ],
+                          **kwargs)
 
 
-def TimeFormat(**args):
-    args.setdefault("title", _("Time format"))
-    args.setdefault("default_value", "%H:%M:%S")
-    args["choices"] = [
+# TODO: Cleanup kwargs
+def TimeFormat(**kwargs):
+    kwargs.setdefault("title", _("Time format"))
+    kwargs.setdefault("default_value", "%H:%M:%S")
+    return DropdownChoice(choices=[
         ("%H:%M:%S", "18:27:36"),
         ("%l:%M:%S %p", "12:27:36 PM"),
         ("%H:%M", "18:27"),
         ("%l:%M %p", "6:27 PM"),
         ("%H", "18"),
         ("%l %p", "6 PM"),
-    ]
-    return DropdownChoice(**args)
+    ],
+                          **kwargs)
 
 
 class Optional(ValueSpec):
@@ -4608,6 +4610,8 @@ class Dictionary(ValueSpec):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
 
+# TODO: Cleanup this and all call sites. Replace it with some kind of DropdownChoice
+# based valuespec
 class ElementSelection(ValueSpec):
     """Base class for selection of a Nagios element out of a given list that must be loaded from a file.
 
@@ -4824,6 +4828,7 @@ class Transform(ValueSpec):
         self._valuespec.validate_value(self.forth(value), varprefix)
 
 
+# TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextUnicode):
     def __init__(self, **kwargs):
         super(LDAPDistinguishedName, self).__init__(**kwargs)
@@ -5357,7 +5362,6 @@ class IconSelector(ValueSpec):
         html.open_ul()
         for category_name, category_alias, icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
-            # TODO: TEST
             html.a(category_alias,
                    href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
                    (varprefix, category_name),
@@ -5429,6 +5433,7 @@ class IconSelector(ValueSpec):
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
 
 
+# TODO: Cleanup kwargs
 def ListOfTimeRanges(**kwargs):
     return ListOf(TimeofdayRange(allow_empty=True,),
                   movable=False,
@@ -5443,13 +5448,11 @@ def ListOfTimeRanges(**kwargs):
 TimeofdayRanges = ListOfTimeRanges
 
 
-class Fontsize(Float):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("title", _("Font size"))
-        kwargs.setdefault("default_value", 10)
-        kwargs["size"] = 5
-        kwargs["unit"] = _("pt")
-        super(Fontsize, self).__init__(**kwargs)
+# TODO: Cleanup kwargs
+def Fontsize(**kwargs):
+    kwargs.setdefault("title", _("Font size"))
+    kwargs.setdefault("default_value", 10)
+    return Float(size=5, unit=_("pt"), **kwargs)
 
 
 class Color(ValueSpec):
@@ -5565,6 +5568,7 @@ class SSHKeyPair(ValueSpec):
         return ':'.join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
+# TODO: Cleanup kwargs
 def SchedulePeriod(from_end=True, **kwargs):
     if from_end:
         from_end_choice = [
@@ -5640,6 +5644,7 @@ class CAorCAChain(UploadOrPasteTextFile):
         return text
 
 
+# TODO: Cleanup kwargs
 def ListOfCAs(**args):
     args.setdefault("title", _("CAs to accept"))
     args.setdefault(
@@ -5657,6 +5662,7 @@ def ListOfCAs(**args):
     return ListOf(CAorCAChain(), movable=False, **args)
 
 
+# TODO: Change to factory, Cleanup kwargs
 class SiteChoice(DropdownChoice):
     def __init__(self, **kwargs):
         kwargs.setdefault("title", _("Site"))
@@ -5687,6 +5693,7 @@ class SiteChoice(DropdownChoice):
         return config.site_attribute_choices()
 
 
+# TODO: Cleanup kwargs
 def LogLevelChoice(**kwargs):
     kwargs.setdefault("default_value", logging.INFO)
     return DropdownChoice(choices=[
@@ -5709,3 +5716,10 @@ def MetricName():
             (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
         ],
     )
+
+
+def _type_name(v):
+    try:
+        return type(v).__name__
+    except Exception:
+        return html.attrencode(type(v))

@@ -79,7 +79,7 @@ def create_crash_info(crash_type, details=None, version=None):
 
     # Unify different string types from exception messages to a unicode string
     try:
-        exc_txt = unicode(exc_value)
+        exc_txt = six.text_type(exc_value)
     except UnicodeDecodeError:
         exc_txt = str(exc_value).decode("utf-8")
 

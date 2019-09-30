@@ -445,7 +445,7 @@ def get_host_attributes(hostname, config_cache):
 
 
 def _get_tag_attributes(collection, prefix):
-    return {u"__%s_%s" % (prefix, k): unicode(v) for k, v in collection.iteritems()}
+    return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.iteritems()}
 
 
 def get_cluster_attributes(config_cache, host_config, nodes):

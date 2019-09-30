@@ -20,7 +20,7 @@ def test_class_HTML():
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"
-    d = unicode('u')
+    d = six.text_type('u')
 
     A = HTML(a)
     B = HTML(b)
@@ -30,12 +30,12 @@ def test_class_HTML():
     assert HTML(None) == HTML(u"%s" % None)
     assert HTML() == HTML('')
     # One day we will fix this!
-    assert unicode(A) == a.decode("utf-8"), unicode(A)
+    assert six.text_type(A) == a.decode("utf-8"), six.text_type(A)
     assert "%s" % A == a.decode("utf-8"), "%s" % A
     assert json.loads(json.dumps(A)) == A
     assert repr(A) == 'HTML(\"%s\")' % A.value.encode("utf-8")
     assert len(B) == len(b)
-    assert unicode(B) == unicode(b)
+    assert six.text_type(B) == six.text_type(b)
 
     assert "1" + B + "2" + C == "1" + b + "2" + c
 
@@ -44,7 +44,7 @@ def test_class_HTML():
     assert HTML().join([a, b]) == a + b
     assert HTML("jo").join([A, B]) == A + "jo" + B
     assert HTML("jo").join([a, b]) == a + "jo" + b
-    assert ''.join(map(unicode, [A, B])) == A + B
+    assert ''.join(map(six.text_type, [A, B])) == A + B
 
     assert isinstance(A, HTML), type(A)
     #    assert isinstance(A, six.text_type), type(A)

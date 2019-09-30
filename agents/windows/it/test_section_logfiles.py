@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import sys
+import six
 
 import pytest
 from remote import (actual_output, config, remotedir, remotetest, run_subprocess, wait_agent,
@@ -183,7 +184,7 @@ def manage_logfiles(request):
     if platform.system() == 'Windows':
         for log in [Globals.testlog1, Globals.testlog2]:
             with io.open(log, 'w', encoding=request.param) as logfile:
-                for entry in [unicode(Globals.testentry1), unicode(Globals.testentry2)]:
+                for entry in [six.text_type(Globals.testentry1), six.text_type(Globals.testentry2)]:
                     logfile.write('%s\r\n' % entry)
     yield
     if platform.system() == 'Windows':

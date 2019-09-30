@@ -57,8 +57,8 @@ from StringIO import StringIO
 from typing import Type, Union, Callable, Text, Any  # pylint: disable=unused-import
 from PIL import Image  # type: ignore
 
-from Cryptodome.PublicKey import RSA
 import six
+from Cryptodome.PublicKey import RSA
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -508,8 +508,8 @@ class TextAscii(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         try:
-            unicode(value)
-        except:
+            assert isinstance(value, six.text_type)
+        except AssertionError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
         if self._forbidden_chars:
             for c in self._forbidden_chars:

@@ -29,6 +29,7 @@ from typing import (  # pylint: disable=unused-import
     Dict, NamedTuple, Optional, List, Tuple, Text,
 )
 from pathlib2 import Path  # pylint: disable=unused-import
+import six
 
 import cmk.utils.paths
 
@@ -57,7 +58,7 @@ _translation = None  # type: Optional[Translation]
 def _(message):
     # type: (str) -> Text
     if not _translation:
-        return unicode(message)
+        return six.text_type(message)
     return _translation.translation.ugettext(message)
 
 

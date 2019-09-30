@@ -27,6 +27,7 @@
 import abc
 import os
 import time
+import io
 import six
 
 import cmk.utils.paths
@@ -1607,7 +1608,7 @@ def paint_custom_notes(what, row):
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
 
     for f in files:
-        contents.append(replace_tags(unicode(open(f).read(), "utf-8").strip()))
+        contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
     return "", "<hr>".join(contents)
 
 

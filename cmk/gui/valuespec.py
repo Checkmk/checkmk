@@ -671,13 +671,8 @@ class EmailAddress(TextAscii):
 
 class EmailAddressUnicode(TextUnicode, EmailAddress):
     def __init__(self, **kwargs):
-        TextUnicode.__init__(self, **kwargs)
-        EmailAddress.__init__(self, **kwargs)
+        super(EmailAddressUnicode, self).__init__(**kwargs)
         self._regex = re.compile(r'^[\w.%&+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
-
-    def _validate_value(self, value, varprefix):
-        TextUnicode.validate_value(self, value, varprefix)
-        EmailAddress.validate_value(self, value, varprefix)
 
 
 class IPNetwork(TextAscii):

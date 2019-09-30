@@ -1,0 +1,16 @@
+Title: Periodic service discovery was not correctly activating changes
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.6.0p3
+Date: 1569829529
+Class: fix
+
+When the automatic update of the service configuration is enabled, the periodic
+service discovery was applying service discovery changes, but was not
+activating them when configured to do so.
+
+The services appeared as discovered on the discovery page in WATO, but they were
+not activated. After activating a change in the GUI, the services were finally
+activated.

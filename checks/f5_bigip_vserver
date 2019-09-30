@@ -63,10 +63,11 @@ def get_ip_address_human_readable(ip_addr):
     """
     u'\xc2;xJ'  ->  '194.59.120.74'
     """
-    ip_addr = "".join(chr(ord(x)) for x in ip_addr)
     if len(ip_addr) == 4:
+        ip_addr = "".join(chr(ord(x)) for x in ip_addr)
         return socket.inet_ntop(socket.AF_INET, ip_addr)
     if len(ip_addr) == 16:
+        ip_addr = "".join([chr(ord(x)) for x in ip_addr])
         return socket.inet_ntop(socket.AF_INET6, ip_addr)
     return "-"
 

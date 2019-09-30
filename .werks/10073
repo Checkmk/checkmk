@@ -1,0 +1,11 @@
+Title: f5_bigip_vserver: Fixed ValueError while ip parsing
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p3
+Date: 1569866070
+Class: fix
+
+Service discovery shows "chr() arg not in range(256)" because of wrong ip parsing.
+This has been fixed. You can rediscover those services now.

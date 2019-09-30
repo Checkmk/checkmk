@@ -21,6 +21,14 @@
 
 MK_ERRPT_AIX_STATE="$MK_VARDIR/mk_errpt_aix.last_reported"
 
+
+# file has been renamed in version 1.7.0i1
+OLD_STATE_FILE="$MK_VARDIR/mk_logwatch_aix.last_reported"
+if [ -f "$OLD_STATE_FILE" ]; then
+    mv --no-clobber "$OLD_STATE_FILE" "$MK_ERRPT_AIX_STATE"
+fi
+
+
 echo "<<<logwatch>>>"
 echo "[[[errorlog]]]"
 

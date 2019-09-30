@@ -35,6 +35,7 @@ import py_compile
 import struct
 import sys
 import itertools
+import contextlib
 from typing import Pattern, Iterable, Set, Text, Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 from pathlib2 import Path
@@ -581,6 +582,33 @@ class PackedConfig(object):
         _initialize_config()
         exec (marshal.load(open(self._path)), globals())
         _perform_post_config_loading_actions()
+
+
+@contextlib.contextmanager
+def set_use_core_config(use_core_config):
+    """The keepalive helpers should always use the core configuration that
+    has been created with "cmk -U". This includes the dynamic configuration
+    parts like the autochecks.
+
+    Instead of loading e.g. the autochecks from the regular path
+    "var/check_mk/autochecks" the helper should always load the files from
+    "var/check_mk/core/autochecks" instead.
+
+    We ensure this by changing the global paths in cmk.utils.paths to point
+    to the helper paths."""
+    _orig_autochecks_dir = cmk.utils.paths.autochecks_dir
+    _orig_discovered_host_labels_dir = cmk.utils.paths.discovered_host_labels_dir
+    try:
+        if use_core_config:
+            cmk.utils.paths.autochecks_dir = cmk.utils.paths.core_autochecks_dir
+            cmk.utils.paths.discovered_host_labels_dir = cmk.utils.paths.core_discovered_host_labels_dir
+        else:
+            cmk.utils.paths.autochecks_dir = cmk.utils.paths.base_autochecks_dir
+            cmk.utils.paths.discovered_host_labels_dir = cmk.utils.paths.base_discovered_host_labels_dir
+        yield
+    finally:
+        cmk.utils.paths.autochecks_dir = _orig_autochecks_dir
+        cmk.utils.paths.discovered_host_labels_dir = _orig_discovered_host_labels_dir
 
 
 #.

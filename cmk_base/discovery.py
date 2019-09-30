@@ -37,6 +37,7 @@ import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
+import cmk_base
 import cmk_base.crash_reporting
 import cmk_base.config as config
 import cmk_base.console as console
@@ -598,10 +599,18 @@ def discover_marked_hosts(core):
 
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
-        if config.monitoring_core == "cmc":
-            cmk_base.core.do_reload(core)
-        else:
-            cmk_base.core.do_restart(core)
+        with config.set_use_core_config(use_core_config=False):
+            try:
+                cmk_base.config_cache.clear_all()
+                config.get_config_cache().initialize()
+
+                if config.monitoring_core == "cmc":
+                    cmk_base.core.do_reload(core)
+                else:
+                    cmk_base.core.do_restart(core)
+            finally:
+                cmk_base.config_cache.clear_all()
+                config.get_config_cache().initialize()
 
 
 def _fetch_host_states():

@@ -587,6 +587,44 @@ TEST(PluginTest, HackPlugin) {
     }
 }
 
+TEST(PluginTest, HackPluginWithPiggyBack) {
+    std::vector<char> in;
+    cma::tools::AddVector(in, std::string(
+                                  //
+                                  "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+                                  "<<<<a>>>>\n"
+                                  "aaaaa\r\n"
+                                  "<<<<a>>>>\n"
+                                  "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+                                  "<<<<>>>>\n"
+                                  "<<<<>>>>\n"
+                                  "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+                                  //
+                                  ));
+
+    {
+        std::vector<char> out;
+        auto patch = cma::ConstructPatchString(123, 456, HackDataMode::header);
+        auto ret =
+            cma::HackDataWithCacheInfo(out, in, patch, HackDataMode::header);
+        ASSERT_TRUE(ret);
+        std::string out_string(out.data(), out.size());
+        std::string exp_string(
+            //
+            "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
+            "<<<<a>>>>\n"
+            "aaaaa\r\n"
+            "<<<<a>>>>\n"
+            "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+            "<<<<>>>>\n"
+            "<<<<>>>>\n"
+            "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
+            //
+        );
+        EXPECT_EQ(out_string, exp_string);
+    }
+}
+
 TEST(PluginTest, FilesAndFolders) {
     using namespace cma::cfg;
     using namespace wtools;
@@ -2328,6 +2366,104 @@ TEST(PluginTest, DebugInit) {
     };
     EXPECT_EQ(0, exe_units_valid_SYNC_local[0].cacheAge());
     EXPECT_FALSE(exe_units_valid_SYNC_local[0].async());
+}
+
+static std::string MakeHeader(std::string_view left, std::string_view rght,
+                              std::string_view name) {
+    return std::string(left) + name.data() + rght.data();
+}
+
+TEST(PluginTest, HackingPiggyBack) {
+    using namespace cma::section;
+    {
+        EXPECT_EQ(kFooter4Left, "<<<<");
+        EXPECT_EQ(kFooter4Right, ">>>>");
+    }
+
+    const std::string_view name = "Name";
+
+    {
+        const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);
+        // find piggyback
+        EXPECT_FALSE(GetPiggyBackName(normal));
+    }
+
+    {
+        const auto pb = MakeHeader(kFooter4Left, kFooter4Right, name);
+        // find piggyback
+        ASSERT_TRUE(GetPiggyBackName(pb));
+        EXPECT_EQ(*GetPiggyBackName(pb), name);
+    }
+
+    {
+        auto pb = MakeHeader(kFooter4Left, "", name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+
+        pb = MakeHeader(kFooter4Right, kFooter4Left, name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+
+        pb = MakeHeader(kFooter4Left, kRightBracket, name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+
+        pb = MakeHeader(kLeftBracket, kFooter4Right, name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+
+        pb = MakeHeader(kFooter4Left, kFooter4Left, name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+        pb = MakeHeader(kFooter4Right, kFooter4Right, name);
+        EXPECT_FALSE(GetPiggyBackName(pb));
+
+        EXPECT_FALSE(GetPiggyBackName(" <<<<>>>>"));
+        EXPECT_FALSE(GetPiggyBackName(" <<<<A>>>>"));
+
+        pb = MakeHeader(kFooter4Left, "", name);
+        // find piggyback
+        EXPECT_FALSE(GetPiggyBackName(pb));
+    }
+
+    {
+        const auto pb_empty = MakeHeader(kFooter4Left, kFooter4Right, "");
+        // find piggyback
+        ASSERT_TRUE(GetPiggyBackName(pb_empty));
+        EXPECT_EQ(*GetPiggyBackName(pb_empty), "");
+    }
+}
+
+TEST(PluginTest, Hacking) {
+    using namespace cma::section;
+
+    {
+        EXPECT_EQ(kFooter4Left, "<<<<");
+        EXPECT_EQ(kFooter4Right, ">>>>");
+    }
+
+    const std::string_view name = "Name";
+    const std::string cached_info = ":cached(12344545, 600)";
+
+    const auto normal = MakeHeader(kLeftBracket, kRightBracket, name);
+
+    const auto normal_empty =
+        MakeHeader(cma::section::kLeftBracket, kRightBracket, "");
+
+    const auto normal_cached = MakeHeader(kLeftBracket, kRightBracket,
+                                          std::string(name) + cached_info);
+    {
+        auto a = normal;
+        auto success = cma::TryToHackStringWithCachedInfo(a, cached_info);
+        EXPECT_TRUE(success);
+        EXPECT_EQ(a, normal_cached);
+    }
+
+    {
+        auto x = normal_empty;
+        auto success = cma::TryToHackStringWithCachedInfo(x, cached_info);
+        EXPECT_TRUE(success);
+        EXPECT_EQ(x, MakeHeader(kLeftBracket, kRightBracket, cached_info));
+
+        std::string arr[] = {"<<a>>>", "<<<a>>", "<<>>>", "<<<", "", ">>>"};
+        for (auto& a : arr)
+            EXPECT_FALSE(cma::TryToHackStringWithCachedInfo(a, cached_info));
+    }
 }
 
 }  // namespace cma

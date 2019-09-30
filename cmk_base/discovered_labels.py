@@ -79,10 +79,13 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         self._labels[label.name] = label
 
     def to_dict(self):
-        return {label.name: label.to_dict() for label in sorted(self._labels.itervalues())}
+        return {
+            label.name: label.to_dict()
+            for label in sorted(self._labels.itervalues(), key=lambda x: x.name)
+        }
 
     def to_list(self):
-        return [label for label in self._labels.itervalues()]
+        return [label for label in sorted(self._labels.itervalues(), key=lambda x: x.name)]
 
     def __add__(self, other):
         if not isinstance(other, DiscoveredHostLabels):

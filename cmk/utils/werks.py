@@ -161,6 +161,7 @@ _REQUIRED_WERK_FIELDS = {
 _OPTIONAL_WERK_FIELDS = {
     "compatible",
     "edition",
+    "knowledge",
     # TODO: What's this? Can we simply nuke the fields below from all werks?
     "state",
     "targetversion",

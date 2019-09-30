@@ -21,11 +21,3 @@ machine as long as python is installed, in particular it is known to run on
 AIX machines.
 
 These two plugins can be deployed independently from one another.
-
-<b>Note:</b>Before deploying the renamed plugin, it is recommended to copy
-the file that stores the last reported message, in order to avoid duplicate
-warnings.
-In the {{$MK_VARDIR}} directory, copy {{mk_logwatch_aix.last_reported}}
-to {{mk_errpt_aix.last_reported}}. After {{mk_errpt.aix}} is deployed,
-you may remove the former.
-

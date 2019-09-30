@@ -289,8 +289,8 @@ def iter_config_lines(files):
 
 def consume_cluster_definition(config_lines):
     cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
-    cluster = ClusterConfig(cluster_name, [])
-    LOGGER.debug("new ClusterConfig: %s", cluster_name)
+    cluster = ClusterConfigBlock(cluster_name, [])
+    LOGGER.debug("new ClusterConfigBlock: %s", cluster_name)
 
     while config_lines and is_indented(config_lines[0]):
         cluster.ips_or_subnets.append(config_lines.pop(0).strip())
@@ -337,7 +337,7 @@ def read_config(files):
 
     Returns configuration as list. List elements are namedtuples.
     Namedtuple either describes logile patterns and is LogfilesConfig(files, patterns).
-    Or tuple describes optional cluster mapping and is ClusterConfig(name, ips_or_subnets)
+    Or tuple describes optional cluster mapping and is ClusterConfigBlock(name, ips_or_subnets)
     with ips as list of strings.
     """
     LOGGER.debug("Config files: %r", files)
@@ -793,9 +793,9 @@ class LogfilesConfig(object):
         self.patterns = patterns
 
 
-class ClusterConfig(object):
+class ClusterConfigBlock(object):
     def __init__(self, name, ips_or_subnets):
-        super(ClusterConfig, self).__init__()
+        super(ClusterConfigBlock, self).__init__()
         self.name = name
         self.ips_or_subnets = ips_or_subnets
 

@@ -114,7 +114,7 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     __, c_config = mk_logwatch.read_config(None)
     cluster = c_config[0]
 
-    assert isinstance(cluster, mk_logwatch.ClusterConfig)
+    assert isinstance(cluster, mk_logwatch.ClusterConfigBlock)
     assert cluster.name == cluster_name
     assert cluster.ips_or_subnets == cluster_data
 
@@ -210,10 +210,10 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
     stdout_mock.isatty.return_value = istty
     fake_config = [
-        mk_logwatch.ClusterConfig("my_cluster",
-                                  ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
-        mk_logwatch.ClusterConfig("another_cluster",
-                                  ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
+        mk_logwatch.ClusterConfigBlock(
+            "my_cluster", ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
+        mk_logwatch.ClusterConfigBlock("another_cluster",
+                                       ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
     ]
 
     status_filename = mk_logwatch.get_status_filename(fake_config)

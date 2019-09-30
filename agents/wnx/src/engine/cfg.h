@@ -13,12 +13,6 @@
 #include "tools/_misc.h"
 #include "yaml-cpp/yaml.h"
 
-namespace cma {
-// set only when executable works as a service
-bool IsService();
-bool IsTest();
-}  // namespace cma
-
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
 // bit mask
@@ -44,6 +38,8 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
+constexpr const wchar_t* kInstallYmlFileW = L"check_mk.install.yml";
+constexpr const char* kInstallYmlFileA = "check_mk.install.yml";
 constexpr const wchar_t* kWatoIniFile = L"check_mk.ini";
 constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
 
@@ -142,9 +138,6 @@ std::string GetHostName() noexcept;
 std::wstring GetWorkingDir() noexcept;
 std::wstring GetMsiExecPath() noexcept;
 
-int GetBackupLogMaxCount() noexcept;
-size_t GetBackupLogMaxSize() noexcept;
-
 bool IsLoadedConfigOk() noexcept;
 
 bool StoreUserYamlToCache() noexcept;
@@ -183,18 +176,14 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
 // ***********************************************************
 // usage auto x = GetVal("global", "name", false);
 template <typename T>
-T GetVal(std::string Section, std::string Name, T Default,
-         int* ErrorOut = nullptr) noexcept {
+T GetVal(std::string Section, std::string Name, T Default) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return Default;
-    }
+    if (yaml.size() == 0) return Default;
+
     try {
         auto section = yaml[Section];
         auto val = section[Name];
         if (val.IsScalar()) return val.as<T>();
-        if (val.IsNull()) return {};
         return Default;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
@@ -205,13 +194,11 @@ T GetVal(std::string Section, std::string Name, T Default,
 }
 
 // usage auto x = GetVal("global", "name");
-inline YAML::Node GetNode(const std::string& Section, const std::string& Name,
-                          int* ErrorOut = nullptr) noexcept {
+inline YAML::Node GetNode(const std::string& Section,
+                          const std::string& Name) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
-        return {};
-    }
+    if (yaml.size() == 0) return {};
+
     try {
         auto section = yaml[Section];
         return section[Name];

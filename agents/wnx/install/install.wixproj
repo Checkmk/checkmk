@@ -47,6 +47,7 @@
   <ItemGroup>
     <Content Include="resources\checkmk.dat" />
     <Content Include="resources\check_mk.ini" />
+    <Content Include="resources\check_mk.install.yml" />
     <Content Include="resources\check_mk.marker" />
     <Content Include="resources\check_mk.user.yml" />
     <Content Include="resources\check_mk.yml" />

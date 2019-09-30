@@ -2,9 +2,7 @@
 
 #include "logger.h"
 
-#include <filesystem>
-
-#include "cfg.h"
+#include "common/cfg_info.h"
 
 namespace XLOG {
 
@@ -81,9 +79,10 @@ static bool CalcEnabled(int Modifications, LogType Type) {
     return true;
 }
 
+namespace internal {
 // converter from low level log type
 // to some default mark
-static int XLogType2Marker(xlog::Type Lt) {
+int Type2Marker(xlog::Type Lt) noexcept {
     switch (Lt) {
         case xlog::Type::kLogOut:
             return XLOG::kError;
@@ -92,39 +91,47 @@ static int XLogType2Marker(xlog::Type Lt) {
         case xlog::Type::kDebugOut:
             return XLOG::kWarning;
         case xlog::Type::kOtherOut:
-            return XLOG::kInfo;
-        default:
+        default:  // stupid, but VS requires default here
             return XLOG::kInfo;
     }
 }
 
+// converter from low level log type
+// to some default mark
+int Mods2Directions(const xlog::LogParam &lp, int mods) noexcept {
+    int directions = lp.directions_;
+
+    if (mods & Mods::kStdio) directions |= xlog::kStdioPrint;
+    if (mods & Mods::kNoStdio) directions &= ~xlog::kStdioPrint;
+    if (mods & Mods::kFile) directions |= xlog::kFilePrint;
+    if (mods & Mods::kNoFile) directions &= ~xlog::kFilePrint;
+    if (mods & Mods::kEvent) directions |= xlog::kEventPrint;
+    if (mods & Mods::kNoEvent) directions &= ~xlog::kEventPrint;
+
+    return directions;
+}
+}  // namespace internal
+
 // get base global variable
 // modifies it!
 static std::tuple<int, int, std::string, std::string, xlog::internal::Colors>
-CalcLogParam(const xlog::LogParam &Param, int Modifications) {
+CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
     using namespace xlog::internal;
 
-    auto &lp = Param;
-    auto directions = lp.directions_;
-    auto flags = lp.flags_;
-    using namespace fmt::v5;
     auto c = Colors::dflt;
 
-    if (Modifications & Mods::kStdio) directions |= xlog::kStdioPrint;
-    if (Modifications & Mods::kNoStdio) directions &= ~xlog::kStdioPrint;
-    if (Modifications & Mods::kFile) directions |= xlog::kFilePrint;
-    if (Modifications & Mods::kNoFile) directions &= ~xlog::kFilePrint;
-    if (Modifications & Mods::kEvent) directions |= xlog::kEventPrint;
-    if (Modifications & Mods::kNoEvent) directions &= ~xlog::kEventPrint;
-    if (Modifications & Mods::kNoPrefix) flags |= xlog::kNoPrefix;
+    auto directions = internal::Mods2Directions(lp, mods);
+
+    auto flags = lp.flags_;
+    if (mods & Mods::kNoPrefix) flags |= xlog::kNoPrefix;
 
     std::string prefix = lp.prefixAscii();
     std::string marker = "";
 
-    auto mark = Modifications & Mods::kMarkerMask;
+    auto mark = mods & Mods::kMarkerMask;
 
     if (mark == 0)
-        mark = XLogType2Marker(lp.type_);  // using default when nothing
+        mark = internal::Type2Marker(lp.type_);  // using default when nothing
 
     switch (mark) {
         case Mods::kCritError:
@@ -248,8 +255,8 @@ void Emitter::postProcessAndPrint(const std::string &text) {
             auto for_file =
                 formatString(flags, marker_ascii.c_str(), text.c_str());
 
-            details::WriteToLogFileWithBackup(fname, GetBackupLogMaxSize(),
-                                              GetBackupLogMaxCount(), for_file);
+            details::WriteToLogFileWithBackup(fname, getBackupLogMaxSize(),
+                                              getBackupLogMaxCount(), for_file);
         }
     }
 

@@ -33,6 +33,32 @@ TEST(xlogTest, xlogLowLevel) {
 
 namespace XLOG {
 
+namespace internal {
+TEST(LogInternalTest, Type2MarkerCheck) {
+    EXPECT_EQ(Type2Marker(xlog::Type::kDebugOut), XLOG::kWarning);
+    EXPECT_EQ(Type2Marker(xlog::Type::kLogOut), XLOG::kError);
+    EXPECT_EQ(Type2Marker(xlog::Type::kOtherOut), XLOG::kInfo);
+    EXPECT_EQ(Type2Marker(xlog::Type::kVerboseOut), XLOG::kTrace);
+}
+
+TEST(LogInternalTest, Mods2DirectionsCheck) {
+    xlog::LogParam lp{0};
+    constexpr int mark = 0x1000'0000;
+    lp.directions_ = mark;
+
+    EXPECT_EQ(Mods2Directions(lp, Mods::kFile), mark | xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), mark | xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), mark | xlog::kFilePrint);
+
+    constexpr int all_mark = 0xFFFF'FFFF;
+    lp.directions_ = all_mark;
+
+    EXPECT_EQ(Mods2Directions(lp, Mods::kNoFile), all_mark & ~xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kStdio), all_mark & ~xlog::kFilePrint);
+    EXPECT_EQ(Mods2Directions(lp, Mods::kEvent), all_mark & ~xlog::kFilePrint);
+}
+}  // namespace internal
+
 TEST(LogTest, RotationFileNameCreation) {
     EXPECT_NO_THROW(details::MakeBackupLogName("a", 0));
     EXPECT_EQ("a", details::MakeBackupLogName("a", 0));
@@ -41,11 +67,15 @@ TEST(LogTest, RotationFileNameCreation) {
 }
 
 TEST(LogTest, RotationFileCfgParam) {
-    auto max_count = cma::cfg::GetBackupLogMaxCount();
-    auto max_size = cma::cfg::GetBackupLogMaxSize();
-    EXPECT_TRUE(max_count < 32);
-    EXPECT_TRUE(max_size > 100'000);
-    EXPECT_TRUE(max_size < 1'000'000'000);
+    for (auto t : {XLOG::LogType::debug, XLOG::LogType::log,
+                   XLOG::LogType::stdio, XLOG::LogType::trace}) {
+        XLOG::Emitter e(t);
+        auto max_count = e.getBackupLogMaxCount();
+        auto max_size = e.getBackupLogMaxSize();
+        EXPECT_TRUE(max_count < 32);
+        EXPECT_TRUE(max_size > 100'000);
+        EXPECT_TRUE(max_size < 1'000'000'000);
+    }
 }
 
 static bool FindString(const std::string& name, unsigned int index,

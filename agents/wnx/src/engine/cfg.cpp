@@ -270,10 +270,6 @@ std::wstring GetPathOfUserConfig() noexcept {
     return GetCfg().getUserYamlPath();
 }
 
-int GetBackupLogMaxCount() noexcept { return GetCfg().getBackupLogMaxCount(); }
-
-size_t GetBackupLogMaxSize() noexcept { return GetCfg().getBackupLogMaxSize(); }
-
 std::wstring GetPathOfLoadedConfig() noexcept {
     using namespace wtools;
 
@@ -1129,7 +1125,6 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
 // #TODO deprecated
 [[deprecated]] void UpdateInstallProtocolFile(
     bool exists_install_protocol, const std::filesystem::path& install_file) {
-
     if (install_file.empty()) {
         XLOG::l("Install file cannot be generated, because it is not correct");
         return;

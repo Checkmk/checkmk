@@ -624,9 +624,15 @@ public:
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
     }
 
-    const xlog::LogParam& getLogParam() const { return log_param_; }
+    const xlog::LogParam& getLogParam() const noexcept { return log_param_; }
 
-    bool constructed() const { return constructed_ == kConstructedValue; }
+    bool constructed() const noexcept {
+        return constructed_ == kConstructedValue;
+    }
+
+    int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
+
+    size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
 
 private:
     uint32_t constructed_;  // filled during construction
@@ -656,7 +662,9 @@ private:
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::ostringstream os_;     // stream storage
+    std::atomic<int> backup_log_max_count_ = cma::cfg::kBackupLogMaxCount;
+    std::atomic<size_t> backup_log_max_size_ = cma::cfg::kBackupLogMaxSize;
+    std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 
     bool copy_;  // informs us that whole structure is temporary
@@ -709,6 +717,11 @@ void EnableWinDbg(bool Enable);
 bool IsEventLogEnabled();
 
 }  // namespace setup
+
+namespace internal {
+int Type2Marker(xlog::Type Lt) noexcept;
+int Mods2Directions(const xlog::LogParam& lp, int mods) noexcept;
+}  // namespace internal
 
 }  // namespace XLOG
 

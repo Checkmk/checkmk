@@ -11,6 +11,13 @@
 
 #include "common/cfg_yaml.h"
 #include "yaml-cpp/yaml.h"
+
+namespace cma {
+// set only when executable works as a service
+bool IsService();
+bool IsTest();
+}  // namespace cma
+
 namespace XLOG {
 
 // windows specific Event Log

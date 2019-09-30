@@ -38,6 +38,7 @@ const char* const kTimeout = "timeout";  // int
 
 // group "global"
 // root
+const char* const kInstall = "install";               // bool
 const char* const kName = "name";                     // string
 const char* const kPort = "port";                     // int
 const char* const kOnlyFrom = "only_from";            // seq

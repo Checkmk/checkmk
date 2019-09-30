@@ -84,13 +84,7 @@ You have to use Packaged agent if you want to upgrade your current configuration
 
 
 ## Uninstallation
-The uninstallation routine will preserve user data in next directories
-%ProgramData%\checkmk\agent\state
-%ProgramData%\checkmk\agent\config
-%ProgramData%\checkmk\agent\plugins
-%ProgramData%\checkmk\agent\local
-%ProgramData%\checkmk\agent\mrpe
-%ProgramData%\checkmk\agent\
-This is done intentionally to prevent occasional user data loss due to uninstallation.
+The uninstallation routine will preserve user data in %ProgramData%\checkmk\agent
+This is done intentionally to prevent occasional user data loss due to uninstallation and provide smooth installation.
 
 

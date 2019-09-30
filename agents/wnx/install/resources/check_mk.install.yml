@@ -1,0 +1,6 @@
+# Created by Check_MK Agent Installer.
+# Used as a placeholder for the Bakery/WATO
+global:
+  enabled: yes
+  install: no   # skip this file during installation, no - for packaged MSI
+

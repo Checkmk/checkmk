@@ -324,17 +324,7 @@ def inv_paint_generic(v):
 
 @decorate_inv_paint
 def inv_paint_hz(hz):
-    if hz < 10:
-        return "number", "%.2f" % hz
-    elif hz < 100:
-        return "number", "%.1f" % hz
-    elif hz < 1500:
-        return "number", "%.0f" % hz
-    elif hz < 1000000:
-        return "number", "%.1f kHz" % (hz / 1000.0)
-    elif hz < 1000000000:
-        return "number", "%.1f MHz" % (hz / 1000000.0)
-    return "number", "%.2f GHz" % (hz / 1000000000.0)
+    return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
 
 
 @decorate_inv_paint

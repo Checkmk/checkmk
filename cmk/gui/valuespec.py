@@ -688,7 +688,7 @@ class IPNetwork(TextAscii):
         return ipaddress.ip_interface
 
     def _validate_value(self, value, varprefix):
-        super(IPNetwork, self).validate_value(value, varprefix)
+        super(IPNetwork, self)._validate_value(value, varprefix)
 
         try:
             self._ip_class()(value.decode("utf-8"))
@@ -909,7 +909,7 @@ class Url(TextAscii):
         super(Url, self).__init__(**kwargs)
 
     def _validate_value(self, value, varprefix):
-        super(Url, self).validate_value(value, varprefix)
+        super(Url, self)._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
             self._custom_validate(value, varprefix)

@@ -302,8 +302,8 @@ def consume_logfile_definition(config_lines):
     cont_list = []
     rewrite_list = []
     filenames = parse_filenames(config_lines.pop(0))
-    logfiles = LogfilesConfig(filenames, [])
-    LOGGER.debug("new LogfilesConfig: %s", filenames)
+    logfiles = PatternConfigBlock(filenames, [])
+    LOGGER.debug("new PatternConfigBlock: %s", filenames)
 
     while config_lines and is_indented(config_lines[0]):
         line = config_lines.pop(0)
@@ -336,7 +336,7 @@ def read_config(files):
     Side effect: Reads filesystem files logwatch.cfg and /logwatch.d/*.cfg
 
     Returns configuration as list. List elements are namedtuples.
-    Namedtuple either describes logile patterns and is LogfilesConfig(files, patterns).
+    Namedtuple either describes logile patterns and is PatternConfigBlock(files, patterns).
     Or tuple describes optional cluster mapping and is ClusterConfigBlock(name, ips_or_subnets)
     with ips as list of strings.
     """
@@ -786,9 +786,9 @@ class Options(object):
             raise
 
 
-class LogfilesConfig(object):
+class PatternConfigBlock(object):
     def __init__(self, files, patterns):
-        super(LogfilesConfig, self).__init__()
+        super(PatternConfigBlock, self).__init__()
         self.files = files
         self.patterns = patterns
 

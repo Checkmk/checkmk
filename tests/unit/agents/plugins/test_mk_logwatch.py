@@ -179,7 +179,7 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
     l_config, __ = mk_logwatch.read_config(None)
     logfiles = l_config[0]
 
-    assert isinstance(logfiles, mk_logwatch.LogfilesConfig)
+    assert isinstance(logfiles, mk_logwatch.PatternConfigBlock)
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
     for actual, expected in zip(logfiles.patterns, logfiles_patterns):

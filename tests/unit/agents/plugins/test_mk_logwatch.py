@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import locale
+from collections import namedtuple
 import pytest  # type: ignore
 from testlib import import_module
 import six
@@ -438,11 +439,15 @@ class MockStdout(object):
     ])
 def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, status,
                          expected_output):
+
+    Section = namedtuple("section", "filename compiled_patterns options")
+
     opt = mk_logwatch.Options()
     opt.values.update(opt_raw)
+    section = Section(logfile, patterns, opt)
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
+    output = mk_logwatch.process_logfile(section, status)
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:

@@ -34,6 +34,7 @@ import tarfile
 import cStringIO
 import sys
 import json
+import six
 import livestatus
 
 import cmk.gui.pages
@@ -106,7 +107,7 @@ def page_crashed(what):
         # Unify different string types from exception messages to a unicode string
         exc_value = sys.exc_info()[1]
         try:
-            exc_txt = unicode(exc_value)
+            exc_txt = six.text_type(exc_value)
         except UnicodeDecodeError:
             exc_txt = str(exc_value).decode("utf-8")
 

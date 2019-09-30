@@ -1074,7 +1074,7 @@ def prepare_check_command(command_spec, hostname, description):
         if arg_type in [int, float]:
             formated.append("%s" % arg)
 
-        elif arg_type in [str, unicode]:
+        elif isinstance(arg, six.string_types):
             formated.append(cmk.utils.quote_shell_string(arg))
 
         elif arg_type == tuple and len(arg) == 3:
@@ -1903,7 +1903,7 @@ def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
         # in the following code.
         # TODO: This should be strictly validated by the check API in 1.7.
         if item is not None and not isinstance(item, six.string_types):
-            item = unicode(item)
+            item = six.text_type(item)
 
         # checks with an item need service-specific rules
         match_object = config_cache.ruleset_match_object_for_checkgroup_parameters(

@@ -603,8 +603,7 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
             elif piggybacked_hostname:  # processing data for an other host
                 if stripped_line[:3] == '<<<' and stripped_line[-3:] == '>>>':
                     line = self._add_cached_info_to_piggybacked_section_header(
-                        piggybacked_hostname, stripped_line, piggybacked_cached_at,
-                        piggybacked_cache_age)
+                        stripped_line, piggybacked_cached_at, piggybacked_cache_age)
                 piggybacked_raw_data.setdefault(piggybacked_hostname, []).append(line)
 
             # Found normal section header
@@ -675,8 +674,8 @@ class CheckMKAgentDataSource(six.with_metaclass(abc.ABCMeta, DataSource)):
         # a) Replace spaces by underscores
         return piggybacked_hostname.replace(" ", "_")
 
-    def _add_cached_info_to_piggybacked_section_header(self, piggybacked_hostname,
-                                                       orig_section_header, cached_at, cache_age):
+    def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
+                                                       cache_age):
         if ':cached(' in orig_section_header or ':persist(' in orig_section_header:
             return orig_section_header
         return '<<<%s:cached(%s,%s)>>>' % (orig_section_header[3:-3], cached_at, cache_age)

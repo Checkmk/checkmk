@@ -628,7 +628,7 @@ metric_info["server_latency"] = {
 }
 
 metric_info["e2e_latency"] = {
-    "title": _("Ent-to-end latency"),
+    "title": _("End-to-end latency"),
     "unit": "s",
     "color": "21/b",
 }

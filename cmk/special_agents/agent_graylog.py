@@ -91,6 +91,14 @@ def handle_request(args, sections):
             # add param from datasource for use in check output
             value.update({"ds_param_since": args.since})
 
+        if section.name == "nodes":
+            url_nodes = url_base + "/cluster/inputstates"
+
+            node_inputstates = handle_response(url_nodes, args).json()
+            for node in node_inputstates:
+                if node in value:
+                    value[node].update({"inputstates": node_inputstates[node]})
+
         sys.stdout.write("%s\n" % json.dumps(value))
 
 
@@ -107,8 +115,8 @@ def handle_response(url, args):
 
 def parse_arguments(argv):
     sections = [
-        "alerts", "cluster_health", "cluster_inputstates", "cluster_stats", "cluster_traffic",
-        "collectors", "failures", "jvm", "messages", "nodes", "sidecars"
+        "alerts", "cluster_stats", "cluster_traffic", "collectors", "failures", "jvm", "messages",
+        "nodes", "sidecars"
     ]
 
     parser = argparse.ArgumentParser(description=__doc__,

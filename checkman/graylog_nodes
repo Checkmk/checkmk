@@ -1,0 +1,17 @@
+title: Graylog: Nodes
+agents: graylog
+catalog: app/graylog
+license: GPL
+distribution: check_mk
+description:
+ With this check you can monitor graylog nodes. It outputs the load balancer,
+ lifecycle and processing state. Also the number of inputs is shown. The
+ long_output gives detailed information about the inputs of the node.
+
+ Needs the datasource "Check state of Graylog" to be configured.
+
+item:
+ The item is the name of the node.
+
+inventory:
+ One service for each node {"Graylog Node my_node"} will be created.

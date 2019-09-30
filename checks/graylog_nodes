@@ -1,0 +1,154 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<graylog_nodes>>>
+# {"a56db164-78a6-4dc8-bec9-418b9edf9067": {"inputstates": {"message_input":
+# {"node": "a56db164-78a6-4dc8-bec9-418b9edf9067", "name": "Syslog TCP",
+# "title": "syslog test", "created_at": "2019-09-30T07:11:19.932Z", "global":
+# false, "content_pack": null, "attributes": {"tls_key_file": "", "tls_enable":
+# false, "store_full_message": false, "tcp_keepalive": false,
+# "tls_key_password": "", "tls_cert_file": "", "allow_override_date": true,
+# "recv_buffer_size": 1048576, "port": 514, "max_message_size": 2097152,
+# "number_worker_threads": 8, "bind_address": "0.0.0.0",
+# "expand_structured_data": false, "tls_client_auth_cert_file": "",
+# "tls_client_auth": "disabled", "use_null_delimiter": false, "force_rdns":
+# false, "override_source": null}, "creator_user_id": "admin", "static_fields":
+# {}, "type": "org.graylog2.inputs.syslog.tcp.SyslogTCPInput", "id":
+# "5d91aa97dedfc2061e233e86"}, "state": "FAILED", "started_at":
+# "2019-09-30T07:11:20.720Z", "detailed_message": "bind(..) failed: Keine
+# Berechtigung.", "id": "5d91aa97dedfc2061e233e86"}, "lb_status": "alive",
+# "operating_system": "Linux 4.15.0-1056-oem", "version": "3.1.2+9e96b08",
+# "facility": "graylog-server", "hostname": "klappclub", "node_id":
+# "a56db164-78a6-4dc8-bec9-418b9edf9067", "cluster_id":
+# "d19bbcf9-9aaf-4812-a829-ba7cc4672ac9", "timezone": "Europe/Berlin",
+# "codename": "Quantum Dog", "started_at": "2019-09-30T05:53:17.699Z",
+# "lifecycle": "running", "is_processing": true}}
+
+import json
+
+
+def parse_graylog_nodes(info):
+    parsed = {}
+
+    for line in info:
+        node_details = json.loads(line[0])
+
+        for node, detail in node_details.iteritems():
+            try:
+                parsed.setdefault(node, []).append(detail)
+            except KeyError:
+                pass
+
+    return parsed
+
+
+factory_settings["graylog_nodes_default_levels"] = {
+    'lb_throttled': 2,
+    'lb_alive': 0,
+    'lb_dead': 2,
+    'lc_uninitialized': 1,
+    'lc_paused': 1,
+    'lc_running': 0,
+    'lc_failed': 2,
+    'lc_halting': 1,
+    'lc_throttled': 2,
+    'lc_starting': 1,
+    'lc_override_lb_alive': 0,
+    'lc_override_lb_dead': 1,
+    'lc_override_lb_throttled': 1,
+    'ps_true': 0,
+    'ps_false': 2,
+    'input_state': 1,
+}
+
+
+@get_parsed_item_data
+def check_graylog_nodes(item, params, data):
+    if data is None:
+        return
+
+    for node_info in data:
+        for key, infotext, levels in [
+            ("lb_status", "Load balancer state", "lb_"),
+            ("lifecycle", "Lifecycle is", "lc_"),
+            ("is_processing", "Is processing", "ps_"),
+        ]:
+
+            value = node_info.get(key)
+            if value is None:
+                continue
+
+            state = params.get("%s%s" % (levels, str(value).lower()), 1)
+
+            yield state, "%s: %s" % (infotext, value)
+
+        long_output = []
+        value_inputstates = node_info.get("inputstates")
+        if value_inputstates is None:
+            continue
+
+        for inputstate in value_inputstates:
+            long_output_str = ""
+
+            value_input_message = inputstate.get("message_input")
+            if value_input_message is not None:
+
+                value_name = value_input_message.get("name")
+                if value_name is not None:
+                    long_output_str += "Name: %s, " % value_name
+
+                value_title = value_input_message.get("title")
+                if value_title is not None:
+                    long_output_str += "Title: %s, " % value_title.title()
+
+            value_input_state = inputstate.get("state")
+            if value_input_state is not None:
+                state_of_input = 0
+                if value_input_state != "RUNNING":
+                    state_of_input = params["input_state"]
+                long_output_str += "Status: %s%s" % (value_input_state,
+                                                     state_markers[state_of_input])
+
+            long_output.append(long_output_str)
+
+        input_info = "Inputs: %d" % len(value_inputstates)
+        if state_of_input:
+            input_info += ", One or more inputs not in state running, see long output for more details"
+
+        yield state_of_input, input_info
+
+        yield 0, "\n%s" % "\n".join(long_output)
+
+
+check_info["graylog_nodes"] = {
+    "parse_function": parse_graylog_nodes,
+    "check_function": check_graylog_nodes,
+    "inventory_function": discover(),
+    "default_levels_variable": "graylog_nodes_default_levels",
+    "service_description": "Graylog Node %s",
+    "has_perfdata": True,
+    "group": "graylog_nodes",
+}

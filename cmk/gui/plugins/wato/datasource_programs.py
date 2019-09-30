@@ -2280,26 +2280,23 @@ def _valuespec_special_agents_graylog():
              ListChoice(
                  title=_("Informations to query"),
                  help=_("Defines what information to query. You can choose "
-                        "between the alerts, failures, cluster_health, cluster_inputstates, "
-                        "cluster_stats, cluster_traffic, collectors, count, "
-                        "failures, jvm, nodes and sidecars."),
+                        "between the alarms, collectors, cluster statistics, "
+                        "failures, jvm heap size, message count, nodes and sidecar "
+                        "fleet."),
                  choices=[
-                     ("alerts", _("Most recent alarms of all streams")),
-                     ("collectors", _("Management of graylog collectors")),
-                     ("cluster_health", _("Indexer cluster information")),
-                     ("cluster_inputstates", _("Cluster input states")),
+                     ("alerts", _("Alarms")),
+                     ("collectors", _("Collectors")),
                      ("cluster_stats", _("Cluster statistics")),
                      ("cluster_traffic", _("Cluster traffic statistics")),
                      ("failures", _("Failed index operations")),
                      ("jvm", _("JVM heap size")),
-                     ("messages", _("Message count in all your indices")),
-                     ("node", _("All nodes")),
-                     ("sidecars", _("Manage sidecar fleet")),
+                     ("messages", _("Message count")),
+                     ("nodes", _("Nodes")),
+                     ("sidecars", _("Sidecar fleet")),
                  ],
                  default_value=[
-                     "alerts", "collectors", "cluster_health", "cluster_inputstates",
-                     "cluster_stats", "cluster_traffic", "failures", "jvm", "messages", "node",
-                     "sidecars"
+                     "alerts", "collectors", "cluster_stats", "cluster_traffic", "failures", "jvm",
+                     "messages", "nodes", "sidecars"
                  ],
                  allow_empty=False,
              )),

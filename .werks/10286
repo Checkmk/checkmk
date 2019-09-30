@@ -1,0 +1,20 @@
+Title: Netapp API Environment Check: check temperatures, fans, voltages and currents
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1569834907
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 1.7.0i1
+
+This werk adds the detection and checking of all detected fans, temperature,
+voltage and current probes. The services (except the fan probes) will monitor
+the pre-determined high and low levels (for warning and critical) given by the
+API for each device and {WARN} or {CRIT} if the measured level is too high.
+To monitor these new services only a service discovery of the host is needed.
+
+For the fans, discrete checks are created which will {CRIT} if the sensor-state
+differs from "normal".
+
+There is no additional configuration.

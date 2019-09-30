@@ -62,3 +62,19 @@ def _discover_single_items(discovery_rules):
     config = host_extra_conf_merged(host_name(), discovery_rules)
     mode = config.get("mode", "single")
     return mode == "single"
+
+
+def maybefloat(num):
+    """Return a float, or None if not possible.
+
+    :param num:
+        Something numeric, either an integer a float or a string. Must be convertible
+        via a call to `float`.
+
+    :return:
+        A float or None
+    """
+    try:
+        return float(num)
+    except (TypeError, ValueError):
+        return None

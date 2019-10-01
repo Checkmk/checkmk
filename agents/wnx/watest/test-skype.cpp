@@ -24,6 +24,11 @@ extern std::wstring SkypeAspSomeCounter;
 TEST(SectionProviderSkype, Construction) {
     SkypeProvider skype;
     EXPECT_EQ(skype.getUniqName(), cma::section::kSkype);
+    EXPECT_EQ(internal::GetSkypeCountersVector()->size(), 30);
+    for (auto entry : *SkypeCounters) {
+        EXPECT_EQ(entry.substr(0, 3), L"LS:");
+        EXPECT_TRUE(entry.find(L" - ") != std::string::npos);
+    }
 }
 
 // Skype is tested with simulated data

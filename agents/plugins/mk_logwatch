@@ -97,7 +97,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser(object):
+class ArgsParser(object):  # pylint: disable=too-few-public-methods
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -387,6 +387,7 @@ class State(object):
         except (NameError, SyntaxError, ValueError):
             # Support status files with the following structure:
             # /var/log/messages|7767698|32455445
+            # These were used prior to to 1.7.0i1
             parts = line.split('|')
             filename, offset = parts[0], int(parts[1])
             inode = int(parts[2]) if len(parts) >= 3 else -1
@@ -524,10 +525,6 @@ def is_inode_capable(path):
     return system == "Linux"
 
 
-def decode_filename(byte_str_filename):
-    return byte_str_filename.decode('utf-8')
-
-
 def process_logfile(section, filestate, debug):
     """
     Returns tuple of (
@@ -539,17 +536,16 @@ def process_logfile(section, filestate, debug):
     and None in case the logfile cannot be opened.
     """
     try:
-        log_iter = LogLinesIter(section.filename, section.options.encoding)
+        log_iter = LogLinesIter(section.name_fs, section.options.encoding)
     except OSError:
         if debug:
             raise
-        return [u"[[[%s:cannotopen]]]\n" % decode_filename(section.filename)]
+        return [u"[[[%s:cannotopen]]]\n" % section.name_write]
 
-    output = [u"[[[%s]]]\n" % decode_filename(section.filename)]
+    output = [u"[[[%s]]]\n" % section.name_write]
 
-    stat = os.stat(section.filename)
-
-    inode = stat.st_ino if is_inode_capable(section.filename) else 1
+    stat = os.stat(section.name_fs)
+    inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
     # If we have never seen this file before, we set the inode to -1
     prev_inode = filestate.get('inode', -1)
     filestate['inode'] = inode
@@ -818,21 +814,43 @@ class ClusterConfigBlock(object):
 
 def find_matching_logfiles(glob_pattern):
     """
+    Evaluate globbing pattern to a list of logfile IDs
+
+    Return a list of Tuples:
+     * one identifier for opening the file as used by os.open (byte str or unicode)
+     * one unicode str, safe for writing
+
     Glob matching of hard linked, unbroken soft linked/symlinked files.
     No tilde expansion is done, but *, ?, and character ranges expressed with []
-    will be correctly matched. No support for recursive globs ** (supported
-    beginning with Python3.5 only). Hard linked dublicates of files are not filtered.
+    will be correctly matched.
+
+    No support for recursive globs ** (supported beginning with Python3.5 only).
+
+    Hard linked dublicates of files are not filtered.
     Soft links may not be detected properly dependent on the Python runtime
     [Python Standard Lib, os.path.islink()].
     """
-    files = []
-    for match in glob.glob(glob_pattern):
+    if platform.system() == "Windows":
+        # windows is the easy case:
+        # provide unicode, and let python deal with the rest
+        # (see https://www.python.org/dev/peps/pep-0277)
+        matches = list(glob.glob(glob_pattern))
+    else:
+        # we can't use glob on unicode, as it would try to re-decode matches with ascii
+        matches = glob.glob(glob_pattern.encode('utf8'))
+
+    # skip dirs and read links
+    file_refs = []
+    for match in matches:
         if os.path.isdir(match):
             continue
         if os.path.islink(match):
             match = os.readlink(match)
-        files.append(match)
-    return files
+        # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
+        match_readable = match if isinstance(match, unicode) else match.decode('utf8', 'replace')
+        file_refs.append((match, match_readable))
+
+    return file_refs
 
 
 def _search_optimize_raw_pattern(raw_pattern):
@@ -854,9 +872,10 @@ def _compile_continuation_pattern(raw_pattern):
 
 
 class LogfileSection(object):
-    def __init__(self, filename):
-        super(LogfileSection, self).__init__(self)
-        self.filename = filename
+    def __init__(self, logfile_ref):
+        super(LogfileSection, self).__init__()
+        self.name_fs = logfile_ref[0]
+        self.name_write = logfile_ref[1]
         self.options = Options()
         self.patterns = []
         self._compiled_patterns = None
@@ -897,13 +916,13 @@ def parse_sections(logfiles_config):
         # Then handle the file patterns
         # The thing here is that the same file could match different patterns.
         for glob_pattern in (f for f in cfg.files if '=' not in f):
-            logfiles = find_matching_logfiles(glob_pattern)
+            logfile_refs = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
-                logfiles = [f for f in logfiles if opt.regex.search(f)]
-            if not logfiles:
+                logfile_refs = [ref for ref in logfile_refs if opt.regex.search(ref[1])]
+            if not logfile_refs:
                 non_matching_patterns.append(glob_pattern)
-            for logfile in logfiles:
-                section = found_sections.setdefault(logfile, LogfileSection(logfile))
+            for logfile_ref in logfile_refs:
+                section = found_sections.setdefault(logfile_ref[0], LogfileSection(logfile_ref))
                 section.patterns.extend(cfg.patterns)
                 section.options.update(opt)
 
@@ -1011,7 +1030,7 @@ def main(argv=None):
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
-        sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
+        sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))
 
     state = State(status_filename)
     try:
@@ -1023,12 +1042,12 @@ def main(argv=None):
         LOGGER.warning("Exception reading status file: %s", str(exc))
 
     for section in found_sections:
-        filestate = state.get(section.filename)
+        filestate = state.get(section.name_fs)
         try:
             output = process_logfile(section, filestate, args.debug)
             write_output(output, section.options.maxoutputsize)
         except () if args.debug else Exception, exc:
-            LOGGER.debug("Exception when processing %r: %s", section.filename, exc)
+            LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")

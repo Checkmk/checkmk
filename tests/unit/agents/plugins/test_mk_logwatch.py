@@ -5,12 +5,9 @@ import os
 import re
 import sys
 import locale
-from collections import namedtuple
+import six
 import pytest  # type: ignore
 from testlib import import_module
-import six
-
-from testlib import cmk_path  # pylint: disable=import-error
 
 
 @pytest.fixture(scope="module")
@@ -225,17 +222,17 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     ((u"/var/log/messages|7767698|32455445\n"
       u"/var/foo|42\n"
       u"/var/test/x12134.log|12345"), {
-          "/var/log/messages": {
+          '/var/log/messages': {
               "file": "/var/log/messages",
               "offset": 7767698,
               "inode": 32455445,
           },
-          "/var/foo": {
+          '/var/foo': {
               "file": "/var/foo",
               "offset": 42,
               "inode": -1,
           },
-          "/var/test/x12134.log": {
+          '/var/test/x12134.log': {
               "file": "/var/test/x12134.log",
               "offset": 12345,
               "inode": -1,
@@ -244,22 +241,36 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     ((u"{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
       u"{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
       u"{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"), {
-          "/var/log/messages": {
+          '/var/log/messages': {
               "file": "/var/log/messages",
               "offset": 7767698,
               "inode": 32455445,
           },
-          "/var/foo": {
+          '/var/foo': {
               "file": "/var/foo",
               "offset": 42,
               "inode": -1,
           },
-          "/var/test/x12134.log": {
+          '/var/test/x12134.log': {
               "file": "/var/test/x12134.log",
               "offset": 12345,
               "inode": -1,
           }
       }),
+    (u"{'file': 'I/am/a/byte/\\x89', 'offset': 23, 'inode': 42}\n", {
+        'I/am/a/byte/\x89': {
+            "file": "I/am/a/byte/\x89",
+            "offset": 23,
+            "inode": 42,
+        },
+    }),
+    (u"{'file': u'I/am/unicode\\u203d', 'offset': 23, 'inode': 42}\n", {
+        u'I/am/unicode\u203d': {
+            "file": u"I/am/unicode‽",
+            "offset": 23,
+            "inode": 42,
+        },
+    }),
 ])
 def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # setup for reading
@@ -269,23 +280,24 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # loading and __getitem__
     state = mk_logwatch.State(str(file_path)).read()
     assert state._data == state_dict
-    for key, expected_data in state_dict.iteritems():
+    for expected_data in state_dict.itervalues():
+        key = expected_data['file']
         assert state.get(key) == expected_data
 
 
 @pytest.mark.parametrize("state_dict", [
     {
-        "/var/log/messages": {
+        '/var/log/messages': {
             "file": "/var/log/messages",
             "offset": 7767698,
             "inode": 32455445,
         },
-        "/var/foo": {
+        '/var/foo': {
             "file": "/var/foo",
             "offset": 42,
             "inode": -1,
         },
-        "/var/test/x12134.log": {
+        '/var/test/x12134.log': {
             "file": "/var/test/x12134.log",
             "offset": 12345,
             "inode": -1,
@@ -299,7 +311,8 @@ def test_state_write(mk_logwatch, tmp_path, state_dict):
     assert not state._data
 
     # writing
-    for key, data in state_dict.iteritems():
+    for data in state_dict.itervalues():
+        key = data['file']
         filestate = state.get(key)
         # should work w/o setting 'file'
         filestate['offset'] = data['offset']
@@ -310,17 +323,36 @@ def test_state_write(mk_logwatch, tmp_path, state_dict):
     assert read_state._data == state_dict
 
 
+STAR_FILES = [
+    ("/file.log", u"/file.log"),
+    ("/hard_link_to_file.log", u"/hard_link_to_file.log"),
+    ("/hard_linked_file.log", u"/hard_linked_file.log"),
+    ("/oh-no-\x89", u"/oh-no-\uFFFD"),  # unicode replace char
+    ("/symlinked_file.log", u"/symlinked_file.log"),
+    ("/wat\xe2\x80\xbd", u"/wat\u203D"),  # actual interobang
+]
+
+
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    ("/*", ["/file.log", "/hard_link_to_file.log", "/hard_linked_file.log", "/symlinked_file.log"]),
-    ("/**", ["/file.log", "/hard_link_to_file.log", "/hard_linked_file.log", "/symlinked_file.log"
-            ]),
-    ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
-    ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
+    (u"/*", STAR_FILES),
+    (u"/**", STAR_FILES),
+    (u"/subdir/*", [("/subdir/another_symlinked_file.log", u"/subdir/another_symlinked_file.log")]),
+    (u"/symlink_to_dir/*", [
+        ("/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")
+    ]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):
-    fake_fs_path = str(fake_filesystem)
-    files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)
-    assert sorted(files) == [fake_fs_path + fs for fs in file_suffixes]
+    fake_fs_path_b = str(fake_filesystem)
+    fake_fs_path_u = fake_fs_path_b.decode('utf8')
+    files = mk_logwatch.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
+
+    for actual, expected in zip(sorted(files), file_suffixes):
+        assert isinstance(actual[0], type(expected[0]))
+        assert actual[0].endswith(expected[0])
+
+        assert isinstance(actual[1], unicode)
+        assert actual[1].startswith(fake_fs_path_u)
+        assert actual[1][len(fake_fs_path_u):] == expected[1]
 
 
 def test_ip_in_subnetwork(mk_logwatch):
@@ -493,11 +525,9 @@ class MockStdout(object):
 def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, state,
                          expected_output):
 
-    Section = namedtuple("section", "filename compiled_patterns options")
-
-    opt = mk_logwatch.Options()
-    opt.values.update(opt_raw)
-    section = Section(logfile, patterns, opt)
+    section = mk_logwatch.LogfileSection((logfile, logfile))
+    section.options.values.update(opt_raw)
+    section._compiled_patterns = patterns
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     output = mk_logwatch.process_logfile(section, state, False)
@@ -513,6 +543,8 @@ def fake_filesystem(tmp_path):
     root = [
         # name     | type  | content/target
         ("file.log", "file", None),
+        ("wat\xe2\x80\xbd", "file", None),
+        ("oh-no-\x89", "file", None),
         ("symlink_to_file.log", "symlink", "symlinked_file.log"),
         ("subdir", "dir", [
             ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),

@@ -23,16 +23,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-if [ -f /opt/kaspersky/kav4fs/bin/kav4fs-control ]
-then
-   echo "<<<kaspersky_av_updates:sep(58)>>>"
-   /opt/kaspersky/kav4fs/bin/kav4fs-control --get-stat Update
+KAV4FS="kav4fs"
+KESL="kesl"
 
-  echo "<<<kaspersky_av_quarantine:sep(58)>>>"
-  /opt/kaspersky/kav4fs/bin/kav4fs-control -Q --get-stat
+run () {
+    suite="$1"
+    control="/opt/kaspersky/$suite/bin/$suite-control"
 
-  echo "<<<kaspersky_av_tasks>>>"
-  /opt/kaspersky/kav4fs/bin/kav4fs-control --get-task-list
+    [ -x "$(command -v $control)" ] || return
 
-fi
+    if [ "$suite" = "$KAV4FS" ]; then
+        echo "<<<kaspersky_av_updates:sep(58)>>>"
+        $control --get-stat Update
+	else
+		echo "<<<kaspersky_av_kesl_updates:sep(124)>>>"
+		$control --app-info | sed -r 's/:\s+/|/1'
+	fi
 
+    if [ "$suite" = "$KAV4FS" ]; then
+        echo "<<<kaspersky_av_quarantine:sep(58)>>>"
+        $control -Q --get-stat
+    fi
+
+    echo "<<<kaspersky_av_tasks>>>"
+    $control --get-task-list
+}
+
+main () {
+    # Debian will refuse to install both at the same time on the same machine.
+    run $KAV4FS
+    run $KESL
+}
+
+main "$@"

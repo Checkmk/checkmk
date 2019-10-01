@@ -35,7 +35,7 @@ import subprocess
 import time  # pylint: disable=unused-import
 # NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
-from typing import Tuple as TypingOptional, Callable, Text, Union  # pylint: disable=unused-import
+from typing import Optional as TypingOptional, List, Callable, Text, Union  # pylint: disable=unused-import
 
 import six
 
@@ -253,149 +253,166 @@ def monitoring_macro_help():
         "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
-# TODO: Change to factory
-class UserIconOrAction(DropdownChoice):
-    def __init__(self, **kwargs):
-        empty_text = _("In order to be able to choose actions here, you need to "
-                       "<a href=\"%s\">define your own actions</a>.") % \
-                          "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
+def UserIconOrAction(title, help):  # pylint: disable=redefined-builtin
+    # type: (Text, Text) -> DropdownChoice
+    empty_text = _("In order to be able to choose actions here, you need to "
+                   "<a href=\"%s\">define your own actions</a>.") % \
+                      "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
 
-        kwargs.update({
-            'choices': self.list_user_icons_and_actions,
-            'empty_text': empty_text,
-            'help': kwargs.get('help', '') + ' ' + empty_text,
-        })
-        super(UserIconOrAction, self).__init__(**kwargs)
-
-    def list_user_icons_and_actions(self):
-        choices = []
-        for key, action in config.user_icons_and_actions.items():
-            label = key
-            if 'title' in action:
-                label += ' - ' + action['title']
-            if 'url' in action:
-                label += ' (' + action['url'][0] + ')'
-
-            choices.append((key, label))
-        return sorted(choices, key=lambda x: x[1])
+    return DropdownChoice(
+        title=title,
+        choices=_list_user_icons_and_actions,
+        empty_text=empty_text,
+        help=help + ' ' + empty_text,
+    )
 
 
-class SNMPCredentials(Alternative):
-    def __init__(self, allow_none=False, **kwargs):
-        def alternative_match(x):
-            if kwargs.get("only_v3"):
-                # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
-                if x is None or len(x) == 2:
-                    return 0  # noAuthNoPriv
-                if len(x) == 4:
-                    return 1  # authNoPriv
-                if len(x) == 6:
-                    return 2  # authPriv
-            else:
-                if x is None or isinstance(x, six.string_types):
-                    return 0  # community only
-                if len(x) == 1 or len(x) == 2:
-                    return 1  # noAuthNoPriv
-                if len(x) == 4:
-                    return 2  # authNoPriv
-                if len(x) == 6:
-                    return 3  # authPriv
-            raise MKGeneralException("invalid SNMP credential format %s" % x)
+def _list_user_icons_and_actions():
+    choices = []
+    for key, action in config.user_icons_and_actions.items():
+        label = key
+        if 'title' in action:
+            label += ' - ' + action['title']
+        if 'url' in action:
+            label += ' (' + action['url'][0] + ')'
 
-        if allow_none:
-            none_elements = [FixedValue(
-                None,
-                title=_("No explicit credentials"),
-                totext="",
-            )]
+        choices.append((key, label))
+    return sorted(choices, key=lambda x: x[1])
 
-            # Wrap match() function defined above
-            match = lambda x: 0 if x is None else (alternative_match(x) + 1)
+
+def SNMPCredentials(  # pylint: disable=redefined-builtin
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Text]
+        only_v3=False,  # type: bool
+        default_value="public",  # type: Text
+        allow_none=False  # type: bool
+):  # type: (...) -> Alternative
+    def alternative_match(x):
+        if only_v3:
+            # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
+            if x is None or len(x) == 2:
+                return 0  # noAuthNoPriv
+            if len(x) == 4:
+                return 1  # authNoPriv
+            if len(x) == 6:
+                return 2  # authPriv
         else:
-            none_elements = []
-            match = alternative_match
+            if x is None or isinstance(x, six.string_types):
+                return 0  # community only
+            if len(x) == 1 or len(x) == 2:
+                return 1  # noAuthNoPriv
+            if len(x) == 4:
+                return 2  # authNoPriv
+            if len(x) == 6:
+                return 3  # authPriv
+        raise MKGeneralException("invalid SNMP credential format %s" % x)
 
-        kwargs.update({
-            "elements": none_elements + [
-                Password(
-                    title=_("SNMP community (SNMP Versions 1 and 2c)"),
-                    allow_empty=False,
+    if allow_none:
+        # Wrap match() function defined above
+        match = lambda x: 0 if x is None else (alternative_match(x) + 1)
+    else:
+        match = alternative_match
+
+    elements = _snmp_credentials_elements(allow_none)
+    if only_v3:
+        # HACK: This shifts the indices in alternative_match above!!
+        # Furthermore, it doesn't work in conjunction with allow_none.
+        elements.pop(0)
+        title = title if title is not None else _("SNMPv3 credentials")
+    else:
+        title = title if title is not None else _("SNMP credentials")
+
+    return Alternative(
+        title=title,
+        help=help,
+        default_value=default_value,
+        match=match,
+        style="dropdown",
+        elements=elements,
+    )
+
+
+def _snmp_credentials_elements(allow_none):
+    # type: (bool) -> List[ValueSpec]
+    none_elements = []  # type: List[ValueSpec]
+    if allow_none:
+        none_elements = [FixedValue(
+            None,
+            title=_("No explicit credentials"),
+            totext="",
+        )]
+
+    return none_elements + [
+        Password(
+            title=_("SNMP community (SNMP Versions 1 and 2c)"),
+            allow_empty=False,
+        ),
+        Transform(Tuple(
+            title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
+            elements=[
+                FixedValue(
+                    "noAuthNoPriv",
+                    title=_("Security Level"),
+                    totext=_("No authentication, no privacy"),
                 ),
-                Transform(Tuple(
-                    title=_(
-                        "Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
-                    elements=[
-                        FixedValue(
-                            "noAuthNoPriv",
-                            title=_("Security Level"),
-                            totext=_("No authentication, no privacy"),
-                        ),
-                        TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
-                    ]),
-                          forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
-                Tuple(title=_(
-                    "Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
-                      elements=[
-                          FixedValue(
-                              "authNoPriv",
-                              title=_("Security Level"),
-                              totext=_("authentication but no privacy"),
-                          ),
-                      ] + self._snmpv3_auth_elements()),
-                Tuple(title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
-                      elements=[
-                          FixedValue(
-                              "authPriv",
-                              title=_("Security Level"),
-                              totext=_("authentication and encryption"),
-                          ),
-                      ] + self._snmpv3_auth_elements() + [
-                          DropdownChoice(choices=[
-                              ("DES", _("DES")),
-                              ("AES", _("AES")),
-                          ],
-                                         title=_("Privacy protocol")),
-                          Password(
-                              title=_("Privacy pass phrase"),
-                              minlen=8,
-                          ),
-                      ]),
-            ],
-            "match": match,
-            "style": "dropdown",
-        })
-        if "default_value" not in kwargs:
-            kwargs["default_value"] = "public"
+                TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
+            ]),
+                  forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", "")),
+        Tuple(
+            title=_("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+            elements=[
+                FixedValue(
+                    "authNoPriv",
+                    title=_("Security Level"),
+                    totext=_("authentication but no privacy"),
+                ),
+            ] + _snmpv3_auth_elements()),
+        Tuple(title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+              elements=[
+                  FixedValue(
+                      "authPriv",
+                      title=_("Security Level"),
+                      totext=_("authentication and encryption"),
+                  ),
+              ] + _snmpv3_auth_elements() + [
+                  DropdownChoice(choices=[
+                      ("DES", _("DES")),
+                      ("AES", _("AES")),
+                  ],
+                                 title=_("Privacy protocol")),
+                  Password(
+                      title=_("Privacy pass phrase"),
+                      minlen=8,
+                  ),
+              ]),
+    ]
 
-        if kwargs.get("only_v3"):
-            # HACK: This shifts the indices in alternative_match above!!
-            # Furthermore, it doesn't work in conjunction with allow_none.
-            kwargs["elements"].pop(0)
-            kwargs.setdefault("title", _("SNMPv3 credentials"))
-        else:
-            kwargs.setdefault("title", _("SNMP credentials"))
-        kwargs["orientation"] = "vertical"
-        super(SNMPCredentials, self).__init__(**kwargs)
 
-    def _snmpv3_auth_elements(self):
-        return [
-            DropdownChoice(choices=[
+def _snmpv3_auth_elements():
+    return [
+        DropdownChoice(
+            choices=[
                 ("md5", _("MD5")),
                 ("sha", _("SHA1")),
             ],
-                           title=_("Authentication protocol")),
-            TextAscii(title=_("Security name"), attrencode=True),
-            Password(
-                title=_("Authentication password"),
-                minlen=8,
-            )
-        ]
+            title=_("Authentication protocol"),
+        ),
+        TextAscii(
+            title=_("Security name"),
+            attrencode=True,
+        ),
+        Password(
+            title=_("Authentication password"),
+            minlen=8,
+        )
+    ]
 
 
-class IPMIParameters(Dictionary):
-    def __init__(self, **kwargs):
-        kwargs["title"] = _("IPMI credentials")
-        kwargs["elements"] = [
+def IPMIParameters():
+    # type: () -> Dictionary
+    return Dictionary(
+        title=_("IPMI credentials"),
+        elements=[
             ("username", TextAscii(
                 title=_("Username"),
                 allow_empty=False,
@@ -404,9 +421,9 @@ class IPMIParameters(Dictionary):
                 title=_("Password"),
                 allow_empty=False,
             )),
-        ]
-        kwargs["optional_keys"] = []
-        super(IPMIParameters, self).__init__(**kwargs)
+        ],
+        optional_keys=[],
+    )
 
 
 # NOTE: When changing this keep it in sync with cmk.utils.translations.translate_hostname()

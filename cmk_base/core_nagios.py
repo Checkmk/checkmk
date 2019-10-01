@@ -686,7 +686,7 @@ def _create_nagios_config_commands(cfg):
             _format_nagios_object(
                 "command", {
                     "command_name": "check_mk_active-%s" % acttype,
-                    "command_line": act_info["command_line"],
+                    "command_line": core_config.autodetect_plugin(act_info["command_line"]),
                 }).encode("utf-8"))
 
     # custom_checks

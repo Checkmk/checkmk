@@ -1,0 +1,16 @@
+Title: Windows Agent reports allowed IP addresses correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1569931484
+
+Previously Windows Agent sent IP Addresses for OnlyFrom in the network form.
+For example, instead of 127.0.0.1 the Agent reported 127.0.0.1/32
+As result, Check MK Site signaled the Warning due to IP Addresses mismatch.
+
+Now this error has been fixed: the Agent reports allowed IP adress(es) 
+"as is" 

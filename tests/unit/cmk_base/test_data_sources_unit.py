@@ -3,6 +3,8 @@
 import pytest  # type: ignore
 from testlib.base import Scenario
 
+import cmk.utils.paths
+
 import cmk_base
 import cmk_base.caching
 import cmk_base.data_sources
@@ -152,7 +154,7 @@ def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
 def test_get_command_line_and_stdin(monkeypatch, info_func_result, expected):
     Scenario().add_host("testhost").apply(monkeypatch)
     special_agent_id = "bi"
-    agent_prefix = "share/check_mk/agents/special/agent_%s " % special_agent_id
+    agent_prefix = "%s/special/agent_%s " % (cmk.utils.paths.agents_dir, special_agent_id)
     ds = cmk_base.data_sources.programs.SpecialAgentDataSource("testhost", "127.0.0.1",
                                                                special_agent_id, None)
     monkeypatch.setattr(config, "special_agent_info",

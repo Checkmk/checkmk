@@ -221,39 +221,50 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     assert status_filename == statusfile
 
 
-def test_read_status(mk_logwatch, tmp_path):
-    # setup
-    fake_status_path = tmp_path / "test"
-    fake_status_path.mkdir()
-    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
-    fake_status_file.write_text(u"""/var/log/messages|7767698|32455445
-/var/test/x12134.log|12345|32444355""",
-                                encoding="utf-8")
-    file_path = str(fake_status_file)
+@pytest.mark.parametrize("state_data, state_dict", [
+    ((u"/var/log/messages|7767698|32455445\n"
+      u"/var/foo|42\n"
+      u"/var/test/x12134.log|12345"), {
+          "/var/log/messages": (7767698, 32455445),
+          "/var/foo": (42, -1),
+          "/var/test/x12134.log": (12345, -1),
+      }),
+])
+def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
+    # setup for reading
+    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path.write_text(state_data, encoding="utf-8")
 
-    # execution
-    actual_status = mk_logwatch.read_status(file_path)
-    # comparing dicts (having unordered keys) is ok
-    assert actual_status == {
-        '/var/log/messages': (7767698, 32455445),
-        '/var/test/x12134.log': (12345, 32444355)
-    }
+    # loading and __getitem__
+    state = mk_logwatch.State(str(file_path)).read()
+    assert state._data == state_dict
+    for key in state_dict:
+        assert state[key] == state_dict[key]
 
 
-def test_save_status(mk_logwatch, tmp_path):
-    fake_status_path = tmp_path / "test"
-    fake_status_path.mkdir()
-    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
-    fake_status_file.write_text(u"", encoding="utf-8")
-    file_path = str(fake_status_file)
-    fake_status = {
-        '/var/log/messages': (7767698, 32455445),
-        '/var/test/x12134.log': (12345, 32444355)
-    }
-    mk_logwatch.save_status(fake_status, file_path)
-    assert sorted(fake_status_file.read_text().splitlines()) == [
-        '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
-    ]
+@pytest.mark.parametrize("state_data, state_dict", [
+    ((u"/var/log/messages|7767698|32455445\n"
+      u"/var/foo|42|-1\n"
+      u"/var/test/x12134.log|12345|-1"), {
+          "/var/log/messages": (7767698, 32455445),
+          "/var/foo": (42, -1),
+          "/var/test/x12134.log": (12345, -1),
+      }),
+])
+def test_state_write(mk_logwatch, tmp_path, state_data, state_dict):
+    # setup for writing
+    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    state = mk_logwatch.State(str(file_path))
+    assert not state._data
+
+    # writing and __setitem__
+    for key in state_dict:
+        state[key] = state_dict[key]
+    state.write()
+
+    written_lines = file_path.read_text().splitlines()
+    supposed_lines = state_data.splitlines()
+    assert sorted(written_lines) == sorted(supposed_lines)
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [

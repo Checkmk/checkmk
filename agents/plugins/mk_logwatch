@@ -366,39 +366,47 @@ def read_config(files, debug=False):
     return logfiles_configs, cluster_configs
 
 
-def read_status(file_name, debug=False):
-    """
-    Support status files with the following structure:
+class State(object):
+    def __init__(self, filename, data=None):
+        super(State, self).__init__()
+        self.filename = filename
+        self._data = data or {}
 
-    # LOGFILE         OFFSET    INODE
-    /var/log/messages|7767698|32455445
-    /var/test/x12134.log|12345|32444355
+    def read(self):
+        """
+        Support status files with the following structure:
 
-    Status file lines may not be empty but must contain | separated status meta data.
-    """
-    LOGGER.debug("Status file: %r", file_name)
-    if debug:
-        return {}
+        # LOGFILE         OFFSET    INODE
+        /var/log/messages|7767698|32455445
+        /var/test/x12134.log|12345|32444355
 
-    status = {}
-    with open(file_name) as stat_fh:
-        for line in stat_fh:
-            parts = line.split('|')
-            filename, offset = parts[0], int(parts[1])
-            inode = int(parts[2]) if len(parts) >= 3 else -1
-            status[filename] = (offset, inode)
+        Status file lines may not be empty but must contain | separated status meta data.
+        """
+        LOGGER.debug("Reading state file: %r", self.filename)
 
-    LOGGER.info("Read status: %r", status)
-    return status
+        with open(self.filename) as stat_fh:
+            for line in stat_fh:
+                parts = line.split('|')
+                filename, offset = parts[0], int(parts[1])
+                inode = int(parts[2]) if len(parts) >= 3 else -1
+                self._data[filename] = (offset, inode)
 
+        LOGGER.info("Read state: %r", self._data)
+        return self
 
-def save_status(status, file_name):
-    LOGGER.debug("Save status:")
-    LOGGER.debug("Status: %s", status)
-    LOGGER.debug("Filename: %s", file_name)
-    with open(file_name, "w") as f:
-        for filename, (offset, inode) in status.items():
-            f.write("%s|%d|%d\n" % (filename, offset, inode))
+    def write(self):
+        LOGGER.debug("Writing state: %r", self._data)
+        LOGGER.debug("State filename: %r", self.filename)
+
+        with open(self.filename, "w") as stat_fh:
+            for filename, (offset, inode) in self._data.items():
+                stat_fh.write("%s|%d|%d\n" % (filename, offset, inode))
+
+    def __setitem__(self, key, value):
+        return self._data.__setitem__(key, value)
+
+    def __getitem__(self, key):
+        return self._data.__getitem__(key)
 
 
 class LogLinesIter(object):
@@ -418,8 +426,6 @@ class LogLinesIter(object):
     def close(self):
         os.close(self._fd)
 
-    # TODO: Add an encoding-Option to the logfile section to enable the
-    # user telling us the correct encoding of a file.
     def _get_encoding(self):
         # In 1.5 this was only used when logwatch is executed on windows.
         # On linux the log lines were not decoded at all.
@@ -512,7 +518,7 @@ def decode_filename(byte_str_filename):
     return byte_str_filename.decode('utf-8')
 
 
-def process_logfile(section, status, debug):
+def process_logfile(section, state, debug):
     """
     Returns tuple of (
         logfile lines,
@@ -537,10 +543,10 @@ def process_logfile(section, status, debug):
     # Look at which file offset we have finished scanning
     # the logfile last time. If we have never seen this file
     # before, we set the offset to -1
-    offset, prev_inode = status.get(section.filename, (None, -1))
+    offset, prev_inode = state.get(section.filename, (None, -1))
 
     # Set the current pointer to the file end
-    status[section.filename] = stat.st_size, inode
+    state[section.filename] = stat.st_size, inode
 
     # If we have never seen this file before, we do not want
     # to make a fuss about ancient log messages... (unless configured to)
@@ -660,7 +666,7 @@ def process_logfile(section, status, debug):
     new_offset = log_iter.get_position()
     log_iter.close()
 
-    status[section.filename] = new_offset, inode
+    state[section.filename] = new_offset, inode
 
     # Handle option maxfilesize, regardless of warning or errors that have happened
     if section.options.maxfilesize:
@@ -991,28 +997,31 @@ def main(argv=None):
     if not os.path.exists(status_filename) and os.path.exists("%s/logwatch.state" % MK_VARDIR):
         shutil.copy("%s/logwatch.state" % MK_VARDIR, status_filename)
 
-    # Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
-    # with an empty status. That keeps the monitoring up and running - even if we might lose a
-    # message in the extreme case of a corrupted status file.
-    try:
-        status = read_status(status_filename, args.debug)
-    except Exception:
-        status = {}
-
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
         sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
 
+    state = State(status_filename)
+    try:
+        state.read()
+    except () if args.debug else Exception, exc:
+        # Simply ignore errors in the status file.  In case of a corrupted status file we simply
+        # begin with an empty status. That keeps the monitoring up and running - even if we might
+        # lose a message in the extreme case of a corrupted status file.
+        LOGGER.warning("Exception reading status file: %s", str(exc))
+
     for section in found_sections:
         try:
-            output = process_logfile(section, status, args.debug)
+            output = process_logfile(section, state, args.debug)
             write_output(output, section.options.maxoutputsize)
         except () if args.debug else Exception, exc:
             LOGGER.debug("Exception when processing %r: %s", section.filename, exc)
 
-    if not args.debug:
-        save_status(status, status_filename)
+    if args.debug:
+        LOGGER.debug("State file not written (debug mode)")
+        return
+    state.write()
 
 
 if __name__ == "__main__":

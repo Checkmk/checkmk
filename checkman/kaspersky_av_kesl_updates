@@ -7,7 +7,8 @@ description:
  This check will trigger a warning state if the antivirus updates are outdated. No confiuration
  is needed. You just need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
 
- This check works with KAV4FS.
+ This check works with KESL.
 
 inventory:
  One service will be created for each system will be created.
+

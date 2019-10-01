@@ -1,0 +1,10 @@
+Title: Inventory kubernetes daemon pod containers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567504518
+Class: feature
+
+Add kubernetes daemon pod containers to the software inventory.

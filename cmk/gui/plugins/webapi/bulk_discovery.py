@@ -82,7 +82,7 @@ class APICallBulkDiscovery(APICallCollection):
                 "started": True,
             }
         except Exception as e:
-            logger.error("Failed to start bulk discovery", exc_info=True)
+            logger.exception("Failed to start bulk discovery")
             raise MKUserError(None, _("Failed to start discovery: %s") % e)
 
     def _get_parameters_from_request(self, request):

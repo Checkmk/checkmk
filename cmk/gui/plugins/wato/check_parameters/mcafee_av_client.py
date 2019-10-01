@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMcafeeAvClient(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mcafee_av_client():
+    return Tuple(
+        title=_('Time Settings for Signature'),
+        elements=[
+            Age(title=_("Warning at"), default_value=86400),
+            Age(title=_("Critical at"), default_value=7 * 86400),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "mcafee_av_client"
 
-    @property
-    def title(self):
-        return _("McAfee Anti-Virus Time Settings")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_('Time Settings for Signature'),
-            elements=[
-                Age(title=_("Warning at"), default_value=86400),
-                Age(title=_("Critical at"), default_value=7 * 86400),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mcafee_av_client",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_mcafee_av_client,
+        title=lambda: _("McAfee Anti-Virus Time Settings"),
+    ))

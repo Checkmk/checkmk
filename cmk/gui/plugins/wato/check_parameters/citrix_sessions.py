@@ -38,49 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCitrixSessions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_citrix_sessions():
+    return Dictionary(elements=[
+        ("total",
+         Tuple(
+             title=_("Total number of Sessions"),
+             elements=[
+                 Integer(title=_("warning at"), unit="Sessions"),
+                 Integer(title=_("critical at"), unit="Session"),
+             ],
+         )),
+        ("active",
+         Tuple(
+             title=_("Number of Active Sessions"),
+             elements=[
+                 Integer(title=_("warning at"), unit="Sessions"),
+                 Integer(title=_("critical at"), unit="Session"),
+             ],
+         )),
+        ("inactive",
+         Tuple(
+             title=_("Number of Inactive Sessions"),
+             elements=[
+                 Integer(title=_("warning at"), unit="Sessions"),
+                 Integer(title=_("critical at"), unit="Session"),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "citrix_sessions"
 
-    @property
-    def title(self):
-        return _("Citrix Terminal Server Sessions")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("total",
-             Tuple(
-                 title=_("Total number of Sessions"),
-                 elements=[
-                     Integer(title=_("warning at"), unit="Sessions"),
-                     Integer(title=_("critical at"), unit="Session"),
-                 ],
-             )),
-            ("active",
-             Tuple(
-                 title=_("Number of Active Sessions"),
-                 elements=[
-                     Integer(title=_("warning at"), unit="Sessions"),
-                     Integer(title=_("critical at"), unit="Session"),
-                 ],
-             )),
-            ("inactive",
-             Tuple(
-                 title=_("Number of Inactive Sessions"),
-                 elements=[
-                     Integer(title=_("warning at"), unit="Sessions"),
-                     Integer(title=_("critical at"), unit="Session"),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="citrix_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_citrix_sessions,
+        title=lambda: _("Citrix Terminal Server Sessions"),
+    ))

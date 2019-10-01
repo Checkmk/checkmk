@@ -36,11 +36,11 @@
 def check_dell_compellent_enclosure(item, params, info):
     for number, status, status_message, enc_type, model, serial in info:
         if number == item:
-            state, state_readable = dell_compellent_translate("ScStatus", status)
-            yield state, "Status: %s, Model: %s, Type: %s, Service-Tag: %s" % \
-                            (state_readable, model, enc_type, serial)
+            state, state_readable = dell_compellent_dev_state_map(status)
+            yield state, "Status: %s" % state_readable
+            yield 0, "Model: %s, Type: %s, Service-Tag: %s" % (model, enc_type, serial)
 
-            if state:
+            if status_message:
                 yield state, "State Message: %s" % status_message
 
 

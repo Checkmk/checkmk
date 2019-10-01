@@ -1,0 +1,14 @@
+Title: jenkins_nodes: New check to monitor Jenkins nodes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567079377
+Class: feature
+
+This check monitors the state of jenkins nodes. The service output gives
+information about the node description, the number of executers, if the node is
+an JNLPAgent, the idle and offline state and the average node response time. It
+also outputs the free temp space.
+

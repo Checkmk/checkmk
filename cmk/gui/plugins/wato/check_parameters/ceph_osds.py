@@ -39,41 +39,32 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.ceph_mgrs import ceph_epoch_element
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCephOsds(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_ceph_osds():
+    return Dictionary(elements=[
+        ("num_out_osds",
+         Tuple(
+             title=_("Upper levels for number of OSDs which are out"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+         )),
+        ("num_down_osds",
+         Tuple(
+             title=_("Upper levels for number of OSDs which are down"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+         )),
+    ] + ceph_epoch_element(_("OSDs epoch levels and average")),)
 
-    @property
-    def check_group_name(self):
-        return "ceph_osds"
 
-    @property
-    def title(self):
-        return _("Ceph OSDs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("num_out_osds",
-             Tuple(
-                 title=_("Upper levels for number of OSDs which are out"),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ],
-             )),
-            ("num_down_osds",
-             Tuple(
-                 title=_("Upper levels for number of OSDs which are down"),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ],
-             )),
-        ] + ceph_epoch_element(_("OSDs epoch levels and average")),)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ceph_osds",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ceph_osds,
+        title=lambda: _("Ceph OSDs"),
+    ))

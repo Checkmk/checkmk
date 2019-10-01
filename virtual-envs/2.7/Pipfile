@@ -8,7 +8,6 @@ name = "pypi"
 astroid = "*"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
-bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 docker = "*"  # used by test_docker test and mk_docker agent plugin
 freezegun = "*"  # used by various unit tests
@@ -67,7 +66,7 @@ paramiko = "==2.4.2"
 pyghmi = "==1.2.14"
 certifi = "==2018.10.15"
 chardet = "==3.0.4"
-urllib3 = "==1.24.1"
+urllib3 = "==1.24.2"
 pykerberos = "==1.2.1"
 requests-kerberos = "==0.12.0"
 tinkerforge = "==2.1.19"
@@ -105,6 +104,11 @@ wmctrl = "==0.3"
 pdbpp = "==0.10.0"
 PySnooper = "==0.0.31"
 future = "==0.17.1"
+contextlib2 = "==0.5.5"
+funcsigs = "==1.0.2"
+mock = "==3.0.5"
+wrapt = "==1.11.2"
+vcrpy = "==2.1.0"
 
 [requires]
 python_version = "2.7"

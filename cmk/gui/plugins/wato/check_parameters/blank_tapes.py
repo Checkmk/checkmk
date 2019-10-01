@@ -36,23 +36,17 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBlankTapes(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_blank_tapes():
+    return Tuple(elements=[
+        Integer(title=_("Warning below"), default_value=5),
+        Integer(title=_("Critical below"), default_value=1),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "blank_tapes"
 
-    @property
-    def title(self):
-        return _("Remaining blank tapes in DIVA CSM Devices")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Integer(title=_("Warning below"), default_value=5),
-            Integer(title=_("Critical below"), default_value=1),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="blank_tapes",
+        group=RulespecGroupCheckParametersStorage,
+        parameter_valuespec=_parameter_valuespec_blank_tapes,
+        title=lambda: _("Remaining blank tapes in DIVA CSM Devices"),
+    ))

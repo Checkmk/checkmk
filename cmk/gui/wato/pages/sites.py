@@ -119,6 +119,11 @@ class ModeEditSite(WatoMode):
 
     def __init__(self):
         super(ModeEditSite, self).__init__()
+        if cmk.is_demo():
+            raise MKGeneralException(
+                _("Distributed setups are not allowed with the Checkmk demo. "
+                  "In case you want to test distributed setups, please "
+                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
         self._site_id = html.request.var("edit")
@@ -208,7 +213,7 @@ class ModeEditSite(WatoMode):
         watolib.add_change("edit-sites",
                            msg,
                            sites=[self._site_id],
-                           domains=watolib.ConfigDomain.enabled_domains())
+                           domains=watolib.ABCConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not site_spec["replication"]:
@@ -284,7 +289,7 @@ class ModeEditSite(WatoMode):
     def _livestatus_elements(self):
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
-        site_choices = [("", _("(no status host)"))] + [
+        site_choices = [
             (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
         ]
 
@@ -459,6 +464,11 @@ class ModeDistributedMonitoring(WatoMode):
 
     def __init__(self):
         super(ModeDistributedMonitoring, self).__init__()
+        if cmk.is_demo():
+            raise MKGeneralException(
+                _("Distributed setups are not allowed with the Checkmk demo. "
+                  "In case you want to test distributed setups, please "
+                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_mgmt = watolib.SiteManagementFactory().factory()
 
     def title(self):
@@ -483,6 +493,8 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(login_id)
 
     def _action_delete(self, delete_id):
+        # TODO: Can we delete this ancient code? The site attribute is always available
+        # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
         # fall back to non-distributed-WATO and the site attribute
@@ -490,11 +502,16 @@ class ModeDistributedMonitoring(WatoMode):
         test_sites = dict(configured_sites.items())
         del test_sites[delete_id]
 
+        # Prevent deletion of the local site. This does not make sense, even on
+        # standalone sites or distributed remote sites.
+        if delete_id == config.omd_site():
+            raise MKUserError(None, _("You can not delete the connection to the local site."))
+
         # Make sure that site is not being used by hosts and folders
         if delete_id in watolib.Folder.root_folder().all_site_ids():
-            search_url = html.makeactionuri([
+            search_url = html.makeactionuri_contextless([
                 ("host_search_change_site", "on"),
-                ("host_search_site", delete_id),
+                ("host_search_site", DropdownChoice.option_id(delete_id)),
                 ("host_search", "1"),
                 ("folder", ""),
                 ("mode", "search"),
@@ -562,17 +579,7 @@ class ModeDistributedMonitoring(WatoMode):
                         _("You need to confirm that you want to "
                           "overwrite the remote site configuration."))
 
-                response = watolib.do_site_login(login_id, name, passwd)
-
-                if isinstance(response, dict):
-                    if cmk.is_managed_edition() and response["edition_short"] != "cme":
-                        raise MKUserError(
-                            None,
-                            _("The Check_MK Managed Services Edition can only "
-                              "be connected with other sites using the CME."))
-                    secret = response["login_secret"]
-                else:
-                    secret = response
+                secret = watolib.do_site_login(login_id, name, passwd)
 
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
@@ -589,7 +596,7 @@ class ModeDistributedMonitoring(WatoMode):
                 error = "%s" % e
 
             except Exception as e:
-                logger.exception()
+                logger.exception("error logging in")
                 if config.debug:
                     raise
                 html.add_user_error("_name", error)
@@ -629,7 +636,7 @@ class ModeDistributedMonitoring(WatoMode):
         return False
 
     def page(self):
-        sites = sort_sites(self._site_mgmt.load_sites().items())
+        sites = sort_sites(self._site_mgmt.load_sites())
 
         html.div("", id_="message_container")
         with table_element(
@@ -662,8 +669,13 @@ class ModeDistributedMonitoring(WatoMode):
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"),
                          "clone")
 
-        delete_url = html.makeactionuri([("_delete", site_id)])
-        html.icon_button(delete_url, _("Delete"), "delete")
+        # Prevent deletion of the local site. This does not make sense, even on
+        # standalone sites or distributed remote sites.
+        if site_id == config.omd_site():
+            html.empty_icon_button()
+        else:
+            delete_url = html.makeactionuri([("_delete", site_id)])
+            html.icon_button(delete_url, _("Delete"), "delete")
 
         if _site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
@@ -782,7 +794,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(msg, style="vertical-align:middle"))
 
     def _render_status_connection_status(self, site_id, site):
-        site_status = cmk.gui.sites.state(site_id, {})
+        site_status = cmk.gui.sites.states().get(site_id, {})
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
         else:
@@ -841,7 +853,7 @@ class ReplicationStatusFetcher(object):
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
-                logger.exception()
+                logger.exception("error collecting replication results from site %s", site_id)
                 html.show_error("%s: %s" % (site_id, e))
 
         self._logger.debug("Got results")
@@ -866,7 +878,7 @@ class ReplicationStatusFetcher(object):
             #            raise
 
             # Reinitialize logging targets
-            log.init_logging()
+            log.init_logging()  # NOTE: We run in a subprocess!
 
             result = ReplicationStatus(
                 site_id=site_id,
@@ -900,6 +912,11 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
 
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
+        if cmk.is_demo():
+            raise MKGeneralException(
+                _("Distributed setups are not allowed with the Checkmk demo. "
+                  "In case you want to test distributed setups, please "
+                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_id = html.request.var("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
@@ -1038,6 +1055,11 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     def __init__(self):
         super(ModeSiteLivestatusEncryption, self).__init__()
+        if cmk.is_demo():
+            raise MKGeneralException(
+                _("Distributed setups are not allowed with the Checkmk demo. "
+                  "In case you want to test distributed setups, please "
+                  "<a href=\"mailto:info@checkmk.com\">contact us</a>."))
         self._site_id = html.request.var("site")
         self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
@@ -1068,7 +1090,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         try:
             cert_details = self._fetch_certificate_details()
         except Exception as e:
-            logger.error(_("Failed to fetch peer certificate"), exc_info=True)
+            logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
             return
 
@@ -1085,7 +1107,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         global_settings = watolib.load_configuration_settings()
         trusted = global_settings.get(
             "trusted_certificate_authorities",
-            watolib.ConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
+            watolib.ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
         trusted_cas = trusted.setdefault("trusted_cas", [])
 
         if cert_pem in trusted_cas:
@@ -1121,7 +1143,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         try:
             cert_details = self._fetch_certificate_details()
         except Exception as e:
-            logger.error(_("Failed to fetch peer certificate"), exc_info=True)
+            logger.exception("Failed to fetch peer certificate")
             html.show_error(_("Failed to fetch peer certificate (%s)") % e)
             return
 

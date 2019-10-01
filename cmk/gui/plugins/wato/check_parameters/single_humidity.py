@@ -37,28 +37,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSingleHumidity(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_single_humidity():
+    return Tuple(
+        help=_("This Ruleset sets the threshold limits for humidity sensors"),
+        elements=[
+            Integer(title=_("Critical at or below"), unit="%"),
+            Integer(title=_("Warning at or below"), unit="%"),
+            Integer(title=_("Warning at or above"), unit="%"),
+            Integer(title=_("Critical at or above"), unit="%"),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "single_humidity"
 
-    @property
-    def title(self):
-        return _("Humidity Levels for devices with a single sensor")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This Ruleset sets the threshold limits for humidity sensors"),
-            elements=[
-                Integer(title=_("Critical at or below"), unit="%"),
-                Integer(title=_("Warning at or below"), unit="%"),
-                Integer(title=_("Warning at or above"), unit="%"),
-                Integer(title=_("Critical at or above"), unit="%"),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="single_humidity",
+        group=RulespecGroupCheckParametersEnvironment,
+        parameter_valuespec=_parameter_valuespec_single_humidity,
+        title=lambda: _("Humidity Levels for devices with a single sensor"),
+    ))

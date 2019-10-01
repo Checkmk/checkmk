@@ -38,33 +38,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersGeneralFlashUsage(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_general_flash_usage():
+    return Alternative(elements=[
+        Tuple(
+            title=_("Specify levels in percentage of total Flash"),
+            elements=[
+                Percentage(title=_("Warning at a usage of"), label=_("% of Flash"), maxvalue=None),
+                Percentage(title=_("Critical at a usage of"), label=_("% of Flash"), maxvalue=None)
+            ]),
+        Tuple(title=_("Specify levels in absolute usage values"),
+              elements=[
+                  Integer(title=_("Warning at"), unit=_("MB")),
+                  Integer(title=_("Critical at"), unit=_("MB"))
+              ]),
+    ])
 
-    @property
-    def check_group_name(self):
-        return "general_flash_usage"
 
-    @property
-    def title(self):
-        return _("Flash Space Usage")
-
-    @property
-    def parameter_valuespec(self):
-        return Alternative(elements=[
-            Tuple(title=_("Specify levels in percentage of total Flash"),
-                  elements=[
-                      Percentage(
-                          title=_("Warning at a usage of"), label=_("% of Flash"), maxvalue=None),
-                      Percentage(
-                          title=_("Critical at a usage of"), label=_("% of Flash"), maxvalue=None)
-                  ]),
-            Tuple(title=_("Specify levels in absolute usage values"),
-                  elements=[
-                      Integer(title=_("Warning at"), unit=_("MB")),
-                      Integer(title=_("Critical at"), unit=_("MB"))
-                  ]),
-        ])
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="general_flash_usage",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_general_flash_usage,
+        title=lambda: _("Flash Space Usage"),
+    ))

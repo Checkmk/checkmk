@@ -10,7 +10,7 @@ description:
  These counters are handled by this check: al (activity log updates),
  bm (bit map updates), lo (local count requests), pe (pending requests),
  ua (unacknowledged requests), ap (application pending requests),
- ep (epch objects), wo (write order), oos (kb out of sync)
+ ep (epoch objects), wo (write order), oos (KiB out of sync)
 
  At the moment this check does not use any thresholds. So it reports {OK}
  all the time.

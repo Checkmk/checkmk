@@ -449,51 +449,38 @@ mssql_waittypes = [
 ]
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlBlockedSessions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_blocked_sessions():
+    return Dictionary(elements=[
+        ("state", MonitoringState(
+            title=_("State if at least one blocked session"),
+            default_value=2,
+        )),
+        ("waittime",
+         Tuple(
+             title=_("Levels for wait"),
+             help=_("The threshholds for wait_duration_ms. Will "
+                    "overwrite the default state set above."),
+             default_value=(0, 0),
+             elements=[
+                 Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
+                 Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
+             ],
+         )),
+        ("ignore_waittypes",
+         DualListChoice(
+             title=_("Ignore wait types"),
+             rows=40,
+             choices=[(entry, entry) for entry in mssql_waittypes],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "mssql_blocked_sessions"
 
-    @property
-    def title(self):
-        return _("MSSQL Blocked Sessions")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("state",
-             MonitoringState(
-                 title=_("State if at least one blocked session"),
-                 default_value=2,
-             )),
-            ("waittime",
-             Tuple(
-                 title=_("Levels for wait"),
-                 help=_("The threshholds for wait_duration_ms. Will "
-                        "overwrite the default state set above."),
-                 default_value=(0, 0),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
-                     Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
-                 ],
-             )),
-            ("ignore_waittypes",
-             DualListChoice(
-                 title=_("Ignore wait types"),
-                 rows=40,
-                 choices=[(entry, entry) for entry in mssql_waittypes],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mssql_blocked_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        is_deprecated=True,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_blocked_sessions,
+        title=lambda: _("MSSQL Blocked Sessions"),
+    ))

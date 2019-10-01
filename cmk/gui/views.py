@@ -32,6 +32,7 @@ import pprint
 import traceback
 import json
 from typing import Dict, Optional, List  # pylint: disable=unused-import
+import six
 
 import livestatus
 
@@ -323,9 +324,7 @@ class View(object):
         self._user_sorters = user_sorters
 
 
-class ViewRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ViewRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, view):
         super(ViewRenderer, self).__init__()
         self.view = view
@@ -575,8 +574,14 @@ def transform_old_dict_based_icons():
 
 
 def _register_tag_plugins():
+    if hasattr(_register_tag_plugins, "_config_hash") \
+       and _register_tag_plugins._config_hash == hash(repr(config.tags.get_dict_format())):
+        return  # No re-register needed :-)
+
     _register_host_tag_painters()
     _register_host_tag_sorters()
+
+    _register_tag_plugins._config_hash = hash(repr(config.tags.get_dict_format()))
 
 
 config.register_post_config_load_hook(_register_tag_plugins)
@@ -635,7 +640,9 @@ def _register_host_tag_sorters():
 
 
 def _cmp_host_tag(r1, r2, tgid):
-    return cmp(_get_tag_group_value(r1, "host", tgid), _get_tag_group_value(r2, "host", tgid))
+    host_tag_1 = _get_tag_group_value(r1, "host", tgid)
+    host_tag_2 = _get_tag_group_value(r2, "host", tgid)
+    return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
 def _get_tag_group_value(row, what, tag_group_id):
@@ -690,7 +697,6 @@ def DatasourceSelection():
         title=_('Datasource'),
         help=_('The datasources define which type of objects should be displayed with this view.'),
         choices=data_source_registry.data_source_choices(),
-        columns=1,
         default_value='services',
     )
 
@@ -1305,7 +1311,7 @@ def show_view(view, view_renderer, only_count=False):
     visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
 
     all_active_filters = _get_all_active_filters(view)
-    filterheaders = _get_livestatus_filter_headers(view, all_active_filters)
+    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
@@ -1480,7 +1486,7 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def _get_livestatus_filter_headers(view, all_active_filters):
+def get_livestatus_filter_headers(view, all_active_filters):
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
@@ -2009,7 +2015,7 @@ def get_painter_title_for_choices(painter):
     if painter.columns == ["site"]:
         info_title = _("Site")
 
-    if callable(painter.title):
+    if hasattr(painter.title, '__call__'):
         title = painter.title()
     else:
         title = painter.title
@@ -2194,7 +2200,7 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                if isinstance(command, unicode):
+                if isinstance(command, six.text_type):
                     command = command.encode("utf-8")
 
                 executor(command, site)

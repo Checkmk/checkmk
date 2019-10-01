@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
@@ -82,7 +83,7 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         while n * n < num_hosts:
             n += 1
 
-        rows = num_hosts / n
+        rows = int(num_hosts / n)
         lastcols = num_hosts % n
         if lastcols > 0:
             rows += 1
@@ -95,7 +96,7 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         #   to be substracted from the cell width
         # This is not a 100% solution but way better than having no links
         cell_spacing = 1
-        cell_size = ((snapin_width - cell_spacing * (n + 1)) / n)
+        cell_size = int((snapin_width - cell_spacing * (n + 1)) / n)
         cell_size, cell_size_rest = divmod(cell_size, 1)
         style = 'width:%spx' % (snapin_width - n * cell_size_rest)
 

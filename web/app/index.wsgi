@@ -35,11 +35,9 @@ import cmk.utils.store as store
 import cmk.utils.profile
 
 import cmk.gui.i18n
-import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.modules as modules
 import cmk.gui.pages as pages
-import cmk.gui.userdb as userdb
 import cmk.gui.login as login
 import cmk.gui.log as log
 import cmk.gui.htmllib
@@ -47,7 +45,7 @@ import cmk.gui.http
 import cmk.gui.globals
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import AppContext, RequestContext, html
 
 from cmk.gui.exceptions import (
     MKUserError,
@@ -67,29 +65,9 @@ class Application(object):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(environ)
         self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
-
-        # Register application object for access from other modules
-        cmk.gui.globals.current_app.set_current(self)
-
-        # Initialize some simple per request global namespace. Nothing fancy here.
-        # Each request starts with a fresh instance.
-        self.g = {}
-
-        # Create an object that contains all data about the request and
-        # helper functions for creating valid HTML. Parse URI and
-        # store results in the request object for later usage.
-        try:
-            h = cmk.gui.htmllib.html(self._request, self._response)
-            cmk.gui.globals.html.set_current(h)
-        except Exception:
-            logger.exception("Failed to process request")
-            self._response.headers["Content-type"] = "text/plain; charset=UTF-8"
-            self._response.stream.write(
-                "Failed to process request. Have a look at 'var/log/web.log' for more information.\n"
-            )
-            return
-
-        self._process_request()
+        with AppContext(self), \
+             RequestContext(cmk.gui.htmllib.html(self._request, self._response)):
+            self._process_request()
 
     def _process_request(self):
         try:
@@ -107,46 +85,23 @@ class Application(object):
         except FinalizeRequest as e:
             self._response.status_code = e.status
 
-        except (
-                MKUserError,
-                MKAuthException,
-                MKUnauthenticatedException,
-                MKConfigError,
-                MKGeneralException,
-                livestatus.MKLivestatusNotFoundError,
-                livestatus.MKLivestatusException,
-        ) as e:
-            # TODO: Refactor all the special cases handled here to simplify the exception handling
-            ty = type(e)
-            if ty == livestatus.MKLivestatusNotFoundError:
-                title = _("Data not found")
-                plain_title = _("Livestatus-data not found")
-            elif isinstance(e, livestatus.MKLivestatusException):
-                title = _("Livestatus problem")
-                plain_title = _("Livestatus problem")
-            else:
-                title = e.title()
-                plain_title = e.plain_title()
+        except (livestatus.MKLivestatusNotFoundError, MKUserError, MKAuthException) as e:
+            self._render_exception(e)
 
-            if self._plain_error():
-                html.set_output_format("text")
-                html.write("%s: %s\n" % (plain_title, e))
-            elif not self._fail_silently():
-                html.header(title)
-                html.show_error(e)
-                html.footer()
+        except livestatus.MKLivestatusException as e:
+            self._render_exception(e)
+            self._response.status_code = httplib.BAD_GATEWAY
 
-            # Some exception need to set a specific HTTP status code
-            if ty == MKUnauthenticatedException:
-                self._response.status_code = httplib.UNAUTHORIZED
-            elif ty == livestatus.MKLivestatusException:
-                self._response.status_code = httplib.BAD_GATEWAY
+        except MKUnauthenticatedException as e:
+            self._render_exception(e)
+            self._response.status_code = httplib.UNAUTHORIZED
 
-            if ty in [MKConfigError, MKGeneralException]:
-                logger.error(_("%s: %s") % (plain_title, e))
+        except (MKConfigError, MKGeneralException) as e:
+            self._render_exception(e)
+            logger.error("%s: %s", e.plain_title(), e)
 
         except Exception as e:
-            logger.exception()
+            logger.exception("error processing WSGI request")
             if self._plain_error():
                 html.set_output_format("text")
                 html.write(_("Internal error") + ": %s\n" % e)
@@ -158,18 +113,20 @@ class Application(object):
 
         finally:
             try:
-                self._teardown()
+                # TODO: Nuke this and use context managers only for locking!
+                store.release_all_locks()
             except:
-                logger.exception()
+                logger.exception("error releasing locks after WSGI request")
                 raise
 
-    def _teardown(self):
-        """Final steps that are performed after each handled HTTP request"""
-        store.release_all_locks()
-        userdb.finalize()
-        sites.disconnect()
-        html.finalize()
-        cmk.gui.globals.html.unset_current()
+    def _render_exception(self, e):
+        if self._plain_error():
+            html.set_output_format("text")
+            html.write("%s: %s\n" % (e.plain_title(), e))
+        elif not self._fail_silently():
+            html.header(e.title())
+            html.show_error(e)
+            html.footer()
 
     def _handle_request(self):
         html.init_modes()
@@ -177,13 +134,7 @@ class Application(object):
         # Make sure all plugins are avaiable as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.
-        modules.load_all_plugins()
-
-        # Clean up left over livestatus + connection objects (which are
-        # globally stored in sites module).  This is a quick fix for the 1.5
-        # and will be cleaned up in 1.6 by storing these objects in the user
-        # request context instead of a global context.
-        sites.disconnect()
+        self._load_all_plugins()
 
         handler = pages.get_page_handler(html.myfile, self._page_not_found)
 
@@ -216,6 +167,14 @@ class Application(object):
 
         self._ensure_general_access()
         handler()
+
+    def _load_all_plugins(self):
+        # Optimization: in case of the graph ajax call only check the metrics module. This
+        # improves the performance for these requests.
+        # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
+        # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
+        only_modules = ["metrics"] if html.myfile == "ajax_graph" else None
+        modules.load_all_plugins(only_modules=only_modules)
 
     def _show_exception_info(self, e):
         html.write_text("%s" % e)
@@ -254,7 +213,7 @@ class Application(object):
         # a second plugin loading when the user is really using a custom localized GUI.
         # Otherwise the load_all_plugins() at the beginning of the request is sufficient.
         if cmk.gui.i18n.get_current_language() != previous_language:
-            modules.load_all_plugins()
+            self._load_all_plugins()
 
     def _fail_silently(self):
         """Ajax-Functions want no HTML output in case of an error but

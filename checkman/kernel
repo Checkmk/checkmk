@@ -15,11 +15,6 @@ description:
  collect performance data. Levels you set to {None} will not
  be checked.
 
-item:
- {"Context Switches"}, {"Process Creations"}, {"Major Page Faults"} or the name
- of the kernel counter in question as found in {/proc/stat} or
- {/proc/vmstat}.
-
 inventory:
  Per default one check for {"Major Page Faults"},
  {"Context Switches"} and {"Process Creations"}

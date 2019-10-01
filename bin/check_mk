@@ -31,6 +31,7 @@
 # - cluster_name  - Name of a cluster (string)
 # - realhost_name - Name of a *real* host, not a cluster (string)
 
+import logging
 import os
 import sys
 import getopt
@@ -56,7 +57,7 @@ from cmk_base.modes import modes
 import cmk_base.check_api as check_api
 
 cmk.utils.log.setup_console_logging()
-logger = cmk.utils.log.get_logger("base")
+logger = logging.getLogger("cmk.base")
 
 cmk_base.utils.register_sigint_handler()
 

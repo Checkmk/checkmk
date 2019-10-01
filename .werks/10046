@@ -1,0 +1,11 @@
+Title: Fix missing installation of CEE / CME notification plugins
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568731260
+
+

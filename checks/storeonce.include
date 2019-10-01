@@ -72,8 +72,9 @@ def check_storeonce_space(item, params, values):
     total_bytes, cloud_bytes, local_bytes = _get_storeonce_space_values(values, "Capacity")
     free_bytes, free_cloud_bytes, free_local_bytes = _get_storeonce_space_values(values, "Free")
     factor = 1024 * 2
-    yield df_check_filesystem_list(item, params,
-                                   [(item, total_bytes / factor, free_bytes / factor, 0)])
+    yield df_check_filesystem_list(
+        item, params,
+        [(item, total_bytes / factor, free_bytes / factor, 0)])  # fixed: true-division
 
     if cloud_bytes and local_bytes:
         yield 0, "Total cloud: %s, Total local: %s" % (get_bytes_human_readable(cloud_bytes),

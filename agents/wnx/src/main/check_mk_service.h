@@ -12,6 +12,8 @@ namespace cma::cmdline {
 
 constexpr int kParamShift = 10;
 
+constexpr std::string_view kRestoreParam = "restore";
+
 constexpr std::string_view kInstallParam = "install";
 constexpr std::string_view kRemoveParam = "remove";
 constexpr std::string_view kLegacyTestParam = "test";
@@ -23,6 +25,9 @@ constexpr std::string_view kCheckParamIo = "-io";
 
 constexpr std::string_view kRealtimeParam = "rt";
 constexpr std::string_view kHelpParam = "help";
+constexpr std::string_view kVersionParam = "version";
+constexpr std::string_view kReloadConfigParam = "reload_config";
+constexpr std::string_view kRemoveLegacyParam = "remove_legacy";
 
 constexpr std::string_view kExecParam = "exec";             // runs as app
 constexpr std::string_view kAdhocParam = "adhoc";           // runs as app

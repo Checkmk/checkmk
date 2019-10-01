@@ -38,7 +38,11 @@ from cmk.gui.valuespec import (
 class RuleComment(TextAreaUnicode):
     def __init__(self, **kwargs):
         kwargs.setdefault("title", _("Comment"))
-        kwargs.setdefault("help", _("An optional comment that explains the purpose of this rule."))
+        kwargs.setdefault(
+            "help",
+            _("An optional comment that may be used to explain the purpose of this object. "
+              "The comment is only visible in this dialog and may help other users "
+              "understanding the intentions of the configured attributes."))
         kwargs.setdefault("rows", 4)
         kwargs.setdefault("cols", 80)
         super(RuleComment, self).__init__(**kwargs)

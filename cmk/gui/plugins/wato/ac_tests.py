@@ -28,11 +28,12 @@ import abc
 import subprocess
 
 import requests
-import urllib3
+import urllib3  # type: ignore
+import six
 
+from livestatus import LocalConnection
 import cmk.gui.utils
 import cmk.gui.userdb as userdb
-import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.htpasswd
@@ -169,7 +170,7 @@ class ACTestLivestatusUsage(ACTest):
         return True
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         site_status = local_connection.query_row(
             "GET status\n"
             "Columns: livestatus_usage livestatus_threads livestatus_active_connections livestatus_overflows_rate"
@@ -233,7 +234,7 @@ class ACTestTmpfs(ACTest):
         # then in /proc/mounts the physical path will appear and be
         # different from tmp_path. We just check the suffix therefore.
         path_suffix = "sites/%s/tmp" % site_id
-        for line in file("/proc/mounts"):
+        for line in open("/proc/mounts"):
             try:
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
                 if mp.endswith(path_suffix) and fstype == 'tmpfs':
@@ -347,12 +348,15 @@ class ACTestHTTPSecured(ACTest):
         return _("Secure GUI (HTTP)")
 
     def help(self):
-        return _(
-            "When using the regular HTTP protocol all data transfered between the Check_MK "
-            "and the clients using the GUI is sent over the network in plain text (unencrypted). "
-            "This includes the passwords users enter to authenticate with Check_MK and other "
-            "sensitive information. It is highly recommended to enable SSL for securing the "
-            "transported data.")
+        return \
+            _("When using the regular HTTP protocol all data transfered between the Check_MK "
+              "and the clients using the GUI is sent over the network in plain text (unencrypted). "
+              "This includes the passwords users enter to authenticate with Check_MK and other "
+              "sensitive information. It is highly recommended to enable SSL for securing the "
+              "transported data.") \
+            + " " \
+            + _("Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in "
+                "your system apache configuration to tell the Checkmk GUI about the SSL setup.")
 
     def is_relevant(self):
         return True
@@ -448,9 +452,14 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
 
 
-class ACApacheTest(ACTest):
+class ABCACApacheTest(six.with_metaclass(abc.ABCMeta, ACTest)):
     """Abstract base class for apache related tests"""
-    __metaclass__ = abc.ABCMeta
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
 
     def _get_number_of_idle_processes(self):
         apache_status = self._get_apache_status()
@@ -481,7 +490,7 @@ class ACApacheTest(ACTest):
 
 
 @ac_test_registry.register
-class ACTestApacheNumberOfProcesses(ACApacheTest):
+class ACTestApacheNumberOfProcesses(ABCACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -561,7 +570,7 @@ class ACTestApacheNumberOfProcesses(ACApacheTest):
 
 
 @ac_test_registry.register
-class ACTestApacheProcessUsage(ACApacheTest):
+class ACTestApacheProcessUsage(ABCACApacheTest):
     def category(self):
         return ACTestCategories.performance
 
@@ -631,7 +640,7 @@ class ACTestCheckMKHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_cmk average_latency_cmk\n")
 
@@ -651,7 +660,7 @@ class ACTestCheckMKHelperUsage(ACTest):
               "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
 
         # Only report this as warning in case the user increased the default helper configuration
-        default_values = watolib.ConfigDomain().get_all_default_globals()
+        default_values = watolib.ABCConfigDomain.get_all_default_globals()
         if self._get_effective_global_setting(
                 "cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and helper_usage_perc < 50:
             yield ACResultWARN(
@@ -710,7 +719,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return self._uses_microcore()
 
     def execute(self):
-        local_connection = sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         row = local_connection.query_row(
             "GET status\nColumns: helper_usage_generic average_latency_generic\n")
 
@@ -756,7 +765,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _replicates_mkps(self):
         replicates_mkps = False
-        for _site_id, site in config.wato_slave_sites():
+        for site in config.wato_slave_sites().itervalues():
             if site.get("replicate_mkps"):
                 replicates_mkps = True
                 break

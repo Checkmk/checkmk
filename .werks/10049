@@ -1,0 +1,12 @@
+Title: Background job overview: Only list job types with existing job entries
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568786068
+
+The "Background jobs overview" of WATO is now only listing the job types
+that currently have at least one job entry to visualize.

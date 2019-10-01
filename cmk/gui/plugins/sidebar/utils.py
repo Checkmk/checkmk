@@ -28,6 +28,7 @@
 import abc
 import traceback
 import json
+import six
 
 import cmk.utils.plugin_registry
 
@@ -63,10 +64,8 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
 
 # TODO: Transform methods to class methods
-class SidebarSnapin(object):
+class SidebarSnapin(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all sidebar snapins"""
-    __metaclass__ = abc.ABCMeta
-
     @classmethod
     @abc.abstractmethod
     def type_name(cls):
@@ -119,13 +118,11 @@ class SidebarSnapin(object):
         return {}
 
 
-class CustomizableSidebarSnapin(SidebarSnapin):
+class CustomizableSidebarSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
     """Parent for all user configurable sidebar snapins
 
     Subclass this class in case you want to implement a sidebar snapin type that can
     be customized by the user"""
-    __metaclass__ = abc.ABCMeta
-
     @classmethod
     def is_customizable(cls):
         """Whether or not a snapin type can be used for custom snapins"""

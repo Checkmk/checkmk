@@ -28,6 +28,10 @@
 def check_icmp_arguments(params):
     args = []
 
+    min_successful_pings = params.get("min_pings", 0)
+    if min_successful_pings:
+        args += ["-m", "%d" % min_successful_pings]
+
     rta = 200, 500
     loss = 80, 100
     for key, value in params.items():
@@ -43,11 +47,16 @@ def check_icmp_arguments(params):
     args += ["-c", "%.2f,%d%%" % (rta[1], loss[1])]
 
     target = params.get("address", "address")
+
     if target == "address":
-        args.append("'$HOSTADDRESS$'")
+        if is_ipv6_primary(host_name()):
+            args.append('-6')
+        args.append("$HOSTADDRESS$")
 
     elif target == "alias":
-        args.append("'$HOSTALIAS$'")
+        if is_ipv6_primary(host_name()):
+            args.append('-6')
+        args.append("$HOSTALIAS$")
 
     elif target == "all_ipv4addresses":
         args += ["$HOST_ADDRESSES_4$", "$HOST_ADDRESS_4$"]
@@ -68,7 +77,7 @@ def check_icmp_arguments(params):
         args.append("$HOST_ADDRESS_6_%s$" % target[1])
 
     else:  # custom
-        args.append(quote_shell_string(target[1]))
+        args.append(target[1])
 
     return args
 

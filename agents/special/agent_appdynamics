@@ -114,7 +114,7 @@ else:
 
 if opt_filename:
     try:
-        data = json.loads(file(opt_filename).read())
+        data = json.loads(open(opt_filename).read())
     except Exception as e:
         sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
         if opt_debug:

@@ -1,0 +1,10 @@
+Title: Agent AWS: Fixed 'ElasticLoadBalancing' object has no attribute 'describe_target_health'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568644540
+Class: fix
+
+

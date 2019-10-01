@@ -1,0 +1,62 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+tails.  You should have received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+
+@import "~select2/dist/css/select2";
+@import "~@yaireo/tagify/dist/tagify";
+
+@import "scss/_variables.scss";
+@import "../facelift/scss/_main.scss";
+@import "../facelift/scss/_pages.scss";
+@import "../facelift/scss/_status.scss";
+@import "../facelift/scss/_bi.scss";
+@import "../facelift/scss/_dashboard.scss";
+@import "../facelift/scss/_login.scss";
+@import "../facelift/scss/_logwatch.scss";
+@import "../facelift/scss/_prediction.scss";
+@import "../facelift/scss/_views.scss";
+@import "../facelift/scss/_wato.scss";
+@import "../facelift/scss/_mobile.scss";
+@import "../facelift/scss/_sidebar.scss";
+@import "../facelift/scss/_snapins.scss";
+@import "../facelift/scss/_node_visualization.scss";
+
+// CEE specific files. Would love to add some kind of conditional import here,
+// but that is simply not possible at the moment using SCSS. Hack around this
+// using symlinks in the git during development and replace the links with empty
+// files during the build procedure of other editions.
+@import "../facelift/scss/cee/_graphs.scss";
+@import "../facelift/scss/cee/_reporting.scss";
+@if $ENTERPRISE = "yes" {
+  @include graphs;
+  @include reporting;
+}
+
+@import "../facelift/scss/cme/_managed.scss";
+@if $MANAGED = "yes" {
+  @include managed;
+}

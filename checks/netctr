@@ -102,7 +102,7 @@ def check_netctr_combined(nic, params, info):
 
         error_percentage = 0.0
         if problems_per_sec > 0:
-            error_percentage = (problems_per_sec / packets_per_sec) * 100.0
+            error_percentage = (problems_per_sec / packets_per_sec) * 100.0  # fixed: true-division
             infotxt += ", error rate %.4f%%" % error_percentage
         if error_percentage >= crit:
             return (2, infotxt, perfdata)

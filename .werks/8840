@@ -1,0 +1,11 @@
+Title: Docker: Introduce host labels for different docker hosts
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564596166
+Class: feature
+
+Docker nodes will now automatically marked with the discovered label "cmk_docker_object:node".
+The docker container host objects will be marked with the host label "cmk_docker_object:container".

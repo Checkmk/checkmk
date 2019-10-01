@@ -235,6 +235,8 @@
     <ClInclude Include="..\common\cfg_info.h" />
     <ClInclude Include="..\common\cfg_yaml.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
+    <ClInclude Include="..\common\object_repo.h" />
+    <ClInclude Include="..\common\stop_watch.h" />
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
@@ -249,6 +251,7 @@
     <ClInclude Include="cfg.h" />
     <ClInclude Include="cfg_details.h" />
     <ClInclude Include="cma_core.h" />
+    <ClInclude Include="commander.h" />
     <ClInclude Include="cvt.h" />
     <ClInclude Include="encryption.h" />
     <ClInclude Include="eventlog\eventlogbase.h" />
@@ -257,6 +260,7 @@
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="onlyfrom.h" />
+    <ClInclude Include="on_start.h" />
     <ClInclude Include="providers\check_mk.h" />
     <ClInclude Include="providers\df.h" />
     <ClInclude Include="providers\fileinfo.h" />
@@ -455,6 +459,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
     <ClCompile Include="..\lwa\Configuration.cpp" />
     <ClCompile Include="..\lwa\stringutil.cpp" />
@@ -465,6 +470,7 @@
     <ClCompile Include="carrier.cpp" />
     <ClCompile Include="cfg.cpp" />
     <ClCompile Include="cma_core.cpp" />
+    <ClCompile Include="commander.cpp" />
     <ClCompile Include="cvt.cpp" />
     <ClCompile Include="encryption.cpp" />
     <ClCompile Include="eventlog\eventlogbase.cpp" />

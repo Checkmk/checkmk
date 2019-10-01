@@ -1,0 +1,17 @@
+Title: bulk notifications did not produce failed notifications
+Level: 2
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1563961368
+
+If a notification script returned a non-zero exit code and was
+configured for bulk notifications no failed notifications were
+shown in the GUI. With this fix one failed notification will
+be produced for every notification present in the failed bulk.
+
+Furthermore the view "Host and Service notifications" now shows
+a "Final notification result" for every notification in a bulk.

@@ -273,7 +273,10 @@ def check_cisco_temperature(item, params, parsed):
             return 3, "This sensor is obsolete, please rediscover"
 
         state, state_readable = data['dev_state']
-        return check_temperature(data['reading'],
+        reading = data.get('reading')
+        if reading is None:
+            return state, 'Status: %s' % state_readable
+        return check_temperature(reading,
                                  params,
                                  "cisco_temperature_%s" % item,
                                  dev_levels=data['dev_levels'],
@@ -348,19 +351,15 @@ discovery_cisco_dom_rules = []
 def inventory_cisco_temperature_dom(parsed):
     discovery_options = host_extra_conf_merged(host_name(), discovery_cisco_dom_rules)
     parsed_dom = parsed.get('14', {})
-    admin_states_to_discover = [
+    admin_states_to_discover = {
         cisco_temperature_admin_state_map[admin_state]
-        for admin_state in discovery_options.get('admin_states', [])
-    ]
+        for admin_state in discovery_options.get('admin_states', ['1'])
+    } | {None}
     for item, attrs in parsed_dom.iteritems():
-        if attrs.get('raw_dev_state') != '1':
-            continue
-        admin_state = attrs.get('admin_state')
-        if admin_state is None:
-            pass  # discover sensors without admin state
-        elif admin_state not in admin_states_to_discover:
-            continue
-        yield item, {}
+        dev_state = attrs.get('raw_dev_state')
+        adm_state = attrs.get('admin_state')
+        if dev_state == '1' and adm_state in admin_states_to_discover:
+            yield item, {}
 
 
 def _determine_levels(user_levels, device_levels):
@@ -383,7 +382,8 @@ def check_cisco_temperature_dom(item, params, parsed):
     state, state_readable = data['dev_state']
     yield state, 'Status: %s' % state_readable
 
-    device_levels = data.get('dev_levels', (None, None, None, None))
+    # get won't save you, because 'dev_levels' may be present, but None.
+    device_levels = data.get('dev_levels') or (None, None, None, None)
 
     # Map WATO configuration of levels to check_levels() compatible tuple.
     # Default value in case of missing WATO config is use device levels.

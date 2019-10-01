@@ -40,9 +40,9 @@
 def check_dell_compellent_controller(item, _no_params, info):
     for number, status, name, addr, model in info:
         if number == item:
-            state, state_readable = dell_compellent_translate("ScStatus", status)
-            yield state, "Status: %s, Model: %s, Name: %s, Address: %s" % \
-                                            (state_readable, model, name, addr)
+            state, state_readable = dell_compellent_dev_state_map(status)
+            yield state, "Status: %s" % state_readable
+            yield 0, "Model: %s, Name: %s, Address: %s" % (model, name, addr)
 
 
 check_info['dell_compellent_controller'] = {

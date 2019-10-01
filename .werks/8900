@@ -1,0 +1,15 @@
+Title: mysql_capacity: Fix problem with warn/crit size
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1565007698
+Class: fix
+
+The crit and warn levels to mysql capacity check values were wrongly multiplied
+by 1024. For example, kB was interpreted as MB. This has been fixed.
+
+<b>Note</b>: Users who have set these levels such that the check works before
+this fix must now update the unit. The fix does not change the behavior of the
+check for users without crit and warn levels.

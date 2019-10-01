@@ -23,15 +23,15 @@ Add-PSSnapin VeeamPSSnapIn -ErrorAction SilentlyContinue
 try
 {
 $tapeJobs = Get-VBRTapeJob
-write-host "<<<veeam_tapejobs>>>"
-write-host "JobName JobID LastResult LastState"
+write-host "<<<veeam_tapejobs:sep(124)>>>"
+write-host "JobName|JobID|LastResult|LastState"
 foreach ($tapeJob in $tapeJobs)
     {
         $jobName = $tapeJob.Name
         $jobID = $tapeJob.Id
         $lastResult = $tapeJob.LastResult
         $lastState = $tapeJob.LastState
-        write-host "$jobName $jobID $lastResult $lastState"
+        write-host "$jobName|$jobID|$lastResult|$lastState"
     }
 
 

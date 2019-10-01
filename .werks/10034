@@ -1,0 +1,16 @@
+Title: Fix wrong encoding in site user context
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568053880
+
+At least since werk #7330 the environment variables LANG and LC_ALL were set to
+"C" to have a localization independent runtime environment in the sites. This
+lead to encoding problems in shell context, which also inherited into e.g.
+python runtimes, changing the preferred encoding of the locale module.
+
+To fix this issue the site is now setting "C.UTF-8" as environment.

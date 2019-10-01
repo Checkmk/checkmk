@@ -31,6 +31,7 @@ configuration.
 
 import copy
 from enum import Enum
+import logging
 import os
 import pprint
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
@@ -237,7 +238,7 @@ def load_config(settings):
     # Convert old logging configurations
     levels = config["log_level"]
     if isinstance(levels, int):
-        level = cmk.utils.log.INFO if levels == 0 else cmk.utils.log.VERBOSE
+        level = logging.INFO if levels == 0 else cmk.utils.log.VERBOSE
         levels = {
             "cmk.mkeventd": level,
             "cmk.mkeventd.EventServer": level,

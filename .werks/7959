@@ -1,0 +1,10 @@
+Title: statgrab_mem,aix_memory,docker_conteiner_mem,solaris_mem,mem: Fixed wrong unit of SWAP in service output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564473974
+Class: fix
+
+

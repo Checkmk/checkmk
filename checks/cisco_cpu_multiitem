@@ -50,11 +50,11 @@ def parse_cisco_cpu_multiitem(info):
 def check_cisco_cpu_multiitem(_no_item, params, data):
     warn, crit = params['levels']
     value = data['util']
-    state, infotext = check_levels(value,
-                                   None, (warn, crit),
-                                   human_readable_func=get_percent_human_readable,
-                                   infoname="Utilization in the last 5 minutes")[:2]
-    yield state, infotext, [("util", value, warn, crit, 0, 100)]
+    yield check_levels(value,
+                       "util", (warn, crit),
+                       human_readable_func=get_percent_human_readable,
+                       boundaries=(0, 100),
+                       infoname="Utilization in the last 5 minutes")
 
 
 check_info["cisco_cpu_multiitem"] = {

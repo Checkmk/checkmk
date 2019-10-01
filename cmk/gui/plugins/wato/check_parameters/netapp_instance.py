@@ -39,26 +39,19 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetappInstance(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_netapp_instance():
+    return ListOf(Dictionary(help=_("This rule allows you to override netapp warnings"),
+                             elements=[("name", TextAscii(title=_("Warning starts with"))),
+                                       ("state",
+                                        MonitoringState(title="Set state to", default_value=1))],
+                             optional_keys=False),
+                  add_label=_("Add warning"))
 
-    @property
-    def check_group_name(self):
-        return "netapp_instance"
 
-    @property
-    def title(self):
-        return _("Netapp Instance State")
-
-    @property
-    def parameter_valuespec(self):
-        return ListOf(Dictionary(help=_("This rule allows you to override netapp warnings"),
-                                 elements=[("name", TextAscii(title=_("Warning starts with"))),
-                                           ("state",
-                                            MonitoringState(title="Set state to",
-                                                            default_value=1))],
-                                 optional_keys=False),
-                      add_label=_("Add warning"))
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="netapp_instance",
+        group=RulespecGroupCheckParametersEnvironment,
+        parameter_valuespec=_parameter_valuespec_netapp_instance,
+        title=lambda: _("Netapp Instance State"),
+    ))

@@ -50,7 +50,7 @@ def check_prism_alerts(__no_item, __no_params, parsed):
                         key=lambda x: (severity(x['severity'][0]), x['timestamp']),
                         reverse=True)
     sever = row_sorted[0]
-    time_str = time.strftime("%c", time.localtime(int(sever['timestamp']) / 1000000))
+    time_str = time.strftime("%c", time.localtime(int(int(sever['timestamp']) / 1000000.0)))
     yield severity(sever['severity'])[1], "%d alerts" % len(row_sorted)
 
     message = sever['message']

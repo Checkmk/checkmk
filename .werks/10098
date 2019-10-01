@@ -1,0 +1,10 @@
+Title: Fix performance issue for sites with a lot of piggyback hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568896403
+Class: fix
+
+

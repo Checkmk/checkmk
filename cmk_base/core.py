@@ -109,7 +109,7 @@ def do_restart(core, only_reload=False):
             console.error("Configuration for monitoring core is invalid. Rolling back.\n")
 
             broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            file(broken_config_path, "w").write(file(cmk.utils.paths.nagios_objects_file).read())
+            open(broken_config_path, "w").write(open(cmk.utils.paths.nagios_objects_file).read())
             console.error("The broken file has been copied to \"%s\" for analysis.\n" %
                           broken_config_path)
 

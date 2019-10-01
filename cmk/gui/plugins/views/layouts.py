@@ -200,7 +200,7 @@ class GroupedBoxesLayout(Layout):
         html.close_table()
 
         html.open_table(class_="data")
-        odd = "even"
+        odd = "odd"
 
         column_headers = view.get("column_headers")
         if column_headers != "off":
@@ -589,7 +589,7 @@ class LayoutTable(Layout):
 
         html.open_table(class_='data table')
         last_group = None
-        odd = "even"
+        odd = "odd"
         column = 1
         group_open = False
         num_cells = len(cells)

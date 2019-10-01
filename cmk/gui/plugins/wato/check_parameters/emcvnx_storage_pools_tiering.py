@@ -39,37 +39,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEmcvnxStoragePoolsTiering(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_emcvnx_storage_pools_tiering():
+    return Dictionary(elements=[
+        ("time_to_complete",
+         Tuple(
+             title=_("Upper levels for estimated time to complete"),
+             elements=[
+                 Age(title=_("Warning at"), default_value=300 * 60 * 60),
+                 Age(title=_("Critical at"), default_value=350 * 60 * 60),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "emcvnx_storage_pools_tiering"
 
-    @property
-    def title(self):
-        return _("EMC VNX storage pools tiering")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("time_to_complete",
-             Tuple(
-                 title=_("Upper levels for estimated time to complete"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=300 * 60 * 60),
-                     Age(title=_("Critical at"), default_value=350 * 60 * 60),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Pool name"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="emcvnx_storage_pools_tiering",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Pool name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_emcvnx_storage_pools_tiering,
+        title=lambda: _("EMC VNX storage pools tiering"),
+    ))

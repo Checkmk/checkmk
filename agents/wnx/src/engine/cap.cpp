@@ -236,8 +236,34 @@ bool Process(const std::string CapFileName, ProcMode Mode,
     return false;
 }
 
-bool NeedReinstall(const std::filesystem::path Target,
-                   const std::filesystem::path Src) {
+bool IsFilesTheSame(const std::filesystem::path &Target,
+                    const std::filesystem::path &Src) {
+    try {
+        std::ifstream f1(Target, std::ifstream::binary | std::ifstream::ate);
+        std::ifstream f2(Src, std::ifstream::binary | std::ifstream::ate);
+
+        if (f1.fail() || f2.fail()) {
+            return false;  // file problem
+        }
+
+        if (f1.tellg() != f2.tellg()) {
+            return false;  // size mismatch
+        }
+
+        // seek back to beginning and use std::equal to compare contents
+        f1.seekg(0, std::ifstream::beg);
+        f2.seekg(0, std::ifstream::beg);
+        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                          std::istreambuf_iterator<char>(),
+                          std::istreambuf_iterator<char>(f2.rdbuf()));
+    } catch (const std::exception &e) {
+        XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
+        return false;
+    }
+}
+
+bool NeedReinstall(const std::filesystem::path &Target,
+                   const std::filesystem::path &Src) {
     namespace fs = std::filesystem;
     std::error_code ec;
 
@@ -256,12 +282,14 @@ bool NeedReinstall(const std::filesystem::path Target,
     // now both file are present
     auto target_time = fs::last_write_time(Target, ec);
     auto src_time = fs::last_write_time(Src, ec);
-    return src_time > target_time;
+    if (src_time > target_time) return true;
+    XLOG::d.i("Timestamp OK, checking file content...");
+    return !IsFilesTheSame(Target, Src);
 }
 
 // returns true when changes had been done
-bool ReinstallCaps(const std::filesystem::path target_cap,
-                   const std::filesystem::path source_cap) {
+bool ReinstallCaps(const std::filesystem::path &target_cap,
+                   const std::filesystem::path &source_cap) {
     bool changed = false;
     namespace fs = std::filesystem;
     std::error_code ec;
@@ -296,8 +324,27 @@ bool ReinstallCaps(const std::filesystem::path target_cap,
     return changed;
 }
 
-bool ReinstallIni(const std::filesystem::path target_ini,
-                  const std::filesystem::path source_ini) {
+static void ConvertIniToBakery(const std::filesystem::path &bakery_yml,
+                               const std::filesystem::path &source_ini) {
+    auto yaml = upgrade::LoadIni(source_ini);
+
+    if (!yaml.has_value()) return;  // bad ini
+
+    XLOG::l.i("Creating Bakery file '{}'", bakery_yml.u8string());
+    std::ofstream ofs(bakery_yml, std::ios::binary);
+    if (ofs) {
+        ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
+        ofs << *yaml;
+    }
+    ofs.close();
+    XLOG::l.i("Creating Bakery file SUCCESS");
+}
+
+// Replaces target with source
+// Removes target if source absent
+// For non-packaged agents convert ini to bakery.yml
+bool ReinstallIni(const std::filesystem::path &target_ini,
+                  const std::filesystem::path &source_ini) {
     namespace fs = std::filesystem;
     std::error_code ec;
 
@@ -305,29 +352,27 @@ bool ReinstallIni(const std::filesystem::path target_ini,
     if (packaged_agent)
         XLOG::l.i(
             "This is PACKAGED AGENT,"
-            "upgrading ini to the bakery.yml skipped");
+            "upgrading ini file to the bakery.yml will be skipped");
 
     // remove old files
     auto bakery_yml = cma::cfg::GetBakeryFile();
-    if (!packaged_agent) fs::remove(bakery_yml, ec);
+    if (!packaged_agent) {
+        XLOG::l.i("Removing '{}'", bakery_yml.u8string());
+        fs::remove(bakery_yml, ec);
+    }
+
+    XLOG::l.i("Removing '{}'", target_ini.u8string());
     fs::remove(target_ini, ec);
 
-    // generate new
-    if (!fs::exists(source_ini, ec)) return true;
-
-    if (!packaged_agent) {
-        cma::cfg::cvt::Parser p;
-        p.prepare();
-        p.readIni(source_ini.u8string(), false);
-        auto yaml = p.emitYaml();
-
-        std::ofstream ofs(bakery_yml, std::ios::binary);
-        if (ofs) {
-            ofs << cma::cfg::upgrade::MakeComments(source_ini, true);
-            ofs << yaml;
-        }
-        ofs.close();
+    // if file doesn't exists we will leave
+    if (!fs::exists(source_ini, ec)) {
+        XLOG::l.i("No source ini, leaving");
+        return true;
     }
+
+    if (!packaged_agent) ConvertIniToBakery(bakery_yml, source_ini);
+
+    XLOG::l.i("Copy init");
     fs::copy_file(source_ini, target_ini, ec);
 
     return true;
@@ -338,7 +383,7 @@ static void InstallCapFile() {
     fs::path target_cap = cma::cfg::GetUserInstallDir();
     target_cap /= files::kCapFile;
 
-    fs::path source_cap = cma::cfg::GetFileInstallDir();
+    fs::path source_cap = cma::cfg::GetRootInstallDir();
     source_cap /= files::kCapFile;
 
     XLOG::l.t("Installing cap file '{}'", source_cap.u8string());
@@ -356,7 +401,7 @@ static void InstallIniFile() {
 
     fs::path target_ini = cma::cfg::GetUserInstallDir();
     target_ini /= files::kIniFile;
-    fs::path source_ini = cma::cfg::GetFileInstallDir();
+    fs::path source_ini = cma::cfg::GetRootInstallDir();
     source_ini /= files::kIniFile;
 
     XLOG::l.t("Installing ini file '{}'", source_ini.u8string());
@@ -391,8 +436,8 @@ static std::string KillTrailingCR(std::string &&message) {
 // false on error
 bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view target_dir,  // $CUSTOM_PLUGINS_PATH$
-                       std::wstring_view source_dir)  // @root/install
-    noexcept {
+                       std::wstring_view source_dir,  // @root/install
+                       Mode mode) noexcept {
     namespace fs = std::filesystem;
 
     std::error_code ec;
@@ -423,7 +468,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
         return false;
     }
 
-    if (NeedReinstall(target_file, source_file)) {
+    if (mode == Mode::forced || NeedReinstall(target_file, source_file)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_file.u8string(),
                   source_file.u8string());
 
@@ -439,13 +484,52 @@ void Install() {
     using namespace cma::cfg;
     using namespace cma::cfg::cap;
 
-    InstallCapFile();
-    InstallIniFile();
+    try {
+        InstallCapFile();
+        InstallIniFile();
+    } catch (const std::exception &e) {
+        XLOG::l.crit("Exception '{}'", e.what());
+        return;
+    }
 
-    auto source = GetFileInstallDir();
+    auto source = GetRootInstallDir();
 
-    InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source);
-    InstallFileAsCopy(files::kUserYmlFile, GetUserDir(), source);
+    InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
+                      Mode::normal);
+    InstallFileAsCopy(files::kUserYmlFile, GetUserDir(), source, Mode::normal);
+}
+
+// Re-install all files as is from the root-install
+void ReInstall() {
+    using namespace cma::cfg;
+
+    namespace fs = std::filesystem;
+    fs::path root_dir = GetRootInstallDir();
+    fs::path user_dir = GetUserInstallDir();
+
+    std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
+        {files::kCapFile, ReinstallCaps},
+        {files::kIniFile, ReinstallIni},
+    };
+
+    try {
+        for (const auto [name, func] : data_vector) {
+            auto target = user_dir / name;
+            auto source = root_dir / name;
+
+            XLOG::l.i("Forced Reinstalling '{}' with '{}'", target.u8string(),
+                      source.u8string());
+            func(target, source);
+        }
+    } catch (const std::exception &e) {
+        XLOG::l.crit("Exception '{}'", e.what());
+        return;
+    }
+
+    auto source = GetRootInstallDir();
+
+    InstallFileAsCopy(files::kDatFile, GetUserInstallDir(), source,
+                      Mode::forced);
 }
 
 }  // namespace cma::cfg::cap

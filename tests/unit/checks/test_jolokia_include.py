@@ -3,7 +3,7 @@ import pytest
 
 pytestmark = pytest.mark.checks
 
-execfile(os.path.join(os.path.dirname(__file__), '../../../checks/jolokia.include'))
+exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/jolokia.include')).read())
 
 
 @pytest.mark.parametrize('line,length,result', [

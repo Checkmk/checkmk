@@ -36,7 +36,7 @@ from cmk.gui.i18n import _
 
 # TODO: For some aracane reason, we are a bit restrictive about the allowed
 # variable names. Try to figure out why...
-_VARNAME_REGEX = re.compile(r'^[\w.%*+=-]+$')
+_VARNAME_REGEX = re.compile(r'^[:\w.%*+=-]+$')
 
 
 def _valid_varname(v):
@@ -175,9 +175,9 @@ class Request(object):
         # All items in self._vars are encoded at the moment. This should be changed one day,
         # but for the moment we treat vars set with set_var() equal to the vars received from
         # the HTTP request.
-        if isinstance(varname, unicode):
+        if isinstance(varname, six.text_type):
             varname = varname.encode("utf-8")
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
 
         self._vars[varname] = value
@@ -192,6 +192,7 @@ class Request(object):
             self.del_var(varname)
 
     def uploaded_file(self, varname):
+        # returns either a triple of (filename, mime-type, content) or None
         return self._uploads.get(varname)
 
 

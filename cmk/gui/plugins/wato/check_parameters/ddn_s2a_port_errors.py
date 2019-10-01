@@ -39,101 +39,89 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDdnS2APortErrors(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_ddn_s2a_port_errors():
+    return Dictionary(elements=[
+        ("link_failure_errs",
+         Tuple(
+             title=_(u"Link failure errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("lost_sync_errs",
+         Tuple(
+             title=_(u"Lost synchronization errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("loss_of_signal_errs",
+         Tuple(
+             title=_(u"Loss of signal errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("prim_seq_errs",
+         Tuple(
+             title=_(u"PrimSeq erros"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("crc_errs",
+         Tuple(
+             title=_(u"CRC errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("receive_errs",
+         Tuple(
+             title=_(u"Receive errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("ctio_timeouts",
+         Tuple(
+             title=_(u"CTIO timeouts"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("ctio_xmit_errs",
+         Tuple(
+             title=_(u"CTIO transmission errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+        ("ctio_other_errs",
+         Tuple(
+             title=_(u"other CTIO errors"),
+             elements=[
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "ddn_s2a_port_errors"
 
-    @property
-    def title(self):
-        return _("Port errors of DDN S2A devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("link_failure_errs",
-             Tuple(
-                 title=_(u"Link failure errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("lost_sync_errs",
-             Tuple(
-                 title=_(u"Lost synchronization errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("loss_of_signal_errs",
-             Tuple(
-                 title=_(u"Loss of signal errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("prim_seq_errs",
-             Tuple(
-                 title=_(u"PrimSeq erros"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("crc_errs",
-             Tuple(
-                 title=_(u"CRC errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("receive_errs",
-             Tuple(
-                 title=_(u"Receive errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("ctio_timeouts",
-             Tuple(
-                 title=_(u"CTIO timeouts"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("ctio_xmit_errs",
-             Tuple(
-                 title=_(u"CTIO transmission errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-            ("ctio_other_errs",
-             Tuple(
-                 title=_(u"other CTIO errors"),
-                 elements=[
-                     Integer(title=_(u"Warning at")),
-                     Integer(title=_(u"Critical at")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title="Port index")
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ddn_s2a_port_errors",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title="Port index"),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ddn_s2a_port_errors,
+        title=lambda: _("Port errors of DDN S2A devices"),
+    ))

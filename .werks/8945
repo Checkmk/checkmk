@@ -1,0 +1,10 @@
+Title: cisco_temperature: If the SNMP device does not send a temperature value, use the device state instead
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566485853
+Class: fix
+
+

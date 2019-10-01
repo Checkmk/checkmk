@@ -11,12 +11,14 @@ encrypted = 0
 encrypted_rt = 1
 execute = exe bat vbs
 ipv6 = 0
-only_from = 127.0.0.1/32 192.168.56.0/24 0:0:0:0:0:0:0:1/128
+logging = yes
+only_from = 127.0.0.1 192.168.56.0/24 ::1
 passphrase = secret
 port = 6556
 realtime_port = 6559
 realtime_sections = df mem winperf_processor
 realtime_timeout = 90
+remove_legacy = 0
 section_flush = 0
 sections = check_mk winperf
 [local]

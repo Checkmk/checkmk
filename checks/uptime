@@ -28,7 +28,7 @@
 # <<<uptime>>>
 # 15876.96 187476.72
 
-from datetime import timedelta
+import datetime
 
 
 def parse_human_read_uptime(string):
@@ -100,7 +100,7 @@ unix:0:system_misc:snaptime     1131.467157594                     # snaptime
     else:
 
         uptimes_summary = "Uptime command: %s; Kernel time since boot: %s; Snaptime: %s" % tuple(
-            timedelta(seconds=x) for x in (
+            datetime.timedelta(seconds=x) for x in (
                 uptime_struct['uptime_parsed'],
                 uptime_struct['from_boot_time'],
                 uptime_struct['snaptime'],

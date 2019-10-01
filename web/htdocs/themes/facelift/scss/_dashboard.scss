@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -35,6 +35,12 @@ div#dashboard {
   margin: 0;
 }
 
+body.dashlet{
+  #data_container{
+    padding: 0;
+    border: none;
+  }
+}
 
 div.dashlet {
   position: absolute;
@@ -51,8 +57,16 @@ div.dashlet {
     overflow: hidden;
 
     /* Dashlets with "background" set to True */
-    .dashlet_inner.background {
-      background-color: #cbd6da;
+    &.background {
+      background-color: $dashlet-inner-bg-color;
+    }
+
+    > div {
+      color: $primary-font-color;
+
+      &[id*="dashlet_graph"] img[id*="dashlet_img"] {
+	filter: $pnp4nagios-img-filter;
+      }
     }
   }
 
@@ -75,22 +89,22 @@ div.dashlet {
     position: absolute;
     left: 0;
     width: 150px; /* will be changed by javascript later */
-    height: 17px;
+    height: 22px;
     padding: 0;
-    padding-top: 4px;
+    padding-top: 0;
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
     font-size: $theme-font-size-small;
     font-weight: 500;
     letter-spacing: 2px;
-    color: $theme-color-table-text;
+    color: $secondary-link-color;
     text-transform: uppercase;
     white-space: nowrap;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
-    border-bottom: none solid;
-    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+    border-radius: $dashlet-title-border-radius;
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
 
@@ -186,10 +200,14 @@ div.dashlet {
   }
 }
 
+.dashlet .dashlet_inner.background {
+  background-color: $dashlet-bg-color;
+}
+
 div.dashlet > div.title span a,
 div.dashlet > div.title span body.main .popup_menu span,
 body.main .popup_menu div.dashlet > div.title span span {
-  color: $theme-color-table-text;
+  color: $secondary-link-color;
 }
 
 div.dashlet > div.title span {
@@ -216,18 +234,18 @@ div.dashlet_inner div.stats {
   height: 100%;
   padding: 0;
   margin: 0;
-  background-color: $theme-color-white;
+  background-color: $secondary-bg-color;
 
   table th, table td {
-    background: $theme-color-white;
-    border-top: 1px solid $theme-color-table-border;
+    background: $dashboard-stats-bg-color;
+    border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
   }
 }
 
 body.main.dashlet {
-  padding: 8px 0;
-  background: transparent;
+  padding: 8px;
+  background: $body-dashlet-bg-color;
   border-top: none;
   box-sizing: border-box;
 
@@ -235,12 +253,39 @@ body.main.dashlet {
     padding: 0 8px;
 
     tr.data {
-      background: $theme-color-nuance-13;
+      border-bottom: $dashboard-tr-border-bottom;
       transition: .15s ease-in-out;
+    }
+  }
 
-      &:hover {
-        background-color: $theme-color-background;
+  table.data {
+    border-spacing: 0;
+
+    th:nth-child(1) {
+      padding-bottom: 2px;
+      padding-left: 1px;
+    }
+  }
+
+  /* Adapted styling of views in dashlets */
+  tr.data {
+    > td {
+      padding-top: 2px;
+      padding-bottom: 2px;
+      border-bottom: none;
+
+      &.state {
+        border-top: none;
+	border-top-color: $state-border-top-color;
       }
+    }
+
+    &:last-of-type > td:not(.state):not(.gap) {
+      border-bottom: 1px solid $theme-color-table-border;
+    }
+
+    &:nth-child(2) > td.state {
+      border-top-color: $theme-color-table-border !important;
     }
   }
 }
@@ -690,35 +735,4 @@ div#dashboard.grid {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
-}
-
-/* Adapted styling of views in dashlets */
-body.main.dashlet {
-  tr.data {
-    > td {
-      padding-top: 2px;
-      padding-bottom: 2px;
-      border-bottom: none;
-
-      &.state {
-	border-top-color: white !important;
-      }
-    }
-
-    &:last-of-type > td {
-      border-bottom: 1px solid #cccfdb;
-    }
-
-    &:nth-child(2) > td.state {
-      border-top-color: #cccfdb !important;
-    }
-  }
-
-  table.data {
-    border-spacing: 0;
-th:nth-child(1) {
-     padding-bottom: 2px;
-     padding-left: 1px;
-   }
-  }
 }

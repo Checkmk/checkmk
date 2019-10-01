@@ -32,13 +32,9 @@ def test_cmk_base_path_access(site):
     expected_target = "/%s/check_mk/login.py?_origtarget=index.py" % site.id
 
     # TODO: Figure out if which status code we *really* expect here: 301 or 302?
-    web.check_redirect("/%s/check_mk/" % site.id,
-                       expected_code=302,
-                       expected_target=expected_target)
+    web.check_redirect("/%s/check_mk/" % site.id, expected_target=expected_target)
 
-    web.check_redirect("/%s/check_mk/index.py" % site.id,
-                       expected_code=302,
-                       expected_target=expected_target)
+    web.check_redirect("/%s/check_mk/index.py" % site.id, expected_target=expected_target)
 
 
 def test_cmk_agents_access(site):
@@ -68,7 +64,7 @@ def test_cmk_automation(site):
 def test_cmk_deploy_agent(site):
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/deploy_agent.py" % site.id)
-    assert response.text.startswith("ERROR: Missing")
+    assert response.text.startswith("Missing")
 
 
 def test_cmk_run_cron(site):
@@ -90,16 +86,16 @@ def test_cmk_ajax_graph_images(site):
 def test_trace_disabled(site):
     web = CMKWebSession(site)
     # TRACE is disabled by using "TraceEnable Off" in apache config
-    web._request("TRACE", "/", expected_code=405)
+    web.request("TRACE", "/", expected_code=405)
 
 
 def test_track_disabled(site):
     web = CMKWebSession(site)
     # TRACE is not supported by apache at all by apache, so there is no need to
     # disable this. The HTTP code is just different from TRACE.
-    web._request("TRACK", "/", expected_code=403)
+    web.request("TRACK", "/", expected_code=403)
 
 
 def test_options_disabled(site):
     web = CMKWebSession(site)
-    web._request("OPTIONS", "/", expected_code=403)
+    web.request("OPTIONS", "/", expected_code=403)

@@ -37,33 +37,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHeartbeatCrmResources(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_heartbeat_crm_resources():
+    return TextAscii(
+        title=_("Resource Name"),
+        help=_("The name of the cluster resource as shown in the service description."),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "heartbeat_crm_resources"
 
-    @property
-    def title(self):
-        return _("Heartbeat CRM resource status")
+def _parameter_valuespec_heartbeat_crm_resources():
+    return Optional(
+        TextAscii(allow_empty=False),
+        title=_("Expected node"),
+        help=_("The hostname of the expected node to hold this resource."),
+        none_label=_("Do not enforce the resource to be hold by a specific node."),
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Optional(
-            TextAscii(allow_empty=False),
-            title=_("Expected node"),
-            help=_("The hostname of the expected node to hold this resource."),
-            none_label=_("Do not enforce the resource to be hold by a specific node."),
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Resource Name"),
-            help=_("The name of the cluster resource as shown in the service description."),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="heartbeat_crm_resources",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_heartbeat_crm_resources,
+        parameter_valuespec=_parameter_valuespec_heartbeat_crm_resources,
+        title=lambda: _("Heartbeat CRM resource status"),
+    ))

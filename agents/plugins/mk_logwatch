@@ -35,6 +35,9 @@ Options:
 You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
+
+from __future__ import with_statement
+
 import glob
 import logging
 import os
@@ -45,6 +48,9 @@ import time
 import socket
 import binascii
 import platform
+import locale
+
+import shlex
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
@@ -164,7 +170,7 @@ class MEIFolderCleaner(object):
                     continue
 
                 shutil.rmtree(path)
-            except Exception as e:
+            except Exception, e:
                 LOGGER.debug("Finding and removing leftover folders failed: %s", e)
 
 
@@ -242,7 +248,7 @@ def is_indented(line):
 
 
 def parse_filenames(line):
-    return line.split()
+    return shlex.split(line)
 
 
 def get_config_files(directory):
@@ -262,7 +268,7 @@ def iter_config_lines(files):
                 try:
                     decoded = (line.decode('utf-8') for line in fid)
                     for line in decoded:
-                        if not is_comment(line):
+                        if not is_comment(line) and not is_empty(line):
                             yield line.rstrip()
                 except UnicodeDecodeError:
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
@@ -272,31 +278,26 @@ def iter_config_lines(files):
                 raise
 
 
-def consume_cluster_definition(iterator, header_line):
-    cluster_name = header_line[8:].strip()  # e.g.: CLUSTER duck
+def consume_cluster_definition(config_lines):
+    cluster_name = config_lines.pop(0)[8:].strip()  # e.g.: CLUSTER duck
     cluster = ClusterConfig(cluster_name, [])
     LOGGER.debug("new ClusterConfig: %s", cluster_name)
 
-    for line in iterator:
-        if is_empty(line) or not is_indented(line):
-            break
-
-        cluster.ips_or_subnets.append(line.strip())
+    while config_lines and is_indented(config_lines[0]):
+        cluster.ips_or_subnets.append(config_lines.pop(0).strip())
 
     return cluster
 
 
-def consume_logfile_definition(iterator, header_line):
+def consume_logfile_definition(config_lines):
     cont_list = []
     rewrite_list = []
-    filenames = parse_filenames(header_line)
+    filenames = parse_filenames(config_lines.pop(0))
     logfiles = LogfilesConfig(filenames, [])
     LOGGER.debug("new LogfilesConfig: %s", filenames)
 
-    for line in iterator:
-        if is_empty(line) or not is_indented(line):
-            break
-
+    while config_lines and is_indented(config_lines[0]):
+        line = config_lines.pop(0)
         level, raw_pattern = line.split(None, 1)
 
         if level == 'A':
@@ -334,7 +335,7 @@ def read_config(files):
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = iter_config_lines(files)
+    config_lines = list(iter_config_lines(files))
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
@@ -344,19 +345,15 @@ def read_config(files):
     # - cluster ips or subnets (follow cluster lines, begin with whitespace)
     # Needs to consider end of lines to append ips/subnets to clusters as well.
 
-    for line in config_lines:
-        if is_empty(line):
-            # empty lines are still needed to indicate the end
-            # of a logfiles or cluster definition
-            continue
+    while config_lines:
+        first_line = config_lines[0]
+        if is_indented(first_line):
+            raise ValueError("Missing block definition for line %r" % first_line)
 
-        if is_indented(line):
-            raise ValueError("Missing block definition for line %r" % line)
-
-        if line.startswith("CLUSTER "):
-            cluster_configs.append(consume_cluster_definition(config_lines, line))
+        if first_line.startswith("CLUSTER "):
+            cluster_configs.append(consume_cluster_definition(config_lines))
         else:
-            logfiles_configs.append(consume_logfile_definition(config_lines, line))
+            logfiles_configs.append(consume_logfile_definition(config_lines))
 
     LOGGER.info("Logfiles configurations: %r", logfiles_configs)
     LOGGER.info("Optional cluster configurations: %r", cluster_configs)
@@ -403,26 +400,43 @@ class LogLinesIter(object):
     # for now, we need a persistent buffer to fix things
     BLOCKSIZE = 8192
 
-    def __init__(self, logfile):
+    def __init__(self, logfile, encoding):
         super(LogLinesIter, self).__init__()
         self._fd = os.open(logfile, os.O_RDONLY)
         self._lines = []
         self._buffer = ''
         self._reached_end = False  # used for optimization only
-        self._enc = self._get_encoding()
+        self._enc = encoding or self._get_encoding()
         self._newline = u'\n'.encode(self._enc)
 
     def close(self):
         os.close(self._fd)
 
+    # TODO: Add an encoding-Option to the logfile section to enable the
+    # user telling us the correct encoding of a file.
     def _get_encoding(self):
+        # In 1.5 this was only used when logwatch is executed on windows.
+        # On linux the log lines were not decoded at all.
+        #
+        # For 1.6 we want to follow the standard approach to decode things read
+        # from external sources as soon as possible. We also want to ensure that
+        # the output of this script is always UTF-8 encoded later.
+        #
+        # In case the current approach does not work out, then have a look here
+        # for possible more robust solutions:
+        # http://python-notes.curiousefficiency.org/en/latest/python3/text_file_processing.html
         enc_bytes_len = max(len(bom) for bom, _enc in ENCODINGS)
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
                 self._buffer = self._buffer[len(bom):]
+                LOGGER.debug("Detected %r encoding by BOM", encoding)
                 return encoding
-        return 'utf_8'
+
+        pref_encoding = locale.getpreferredencoding()
+        encoding = "utf_8" if not pref_encoding or pref_encoding == "ANSI_X3.4-1968" else pref_encoding
+        LOGGER.debug("Locale Preferred encoding is %s, using %s", pref_encoding, encoding)
+        return encoding
 
     def _update_lines(self):
         """
@@ -470,7 +484,8 @@ class LogLinesIter(object):
             self._update_lines()
 
         if self._lines:
-            return self._lines.pop(0).decode(self._enc)
+            # in case of decoding error, replace with U+FFFD REPLACEMENT CHARACTER
+            return self._lines.pop(0).decode(self._enc, "replace")
 
         self._reached_end = True
         return None
@@ -502,7 +517,7 @@ def process_logfile(logfile, patterns, opt, status):
     and None in case the logfile cannot be opened.
     """
     try:
-        log_iter = LogLinesIter(logfile)
+        log_iter = LogLinesIter(logfile, opt.encoding)
     except OSError:
         if debug():
             raise
@@ -620,7 +635,8 @@ def process_logfile(logfile, patterns, opt, status):
                 for replace in replacements:
                     line = replace.replace('\\0', line.rstrip()) + "\n"
                     for num, group in enumerate(matches.groups()):
-                        line = line.replace('\\%d' % (num + 1), group)
+                        if group is not None:
+                            line = line.replace('\\%d' % (num + 1), group)
 
                 break  # matching rule found and executed
 
@@ -657,8 +673,9 @@ def process_logfile(logfile, patterns, opt, status):
 class Options(object):
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
-    MAP_BOOL = {'true': True, 'false': False}
+    MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
     DEFAULTS = {
+        'encoding': None,
         'maxfilesize': None,
         'maxlines': None,
         'maxtime': None,
@@ -672,6 +689,10 @@ class Options(object):
 
     def __init__(self):
         self.values = {}
+
+    @property
+    def encoding(self):
+        return self._attr_or_default('encoding')
 
     @property
     def maxfilesize(self):
@@ -724,7 +745,10 @@ class Options(object):
     def set_opt(self, opt_str):
         try:
             key, value = opt_str.split('=', 1)
-            if key in ('maxlines', 'maxlinesize', 'maxfilesize', 'maxoutputsize'):
+            if key == 'encoding':
+                ''.encode(value)  # make sure it's an encoding
+                self.values[key] = value
+            elif key in ('maxlines', 'maxlinesize', 'maxfilesize', 'maxoutputsize'):
                 self.values[key] = int(value)
             elif key in ('maxtime',):
                 self.values[key] = float(value)
@@ -748,7 +772,7 @@ class Options(object):
                 self.values[key] = Options.MAP_BOOL[value.lower()]
             else:
                 raise ValueError("Invalid option: %r" % opt_str)
-        except ValueError as exc:
+        except (ValueError, LookupError), exc:
             sys.stdout.write("INVALID CONFIGURATION: %s\n" % exc)
             raise
 
@@ -927,14 +951,14 @@ def main():
         # This removes leftover folders which may be generated by crashing frozen binaries
         folder_cleaner = MEIFolderCleaner()
         folder_cleaner.find_and_remove_leftover_folders(hint_filenames=["mk_logwatch.exe.manifest"])
-    except Exception as exc:
+    except Exception, exc:
         sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % exc)
         sys.exit(1)
 
     try:
         files = get_config_files(MK_CONFDIR)
         logfiles_config, cluster_config = read_config(files)
-    except Exception as exc:
+    except Exception, exc:
         if debug():
             raise
         sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
@@ -958,9 +982,12 @@ def main():
     for pattern in non_matching_patterns:
         sys.stdout.write((u"[[[%s:missing]]]\n" % decode_filename(pattern)).encode('utf-8'))
 
-    for logfile, (patterns, options) in found_sections:
-        output = process_logfile(logfile, patterns, options, status)
-        write_output(output, options.maxoutputsize)
+    for logfile, (patterns, options) in sorted(found_sections, key=lambda k: k[0]):
+        try:
+            output = process_logfile(logfile, patterns, options, status)
+            write_output(output, options.maxoutputsize)
+        except () if debug() else Exception, exc:
+            LOGGER.debug("Exception when processing %r: %s", logfile, exc)
 
     if not debug():
         save_status(status, status_filename)

@@ -188,7 +188,7 @@ if type stat >/dev/null 2>&1 ; then
 fi
 
 echo '<<<ps>>>'
-ps -ef -F user,vszsize,rssize,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 
 if type lparstat >/dev/null 2>&1
 then
@@ -313,8 +313,9 @@ fi
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
 perl -e '
+use File::Glob "bsd_glob";
 my @patterns = ();
-foreach (<"$ARGV[0]/fileinfo.cfg">, <"$ARGV[0]/fileinfo.d/*">) {
+foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
     open my $handle, "<", $_ or next;
     while (<$handle>) {
         chomp;
@@ -331,7 +332,7 @@ exit if ! @patterns;
 print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
 
 foreach (@patterns) {
-    while (<"$_">) {
+    foreach (bsd_glob("$_")) {
         if (! -f) {
             print "$_|missing\n" if ! -d;
         } elsif (my @infos = stat) {

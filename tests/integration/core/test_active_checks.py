@@ -2,6 +2,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import collections
 import pytest  # type: ignore
 
@@ -15,7 +16,7 @@ def test_cfg(request, web, site):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
-    print "Applying default config"
+    print("Applying default config")
     web.add_host("test-host", attributes={
         "ipaddress": "127.0.0.1",
         "tag_agent": "no-agent",
@@ -27,7 +28,7 @@ def test_cfg(request, web, site):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     web.delete_host("test-host")
 
@@ -56,7 +57,7 @@ def test_active_check_execution(test_cfg, site, web):
         result = site.live.query_row(
             "GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check"
         )
-        print "Result: %r" % result
+        print("Result: %r" % result)
         assert result[4] == 1
         assert result[0] == "test-host"
         assert result[1] == u'\xc4ctive-Check'

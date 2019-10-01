@@ -51,7 +51,7 @@ def h3c_lanswitch_genitem(endoid):
         hwLswdev = "Fan"
     else:
         hwLswdev = "Powersupply"
-    unitid = int(id_) / 65536
+    unitid = int(id_) // 65536
     num = int(id_) % 65536
     return "Unit %d %s %d" % (unitid, hwLswdev, num)
 

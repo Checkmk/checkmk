@@ -139,7 +139,7 @@ def need_if64adm():
 def fix_if_64_highspeed(info):
     for line in info:
         # TODO: Use six.string_types when this is a module.
-        if isinstance(line[3], basestring):  # not yet converted
+        if isinstance(line[3], six.string_types):  # not yet converted
             line[3] = saveint(line[3]) * 1000000
 
 
@@ -293,7 +293,7 @@ def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed
             # are of type absolute, convert these 'bit' entries to byte
             # still reported as bytes to stay compatible with older rrd data
             if unit == 'Bit' and level_type == 'abs':
-                level_value = level_value / 8
+                level_value = level_value // 8
             elif level_type == 'perc':
                 # convert percentages to absolute values. Use either the assumed speed
                 # or the reference speed. When none of both are available, ignore
@@ -815,6 +815,8 @@ def check_if_common_single(item,
 
     # error checking might be turned off
     err_warn, err_crit = params.get("errors", (None, None))
+    err_in_warn, err_in_crit = params.get("errors_in", (err_warn, err_crit))
+    err_out_warn, err_out_crit = params.get("errors_out", (err_warn, err_crit))
 
     # broadcast storm detection is turned off by default
     if "nucasts" in params:
@@ -943,8 +945,8 @@ def check_if_common_single(item,
                                                      assumed_speed_in, assumed_speed_out)
 
         # Speed in bytes
-        speed_b_in = (assumed_speed_in / 8) if assumed_speed_in else ref_speed
-        speed_b_out = (assumed_speed_out / 8) if assumed_speed_out else ref_speed
+        speed_b_in = (assumed_speed_in // 3) if assumed_speed_in else ref_speed
+        speed_b_out = (assumed_speed_out // 3) if assumed_speed_out else ref_speed
 
         #
         # All internal values within ths check after this point are bytes, not bits!
@@ -969,14 +971,14 @@ def check_if_common_single(item,
             ("innucast", saveint(interface.inmcast) + saveint(interface.inbcast), nucast_warn,
              nucast_crit, None, None),
             ("indisc", interface.ifInDiscards, disc_warn, disc_crit, None, None),
-            ("inerr", interface.ifInErrors, err_warn, err_crit, None, None),
+            ("inerr", interface.ifInErrors, err_in_warn, err_in_crit, None, None),
             ("out", interface.ifOutOctets, traffic_levels[('out', 'upper', 'warn')],
              traffic_levels[('out', 'upper', 'crit')], 0, speed_b_out),
             ("outucast", interface.outucast, None, None, None, None),
             ("outnucast", saveint(interface.outmcast) + saveint(interface.outbcast), nucast_warn,
              nucast_crit, None, None),
             ("outdisc", interface.ifOutDiscards, disc_warn, disc_crit, None, None),
-            ("outerr", interface.ifOutErrors, err_warn, err_crit, None, None),
+            ("outerr", interface.ifOutErrors, err_out_warn, err_out_crit, None, None),
         ]:
 
             try:
@@ -1016,10 +1018,10 @@ def check_if_common_single(item,
                 return "%s/s" % get_bytes_human_readable(value)
 
             # loop over incoming and outgoing traffic
-            for what, traffic, urate, nurate, discrate, errorrate, speed in \
-                [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
-                    ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
-
+            for what, traffic, urate, nurate, discrate, errorrate, speed in [
+                ("in", rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
+                ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out),
+            ]:
                 if (what, 'predictive') in traffic_levels:
                     params = traffic_levels[(what, 'predictive')]
                     bw_warn, bw_crit = None, None
@@ -1034,11 +1036,9 @@ def check_if_common_single(item,
                 if average:
                     traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic,
                                               average)
-                    infotext += ", %dmin avg: %s" % (average, format_value(traffic_avg))
                     dsname = "%s_avg_%d" % (what, average)
-                    perfdata.append((dsname, traffic_avg, bw_warn, bw_crit, 0, speed))
                     traffic = traffic_avg  # apply levels to average traffic
-                    title = "%s average %d" % (what.title(), average)
+                    title = "%s %d average" % (what.title(), average)
                 else:
                     dsname = what
                     title = what.title()
@@ -1052,7 +1052,6 @@ def check_if_common_single(item,
                                       infoname=title)
                 state = max(state, result[0])
                 infotext += ", " + result[1]
-                perfdata += result[2]
 
                 if speed:
                     perc_used = 100.0 * traffic / speed
@@ -1067,23 +1066,20 @@ def check_if_common_single(item,
                 if pacrate > 0.0:  # any packets transmitted?
                     errperc = 100.0 * errorrate / pacrate
                     if errperc > 0:
-                        infotext += ", %s-errors: %.2f%%" % (what, errperc)
                         if isinstance(err_crit, float):  # percentual levels
-                            if errperc >= err_crit:
-                                state = 2
-                                infotext += "(!!) >= %s%%" % str(err_crit)
-                            elif errperc >= err_warn:
-                                state = max(state, 1)
-                                infotext += "(!) >= %s%%" % str(err_warn)
+                            result = check_levels(errperc,
+                                                  dsname, (err_warn, err_crit),
+                                                  statemarkers=True,
+                                                  human_readable_func=get_percent_human_readable,
+                                                  infoname=what + "-errors")
                         elif isinstance(err_crit, int):  # absolute levels
-                            if errorrate >= err_crit:
-                                state = 2
-                                infotext += ", %s-error packets: %d (!!) >= %s" % (what, errorrate,
-                                                                                   err_crit)
-                            elif errorrate >= err_warn:
-                                state = max(state, 1)
-                                infotext += ", %s-errors packets: %d (!!) >= %s" % (what, errorrate,
-                                                                                    err_warn)
+                            result = check_levels(errorrate,
+                                                  dsname, (err_warn, err_crit),
+                                                  statemarkers=True,
+                                                  human_readable_func=lambda x: "%d" % x,
+                                                  infoname=what + "-errors packets")
+                        state = max(state, result[0])
+                        infotext += ", " + result[1]
 
                 # check rate of non-unicast packets and discards
                 for _txt, _rate, _warn, _crit in [("non-unicast packets", nurate, nucast_warn,
@@ -1091,14 +1087,13 @@ def check_if_common_single(item,
                                                   ("discards", discrate, disc_warn, disc_crit)]:
 
                     if _crit is not None and _warn is not None:
-                        infotext += ", %s %s %.2f/s" % (what, _txt, _rate)
-
-                        if _rate >= _crit:
-                            state = 2
-                            infotext += "(!!) >= " + str(_crit)
-                        elif _rate >= _warn:
-                            state = max(state, 1)
-                            infotext += "(!) >= " + str(_warn)
+                        result = check_levels(_rate,
+                                              _txt, (_warn, _crit),
+                                              statemarkers=True,
+                                              unit="/s",
+                                              infoname="%s %s" % (what, _txt))
+                        state = max(state, result[0])
+                        infotext += ", " + result[1]
 
         if node:
             cluster_items[node] = (state, infotext, perfdata)

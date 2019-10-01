@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import six
+
 import cmk.gui.sites as sites
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
@@ -35,9 +37,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 
-class GroupSnapin(SidebarSnapin):
-    __metaclass__ = abc.ABCMeta
-
+class GroupSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()

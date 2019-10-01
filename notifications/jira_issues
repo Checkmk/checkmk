@@ -1,9 +1,14 @@
 #!/usr/bin/env python
-# JIRA
+# JIRA (Enterprise only)
 # Bulk: no
 
 import sys
-from cmk.notification_plugins import jira_issues
+
+try:
+    from cmk.cee.notification_plugins import jira_issues
+except ImportError:
+    sys.stderr.write("JIRA notification script is only available with CEE / CME\n")
+    sys.exit(1)
 
 if __name__ == "__main__":
     sys.exit(jira_issues.main())

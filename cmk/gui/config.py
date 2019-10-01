@@ -29,7 +29,7 @@ import errno
 import os
 import copy
 import json
-from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NewType, Optional, Tuple, Union  # pylint: disable=unused-import
 import six
 from pathlib2 import Path
 
@@ -68,7 +68,10 @@ if cmk.is_managed_edition():
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
-sites = {}
+SiteId = NewType('SiteId', str)
+SiteConfiguration = NewType('SiteConfiguration', Dict[str, Any])
+SiteConfigurations = NewType('SiteConfigurations', Dict[SiteId, SiteConfiguration])
+
 multisite_users = {}
 admin_users = []
 tags = cmk.utils.tags.TagConfig()
@@ -80,7 +83,7 @@ builtin_role_ids = ["user", "admin", "guest"]
 config_dir = cmk.utils.paths.var_dir + "/web"
 
 # Stores the initial configuration values
-default_config = {}
+default_config = {}  # type: Dict[str, Any]
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -131,7 +134,7 @@ class DT_AGGR_WARN(object):
 # bi.py and also in multisite.mk. "Double" declarations are no problem
 # here since this is a dict (List objects have problems with duplicate
 # definitions).
-aggregation_functions = {}
+aggregation_functions = {}  # type: Dict[str, Callable]
 
 #.
 #   .--Functions-----------------------------------------------------------.
@@ -157,7 +160,7 @@ def _load_config_file(path):
     # type: (str) -> None
     """Load the given GUI configuration file"""
     try:
-        execfile(path, globals(), globals())
+        exec (open(path).read(), globals(), globals())
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
@@ -172,6 +175,7 @@ def _load_config_file(path):
 # plugins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config():
+    # type: () -> None
     global sites
 
     # Set default values for all user-changable configuration settings
@@ -207,32 +211,34 @@ def load_config():
 
 
 def _prepare_tag_config():
+    # type: () -> None
     global tags
 
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
     # the wato_host_tags and wato_aux_tags to the new structure
     tag_config = wato_tags
-    if any(tag_config) and (wato_host_tags or wato_aux_tags):
-        migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
+    if not any(tag_config.values()) and (wato_host_tags or wato_aux_tags):
         tag_config = cmk.utils.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
 
     tags = cmk.utils.tags.get_effective_tag_config(tag_config)
 
 
 def execute_post_config_load_hooks():
+    # type: () -> None
     for func in _post_config_load_hooks:
         func()
 
 
-_post_config_load_hooks = []
+_post_config_load_hooks = []  # type: List[Callable[[], None]]
 
 
 def register_post_config_load_hook(func):
-    # type: (Callable) -> None
+    # type: (Callable[[], None]) -> None
     _post_config_load_hooks.append(func)
 
 
 def _initialize_with_default_config():
+    # type: () -> None
     vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
@@ -242,6 +248,7 @@ def _initialize_with_default_config():
 
 
 def _apply_default_config():
+    # type: () -> None
     for k, v in default_config.items():
         if isinstance(v, (dict, list)):
             v = copy.deepcopy(v)
@@ -308,7 +315,10 @@ def hide_language(lang):
 
 
 def all_nonfunction_vars(var_dict):
-    return {name for name, value in var_dict.items() if name[0] != '_' and not callable(value)}
+    return {
+        name for name, value in var_dict.items()
+        if name[0] != '_' and not hasattr(value, '__call__')
+    }
 
 
 def get_language(default=None):
@@ -521,27 +531,37 @@ class LoggedInUser(object):
         self.save_file("favorites", list(stars))
 
     def is_site_disabled(self, site_id):
+        # type: (SiteId) -> bool
         siteconf = self.siteconf.get(site_id, {})
         return siteconf.get("disabled", False)
 
     def authorized_sites(self, unfiltered_sites=None):
+        # type: (Optional[SiteConfigurations]) -> SiteConfigurations
         if unfiltered_sites is None:
-            unfiltered_sites = allsites().items()
+            unfiltered_sites = allsites()
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
-            return unfiltered_sites
+            return SiteConfigurations(dict(unfiltered_sites))
 
-        return [(site_id, s) for site_id, s in unfiltered_sites if site_id in authorized_sites]
+        return SiteConfigurations({
+            site_id: s  #
+            for site_id, s in unfiltered_sites.iteritems()
+            if site_id in authorized_sites
+        })
 
     def authorized_login_sites(self):
+        # type: () -> SiteConfigurations
         login_site_ids = get_login_slave_sites()
-        login_sites = [
-            (site_id, s) for site_id, s in allsites().items() if site_id in login_site_ids
-        ]
-        return self.authorized_sites(login_sites)
+        return self.authorized_sites(
+            SiteConfigurations({
+                site_id: s  #
+                for site_id, s in allsites().items()
+                if site_id in login_site_ids
+            }))
 
     def may(self, pname):
+        # type: (str) -> bool
         if pname in self.permissions:
             return self.permissions[pname]
         he_may = _may_with_roles(user.role_ids, pname)
@@ -699,6 +719,7 @@ def save_user_file(name, data, user_id, unlock=False):
 
 
 def migrate_old_site_config(site_config):
+    # type: (SiteConfigurations) -> SiteConfigurations
     if not site_config:
         # Prevent problem when user has deleted all sites from his
         # configuration and sites is {}. We assume a default single site
@@ -790,119 +811,6 @@ def _migrate_string_encoded_socket(value):
     raise NotImplementedError()
 
 
-# Previous to 1.5 the "Agent type" tag group was created as sample config and was not
-# a builtin tag group (which can not be modified by the user). With werk #5535 we changed
-# the tag scheme and need to deal with the user config (which might extend the original tag group).
-# Use two strategies:
-#
-# a) Check whether or not the tag group has been modified. If not, simply remove it from the user
-#    config and use the builtin tag group in the future.
-# b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
-# TODO: Move to wato/watolib and register using register_post_config_load_hook()
-def migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
-    remove_old_sample_config_tag_groups(host_tags, aux_tags_)
-    extend_user_modified_tag_groups(host_tags)
-
-
-def remove_old_sample_config_tag_groups(host_tags, aux_tags_):
-    legacy_tag_group_default = (
-        'agent',
-        u'Agent type',
-        [
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping', u'No Agent', []),
-        ],
-    )
-
-    try:
-        host_tags.remove(legacy_tag_group_default)
-
-        # Former tag choices (see above) are added as aux tags to allow the user to migrate
-        # these tags and the objects that use them
-        aux_tags_.insert(0,
-                         ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
-        aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
-    except ValueError:
-        pass  # Not there or modified
-
-    legacy_aux_tag_ids = [
-        'snmp',
-        'tcp',
-    ]
-
-    for aux_tag in aux_tags_[:]:
-        if aux_tag[0] in legacy_aux_tag_ids:
-            aux_tags_.remove(aux_tag)
-
-
-def extend_user_modified_tag_groups(host_tags):
-    """This method supports migration from <1.5 to 1.5 in case the user has a customized "Agent type" tag group
-    See help of migrate_old_sample_config_tag_groups() and werk #5535 and #6446 for further information.
-
-    Disclaimer: The host_tags data structure is a mess which will hopefully be cleaned up during 1.6 development.
-    Basically host_tags is a list of configured tag groups. Each tag group is represented by a tuple like this:
-
-    # tag_group_id, tag_group_title, tag_choices
-    ('agent', u'Agent type',
-        [
-            # tag_id, tag_title, aux_tag_ids
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1',   u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp',  u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping',      u'No Agent', []),
-        ],
-    )
-    """
-    tag_group = None
-    for this_tag_group in host_tags:
-        if this_tag_group[0] == "agent":
-            tag_group = this_tag_group
-
-    if tag_group is None:
-        return  # Tag group does not exist
-
-    # Mark all existing tag choices as legacy to help the user that this should be cleaned up
-    for index, tag_choice in enumerate(tag_group[2][:]):
-        if tag_choice[0] in ["no-agent", "special-agents", "all-agents", "cmk-agent"]:
-            continue  # Don't prefix the standard choices
-
-        if tag_choice[1].startswith("Legacy: "):
-            continue  # Don't prefix already prefixed choices
-
-        tag_choice_list = list(tag_choice)
-        tag_choice_list[1] = "Legacy: %s" % tag_choice_list[1]
-        tag_group[2][index] = tuple(tag_choice_list)
-
-    tag_choices = [c[0] for c in tag_group[2]]
-
-    if "no-agent" not in tag_choices:
-        tag_group[2].insert(0, ("no-agent", _("No agent"), []))
-
-    if "special-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("special-agents", _("No Checkmk agent, all configured special agents"), ["tcp"]))
-
-    if "all-agents" not in tag_choices:
-        tag_group[2].insert(
-            0, ("all-agents", _("Normal Checkmk agent, all configured special agents"), ["tcp"]))
-
-    if "cmk-agent" not in tag_choices:
-        tag_group[2].insert(
-            0, ("cmk-agent", _("Normal Checkmk agent, or special agent if configured"), ["tcp"]))
-    else:
-        # Change title of cmk-agent tag choice and move to top
-        for index, tag_choice in enumerate(tag_group[2]):
-            if tag_choice[0] == "cmk-agent":
-                tag_choice_list = list(tag_group[2].pop(index))
-                tag_choice_list[1] = _("Normal Checkmk agent, or special agent if configured")
-                tag_group[2].insert(0, tuple(tag_choice_list))
-                break
-
-
 #.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |
@@ -917,10 +825,12 @@ def extend_user_modified_tag_groups(host_tags):
 
 
 def omd_site():
+    # type: () -> SiteId
     return cmk.omd_site()
 
 
 def url_prefix():
+    # type: () -> str
     return "/%s/" % cmk.omd_site()
 
 
@@ -928,8 +838,9 @@ use_siteicons = False
 
 
 def default_single_site_configuration():
-    return {
-        omd_site(): {
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
+        omd_site(): SiteConfiguration({
             'alias': _("Local site %s") % omd_site(),
             'socket': ("local", None),
             'disable_wato': True,
@@ -943,14 +854,15 @@ def default_single_site_configuration():
             'timeout': 5,
             'user_login': True,
             'proxy': None,
-        }
-    }
+        })
+    })
 
 
-sites = {}
+sites = SiteConfigurations({})
 
 
 def sitenames():
+    # () -> List[SiteId]
     return sites.keys()
 
 
@@ -958,16 +870,18 @@ def sitenames():
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
 # TODO: Rename this!
-# TODO: All site listing functions should return the same data structure, e.g. a list of
-#       pairs (site_id, site)
 def allsites():
-    return dict([
-        (name, site(name)) for name in sitenames() if not site(name).get("disabled", False)
-    ])
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
+        name: site(name)  #
+        for name in sitenames()
+        if not site(name).get("disabled", False)
+    })
 
 
 def configured_sites():
-    return [(site_id, site(site_id)) for site_id in sitenames()]
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({site_id: site(site_id) for site_id in sitenames()})
 
 
 def has_wato_slave_sites():
@@ -984,6 +898,7 @@ def _has_distributed_wato_file():
 
 
 def get_login_sites():
+    # type: () -> List[SiteId]
     """Returns the WATO slave sites a user may login and the local site"""
     return get_login_slave_sites() + [omd_site()]
 
@@ -991,27 +906,33 @@ def get_login_sites():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def get_login_slave_sites():
+    # type: () -> List[SiteId]
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
-    for site_id, site_spec in wato_slave_sites():
+    for site_id, site_spec in wato_slave_sites().iteritems():
         if site_spec.get('user_login', True) and not site_is_local(site_id):
             login_sites.append(site_id)
     return login_sites
 
 
 def wato_slave_sites():
-    return [(site_id, s) for site_id, s in sites.items() if s.get("replication")]
+    # type: () -> SiteConfigurations
+    return SiteConfigurations({
+        site_id: s  #
+        for site_id, s in sites.items()
+        if s.get("replication")
+    })
 
 
 def sorted_sites():
-    sorted_choices = []
-    for site_id, s in user.authorized_sites():
-        sorted_choices.append((site_id, s['alias']))
-    return sorted(sorted_choices, key=lambda k: k[1], cmp=lambda a, b: cmp(a.lower(), b.lower()))
+    # type: () -> List[Tuple[SiteId, str]]
+    return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().iteritems()],
+                  key=lambda k: k[1].lower())
 
 
 def site(site_id):
-    s = dict(sites.get(site_id, {}))
+    # type: (SiteId) -> SiteConfiguration
+    s = SiteConfiguration(dict(sites.get(site_id, {})))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
@@ -1022,11 +943,13 @@ def site(site_id):
 
 
 def site_is_local(site_id):
+    # type: (SiteId) -> bool
     family_spec, address_spec = site(site_id)["socket"]
     return _is_local_socket_spec(family_spec, address_spec)
 
 
 def _is_local_socket_spec(family_spec, address_spec):
+    # type: (str, Dict[str, Any]) -> bool
     if family_spec == "local":
         return True
 
@@ -1037,6 +960,7 @@ def _is_local_socket_spec(family_spec, address_spec):
 
 
 def default_site():
+    # type: () -> Optional[SiteId]
     for site_name, _site in sites.items():
         if site_is_local(site_name):
             return site_name
@@ -1044,6 +968,7 @@ def default_site():
 
 
 def is_single_local_site():
+    # type: () -> bool
     if len(sites) > 1:
         return False
     elif len(sites) == 0:
@@ -1055,18 +980,22 @@ def is_single_local_site():
 
 
 def site_attribute_default_value():
+    # type: () -> Optional[SiteId]
     def_site = default_site()
-    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
+    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     if def_site and def_site in authorized_site_ids:
         return def_site
+    return None
 
 
 def site_attribute_choices():
-    authorized_site_ids = [x[0] for x in user.authorized_sites(unfiltered_sites=configured_sites())]
+    # () -> List[Tuple[SiteId, str]]
+    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
 
 
 def site_choices(filter_func=None):
+    # (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, str]]
     choices = []
     for site_id, site_spec in sites.items():
         if filter_func and not filter_func(site_id, site_spec):
@@ -1082,6 +1011,7 @@ def site_choices(filter_func=None):
 
 
 def get_event_console_site_choices():
+    # () -> List[Tuple[SiteId, str]]
     return site_choices(
         filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
 
@@ -1111,7 +1041,7 @@ def load_plugins(force):
 def theme_choices():
     themes = {}
 
-    for base_dir in [Path(cmk.utils.paths.web_dir), Path(cmk.utils.paths.local_web_dir)]:
+    for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
         if not base_dir.exists():
             continue
 

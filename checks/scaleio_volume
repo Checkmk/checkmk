@@ -64,7 +64,7 @@ def check_scaleio_volume(item, params, parsed):
     # Assuming the API will never report
     # a number bigger than 1048576
     if total > 1024:
-        total = total / 1024
+        total = total // 1024
         unit = change_unit[unit]
     yield 0, "Name: %s, Size: %.1f %s" % (name, total, unit)
 

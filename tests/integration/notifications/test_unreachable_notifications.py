@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
 import errno
 import time
 import os
@@ -41,7 +42,7 @@ def scenario(request, web, site):
     site.set_core(core)
 
     try:
-        print "Applying test config"
+        print("Applying test config")
 
         web.add_host("notify-test-parent", attributes={
             "ipaddress": "127.0.0.1",
@@ -85,7 +86,7 @@ def scenario(request, web, site):
         #
         # Cleanup code
         #
-        print "Cleaning up default config"
+        print("Cleaning up default config")
 
         site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())

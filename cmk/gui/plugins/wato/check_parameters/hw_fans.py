@@ -40,56 +40,44 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHwFans(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
-
-    @property
-    def check_group_name(self):
-        return "hw_fans"
-
-    @property
-    def title(self):
-        return _("FAN speed of Hardware devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                (
-                    "lower",
-                    Tuple(
-                        help=_("Lower levels for the fan speed of a hardware device"),
-                        title=_("Lower levels"),
-                        elements=[
-                            Integer(title=_("warning if below"), unit=u"rpm"),
-                            Integer(title=_("critical if below"), unit=u"rpm"),
-                        ],
-                    ),
+def _parameter_valuespec_hw_fans():
+    return Dictionary(
+        elements=[
+            (
+                "lower",
+                Tuple(
+                    help=_("Lower levels for the fan speed of a hardware device"),
+                    title=_("Lower levels"),
+                    elements=[
+                        Integer(title=_("warning if below"), unit=u"rpm"),
+                        Integer(title=_("critical if below"), unit=u"rpm"),
+                    ],
                 ),
-                (
-                    "upper",
-                    Tuple(
-                        help=_("Upper levels for the fan speed of a hardware device"),
-                        title=_("Upper levels"),
-                        elements=[
-                            Integer(title=_("warning at"), unit=u"rpm", default_value=8000),
-                            Integer(title=_("critical at"), unit=u"rpm", default_value=8400),
-                        ],
-                    ),
+            ),
+            (
+                "upper",
+                Tuple(
+                    help=_("Upper levels for the fan speed of a hardware device"),
+                    title=_("Upper levels"),
+                    elements=[
+                        Integer(title=_("warning at"), unit=u"rpm", default_value=8000),
+                        Integer(title=_("critical at"), unit=u"rpm", default_value=8400),
+                    ],
                 ),
-                ("output_metrics",
-                 Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
-            ],
-            optional_keys=["upper", "output_metrics"],
-        )
+            ),
+            ("output_metrics",
+             Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
+        ],
+        optional_keys=["upper", "output_metrics"],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Fan Name"), help=_("The identificator of the fan."))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hw_fans",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=lambda: TextAscii(title=_("Fan Name"), help=_("The identificator of the fan.")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_hw_fans,
+        title=lambda: _("FAN speed of Hardware devices"),
+    ))

@@ -26,14 +26,14 @@
 
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.plugins.watolib.utils import (
-    ConfigDomain,
+    ABCConfigDomain,
     config_variable_registry,
 )
 
 
 def load_configuration_settings(site_specific=False):
     settings = {}
-    for domain in ConfigDomain.enabled_domains():
+    for domain in ABCConfigDomain.enabled_domains():
         if site_specific:
             settings.update(domain().load_site_globals())
         else:
@@ -60,7 +60,7 @@ def save_global_settings(vars_, site_specific=False):
         per_domain.setdefault(ConfigDomainGUI.ident,
                               {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
 
-    for domain in ConfigDomain.enabled_domains():
+    for domain in ABCConfigDomain.enabled_domains():
         if site_specific:
             domain().save_site_globals(per_domain.get(domain.ident, {}))
         else:

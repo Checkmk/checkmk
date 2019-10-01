@@ -1,3 +1,4 @@
+from __future__ import division
 import pytest
 
 import cmk.gui.hooks as hooks
@@ -45,10 +46,10 @@ def test_call(mocker):
 
 
 def test_call_exception_handling(mocker):
-    hooks.register_builtin("bli", lambda: 1 / 0)
+    hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)
-    with pytest.raises(ZeroDivisionError, match="integer division"):
+    with pytest.raises(ZeroDivisionError, match="float division by zero"):
         hooks.call("bli")
     hook3_mock.assert_not_called()
 

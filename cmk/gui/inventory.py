@@ -44,7 +44,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 
 
@@ -226,10 +226,10 @@ def get_history_deltas(hostname, search_timestamp=None):
             current_tree = get_tree(timestamp)
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
-
-            cmk.utils.store.save_file(cached_delta_path,
-                                      repr((new, changed, removed, delta_tree.get_raw_tree())))
-            delta_history.append((timestamp, delta_data))
+            if new or changed or removed:
+                cmk.utils.store.save_file(cached_delta_path,
+                                          repr((new, changed, removed, delta_tree.get_raw_tree())))
+                delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise
         except Exception:
@@ -268,7 +268,7 @@ def _load_inventory_tree(hostname):
     if not hostname:
         return
 
-    inventory_tree_cache = current_app.g.setdefault("inventory", {})
+    inventory_tree_cache = g.setdefault("inventory", {})
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
@@ -310,14 +310,13 @@ def _get_permitted_inventory_paths():
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    cache_varname = "permitted_inventory_paths"
-    if cache_varname in current_app.g:
-        return current_app.g[cache_varname]
+    if 'permitted_inventory_paths' in g:
+        return g.permitted_inventory_paths
 
     user_groups = userdb.contactgroups_of_user(config.user.id)
 
     if not user_groups:
-        current_app.g[cache_varname] = None
+        g.permitted_inventory_paths = None
         return None
 
     forbid_whole_tree = False
@@ -326,11 +325,11 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            current_app.g[cache_varname] = None
+            g.permitted_inventory_paths = None
             return None
 
         if inventory_paths == "allow_all":
-            current_app.g[cache_varname] = None
+            g.permitted_inventory_paths = None
             return None
 
         elif inventory_paths == "forbid_all":
@@ -347,10 +346,10 @@ def _get_permitted_inventory_paths():
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
-        current_app.g[cache_varname] = []
+        g.permitted_inventory_paths = []
         return []
 
-    current_app.g[cache_varname] = permitted_paths
+    g.permitted_inventory_paths = permitted_paths
     return permitted_paths
 
 
@@ -442,10 +441,11 @@ def _may_see(host_name, site):
     query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
     if site:
         sites.live().set_only_sites([site])
-
-    result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
-    if site:
-        sites.live().set_only_sites()
+    try:
+        result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    finally:
+        if site:
+            sites.live().set_only_sites()
 
     if not result:
         return False

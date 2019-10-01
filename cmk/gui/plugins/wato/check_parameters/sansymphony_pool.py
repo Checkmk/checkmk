@@ -38,38 +38,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSansymphonyPool(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_sansymphony_pool():
+    return Tuple(
+        help=_("This rule sets the warn and crit levels for the percentage of allocated pools"),
+        elements=[
+            Integer(
+                title=_("Warning at"),
+                unit=_("percent"),
+                default_value=80,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("percent"),
+                default_value=90,
+            ),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "sansymphony_pool"
 
-    @property
-    def title(self):
-        return _("Sansymphony: pool allocation")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets the warn and crit levels for the percentage of allocated pools"),
-            elements=[
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("percent"),
-                    default_value=80,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("percent"),
-                    default_value=90,
-                ),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the pool"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="sansymphony_pool",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of the pool"),),
+        parameter_valuespec=_parameter_valuespec_sansymphony_pool,
+        title=lambda: _("Sansymphony: pool allocation"),
+    ))

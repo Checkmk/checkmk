@@ -38,26 +38,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersVmsProcs(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_vms_procs():
+    return Optional(
+        Tuple(elements=[
+            Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
+            Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
+        ],),
+        title=_("Impose levels on number of processes"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "vms_procs"
 
-    @property
-    def title(self):
-        return _("Number of processes on OpenVMS")
-
-    @property
-    def parameter_valuespec(self):
-        return Optional(
-            Tuple(elements=[
-                Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
-                Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
-            ],),
-            title=_("Impose levels on number of processes"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="vms_procs",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vms_procs,
+        title=lambda: _("Number of processes on OpenVMS"),
+    ))

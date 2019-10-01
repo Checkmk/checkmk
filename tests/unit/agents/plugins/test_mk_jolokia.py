@@ -1,26 +1,23 @@
 # -*- encoding: utf-8
-# pylint: disable=protected-access
-import os
-import sys
-import pytest
-from testlib import cmk_path  # pylint: disable=import-error
+# pylint: disable=protected-access,redefined-outer-name
+import pytest  # type: ignore
+from testlib import import_module
 
-sys.path.insert(0, os.path.join(cmk_path(), 'agents', 'plugins'))
 
-import mk_jolokia  # pylint: disable=import-error,wrong-import-position
-
-SANITIZE = mk_jolokia.JolokiaInstance._sanitize_config
+@pytest.fixture(scope="module")
+def mk_jolokia():
+    return import_module("agents/plugins/mk_jolokia.py")
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
-def test_missing_config_basic(removed):
+def test_missing_config_basic(mk_jolokia, removed):
     config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
 
 
-def test_missing_config_auth():
+def test_missing_config_auth(mk_jolokia):
     def missing_keys(key_string):
         msg_pattern = r'Missing key\(s\): %s in configuration for UnitTest' % key_string
         return pytest.raises(ValueError, match=msg_pattern)
@@ -32,47 +29,48 @@ def test_missing_config_auth():
     config["mode"] = "digest"
 
     with missing_keys("password, user"):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
     config["user"] = "TestUser"
     with missing_keys("password"):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
 
     config["mode"] = "https"
     with missing_keys("client_cert, client_key"):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
     config["client_cert"] = "path/to/MyClientCert"
     with missing_keys("client_key"):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
     config["client_key"] = "mysecretkey"
 
     config["service_user"] = "service user"
     config["service_url"] = "u://r/l"
     with missing_keys("service_password"):
-        SANITIZE(config)
+        mk_jolokia.JolokiaInstance._sanitize_config(config)
 
 
-def test_config_instance():
+def test_config_instance(mk_jolokia):
     config = mk_jolokia.get_default_config_dict()
-    assert SANITIZE(config).get("instance") == "8080"
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("instance") == "8080"
     config["instance"] = "some spaces in string"
-    assert SANITIZE(config).get("instance") == "some_spaces_in_string"
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get(
+        "instance") == "some_spaces_in_string"
 
 
-def test_config_timeout():
+def test_config_timeout(mk_jolokia):
     config = mk_jolokia.get_default_config_dict()
     config["timeout"] = '23'
-    assert isinstance(SANITIZE(config).get("timeout"), float)
+    assert isinstance(mk_jolokia.JolokiaInstance._sanitize_config(config).get("timeout"), float)
 
 
-def test_config_legacy_cert_path_to_verify():
+def test_config_legacy_cert_path_to_verify(mk_jolokia):
     config = mk_jolokia.get_default_config_dict()
     config["verify"] = None
-    assert SANITIZE(config).get("verify") is True
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True
     config["cert_path"] = "_default"
-    assert SANITIZE(config).get("verify") is True
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") is True
     config["verify"] = None
     config["cert_path"] = "some/path/to/file"
-    assert SANITIZE(config).get("verify") == "some/path/to/file"
+    assert mk_jolokia.JolokiaInstance._sanitize_config(config).get("verify") == "some/path/to/file"
 
 
 @pytest.mark.parametrize("config,base_url", [({
@@ -82,12 +80,12 @@ def test_config_legacy_cert_path_to_verify():
     "suburi": "jolo-site",
     "timeout": 0
 }, "sftp://billy.theserver:42/jolo-site/")])
-def test_jolokia_instance_base_url(config, base_url):
+def test_jolokia_instance_base_url(mk_jolokia, config, base_url):
     joloi = mk_jolokia.JolokiaInstance(config)
     assert joloi._get_base_url() == base_url
 
 
-def test_jolokia_yield_configured_instances():
+def test_jolokia_yield_configured_instances(mk_jolokia):
     yci = mk_jolokia.yield_configured_instances({
         "instances": [{
             "server": "s1"
@@ -112,7 +110,7 @@ class _MockHttpResponse(object):
         return self._payload
 
 
-def test_jolokia_validate_response_skip_mbean():
+def test_jolokia_validate_response_skip_mbean(mk_jolokia):
     for status in (199, 300):
         with pytest.raises(mk_jolokia.SkipMBean):
             mk_jolokia.validate_response(_MockHttpResponse(status))
@@ -126,7 +124,7 @@ def test_jolokia_validate_response_skip_mbean():
         mk_jolokia.validate_response(_MockHttpResponse(200, status=200))
 
 
-def test_jolokia_validate_response_skip_instance():
+def test_jolokia_validate_response_skip_instance(mk_jolokia):
     for status in (401, 403, 502):
         with pytest.raises(mk_jolokia.SkipInstance):
             mk_jolokia.validate_response(_MockHttpResponse(status))
@@ -138,5 +136,5 @@ def test_jolokia_validate_response_skip_instance():
         "value": 23,
     },
 ])
-def test_jolokia_validate_response_ok(data):
+def test_jolokia_validate_response_ok(mk_jolokia, data):
     assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))

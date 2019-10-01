@@ -70,6 +70,8 @@ class NagVisMaps(SidebarSnapin):
             self._show_table(request)
         elif request["type"] == "tree":
             self._show_tree(request)
+        elif request["type"] == "error":
+            html.show_error(request["message"])
         else:
             raise NotImplementedError()
 

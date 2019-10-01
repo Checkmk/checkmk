@@ -1,0 +1,29 @@
+import java.text.SimpleDateFormat
+
+node {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        println(DOCKER_REGISTRY)
+        IMAGE = 'ubuntu-18.04-common'
+        println(IMAGE)
+        docker.image(IMAGE).pull()
+        docker.image(IMAGE).inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
+            stage('checkout sources') {
+                checkout(scm)
+            }
+        }
+    }
+}
+
+node {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker.image('ubuntu-19.04-os-image').pull()
+        docker.image('ubuntu-19.04-os-image').inside("-u 0:0 --ulimit nofile=1024:1024 --init --privileged") {
+           stage('test python3 unit') {
+               dir ('tests-py3') {
+                   sh "make test-unit"
+               }
+           }
+        }
+    }
+}
+

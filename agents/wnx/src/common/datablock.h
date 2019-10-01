@@ -3,12 +3,10 @@
 #pragma once
 namespace cma {
 namespace tools {
-// very generic
 // ownership belongs to DataBlock
 // supplementary structure to store data
 // tested in perf_reader.exe(part of the old win agent)
-// #TODO gtest
-// #TODO close data members
+// NOT THREAD SAFE
 template <typename T>
 struct DataBlock {
     DataBlock() : len_(0), data_(nullptr) {}

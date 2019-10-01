@@ -38,32 +38,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEpower(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_epower():
+    return TextAscii(title=_("Phase"),
+                     help=_("The identifier of the phase the power is related to."))
 
-    @property
-    def check_group_name(self):
-        return "epower"
 
-    @property
-    def title(self):
-        return _("Electrical Power")
+def _parameter_valuespec_epower():
+    return Tuple(
+        help=_("Levels for the electrical power consumption of a device "
+               "like a UPS or a PDU. Several phases may be addressed independently."),
+        elements=[
+            Integer(title=_("warning if below"), unit="Watt", default_value=20),
+            Integer(title=_("critical if below"), unit="Watt", default_value=1),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Levels for the electrical power consumption of a device "
-                   "like a UPS or a PDU. Several phases may be addressed independently."),
-            elements=[
-                Integer(title=_("warning if below"), unit="Watt", default_value=20),
-                Integer(title=_("critical if below"), unit="Watt", default_value=1),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Phase"),
-                         help=_("The identifier of the phase the power is related to."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="epower",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_epower,
+        parameter_valuespec=_parameter_valuespec_epower,
+        title=lambda: _("Electrical Power"),
+    ))

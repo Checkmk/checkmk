@@ -1,4 +1,5 @@
 """Submodule providing the `run` function of generictests package"""
+from __future__ import print_function
 from ast import literal_eval
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
@@ -118,7 +119,7 @@ def discovery(check, subcheck, dataset, info_arg, immu):
         assert disco_func, "%r has no discovery function!" \
                            % check.name
     if not disco_func:
-        return []
+        return DiscoveryResult()
 
     d_result_raw = check.run_discovery(info_arg)
     immu.test(' after discovery (%s): ' % disco_func.__name__)
@@ -190,7 +191,11 @@ def run(check_manager, dataset, write=False):
 
     with optional_freeze_time(dataset):
         # test the parse function
+        if hasattr(dataset, 'info'):
+            immu.register(dataset.info, 'info')
         parsed = parse(check_manager, dataset)
+        immu.test(' after parse function ')
+
         immu.register(parsed, 'parsed')
 
         # get the expected check results, if present
@@ -210,18 +215,21 @@ def run(check_manager, dataset, write=False):
             with MockItemState(mock_is), \
                  MockHostExtraConf(check, mock_hec), \
                  MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
+
                 # test discovery
-                d_result = discovery(check, subcheck, dataset, info_arg, immu)
+                discovery_result = discovery(check, subcheck, dataset, info_arg, immu)
                 if write:
-                    dataset.discovery[subcheck] = [e.tuple for e in d_result]
-                    # test checks
-                for dr in d_result:
+                    dataset.discovery[subcheck] = [e.tuple for e in discovery_result.entries
+                                                  ] + discovery_result.labels.to_list()
+
+                # test checks for DiscoveryResult entries
+                for dr in discovery_result.entries:
                     cdr = check_discovered_result(check, dr, info_arg, immu)
                     if write and cdr:
                         dataset.checks.setdefault(subcheck, []).append(cdr)
+
                 if not write:
                     for entry in checks_expected.get(subcheck, []):
-
                         check_listed_result(check, entry, info_arg, immu)
 
         immu.test(' at end of subcheck loop %r ' % subcheck)

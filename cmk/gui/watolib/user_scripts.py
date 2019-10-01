@@ -51,7 +51,7 @@ def load_user_scripts(what):
     try:
         if what == "notifications":
             # Support for setup.sh
-            not_dir = cmk.utils.paths.notifications_dir
+            not_dir = str(cmk.utils.paths.notifications_dir)
     except Exception:
         pass
 
@@ -74,15 +74,15 @@ def _load_user_scripts_from(adir):
             if os.path.isfile(path) and os.access(path, os.X_OK):
                 info = {"title": entry, "bulk": False}
                 try:
-                    lines = file(path)
+                    lines = open(path)
                     next(lines)
-                    line = lines.next().decode("utf-8").strip()
+                    line = next(lines).decode("utf-8").strip()
                     if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
-                        line = lines.next().strip()
+                        line = next(lines).strip()
                     if line.startswith("#"):
                         info["title"] = line.lstrip("#").strip().split("#", 1)[0]
                     while True:
-                        line = lines.next().strip()
+                        line = next(lines).strip()
                         if not line.startswith("#") or ":" not in line:
                             break
                         key, value = line[1:].strip().split(":", 1)
@@ -103,8 +103,7 @@ def load_notification_scripts():
 def user_script_choices(what):
     scripts = load_user_scripts(what)
     choices = [(name, info["title"]) for (name, info) in scripts.items()]
-    choices.sort(cmp=lambda a, b: cmp(a[1], b[1]))
-    choices = [(k, _u(v)) for k, v in choices]
+    choices = [(k, _u(v)) for k, v in sorted(choices, key=lambda x: x[1])]
     return choices
 
 

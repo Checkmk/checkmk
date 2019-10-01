@@ -39,42 +39,34 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetappSystemtime(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_netapp_systemtime():
+    return TextAscii(
+        title=_("Name of the node"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "netapp_systemtime"
 
-    @property
-    def title(self):
-        return _("Netapp systemtime")
+def _parameter_valuespec_netapp_systemtime():
+    return Dictionary(elements=[
+        ("levels",
+         Tuple(
+             title=_("Set upper levels for the time difference"),
+             help=_("Here you can Set upper levels for the time difference "
+                    "between agent and system time."),
+             elements=[
+                 Age(title=_("Warning if at")),
+                 Age(title=_("Critical if at")),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Tuple(
-                 title=_("Set upper levels for the time difference"),
-                 help=_("Here you can Set upper levels for the time difference "
-                        "between agent and system time."),
-                 elements=[
-                     Age(title=_("Warning if at")),
-                     Age(title=_("Critical if at")),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the node"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="netapp_systemtime",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_netapp_systemtime,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_netapp_systemtime,
+        title=lambda: _("Netapp systemtime"),
+    ))

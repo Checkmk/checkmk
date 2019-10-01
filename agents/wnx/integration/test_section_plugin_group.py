@@ -101,7 +101,8 @@ def expected_output():
             r'\s+(\d+\.\d+\.\d+\.\d+|\[::\d*\]|'
             r'\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+'
             r'\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET'
-            r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK)'
+            r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK'
+            r'|SCHLIESSEND|ZULETZT_ACK)'
             r'|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*'
             r'|\-?\d+( \d+)+ [\w\(\)]+')
         if Globals.plugintype == 'plugins':
@@ -173,4 +174,6 @@ def manage_plugins(request, plugin_dir):
 
 def test_section_plugin_group(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
+    if Globals.executionmode == 'async+cached' and Globals.plugintype == 'local':
+        pytest.skip('This test is not conform with latest changes on Monitoring Site')
     local_test(expected_output, actual_output, testfile, request.node.name)

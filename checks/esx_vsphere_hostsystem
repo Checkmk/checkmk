@@ -89,21 +89,16 @@ def check_esx_vsphere_hostsystem_cpu(item, params, info):
     num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
     num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
     used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
-    mhz_per_core = float(data['hardware.cpuInfo.hz'][0]) / 1000.0 / 1000.0
+    mhz_per_core = (float(data['hardware.cpuInfo.hz'][0]) / 1000.0) / 1000.0
     total_mhz = mhz_per_core * num_cores
 
     usage = used_mhz / total_mhz * 100
+    for res in check_cpu_util(usage, params):
+        yield res
 
-    infotext = "%.1f%%" % usage
-
-    # Convert legacy parameters
-    state, infotext, perfdata = next(check_cpu_util(usage, params))
-
-    infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0)
-    infotext += ", %d sockets, %d cores/socket, %d threads" % (num_sockets, num_cores / num_sockets,
-                                                               num_threads)
-
-    return (state, infotext, perfdata)
+    yield 0, "%.2fGHz/%.2fGHz" % (used_mhz / 1000.0, total_mhz / 1000.0)
+    yield 0, "%d sockets, %d cores/socket, %d threads" % (num_sockets, num_cores / num_sockets,
+                                                          num_threads)
 
 
 check_info['esx_vsphere_hostsystem.cpu_usage'] = {
@@ -191,7 +186,7 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
         num_cores = int(node['hardware.cpuInfo.numCpuCores'])
         num_threads = int(node['hardware.cpuInfo.numCpuThreads'])
         used_mhz = float(node['summary.quickStats.overallCpuUsage'])
-        mhz_per_core = float(node['hardware.cpuInfo.hz']) / 1024.0 / 1024.0
+        mhz_per_core = (float(node['hardware.cpuInfo.hz']) / 1024.0) / 1024.0
         total_mhz = mhz_per_core * num_cores
         return used_mhz, total_mhz, num_threads
 
@@ -224,16 +219,17 @@ def check_esx_vsphere_hostsystem_cpu_util_cluster(item, params, info):
     sorted_params = sorted(params, reverse=True)
     for count, levels in sorted_params:
         if node_count >= count:
-            state, infotext, perfdata = next(check_cpu_util(usage, levels))
+            these_levels = levels
             break
     else:
-        state, infotext, perfdata = next(check_cpu_util(usage, None))
+        these_levels = None
+
+    for res in check_cpu_util(usage, these_levels):
+        yield res
 
     yield 0, "%d Nodes" % node_count
     yield 0, "%.2fGHz/%.2fGHz" % (sum_used / 1024.0, sum_total / 1024.0)
     yield 0, "%d threads" % sum_threads
-
-    yield state, infotext, perfdata
 
 
 check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {

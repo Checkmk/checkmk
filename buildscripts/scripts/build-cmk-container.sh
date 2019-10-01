@@ -56,6 +56,7 @@ if [ $EDITION = raw ]; then
     docker tag "checkmk/check-mk-${EDITION}:${VERSION}" "checkmk/check-mk-${EDITION}:latest"
 
     log "Lade zu Docker-Hub hoch..."
+    docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
     DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:${VERSION}"
     DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}:${BRANCH}-latest"
     if [ "$SET_LATEST_TAG" = "yes" ]; then

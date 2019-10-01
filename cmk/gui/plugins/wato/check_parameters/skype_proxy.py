@@ -39,50 +39,42 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSkypeProxy(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_skype_proxy():
+    return TextAscii(
+        title=_("Name of the Proxy"),
+        help=_("The name of the Data Proxy"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "skype_proxy"
 
-    @property
-    def title(self):
-        return _("Skype for Business Data Proxy")
+def _parameter_valuespec_skype_proxy():
+    return Dictionary(
+        help=_("Warn/Crit levels for various Skype for Business "
+               "(formerly known as Lync) metrics"),
+        elements=[
+            ('throttled_connections',
+             Dictionary(
+                 title=_("Throttled Server Connections"),
+                 elements=[
+                     ("upper",
+                      Tuple(elements=[
+                          Integer(title=_("Warning at"), default_value=3),
+                          Integer(title=_("Critical at"), default_value=6),
+                      ],)),
+                 ],
+                 optional_keys=[],
+             )),
+        ],
+        optional_keys=[],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("Warn/Crit levels for various Skype for Business "
-                   "(formerly known as Lync) metrics"),
-            elements=[
-                ('throttled_connections',
-                 Dictionary(
-                     title=_("Throttled Server Connections"),
-                     elements=[
-                         ("upper",
-                          Tuple(elements=[
-                              Integer(title=_("Warning at"), default_value=3),
-                              Integer(title=_("Critical at"), default_value=6),
-                          ],)),
-                     ],
-                     optional_keys=[],
-                 )),
-            ],
-            optional_keys=[],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the Proxy"),
-            help=_("The name of the Data Proxy"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="skype_proxy",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_skype_proxy,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_skype_proxy,
+        title=lambda: _("Skype for Business Data Proxy"),
+    ))

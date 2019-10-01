@@ -15,10 +15,10 @@ discovery = {
 checks = {
     'fan': [('1', {
         'lower': (3000, 2800)
-    }, [(0, 'Speed at 4687 RPM', [])]),
+    }, [(0, 'Speed: 4687 RPM', [])]),
             ('2', {
                 'lower': (3000, 2800)
-            }, [(0, 'Speed at 4560 RPM', [])])],
+            }, [(0, 'Speed: 4560 RPM', [])])],
     'power': [('1', {}, [(0, 'No problems found', [])]), ('2', {}, [(0, 'No problems found', [])])],
     'temp': [('1', {
         'levels': (55, 60)

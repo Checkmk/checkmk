@@ -23,20 +23,22 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import logging
 import os
 import json
 import time
 
+import six
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 from livestatus import MKLivestatusNotFoundError
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.debug
-import cmk.utils.log
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.prediction")
 
 
 # Check wether a certain time stamp lies with in daylight saving time (DST)
@@ -66,12 +68,25 @@ class TimeSeries(object):
       which means they are at the end of the interval.
     - The Series describes the interval [start; end[
     - Start has no associated value to it.
+
+    args:
+        data : List
+            Includes [start, end, step, *values]
+        timewindow: tuple
+            describes (start, end, step), in this case data has only values
+
     """
-    def __init__(self, data):
-        self.start = data[0]
-        self.end = data[1]
-        self.step = data[2]
-        self.values = data[3:]
+    def __init__(self, data, timewindow=None):
+        if timewindow:
+            self.start = timewindow[0]
+            self.end = timewindow[1]
+            self.step = timewindow[2]
+            self.values = data
+        else:
+            self.start = data[0]
+            self.end = data[1]
+            self.step = data[2]
+            self.values = data[3:]
 
     @property
     def twindow(self):
@@ -101,13 +116,47 @@ class TimeSeries(object):
         return list(zip(rrd_timestamps(self.twindow), self.values))
 
     def __repr__(self):
-        return str(list(self.twindow) + self.values)
+        return "TimeSeries(%s, timewindow=%s)" % (self.values, self.twindow)
 
     def __eq__(self, other):
         if not isinstance(other, TimeSeries):
             return NotImplemented
 
         return self.start == other.start and self.end == other.end and self.step == other.step and self.values == other.values
+
+    def __getitem__(self, i):
+        return self.values[i]
+
+    def __len__(self):
+        return len(self.values)
+
+
+def lq_logic(filter_condition, values, join):
+    """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
+    if isinstance(values, six.string_types):
+        values = [values]
+    conds = ["%s %s" % (filter_condition, livestatus.lqencode(x)) for x in values]
+    if len(conds) > 1:
+        return "\n".join(conds) + "\n%s: %d\n" % (join, len(conds))
+    if conds:
+        return conds[0] + '\n'
+    return ""
+
+
+def livestatus_lql(host_names, columns, service_descriptions=None):
+    if isinstance(columns, list):
+        columns = " ".join(columns)
+
+    query_filter = "Columns: %s\n" % columns
+    query_filter += lq_logic("Filter: host_name =", host_names, "Or")
+
+    if service_descriptions == "_HOST_" or service_descriptions is None:
+        what = 'host'
+    else:
+        what = 'service'
+        query_filter += lq_logic("Filter: service_description =", service_descriptions, "Or")
+
+    return "GET %ss\n%s" % (what, query_filter)
 
 
 def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime, max_entries=400):
@@ -135,14 +184,11 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
 
     step = 1
     rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
+    point_range = ":".join(
+        livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
+    column = "rrddata:m1:%s:%s" % (rpn, point_range)
 
-    lql = "GET services\n" \
-          "Columns: rrddata:m1:%s:%s:%s:%s:%s\n" \
-          "OutputFormat: python\n" \
-          "Filter: host_name = %s\n" \
-          "Filter: description = %s\n" % tuple(map(livestatus.lqencode,
-                                                   map(str, (rpn, fromtime, untiltime, step, max_entries,
-                                                             hostname, service_description))))
+    lql = livestatus_lql(hostname, column, service_description) + "OutputFormat: python\n"
 
     try:
         connection = livestatus.SingleSiteConnection("unix:%s" %
@@ -188,17 +234,17 @@ def clean_prediction_files(pred_file, force=False):
     # manual removal of the files. Clean this up.
     for file_path in [pred_file, pred_file + '.info']:
         if os.path.exists(file_path) and (os.stat(file_path).st_size == 0 or force):
-            logger.verbose("Removing obsolete prediction %s", os.path.basename(file_path))
+            logger.log(VERBOSE, "Removing obsolete prediction %s", os.path.basename(file_path))
             os.remove(file_path)
 
 
 def retrieve_data_for_prediction(info_file, timegroup):
     try:
-        return json.loads(file(info_file).read())
+        return json.loads(open(info_file).read())
     except IOError:
-        logger.verbose("No previous prediction for group %s available.", timegroup)
+        logger.log(VERBOSE, "No previous prediction for group %s available.", timegroup)
     except ValueError:
-        logger.verbose("Invalid prediction file %s, old format", info_file)
+        logger.log(VERBOSE, "Invalid prediction file %s, old format", info_file)
         pred_file = info_file[:-5] if info_file.endswith(".info") else info_file
         clean_prediction_files(pred_file, force=True)
     return None

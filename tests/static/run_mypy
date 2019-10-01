@@ -2,13 +2,15 @@
 # mypy_path in mypy.ini doesn't support relative paths, so we need this wrapper... :-/
 cd $(dirname $0)
 
-make --silent .venv
+VENV_PATH=../../virtual-envs/3.7/.venv
 
-if [ ! -f ./.venv/bin/mypy ]; then
+make -C ../.. --silent virtual-envs/3.7/.venv
+
+if [ ! -f $VENV_PATH/bin/mypy ]; then
     for LAST_ARG; do :; done
-    echo "$LAST_ARG:1: error: Could not find ./.venv/bin/mypy"
+    echo "$LAST_ARG:1: error: Could not find $VENV_PATH/bin/mypy"
     exit 1
 fi
 
 REPO_PATH=$(realpath ../..)
-MYPYPATH=$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$(realpath typeshed) exec ./.venv/bin/mypy "$@"
+MYPYPATH=$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$(realpath typeshed) exec $VENV_PATH/bin/mypy "$@"

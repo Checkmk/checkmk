@@ -1,8 +1,10 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import subprocess
 import gettext
-import pytest
+import pytest  # type: ignore
+import six
 from pathlib2 import Path
 from testlib import cmk_path
 
@@ -12,13 +14,13 @@ import cmk.gui.i18n as i18n
 
 @pytest.fixture(autouse=True)
 def locale_paths(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "locale_dir", "%s/locale" % cmk_path())
-    monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", str(tmp_path / "locale"))
+    monkeypatch.setattr(cmk.utils.paths, "locale_dir", Path("%s/locale" % cmk_path()))
+    monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
 @pytest.fixture(autouse=True)
 def compile_builtin_po_files(locale_paths):
-    builtin_dir = Path(cmk.utils.paths.locale_dir) / "de" / "LC_MESSAGES"
+    builtin_dir = cmk.utils.paths.locale_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
     if po_file.exists() and not mo_file.exists():  # pylint: disable=no-member
@@ -34,7 +36,7 @@ def local_translation():
 
 
 def _add_local_translation(lang, alias, texts):
-    local_dir = Path(cmk.utils.paths.local_locale_dir) / lang / "LC_MESSAGES"
+    local_dir = cmk.utils.paths.local_locale_dir / lang / "LC_MESSAGES"
     local_dir.mkdir(parents=True)  # pylint: disable=no-member
     po_file = local_dir / "multisite.po"
     mo_file = local_dir / "multisite.mo"
@@ -67,7 +69,7 @@ msgstr "%s"
 
 def test_underscore_without_localization():
     assert i18n.get_current_language() is None
-    assert isinstance(i18n._("bla"), unicode)
+    assert isinstance(i18n._("bla"), six.text_type)
     assert i18n._("bla") == u"bla"
 
 
@@ -91,7 +93,7 @@ def test_init_language_only_builtin():
     assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "bla"
 
 
@@ -102,7 +104,7 @@ def test_init_language_with_local_modification(local_translation):
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
 
@@ -113,13 +115,13 @@ def test_init_language_with_local_modification_fallback(local_translation):
     assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
 
     translated = trans.ugettext("bla")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "blub"
 
     # This string is localized in the standard file, not in the locally
     # overridden file
     translated = trans.ugettext("Age")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "Alter"
 
 
@@ -127,20 +129,20 @@ def test_init_language_with_package_localization(local_translation):
     trans = i18n._init_language("de")
 
     translated = trans.ugettext("pkg1")
-    assert isinstance(translated, unicode)
+    assert isinstance(translated, six.text_type)
     assert translated == "lala"
 
 
 def test_get_language_alias():
-    assert isinstance(i18n.get_language_alias(None), unicode)
+    assert isinstance(i18n.get_language_alias(None), six.text_type)
     assert i18n.get_language_alias(None) == "English"
 
-    assert isinstance(i18n.get_language_alias("de"), unicode)
+    assert isinstance(i18n.get_language_alias("de"), six.text_type)
     assert i18n.get_language_alias("de") == "German"
 
 
 def test_get_language_local_alias(local_translation):
-    assert isinstance(i18n.get_language_alias("de"), unicode)
+    assert isinstance(i18n.get_language_alias("de"), six.text_type)
     assert i18n.get_language_alias("de") == u"Äxtended German"
 
 

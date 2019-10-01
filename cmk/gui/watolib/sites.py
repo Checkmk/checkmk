@@ -303,7 +303,7 @@ class SiteManagement(object):
             return config.default_single_site_configuration()
 
         config_vars = {"sites": {}}
-        execfile(cls._sites_mk(), config_vars, config_vars)
+        exec (open(cls._sites_mk()).read(), config_vars, config_vars)
 
         if not config_vars["sites"]:
             return config.default_single_site_configuration()
@@ -578,6 +578,7 @@ class CEESiteManagement(SiteManagement):
         return domains
 
 
+# TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
     def __init__(self, **kwargs):
         kwargs["elements"] = [
@@ -586,7 +587,7 @@ class LivestatusViaTCP(Dictionary):
                  title=_("TCP port"),
                  minvalue=1,
                  maxvalue=65535,
-                 default_value=kwargs.get("tcp_port", 6557),
+                 default_value=kwargs.pop("tcp_port", 6557),
              )),
             ("only_from",
              ListOfStrings(

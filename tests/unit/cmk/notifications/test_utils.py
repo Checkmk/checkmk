@@ -2,33 +2,108 @@ import pytest
 from cmk.notification_plugins import utils
 
 
-@pytest.mark.parametrize("context, link_template, testkey, result", [
-    ({
-        "PARAMETER_URL_PREFIX": "https://host/site/check_mk",
-        "HOSTURL": "/view?key=val",
-        "HOSTNAME": "site",
-        "WHAT": 'HOST',
-    }, "<{}|{}>", "LINKEDHOSTNAME", "<https://host/site/view?key=val|site>"),
-    ({
-        "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
-        "MONITORING_HOST": "localhost",
-        "OMD_SITE": "testsite",
-        "HOSTURL": "/view?key=val",
-        "SERVICEURL": "/view?key=val",
-        "HOSTNAME": "site1",
-        "SERVICEDESC": "first",
-        "WHAT": 'SERVICE',
-    }, '<a href="{}">{}</a>', "LINKEDSERVICEDESC",
-     '<a href="http://localhost/testsite/view?key=val">first</a>'),
-    ({
-        "HOSTURL": "/view?key=val",
-        "HOSTNAME": "site2",
-        "WHAT": 'SERVICE',
-    }, '<a href="{}">{}</a>', "LINKEDSERVICEDESC", ''),
+@pytest.mark.parametrize(
+    "context, result",
+    [
+        (  # host context with url parameter
+            {
+                "PARAMETER_URL_PREFIX": "https://host/site/check_mk",
+                "HOSTURL": "/check_mk/index.py?start_url=view.py?view_name=hoststatus&host=test&site=heute",
+                "WHAT": 'HOST',
+            },
+            "https://host/site/check_mk/index.py?start_url=view.py?view_name=hoststatus&host=test&site=heute",
+        ),
+        (  # service context with url parameter
+            {
+                "PARAMETER_URL_PREFIX_AUTOMATIC": "https",
+                "MONITORING_HOST": "localhost",
+                "OMD_SITE": "testsite",
+                "HOSTURL": "/view?key=val",
+                "WHAT": 'SERVICE',
+            },
+            "https://localhost/testsite/view?key=val",
+        ),
+        (  # host context withour url parameter
+            {
+                "WHAT": 'HOST',
+            },
+            "",
+        ),
+        (  # service context without url parameter
+            {
+                "WHAT": 'SERVICE',
+            },
+            "",
+        ),
+    ])
+def test_host_url_from_context(context, result):
+    host_url = utils.host_url_from_context(context)
+    assert host_url == result
+
+
+@pytest.mark.parametrize(
+    "context, result",
+    [
+        (  # host context with url parameter
+            {
+                "PARAMETER_URL_PREFIX": "https://host/site/check_mk",
+                "WHAT": 'HOST',
+            },
+            "",
+        ),
+        (  # service context with url parameter
+            {
+                "PARAMETER_URL_PREFIX_AUTOMATIC": "http",
+                "MONITORING_HOST": "localhost",
+                "OMD_SITE": "testsite",
+                "SERVICEURL": '/check_mk/index.py?start_url=view.py?view_name=service&host=test&service=foos&site=heute',
+                "WHAT": 'SERVICE',
+            },
+            "http://localhost/testsite/check_mk/index.py?start_url=view.py?view_name=service&host=test&service=foos&site=heute",
+        ),
+        (  # host context without url parameter
+            {
+                "HOSTURL": "/view?key=val",
+                "HOSTNAME": "site2",
+                "WHAT": 'SERVICE',
+            },
+            "",
+        ),
+        (  # service context without url parameter
+            {
+                "WHAT": 'SERVICE',
+            },
+            "",
+        ),
+    ])
+def test_service_url_from_context(context, result):
+    service_url = utils.service_url_from_context(context)
+    assert service_url == result
+
+
+@pytest.mark.parametrize("template, url, text, expected_link", [
+    (
+        "<%s|%s>",
+        "https://host/site/view?key=val",
+        "site",
+        "<https://host/site/view?key=val|site>",
+    ),
+    (
+        '<a href="%s">%s</a>',
+        'http://localhost/testsite/view?key=val',
+        'first',
+        '<a href="http://localhost/testsite/view?key=val">first</a>',
+    ),
+    (
+        '<a href="%s">%s</a>',
+        '',
+        'host1',
+        'host1',
+    ),
 ])
-def test_extend_with_link_urls(context, link_template, testkey, result):
-    utils.extend_context_with_link_urls(context, link_template)
-    assert context[testkey] == result
+def test_format_link(template, url, text, expected_link):
+    actual_link = utils.format_link(template, url, text)
+    assert actual_link == expected_link
 
 
 @pytest.mark.parametrize("context, template, result", [

@@ -32,23 +32,24 @@ import abc
 import json
 import re
 import subprocess
-import time
+import time  # pylint: disable=unused-import
+# NOTE: We have a clash with Tuple here! :-/
 import typing  # pylint: disable=unused-import
-from typing import Callable, Optional, List, Dict  # pylint: disable=unused-import
+from typing import Tuple as TypingOptional, Callable, Text, Union  # pylint: disable=unused-import
 
 import six
 
 import cmk.utils.plugin_registry
 import cmk.utils.store
 
-from cmk.gui.globals import current_app
+from cmk.gui.globals import g
 import cmk.gui.mkeventd
 import cmk.gui.config as config
+from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations  # pylint: disable=unused-import
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
-import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -180,7 +181,7 @@ from cmk.gui.watolib import (
     ACResultWARN,
     ACResultOK,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainCore,
     ConfigDomainOMD,
     ConfigDomainEventConsole,
@@ -252,6 +253,7 @@ def monitoring_macro_help():
         "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
+# TODO: Change to factory
 class UserIconOrAction(DropdownChoice):
     def __init__(self, **kwargs):
         empty_text = _("In order to be able to choose actions here, you need to "
@@ -260,7 +262,6 @@ class UserIconOrAction(DropdownChoice):
 
         kwargs.update({
             'choices': self.list_user_icons_and_actions,
-            'allow_empty': False,
             'empty_text': empty_text,
             'help': kwargs.get('help', '') + ' ' + empty_text,
         })
@@ -528,7 +529,7 @@ def _translation_elements(what):
 # TODO: Refactor this and all other childs of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
-    def __init__(self, what, choices, **kwargs):
+    def __init__(self, what, choices, no_selection=None, **kwargs):
         kwargs.setdefault(
             'empty_text',
             _('You have not defined any %s group yet. Please '
@@ -536,8 +537,7 @@ class _GroupSelection(ElementSelection):
         super(_GroupSelection, self).__init__(**kwargs)
         self._what = what
         self._choices = choices
-        # Allow to have "none" entry with the following title
-        self._no_selection = kwargs.get("no_selection")
+        self._no_selection = no_selection
 
     def get_elements(self):
         elements = self._choices()
@@ -597,10 +597,18 @@ def passwordstore_choices():
             for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
 
 
-class PasswordFromStore(CascadingDropdown):
-    def __init__(self, *args, **kwargs):
-        kwargs["choices"] = [
-            ("password", _("Explicit"), Password(allow_empty=kwargs.get("allow_empty", True),)),
+def PasswordFromStore(  # pylint: disable=redefined-builtin
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        allow_empty=True,  # type: bool
+        size=25,  # type: int
+):  # -> CascadingDropdown
+    return CascadingDropdown(
+        choices=[
+            ("password", _("Explicit"), Password(
+                allow_empty=allow_empty,
+                size=size,
+            )),
             ("store", _("From password store"),
              DropdownChoice(
                  choices=passwordstore_choices,
@@ -611,15 +619,24 @@ class PasswordFromStore(CascadingDropdown):
                                         "are not permitted to use this password. Please choose "
                                         "another one."),
              )),
-        ]
-        kwargs["orientation"] = "horizontal"
+        ],
+        orientation="horizontal",
+    )
 
-        CascadingDropdown.__init__(self, *args, **kwargs)
 
-
-def IndividualOrStoredPassword(*args, **kwargs):
+def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+        title=None,  # type: TypingOptional[Text]
+        help=None,  # type: TypingOptional[Union[Text, Callable[[], Text]]]
+        allow_empty=True,  # type: bool
+        size=25,  # type: int
+):
     return Transform(
-        PasswordFromStore(*args, **kwargs),
+        PasswordFromStore(
+            title=title,
+            help=help,
+            allow_empty=allow_empty,
+            size=size,
+        ),
         forth=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )
 
@@ -696,32 +713,28 @@ def register_check_parameters(subgroup,
 
     # Register rule for discovered checks
     if has_inventory:
-        class_attrs = {
+        kwargs = {
             "group": subgroup,
-            "title": title,
+            "title": lambda: title,
             "match_type": match_type,
             "is_deprecated": deprecated,
-            "parameter_valuespec": valuespec,
+            "parameter_valuespec": lambda: valuespec,
             "check_group_name": checkgroup,
-            "item_spec": itemspec,
+            "create_manual_check": register_static_check,
         }
+
+        if itemspec:
+            kwargs["item_spec"] = lambda: itemspec
 
         base_class = CheckParameterRulespecWithItem if itemspec is not None else CheckParameterRulespecWithoutItem
 
-        rulespec_class = type("LegacyCheckParameterRulespec%s" % checkgroup.title(), (base_class,),
-                              class_attrs)
-        rulespec_registry.register(rulespec_class)
+        rulespec_registry.register(base_class(**kwargs))
 
     if not (valuespec and has_inventory) and register_static_check:
         raise MKGeneralException("Sorry, registering manual check parameters without discovery "
                                  "check parameters is not supported anymore using the old API. "
                                  "Please register the manual check rulespec using the new API. "
                                  "Checkgroup: %s" % checkgroup)
-
-    if has_inventory and not register_static_check:
-        # Remove the static checks rulespec that was created during the checkgroup
-        # rulespec registration by the registry
-        del rulespec_registry["static_checks:%s" % checkgroup]
 
 
 @rulespec_group_registry.register
@@ -736,10 +749,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def help(self):
-        return _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
-                 "Use these rules in order to define parameters like filesystem levels, "
-                 "levels for CPU load and other things for services that have been found "
-                 "by the automatic service discovery of Check_MK.")
+        return _("Parameters for checks found by the Check_MK service discovery")
 
 
 @rulespec_group_registry.register
@@ -1016,7 +1026,6 @@ def Levels(**kwargs):
     return Alternative(
         title=title,
         help=help_txt,
-        show_titles=False,
         style="dropdown",
         elements=[
             FixedValue(
@@ -1027,14 +1036,18 @@ def Levels(**kwargs):
             Tuple(
                 title=_("Fixed Levels"),
                 elements=[
-                    Float(unit=unit,
-                          title=_("Warning at"),
-                          default_value=default_levels[0],
-                          allow_int=True),
-                    Float(unit=unit,
-                          title=_("Critical at"),
-                          default_value=default_levels[1],
-                          allow_int=True),
+                    Float(
+                        unit=unit,
+                        title=_("Warning at"),
+                        default_value=default_levels[0],
+                        allow_int=True,
+                    ),
+                    Float(
+                        unit=unit,
+                        title=_("Critical at"),
+                        default_value=default_levels[1],
+                        allow_int=True,
+                    ),
                 ],
             ),
             PredictiveLevels(default_difference=default_difference,),
@@ -1087,9 +1100,7 @@ class ConfigHostname(TextAsciiAutocomplete):
         return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
 
 
-class EventsMode(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class EventsMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1123,13 +1134,10 @@ class EventsMode(WatoMode):
                    choices = [
                        ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
                        ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
-
                        ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
                        ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
-
                        ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
                        ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-
                        ( '?r', _("any")         + u" ➤ " + _("UP")),
                        ( '?d', _("any")         + u" ➤ " + _("DOWN")),
                        ( '?u', _("any")         + u" ➤ " + _("UNREACHABLE")),
@@ -1148,27 +1156,21 @@ class EventsMode(WatoMode):
                    choices = [
                        ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
                        ( 'rr', _("OK")      + u" ➤ " + _("OK")),
-
                        ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
                        ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
-
                        ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
                        ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
                        ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
-
                        ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
                        ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
                        ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
-
                        ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
                        ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
                        ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-
                        ( '?r', _("any") + u" ➤ " + _("OK")),
                        ( '?w', _("any") + u" ➤ " + _("WARN")),
                        ( '?c', _("any") + u" ➤ " + _("CRIT")),
                        ( '?u', _("any") + u" ➤ " + _("UNKNOWN")),
-
                    ] + add_choices,
                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', ] + add_default,
               )
@@ -1203,7 +1205,7 @@ class EventsMode(WatoMode):
                             ( "match_id",    _("Match the internal identifier")),
                             ( "match_alias", _("Match the alias"))
                         ],
-                        default = "match_id"
+                        default_value = "match_id"
                       ),
                       ListOfStrings(
                           help = _("The service group alias must match one of the following regular expressions."
@@ -1226,7 +1228,7 @@ class EventsMode(WatoMode):
                             ( "match_id",    _("Match the internal identifier")),
                             ( "match_alias", _("Match the alias"))
                         ],
-                        default = "match_id"
+                        default_value = "match_id"
                       ),
                       ListOfStrings(
                           help = _("The service group alias must not match one of the following regular expressions. "
@@ -1354,10 +1356,10 @@ class EventsMode(WatoMode):
                                  _("Changed position of %s %d") % (what_title, from_pos))
 
 
-def sort_sites(sitelist):
-    # type: (List[typing.Tuple[str, Dict]]) -> List[typing.Tuple[str, Dict]]
+def sort_sites(sites):
+    # type: (SiteConfigurations) -> typing.List[typing.Tuple[SiteId, SiteConfiguration]]
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sitelist,
+    return sorted(sites.iteritems(),
                   key=lambda sid_s: (sid_s[1].get("replication"), sid_s[1].get("alias"), sid_s[0]))
 
 
@@ -1707,9 +1709,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(object):
-    __metaclass__ = abc.ABCMeta
-
+class NotificationParameter(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -1767,7 +1767,7 @@ class DictHostTagCondition(Transform):
             ListOfMultiple(
                 title=title,
                 help=help_txt,
-                choices=self._get_tag_group_choices(),
+                choices=self._get_cached_tag_group_choices(),
                 choice_page_name="ajax_dict_host_tag_condition_get_choice",
                 add_label=_("Add tag condition"),
                 del_label=_("Remove tag condition"),
@@ -1775,6 +1775,13 @@ class DictHostTagCondition(Transform):
             forth=self._to_valuespec,
             back=self._from_valuespec,
         )
+
+    def _get_cached_tag_group_choices(self):
+        # In case one has configured a lot of tag groups / id recomputing this for
+        # every DictHostTagCondition instance takes a lot of time
+        if "tag_group_choices" not in g:
+            g.tag_group_choices = self._get_tag_group_choices()
+        return g.tag_group_choices
 
     def _get_tag_group_choices(self):
         choices = []
@@ -1870,7 +1877,6 @@ class DictHostTagCondition(Transform):
                     ("or", _("one of"), tag_id_choice),
                     ("nor", _("none of"), tag_id_choice),
                 ],
-                show_titles=False,
                 orientation="horizontal",
                 default_value=("is", tag_choices[0][0]),
             ),
@@ -1982,9 +1988,6 @@ class HostTagCondition(ValueSpec):
                     varprefix,
                     _("The list of host tags must only contain strings "
                       "but also contains %r") % x)
-
-    def validate_value(self, value, varprefix):
-        pass
 
     def _render_condition_editor(self, varprefix, tag_specs):
         """Render HTML input fields for editing a tag based condition"""
@@ -2188,7 +2191,7 @@ def get_search_expression():
 
 
 def get_hostnames_from_checkboxes(filterfunc=None):
-    # type: (Optional[Callable]) -> List[str]
+    # type: (typing.Optional[typing.Callable]) -> typing.List[str]
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     show_checkboxes = html.request.var("show_checkboxes") == "1"
@@ -2211,19 +2214,6 @@ def get_hosts_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     folder = watolib.Folder.current()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
-
-
-class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
-    def initialize_environment(self):
-        super(WatoBackgroundProcess, self).initialize_environment()
-
-        if self._jobstatus.get_status_from_file().get("lock_wato"):
-            cmk.utils.store.release_all_locks()
-            cmk.utils.store.lock_exclusive()
-
-
-class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
-    _background_process_class = WatoBackgroundProcess
 
 
 class FullPathFolderChoice(DropdownChoice):
@@ -2264,8 +2254,8 @@ def rule_option_elements(disabling=True):
 
 
 def get_check_information():
-    cache_id = "automation_get_check_information"
-    if cache_id not in current_app.g:
-        current_app.g[cache_id] = watolib.check_mk_local_automation("get-check-information")
+    if 'automation_get_check_information' not in g:
+        g.automation_get_check_information = watolib.check_mk_local_automation(
+            "get-check-information")
 
-    return current_app.g[cache_id]
+    return g.automation_get_check_information

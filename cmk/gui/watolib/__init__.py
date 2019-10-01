@@ -272,12 +272,12 @@ from cmk.gui.watolib.utils import (
     has_agent_bakery,
     site_neutral_path,
 )
-
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
 from cmk.gui.plugins.watolib.utils import (
-    ConfigDomain,
+    ABCConfigDomain,
     config_domain_registry,
     config_variable_registry,
     wato_fileheader,
@@ -342,12 +342,11 @@ def _create_sample_config():
     logger.debug("Start creating the sample config")
     for generator in sample_config_generator_registry.get_generators():
         try:
-            logger.debug("Starting [%s]" % generator.ident())
+            logger.debug("Starting [%s]", generator.ident())
             generator.generate()
-            logger.debug("Finished [%s]" % generator.ident())
+            logger.debug("Finished [%s]", generator.ident())
         except Exception:
-            logger.error("Exception in sample config generator [%s]" % generator.ident(),
-                         exc_info=True)
+            logger.exception("Exception in sample config generator [%s]", generator.ident())
 
     logger.debug("Finished creating the sample config")
 
@@ -426,6 +425,11 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         })
 
+        content = "# Written by WATO Basic config (%s)\n\n" % time.strftime("%Y-%m-%d %H:%M:%S")
+        content += 'df_use_fs_used_as_metric_name = True\n'
+        store.save_file(os.path.join(cmk.utils.paths.omd_root, 'etc/check_mk/conf.d/fs_cap.mk'),
+                        content)
+
         # A contact group for all hosts and services
         groups = {
             "contact": {
@@ -497,6 +501,34 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     'description': u'Put all hosts into the contact group "all"'
                 },
             },],
+
+            # Docker container specific host check commands
+            'host_check_commands': [{
+                'condition': {
+                    'host_labels': {
+                        u'cmk/docker_object': u'container'
+                    }
+                },
+                'value': ('service', u'Docker container status'),
+                'options': {
+                    'description': u'Make all docker container host states base on the "Docker container status" service',
+                },
+            },],
+
+            # Enable HW/SW inventory + status data inventory for docker containers by default to
+            # simplify the setup procedure of docker monitoring
+            'active_checks': {
+                'cmk_inv': [{
+                    'condition': {
+                        'host_labels': {
+                            u'cmk/docker_object': u'node'
+                        }
+                    },
+                    'value': {
+                        'status_data_inventory': True
+                    },
+                },]
+            },
 
             # Interval for HW/SW-Inventory check
             'extra_service_conf': {

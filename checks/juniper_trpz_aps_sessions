@@ -76,8 +76,11 @@ def parse_juniper_trpz_aps_sessions(info):
                 parsed[name].setdefault("passive_node", node_info)
 
         for data in radios:
-            radio_node = data[0]
-            radio_oid, radio_number = data[1].rsplit('.', 1)
+            radio_node, radio_data = data[:2]
+            try:
+                radio_oid, radio_number = radio_data.rsplit('.', 1)
+            except ValueError:
+                continue
             for ap_data in parsed.itervalues():
                 if radio_oid == ap_data.get('end_oid') and \
                    radio_node == ap_data.get('active_node'):
@@ -130,7 +133,7 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
     ap_sessions = 0
     noise_floor_radios = []
 
-    for radio_number, radio_data in data.get('radios', {}).items():
+    for radio_number, radio_data in sorted(data.get('radios', {}).items()):
         try:
             radio_data_noise_floor = int(radio_data['noise_floor'])
             noise_floor_radios.append(radio_data_noise_floor)

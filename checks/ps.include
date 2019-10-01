@@ -31,7 +31,7 @@ factory_settings["ps_default_levels"] = {
 
 ps_info = collections.namedtuple(
     "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
-                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime'))
+                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)
 
@@ -51,8 +51,8 @@ def ps_wato_configured_inventory_rules(invrules):
         if "cpu_rescale_max" not in default_params:
             default_params["cpu_rescale_max"] = None
 
-        inventory_specs.append(
-            (value['descr'], value.get('match'), value.get('user'), default_params))
+        inventory_specs.append((value['descr'], value.get('match'), value.get('user'),
+                                value.get('cgroup', (None, False)), default_params))
 
     return inventory_specs
 
@@ -62,16 +62,18 @@ def inventory_ps_common(invrules, parsed):
 
     inventory = []
     for line in parsed:
-        for servicedesc, pattern, userspec, default_params in inventory_specs:
+        for servicedesc, pattern, userspec, cgroupspec, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
-            process_line = line[1:]
-            matches = process_matches(process_line, pattern, userspec)
+            process_info, command_line = line[1], line[2:]
+            if not process_attributes_match(process_info, userspec, cgroupspec):
+                continue
+            matches = process_matches(command_line, pattern)
             if not matches:
                 continue  # skip not matched lines
 
             # User capturing on rule
             if userspec == GRAB_USER:
-                i_userspec = process_line[0].user
+                i_userspec = process_info.user
             else:
                 i_userspec = userspec
 
@@ -88,6 +90,7 @@ def inventory_ps_common(invrules, parsed):
                 "process": pattern,
                 "match_groups": match_groups,
                 "user": i_userspec,
+                "cgroup": cgroupspec,
             }
 
             # default_params is either a clean dict with optional
@@ -130,28 +133,35 @@ def replace_service_description(service_description, match_groups, pattern):
             (service_description, total_replacements_count, pattern, len(match_groups)))
 
 
-def match_user(user, user_pattern):
-    if user_pattern:
-        if user_pattern.startswith('~'):
-            if not regex(user_pattern[1:]).match(user):
-                return False
+def match_attribute(attribute, pattern):
+    if not pattern:
+        return True
 
-        elif user_pattern != user:
-            return False
-    return None
+    if pattern.startswith('~'):
+        return bool(regex(pattern[1:]).match(attribute))
+
+    return pattern == attribute
 
 
-def process_matches(process_line, process_pattern, user_pattern, match_groups=None):
-    user, command_line = process_line[0].user, process_line[1:]
+def process_attributes_match(process_info, userspec, cgroupspec):
 
-    if match_user(user, user_pattern) is False:
+    cgroup_pattern, invert = cgroupspec
+    if process_info.cgroup and (match_attribute(process_info.cgroup, cgroup_pattern) is invert):
         return False
+
+    if not match_attribute(process_info.user, userspec):
+        return False
+
+    return True
+
+
+def process_matches(command_line, process_pattern, match_groups=None):
 
     if not process_pattern:
         # Process name not relevant
         return True
 
-    elif process_pattern.startswith("~"):
+    if process_pattern.startswith("~"):
         # Regex for complete process command line
         reg = regex(process_pattern[1:])  # skip "~"
         m = reg.match(" ".join(command_line))
@@ -589,32 +599,43 @@ def check_ps_process_capture(parsed, params, cpu_cores):
 
     ps_aggregator = ProcessAggregator(cpu_cores, params)
 
+    userspec = params.get("user")
+    cgroupspec = params.get("cgroup", (None, False))
+
     for line in parsed:
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if process_matches(process_line, params.get("process"), params.get("user"),
-                           params.get('match_groups')):
-            process = []
+        if not process_attributes_match(process_info, userspec, cgroupspec):
+            continue
 
-            if node_name is not None:
-                ps_aggregator.running_on_nodes.add(node_name)
+        if not process_matches(command_line, params.get("process"), params.get('match_groups')):
+            continue
 
-            if command_line:
-                process.append(("name", (command_line[0], "")))
+        process = []
 
-            # extended performance data: virtualsize, residentsize, %cpu
-            if all(process_info[1:4]):
-                process.append(("user", (process_info.user, "")))
-                process.append(("virtual size", (int(process_info.virtual), "kB")))
-                process.append(("resident size", (int(process_info.physical), "kB")))
+        if node_name is not None:
+            ps_aggregator.running_on_nodes.add(node_name)
 
-                ps_aggregator.virtual_size += int(process_info.virtual)  # kB
-                ps_aggregator.resident_size += int(process_info.physical)  # kB
+        if command_line:
+            process.append(("name", (command_line[0], "")))
 
-                ps_aggregator.lifetimes(process_info, process)
-                ps_aggregator.cpu_usage(process_info, process)
+        # extended performance data: virtualsize, residentsize, %cpu
+        if all(process_info[1:4]):
+            process.append(("user", (process_info.user, "")))
+            process.append(("virtual size", (int(process_info.virtual), "kB")))
+            process.append(("resident size", (int(process_info.physical), "kB")))
 
-            ps_aggregator.append(process)
+            ps_aggregator.virtual_size += int(process_info.virtual)  # kB
+            ps_aggregator.resident_size += int(process_info.physical)  # kB
+
+            ps_aggregator.lifetimes(process_info, process)
+            ps_aggregator.cpu_usage(process_info, process)
+
+        include_args = params.get("process_info_arguments", 0)
+        if include_args:
+            process.append(("args", (' '.join(command_line[1:])[:include_args], "")))
+
+        ps_aggregator.append(process)
 
     return ps_aggregator

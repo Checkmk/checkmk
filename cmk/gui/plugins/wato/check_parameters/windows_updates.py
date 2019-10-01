@@ -39,37 +39,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWindowsUpdates(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_windows_updates():
+    return Tuple(
+        title=_("Parameters for the Windows Update Check with WSUS"),
+        help=_("Set the according numbers to 0 if you want to disable alerting."),
+        elements=[
+            Integer(title=_("Warning if at least this number of important updates are pending")),
+            Integer(title=_("Critical if at least this number of important updates are pending")),
+            Integer(title=_("Warning if at least this number of optional updates are pending")),
+            Integer(title=_("Critical if at least this number of optional updates are pending")),
+            Age(title=_("Warning if time until forced reboot is less then"), default_value=604800),
+            Age(title=_("Critical if time time until forced reboot is less then"),
+                default_value=172800),
+            Checkbox(title=_("display all important updates verbosely"), default_value=True),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "windows_updates"
 
-    @property
-    def title(self):
-        return _("WSUS (Windows Updates)")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Parameters for the Windows Update Check with WSUS"),
-            help=_("Set the according numbers to 0 if you want to disable alerting."),
-            elements=[
-                Integer(
-                    title=_("Warning if at least this number of important updates are pending")),
-                Integer(
-                    title=_("Critical if at least this number of important updates are pending")),
-                Integer(title=_("Warning if at least this number of optional updates are pending")),
-                Integer(
-                    title=_("Critical if at least this number of optional updates are pending")),
-                Age(title=_("Warning if time until forced reboot is less then"),
-                    default_value=604800),
-                Age(title=_("Critical if time time until forced reboot is less then"),
-                    default_value=172800),
-                Checkbox(title=_("display all important updates verbosely"), default_value=True),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="windows_updates",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_windows_updates,
+        title=lambda: _("WSUS (Windows Updates)"),
+    ))

@@ -39,28 +39,28 @@ def inventory_liebert_maintenance(parsed):
     return [(None, {})]
 
 
-def check_liebert_maintenance(item, params, parsed):
+def check_liebert_maintenance(_no_item, params, parsed):
+    month, year = None, None
     for key, value in parsed.iteritems():
         if "month" in key.lower():
             month = value
         elif "year" in key.lower():
             year = value
 
-    yield 0, "Next maintenance in %s/%s" % (month, year)
+    if None in (month, year):
+        return
 
-    warn, crit = params['levels']
-    warn_seconds = warn * 60 * 60 * 24
-    crit_seconds = crit * 60 * 60 * 24
+    yield 0, "Next maintenance: %s/%s" % (month, year)
 
-    dt = time.mktime(time.strptime("%s %s" % (month, year), '%m %Y')) - time.time()
+    time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()
 
-    state = levels_liebert(dt, warn_seconds, crit_seconds, "lower")
-    if state > 0:
-        yield state, "(warn/crit below %s/%s days)" % (warn, crit)
+    warn_days, crit_days = params['levels']
+    levels = (None, None, warn_days * 86400, crit_days * 86400)
+    yield check_levels(time_left_seconds, None, levels, human_readable_func=get_age_human_readable)
 
 
 check_info['liebert_maintenance'] = {
-    'parse_function': parse_liebert_without_unit,
+    'parse_function': lambda info: parse_liebert_without_unit(info, int),
     'inventory_function': inventory_liebert_maintenance,
     'check_function': check_liebert_maintenance,
     'service_description': 'Maintenance',

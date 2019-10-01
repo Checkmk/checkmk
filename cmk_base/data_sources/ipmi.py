@@ -30,6 +30,7 @@ import pyghmi.constants as ipmi_const
 from pyghmi.exceptions import IpmiException
 
 import cmk.utils.debug
+from cmk.utils.log import VERBOSE
 
 from cmk_base.exceptions import MKAgentError
 
@@ -129,7 +130,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         try:
             sdr = ipmi_sdr.SDR(connection)
         except NotImplementedError as e:
-            self._logger.verbose("Failed to fetch sensor data: %r" % e)
+            self._logger.log(VERBOSE, "Failed to fetch sensor data: %r", e)
             self._logger.debug("Exception", exc_info=e)
             return ""
 
@@ -179,7 +180,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         try:
             firmware_entries = connection.get_firmware()
         except Exception as e:
-            self._logger.verbose("Failed to fetch firmware information: %r" % e)
+            self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
             return ""
 

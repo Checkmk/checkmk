@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<jenkins_instance>>>
+# {"quietingDown": false, "nodeDescription": "the master Jenkins node",
+# "numExecutors": 0, "mode": "NORMAL", "_class": "hudson.model.Hudson",
+# "useSecurity": true}
+
+import json
+
+MAP_INSTANCE_STATE = {
+    True: "yes",
+    False: "no",
+    "NORMAL": "normal",
+    "EXCLUSIVE": "exclusive",
+    None: "N/A",
+}
+
+
+def parse_jenkins_instance(info):
+    parsed = {}
+
+    for line in info:
+        parsed.update(json.loads(line[0]))
+
+    return parsed
+
+
+def inventory_jenkins_instance(parsed):
+    yield None, {}
+
+
+factory_settings["jenkins_instance_default_levels"] = {'mode': 'NORMAL'}
+
+
+def check_jenkins_instance(no_item, params, parsed):
+    if not parsed:
+        return
+
+    for key, value, infotext in [("mode", params["mode"], "Mode"),
+                                 ("quietingDown", False, "Quieting Down"),
+                                 ("useSecurity", True, "Security used")]:
+
+        state = 0
+        parsed_data = parsed.get(key)
+
+        if parsed_data is not None and parsed_data != value:
+            state = 1
+        elif parsed_data is None:
+            state = 3
+
+        yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])
+
+
+check_info["jenkins_instance"] = {
+    "parse_function": parse_jenkins_instance,
+    "check_function": check_jenkins_instance,
+    "inventory_function": inventory_jenkins_instance,
+    "default_levels_variable": "jenkins_instance_default_levels",
+    "service_description": "Jenkins Instance",
+    "group": "jenkins_instance",
+}

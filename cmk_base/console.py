@@ -26,14 +26,15 @@
 """Utiliy module for holding generic methods that implement handling
 of console input / output"""
 
+import logging
 import sys
 
+from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
-import cmk.utils.log
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
 # verbosity setting.
-logger = cmk.utils.log.get_logger("base")
+logger = logging.getLogger("cmk.base")
 
 #
 # Generic / low level functions
@@ -58,13 +59,13 @@ def output(text, *args, **kwargs):
 
 # Output text if opt_verbose is set (-v). Adds no linefeed
 def verbose(text, *args, **kwargs):
-    if logger.is_verbose():
+    if logger.isEnabledFor(VERBOSE):
         output(text, *args, **kwargs)
 
 
 # Output text if, opt_verbose >= 2 (-vv).
 def vverbose(text, *args, **kwargs):
-    if logger.is_very_verbose():
+    if logger.isEnabledFor(logging.DEBUG):
         verbose(text, *args, **kwargs)
 
 

@@ -28,6 +28,7 @@ import abc
 import ast
 import os
 from typing import Dict  # pylint: disable=unused-import
+import six
 
 import cmk.utils.store as store
 
@@ -35,7 +36,6 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
-import cmk.gui.plugins.wato.utils
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -96,9 +96,7 @@ class FetchAgentOutputRequest(object):
 
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(Page):
-    __metaclass__ = abc.ABCMeta
-
+class AgentOutputPage(six.with_metaclass(abc.ABCMeta, Page)):
     def __init__(self):
         super(AgentOutputPage, self).__init__()
         self._from_vars()
@@ -199,9 +197,12 @@ class PageFetchAgentOutput(AgentOutputPage):
                                             ])
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand):
-    __metaclass__ = abc.ABCMeta
+class ABCAutomationFetchAgentOutput(six.with_metaclass(abc.ABCMeta, AutomationCommand)):
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
 
+    # pylint: disable=abstract-method
     def get_request(self):
         # type: () -> FetchAgentOutputRequest
         config.user.need_permission("wato.download_agent_output")
@@ -247,7 +248,7 @@ def get_fetch_agent_job_status(request):
 
 
 @gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
+class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
     job_prefix = "agent-output-"
 

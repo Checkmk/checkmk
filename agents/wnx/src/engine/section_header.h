@@ -42,7 +42,6 @@ constexpr std::string_view kRightSubSectionBracket{"]"};
 constexpr std::string_view kUseEmbeddedName = {"*"};
 
 constexpr std::string_view kUptimeName{"uptime"};
-constexpr std::string_view kCheckMkName{"check_mk"};
 constexpr std::string_view kDfName{"df"};
 constexpr std::string_view kMemName{"mem"};
 constexpr std::string_view kSystemTime{"systemtime"};

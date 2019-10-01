@@ -47,6 +47,7 @@ import cmk.utils.render
 import cmk.utils.plugin_registry
 from cmk.utils.regex import regex
 
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -149,9 +150,8 @@ def _convert_legacy_tuple_perfometers(perfometers):
             }
 
         else:
-            logger.warning(
-                _("Could not convert perfometer to dict format: %r. Ignoring this one.") %
-                perfometer)
+            logger.warning(_("Could not convert perfometer to dict format: %r. Ignoring this one."),
+                           perfometer)
             perfometers.pop(index)
 
 
@@ -323,8 +323,7 @@ class Perfometers(object):
         return not required_metric_names.issubset(available_metric_names)
 
 
-class MetricometerRenderer(object):
-    __metaclass__ = abc.ABCMeta
+class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls):
@@ -435,7 +434,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             if pos > 98:
                 pos = 98
 
-        return [(pos, color), (100 - pos, "#ffffff")]
+        return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
 
 
 @renderer_registry.register
@@ -455,7 +454,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
             total = summed
 
         if total == 0:
-            entry.append((100.0, "#ffffff"))
+            entry.append((100.0, get_themed_perfometer_bg_color()))
 
         else:
             for ex in self._perfometer["segments"]:
@@ -464,7 +463,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
             # Paint rest only, if it is positive and larger than one promille
             if total - summed > 0.001:
-                entry.append((100.0 * (total - summed) / total, "#ffffff"))
+                entry.append((100.0 * (total - summed) / total, get_themed_perfometer_bg_color()))
 
         return [entry]
 
@@ -548,7 +547,7 @@ class MetricometerRendererDual(MetricometerRenderer):
                 raise MKInternalError(
                     _("Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"))
 
-            half_stack = [(value / 2, color) for (value, color) in sub_stack[0]]
+            half_stack = [(int(value / 2.0), color) for (value, color) in sub_stack[0]]
             if nr == 0:
                 half_stack.reverse()
             content += half_stack
@@ -867,7 +866,7 @@ def cmk_graphs_possible(site_id=None):
 # one site is running CMC
 def site_is_running_cmc(site_id):
     if site_id:
-        return sites.state(site_id, {}).get("program_version", "").startswith("Check_MK")
+        return sites.states().get(site_id, {}).get("program_version", "").startswith("Check_MK")
 
     for status in sites.states().values():
         if status.get("program_version", "").startswith("Check_MK"):
@@ -915,7 +914,7 @@ def page_host_service_graph_popup():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):
-        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs
         graphs.host_service_graph_popup_cmk(site_id, host_name, service_description)
     else:
         host_service_graph_popup_pnp(site_id, host_name, service_description)
@@ -963,7 +962,7 @@ def page_graph_dashlet():
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible():
-        import cmk.gui.cee.plugins.metrics.graphs as graphs
+        import cmk.gui.cee.plugins.metrics.html_render as graphs
         graphs.host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
     elif graph_identification[0] == "template":
         host_service_graph_dashlet_pnp(graph_identification)
@@ -1002,10 +1001,7 @@ def host_service_graph_dashlet_pnp(graph_identification):
 
 def render_metrics_table(translated_metrics, host_name, service_description):
     output = "<table class=metricstable>"
-    for metric_name, metric in sorted(
-            translated_metrics.items(),
-            cmp=lambda a, b: cmp(a[1]["title"], b[1]["title"]),
-    ):
+    for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
         output += "<tr>"
         output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
         output += "<td>%s:</td>" % metric["title"]
@@ -1014,10 +1010,10 @@ def render_metrics_table(translated_metrics, host_name, service_description):
             output += "<td>"
             output += html.render_popup_trigger(
                 html.render_icon("custom_graph",
-                                 title=_("Add this metric to a custom graph"),
+                                 title=_("Add this metric to dedicated graph"),
                                  cssclass="iconbutton"),
                 ident="add_metric_to_graph_" + host_name + ";" + service_description,
-                what="add_metric_to_custom_graph",
+                what="add_metric_to_graph",
                 url_vars=[
                     ("host", host_name),
                     ("service", service_description),

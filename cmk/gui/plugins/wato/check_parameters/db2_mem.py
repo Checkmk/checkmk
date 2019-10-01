@@ -38,27 +38,18 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Mem(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_db2_mem():
+    return Tuple(elements=[
+        Percentage(title=_("Warning if less than"), unit=_("% memory left")),
+        Percentage(title=_("Critical if less than"), unit=_("% memory left")),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "db2_mem"
 
-    @property
-    def title(self):
-        return _("Memory levels for DB2 memory usage")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Percentage(title=_("Warning if less than"), unit=_("% memory left")),
-            Percentage(title=_("Critical if less than"), unit=_("% memory left")),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance name"), allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_mem",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Instance name"), allow_empty=True),
+        parameter_valuespec=_parameter_valuespec_db2_mem,
+        title=lambda: _("Memory levels for DB2 memory usage"),
+    ))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# pylint: disable=redefined-outer-name
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import base64
 import copy
@@ -10,6 +10,7 @@ from StringIO import StringIO
 import subprocess
 import sys
 import time
+import six
 
 import pytest  # type: ignore
 from PIL import Image  # type: ignore
@@ -39,7 +40,7 @@ def local_test_hosts(web, site):
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
             "var/check_mk/agent_output/%s" % hostname,
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
     yield
@@ -382,6 +383,43 @@ def test_write_host_tags(web, site):
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
 
 
+def test_write_host_labels(web, site):
+    try:
+        web.add_host("test-host-lan",
+                     attributes={
+                         "ipaddress": "127.0.0.1",
+                         'labels': {
+                             'blä': 'blüb'
+                         }
+                     },
+                     verify_set_attributes=False)
+
+        hosts = web.get_all_hosts(effective_attributes=True)
+        assert hosts["test-host-lan"]["attributes"]["labels"] == {u'blä': u'blüb'}
+
+        cfg = {
+            "FOLDER_PATH": "/",
+            "all_hosts": [],
+            "host_tags": {},
+            "host_labels": {},
+            "ipaddresses": {},
+            "host_attributes": {},
+        }
+
+        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+
+        assert cfg["host_labels"]["test-host-lan"] == {
+            u"blä": u"blüb",
+        }
+
+        for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
+            assert isinstance(label_id, six.text_type)
+            assert isinstance(label_value, six.text_type)
+
+    finally:
+        web.delete_hosts(["test-host-lan"])
+
+
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
 def test_add_group(web, group_type):
@@ -466,8 +504,8 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
-        file(dummy_map_filepath1, "w")
-        file(dummy_map_filepath2, "w")
+        open(dummy_map_filepath1, "w")
+        open(dummy_map_filepath2, "w")
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
@@ -601,7 +639,7 @@ def _wait_for_bulk_discovery_job(web):
         status = web.bulk_discovery_status()
         return status["job"]["state"] != "initialized" and status["is_active"] is False
 
-    wait_until(job_completed, timeout=15, interval=1)
+    wait_until(job_completed, timeout=30, interval=1)
 
 
 def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
@@ -618,7 +656,7 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    assert "65 added" in status["job"]["output"]
+    assert "63 added" in status["job"]["output"]
     assert "discovery successful" in status["job"]["output"]
 
 
@@ -694,7 +732,7 @@ def graph_test_config(web, site):
         site.makedirs("var/check_mk/agent_output/")
         site.write_file(
             "var/check_mk/agent_output/test-host-get-graph",
-            file("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
+            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
                  repo_path()).read())
 
         web.discover_services("test-host-get-graph")
@@ -1019,7 +1057,7 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'title': u'CPU time in operating system',
                     u'unit': u's'
                 }, {
-                    u'color': u'#00b2ff',
+                    u'color': u'#0093ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
                         None, 1.0
@@ -1059,6 +1097,69 @@ def test_get_graph_recipes(web, graph_test_config):
                 u'unit': u's'
             },
         ]
+
+
+def test_get_combined_graph_identifications(web, graph_test_config):
+    result = web.get_combined_graph_identifications(
+        request={
+            "single_infos": ["host"],
+            "datasource": "services",
+            "context": {
+                "service": {
+                    "service": "CPU load"
+                },
+                "site": {
+                    "site": web.site.id
+                },
+                "host_name": "test-host-get-graph",
+            },
+        })
+
+    assert result == [
+        {
+            u'identification': [
+                u'combined', {
+                    u'context': {
+                        u'host_name': u'test-host-get-graph',
+                        u'service': {
+                            u'service': u'CPU load'
+                        },
+                        u'site': {
+                            u'site': web.site.id,
+                        }
+                    },
+                    u'datasource': u'services',
+                    u'graph_template': u'cpu_load',
+                    u'presentation': u'sum',
+                    u'single_infos': [u'host']
+                }
+            ],
+            u'title': u'CPU Load - %(load1:max@count) CPU Cores'
+        },
+    ]
+
+
+def test_get_graph_annotations(web, graph_test_config):
+    now = time.time()
+    start_time, end_time = now - 3601, now
+
+    result = web.get_graph_annotations(
+        request={
+            "context": {
+                "site": {
+                    "site": web.site.id,
+                },
+                "service": {
+                    "service": "CPU load",
+                },
+                "host_name": "test-host-get-graph",
+            },
+            "start_time": start_time,
+            "end_time": end_time,
+        })
+
+    assert len(result["availability_timelines"]) == 1
+    assert result["availability_timelines"][0]["display_name"] == "CPU load"
 
 
 def test_get_hosttags(web):

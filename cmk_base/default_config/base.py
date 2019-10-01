@@ -201,6 +201,7 @@ service_descriptions = {}
 host_attributes = {}  # needed by WATO, ignored by Check_MK
 ping_levels = []  # special parameters for host/PING check_command
 host_check_commands = []  # alternative host check instead of check_icmp
+piggybacked_host_files = []  # time settings for piggybacked hosts
 check_mk_exit_status = []  # Rule for specifying CMK's exit status in case of various errors
 check_mk_agent_target_versions = []  # Rule for defining expected version for agents
 check_periods = []

@@ -29,13 +29,13 @@
 
 import abc
 from collections import namedtuple
-import os
 import time
 import re
 import hashlib
 import traceback
 from typing import Tuple, List, Optional, Union, Text, Dict, Callable, Type  # pylint: disable=unused-import
 import six
+from pathlib2 import Path
 
 import livestatus
 
@@ -54,7 +54,7 @@ from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
@@ -75,9 +75,9 @@ class PainterOptions(object):
     @classmethod
     def get_instance(cls):
         """Use the request globals to prevent multiple instances during a request"""
-        if "painter_options" not in current_app.g:
-            current_app.g["painter_options"] = cls()
-        return current_app.g["painter_options"]
+        if 'painter_options' not in g:
+            g.painter_options = cls()
+        return g.painter_options
 
     def __init__(self):
         super(PainterOptions, self).__init__()
@@ -275,9 +275,7 @@ def _create_dict_key(value):
     return value
 
 
-class PainterOption(object):
-    __metaclass__ = abc.ABCMeta
-
+class PainterOption(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -301,9 +299,7 @@ class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 painter_option_registry = ViewPainterOptionRegistry()
 
 
-class Layout(object):
-    __metaclass__ = abc.ABCMeta
-
+class Layout(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -374,9 +370,7 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
 layout_registry = ViewLayoutRegistry()
 
 
-class CommandGroup(object):
-    __metaclass__ = abc.ABCMeta
-
+class CommandGroup(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -419,9 +413,7 @@ def register_command_group(ident, title, sort_index):
     command_group_registry.register(cls)
 
 
-class Command(object):
-    __metaclass__ = abc.ABCMeta
-
+class Command(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -502,10 +494,8 @@ def register_legacy_command(spec):
     command_registry.register(cls)
 
 
-class DataSource(object):
+class DataSource(six.with_metaclass(abc.ABCMeta, object)):
     """Provider of rows for the views (basically tables of data) in the GUI"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -659,9 +649,7 @@ class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
 data_source_registry = DataSourceRegistry()
 
 
-class RowTable(object):
-    __metaclass__ = abc.ABCMeta
-
+class RowTable(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def query(self, view, columns, headers, only_sites, limit, all_active_filters):
         raise NotImplementedError()
@@ -788,7 +776,7 @@ def query_livestatus(query, only_sites, limit, auth_domain):
 # HTML and PDF.
 # TODO: A lot of painter classes simply display plain livestatus column values. These
 # could be replaced with some simpler generic definition.
-class Painter(object):
+class Painter(six.with_metaclass(abc.ABCMeta, object)):
     """A painter computes HTML code based on information from a data row and
     creates a CSS class for one display column.
 
@@ -797,9 +785,6 @@ class Painter(object):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
-
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -945,12 +930,9 @@ def register_painter(ident, spec):
     painter_registry.register(cls)
 
 
-class Sorter(object):
+class Sorter(six.with_metaclass(abc.ABCMeta, object)):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
-
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -1227,7 +1209,7 @@ def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
 
 
 def cmp_simple_number(column, r1, r2):
-    return cmp(r1.get(column), r2.get(column))
+    return (r1.get(column) > r2.get(column)) - (r1.get(column) < r2.get(column))
 
 
 def cmp_num_split(column, r1, r2):
@@ -1240,11 +1222,11 @@ def cmp_simple_string(column, r1, r2):
 
 
 def cmp_insensitive_string(v1, v2):
-    c = cmp(v1.lower(), v2.lower())
+    c = (v1.lower() > v2.lower()) - (v1.lower() < v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
     if c == 0:
-        return cmp(v1, v2)
+        return (v1 > v2) - (v1 < v2)
     return c
 
 
@@ -1269,7 +1251,8 @@ def cmp_service_name_equiv(r):
 
 
 def cmp_custom_variable(r1, r2, key, cmp_func):
-    return cmp(get_custom_var(r1, key), get_custom_var(r2, key))
+    return (get_custom_var(r1, key) > get_custom_var(r2, key)) - (get_custom_var(r1, key) <
+                                                                  get_custom_var(r2, key))
 
 
 def cmp_ip_address(column, r1, r2):
@@ -1280,7 +1263,7 @@ def cmp_ip_address(column, r1, r2):
             return ip
 
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
-    return cmp(v1, v2)
+    return (v1 > v2) - (v1 < v2)
 
 
 def get_custom_var(row, key):
@@ -1423,9 +1406,9 @@ class ViewStore(object):
     @classmethod
     def get_instance(cls):
         """Use the request globals to prevent multiple instances during a request"""
-        if "view_store" not in current_app.g:
-            current_app.g["view_store"] = cls()
-        return current_app.g["view_store"]
+        if 'view_store' not in g:
+            g.view_store = cls()
+        return g.view_store
 
     def __init__(self):
         self.all = self._load_all_views()
@@ -1463,9 +1446,9 @@ def _transform_old_views(all_views):
             view.setdefault("user_sortable", True)
 
         if 'context_type' in view:
-            # This code transforms views from user_views.mk which have been migrated with
-            # daily snapshots from 2014-08 till beginning 2014-10.
-            visuals.transform_old_visual(view)
+            raise MKGeneralException(
+                "Could not transform legacy view definition containing \"context_type\". "
+                "You have to remove it or migrate it by hand")
 
         elif 'single_infos' not in view:
             # This tries to map the datasource and additional settings of the
@@ -1605,6 +1588,8 @@ def _transform_old_views(all_views):
                 del view[k]
             except KeyError:
                 pass
+
+        visuals.transform_old_visual(view)
 
     return all_views
 
@@ -1757,13 +1742,13 @@ class Cell(object):
 
     def _get_short_title(self, painter):
         # TODO: Hack for the SLA painters. Find a better way
-        if callable(painter.short_title):
+        if hasattr(painter.short_title, '__call__'):
             return painter.short_title(self.painter_parameters())
         return painter.short_title
 
     def _get_long_title(self, painter):
         # TODO: Hack for the SLA painters. Find a better way
-        if callable(painter.title):
+        if hasattr(painter.title, '__call__'):
             return painter.title(self.painter_parameters())
         return painter.title
 
@@ -1869,7 +1854,7 @@ class Cell(object):
         try:
             tdclass, content = self.render_content(row)
         except:
-            logger.exception("Failed to render painter '%s' (Row: %r)" % (self._painter_name, row))
+            logger.exception("Failed to render painter '%s' (Row: %r)", self._painter_name, row)
             raise
 
         if tdclass is None:
@@ -1896,13 +1881,12 @@ class Cell(object):
     def render_for_pdf(self, row, time_range):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
-            dirs = [
-                cmk.utils.paths.local_web_dir + "/htdocs/",
-                cmk.utils.paths.web_dir + "/htdocs/",
-            ]
-            for d in dirs:
-                if os.path.exists(d + filename):
-                    return d + filename
+            for file_path in [
+                    cmk.utils.paths.local_web_dir.joinpath("htdocs", filename),
+                    Path(cmk.utils.paths.web_dir, "htdocs", filename),
+            ]:
+                if file_path.exists():
+                    return str(file_path)
 
         try:
             row = join_row(row, self)
@@ -2042,7 +2026,7 @@ class EmptyCell(Cell):
 def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    if isinstance(filename, unicode):
+    if isinstance(filename, six.text_type):
         filename = filename.encode("utf-8")
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 

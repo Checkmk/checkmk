@@ -217,8 +217,8 @@ try:
     shutil.copy(source_dir + "/plugins.cap", source_dir + "/plugins_cap")
     # checkmk.dat is the same, no need to copy
 
-    lines_file_idt = file(work_dir + "/File.idt").readlines()
-    file_idt_new = file(work_dir + "/File.idt.new", "w")
+    lines_file_idt = open(work_dir + "/File.idt").readlines()
+    file_idt_new = open(work_dir + "/File.idt.new", "w")
     file_idt_new.write("".join(lines_file_idt[:3]))
 
     cabinet_files = []
@@ -240,8 +240,8 @@ try:
 
     # ==============================================
     # Modify Component.idt
-    lines_component_idt = file(work_dir + "/Component.idt").readlines()
-    component_idt_new = file(work_dir + "/Component.idt.new", "w")
+    lines_component_idt = open(work_dir + "/Component.idt").readlines()
+    component_idt_new = open(work_dir + "/Component.idt.new", "w")
     component_idt_new.write("".join(lines_component_idt[:3]))
 
     for line in lines_component_idt[3:]:
@@ -257,14 +257,14 @@ try:
     # ==============================================
     # Modify Property.idt
     product_code = ("{%s}\r\n" % uuid.uuid1()).upper()
-    lines_property_idt = file(work_dir + "/Property.idt").readlines()
-    property_idt_new = file(work_dir + "/Property.idt.new", "w")
+    lines_property_idt = open(work_dir + "/Property.idt").readlines()
+    property_idt_new = open(work_dir + "/Property.idt.new", "w")
     property_idt_new.write("".join(lines_property_idt[:3]))
 
     for line in lines_property_idt[3:]:
         tokens = line.split("\t")
         if tokens[0] == "ProductName":
-            tokens[1] = "Check MK Service\r\n"
+            tokens[1] = "Check MK Agent 1.6\r\n"
         # The upgrade code defines the product family. Do not change it!
         #    elif tokens[0] == "UpgradeCode":
         #        tokens[1] = upgrade_code

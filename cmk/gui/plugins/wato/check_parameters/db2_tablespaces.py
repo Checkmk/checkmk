@@ -120,38 +120,29 @@ def db_levels_common():
     ]
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Tablespaces(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_db2_tablespaces():
+    return TextAscii(title=_("Instance"),
+                     help=_("The instance name, the database name and the tablespace name combined "
+                            "like this db2wps8:WPSCOMT8.USERSPACE1"))
 
-    @property
-    def check_group_name(self):
-        return "db2_tablespaces"
 
-    @property
-    def title(self):
-        return _("DB2 Tablespaces")
+def _parameter_valuespec_db2_tablespaces():
+    return Dictionary(
+        help=_("A tablespace is a container for segments (tables, indexes, etc). A "
+               "database consists of one or more tablespaces, each made up of one or "
+               "more data files. Tables and indexes are created within a particular "
+               "tablespace. "
+               "This rule allows you to define checks on the size of tablespaces."),
+        elements=db_levels_common(),
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("A tablespace is a container for segments (tables, indexes, etc). A "
-                   "database consists of one or more tablespaces, each made up of one or "
-                   "more data files. Tables and indexes are created within a particular "
-                   "tablespace. "
-                   "This rule allows you to define checks on the size of tablespaces."),
-            elements=db_levels_common(),
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("The instance name, the database name and the tablespace name combined "
-                   "like this db2wps8:WPSCOMT8.USERSPACE1"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_tablespaces",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_db2_tablespaces,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_db2_tablespaces,
+        title=lambda: _("DB2 Tablespaces"),
+    ))

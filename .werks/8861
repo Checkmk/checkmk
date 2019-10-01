@@ -1,0 +1,29 @@
+Title: DCD: Gracefully handle single host issues when creating hosts
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1565961114
+
+When one of multiple hosts could not be created or modified by a execution,
+this resulted in a complete termination of the execution. A persistent issue
+could totally break a connection, since no further steps would be executed.
+
+As first step the "add_hosts" and "edit_hosts" API call has been extended to
+report back the result of a call. The structure looks like this:
+
+C+:
+{
+    "succeeded_hosts": ["host1", "host3"],
+    "failed_hosts": {
+        "host2": "an error occured ...",
+    },
+}
+C-:
+
+The DCD reads this response and logs the result. In case there have been hosts
+added, the discovery is performed for them. After that, the connection
+continues with the following steps.

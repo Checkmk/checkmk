@@ -42,6 +42,7 @@ def inventory_netapp_api_fcp(parsed):
 
 
 # interfaces : {
+#    total_ops: 0,
 #    read_ops: 0,               # rate/number
 #    write_ops: 0               # rate/number
 #    read_bytes: 0,              # rate/bytes
@@ -96,37 +97,44 @@ def check_fibrechannel_common(item, params, parsed):
     general_levels = if_get_traffic_levels(params)
     traffic_levels = get_specific_traffic_levels(general_levels, "Bytes", fcp_if.get("speed"), None,
                                                  None)
+    now = fcp_if["now"]
     for what, levels_what, descr, format_func in [
         ("read_bytes", "in", "Read", lambda x: get_bytes_human_readable(x, unit="B/s")),
         ("write_bytes", "out", "Write", lambda x: get_bytes_human_readable(x, unit="B/s")),
         ("read_ops", None, "Read OPS", int), ("write_ops", None, "Write OPS", int)
     ]:
-        value = fcp_if.get(what)
-        if value is not None:
-            state = 0
-            infotext = "%s: %s" % (descr, format_func(value))
-            perfdata = [(what, value)]
-            if levels_what:
-                if (what, 'predictive') in traffic_levels:
-                    level_params = traffic_levels[(what, 'predictive')]
-                    bw_warn, bw_crit = None, None
-                else:
-                    bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
-                    bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
-                    bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
-                    bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
-                    level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
-                state, infotext, perfdata = check_levels(value, what, level_params, infoname=descr)
+        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        if value is None:
+            continue
 
-            yield state, infotext, perfdata
+        if levels_what:
+            if (what, 'predictive') in traffic_levels:
+                level_params = traffic_levels[(what, 'predictive')]
+            else:
+                bw_warn = traffic_levels[(levels_what, 'upper', 'warn')]
+                bw_crit = traffic_levels[(levels_what, 'upper', 'crit')]
+                bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
+                bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
+                level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
+        else:
+            level_params = None
+
+        yield check_levels(value,
+                           what,
+                           level_params,
+                           human_readable_func=format_func,
+                           infoname=descr)
 
     # Latency
-    for what, text in [("latency", "Latency"), ("read_latency", "Read Latency"),
-                       ("write_latency", "Write Latency")]:
-        value = fcp_if.get("avg_%s" % what)
+    total_ops = fcp_if["total_ops"]
+    for what, text in [("avg_latency", "Latency"), ("avg_read_latency", "Read Latency"),
+                       ("avg_write_latency", "Write Latency")]:
+        # According to NetApp's "Performance Management Design Guide",
+        # the latency is a function of `total_ops`.
+        value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what))
         if value is not None:
             yield check_levels(value,
-                               "avg_%s_latency" % what,
+                               "%s_latency" % what,
                                params.get(what),
                                unit="ms",
                                infoname=text)
@@ -137,23 +145,19 @@ def parse_netapp_api_fcp(info):
     parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
-        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn")}
+        fcp_data = {"state": values.get("state"), "address": values.get("port_wwpn"), "now": now}
+        fcp_data["total_ops"] = int(values.get("total_ops", 0))
         speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 
-        for what, renamed in [
-            ("read_ops", "read_ops"),
-            ("write_ops", "write_ops"),
-            ("read_data", "read_bytes"),
-            ("write_data", "write_bytes"),
-        ]:
+        for what in ["read_ops", "write_ops", "read_data", "write_data"]:
             if what in values:
-                fcp_data[renamed] = get_rate("%s.%s" % (key, what), now, int(values[what]))
+                fcp_data[what.replace("data", "bytes")] = int(values[what])
 
         for what in ["avg_latency", "avg_read_latency", "avg_write_latency"]:
             if what in values:
-                fcp_data[what] = get_rate("%s.%s" % (key, what), now, int(values[what]) / 1000.0)
+                fcp_data[what] = int(values[what]) / 1000.0
         fcp_interfaces[key] = fcp_data
 
     return fcp_interfaces

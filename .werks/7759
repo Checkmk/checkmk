@@ -1,0 +1,11 @@
+Title: jenkins_instance: New check to monitor the state of the queried Jenkins instance
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567602394
+Class: feature
+
+This check monitors the state of the queried jenkins instance. It outputs the
+used mode (normal/exclusive), the quieting down state and if security is used.

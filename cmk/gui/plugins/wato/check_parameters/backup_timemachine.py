@@ -37,33 +37,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBackupTimemachine(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_backup_timemachine():
+    return Dictionary(elements=[
+        ("age",
+         Tuple(
+             title=_("Maximum age of latest timemachine backup"),
+             elements=[
+                 Age(title=_("Warning if older than"), default_value=86400),
+                 Age(title=_("Critical if older than"), default_value=172800)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "backup_timemachine"
 
-    @property
-    def title(self):
-        return _("Age of timemachine backup")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("age",
-             Tuple(
-                 title=_("Maximum age of latest timemachine backup"),
-                 elements=[
-                     Age(title=_("Warning if older than"), default_value=86400),
-                     Age(title=_("Critical if older than"), default_value=172800)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="backup_timemachine",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_backup_timemachine,
+        title=lambda: _("Age of timemachine backup"),
+    ))

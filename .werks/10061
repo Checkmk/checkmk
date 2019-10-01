@@ -1,0 +1,19 @@
+Title: Windows Agent Installer doesn't clean ProgramData Folder anymore
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568879766
+Class: fix
+
+Previously the manual use of Windows Installer(check_mk_agent.msi) could lead 
+to strange installation errors. This happens during the cleanup of the 
+ProgramData folder, because some files in this folder may be locked by 
+other running Windows software, Windows Agent's plugins, cmk-update-agent.exe 
+or even by the Windows Agent itself.
+
+Since now then the Windows Installer does not touch ProgramData anymore and 
+prevents such errors.
+
+

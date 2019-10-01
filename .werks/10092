@@ -1,0 +1,10 @@
+Title: esx_vsphere_clusters: Fixed gathering information from special agent which was broken
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568729029
+Class: fix
+
+

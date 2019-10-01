@@ -37,44 +37,35 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMongodbFlushing(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "mongodb_flushing"
-
-    @property
-    def title(self):
-        return _("MongoDB Flushes")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "average_time",
-                Tuple(title=_("Average flush time"),
-                      elements=[
-                          Integer(title=_("Warning at"), unit="ms", default_value=50),
-                          Integer(title=_("Critical at"), unit="ms", default_value=100),
-                          Integer(title=_("Time interval"), unit="minutes", default_value=10),
-                      ]),
+def _parameter_valuespec_mongodb_flushing():
+    return Dictionary(elements=[
+        (
+            "average_time",
+            Tuple(title=_("Average flush time"),
+                  elements=[
+                      Integer(title=_("Warning at"), unit="ms", default_value=50),
+                      Integer(title=_("Critical at"), unit="ms", default_value=100),
+                      Integer(title=_("Time interval"), unit="minutes", default_value=10),
+                  ]),
+        ),
+        (
+            "last_time",
+            Tuple(
+                title=_("Last flush time"),
+                elements=[
+                    Integer(title=_("Warning at"), unit="ms", default_value=50),
+                    Integer(title=_("Critical at"), unit="ms", default_value=100),
+                ],
             ),
-            (
-                "last_time",
-                Tuple(
-                    title=_("Last flush time"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit="ms", default_value=50),
-                        Integer(title=_("Critical at"), unit="ms", default_value=100),
-                    ],
-                ),
-            ),
-        ],)
+        ),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mongodb_flushing",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mongodb_flushing,
+        title=lambda: _("MongoDB Flushes"),
+    ))

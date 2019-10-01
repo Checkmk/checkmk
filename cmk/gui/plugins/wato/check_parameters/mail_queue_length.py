@@ -38,31 +38,19 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_params
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMailQueueLength(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mail_queue_length():
+    return Transform(
+        mailqueue_params,
+        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+    )
 
-    @property
-    def check_group_name(self):
-        return "mail_queue_length"
 
-    @property
-    def title(self):
-        return _("Number of mails in outgoing mail queue")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            mailqueue_params,
-            forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Mail queue name"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mail_queue_length",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Mail queue name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mail_queue_length,
+        title=lambda: _("Number of mails in outgoing mail queue"),
+    ))

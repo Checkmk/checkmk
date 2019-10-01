@@ -227,6 +227,8 @@ $(INSTALL_GLOBAL): $(INSTALL)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	ln -sfn check_mk/ChangeLog $(DESTDIR)$(OMD_ROOT)/share/doc/ChangeLog
 	install -m 644 Licenses.csv $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.csv
+	install -m 644 Licenses.README.txt $(DESTDIR)$(OMD_ROOT)/share/doc/Licenses.README.txt
+	install -m 644 License_texts.pdf $(DESTDIR)$(OMD_ROOT)/share/doc/License_texts.pdf
 
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
@@ -238,7 +240,6 @@ $(BIN_TGZ): $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
 rpm:
-	PKG_VERSION=$(OMD_VERSION) ; \
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
@@ -259,10 +260,9 @@ rpm:
 	# has a rpath hard coded to the OMD shipped libpython2.7.
 	NO_BRP_CHECK_RPATH="yes" \
 	NO_BRP_STALE_LINK_ERROR="yes" \
-	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
-	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
 # create a debian/changelog to build the package
@@ -275,11 +275,7 @@ debian/changelog:
 	fi
 	# this is a hack!
 	rm -f debian/changelog
-	PKG_VERSION=$(OMD_VERSION) ; \
-	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
-	dch --create --package check-mk-$(EDITION)-$$PKG_VERSION \
+	dch --create --package check-mk-$(EDITION)-$(PKG_VERSION) \
 	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
@@ -338,7 +334,7 @@ $(CMA_PACKAGE): $(CMA_INSTALL) $(APPLIANCE_INSTALL_CMA) $(APPLIANCE_SKEL_CMA) $(
 	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
-	@if [ -f packages/nagios/patches/9999-demo-version.dif ]; then \
+	@if [ -n "$(DEMO_SUFFIX)" ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 

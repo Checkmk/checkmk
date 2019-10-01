@@ -197,9 +197,9 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
             pid = int(psinfo["ProcessId"])
             if pid not in seen_pids:
                 seen_pids.add(pid)
-                virt = int(psinfo["VirtualSize"]) / 1024  # Bytes -> KB
-                resi = int(psinfo["WorkingSetSize"]) / 1024  # Bytes -> KB
-                pagefile = int(psinfo["PageFileUsage"]) / 1024  # Bytes -> KB
+                virt = int(psinfo["VirtualSize"]) >> 10  # Bytes -> KB
+                resi = int(psinfo["WorkingSetSize"]) >> 10  # Bytes -> KB
+                pagefile = int(psinfo["PageFileUsage"]) >> 10  # Bytes -> KB
                 userc = int(psinfo["UserModeTime"])  # do not resolve counter here!
                 kernelc = int(psinfo["KernelModeTime"])  # do not resolve counter here!
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
@@ -214,21 +214,24 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def ps_parse_process_entries(parsed):
+def ps_parse_process_entries(pre_parsed):
+    parsed = []
     # line[0] = node
     # line[1] = process_info OR (if no process info available) = process name
-    for line in parsed:
+    for line in pre_parsed:
         process_info = ps_info_tuple(line[1])
         if process_info:
-            line[1] = process_info
+            parsed_line = [line[0], process_info] + line[2:]
         else:
             # Make number of columns in line consistent for discovery/check
-            line.insert(1, ps_info())
+            parsed_line = [line[0], ps_info()] + line[1:]
 
-    # Filter out any lines where no process command line is available, e.g.
-    # [None, u'(<defunct>,,,)']
-    # [None, u'(<defunct>,,,)', u'']
-    parsed = [x for x in parsed if len(x) > 2 and x[2]]
+        # Filter out any lines where no process command line is available, e.g.
+        # [None, u'(<defunct>,,,)']
+        # [None, u'(<defunct>,,,)', u'']
+        if len(parsed_line) > 2 and parsed_line[2]:
+            parsed.append(parsed_line)
+
     return parsed
 
 
@@ -251,13 +254,22 @@ def parse_ps(info):
 
 
 def inventory_ps(info):
-    _cpu_cores, parsed = info[0]
+    ps_info, ps_lnx_info = info[:2]
+    if ps_lnx_info:
+        parsed = parse_ps_lnx(ps_lnx_info)
+    else:
+        _cpu_cores, parsed = parse_ps(ps_info)
     return inventory_ps_common(inventory_processes_rules, parsed)
 
 
 def check_ps(item, params, info):
-    (cpu_cores,
-     parsed), mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info
+    ps_info, ps_lnx_info = info[:2]
+    if ps_lnx_info:
+        cpu_cores, parsed = 1, parse_ps_lnx(ps_lnx_info)
+    else:
+        cpu_cores, parsed = parse_ps(ps_info)
+
+    mem_info, solaris_mem_info, statgrab_mem_info, aix_memory_info, cpu_info = info[2:]
 
     # cpu_info for non windows systems
     if cpu_info and len(cpu_info[0]) == 6:
@@ -278,16 +290,15 @@ def check_ps(item, params, info):
 
 
 check_info['ps'] = {
-    "parse_function": parse_ps,
     "inventory_function": inventory_ps,
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "mem.include"],
+    "includes": ["ps_lnx.include", "ps.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",
     "default_levels_variable": "ps_default_levels",
-    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
+    "extra_sections": ["ps_lnx", "mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }
 
 # NOTE: This check is deprecated and will be removed any decade now. ps now
@@ -295,10 +306,10 @@ check_info['ps'] = {
 check_info['ps.perf'] = {
     "check_function": check_ps,
     "service_description": "Process %s",
-    "includes": ["ps.include", "mem.include"],
+    "includes": ["ps_lnx.include", "ps.include", "mem.include"],
     "has_perfdata": True,
     "node_info": True,  # add first column with actual host name
     "group": "ps",
     "default_levels_variable": "ps_default_levels",
-    "extra_sections": ["mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
+    "extra_sections": ["ps_lnx", "mem", "solaris_mem", "statgrab_mem", "aix_memory", "cpu"],
 }

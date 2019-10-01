@@ -39,34 +39,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWindowsMultipath(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_windows_multipath():
+    return Alternative(
+        help=_("This rules sets the expected number of active paths for a multipath LUN."),
+        title=_("Expected number of active paths"),
+        elements=[
+            Integer(title=_("Expected number of active paths")),
+            Tuple(
+                title=_("Expected percentage of active paths"),
+                elements=[
+                    Integer(title=_("Expected number of active paths")),
+                    Percentage(title=_("Warning if less then")),
+                    Percentage(title=_("Critical if less then")),
+                ],
+            ),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "windows_multipath"
 
-    @property
-    def title(self):
-        return _("Windows Multipath Count")
-
-    @property
-    def parameter_valuespec(self):
-        return Alternative(
-            help=_("This rules sets the expected number of active paths for a multipath LUN."),
-            title=_("Expected number of active paths"),
-            elements=[
-                Integer(title=_("Expected number of active paths")),
-                Tuple(
-                    title=_("Expected percentage of active paths"),
-                    elements=[
-                        Integer(title=_("Expected number of active paths")),
-                        Percentage(title=_("Warning if less then")),
-                        Percentage(title=_("Critical if less then")),
-                    ],
-                ),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="windows_multipath",
+        group=RulespecGroupCheckParametersStorage,
+        parameter_valuespec=_parameter_valuespec_windows_multipath,
+        title=lambda: _("Windows Multipath Count"),
+    ))

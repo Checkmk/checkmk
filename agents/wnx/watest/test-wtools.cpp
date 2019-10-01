@@ -3,6 +3,7 @@
 
 #include "pch.h"
 
+#include <chrono>
 #include <filesystem>
 
 #include "cfg_details.h"
@@ -89,6 +90,30 @@ TEST(Wtools, ScanProcess) {
                 return true;
             });
         EXPECT_FALSE(found);
+    }
+}
+
+TEST(Wtools, ConditionallyConvertLowLevel) {
+    {
+        std::vector<uint8_t> v = {0xFE, 0xFE};
+        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+    {
+        std::vector<uint8_t> v = {0xFE, 0xFE, 0, 0};
+        EXPECT_FALSE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+    {
+        std::vector<uint8_t> v = {0xFF, 0xFE, 0, 0};
+        EXPECT_TRUE(wtools::IsVectorMarkedAsUTF16(v));
+    }
+
+    {
+        std::string v = "aa";
+        auto data = v.data();
+        data[2] = 1;  // simulate random data instead of the ending null
+        AddSafetyEndingNull(v);
+        data = v.data();
+        EXPECT_TRUE(data[2] == 0);
     }
 }
 
@@ -321,6 +346,28 @@ TEST(Wtools, Perf2) {
         ASSERT_TRUE(index.has_value());
         EXPECT_EQ(index, 4);
     }
+}
+TEST(Wtools, GetArgv2) {
+    std::filesystem::path val = GetArgv(0);
+    EXPECT_TRUE(cma::tools::IsEqual(val.extension().wstring(), L".exe"));
+    std::filesystem::path val1 = GetArgv(10);
+    EXPECT_TRUE(val1.empty());
+}
+
+TEST(Wtools, MemSize) {
+    auto sz = GetOwnVirtualSize();
+    EXPECT_TRUE(sz > static_cast<size_t>(400'000));
+}
+
+TEST(Wtools, ParentPid) {
+    //    uint32_t pid = 0;
+    //    auto parent_pid = GetParentPid(pid);
+    //    EXPECT_TRUE(pid == 0);
+}
+
+TEST(Wtools, KillTree) {
+    //
+    EXPECT_FALSE(kProcessTreeKillAllowed);
 }
 
 }  // namespace wtools

@@ -1,0 +1,10 @@
+Title: agent_vsphere: Fix name of host system power display on VM
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566824603
+Class: fix
+
+The '--spaces' option was not considered if the host system power display was set to 'vm'.

@@ -56,7 +56,7 @@ def test_inv_docker_node_info(parsed, inv_data, stat_data):
     status_data_tree = MockTree()
 
     context = {'inv_info': {}}
-    execfile(INV_FILE, context)
+    exec (open(INV_FILE).read(), context)
     inv_docker_node_info = context["inv_docker_node_info"]
 
     inv_docker_node_info(parsed, inventory_tree, status_data_tree)

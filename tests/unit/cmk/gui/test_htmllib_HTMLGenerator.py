@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import traceback
+import six
 
 from cmk.gui.globals import html
 from tools import compare_html
 
 
-def test_HTMLGenerator(register_builtin_html):
+def test_ABCHTMLGenerator(register_builtin_html):
     with html.plugged():
 
         with html.plugged():
@@ -45,12 +47,12 @@ def test_HTMLGenerator(register_builtin_html):
             html.render_a(u"test", href=u"www.test.case")
             try:
                 assert html.render_a(u"test",
-                                     href=unicode("www.test.case"),
-                                     id_=unicode("something"),
-                                     class_=unicode("test_%s") % a)
+                                     href=six.text_type("www.test.case"),
+                                     id_=six.text_type("something"),
+                                     class_=six.text_type("test_%s") % a)
             except Exception as e:
-                print traceback.print_exc()
-                print e
+                print(traceback.print_exc())
+                print(e)
 
 
 def test_multiclass_call(register_builtin_html):

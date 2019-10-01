@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Module to hold shared code for main module internals and the plugins"""
+from __future__ import division
 
 from collections import OrderedDict
 import colorsys
@@ -35,7 +36,7 @@ import cmk.utils.regex
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.utils.memoize import MemoizeCache
 
@@ -154,7 +155,7 @@ def indexed_color(idx, total):
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
-        tone = ((idx / 4) % 6) + 1
+        tone = ((idx // 4) % 6) + 1
         if idx % 8 < 4:
             shade = "a"
         else:
@@ -166,8 +167,8 @@ def indexed_color(idx, total):
         idx = idx - _COLOR_WHEEL_SIZE
         base_color = idx % 7  # red, green, blue, red+green, red+blue,
         # green+blue, red+green+blue
-        delta = 255 / ((total - _COLOR_WHEEL_SIZE) / 7)
-        offset = 255 - (delta * ((idx / 7) + 1))
+        delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
+        offset = int(255 - (delta * ((idx / 7.0) + 1)))
 
         red = int(base_color in [0, 3, 4, 6])
         green = int(base_color in [1, 3, 5, 6])
@@ -297,26 +298,31 @@ def perfvar_translation(perfvar_name, check_command):
     }
 
 
+def scalar_bounds(perfvar_bounds, scale):
+    """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
+
+    Return "None" entries if no performance data and hence no scalars are available
+    """
+
+    scalars = {}
+    for name, value in zip(("warn", "crit", "min", "max"), perfvar_bounds):
+        if value is not None:
+            scalars[name] = float(value) * scale
+    return scalars
+
+
 def normalize_perf_data(perf_data, check_command):
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry = {
         "orig_name": perf_data[0],
         "value": perf_data[1] * translation_entry["scale"],
-        "scalar": {},
+        "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
         "scale": translation_entry["scale"],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
         "auto_graph": translation_entry["auto_graph"],
     }
 
-    # Add warn, crit, min, max
-    for perf_value, name in zip(perf_data[3:], ["warn", "crit", "min", "max"]):
-        if perf_value is not None:
-            try:
-                new_entry["scalar"][name] = float(perf_value) * translation_entry["scale"]
-            except Exception as exc:
-                if config.debug:
-                    raise exc
     return translation_entry["name"], new_entry
 
 
@@ -359,10 +365,6 @@ def translate_metrics(perf_data, check_command):
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
         translated_metrics[metric_name] = new_entry
-        # TODO: warn, crit, min, max
-        # if entry[2]:
-        #     # TODO: lower and upper levels
-        #     translated_metrics[metric_name]["warn"] = float(entry[2])
     return translated_metrics
 
 
@@ -380,6 +382,19 @@ def translate_metrics(perf_data, check_command):
 # TODO: Refactor evaluate and all helpers into single class
 
 
+def split_expression(expression):
+    if "#" in expression:
+        expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
+    else:
+        explicit_color = None
+
+    if "@" in expression:
+        expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
+    else:
+        explicit_unit_name = None
+    return expression, explicit_unit_name, explicit_color
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -393,27 +408,18 @@ def translate_metrics(perf_data, check_command):
 def evaluate(expression, translated_metrics):
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
-    else:
-        if "#" in expression:
-            expression, explicit_color = expression.rsplit("#",
-                                                           1)  # drop appended color information
-        else:
-            explicit_color = None
 
-        if "@" in expression:
-            expression, explicit_unit_name = expression.rsplit("@", 1)  # appended unit name
-        else:
-            explicit_unit_name = None
+    expression, explicit_unit_name, explicit_color = split_expression(expression)
 
-        value, unit, color = _evaluate_rpn(expression, translated_metrics)
+    value, unit, color = _evaluate_rpn(expression, translated_metrics)
 
-        if explicit_color:
-            color = "#" + explicit_color
+    if explicit_color:
+        color = "#" + explicit_color
 
-        if explicit_unit_name:
-            unit = unit_info[explicit_unit_name]
+    if explicit_unit_name:
+        unit = unit_info[explicit_unit_name]
 
-        return value, unit, color
+    return value, unit, color
 
 
 def _evaluate_rpn(expression, translated_metrics):
@@ -575,12 +581,7 @@ def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
     def eval_to_string(match):
         expression = match.group()[2:-1]
-        unit_name = None
-        if "@" in expression:
-            expression, unit_name = expression.split("@")
         value, unit, _color = evaluate(expression, translated_metrics)
-        if unit_name:
-            unit = unit_info[unit_name]
         if value is not None:
             return unit["render"](value)
         return _("n/a")
@@ -795,12 +796,12 @@ def get_palette_color_by_index(i, shading='a'):
 
 def get_next_random_palette_color():
     keys = _cmk_color_palette.keys()
-    if "random_color_index" in current_app.g:
-        last_index = current_app.g["random_color_index"]
+    if 'random_color_index' in g:
+        last_index = g.random_color_index
     else:
         last_index = random.randint(0, len(keys))
     index = (last_index + 1) % len(keys)
-    current_app.g["random_color_index"] = index
+    g.random_color_index = index
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 
@@ -811,7 +812,7 @@ def get_n_different_colors(n):
 
     colors = []
     while len(colors) < n:
-        weight_index = len(colors) * total_weight / n
+        weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
         colors.append(hsv_to_hexrgb((hue, 1, 1)))
     return colors
@@ -822,7 +823,7 @@ def _get_hue_by_weight_index(weight_index):
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
             section_size = section_end - section_begin
-            hue = section_begin + ((weight_index / section_weight) * section_size)
+            hue = section_begin + int((weight_index / section_weight) * section_size)
             return hue
         weight_index -= section_weight
         section_begin = section_end
@@ -901,8 +902,8 @@ def lighten_color(rgb, v):
 
 
 def _rgb_to_gray(rgb):
-    r, g, b = rgb
-    return 0.21 * r + 0.72 * g + 0.07 * b
+    r, gr, b = rgb
+    return 0.21 * r + 0.72 * gr + 0.07 * b
 
 
 def _mix_colors(a, b):

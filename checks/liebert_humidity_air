@@ -38,41 +38,47 @@ factory_settings['liebert_humidity_air_default_levels'] = {
 }
 
 
-def inventory_liebert_humidity_air(parsed):
-    for key, values in parsed[0].iteritems():
-        if values[0] and "Unavailable" not in values[0]:
-            yield (key.replace(" Humidity", ""), {})
+def _item_from_key(key):
+    return key.replace(" Humidity", "")
+
+
+def discover_liebert_humidity_air(parsed):
+    parsed, _extra_section = parsed
+    for key, (value, _unit) in parsed.iteritems():
+        if "Unavailable" not in value:
+            yield _item_from_key(key), {}
+
+
+def _get_item_data(item, parsed):
+    for key, data in parsed.iteritems():
+        if _item_from_key(key) == item:
+            return data
+    return (None, None)
 
 
 def check_liebert_humidity_air(item, params, parsed):
-    for key, values in parsed[0].iteritems():
-        short_key = key.replace(" Humidity", "")
+    parsed, liebert_system_section = parsed
+    value, unit = _get_item_data(item, parsed)
+    if value is None:
+        return
 
-        # We do not warn if a service value is unavailable
-        # but the device in standby mode
-        if item == short_key and \
-          "Unavailable" in values[0] and \
-          parsed[1]['Unit Operating State'] == "standby":
-            yield 0, "Unit is in standby (unavailable)"
-        elif item == short_key and not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "%.1f%s" % (value, unit), [('humidity', value, warn, crit)]
+    device_state = liebert_system_section.get('Unit Operating State')
+    if "Unavailable" in value and device_state == "standby":
+        yield 0, "Unit is in standby (unavailable)"
+        return
 
-            state = levels_liebert(value, warn, crit)
-            if state > 0:
-                yield state, "warn/crit at %s/%s" % (warn, crit)
+    try:
+        value = float(value)
+    except ValueError:
+        return
 
-            warn_lower, crit_lower = params['levels_lower']
-            state_lower = levels_liebert(value, warn_lower, crit_lower, 'lower')
-            if state_lower > 0:
-                yield state_lower, "warn/crit below %s/%s" % (warn_lower, crit_lower)
+    levels = params['levels'] + params['levels_lower']
+    yield check_levels(value, 'humidity', levels, unit=unit)
 
 
 check_info['liebert_humidity_air'] = {
-    'parse_function': parse_liebert,
-    'inventory_function': inventory_liebert_humidity_air,
+    'parse_function': lambda info: parse_liebert(info, str),
+    'inventory_function': discover_liebert_humidity_air,
     'check_function': check_liebert_humidity_air,
     'service_description': '%s Humidity',
     'snmp_info': (

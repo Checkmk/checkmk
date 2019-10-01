@@ -30,8 +30,11 @@
 # cifs:vserver        session_timed_out 17731        sd_max_ace_size         cifs_latency 9403817108427        ..
 # iscsi_lif:vserver        iscsi_read_ops 4071295661        avg_write_latency 3429809602514        ..
 
+# A list of counter name is available at
+# https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
 
-def inventory_netapp_api_vs_traffic(parsed, what):
+
+def inventory_netapp_api_vs_traffic(parsed):
     vservers = {x.split(".", 1)[1] for x in parsed.keys()}
     for vserver in vservers:
         yield vserver, {}
@@ -50,9 +53,9 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
              ("sent_packet", "if_out_pkts", "sent packets", 1, int)]),
         "fcp_lif:vserver": (
             "FCP",
-            [("avg_read_latency", "fcp_read_latency", "avg. Read latency", 0.001,
+            [("fcp_read_latency", "fcp_read_latency", "avg. Read latency", 0.001,
               lambda x: "%.2f ms" % (x * 1000)),
-             ("avg_write_latency", "fcp_write_latency", "avg. Write latency", 0.001,
+             ("fcp_write_latency", "fcp_write_latency", "avg. Write latency", 0.001,
               lambda x: "%.2f ms" % (x * 1000)),
              ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
              ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable)],
@@ -68,9 +71,9 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
         ),
         "iscsi_lif:vserver": (
             "iSCSI",
-            [("avg_read_latency", "iscsi_read_latency", "avg. Read latency", 0.001,
+            [("iscsi_read_latency", "iscsi_read_latency", "avg. Read latency", 0.001,
               lambda x: "%.2f ms" % (x * 1000)),
-             ("avg_write_latency", "iscsi_write_latency", "avg. Write latency", 0.001,
+             ("iscsi_write_latency", "iscsi_write_latency", "avg. Write latency", 0.001,
               lambda x: "%.2f ms" % (x * 1000)),
              ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
              ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable)],
@@ -105,6 +108,22 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
         )
     }
 
+    def get_ref(what, data):
+        # According to "NetApp® Unified Storage Performance Management",
+        # latency calculation is a function of the number of ops.
+        refname = {
+            "iscsi_read_latency": "iscsi_read_ops",
+            "iscsi_write_latency": "iscsi_write_ops",
+            "fcp_read_latency": "fcp_read_ops",
+            "fcp_write_latency": "fcp_write_ops",
+            "cifs_read_latency": "cifs_read_ops",
+            "cifs_write_latency": "cifs_write_ops",
+        }.get(what)
+        try:
+            return int(data[refname])
+        except KeyError:
+            return None
+
     now = time.time()
     for protocol, (protoname, values) in protocol_map.items():
         data = parsed.get("%s.%s" % (protocol, item))
@@ -115,14 +134,18 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             if what not in data:
                 continue
 
-            rate = get_rate('%s.%s' % (protocol, what), now, int(data[what]) * scale)
+            ref = get_ref(what, data)
+            if ref is None:
+                ref = now
+
+            rate = get_rate('%s.%s' % (protocol, what), ref, int(data[what]) * scale)
             yield 0, "%s %s: %s" % (protoname, perftext, format_func(rate)), [(perfname, rate)]
 
 
 check_info["netapp_api_vs_traffic"] = {
     'parse_function': lambda info: netapp_api_parse_lines(
         info, custom_keys=["protocol", "instance_name"]),
-    'inventory_function': lambda parsed: inventory_netapp_api_vs_traffic(parsed, "lif:vserver"),
+    'inventory_function': inventory_netapp_api_vs_traffic,
     'check_function': check_netapp_api_vs_traffic,
     'service_description': 'Traffic vServer %s',
     'has_perfdata': True,

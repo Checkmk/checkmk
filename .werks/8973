@@ -1,0 +1,10 @@
+Title: sophos_disk: Monitoring of disk percentage usage for Sophos devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566916104
+Class: feature
+
+This check plugin allows the user to monitor disk usage for Sophos devices. Upper levels for both usages can be defined through the WATO.

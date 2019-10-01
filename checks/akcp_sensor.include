@@ -92,7 +92,8 @@ def check_akcp_humidity(item, params, info):
                 state, state_name = akcp_sensor_level_states[status]
                 yield state, "State: %s" % state_name
 
-            yield check_humidity(int(percent), params)
+            if percent:
+                yield check_humidity(int(percent), params)
 
 
 #.

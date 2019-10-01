@@ -31,7 +31,7 @@ def expected_output():
     drive = r'[A-Z]:%s' % re.escape(os.sep)
     expected = [
         re.escape(r'<<<%s:sep(9)>>>' % Globals.section),
-        r'(%s|\w+)\s+\w+\s+\d+\s+\d+\s+\d+\s+\d{1,3}%s\s+%s' % (drive, re.escape('%'), drive)
+        r'(%s.*|\w+)\t\w*\t\d+\t\d+\t\d+\t\d{1,3}%s\t%s' % (drive, re.escape('%'), drive)
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
@@ -40,7 +40,8 @@ def expected_output():
 
 def test_section_df(request, testconfig, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    actual_output_len = len(actual_output)
+    result = actual_output
+    actual_output_len = len(result)
     expected_output_len = len(expected_output)
 
     # if we have length mismatch we have to extend expected output

@@ -480,7 +480,7 @@ def check_mssql_counters_locks_per_batch(item, params, parsed):
         if batch_rate == 0:
             lock_per_batch = 0
         else:
-            lock_per_batch = lock_rate / batch_rate
+            lock_per_batch = lock_rate / batch_rate  # fixed: true-division
 
         node_info = ""
         if node_name:

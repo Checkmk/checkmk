@@ -40,53 +40,41 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetscalerVserver(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_netscaler_vserver():
+    return Dictionary(elements=[
+        ("health_levels",
+         Tuple(
+             title=_("Lower health levels"),
+             elements=[
+                 Percentage(title=_("Warning below"), default_value=100.0),
+                 Percentage(title=_("Critical below"), default_value=0.1),
+             ],
+         )),
+        ("cluster_status",
+         DropdownChoice(
+             title=_("Cluster behaviour"),
+             help=_("Here you can choose the cluster behaviour. The best state "
+                    "of all nodes is the default. This means, if  you have at "
+                    "least one node in status UP the check returns OK. Health levels "
+                    "should be the same on each node. If you choose worst, the check "
+                    "will return CRIT if at least one node is in a state other than OK. "
+                    "Health levels should be the same on each node, so only the first "
+                    "node the health-levels are checked."),
+             choices=[
+                 ("best", _("best state")),
+                 ("worst", _("worst state")),
+             ],
+             default_value="best",
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "netscaler_vserver"
 
-    @property
-    def title(self):
-        return _("Netscaler VServer States")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("health_levels",
-             Tuple(
-                 title=_("Lower health levels"),
-                 elements=[
-                     Percentage(title=_("Warning below"), default_value=100.0),
-                     Percentage(title=_("Critical below"), default_value=0.1),
-                 ],
-             )),
-            ("cluster_status",
-             DropdownChoice(
-                 title=_("Cluster behaviour"),
-                 help=_("Here you can choose the cluster behaviour. The best state "
-                        "of all nodes is the default. This means, if  you have at "
-                        "least one node in status UP the check returns OK. Health levels "
-                        "should be the same on each node. If you choose worst, the check "
-                        "will return CRIT if at least one node is in a state other than OK. "
-                        "Health levels should be the same on each node, so only the first "
-                        "node the health-levels are checked."),
-                 choices=[
-                     ("best", _("best state")),
-                     ("worst", _("worst state")),
-                 ],
-                 default_value="best",
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of VServer"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="netscaler_vserver",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        item_spec=lambda: TextAscii(title=_("Name of VServer")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_netscaler_vserver,
+        title=lambda: _("Netscaler VServer States"),
+    ))

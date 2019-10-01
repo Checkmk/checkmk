@@ -24,13 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import six
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.i18n import _
+
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
@@ -51,7 +54,6 @@ from cmk.gui.plugins.views import (
     cmp_simple_string,
     cmp_num_split,
 )
-
 from cmk.gui.permissions import (
     permission_registry,
     Permission,
@@ -138,7 +140,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = 0.0
             elif isinstance(row[key], str):
                 row[key] = ""
-            elif isinstance(row[key], unicode):
+            elif isinstance(row[key], six.text_type):
                 row[key] = u""
 
 
@@ -1457,7 +1459,7 @@ def cmp_simple_state(column, ra, rb):
         a = 1.5
     if b == 3:
         b = 1.5
-    return cmp(a, b)
+    return (a > b) - (a < b)
 
 
 declare_1to1_sorter("event_id", cmp_simple_number)

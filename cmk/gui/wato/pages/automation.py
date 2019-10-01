@@ -147,7 +147,7 @@ class ModeAutomation(AjaxPage):
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             html.write(watolib.mk_repr(self._automation_push_profile()))
         except Exception as e:
-            logger.exception()
+            logger.exception("error pushing profile")
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
@@ -185,7 +185,7 @@ class ModeAutomation(AjaxPage):
             automation = automation_command()
             html.write(repr(automation.execute(automation.get_request())))
         except Exception as e:
-            logger.exception()
+            logger.exception("error executing automation command")
             if config.debug:
                 raise
             html.write_text(_("Internal automation error: %s\n%s") % \

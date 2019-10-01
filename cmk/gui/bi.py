@@ -50,7 +50,7 @@ import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
@@ -305,7 +305,7 @@ def aggregation_group_choices():
     for aggr_def in config.aggregations + config.host_aggregations:
         group_names.update(aggr_def[1])
 
-    return [(g, g) for g in sorted(group_names, key=lambda x: x.lower())]
+    return [(gn, gn) for gn in sorted(group_names, key=lambda x: x.lower())]
 
 
 def log(*args):
@@ -442,8 +442,8 @@ class JobWorker(multiprocessing.Process):
             raise MKConfigError("Aggregation groups mismatch")
 
         aggr_options, aggr = aggr[0], aggr[1:]
-        #        aggregation_id = aggr_options.get("id", "")
-        use_layout_id = aggr_options.get("use_layout_id", "")
+        aggregation_id = aggr_options.get("id", "")
+        node_visualization = aggr_options.get("node_visualization", {})
         use_hard_states = aggr_options.get("hard_states")
         downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
 
@@ -456,14 +456,15 @@ class JobWorker(multiprocessing.Process):
 
         for this_entry in new_entries:
             remove_empty_nodes(this_entry)
-            #            this_entry["aggregation_id"] = aggregation_id
-            this_entry["use_layout_id"] = use_layout_id
+            this_entry["aggregation_id"] = aggregation_id
+            this_entry["node_visualization"] = node_visualization
             this_entry["use_hard_states"] = use_hard_states
             this_entry["downtime_aggr_warn"] = downtime_aggr_warn
 
         new_entries = [e for e in new_entries if len(e["nodes"]) > 0]
         for entry in new_entries:
             entry["aggr_group_tree"] = groups
+            entry["aggr_type"] = "multi" if aggr_type == AGGR_MULTI else "single"
 
         # Generates a unique id for the given entry
         def get_hash(entry):
@@ -553,7 +554,7 @@ class BILock(object):
 
     def __enter__(self):
         if not os.path.exists(self._filepath):
-            file(self._filepath, "a+")
+            open(self._filepath, "a+")
 
         lock_options = fcntl.LOCK_SH if self._shared else fcntl.LOCK_EX
         lock_options = lock_options if self._blocking else (lock_options | fcntl.LOCK_NB)
@@ -591,13 +592,13 @@ class BILock(object):
 
 
 def marshal_save_data(filepath, data):
-    with file(filepath, "w") as the_file:
+    with open(filepath, "w") as the_file:
         marshal.dump(data, the_file)
         os.fsync(the_file.fileno())
 
 
 def marshal_load_data(filepath):
-    return marshal.load(file(filepath))
+    return marshal.load(open(filepath))
 
 
 # This class allows you to load and save python data
@@ -616,7 +617,7 @@ class BICacheFile(object):
         self._filetime = None
 
         try:
-            file(self._filepath, "a")
+            open(self._filepath, "a")
         except IOError:
             pass
 
@@ -672,7 +673,7 @@ class BICacheFile(object):
     def truncate(self):
         log("Truncate %s" % self._filepath)
         with BILock(self._filepath):
-            file(self._filepath, "w")
+            open(self._filepath, "w")
             self._cached_data = None
             self._filetime = os.stat(self._filepath).st_mtime
 
@@ -1428,10 +1429,12 @@ def compile_forest(only_hosts=None, only_groups=None):
 
     # Prevent multiple redundant calls of this function
     # Sometimes, the GUI likes to call this function a hundred times in the same request
-    html_cache_id = "BI_CACHE_%r/%r" % (only_hosts, only_groups)
-    if html_cache_id in current_app.g:
+    if 'bi_cache' not in g:
+        g.bi_cache = {}
+    html_cache_id = "%r/%r" % (only_hosts, only_groups)
+    if html_cache_id in g.bi_cache:
         return
-    current_app.g[html_cache_id] = "1"
+    g.bi_cache[html_cache_id] = "1"
 
     compilation_start_time = time.time()
     log("###########################################################")
@@ -1484,7 +1487,7 @@ def compile_forest(only_hosts=None, only_groups=None):
 
     except Exception:
         log("Exception in BI compilation main loop:")
-        logger.exception()
+        logger.exception("error compiling BI forest")
     finally:
         if g_bi_cache_manager.get_error_info():
             raise MKConfigError(g_bi_cache_manager.get_error_info())
@@ -1921,10 +1924,14 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl, rulename=None):
     if docu_url:
         aggregation["docu_url"] = docu_url
 
+    layout_style = rule.get("layout_style")
+    if layout_style:
+        aggregation["rule_layout_style"] = layout_style
+
     if icon:
         aggregation["icon"] = icon
 
-    aggregation["rule_id"] = [_rule_to_pack_lookup[rulename], rulename, funcname]
+    aggregation["rule_id"] = [_rule_to_pack_lookup.get(rulename, "default"), rulename, funcname]
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -2149,8 +2156,8 @@ def compile_leaf_node(host_re, service_re=config.HOST_STATE):
 # the states of all nodes
 def execute_tree(tree, status_info=None):
     aggregation_options = {
-        #        "aggregation_id": tree["aggregation_id"],
-        "use_layout_id": tree["use_layout_id"],
+        #        "use_aggregation_id": tree["aggregation_id"],
+        "node_visualization": tree["node_visualization"],
         "use_hard_states": tree["use_hard_states"],
         "downtime_aggr_warn": tree["downtime_aggr_warn"],
     }
@@ -2784,9 +2791,7 @@ def render_tree_json(row):
     return "", render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-class ABCFoldableTreeRenderer(object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCFoldableTreeRenderer(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root
@@ -3236,6 +3241,7 @@ def create_aggregation_row(tree, status_info=None):
         "aggr_output": output,
         "aggr_hosts": node["reqhosts"],
         "aggr_function": node["func"],
+        "aggr_type": node["aggr_type"],
     }
 
 
@@ -3594,33 +3600,47 @@ def migrate_bi_configuration():
 
 
 def _convert_aggregation(aggr_tuple):
-    old_groups = aggr_tuple[1]
+    """ The first values in the tuple may indicate a special handling
+    The job of this function is to extract these special keys and put them into a dict
+    Furthermore, outdated aggregation group formats will be fixed too."""
+
+    special_values = {
+        config.DISABLED: "disabled",
+        config.HARD_STATES: "hard_states",
+        config.DT_AGGR_WARN: "downtime_aggr_warn",
+    }
+
+    old_groups = None
+    options = {}
+    for idx, token in enumerate(list(aggr_tuple)):
+        if token in special_values.keys():
+            options[special_values[token]] = True
+            continue
+        if isinstance(token, dict):
+            # Should be a dictionary at the start of the tuple -> new format
+            # All options are specified within this dict
+            options = token
+            continue
+
+        # The aggregation groups
+        old_groups = token
+        aggr_tuple = aggr_tuple[idx:]
+        break
+
+    # The data type of the old_groups was a string or a list. Unify them into this
+    # groups = ["group1", "group2", "sub1/sub2/group3"]
     updated_groups = []
     if isinstance(old_groups, list):
         updated_groups.extend(old_groups)
     else:
         updated_groups.append(old_groups)
-
     updated_groups.sort()
+
+    # Create new tuple with the updated groups
     tmp_aggr_list = list(aggr_tuple)
-    tmp_aggr_list[1] = updated_groups
+    tmp_aggr_list[0] = updated_groups
     aggr_tuple = tuple(tmp_aggr_list)
 
-    if isinstance(aggr_tuple[0], dict):
-        return aggr_tuple  # already converted
-
-    options = {}
-    map_class_to_key = {
-        config.DISABLED: "disabled",
-        config.HARD_STATES: "hard_states",
-        config.DT_AGGR_WARN: "downtime_aggr_warn",
-    }
-    for idx, token in enumerate(list(aggr_tuple)):
-        if token in map_class_to_key:
-            options[map_class_to_key[token]] = True
-        else:
-            aggr_tuple = aggr_tuple[idx:]
-            break
     return (options,) + aggr_tuple
 
 

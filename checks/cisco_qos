@@ -248,7 +248,7 @@ def check_cisco_qos(item, params, info):
                         speed = speed * (qos_bandwidth / 100.0)
 
                     elif qos_unit == 3:
-                        remaining = (speed / 100) * qos_bandwidth
+                        remaining = (speed / 100.0) * qos_bandwidth
                         speed = speed - remaining
                     break
                 except KeyError:
@@ -263,8 +263,8 @@ def check_cisco_qos(item, params, info):
         post_crit = bw / 100.0 * post_crit
     elif isinstance(post_warn, int):
         if unit == 'bit':
-            post_warn = post_warn / 8
-            post_crit = post_crit / 8
+            post_warn = post_warn // 8
+            post_crit = post_crit // 8
 
     # Determine drop warn/crit levels
     if isinstance(drop_warn, float) and not had_legacy_params:

@@ -39,40 +39,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNginxStatus(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_nginx_status():
+    return TextAscii(title=_("Nginx Server"),
+                     help=_("A string-combination of servername and port, e.g. 127.0.0.1:80."))
 
-    @property
-    def check_group_name(self):
-        return "nginx_status"
 
-    @property
-    def title(self):
-        return _("Nginx Status")
+def _parameter_valuespec_nginx_status():
+    return Dictionary(elements=[
+        ("active_connections",
+         Tuple(
+             title=_("Active Connections"),
+             help=_("You can configure upper thresholds for the currently active "
+                    "connections handled by the web server."),
+             elements=[
+                 Integer(title=_("Warning at"), unit=_("connections")),
+                 Integer(title=_("Critical at"), unit=_("connections"))
+             ],
+         ))
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("active_connections",
-             Tuple(
-                 title=_("Active Connections"),
-                 help=_("You can configure upper thresholds for the currently active "
-                        "connections handled by the web server."),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=_("connections")),
-                     Integer(title=_("Critical at"), unit=_("connections"))
-                 ],
-             ))
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Nginx Server"),
-                         help=_("A string-combination of servername and port, e.g. 127.0.0.1:80."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="nginx_status",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_nginx_status,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_nginx_status,
+        title=lambda: _("Nginx Status"),
+    ))

@@ -59,7 +59,7 @@ class Profile(object):
             self._profile.dump_stats(self._profile_file)
             cmk.utils.log.logger.info("Created profile file: %s", self._profile_file)
 
-            file(self._profile_file + ".py",
+            open(self._profile_file + ".py",
                  "w").write("#!/usr/bin/env python\n"
                             "import pstats\n"
                             "stats = pstats.Stats(%r)\n"

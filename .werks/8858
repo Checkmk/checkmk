@@ -1,0 +1,11 @@
+Title: Fix broken distributed setup when Livestatus TLS is not enabled (1.6.0b5 regression, #7987)
+Level: 2
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1565788063
+
+Werk #7987 broke distributed setups via Livestatus when Livestatus TLS is not enabled.

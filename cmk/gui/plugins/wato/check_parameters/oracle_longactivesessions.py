@@ -39,37 +39,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleLongactivesessions(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_oracle_longactivesessions():
+    return Dictionary(elements=[("levels",
+                                 Tuple(
+                                     title=_("Levels of active sessions"),
+                                     elements=[
+                                         Integer(title=_("Warning if more than"),
+                                                 unit=_("sessions")),
+                                         Integer(title=_("Critical if more than"),
+                                                 unit=_("sessions")),
+                                     ],
+                                 ))],)
 
-    @property
-    def check_group_name(self):
-        return "oracle_longactivesessions"
 
-    @property
-    def title(self):
-        return _("Oracle Long Active Sessions")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[("levels",
-                                     Tuple(
-                                         title=_("Levels of active sessions"),
-                                         elements=[
-                                             Integer(title=_("Warning if more than"),
-                                                     unit=_("sessions")),
-                                             Integer(title=_("Critical if more than"),
-                                                     unit=_("sessions")),
-                                         ],
-                                     ))],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="oracle_longactivesessions",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_oracle_longactivesessions,
+        title=lambda: _("Oracle Long Active Sessions"),
+    ))

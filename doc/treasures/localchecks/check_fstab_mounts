@@ -11,11 +11,12 @@
 # tmpfs  /opt/omd/sites/hirn/tmp tmpfs noauto,user,mode=755,uid=hirn,gid=hirn 0 0
 # tmpfs  /opt/omd/sites/heute/tmp tmpfs noauto,user,mode=755,uid=heute,gid=heute 0 0
 
-mounted = [l.split()[1] for l in file("/proc/mounts")]
+from __future__ import print_function
+mounted = [l.split()[1] for l in open("/proc/mounts")]
 
 missing = []
 count = 0
-for line in file("/etc/fstab"):
+for line in open("/etc/fstab"):
     if not line.strip() or line.strip().startswith("#"):
         continue
 
@@ -35,4 +36,4 @@ else:
     state = 0
     output = "All %d expected filesystems of /etc/fstab are mounted" % count
 
-print "%d Mounted_Filesystems - %s" % (state, output)
+print("%d Mounted_Filesystems - %s" % (state, output))

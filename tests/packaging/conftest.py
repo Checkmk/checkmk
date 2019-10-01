@@ -9,15 +9,17 @@ def site(request):
     pass
 
 
+# TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
-def version_path():
-    path = os.environ.get("VERSION_PATH")
+def package_path():
+    path = os.environ.get("PACKAGE_PATH")
     if not path:
-        raise Exception("VERSION_PATH environment variable pointing to the version "
-                        "directory (e.g. /bauwelt/download/2016.12.22) is missing")
+        raise Exception("PACKAGE_PATH environment variable pointing to the package "
+                        "to be tested is missing")
     return path
 
 
+# TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
 def cmk_version():
     version = os.environ.get("VERSION")

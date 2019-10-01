@@ -1,0 +1,25 @@
+title: Various Linux kernel counters
+agents: linux
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors various counters as found in {/proc/stat}
+ and {/proc/vmstat}. Examples for those counters are {ctxt}
+ (the number of process context switches per second), {pgmajfault}
+ (the number of major page faults per second), {processes}
+ (the number of process creations per second), {pswpin}
+ (the number of written swap pages to disk) and {pswpout}
+ (the number of read swap pages from disk).
+
+ You can set a critical and warning level on each of those
+ counters or just monitor them without levels in order to
+ collect performance data. Levels you set to {None} will not
+ be checked. For {Page Swap In} and {Page Swap Out}
+ both upper and lower levels can be set.
+
+inventory:
+ One check for all of {"Major Page Faults"},
+ {"Context Switches"}, {"Process Creations"},
+ {"Page Swap In"} and {"Page Swap Out"}
+ will be created on each host providing that data.

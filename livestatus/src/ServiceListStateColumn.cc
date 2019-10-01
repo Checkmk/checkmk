@@ -57,9 +57,10 @@ int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
                                                      const contact *auth_user) {
     int32_t result = 0;
 #ifdef CMC
+    (void)mc;
     if (mem != nullptr) {
         for (const auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(mc, auth_user)) {
+            if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 update(logictype, svc.get(), result);
             }
         }

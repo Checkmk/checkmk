@@ -206,7 +206,7 @@ def main():
         settings = {'port': 9440}
         cfg_path = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "prism.cfg")
         if os.path.isfile(cfg_path):
-            execfile(cfg_path, settings, settings)
+            exec (open(cfg_path).read(), settings, settings)
     else:
         from optparse import OptionParser
         parser = OptionParser()

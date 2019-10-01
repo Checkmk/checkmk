@@ -33,23 +33,17 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class ManualCheckParameterOMDStatus(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksApplications
+def _item_spec_omd_status():
+    return TextAscii(
+        title=_("Name of the OMD site"),
+        help=_("The name of the OMD site to check the status for"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "omd_status"
 
-    @property
-    def title(self):
-        return _("OMD site status")
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the OMD site"),
-            help=_("The name of the OMD site to check the status for"),
-        )
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="omd_status",
+        group=RulespecGroupManualChecksApplications,
+        item_spec=_item_spec_omd_status,
+        title=lambda: _("OMD site status"),
+    ))

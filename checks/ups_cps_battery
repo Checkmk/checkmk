@@ -37,7 +37,7 @@ def parse_ups_cps_battery(info):
 
     # A TimeTick is 1/100 s
     if info[0][2]:
-        parsed["battime"] = float(info[0][2]) / 100
+        parsed["battime"] = float(info[0][2]) / 100.0
     return parsed
 
 
@@ -112,12 +112,12 @@ def check_ups_cps_battery(item, params, parsed):
     battime = parsed["battime"]
     # WATO rule stores remaining time in minutes
     battime_params = params.get("battime")
-    battime_status = check_lower_levels(battime / 60, battime_params)
+    battime_status = check_lower_levels(battime / 60.0, battime_params)
     if battime_status:
         levelstext = " (warn/crit at %d/%d min)" % battime_params
     else:
         levelstext = ""
-    yield battime_status, ("%.0f minutes remaining on battery" % (battime / 60)) + levelstext
+    yield battime_status, ("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext
 
 
 check_info["ups_cps_battery"] = {

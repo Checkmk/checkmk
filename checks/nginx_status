@@ -67,7 +67,8 @@ def check_nginx_status(item, params, data):
 
     # Add some more values, derived from the raw ones...
     computed_values = {}
-    computed_values['requests_per_conn'] = data['requests'] / data['handled']
+    computed_values['requests_per_conn'] = data['requests'] / data[
+        'handled']  # fixed: true-division
 
     this_time = int(time.time())
     for key in ['accepted', 'handled', 'requests']:

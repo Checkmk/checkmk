@@ -44,7 +44,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 
 from cmk.gui.watolib.utils import (
     wato_root_dir,
@@ -329,10 +329,10 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def all_folders():
-        if "wato_folders" not in current_app.g:
-            wato_folders = current_app.g["wato_folders"] = {}
+        if 'wato_folders' not in g:
+            wato_folders = g.wato_folders = {}
             Folder("", "").add_to_dictionary(wato_folders)
-        return current_app.g["wato_folders"]
+        return g.wato_folders
 
     @staticmethod
     def folder_choices():
@@ -374,10 +374,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def invalidate_caches():
-        try:
-            del current_app.g["wato_folders"]
-        except KeyError:
-            pass
+        g.pop('wato_folders', {})
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -389,8 +386,8 @@ class CREFolder(BaseFolder):
     @staticmethod
     def current():
         # type: () -> CREFolder
-        if "wato_current_folder" in current_app.g:
-            return current_app.g["wato_current_folder"]
+        if 'wato_current_folder' in g:
+            return g.wato_current_folder
 
         folder = SearchFolder.current_search_folder()
         if folder:
@@ -421,7 +418,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def set_current(folder):
-        current_app.g["wato_current_folder"] = folder
+        g.wato_current_folder = folder
 
     # .-----------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                        |
@@ -783,14 +780,15 @@ class CREFolder(BaseFolder):
         _permitted_groups, contact_groups, use_for_services = self.groups()
         if contact_groups:
             out.write("\nhost_contactgroups.insert(0, \n"
-                      "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" %
+                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
                       list(contact_groups))
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
                 for cg in contact_groups:
                     out.write(
                         "\nservice_contactgroups.insert(0, \n"
-                        "  {'value': %r, 'condition': {'host_folder': '/' + FOLDER_PATH}})\n" % cg)
+                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                        cg)
 
         # Write information about all host attributes into special variable - even
         # values stored for check_mk as well.
@@ -1036,15 +1034,14 @@ class CREFolder(BaseFolder):
             msg = "/".join(folder.title_path_without_root())
             choices.append((folder_path, msg))
 
-        choices.sort(cmp=lambda a, b: cmp(a[1].lower(), b[1].lower()))
+        choices.sort(key=lambda x: x[1].lower())
         return choices
 
     def subfolders_sorted_by_title(self):
-        return sorted(self.all_subfolders().values(), cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.all_subfolders().values(), key=lambda x: x.title())
 
     def visible_subfolders_sorted_by_title(self):
-        return sorted(self.visible_subfolders().values(),
-                      cmp=lambda a, b: cmp(a.title(), b.title()))
+        return sorted(self.visible_subfolders().values(), key=lambda x: x.title())
 
     def site_id(self):
         if "site" in self._attributes:
@@ -2461,7 +2458,7 @@ def get_folder_title_path(path, with_links=False):
     components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]"""
     # In order to speed this up, we work with a per HTML-request cache
     cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
-    cache = current_app.g.setdefault(cache_name, {})
+    cache = g.setdefault(cache_name, {})
     if path not in cache:
         cache[path] = Folder.folder(path).title_path(with_links)
     return cache[path]

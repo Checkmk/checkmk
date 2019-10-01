@@ -145,6 +145,16 @@ bool PatchStateHash(const std::filesystem::path& ini,
                     const std::string& hash) noexcept;
 std::filesystem::path FindOwnDatFile();
 std::filesystem::path ConstructDatFileName() noexcept;
+
 }  // namespace cma::cfg::upgrade
+
+namespace cma::cfg::rm_lwa {
+bool IsRequestedByRegistry();
+void SetAlreadyRemoved();
+bool IsAlreadyRemoved();
+bool IsToRemove();
+void Execute();
+
+}  // namespace cma::cfg::rm_lwa
 
 #endif  // upgrade_h__

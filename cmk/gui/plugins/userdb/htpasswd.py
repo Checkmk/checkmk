@@ -124,6 +124,9 @@ class HtpasswdUserConnector(UserConnector):
     # USERDB API METHODS
     #
 
+    def is_enabled(self):
+        return True
+
     def check_credentials(self, user_id, password):
         users = self._get_htpasswd().load()
         if user_id not in users:

@@ -1,7 +1,106 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+tails.  You should have received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+
+// -----------------------------------------------------------------------------
+// Colors
+// -----------------------------------------------------------------------------
+$white:    rgb(255, 255, 255);
+$black:    rgb(0, 0, 0);
+$warning:  rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
+$danger:   rgb(255, 50, 50);
+$success:  rgb(19, 211, 137);
+$info:     rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
+$grey-1:   rgb(250, 250, 250);
+$grey-2:   rgb(189, 189, 189);
+$grey-3:   rgb(68, 68, 68);
+$grey-4:   rgb(51, 51, 51);
+$grey-5:   rgb(50, 50, 50);
+$grey-6:   rgb(40, 40, 40);
+$grey-7:   rgb(33, 33, 33);
+$shadow:   rgba(33, 33, 33, .35);
+
+
+// -----------------------------------------------------------------------------
+// Global toggles
+// -----------------------------------------------------------------------------
+$enable-rounded:  true;
+
+// -----------------------------------------------------------------------------
+// Spacing
+// -----------------------------------------------------------------------------
+$spacer:        1rem;
+$line-height:   1.5;
+
+$border-width:  1px;
+$border-color:  $grey-3;
+
+// -----------------------------------------------------------------------------
+// Fonts
+// -----------------------------------------------------------------------------
+$font-family-sans-serif:  "Lato", "Roboto", Helvetica, Arial, sans-serif;
+$font-family-monospace:   SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$font-family-base:        $font-family-sans-serif;
+
+$font-size__base:          1rem; // Assumes the browser default, typically `16px`
+
+$font-weight__light:       300;
+$font-weight__normal:      400;
+$font-weight__bold:        700;
+
+$font-weight-base:        $font-weight__normal;
+
+$headings__margin-bottom:  ($spacer * .5);
+
+// -----------------------------------------------------------------------------
+// Body
+// -----------------------------------------------------------------------------
+$body__background-color: $grey-5;
+$body__color: $grey-1;
+
+// -----------------------------------------------------------------------------
+// Buttons
+// -----------------------------------------------------------------------------
+$button__color:                    $white;
+$button__background-color:         $grey-6;
+$button__hover__background-color:  mix($white, $grey-6, 30%);
+$button__border-color:             $grey-7;
+
+// -----------------------------------------------------------------------------
+// Forms
+// -----------------------------------------------------------------------------
+$input__color:             $white;
+$input__background-color:  $grey-3;
+$input__border-color:      $grey-3;
+
 // General
 
-$theme-color-black:                         #000; // black
-$theme-color-white:                         #fff; // white
+$theme-color-black:                         $black; // black
+$theme-color-white:                         $white; // white
 $theme-color-lightgrey:                     #f8f8f8; // light grey
 $theme-color-darkgrey:                      #838383; // dark grey
 
@@ -18,12 +117,16 @@ $theme-border-radius:                       4px;
 // Buttons
 
 $theme-button-background:                   #f7f7f7;
+$theme-button-background-hover:             $theme-button-background;
 $theme-button-border:                       #d9d9d9;
 $theme-button-hover:                        #ffe350;
 $theme-button-height:                       28px;
 
 
 // States
+
+$theme-color-state-1-background:	    $theme-color-main;
+$theme-color-state-1-border:		    #e9c400; // yellow
 
 $theme-color-state-2-background:            #e85555;
 $theme-color-state-2-border:                #e53f3f;
@@ -44,12 +147,12 @@ $theme-color-state-8-background:            #f1aea2;
 
 $theme-color-state-9-background:            #bf5abf;
 
-$theme-color-state-warning-border:          #e9c400; // yellow
-
 $theme-color-state-error-border:            #e22828; // red
 
 $theme-color-state-success-background:      #aae199; // green
 $theme-color-state-success-border:          #9adb85; // green
+
+$theme-color-perfometer-title:              $theme-color-text;
 
 
 // Tables
@@ -116,3 +219,324 @@ $theme-letter-spacing-table:                1px;
 
 $tag-margin:                                0 5px 2px 0;
 $tag-padding:                               .1em .3em;
+$tag-font-color:			    $white;
+$tag-opacity:				    null;
+$tag-discovered-opacity:		    null;
+$tag-hover-opacity:			    .5;
+
+$tag-input-bg-color:			    #cccfdb;
+$tag-dropdown-active-color:		    inherit;
+$tag-dropdown-active-bg-color:		    null;
+
+
+// -----------------------------------------------------------------------------
+// Temporary variables for implementing the dark theme
+// These should be put into a more intuitive naming structure afterwards.
+// -----------------------------------------------------------------------------
+
+$primary-bg-color:			    $white;
+$secondary-bg-color:			    $white;
+
+$primary-font-color:			    $theme-color-black;
+$secondary-font-color:			    $theme-color-table-text;
+$primary-hover-font-color:		    $theme-color-black;
+$primary-sidebar-font-color:		    $white;
+
+$primary-link-color:			    $theme-color-text;
+$secondary-link-color:			    $theme-color-table-text;
+
+$primary-border:			    null;
+$primary-table-border:			    1px solid $theme-color-table-border;
+$secondary-table-border:		    null;
+
+$primary-th-bg-color:			    #f5f5f5;
+$primary-td-bg-color:			    $theme-color-table-background;
+
+$primary-box-shadow:			    0.5px 0.5px 1px #ccc;
+$primary-border-radius:			    $theme-border-radius;
+
+$dashboard-stats-bg-color:		    $white;
+$dashboard-tr-border-bottom:		    null;
+
+$checkbox-border-color:			    #73767a;
+$checkbox-shadow:			    #888;
+$checkbox-checked-color:		    $primary-font-color;
+$checkbox-checked-bg-color:		    #ddd;
+
+$toggle-switch-on-bg-color:		    #54a626;
+$toggle-switch-on-border:		    null;
+$toggle-switch-off-bg-color:		    #f60000;
+$toggle-switch-off-border:		    null;
+$toggle-switch-font-color:		    $white;
+$toggle-switch-height:			    17px;
+$toggle-switch-font-weight:		    700;
+
+$toggle-button-off-border:		    null;
+$toggle-button-down-bg-color:		    $theme-color-text-light;
+$toggle-button-down-border-color:	    $theme-button-border;
+$toggle-button-down-hover-bg-color:	    $theme-button-border;
+$toggle-button-down-hover-border-color:	    #ccc;
+$toggle-button-search-img-filter:	    null;
+
+$success-bg-color:			    #9dbecd;
+
+$filter-inversion-percentage:		    100%;
+
+$color-div-border-color:		    $theme-color-black;
+
+$success-alert-bg-color:		    $theme-color-state-success-background;
+$success-alert-border-color:		    $theme-color-state-success-border;
+
+$data-container-bg-color:		    null;
+$data-container-border:			    null;
+
+$oddeven-table-bg-color:		    transparent;
+$data-td-bg-color:			    $white;
+$data-table-border-collapse:		    null;
+$data-table-border-spacing:		    0 2px;
+$data-table-border-topmost:		    $primary-table-border;
+$data-table-border-top:			    $primary-table-border;
+$data-table-border-bottom:		    $primary-table-border;
+$data-table-state-border-top:		    null;
+$data-table-state-border-bottom:	    null;
+
+$input-button-bg-color:			    $success;
+$input-button-hover-bg-color:		    #11bd7b;
+$input-button-color:			    $grey-5;
+
+$odd-tr-bg-color:			    null;
+$even-tr-bg-color:			    null;
+
+$tr-data-border-bottom:			    null;
+
+$floatfilter-bg-color:			    rgba(255, 255, 255, 0.2);
+
+$select2-border-color:			    $theme-button-border;
+$select2-rendered-color:		    null;
+$select2-selected-bg-color:		    null;
+$select2-highlighted-bg-color:		    null;
+
+$td-single-bg-color:			    $white;
+$wato-tr-bg-color:			    transparent;
+$wato-a-hover-bg-color:			    $theme-color-table-background;
+
+$td-unused-color:			    #256;
+
+$color-div-box-shadow:			    0.5px 0.5px 1px #888;
+
+$graph-legend-color:			    null;
+
+$dark-font-color:			    null;
+
+$body-dashlet-bg-color:			    transparent;
+$dashlet-bg-color:			    null;
+
+$tactical-overview-th-font-color:	    $theme-color-nuance-5;
+$tactical-overview-td-bg-color:		    $theme-color-background;
+$tactical-overview-prob-link-color:	    null;
+
+$sidebar-iconbutton-bg-color:		    $theme-color-sidebar-background;
+$sidebar-iconbutton-border-color:	    $theme-color-table-border-dark-2;
+
+$table-header-border-bottom:		    1px solid $theme-color-table-border;
+
+$state-border-top-color:		    null;
+
+$body-side-bg-color:			    $theme-color-table-border-dark;
+
+$td-gap-bg-color:			    $theme-color-background;
+$td-border-left-right:			    null;
+
+$td-text-overflow:			    null;
+
+$span-dots-color:			    $grey-3;
+
+$tr-odd3-bg-color:			    null;
+$tr-even3-bg-color:			    null;
+
+$graph-bg-color:			    null;
+$graph-legend-th-border-bottom:		    null;
+$graph-time-color:			    null;
+
+$dashlet-stats-border-top-color:	    $theme-color-table-border;
+$dashlet-title-border-radius:		    5px 5px 0 0;
+
+$snapin-border:				    none;
+$snapin-border-top:			    1px solid $theme-color-table-border-dark-2;
+$snapin-border-bottom:			    1px solid $theme-color-table-border-dark-2;
+
+$wato-a-border:				    null;
+
+$wato-subtitle-color:			    $theme-color-darkgrey;
+
+$footnote-link-color:			    #13d389;
+
+$table-data-single-padding:		    8px 16px;
+$td-single-left-border-right:		    1px solid $theme-color-table-border;
+$td-single-left-padding:		    2px 20px 2px 16px;
+
+$host-diag-success-bg-color:		    #efe;
+$host-diag-failed-bg-color:		    #fee;
+
+$wato-inherited-color:			    #444;
+
+$hot-bg-color:				    rgb(255, 160, 66);
+$hot-font-color:			    $grey-5;
+
+$input-hover-bg-color:			    #edeceb;
+
+$data-th-sort-hover-bg-color:		    inherit;
+
+$wato-h3-margin-bottom:			    null;
+$wato-data-th-bg-color:			    transparent;
+$wato-data-table-border:		    null;
+$wato-data-table-border-bottom:		    null;
+$wato-data-table-box-shadow:		    null;
+
+$wato-post-contextlinks-border-top:	    null;
+
+$wato-info-margin:			    null;
+$wato-info-padding:			    null;
+
+$ac-test-details-td-padding:		    1px 5px;
+
+$groupheader-first-padding-top:		    null;
+
+$boxlayout-tr-bg-color:			    transparent;
+
+$age-font-color:			    #666;
+
+$mk-search-results-bg-color:		    #dfdfdf;
+$mk-search-results-hover-bg-color:	    #bfbfbf;
+$mk-search-results-border:		    1px solid $white;
+
+$repprogress-msg-color:			    null;
+$repprogress-progress-bg-color:		    $theme-color-state-6-background;
+$repprogress-progress-border-color:	    $theme-color-nuance-17;
+
+$first-child-border-radius:		    4px 0 0 4px;
+$last-child-border-radius:		    0 4px 4px 0;
+
+$nform-table-hr-color:			    #e5e5e5;
+
+$iconbutton-filter:			    invert(0%);
+
+$multiple-select-bg-color:		    $white;
+$popup-menu-select-bg-color:		    $white;
+
+$tree-collapse-img-filter:		    null;
+
+$input-focus-box-shadow-color:		    $grey-5;
+
+$dragging-bg-color:			    $grey-1;
+
+$invtree-th-bg-color:			    $primary-th-bg-color;
+$invtree-td-bg-color:			    $primary-td-bg-color;
+
+$availability-table-border-color:	    null;
+$availability-summary-bg-color:		    $grey-2;
+$lightened-state0-bg-color:		    lighten($theme-color-state-success-background, 10%);
+$lightened-state1-bg-color:		    lighten($theme-color-state-1-background, 10%);
+$lightened-state2-bg-color:		    lighten($theme-color-state-2-background, 10%);
+$lightened-state3-bg-color:		    lighten($theme-color-state-3-background, 10%);
+$unmonitored-font-color:		    rgb(102, 102, 102);
+$unmonitored-bg-color:			    rgb(202, 202, 202);
+$lightened-unmonitored-bg-color:	    lighten($unmonitored-bg-color, 10%);
+$hostdown-bg-color:			    rgb(0, 102, 170);
+$lightened-hostdown-bg-color:		    lighten($hostdown-bg-color, 10%);
+
+$nform-vlof-border-color:		    $theme-color-table-border;
+
+$availability-data-table-border:		        $wato-data-table-border;
+$availability-data-th-bg-color:		            $wato-data-th-bg-color;
+$availability-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$data-table-td-count-state-border-color:        null;
+
+$timelineevents-data-table-border:		        $wato-data-table-border;
+$timelineevents-data-th-bg-color:		        $wato-data-th-bg-color;
+$timelineevents-data-table-box-shadow:		    $wato-data-table-box-shadow;
+
+$table-cell-last-child-border-radius: $last-child-border-radius;
+
+$duallist-control-a-hover-bg-color:             $wato-a-hover-bg-color;
+
+$side-content-top:                              66px;
+$snapin-margin:                                 8px 0;
+$sidebar-ends-margin:				6px;
+
+$main-body-padding:                             68px 16px 60px;
+
+$snapin-cmc-table-width:                        228px;
+$snapin-list-color:                             $white;
+
+$performance-table-shared-padding:              8px;
+
+
+// Node visualization
+
+$node-vis-darkgrey:			    rgb(169, 169, 169);
+$node-vis-togglebox-enabled:		    rgb(255, 215, 0);
+$node-vis-search-box-border:		    null;
+$node-vis-search-box-bg-color:		    null;
+$node-vis-search-field-border-color:	    transparent;
+$node-vis-box-border:			    1px solid rgb(204, 207, 219); // grey
+$node-vis-box-shadow:			    2px 2px 2px #444;
+$node-vis-toggle-hover-bg-color:	    $grey-1;
+$node-vis-toggle-down-bg-color:		    rgb(230, 230, 230); // light grey
+$node-vis-toggle-down-border-color:	    rgb(204, 204, 204); // light grey
+$node-vis-menu-bg-color:		    null;
+$node-vis-history-bg-color:		    null;
+$node-vis-history-border-color:		    null;
+$node-vis-history-filter:		    null;
+$node-vis-growth-img-filter:		    null;
+$node-vis-growth-root-color:		    rgb(25, 90, 230); // blue
+$topology-filter-bg-color:		    null;
+$topology-filter-border-color:		    null;
+
+$host-folder-font-color:		    #bde;
+
+$snapin-link-hover-color:		    #fff;
+
+$if-state-up-font-color:		    null;
+
+$foldertree-snapin-bg-color:		    $theme-color-lightgrey;
+$foldertree-snapin-font-color:		    $theme-color-nuance-7;
+
+$table-headerleft-border-bottom:	    none;
+
+$agent-config-inner-title-bg-color:	    $grey-1;
+$agent-config-td-color:			    rgb(42, 42, 42);
+
+$service-container-groupheader-bg-color:    null;
+
+$pnp4nagios-img-filter:			    null;
+
+$matches-search-bg-color:		    $theme-color-nuance-2;
+$matches-search-font-color:		    null;
+
+$help-bg-color:				    #ffc;
+$help-link-color:			    $theme-color-text;
+
+$minority-font-color:			    null;
+
+$button-spacer-color:			    rgb(180, 180, 180);
+
+$td-h3-margin-top:			    null;
+
+$timeline-hilite-border:		    null;
+$timetable-hilite-filter:		    brightness(90%);
+$timetable-hilite-even-bg-color:	    null;
+$timetable-hilite-odd-bg-color:		    null;
+
+$pnp-graph-img-border-color:		    $theme-color-table-border;
+$graph-hover-popup-font-color:		    #1a243d;
+$graph-hover-popup-bg-color:		    #f0f2f4;
+$graph-hover-popup-border:		    1px solid #cccfdb;
+$graph-hover-popup-box-shadow:		    0.5px 0.5px 2px #ccc;
+
+$globalvars-modified-border-color:	    #cdf;
+$globalvars-modified-box-shadow:	    3px 3px 5px #eee inset;
+$globalvars-modified-globally-box-shadow:   3px 3px 5px #8bc7e5 inset;
+
+$dashlet-inner-bg-color:		    $white;

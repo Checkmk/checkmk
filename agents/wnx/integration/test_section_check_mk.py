@@ -82,7 +82,7 @@ def make_only_from_array(ipv4):
     # not very pythonic, but other methods(reduce) overkill
     for x in ipv4:
         addr_list.append(x)
-        addr_list.append(Globals.ipv4_to_ipv6[x])
+        # addr_list.append(Globals.ipv4_to_ipv6[x])
 
     return addr_list
 
@@ -126,8 +126,8 @@ def expected_output():
         # r'SuccessLog: %s%s' %
         # (drive_letter,
         #  re.escape(os.path.join(exec_dir, 'log', 'success.log'))),
-        (r'OnlyFrom: %s/32 %s/128 %s/32 %s/128' % tuple([i4 for i4 in make_only_from_array(ipv4)])
-         if Globals.only_from else r'OnlyFrom: 0\.0\.0\.0/0')
+        (r'OnlyFrom: %s %s' %
+         tuple([i4 for i4 in make_only_from_array(ipv4)]) if Globals.only_from else r'OnlyFrom: ')
     ]
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
@@ -136,5 +136,4 @@ def expected_output():
 
 def test_section_check_mk(request, testconfig_only_from, expected_output, actual_output, testfile):
     # request.node.name gives test name
-    print(actual_output)
     local_test(expected_output, actual_output, testfile, request.node.name)

@@ -1434,7 +1434,7 @@ Function sql_jobs {
                 AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
                               WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME
                              )
-                AND not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);";
+                AND not (j.auto_drop = 'TRUE' and REPEAT_INTERVAL is null);
 
 '@
      echo $query_scheduler_jobs
@@ -1622,7 +1622,7 @@ Function sql_sessions {
      }
      else
      {
-          query_sessions = @'
+          $query_sessions = @'
           prompt <<<oracle_sessions:sep(124)>>>;
           select upper(i.instance_name)
                   || '|' || CURRENT_UTILIZATION

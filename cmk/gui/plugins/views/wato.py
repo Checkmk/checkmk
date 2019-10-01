@@ -28,7 +28,6 @@ import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
-
 from cmk.gui.plugins.views import (
     sorter_registry,
     Sorter,
@@ -174,7 +173,8 @@ class PainterWatoFolderPlain(Painter):
 
 
 def cmp_wato_folder(r1, r2, how):
-    return cmp(get_wato_folder(r1, how, False), get_wato_folder(r2, how, False))
+    return (get_wato_folder(r1, how, False) > get_wato_folder(r2, how, False)) - (get_wato_folder(
+        r1, how, False) < get_wato_folder(r2, how, False))
 
 
 @sorter_registry.register

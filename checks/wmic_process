@@ -49,8 +49,8 @@ def check_wmic_process(item, params, info):
     page_mb = page / 1048576.0
     user_per_sec = get_rate("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
     kernel_per_sec = get_rate("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
-    user_perc = user_per_sec / 100000.0 / cpucores
-    kernel_perc = kernel_per_sec / 100000.0 / cpucores
+    user_perc = (user_per_sec / 100000.0) / cpucores
+    kernel_perc = (kernel_per_sec / 100000.0) / cpucores
     cpu_perc = user_perc + kernel_perc
     perfdata = [
         ("mem", mem_mb, memwarn, memcrit),

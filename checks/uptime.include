@@ -44,10 +44,10 @@ def parse_snmp_uptime(ticks):
 
 def check_uptime_seconds(params, uptime_sec):
     seconds = uptime_sec % 60
-    rem = uptime_sec / 60
+    rem = uptime_sec // 60
     minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
+    hours = (rem % 1440) // 60
+    days = rem // 1440
     since = time.strftime("%c", time.localtime(time.time() - uptime_sec))
 
     state = 0

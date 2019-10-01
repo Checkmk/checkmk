@@ -39,6 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -81,7 +82,7 @@ def render_perfometer(data):
 
 # Paint linear performeter with one value
 def perfometer_linear(perc, color):
-    return render_perfometer([(perc, color), (100 - perc, "white")])
+    return render_perfometer([(perc, color), (100 - perc, get_themed_perfometer_bg_color())])
 
 
 # Paint logarithm with base 10, half_value is being
@@ -108,8 +109,8 @@ def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base
         if pos > 49:
             pos = 49
     if left_or_right == "right":
-        return [(pos, color), (50 - pos, "white")]
-    return [(50 - pos, "white"), (pos, color)]
+        return [(pos, color), (50 - pos, get_themed_perfometer_bg_color())]
+    return [(50 - pos, get_themed_perfometer_bg_color()), (pos, color)]
 
 
 # Dual logarithmic Perf-O-Meter

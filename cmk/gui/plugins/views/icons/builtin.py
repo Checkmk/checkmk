@@ -64,7 +64,7 @@ import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -299,9 +299,14 @@ class ManpageIcon(Icon):
                 check_type = command[9:]
             elif command.startswith("check_mk_active-"):
                 check_name = command[16:].split("!")[0]
-                if check_name == "cmk_inv":
-                    return
                 check_type = "check_" + check_name
+            elif command in ["check-mk", "check-mk-inventory"]:
+                if command == "check-mk":
+                    check_type = "check-mk"
+                elif command == "check-mk-inventory":
+                    check_type = "check-mk-inventory"
+                else:
+                    return
             else:
                 return
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
@@ -821,7 +826,7 @@ class PassiveChecksIcon(Icon):
         return "status_passive_checks"
 
     def columns(self):
-        return ['modified_attributes_list', 'active_passive_checks']
+        return ['modified_attributes_list', 'accept_passive_checks']
 
     def default_toplevel(self):
         return True
@@ -951,10 +956,9 @@ class StarsIcon(Icon):
         return "stars"
 
     def render(self, what, row, tags, custom_vars):
-        stars = current_app.g.get("stars")
-        if stars is None:
-            stars = set(config.user.load_file("favorites", []))
-            current_app.g["stars"] = stars
+        if 'stars' not in g:
+            g.stars = set(config.user.load_file("favorites", []))
+        stars = g.stars
 
         if what == "host":
             starred = row["host_name"] in stars

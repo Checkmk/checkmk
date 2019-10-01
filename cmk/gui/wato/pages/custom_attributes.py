@@ -29,6 +29,7 @@ import abc
 import os
 import pprint
 import re
+import six
 
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -91,9 +92,7 @@ def custom_attr_types():
     ]
 
 
-class ModeEditCustomAttr(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class ModeEditCustomAttr(six.with_metaclass(abc.ABCMeta, WatoMode)):
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
@@ -380,9 +379,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
                             "back")
 
 
-class ModeCustomAttrs(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class ModeCustomAttrs(six.with_metaclass(abc.ABCMeta, WatoMode)):
     def __init__(self):
         super(ModeCustomAttrs, self).__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about

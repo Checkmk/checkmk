@@ -560,7 +560,7 @@ def logfiles_of_host(site, host_name):
         raise MKGeneralException(
             _("The monitoring core of the target site '%s' has the version '%s'. That "
               "does not support fetching logfile information. Please upgrade "
-              "to a newer version.") % (site, sites.state(site)["program_version"]))
+              "to a newer version.") % (site, sites.states().get(site)["program_version"]))
     return file_names
 
 

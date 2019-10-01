@@ -1,0 +1,13 @@
+Title: Historic metrics painter: Prevent empty views, improve error handling
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1566563437
+Class: fix
+
+When adding the "historic metrics painter" to a view, this could result in empty
+views when none of the fetched row could satisfy the required metrics. Instead of
+filtering out all rows, we now leave the rows untouched and show an error message
+in the historic metrics painter.

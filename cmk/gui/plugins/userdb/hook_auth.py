@@ -57,6 +57,7 @@
 
 import os
 import copy
+import six
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -81,7 +82,7 @@ def format_php(data, lvl=1):
         s += '    ' * (lvl - 1) + ')'
     elif isinstance(data, str):
         s += '\'%s\'' % data.replace('\'', '\\\'')
-    elif isinstance(data, unicode):
+    elif isinstance(data, six.text_type):
         s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
@@ -106,12 +107,12 @@ def create_php_file(callee, users, role_permissions, groups):
     # files into php.
     tempfile = g_auth_base_dir + '/auth.php.tmp'
     lockfile = g_auth_base_dir + '/auth.php.state'
-    file(lockfile, "a")
+    open(lockfile, "a")
     store.aquire_lock(lockfile)
 
     # First write a temp file and then do a move to prevent syntax errors
     # when reading half written files during creating that new file
-    file(tempfile, 'w').write('''<?php
+    open(tempfile, 'w').write('''<?php
 // Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_groups;
 $mk_users   = %s;

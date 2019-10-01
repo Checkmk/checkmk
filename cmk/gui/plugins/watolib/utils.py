@@ -28,7 +28,6 @@ import abc
 import os
 import pprint
 from typing import Optional, Type, Text, List  # pylint: disable=unused-import
-
 import six
 
 import cmk.utils.store as store
@@ -43,12 +42,15 @@ def wato_fileheader():
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ConfigDomain(object):
+class ABCConfigDomain(six.with_metaclass(abc.ABCMeta, object)):
     needs_sync = True
     needs_activation = True
     always_activate = False
-    ident = None
     in_global_settings = True
+
+    @abc.abstractproperty
+    def ident(self):
+        raise NotImplementedError()
 
     @classmethod
     def enabled_domains(cls):
@@ -69,10 +71,11 @@ class ConfigDomain(object):
     @classmethod
     def get_all_default_globals(cls):
         settings = {}
-        for domain in ConfigDomain.enabled_domains():
+        for domain in ABCConfigDomain.enabled_domains():
             settings.update(domain().default_globals())
         return settings
 
+    @abc.abstractmethod
     def config_dir(self):
         raise NotImplementedError()
 
@@ -92,7 +95,7 @@ class ConfigDomain(object):
             return {}
 
         try:
-            execfile(filename, settings, settings)
+            exec (open(filename).read(), settings, settings)
 
             # FIXME: Do not modify the dict while iterating over it.
             for varname in list(settings.keys()):
@@ -119,6 +122,7 @@ class ConfigDomain(object):
     def save_site_globals(self, settings):
         self.save(settings, site_specific=True)
 
+    @abc.abstractmethod
     def default_globals(self):
         """Returns a dictionary that contains the default settings
         of all configuration variables of this config domain."""
@@ -135,7 +139,7 @@ class ConfigDomain(object):
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
-        return ConfigDomain
+        return ABCConfigDomain
 
     def plugin_name(self, plugin_class):
         return plugin_class.ident
@@ -144,11 +148,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(object):
-    __metaclass__ = abc.ABCMeta
-
-    # Is currently not possible to do this with Python 2.7:
-    # TODO: @abc.abstractmethod
+class SampleConfigGenerator(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     def ident(cls):
         # type: () -> str
@@ -255,7 +255,7 @@ class ConfigVariable(object):
         raise NotImplementedError()
 
     def domain(self):
-        # type: () -> Type[ConfigDomain]
+        # type: () -> Type[ABCConfigDomain]
         """Returns the class of the config domain this configuration variable belongs to"""
         return config_domain_registry["check_mk"]
 
@@ -313,7 +313,7 @@ def register_configvar(group,
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
     if isinstance(domain, six.string_types):
-        domain = ConfigDomain.get_class(domain)
+        domain = ABCConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
     if isinstance(group, six.string_types):

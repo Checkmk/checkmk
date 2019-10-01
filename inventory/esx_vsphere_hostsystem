@@ -95,8 +95,8 @@ def inv_esx_vsphere_hostsystem(info):
         node["cores"] = int(data["hardware.cpuInfo"]["numCpuCores"])
         node["threads"] = int(data["hardware.cpuInfo"]["numCpuThreads"])
 
-    node["cores_per_cpu"] = node["cores"] / node["cpus"]
-    node["threads_per_cpu"] = node["threads"] / node["cpus"]
+    node["cores_per_cpu"] = int(node["cores"] / node["cpus"])
+    node["threads_per_cpu"] = int(node["threads"] / node["cpus"])
     if "hardware.cpuPkg" in data:
         node["model"] = data["hardware.cpuPkg"]["0"]["description"]
         node["vendor"] = data["hardware.cpuPkg"]["0"]["vendor"]

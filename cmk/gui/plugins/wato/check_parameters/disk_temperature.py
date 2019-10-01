@@ -37,34 +37,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDiskTemperature(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_disk_temperature():
+    return TextAscii(title=_("Hard disk device"),
+                     help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."))
 
-    @property
-    def check_group_name(self):
-        return "disk_temperature"
 
-    @property
-    def title(self):
-        return _("Harddisk temperature (e.g. via SMART)")
+def _parameter_valuespec_disk_temperature():
+    return Tuple(help=_("Temperature levels for hard disks, that is determined e.g. via SMART"),
+                 elements=[
+                     Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                     Integer(title=_("critical at"), unit=u"°C", default_value=40),
+                 ])
 
-    @property
-    def is_deprecated(self):
-        return True
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(help=_("Temperature levels for hard disks, that is determined e.g. via SMART"),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                         Integer(title=_("critical at"), unit=u"°C", default_value=40),
-                     ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Hard disk device"),
-            help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="disk_temperature",
+        group=RulespecGroupCheckParametersEnvironment,
+        is_deprecated=True,
+        item_spec=_item_spec_disk_temperature,
+        parameter_valuespec=_parameter_valuespec_disk_temperature,
+        title=lambda: _("Harddisk temperature (e.g. via SMART)"),
+    ))

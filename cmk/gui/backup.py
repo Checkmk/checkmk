@@ -30,6 +30,7 @@
 # BE AWARE: This code is directly used by the appliance. So if you are
 # about to refactor things, you will have to care about the appliance!
 
+import abc
 import errno
 import glob
 import os
@@ -39,6 +40,7 @@ import socket
 import subprocess
 import time
 import json
+import six
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -234,7 +236,7 @@ class MKBackupJob(object):
 
     def state(self):
         try:
-            state = json.load(file(self.state_file_path()))
+            state = json.load(open(self.state_file_path()))
         except IOError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
@@ -915,7 +917,7 @@ class Target(BackupEntity):
         return self._config["remote"][0]
 
     def type_class(self):
-        return BackupTargetType.get_type(self.type_ident())
+        return ABCBackupTargetType.get_type(self.type_ident())
 
     def type_params(self):
         return self._config["remote"][1]
@@ -1144,7 +1146,7 @@ class PageEditBackupTarget(object):
                 ("remote",
                  CascadingDropdown(
                      title=_("Destination"),
-                     choices=BackupTargetType.choices,
+                     choices=ABCBackupTargetType.choices,
                  )),
             ],
             optional_keys=[],
@@ -1216,8 +1218,10 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class BackupTargetType(object):
-    ident = None
+class ABCBackupTargetType(six.with_metaclass(abc.ABCMeta, object)):
+    @abc.abstractproperty
+    def ident(self):
+        raise NotImplementedError()
 
     @classmethod
     def choices(cls):
@@ -1241,14 +1245,16 @@ class BackupTargetType(object):
     def __init__(self, params):
         self._params = params
 
+    @abc.abstractmethod
     def valuespec(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def backups(self):
         raise NotImplementedError()
 
 
-class BackupTargetLocal(BackupTargetType):
+class BackupTargetLocal(ABCBackupTargetType):
     ident = "local"
 
     @classmethod
@@ -1300,7 +1306,7 @@ class BackupTargetLocal(BackupTargetType):
         # Check write access for the site user
         try:
             test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            file(test_file_path, "w")
+            open(test_file_path, "w")
             os.unlink(test_file_path)
         except IOError:
             if is_cma():
@@ -1341,7 +1347,7 @@ class BackupTargetLocal(BackupTargetType):
 
     # TODO: Duplicate code with mkbackup
     def _load_backup_info(self, path):
-        info = json.load(file(path))
+        info = json.load(open(path))
 
         # Load the backup_id from the second right path component. This is the
         # base directory of the mkbackup.info file. The user might have moved

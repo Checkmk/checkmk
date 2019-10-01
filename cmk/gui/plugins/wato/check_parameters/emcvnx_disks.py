@@ -40,59 +40,47 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEmcvnxDisks(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_emcvnx_disks():
+    return Dictionary(elements=[
+        ("state_read_error",
+         Tuple(
+             title=_("State on hard read error"),
+             elements=[
+                 MonitoringState(
+                     title=_("State"),
+                     default_value=2,
+                 ),
+                 Integer(
+                     title=_("Minimum error count"),
+                     default_value=2,
+                 ),
+             ],
+         )),
+        ("state_write_error",
+         Tuple(
+             title=_("State on hard write error"),
+             elements=[
+                 MonitoringState(
+                     title=_("State"),
+                     default_value=2,
+                 ),
+                 Integer(
+                     title=_("Minimum error count"),
+                     default_value=2,
+                 ),
+             ],
+         )),
+        ("state_rebuilding",
+         MonitoringState(default_value=1, title=_("State when rebuildung enclosure"))),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "emcvnx_disks"
 
-    @property
-    def title(self):
-        return _("EMC VNX Enclosures")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("state_read_error",
-             Tuple(
-                 title=_("State on hard read error"),
-                 elements=[
-                     MonitoringState(
-                         title=_("State"),
-                         default_value=2,
-                     ),
-                     Integer(
-                         title=_("Minimum error count"),
-                         default_value=2,
-                     ),
-                 ],
-             )),
-            ("state_write_error",
-             Tuple(
-                 title=_("State on hard write error"),
-                 elements=[
-                     MonitoringState(
-                         title=_("State"),
-                         default_value=2,
-                     ),
-                     Integer(
-                         title=_("Minimum error count"),
-                         default_value=2,
-                     ),
-                 ],
-             )),
-            ("state_rebuilding",
-             MonitoringState(default_value=1, title=_("State when rebuildung enclosure"))),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Enclosure ID"), allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="emcvnx_disks",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Enclosure ID"), allow_empty=True),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_emcvnx_disks,
+        title=lambda: _("EMC VNX Enclosures"),
+    ))

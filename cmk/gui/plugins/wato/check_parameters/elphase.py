@@ -104,91 +104,72 @@ def _phase_elements():
     ]
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersElInphase(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
-
-    @property
-    def check_group_name(self):
-        return "el_inphase"
-
-    @property
-    def title(self):
-        return _("Parameters for input phases of UPSs and PDUs")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "This rule allows you to specify levels for the voltage, current, power "
-                "and apparent power of your device. The levels will only be applied if the device "
-                "actually supplies values for these parameters."),
-            elements=_phase_elements() + [
-                ("map_device_states",
-                 ListOf(
-                     Tuple(elements=[TextAscii(size=10), MonitoringState()]),
-                     title=_("Map device state"),
-                     help=_("Here you can enter either device state number (eg. from SNMP devices) "
-                            "or exact device state name and the related monitoring state."),
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Input Name"),
-                         help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+def _item_spec_el_inphase():
+    return TextAscii(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersUpsOutphase(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_el_inphase():
+    return Dictionary(
+        help=_("This rule allows you to specify levels for the voltage, current, power "
+               "and apparent power of your device. The levels will only be applied if the device "
+               "actually supplies values for these parameters."),
+        elements=_phase_elements() + [
+            ("map_device_states",
+             ListOf(
+                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                 title=_("Map device state"),
+                 help=_("Here you can enter either device state number (eg. from SNMP devices) "
+                        "or exact device state name and the related monitoring state."),
+             )),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "ups_outphase"
 
-    @property
-    def title(self):
-        return _("Parameters for output phases of UPSs and PDUs")
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="el_inphase",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_el_inphase,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_el_inphase,
+        title=lambda: _("Parameters for input phases of UPSs and PDUs"),
+    ))
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_(
-                "This rule allows you to specify levels for the voltage, current, load, power "
-                "and apparent power of your device. The levels will only be applied if the device "
-                "actually supplies values for these parameters."),
-            elements=_phase_elements() + [
-                ("load",
-                 Tuple(title=_("Load"),
-                       elements=[
-                           Integer(title=_("warning at"), unit=u"%", default_value=80),
-                           Integer(title=_("critical at"), unit=u"%", default_value=90),
-                       ])),
-                ("map_device_states",
-                 ListOf(
-                     Tuple(elements=[TextAscii(size=10), MonitoringState()]),
-                     title=_("Map device state"),
-                     help=_("Here you can enter either device state number (eg. from SNMP devices) "
-                            "or exact device state name and the related monitoring state."),
-                 )),
-            ],
-        )
+def _item_spec_ups_outphase():
+    return TextAscii(title=_("Output Name"),
+                     help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Output Name"),
-                         help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
+
+def _parameter_valuespec_ups_outphase():
+    return Dictionary(
+        help=_("This rule allows you to specify levels for the voltage, current, load, power "
+               "and apparent power of your device. The levels will only be applied if the device "
+               "actually supplies values for these parameters."),
+        elements=_phase_elements() + [
+            ("load",
+             Tuple(title=_("Load"),
+                   elements=[
+                       Integer(title=_("warning at"), unit=u"%", default_value=80),
+                       Integer(title=_("critical at"), unit=u"%", default_value=90),
+                   ])),
+            ("map_device_states",
+             ListOf(
+                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                 title=_("Map device state"),
+                 help=_("Here you can enter either device state number (eg. from SNMP devices) "
+                        "or exact device state name and the related monitoring state."),
+             )),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ups_outphase",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_ups_outphase,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ups_outphase,
+        title=lambda: _("Parameters for output phases of UPSs and PDUs"),
+    ))

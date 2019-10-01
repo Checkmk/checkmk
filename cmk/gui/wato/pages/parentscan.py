@@ -41,7 +41,6 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
-    WatoBackgroundJob,
     get_hosts_from_checkboxes,
 )
 
@@ -52,7 +51,7 @@ ParentScanResult = collections.namedtuple("ParentScanResult",
 
 # TODO: This job should be executable multiple times at once
 @gui_background_job.job_registry.register
-class ParentScanBackgroundJob(WatoBackgroundJob):
+class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod
@@ -73,20 +72,20 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 
     def do_execute(self, settings, tasks, job_interface=None):
         self._initialize_statistics()
-        self._logger.info(_("Parent scan started..."))
+        self._logger.info("Parent scan started...")
 
         for task in tasks:
             self._process_task(task, settings)
 
-        self._logger.info(_("Summary:"))
-        for title, value in [(_("Total hosts"), self._num_hosts_total),
-                             (_("Gateways found"), self._num_gateways_found),
-                             (_("Directly reachable hosts"), self._num_directly_reachable_hosts),
-                             (_("Unreachable gateways"), self._num_unreachable_gateways),
-                             (_("No gateway found"), self._num_no_gateway_found),
-                             (_("New parents configured"), self._num_new_parents_configured),
-                             (_("Gateway hosts created"), self._num_gateway_hosts_created),
-                             (_("Errors"), self._num_errors)]:
+        self._logger.info("Summary:")
+        for title, value in [("Total hosts", self._num_hosts_total),
+                             ("Gateways found", self._num_gateways_found),
+                             ("Directly reachable hosts", self._num_directly_reachable_hosts),
+                             ("Unreachable gateways", self._num_unreachable_gateways),
+                             ("No gateway found", self._num_no_gateway_found),
+                             ("New parents configured", self._num_new_parents_configured),
+                             ("Gateway hosts created", self._num_gateway_hosts_created),
+                             ("Errors", self._num_errors)]:
             self._logger.info("  %s: %d" % (title, value))
 
         job_interface.send_result_message(_("Parent scan finished"))
@@ -162,7 +161,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 
         host = folder.host(task.host_name)
         if host.effective_attribute("parents") == parents:
-            self._logger.info(_("Parents unchanged at %s"),
+            self._logger.info("Parents unchanged at %s",
                               (",".join(parents) if parents else _("none")))
             return
 
@@ -174,9 +173,9 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
                 host.clean_attributes(["parents"])
 
         if parents:
-            self._logger.info(_("Set parents to %s"), ",".join(parents))
+            self._logger.info("Set parents to %s", ",".join(parents))
         else:
-            self._logger.info(_("Removed parents"))
+            self._logger.info("Removed parents")
 
         self._num_new_parents_configured += 1
 

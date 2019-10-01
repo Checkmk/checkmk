@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "common/stop_watch.h"
+
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
 static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
@@ -29,7 +31,7 @@ public:
     using DataBlock = std::vector<uint8_t>;
     enum class Order { random, plugins_last };
     AsyncAnswer()
-        : timeout_(5), awaiting_segments_(0), tp_id_(GenerateAnswerId()) {}
+        : timeout_(5), awaited_segments_(0), tp_id_(GenerateAnswerId()) {}
 
     bool isAnswerOlder(std::chrono::milliseconds Milli) const;
 
@@ -48,7 +50,7 @@ public:
 
     void exeKickedCount(int Count) {
         std::lock_guard lk(lock_);
-        awaiting_segments_ = Count;
+        awaited_segments_ = Count;
     }
 
     // thread safe
@@ -60,6 +62,7 @@ public:
     auto getAllClear() {}
 
     bool prepareAnswer(std::string_view Ip) noexcept;
+    uint64_t num() const noexcept { return sw_.getCount(); }
 
     // Reporting Function, which called by the sections
     // #TODO gtest
@@ -69,9 +72,14 @@ public:
     );
 
     // #TODO gtest
+    bool tryBreakWait();
+
+    std::vector<std::string> segmentNameList();
+
+    // #TODO gtest
     auto awaitingSegments() const {
         std::lock_guard lk(lock_);
-        return awaiting_segments_;
+        return awaited_segments_;
     }
 
     // #TODO gtest
@@ -92,10 +100,14 @@ public:
         return timeout_;
     }
 
+    const wtools::StopWatch& getStopWatch() const { return sw_; }
+
 private:
+    wtools::StopWatch sw_;
+
     bool isAnswerInUseNoLock() const {
         return !external_ip_.empty() || !segments_.empty() ||
-               awaiting_segments_ != 0 || received_segments_ != 0;
+               awaited_segments_ != 0 || received_segments_ != 0;
     }
 
     struct SegmentInfo {
@@ -113,7 +125,7 @@ private:
                                // for plugins and providers too late or too lazy
     DataBlock data_;           // our pretty data
 
-    uint32_t awaiting_segments_;  // how many sections are awaited
+    uint32_t awaited_segments_;   // how many sections are awaited
     uint32_t received_segments_;  // how many sections are received
 
     int timeout_;  // seconds

@@ -38,34 +38,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHpuxMultipath(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_hpux_multipath():
+    return Tuple(
+        title=_("Expected path situation"),
+        help=_("This rules sets the expected number of various paths for a multipath LUN "
+               "on HPUX servers"),
+        elements=[
+            Integer(title=_("Number of active paths")),
+            Integer(title=_("Number of standby paths")),
+            Integer(title=_("Number of failed paths")),
+            Integer(title=_("Number of unopen paths")),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "hpux_multipath"
 
-    @property
-    def title(self):
-        return _("HP-UX Multipath Count")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Expected path situation"),
-            help=_("This rules sets the expected number of various paths for a multipath LUN "
-                   "on HPUX servers"),
-            elements=[
-                Integer(title=_("Number of active paths")),
-                Integer(title=_("Number of standby paths")),
-                Integer(title=_("Number of failed paths")),
-                Integer(title=_("Number of unopen paths")),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("WWID of the LUN"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hpux_multipath",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("WWID of the LUN")),
+        parameter_valuespec=_parameter_valuespec_hpux_multipath,
+        title=lambda: _("HP-UX Multipath Count"),
+    ))

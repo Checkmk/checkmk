@@ -43,154 +43,126 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSapHanaBackup(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "sap_hana_backup"
-
-    @property
-    def title(self):
-        return _("SAP HANA Backup")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('backup_age',
-             Alternative(title=_("Upper levels for the backup age"),
-                         style="dropdown",
-                         elements=[
-                             Tuple(title=_("Set levels"),
-                                   elements=[
-                                       Age(title=_("Warning at")),
-                                       Age(title=_("Critical at")),
-                                   ]),
-                             Tuple(title=_("No levels"),
-                                   elements=[
-                                       FixedValue(None, totext=""),
-                                       FixedValue(None, totext=""),
-                                   ]),
-                         ])),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("The instance name and backup type"))
+def _item_spec_sap_hana_backup():
+    return TextAscii(title=_("The instance name and backup type"))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSapHanaLicense(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "sap_hana_license"
-
-    @property
-    def title(self):
-        return _("SAP HANA License")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('license_size',
-             Alternative(title=_("Upper levels for the license size"),
-                         style="dropdown",
-                         elements=[
-                             Tuple(title=_("Set levels"),
-                                   elements=[
-                                       Filesize(title=_("Warning at")),
-                                       Filesize(title=_("Critical at")),
-                                   ]),
-                             Tuple(title=_("No levels"),
-                                   elements=[
-                                       FixedValue(None, totext=""),
-                                       FixedValue(None, totext=""),
-                                   ]),
-                         ])),
-            ('license_usage_perc',
-             Alternative(title=_("Upper levels for the license usage"),
-                         style="dropdown",
-                         elements=[
-                             Tuple(title=_("Set levels"),
-                                   elements=[
-                                       Percentage(title=_("Warning at")),
-                                       Percentage(title=_("Critical at")),
-                                   ]),
-                             Tuple(title=_("No levels"),
-                                   elements=[
-                                       FixedValue(None, totext=""),
-                                       FixedValue(None, totext=""),
-                                   ]),
-                         ])),
-        ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("The instance name"))
+def _parameter_valuespec_sap_hana_backup():
+    return Dictionary(elements=[
+        ('backup_age',
+         Alternative(title=_("Upper levels for the backup age"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(title=_("Set levels"),
+                               elements=[
+                                   Age(title=_("Warning at")),
+                                   Age(title=_("Critical at")),
+                               ]),
+                         Tuple(title=_("No levels"),
+                               elements=[
+                                   FixedValue(None, totext=""),
+                                   FixedValue(None, totext=""),
+                               ]),
+                     ])),
+    ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSapHanaMemory(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="sap_hana_backup",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_sap_hana_backup,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sap_hana_backup,
+        title=lambda: _("SAP HANA Backup"),
+    ))
 
-    @property
-    def check_group_name(self):
-        return "sap_hana_memory"
 
-    @property
-    def title(self):
-        return _("SAP HANA Memory")
+def _item_spec_sap_hana_license():
+    return TextAscii(title=_("The instance name"))
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("levels",
-                 CascadingDropdown(
-                     title=_("Levels for memory usage"),
-                     choices=[
-                         ("perc_used", _("Percentual levels for used memory"),
-                          Tuple(elements=[
-                              Percentage(title=_("Warning at a memory usage of"),
-                                         default_value=80.0,
-                                         maxvalue=None),
-                              Percentage(title=_("Critical at a memory usage of"),
-                                         default_value=90.0,
-                                         maxvalue=None)
-                          ],)),
-                         ("abs_free", _("Absolute levels for free memory"),
-                          Tuple(elements=[
-                              Filesize(title=_("Warning below")),
-                              Filesize(title=_("Critical below"))
-                          ],)),
-                         ("ignore", _("Do not impose levels")),
-                     ],
-                 )),
-            ],
-            optional_keys=[],
-        )
+def _parameter_valuespec_sap_hana_license():
+    return Dictionary(elements=[
+        ('license_size',
+         Alternative(title=_("Upper levels for the license size"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(title=_("Set levels"),
+                               elements=[
+                                   Filesize(title=_("Warning at")),
+                                   Filesize(title=_("Critical at")),
+                               ]),
+                         Tuple(title=_("No levels"),
+                               elements=[
+                                   FixedValue(None, totext=""),
+                                   FixedValue(None, totext=""),
+                               ]),
+                     ])),
+        ('license_usage_perc',
+         Alternative(title=_("Upper levels for the license usage"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(title=_("Set levels"),
+                               elements=[
+                                   Percentage(title=_("Warning at")),
+                                   Percentage(title=_("Critical at")),
+                               ]),
+                         Tuple(title=_("No levels"),
+                               elements=[
+                                   FixedValue(None, totext=""),
+                                   FixedValue(None, totext=""),
+                               ]),
+                     ])),
+    ])
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("The instance name"))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="sap_hana_license",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_sap_hana_license,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sap_hana_license,
+        title=lambda: _("SAP HANA License"),
+    ))
+
+
+def _parameter_valuespec_sap_hana_memory():
+    return Dictionary(
+        elements=[
+            ("levels",
+             CascadingDropdown(
+                 title=_("Levels for memory usage"),
+                 choices=[
+                     ("perc_used", _("Percentual levels for used memory"),
+                      Tuple(elements=[
+                          Percentage(title=_("Warning at a memory usage of"),
+                                     default_value=80.0,
+                                     maxvalue=None),
+                          Percentage(title=_("Critical at a memory usage of"),
+                                     default_value=90.0,
+                                     maxvalue=None)
+                      ],)),
+                     ("abs_free", _("Absolute levels for free memory"),
+                      Tuple(elements=[
+                          Filesize(title=_("Warning below")),
+                          Filesize(title=_("Critical below"))
+                      ],)),
+                     ("ignore", _("Do not impose levels")),
+                 ],
+             )),
+        ],
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="sap_hana_memory",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("The instance name")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_sap_hana_memory,
+        title=lambda: _("SAP HANA Memory"),
+    ))

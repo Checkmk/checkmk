@@ -12,6 +12,7 @@
 #include <string_view>
 
 #include "carrier.h"
+#include "common/stop_watch.h"
 #include "section_header.h"
 
 namespace cma::srv {
@@ -72,7 +73,14 @@ public:
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
     std::string generateContent(const std::string_view& SectionName,
-                                bool ForceGeneration = false);
+                                bool ForceGeneration);
+    std::string generateContent() {
+        return generateContent(section::kUseEmbeddedName, false);
+    }
+
+    std::string generateContent(const std::string_view& section_name) {
+        return generateContent(section_name, false);
+    }
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const;
@@ -89,7 +97,11 @@ public:
 
     char separator() const { return separator_; }
 
+    void stopWatchStart() { sw_.start(); }
+    uint64_t stopWatchStop() { return sw_.stop(); }
+
 protected:
+    wtools::StopWatch sw_;
     // conditionally(depending from the name of section) sets delay after error
     void setupDelayOnFail() noexcept;
 

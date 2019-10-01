@@ -38,77 +38,68 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersUpsCapacity(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
-
-    @property
-    def check_group_name(self):
-        return "ups_capacity"
-
-    @property
-    def title(self):
-        return _("UPS Capacity")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Levels for battery parameters"),
-            optional_keys=False,
-            elements=[
-                (
-                    "capacity",
-                    Tuple(
-                        title=_("Battery capacity"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at"),
-                                help=
-                                _("The battery capacity in percent at and below which a warning state is triggered"
-                                 ),
-                                unit="%",
-                                default_value=95,
-                            ),
-                            Integer(
-                                title=_("Critical at"),
-                                help=
-                                _("The battery capacity in percent at and below which a critical state is triggered"
-                                 ),
-                                unit="%",
-                                default_value=90,
-                            ),
-                        ],
-                    ),
+def _parameter_valuespec_ups_capacity():
+    return Dictionary(
+        title=_("Levels for battery parameters"),
+        optional_keys=False,
+        elements=[
+            (
+                "capacity",
+                Tuple(
+                    title=_("Battery capacity"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            help=
+                            _("The battery capacity in percent at and below which a warning state is triggered"
+                             ),
+                            unit="%",
+                            default_value=95,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            help=
+                            _("The battery capacity in percent at and below which a critical state is triggered"
+                             ),
+                            unit="%",
+                            default_value=90,
+                        ),
+                    ],
                 ),
-                (
-                    "battime",
-                    Tuple(
-                        title=_("Time left on battery"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at"),
-                                help=
-                                _("Time left on Battery at and below which a warning state is triggered"
-                                 ),
-                                unit=_("min"),
-                                default_value=0,
-                            ),
-                            Integer(
-                                title=_("Critical at"),
-                                help=
-                                _("Time Left on Battery at and below which a critical state is triggered"
-                                 ),
-                                unit=_("min"),
-                                default_value=0,
-                            ),
-                        ],
-                    ),
+            ),
+            (
+                "battime",
+                Tuple(
+                    title=_("Time left on battery"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            help=
+                            _("Time left on Battery at and below which a warning state is triggered"
+                             ),
+                            unit=_("min"),
+                            default_value=0,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            help=
+                            _("Time Left on Battery at and below which a critical state is triggered"
+                             ),
+                            unit=_("min"),
+                            default_value=0,
+                        ),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ups_capacity",
+        group=RulespecGroupCheckParametersEnvironment,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ups_capacity,
+        title=lambda: _("UPS Capacity"),
+    ))

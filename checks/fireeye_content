@@ -28,7 +28,7 @@
 # .1.3.6.1.4.1.25597.11.5.1.6.0 1 --> FE-FIREEYE-MIB::feLastContentUpdatePassed.0
 # .1.3.6.1.4.1.25597.11.5.1.7.0 2016/02/26 15:42:06 --> FE-FIREEYE-MIB::feLastContentUpdateTime.0
 
-from collections import namedtuple
+import collections
 
 
 def parse_fireeye_content(info):
@@ -48,8 +48,8 @@ def parse_fireeye_content(info):
     except ValueError:
         update_time_seconds = None
 
-    SecurityContent = namedtuple('SecurityContent',
-                                 'version update_status update_time_str update_time_seconds')
+    SecurityContent = collections.namedtuple(
+        'SecurityContent', 'version update_status update_time_str update_time_seconds')
     return SecurityContent(version, update_status, update_time_str, update_time_seconds)
 
 

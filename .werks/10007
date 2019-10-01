@@ -1,0 +1,12 @@
+Title: agent_hp_msa: Properly connect to 2040/2042 devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568122185
+
+From version 1.6.0b1 to version 1.6.0b9 agent_hp_msa was unable to
+connect to 2040/2042 devices.

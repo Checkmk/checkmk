@@ -252,7 +252,7 @@ def check_fc_port(item, params, info):
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
-            rate = per_sec / (ref + per_sec)
+            rate = per_sec / (ref + per_sec)  # fixed: true-division
         else:
             rate = 0
         text = "%s: %.2f%%" % (descr, rate * 100.0)

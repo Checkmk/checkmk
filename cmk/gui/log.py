@@ -24,62 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import logging as _logging
+import logging
 
 import cmk.utils.log
 import cmk.utils.paths
 
-from cmk.gui.i18n import _
-
-
-class CMKWebLogger(_logging.getLoggerClass()):
-    def exception(self, *args, **kwargs):
-        """Logs an optional message together with the traceback of the
-        last exception to the current logger (-> web.log)"""
-        # FIXME: Ugly Kung Fu to make the msg positional argument optional. This
-        # is a consequence of the cruel hack to change exceptions's signature,
-        # something which we shouldn't do: Either fix all the call sites or
-        # introduce another method.
-        if args:
-            msg = args[0]
-            args = args[1:]
-        else:
-            msg = _('Internal error')
-        msg = kwargs.pop('msg', msg)
-
-        from cmk.gui.globals import html
-        if html.in_context():
-            msg = "%s %s" % (html.request.requested_url, msg)
-
-        super(CMKWebLogger, self).exception(msg, *args, **kwargs)
-
-
-_logging.setLoggerClass(CMKWebLogger)
-
-logger = cmk.utils.log.get_logger("web")
+logger = logging.getLogger("cmk.web")
 
 
 def init_logging():
-    _setup_web_log_logging()
-
-
-def _setup_web_log_logging():
-    del logger.root.handlers[:]  # First remove all handlers
-
-    handler = _logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
-
+    handler = logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
     handler.setFormatter(cmk.utils.log.get_formatter())
-
-    # Setup logging for the root logger to be able to get library log entries in the
-    # log of the web application
-    logger.root.addHandler(handler)
+    root = logging.getLogger()
+    del root.handlers[:]  # Remove all previously existing handlers
+    root.addHandler(handler)
 
 
 def set_log_levels(log_levels):
-    # Setup logging for the root logger to be able to get library log entries in the
-    # log of the web application
-    logger.root.setLevel(log_levels["cmk.web"])
-    cmk.utils.log.logger.setLevel(log_levels["cmk.web"])
+    for name, level in _augmented_log_levels(log_levels).iteritems():
+        logging.getLogger(name).setLevel(level)
 
-    for logger_name, level in log_levels.items():
-        _logging.getLogger(logger_name).setLevel(level)
+
+# To see log entries from libraries and non-GUI code, reuse cmk.web's level.
+def _augmented_log_levels(log_levels):
+    root_level = log_levels.get("cmk.web")
+    all_levels = {} if root_level is None else {"": root_level, "cmk": root_level}
+    all_levels.update(log_levels)
+    return all_levels

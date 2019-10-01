@@ -38,56 +38,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersStorcliVdrives(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_storcli_vdrives():
+    return TextAscii(
+        title=_("Virtual Drive"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "storcli_vdrives"
 
-    @property
-    def title(self):
-        return _("LSI RAID VDrives (StorCLI)")
+def _parameter_valuespec_storcli_vdrives():
+    return Dictionary(
+        title=_("Evaluation of VDrive States"),
+        elements=[
+            ("Optimal", MonitoringState(
+                title=_("State for <i>Optimal</i>"),
+                default_value=0,
+            )),
+            ("Partially Degraded",
+             MonitoringState(
+                 title=_("State for <i>Partially Degraded</i>"),
+                 default_value=1,
+             )),
+            ("Degraded", MonitoringState(
+                title=_("State for <i>Degraded</i>"),
+                default_value=2,
+            )),
+            ("Offline", MonitoringState(
+                title=_("State for <i>Offline</i>"),
+                default_value=1,
+            )),
+            ("Recovery", MonitoringState(
+                title=_("State for <i>Recovery</i>"),
+                default_value=1,
+            )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Evaluation of VDrive States"),
-            elements=[
-                ("Optimal", MonitoringState(
-                    title=_("State for <i>Optimal</i>"),
-                    default_value=0,
-                )),
-                ("Partially Degraded",
-                 MonitoringState(
-                     title=_("State for <i>Partially Degraded</i>"),
-                     default_value=1,
-                 )),
-                ("Degraded", MonitoringState(
-                    title=_("State for <i>Degraded</i>"),
-                    default_value=2,
-                )),
-                ("Offline", MonitoringState(
-                    title=_("State for <i>Offline</i>"),
-                    default_value=1,
-                )),
-                ("Recovery", MonitoringState(
-                    title=_("State for <i>Recovery</i>"),
-                    default_value=1,
-                )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Virtual Drive"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="storcli_vdrives",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_storcli_vdrives,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_storcli_vdrives,
+        title=lambda: _("LSI RAID VDrives (StorCLI)"),
+    ))

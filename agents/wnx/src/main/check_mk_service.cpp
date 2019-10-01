@@ -38,13 +38,17 @@ void PrintMain() {
     using namespace xlog::internal;
     PrintBlock("Normal Usage:\n", Colors::green, []() {
         return fmt::format(
-            "\t{1} <{2}|{3}>\n"
-            "\t{2:<{0}} - test\n"
-            "\t{3:<{0}} - usage\n",
+            "\t{1} <{2}|{3}|{4}|{5}|{6}>\n"
+            "\t{2:<{0}} - generates test output\n"
+            "\t{3:<{0}} - version of the Agent\n"
+            "\t{4:<{0}} - reload configuration files of the Agent\n"
+            "\t{5:<{0}} - remove Legacy Agent if installed\n"
+            "\t{6:<{0}} - usage\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
             // first Row
-            kLegacyTestParam, kHelpParam);
+            kLegacyTestParam, kVersionParam, kReloadConfigParam,
+            kRemoveLegacyParam, kHelpParam);
     });
 }
 
@@ -90,10 +94,24 @@ void PrintLegacyTesting() {
     });
 }
 
+void PrintReinstallWATO() {
+    using namespace xlog::internal;
+    PrintBlock(
+        "Restore WATO Configuration(only for experienced users):\n",
+        Colors::pink, []() {
+            return fmt::format(
+                "\t{1} {2}\n"
+                "\t{2:{0}} - agent tries to restore configuration created by WATO(bakery)\n",
+                kParamShift,
+                kServiceExeName,  // service name from th project definitions
+                kRestoreParam);
+        });
+}
+
 void PrintInstallUninstall() {
     using namespace xlog::internal;
     PrintBlock(
-        "To install or remove service: for Experienced Users only:\n",
+        "Install or remove service(only for experienced users):\n",
         Colors::pink, []() {
             return fmt::format(
                 "\t{1} <{2}|{3}>\n"
@@ -136,7 +154,7 @@ void PrintRealtimeTesting() {
 void PrintCvt() {
     using namespace xlog::internal;
     PrintBlock(
-        "To Convert Legacy Agent Ini File into Agent Yml file:\n", Colors::pink,
+        "Convert Legacy Agent Ini File into Agent Yml file:\n", Colors::pink,
         []() {
             return fmt::format(
                 "\t{0} {1} [{2}] <inifile> [yamlfile]\n"
@@ -151,7 +169,7 @@ void PrintCvt() {
 void PrintLwaActivate() {
     using namespace xlog::internal;
 
-    PrintBlock("To Activate/Deactivate Legacy Agent:\n", Colors::pink, []() {
+    PrintBlock("Activate/Deactivate Legacy Agent:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
             "\t{2:{0}} - stop and deactivate legacy agent\n"
@@ -164,7 +182,7 @@ void PrintLwaActivate() {
 
 void PrintUpgrade() {
     using namespace xlog::internal;
-    PrintBlock("To Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
+    PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} [{3}]\n"
             "\t{2:{0}} - upgrading/migration\n"
@@ -180,7 +198,7 @@ void PrintCap() {
     using namespace xlog::internal;
 
     PrintBlock(
-        "To Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
+        "Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
         Colors::pink, []() {
             return fmt::format(
                 "\t{0} {1}\n",
@@ -192,7 +210,7 @@ void PrintCap() {
 void PrintSectionTesting() {
     using namespace xlog::internal;
 
-    PrintBlock("To test Sections individually:\n", Colors::pink, []() {
+    PrintBlock("Test sections individually:\n", Colors::pink, []() {
         return fmt::format(
             "\t{1} {2} {3} [{4} [{5}]] \n"
             "\t\t{3:{0}} - any section name(df, fileinfo and so on)\n"
@@ -233,6 +251,7 @@ static void ServiceUsage(std::wstring_view comment) {
         PrintCap();
         PrintSectionTesting();
         PrintInstallUninstall();
+        PrintReinstallWATO();
     } catch (const std::exception &e) {
         XLOG::l("Exception is '{}'", e.what());  //
     }
@@ -314,6 +333,13 @@ int CheckMainService(const std::wstring &What, int Interval) {
 // we want to test main function too.
 // so we have main, but callable
 int MainFunction(int argc, wchar_t const *Argv[]) {
+    std::set_terminate([]() {
+        //
+        XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
+        XLOG::l.bp("Win Agent is Terminated.");
+        abort();
+    });
+
     if (argc == 1) {
         // entry from the service engine
 
@@ -406,6 +432,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::TestLegacy();
     }
 
+    if (param == wtools::ConvertToUTF16(kRestoreParam)) {
+        return cma::srv::RestoreWATOConfig();
+    }
+
     if (param == wtools::ConvertToUTF16(kExecParam) ||
         param == wtools::ConvertToUTF16(kAdhocParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
@@ -436,6 +466,10 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
     }
     if (param == wtools::ConvertToUTF16(kCapParam)) {
         return cma::srv::ExecCap();
+    }
+
+    if (param == wtools::ConvertToUTF16(kVersionParam)) {
+        return cma::srv::ExecVersion();
     }
 
     if (param == wtools::ConvertToUTF16(kPatchHashParam)) {
@@ -485,6 +519,16 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
                 ? cma::srv::StdioLog::yes
                 : cma::srv::StdioLog::no;
         return cma::srv::ExecSection(section, delay, diag);
+    }
+
+    if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
+        cma::srv::ExecReloadConfig();
+        return 0;
+    }
+
+    if (param == wtools::ConvertToUTF16(kRemoveLegacyParam)) {
+        cma::srv::ExecRemoveLegacyAgent();
+        return 0;
     }
 
     if (param == wtools::ConvertToUTF16(kHelpParam)) {

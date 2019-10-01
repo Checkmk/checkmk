@@ -1,0 +1,10 @@
+Title: agent_hp_msa: Adjustment of HP MSA agent to allow information retrieval based on the new API
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1565257839
+Class: feature
+
+The HP MSA special agent is modified which allows to retrieve information through the new API version. If the connection to the new API is not possible, the agent automatically attempts to establish a connection through the old API version.

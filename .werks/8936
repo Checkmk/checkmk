@@ -1,0 +1,10 @@
+Title: tsm_scratch: Do not crash and skip check if agent sends invalid data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566458977
+Class: fix
+
+

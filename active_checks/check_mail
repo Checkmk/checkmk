@@ -423,7 +423,7 @@ def forward_to_ec(mails):
                 file_name = '.%s_%d_%d' % (forward_host, os.getpid(), time.time())
                 if not os.path.exists(spool_path):
                     os.makedirs(spool_path)
-                file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
+                open('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
                 os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
         if cleanup_messages:

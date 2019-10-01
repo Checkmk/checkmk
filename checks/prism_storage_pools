@@ -35,7 +35,7 @@ def inventory_prism_storage_pools(parsed):
 
 
 def _convert_byte_to_mbyte(value):
-    return int(value) / (1024 * 1024)
+    return int(value) // 1024**2
 
 
 def check_prism_storage_pools(item, params, parsed):

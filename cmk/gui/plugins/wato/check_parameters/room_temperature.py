@@ -37,36 +37,25 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersRoomTemperature(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_room_temperature():
+    return Tuple(
+        help=_("Temperature levels for external thermometers that are used "
+               "for monitoring the temperature of a datacenter. An example "
+               "is the webthem from W&T."),
+        elements=[
+            Integer(title=_("warning at"), unit=u"°C", default_value=26),
+            Integer(title=_("critical at"), unit=u"°C", default_value=30),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "room_temperature"
 
-    @property
-    def title(self):
-        return _("Room temperature (external thermal sensors)")
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Temperature levels for external thermometers that are used "
-                   "for monitoring the temperature of a datacenter. An example "
-                   "is the webthem from W&T."),
-            elements=[
-                Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                Integer(title=_("critical at"), unit=u"°C", default_value=30),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="room_temperature",
+        group=RulespecGroupCheckParametersEnvironment,
+        is_deprecated=True,
+        item_spec=lambda: TextAscii(title=_("Sensor ID"),
+                                    help=_("The identifier of the thermal sensor.")),
+        parameter_valuespec=_parameter_valuespec_room_temperature,
+        title=lambda: _("Room temperature (external thermal sensors)"),
+    ))

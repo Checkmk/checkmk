@@ -1,0 +1,18 @@
+Title: Service discovery: Print warning instead of failing on discovery errors
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1564734854
+
+The service discovery page of WATO was terminating the service discovery on the
+first error, independent of which discovery function raised the error. In this
+situation a single broken check could break the service discovery functionality
+of WATO.
+
+On the command line (cmk -I) the default behavious is to proceed with the other
+discovery function when a single discovery function fails. This is now the
+default behavior of the WATO discovery page.

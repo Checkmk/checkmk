@@ -38,33 +38,24 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFireeyeQuarantine(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_fireeye_quarantine():
+    return Dictionary(elements=[(
+        "usage",
+        Tuple(
+            title=_("Levels for Quarantine Usage"),
+            elements=[
+                Integer(title="Warning at", default_value=70, unit="%"),
+                Integer(title="Critical at", default_value=80, unit="%"),
+            ],
+        ),
+    )],)
 
-    @property
-    def check_group_name(self):
-        return "fireeye_quarantine"
 
-    @property
-    def title(self):
-        return _("Fireeye Quarantine Usage")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[(
-            "usage",
-            Tuple(
-                title=_("Levels for Quarantine Usage"),
-                elements=[
-                    Integer(title="Warning at", default_value=70, unit="%"),
-                    Integer(title="Critical at", default_value=80, unit="%"),
-                ],
-            ),
-        )],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fireeye_quarantine",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fireeye_quarantine,
+        title=lambda: _("Fireeye Quarantine Usage"),
+    ))

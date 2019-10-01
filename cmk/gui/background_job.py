@@ -41,6 +41,7 @@ from pathlib2 import Path
 from cmk.gui.i18n import _
 import cmk
 import cmk.utils.log
+from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
@@ -160,8 +161,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
         try:
             self.initialize_environment()
-            self._logger.verbose("Initialized background job (Job ID: %s)" %
-                                 self._job_parameters["job_id"])
+            self._logger.log(VERBOSE, "Initialized background job (Job ID: %s)",
+                             self._job_parameters["job_id"])
             self._jobstatus.update_status({
                 "pid": self.pid,
                 "state": JobStatusStates.RUNNING,
@@ -206,16 +207,18 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         except MKTerminate:
             raise
         except Exception as e:
-            self._logger.error("Exception in background function", exc_info=True)
+            self._logger.exception("Exception in background function")
             job_interface.send_exception(_("Exception: %s") % (e))
 
     def _open_stdout_and_stderr(self):
         """Create a temporary file and use it as stdout / stderr buffer"""
-        # We can not use io.BytesIO() or similar because we need real file descriptors
-        # to be able to catch the (debug) output of libraries like libldap or subproccesses
+        # - We can not use io.BytesIO() or similar because we need real file descriptors
+        #   to be able to catch the (debug) output of libraries like libldap or subproccesses
+        # - Use buffering=0 to make the non flushed output directly visible in
+        #   the job progress dialog
         sys.stdout = sys.stderr = (
             Path(self.get_work_dir()) /  # pylint: disable=no-member
-            BackgroundJobDefines.progress_update_filename).open("wb")
+            BackgroundJobDefines.progress_update_filename).open("wb", buffering=0)
 
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
@@ -493,7 +496,7 @@ class BackgroundJob(object):
             p = self._background_process_class(job_parameters)
             p.start()
         except Exception as e:
-            self._logger.error("Error while starting subprocess: %s", e, exc_info=True)
+            self._logger.exception("Error while starting subprocess: %s", e)
             os._exit(1)
         os._exit(0)
 
@@ -539,7 +542,7 @@ class JobStatus(object):
                                      ("JobResult", self._result_message_path),
                                      ("JobException", self._exceptions_path)]:
             if field_path.exists():  # pylint: disable=no-member
-                data["loginfo"][field_id] = file(str(field_path)).read().splitlines()
+                data["loginfo"][field_id] = open(str(field_path)).read().splitlines()
             else:
                 data["loginfo"][field_id] = []
 

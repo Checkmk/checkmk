@@ -1,0 +1,10 @@
+Title: local: Fix bug of none existing level values
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566391107
+Class: fix
+
+The absence of level values caused local checks to crashed. Now it is possible to set an critical level value without having to set warning level.

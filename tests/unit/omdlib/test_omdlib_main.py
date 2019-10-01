@@ -4,8 +4,7 @@ from pathlib2 import Path
 import omdlib.main
 
 
-def test_read_skel_permissions(monkeypatch, tmpdir):
-    tmp_path = Path("%s" % tmpdir)
+def test_read_skel_permissions(monkeypatch, tmp_path):
     pfile = tmp_path / "skel.permissions"
     pfile.open("w", encoding="utf-8").write(u"bla 755\nblub 644\n")  # pylint: disable=no-member
 
@@ -15,9 +14,9 @@ def test_read_skel_permissions(monkeypatch, tmpdir):
     assert omdlib.main.g_skel_permissions == {'bla': 493, 'blub': 420}
 
 
-def test_initialize_site_ca(monkeypatch, tmpdir):
+def test_initialize_site_ca(monkeypatch, tmp_path):
     site_id = "tested"
-    ca_path = Path("%s" % tmpdir) / site_id / "etc" / "ssl"
+    ca_path = tmp_path / site_id / "etc" / "ssl"
     ca_path.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
 
     monkeypatch.setattr(omdlib.certs.CertificateAuthority, "ca_path", property(lambda x: ca_path))

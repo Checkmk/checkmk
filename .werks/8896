@@ -1,0 +1,14 @@
+Title: Fixed rare crash when a plugin should be terminated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b8
+Date: 1567765397
+Class: fix
+
+Previously, in the process of terminating of the hanging plugins, 
+the Windows Agent could accidentally destroy an important process, 
+thus causing BSOD.
+
+Since then, the Agent uses a safe algorithm to terminate plugins.

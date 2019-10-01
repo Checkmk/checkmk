@@ -60,7 +60,7 @@ def check_netapp_api_vf_stats(item, params, parsed):
     # vFilers are 7mode only and cannot appear in clustermoder
     num_processors = float(cpu.get('7mode', {}).get("num_processors", 1))
 
-    used_perc = ticks_per_sec / num_processors / ticks_per_sec_base * 100
+    used_perc = (ticks_per_sec / num_processors) / ticks_per_sec_base * 100  # fixed: true-division
 
     # Due to timeing invariancies the measured level can become > 100%.
     # This makes users unhappy, so cut it off.

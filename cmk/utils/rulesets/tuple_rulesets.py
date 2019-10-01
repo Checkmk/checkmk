@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import NamedTuple, Generator, Dict, Text, Pattern, Tuple, List  # pylint: disable=unused-import
+from typing import Dict, Generator, List, NamedTuple, Optional, Pattern, Text, Tuple  # pylint: disable=unused-import
 
+import cmk.utils.debug
 from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

@@ -1,0 +1,13 @@
+Title: "Periodic service discovery" breaks Nagios config generation
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566565860
+
+A rule in the ruleset "Periodic service discovery" that is configured
+with the option "Do not perform service discovery check" resulted in
+a exception when updating the Nagios core config (e.g. with cmk -U).

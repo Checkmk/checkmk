@@ -70,6 +70,12 @@ check-freetds:
 	    exit 1 ; \
 	fi
 
+# libgsf ######################################################################
+
+PACKAGE_LIBGSF_DESTDIR := $(PACKAGE_BASE)/libgsf/destdir
+PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
+PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
+
 # re2 #########################################################################
 
 PACKAGE_RE2_DESTDIR := $(PACKAGE_BASE)/re2/destdir

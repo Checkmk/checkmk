@@ -27,11 +27,10 @@
 import os
 import re
 import pprint
-from typing import Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import Text, Dict, Union, NamedTuple, List, Optional  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.labels import LabelManager
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -55,10 +54,15 @@ from cmk.gui.watolib.utils import (
     NEGATE,
 )
 
+import cmk_base.export
+
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
 # to_config_with_folder_macro() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+# Make the GUI config module reset the base config to always get the latest state of the config
+config.register_post_config_load_hook(cmk_base.export.reset_config)
 
 
 class RuleConditions(object):
@@ -67,13 +71,15 @@ class RuleConditions(object):
                  host_tags=None,
                  host_labels=None,
                  host_name=None,
-                 service_description=None):
-        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]]) -> None
+                 service_description=None,
+                 service_labels=None):
+        # type: (str, Dict[str, str], Dict[str, str], Optional[Union[Dict[str, List[str]], List[str]]], Optional[List[str]], Dict[str, str]) -> None
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
         self.host_name = host_name
         self.service_description = service_description
+        self.service_labels = service_labels or {}
 
     def from_config(self, conditions):
         self.host_folder = conditions.get("host_folder", self.host_folder)
@@ -81,6 +87,7 @@ class RuleConditions(object):
         self.host_labels = conditions.get("host_labels", {})
         self.host_name = conditions.get("host_name")
         self.service_description = conditions.get("service_description")
+        self.service_labels = conditions.get("service_labels", {})
         return self
 
     def to_config_with_folder_macro(self):
@@ -127,6 +134,9 @@ class RuleConditions(object):
 
         if self.service_description is not None:
             cfg["service_description"] = self.service_description
+
+        if self.service_labels:
+            cfg["service_labels"] = self.service_labels
 
         return cfg
 
@@ -199,8 +209,15 @@ class RulesetCollection(object):
     def load(self):
         raise NotImplementedError()
 
+    def _initialize_rulesets(self, only_varname=None):
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
+        self._rulesets = {varname: Ruleset(varname, self._tag_to_group_map) for varname in varnames}
+
     def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
+
+        if not os.path.exists(path):
+            return  # Do not initialize rulesets when no rule at all exists
 
         config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
@@ -219,39 +236,26 @@ class RulesetCollection(object):
             else:
                 config_dict[varname] = []
 
-        # Initialize rulesets once
-        self._initialize_rulesets(only_varname=only_varname)
-
-        if os.path.exists(path):
-            self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
-
-    def _initialize_rulesets(self, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
-
-        for varname in varnames:
-            if varname in self._rulesets:
-                continue
-            self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
+        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        if only_varname:
-            varnames = [only_varname]
-        else:
-            varnames = rulespec_registry.keys()
-
+        varnames = [only_varname] if only_varname else rulespec_registry.keys()
         for varname in varnames:
-            if varname not in self._rulesets:
-                self._rulesets[varname] = Ruleset(varname, self._tag_to_group_map)
             if ':' in varname:
-                dictname, subkey = varname.split(":")
-                ruleset_config = rulesets_config.get(dictname, {})
-                if subkey in ruleset_config:
-                    self._rulesets[varname].from_config(folder, ruleset_config[subkey])
+                config_varname, subkey = varname.split(":", 1)
+                rulegroup_config = rulesets_config.get(config_varname, {})
+                if subkey not in rulegroup_config:
+                    continue  # Nothing configured: nothing left to do
+
+                ruleset_config = rulegroup_config[subkey]
             else:
-                self._rulesets[varname].from_config(folder, rulesets_config.get(varname, []))
+                config_varname, subkey = varname, None
+                ruleset_config = rulesets_config.get(config_varname, [])
+
+            if not ruleset_config:
+                continue  # Nothing configured: nothing left to do
+
+            self._rulesets[varname].from_config(folder, ruleset_config)
 
     def save(self):
         raise NotImplementedError()
@@ -274,16 +278,16 @@ class RulesetCollection(object):
             has_content = True
             content += ruleset.to_config(folder)
 
-        # Adding this instead of the full path makes it easy to move config
-        # files around. The real FOLDER_PATH will be added dynamically while
-        # loading the file in cmk_base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
-
         rules_file_path = folder.rules_file_path()
         # Remove rules files if it has no content. This prevents needless reads
         if not has_content and os.path.exists(rules_file_path):
-            os.unlink(rules_file_path)
+            os.unlink(rules_file_path)  # Do not keep empty rules.mk files
             return
+
+        # Adding this instead of the full path makes it easy to move config
+        # files around. The real FOLDER_PATH will be added dynamically while
+        # loading the file in cmk_base.config
+        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
@@ -331,6 +335,7 @@ class AllRulesets(RulesetCollection):
 
     def load(self):
         """Load all rules of all folders"""
+        self._initialize_rulesets()
         self._load_rulesets_recursively(Folder.root_folder())
 
     def save_folder(self, folder):
@@ -354,6 +359,7 @@ class SingleRulesetRecursively(AllRulesets):
 
     # Load single ruleset from all folders
     def load(self):
+        self._initialize_rulesets(only_varname=self._name)
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
 
     def save_folder(self, folder):
@@ -366,6 +372,7 @@ class FolderRulesets(RulesetCollection):
         self._folder = folder
 
     def load(self):
+        self._initialize_rulesets()
         self._load_folder_rulesets(self._folder)
 
     def save(self):
@@ -424,7 +431,7 @@ class Ruleset(object):
     def __init__(self, name, tag_to_group_map):
         super(Ruleset, self).__init__()
         self.name = name
-        self.rulespec = rulespec_registry[name]()
+        self.rulespec = rulespec_registry[name]
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
 
@@ -488,8 +495,9 @@ class Ruleset(object):
         self._rules[folder.path()] = []
 
         self.tuple_transformer.transform_in_place(rules_config,
-                                                  is_service=bool(self.item_type()),
-                                                  is_binary=not self.valuespec())
+                                                  is_service=self.rulespec.is_for_services,
+                                                  is_binary=self.rulespec.is_binary_ruleset,
+                                                  use_ruleset_id_cache=False)
 
         for rule_config in rules_config:
             rule = Rule(folder, self)
@@ -696,7 +704,7 @@ class Ruleset(object):
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(self, hostname, service):
+    def analyse_ruleset(self, hostname, svc_desc_or_item, svc_desc):
         resultlist = []
         resultdict = {}
         effectiverules = []
@@ -704,7 +712,8 @@ class Ruleset(object):
             if rule.is_disabled():
                 continue
 
-            if not rule.matches_host_and_item(Folder.current(), hostname, service):
+            if not rule.matches_host_and_item(Folder.current(), hostname, svc_desc_or_item,
+                                              svc_desc):
                 continue
 
             if self.match_type() == "all":
@@ -737,8 +746,7 @@ class Rule(object):
     @classmethod
     def create(cls, folder, ruleset):
         rule = Rule(folder, ruleset)
-        if rule.ruleset.valuespec():
-            rule.value = rule.ruleset.valuespec().default_value()
+        rule.value = rule.ruleset.valuespec().default_value()
         return rule
 
     def __init__(self, folder, ruleset):
@@ -757,17 +765,14 @@ class Rule(object):
     def _initialize(self):
         self.conditions = RuleConditions(self.folder.path())
         self.rule_options = {}
-        if self.ruleset.valuespec():
-            self.value = None
-        else:
-            self.value = True
+        self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
 
     def from_config(self, rule_config):
         try:
             self._initialize()
             self._parse_rule(rule_config)
         except Exception:
-            logger.exception()
+            logger.exception("error parsing rule")
             raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (rule_config,))
 
     def _parse_rule(self, rule_config):
@@ -831,72 +836,83 @@ class Rule(object):
         return ro
 
     def is_ineffective(self):
+        """Whether or not this rule does not match at all
+
+        Interesting: This has always tried host matching. Whether or not a service ruleset
+        does not match any service has never been tested. Probably because this would be
+        too expensive."""
         hosts = Host.all()
         for host_name, host in hosts.items():
-            if self.matches_host_and_item(host.folder(), host_name, service_description=None):
+            if self.matches_host_conditions(host.folder(), host_name):
                 return False
         return True
 
-    def matches_host_and_item(self, host_folder, hostname, service_description):
-        """Whether or not the given folder/host/item matches this rule"""
-        return not any(
-            True for _r in self.get_mismatch_reasons(host_folder, hostname, service_description))
+    def matches_host_conditions(self, host_folder, hostname):
+        """Whether or not the given folder/host matches this rule
+        This only evaluates host related conditions, even if the ruleset is a service ruleset."""
+        return not any(True for _r in self.get_mismatch_reasons(
+            host_folder, hostname, svc_desc_or_item=None, svc_desc=None, only_host_conditions=True))
 
-    def get_mismatch_reasons(self, host_folder, hostname, service_description):
+    def matches_host_and_item(self, host_folder, hostname, svc_desc_or_item, svc_desc):
+        """Whether or not the given folder/host/item matches this rule"""
+        return not any(True for _r in self.get_mismatch_reasons(
+            host_folder, hostname, svc_desc_or_item, svc_desc, only_host_conditions=False))
+
+    def get_mismatch_reasons(self, host_folder, hostname, svc_desc_or_item, svc_desc,
+                             only_host_conditions):
         """A generator that provides the reasons why a given folder/host/item not matches this rule"""
         host = host_folder.host(hostname)
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())
 
-        match_object = ruleset_matcher.RulesetMatchObject(
-            host_name=hostname,
-            host_folder=host_folder.path_for_rule_matching(),
-            host_tags=host.tag_groups(),
-            host_labels=host.labels(),
-            service_description=service_description,
-        )
+        # BE AWARE: Depending on the service ruleset the service_description of
+        # the rules is only a check item or a full service description. For
+        # example the check parameters rulesets only use the item, and other
+        # service rulesets like disabled services ruleset use full service
+        # descriptions.
+        #
+        # The service_description attribute of the match_object must be set to
+        # either the item or the full service description, depending on the
+        # ruleset, but the labels of a service need to be gathered using the
+        # real service description.
+        if only_host_conditions:
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        elif self.ruleset.item_type() == "service":
+            match_object = cmk_base.export.ruleset_match_object_of_service(
+                hostname, svc_desc_or_item)
+        elif self.ruleset.item_type() == "item":
+            match_object = cmk_base.export.ruleset_match_object_for_checkgroup_parameters(
+                hostname, svc_desc_or_item, svc_desc)
+        elif not self.ruleset.item_type():
+            match_object = ruleset_matcher.RulesetMatchObject(hostname)
+        else:
+            raise NotImplementedError()
 
-        for reason in self._get_mismatch_reasons_of_match_object(match_object, host.tags()):
+        match_service_conditions = self.ruleset.rulespec.is_for_services
+        if only_host_conditions:
+            match_service_conditions = False
+
+        for reason in self._get_mismatch_reasons_of_match_object(match_object,
+                                                                 match_service_conditions):
             yield reason
 
-    def matches_item(self, item):
-        match_object = ruleset_matcher.RulesetMatchObject(
-            host_name=None,
-            host_folder="/",
-            service_description=item,
-        )
-        return any(self._get_mismatch_reasons_of_match_object(match_object, host_tags=[]))
-
-    def _get_mismatch_reasons_of_match_object(self, match_object, host_tags):
-        # TODO:
-        # - What about the host_label_rules and service_label_rules?
-        # - The autochecks_manager also needs to be available here!
-        # Both is only working with cmk_base code which has the checks and config loaded.
-        label_manager = LabelManager(
-            explicit_host_labels={match_object.host_name: match_object.host_labels},
-            host_label_rules=[],
-            service_label_rules=[],
-            autochecks_manager=None,
-        )
-
-        matcher = ruleset_matcher.RulesetMatcher(
-            tag_to_group_map=ruleset_matcher.get_tag_to_group_map(config.tags),
-            host_tag_lists={match_object.host_name: host_tags},
-            host_paths={match_object.host_name: match_object.host_folder},
-            labels=label_manager,
-            all_configured_hosts={match_object.host_name},
-            clusters_of={},
-            nodes_of={},
-        )
+    def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
+        matcher = cmk_base.export.get_ruleset_matcher()
 
         rule_dict = self.to_config()
         rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
 
-        if self.ruleset.item_type():
-            if matcher.is_matching_service_ruleset(match_object, [rule_dict]):
+        if match_service_conditions:
+            if list(
+                    matcher.get_service_ruleset_values(
+                        match_object, [rule_dict],
+                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
         else:
-            if matcher.is_matching_host_ruleset(match_object, [rule_dict]):
+            if list(
+                    matcher.get_host_ruleset_values(
+                        match_object, [rule_dict],
+                        is_binary=self.ruleset.rulespec.is_binary_ruleset)):
                 return
 
         yield _("The rule does not match")
@@ -924,18 +940,14 @@ class Rule(object):
         if not _match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        if "rule_value" in search_options and not self.ruleset.valuespec():
-            return False
-
         value_text = None
-        if self.ruleset.valuespec():
-            try:
-                value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
-            except Exception as e:
-                logger.exception()
-                html.show_warning(
-                    _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
-                    (self.ruleset.title(), self.folder.title(), self.to_config(), e))
+        try:
+            value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
+        except Exception as e:
+            logger.exception("error searching ruleset %s", self.ruleset.title())
+            html.show_warning(
+                _("Failed to search rule of ruleset '%s' in folder '%s' (%r): %s") %
+                (self.ruleset.title(), self.folder.title(), self.to_config(), e))
 
         if value_text is not None and not _match_search_expression(search_options, "rule_value",
                                                                    value_text):

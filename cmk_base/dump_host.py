@@ -26,6 +26,7 @@
 
 import time
 
+import cmk.utils
 import cmk.utils.tty as tty
 import cmk.utils.render
 
@@ -77,8 +78,14 @@ def dump_host(hostname):
                    (addresses if addresses is not None else "No IP") + "\n")
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.iteritems())]
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
+
+    labels = [
+        (tag_template % ":".join(l)).encode("utf-8") for l in sorted(host_config.labels.iteritems())
+    ]
+    console.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
+
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if host_config.is_cluster:
         parents_list = host_config.nodes
@@ -88,9 +95,9 @@ def dump_host(hostname):
         console.output(tty.yellow + "Parents:                " + tty.normal +
                        ", ".join(parents_list) + "\n")
     console.output(tty.yellow + "Host groups:            " + tty.normal +
-                   cmk_base.utils.make_utf8(", ".join(host_config.hostgroups)) + "\n")
+                   cmk.utils.make_utf8(", ".join(host_config.hostgroups)) + "\n")
     console.output(tty.yellow + "Contact groups:         " + tty.normal +
-                   cmk_base.utils.make_utf8(", ".join(host_config.contactgroups)) + "\n")
+                   cmk.utils.make_utf8(", ".join(host_config.contactgroups)) + "\n")
 
     agenttypes = []
     sources = data_sources.DataSources(hostname, ipaddress)
@@ -120,10 +127,10 @@ def dump_host(hostname):
                           key=lambda s: s.description):
         table_data.append([
             service.check_plugin_name,
-            cmk_base.utils.make_utf8(service.item),
+            cmk.utils.make_utf8(service.item),
             _evaluate_params(service.parameters),
-            cmk_base.utils.make_utf8(service.description),
-            cmk_base.utils.make_utf8(",".join(
+            cmk.utils.make_utf8(service.description),
+            cmk.utils.make_utf8(",".join(
                 config_cache.servicegroups_of_service(hostname, service.description)))
         ])
 

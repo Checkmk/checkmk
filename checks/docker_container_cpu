@@ -24,11 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def parse_docker_container_cpu(info):
+    parsed = {}
+    version = docker_get_version(info)
+    if version is None:
+        for line in info:
+            if line[0] == "cpu":
+                parsed["system_ticks"] = sum(map(int, line[1:]))
+            else:
+                parsed[line[0]] = int(line[1])
+        if "user" in parsed and "system" in parsed:
+            parsed["container_ticks"] = parsed["user"] + parsed["system"]
+        return parsed
+
+    raw = docker_json_get_obj(info[1])
+    parsed["num_cpus"] = len(raw['cpu_usage']['percpu_usage'])
+    parsed["system_ticks"] = raw['system_cpu_usage']
+    parsed["container_ticks"] = raw['cpu_usage']['total_usage']
+    return parsed
+
+
 check_info["docker_container_cpu"] = {
-    "check_function": check_cpu_util_linux_container,
+    "parse_function": parse_docker_container_cpu,
     "inventory_function": discover_single,
+    "check_function": check_cpu_util_linux_container,
     "service_description": "CPU utilization",
     "has_perfdata": True,
-    "includes": ["cpu_util.include"],
+    "includes": ["docker.include", "cpu_util.include"],
     "group": "cpu_utilization_os",
 }

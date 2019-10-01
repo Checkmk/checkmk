@@ -40,39 +40,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCiscoWlc(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_cisco_wlc():
+    return Dictionary(
+        help=_("Here you can set which alert type is set when the given "
+               "access point is missing (might be powered off). The access point "
+               "can be specified by the AP name or the AP model"),
+        elements=[("ap_name",
+                   ListOf(Tuple(elements=[
+                       TextAscii(title=_("AP name")),
+                       MonitoringState(title=_("State when missing"), default_value=2)
+                   ],),
+                          title=_("Access point name"),
+                          add_label=_("Add name")))],
+    )
 
-    @property
-    def check_group_name(self):
-        return "cisco_wlc"
 
-    @property
-    def title(self):
-        return _("Cisco WLAN AP")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("Here you can set which alert type is set when the given "
-                   "access point is missing (might be powered off). The access point "
-                   "can be specified by the AP name or the AP model"),
-            elements=[("ap_name",
-                       ListOf(Tuple(elements=[
-                           TextAscii(title=_("AP name")),
-                           MonitoringState(title=_("State when missing"), default_value=2)
-                       ],),
-                              title=_("Access point name"),
-                              add_label=_("Add name")))],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Access Point"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="cisco_wlc",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("Access Point")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_cisco_wlc,
+        title=lambda: _("Cisco WLAN AP"),
+    ))

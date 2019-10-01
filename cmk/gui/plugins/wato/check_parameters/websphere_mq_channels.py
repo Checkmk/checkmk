@@ -39,56 +39,43 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.websphere_mq import websphere_mq_common_elements
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWebsphereMqChannels(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_websphere_mq_channels():
+    return Dictionary(elements=websphere_mq_common_elements() + [
+        ("status",
+         Dictionary(
+             title=_('Override check state based on channel state'),
+             elements=[
+                 ("INACTIVE",
+                  MonitoringState(title=_("State when channel is inactive"), default_value=2)),
+                 ("INITIALIZING",
+                  MonitoringState(title=_("State when channel is initializing"), default_value=2)),
+                 ("BINDING",
+                  MonitoringState(title=_("State when channel is binding"), default_value=2)),
+                 ("STARTING",
+                  MonitoringState(title=_("State when channel is starting"), default_value=2)),
+                 ("RUNNING",
+                  MonitoringState(title=_("State when channel is running"), default_value=0)),
+                 ("RETRYING",
+                  MonitoringState(title=_("State when channel is retrying"), default_value=2)),
+                 ("STOPPING",
+                  MonitoringState(title=_("State when channel is stopping"), default_value=2)),
+                 ("STOPPED",
+                  MonitoringState(title=_("State when channel is stopped"), default_value=1)),
+                 ("other",
+                  MonitoringState(title=_("State when channel status is unknown"),
+                                  default_value=2)),
+             ],
+             optional_keys=[],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "websphere_mq_channels"
 
-    @property
-    def title(self):
-        return _("Websphere MQ Channels")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=websphere_mq_common_elements() + [
-            ("status",
-             Dictionary(
-                 title=_('Override check state based on channel state'),
-                 elements=[
-                     ("INACTIVE",
-                      MonitoringState(title=_("State when channel is inactive"), default_value=2)),
-                     ("INITIALIZING",
-                      MonitoringState(title=_("State when channel is initializing"),
-                                      default_value=2)),
-                     ("BINDING",
-                      MonitoringState(title=_("State when channel is binding"), default_value=2)),
-                     ("STARTING",
-                      MonitoringState(title=_("State when channel is starting"), default_value=2)),
-                     ("RUNNING",
-                      MonitoringState(title=_("State when channel is running"), default_value=0)),
-                     ("RETRYING",
-                      MonitoringState(title=_("State when channel is retrying"), default_value=2)),
-                     ("STOPPING",
-                      MonitoringState(title=_("State when channel is stopping"), default_value=2)),
-                     ("STOPPED",
-                      MonitoringState(title=_("State when channel is stopped"), default_value=1)),
-                     ("other",
-                      MonitoringState(title=_("State when channel status is unknown"),
-                                      default_value=2)),
-                 ],
-                 optional_keys=[],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of channel"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="websphere_mq_channels",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of channel")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_websphere_mq_channels,
+        title=lambda: _("Websphere MQ Channels"),
+    ))

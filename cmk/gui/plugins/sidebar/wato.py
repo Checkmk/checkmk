@@ -80,7 +80,7 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO &middot; Configuration")
+        return _("WATO - Configuration")
 
     @classmethod
     def description(cls):
@@ -107,7 +107,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO &middot; Quickaccess")
+        return _("WATO - Quickaccess")
 
     @classmethod
     def description(cls):
@@ -204,7 +204,7 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
-    subfolders.sort(cmp=lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+    subfolders.sort(key=lambda x: x["title"].lower())
 
     is_leaf = len(subfolders) == 0
 

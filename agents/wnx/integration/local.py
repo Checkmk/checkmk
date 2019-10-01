@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; py-indent-offset: 4 -*-
+from __future__ import print_function
+from builtins import zip
+from builtins import range
+from builtins import object
 import configparser
 import yaml
 from contextlib import contextmanager
 import os
-import platform
 import pytest
 import re
 import time
@@ -12,6 +15,20 @@ import subprocess
 import sys
 import shutil
 import telnetlib  # nosec
+import it_utils
+import platform
+
+default_config = """
+global:
+  enabled: true
+  logging:
+    debug: true
+  port: {}
+"""
+
+if not it_utils.check_os():
+    print("Unsupported platform {}".format(platform.system()))
+    exit(13)
 
 
 def get_main_exe_name(base_dir):
@@ -30,9 +47,19 @@ def get_main_plugins_name(base_dir):
     return os.path.join(base_dir, 'plugins')
 
 
-def create_protocol_file(base_dir):
-    protocol_file = os.path.join(base_dir, 'upgrade.protocol')
+def create_protocol_file(user_dir):
     # block  upgrading
+    protocol_dir = os.path.join(user_dir, 'config')
+    try:
+        os.makedirs(protocol_dir)
+    except OSError as e:
+        print('Probably folders exist: {}'.format(e))
+
+    if not os.path.exists(protocol_dir):
+        print('Directory {} doesnt exist, may be you have not enough rights'.format(protocol_dir))
+        sys.exit(11)
+
+    protocol_file = os.path.join(protocol_dir, 'upgrade.protocol')
     with open(protocol_file, 'w') as f:
         f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
 
@@ -40,14 +67,14 @@ def create_protocol_file(base_dir):
 def make_clean_dir(dir_to_create_and_clean):
     try:
         shutil.rmtree(dir_to_create_and_clean)
-    except OSError:
-        print("Folder doesn't exist")
+    except OSError as e:
+        print("Folder doesn't exist, err is {}".format(e))
 
     if not os.path.exists(dir_to_create_and_clean):
         os.mkdir(dir_to_create_and_clean)
 
     if not os.path.exists(dir_to_create_and_clean):
-        print('Cannot create path %s' % dir_to_create_and_clean)
+        print('Cannot create path "{}"'.format(dir_to_create_and_clean))
         sys.exit(13)
 
 
@@ -60,7 +87,6 @@ def create_and_fill_root_dir(root_work_dir, artefacts_dir):
         shutil.copy(src, root_work_dir)
 
     shutil.copytree(get_main_plugins_name(artefacts_dir), get_main_plugins_name(root_work_dir))
-    create_protocol_file(root_work_dir)
     # checking
     tgt_agent_exe = get_main_exe_name(root_work_dir)
     if not os.path.exists(tgt_agent_exe):
@@ -72,11 +98,13 @@ def make_user_dir(base_dir):
     u_dir = os.path.join(base_dir, 'ProgramData', 'checkmk', 'agent')
     try:
         os.makedirs(u_dir)
-    except OSError:
-        print('Probably folders exist')
+    except OSError as e:
+        print('Probably folders exist: {}'.format(e))
+
     if not os.path.exists(u_dir):
-        print('Directory %s doesnt exist' % u_dir)
+        print('Directory {} doesnt exist'.format(u_dir))
         sys.exit(11)
+
     return u_dir
 
 
@@ -100,6 +128,7 @@ create_and_fill_root_dir(root_dir, src_exec_dir)
 
 # user dir
 user_dir = make_user_dir(root_dir)
+create_protocol_file(user_dir)
 
 # names
 user_yaml_config = get_user_yaml_name(user_dir)
@@ -131,33 +160,28 @@ def run_agent(cmd):
 
 
 def assert_subprocess(cmd):
-    exit_code, stdout, stderr = run_subprocess(cmd)
+    exit_code, stdout_ret, stderr_ret = run_subprocess(cmd)
 
-    if stdout:
-        sys.stdout.write(stdout)
-    if stderr:
-        sys.stderr.write(stderr)
+    if stdout_ret:
+        sys.stdout.write(stdout_ret.decode(encoding='cp1252'))
+
+    if stderr_ret:
+        sys.stderr.write(stderr_ret.decode(encoding='cp1252'))
+
     assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
 
 
 @pytest.fixture
 def make_yaml_config():
-    yml = yaml.safe_load("""
-global:
-  enabled: true
-  logging:
-    debug: true
-  port: %d
-""" % port)
+    yml = yaml.safe_load(default_config.format(port))
     return yml
 
 
 @pytest.fixture
 def write_config(testconfig):
-    if platform.system() == 'Windows':
-        with open(user_yaml_config, 'wt') as yaml_file:
-            a = yaml.dump(testconfig)
-            yaml_file.write(a)
+    with open(user_yaml_config, 'wt') as yaml_file:
+        ret = yaml.dump(testconfig)
+        yaml_file.write(ret)
     yield
 
 
@@ -165,16 +189,13 @@ def write_config(testconfig):
 @pytest.fixture
 def wait_agent():
     def inner():
-        pass
+        return False
 
     return inner
 
 
 @pytest.fixture
 def actual_output(write_config, wait_agent):
-    if platform.system() != 'Windows':
-        sys.exit(1)
-
     # Run agent and yield telnet output.
     telnet, p = None, None
     try:
@@ -204,6 +225,9 @@ def actual_output(write_config, wait_agent):
         if p:
             p.terminate()
 
+        # hammer kill of the process, terminate may be too long
+        subprocess.call("taskkill /F /IM check_mk_agent.exe")
+
         # Possibly wait for async processes to stop.
         wait_agent()
 
@@ -228,11 +252,13 @@ class YamlWriter(object):
         self._doc = yaml.safe_load(doc)
 
 
-def local_test(expected_output, actual_output, testfile, test_name=None, test_class=None):
-    comparison_data = zip(expected_output, actual_output)
+def local_test(expected_output_from_agent,
+               actual_output_from_agent,
+               current_test,
+               test_name=None,
+               test_class=None):
+    comparison_data = list(zip(expected_output_from_agent, actual_output_from_agent))
     for expected, actual in comparison_data:
-        if actual == 'WMItimeout':
-            pytest.skip('WMI timeout, better luck next time')
         # Uncomment for debug prints:
         # if re.match(expected, actual) is None:
         #    print("ups: %s" % actual)
@@ -243,14 +269,14 @@ def local_test(expected_output, actual_output, testfile, test_name=None, test_cl
         assert re.match(expected,
                         actual) is not None, "\nExpected '%s'\nActual   '%s'" % (expected, actual)
     try:
-        assert len(actual_output) >= len(expected_output), (
+        assert len(actual_output_from_agent) >= len(expected_output_from_agent), (
             'actual output is shorter than expected:\n'
             'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output), '\n'.join(actual_output)))
-        assert len(actual_output) <= len(expected_output), (
+            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
+        assert len(actual_output_from_agent) <= len(expected_output_from_agent), (
             'actual output is longer than expected:\n'
             'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output), '\n'.join(actual_output)))
+            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
     except TypeError:
         # expected_output may be an iterator without len
-        assert len(actual_output) > 0, 'Actual output was empty'
+        assert len(actual_output_from_agent) > 0, 'Actual output was empty'

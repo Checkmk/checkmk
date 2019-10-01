@@ -32,6 +32,7 @@ import gzip
 import re
 # Just for tests
 import pprint
+import six
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -94,7 +95,9 @@ class StructuredDataTree(object):
     def _validate_tree_path(self, tree_path):
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        if not isinstance(tree_path, (str, unicode)):
+        if not isinstance(
+                tree_path,
+            (six.binary_type, six.text_type)):  # TODO: Check if six.binary_type is necessary
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
         if not (tree_path.endswith(":") or tree_path.endswith(".")):
             raise MKGeneralException("No valid tree path.")

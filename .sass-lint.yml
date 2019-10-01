@@ -71,15 +71,17 @@ rules:
   no-invalid-hex: 2
   no-mergeable-selectors: 0
   no-misspelled-properties: 2
-  no-qualifying-elements:
-    - 2
-    -
-      allow-element-with-attribute: true
   no-trailing-whitespace: 2
   no-trailing-zero: 2
   no-transition-all: 0
   no-url-protocols: 2
-  no-vendor-prefixes: 1
+  no-vendor-prefixes:
+    - 1
+    -
+      excluded-identifiers:
+        - webkit
+        - moz
+        - ms
   no-warn: 0
   one-declaration-per-line: 2
   placeholder-in-extend: 0
@@ -112,15 +114,12 @@ rules:
   # name formats
   class-name-format:
     - 2
-    -
-      allow-leading-underscore: false
-      convention: 'hyphenatedbem'
+    - allow-leading-underscore: false
+      # TODO: We should use one convention here. Right now we use e.g. "popup_switch", "WARN" or "picker-wrapper".
+      # See: https://github.com/sasstools/sass-lint/blob/master/docs/rules/class-name-format.md
+      convention: '^[-_a-zA-Z0-9]+$'
       ignore:
-        - mod_cssanimations
-        - mod_csstransforms
-        - mod_supports
-        - mod_csstransforms3d
-        - mod_csstransitions
+        - tag-ellipsis
   function-name-format:
     - 2
     -
@@ -130,7 +129,7 @@ rules:
     - 2
     -
       allow-leading-underscore: false
-      convention: 'hyphenatedlowercase'
+      convention: 'snakecase'
   mixin-name-format:
     - 0
     -

@@ -76,7 +76,8 @@ def check_emc_isilon_quota(item, params, info):
                 params["levels"] = (warn * 100.0) / assumed_size, (crit * 100.0) / assumed_size
 
             avail = assumed_size - int(usage)
-            fslist_blocks.append((path, assumed_size / byte_to_mb, avail / byte_to_mb, 0))
+            fslist_blocks.append(
+                (path, assumed_size / byte_to_mb, avail / byte_to_mb, 0))  # fixed: true-division
 
     return df_check_filesystem_list(item, params, fslist_blocks)
 

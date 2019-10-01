@@ -26,10 +26,7 @@
 
 import cmk.utils.render
 
-import cmk.gui.utils as utils
 from cmk.gui.i18n import _
-
-from cmk.utils.render import scale_factor_prefix
 
 from cmk.gui.plugins.metrics import (
     unit_info,
@@ -91,20 +88,10 @@ unit_info[""] = {
     "render": lambda v: cmk.utils.render.scientific(v, 2),
 }
 
-
-def metric_number_with_precision(v, *args, **kwargs):
-
-    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
-
-    factor, prefix = scale_factor_prefix(v, base=1000.0)
-
-    return '%.*f %s' % (precision, float(v) / factor, prefix)
-
-
 unit_info["count"] = {
     "title": _("Count"),
     "symbol": "",
-    "render": lambda v: metric_number_with_precision(v, drop_zeroes=True),
+    "render": lambda v: cmk.utils.render.fmt_number_with_precision(v, drop_zeroes=True),
     "stepping": "integer",  # for vertical graph labels
 }
 
@@ -128,7 +115,7 @@ unit_info["1/s"] = {
     "title": _("per second"),
     "description": _("Frequency (displayed in events/s)"),
     "symbol": _("/s"),
-    "render": lambda v: "%s%s" % (utils.drop_dotzero(v), _("/s")),
+    "render": lambda v: "%s%s" % (cmk.utils.render.drop_dotzero(v), _("/s")),
 }
 
 unit_info["hz"] = {
@@ -184,7 +171,7 @@ def bytes_human_readable_list(values, *args, **kwargs):
     else:
         reference = min([abs(v) for v in values])
 
-    scale_factor, scale_prefix = scale_factor_prefix(reference, 1024.0)
+    scale_factor, scale_prefix = cmk.utils.render.scale_factor_prefix(reference, 1024.0)
     precision = kwargs.get("precision", 2)
 
     scaled_values = ["%.*f" % (precision, float(value) / scale_factor) for value in values]
@@ -207,7 +194,7 @@ unit_info["bytes/d"] = {
 unit_info["c"] = {
     "title": _("Degree Celsius"),
     "symbol": u"°C",
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), u"°C"),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), u"°C"),
 }
 
 unit_info["a"] = {
@@ -243,13 +230,13 @@ unit_info["wh"] = {
 unit_info["dbm"] = {
     "title": _("Decibel-milliwatts"),
     "symbol": _("dBm"),
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBm")),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBm")),
 }
 
 unit_info["dbmv"] = {
     "title": _("Decibel-millivolt"),
     "symbol": _("dBmV"),
-    "render": lambda v: "%s %s" % (utils.drop_dotzero(v), _("dBmV")),
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBmV")),
 }
 
 unit_info["db"] = {
@@ -641,7 +628,7 @@ metric_info["server_latency"] = {
 }
 
 metric_info["e2e_latency"] = {
-    "title": _("Ent-to-end latency"),
+    "title": _("End-to-end latency"),
     "unit": "s",
     "color": "21/b",
 }
@@ -1187,6 +1174,18 @@ metric_info["major_page_faults"] = {
     "color": "#20ff80",
 }
 
+metric_info["page_swap_in"] = {
+    "title": _("Page Swap In"),
+    "unit": "1/s",
+    "color": "33/a",
+}
+
+metric_info["page_swap_out"] = {
+    "title": _("Page Swap Out"),
+    "unit": "1/s",
+    "color": "36/a",
+}
+
 metric_info["process_creations"] = {
     "title": _("Process creations"),
     "unit": "1/s",
@@ -1312,6 +1311,41 @@ metric_info["24ghz_clients"] = {
     "title": _("Client connects for 2,4 Ghz Band"),
     "unit": "count",
     "color": "14/a",
+}
+
+metric_info["mongodb_chunk_count"] = {
+    "title": _("Number of Chunks"),
+    "help": _("Number of jumbo chunks per collection"),
+    "color": "#924d85",
+    "unit": "count",
+}
+
+metric_info["mongodb_jumbo_chunk_count"] = {
+    "title": _("Jumbo Chunks"),
+    "help": _("Number of jumbo chunks per collection"),
+    "color": "#91457d",
+    "unit": "count",
+}
+
+metric_info["mongodb_collection_size"] = {
+    "title": _("Collection Size"),
+    "help": _("Uncompressed size in memory"),
+    "color": "#3b4080",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_collection_storage_size"] = {
+    "title": _("Storage Size"),
+    "help": _("Allocated for document storage"),
+    "color": "#4d5092",
+    "unit": "bytes",
+}
+
+metric_info["mongodb_document_count"] = {
+    "title": _("Number of Documents"),
+    "help": _("Number of documents per collection"),
+    "color": "#60ad54",
+    "unit": "count",
 }
 
 
@@ -1578,6 +1612,12 @@ metric_info["util"] = {
     "title": _("CPU utilization"),
     "unit": "%",
     "color": "26/a",
+}
+
+metric_info["util_numcpu_as_max"] = {
+    "title": _("CPU utilization"),
+    "unit": "%",
+    "color": "#004080",
 }
 
 metric_info["util_average"] = {
@@ -2069,6 +2109,12 @@ metric_info["write_latency"] = {
     "title": _("Write latency"),
     "unit": "s",
     "color": "45/a",
+}
+
+metric_info["other_latency"] = {
+    "title": _("Other latency"),
+    "unit": "s",
+    "color": "21/a",
 }
 
 metric_info["disk_queue_length"] = {
@@ -2791,13 +2837,13 @@ metric_info["livestatus_overflows_rate"] = {
 metric_info["cmk_time_agent"] = {
     "title": _("Time spent waiting for Check_MK agent"),
     "unit": "s",
-    "color": "35/a",
+    "color": "36/a",
 }
 
 metric_info["cmk_time_snmp"] = {
     "title": _("Time spent waiting for SNMP responses"),
     "unit": "s",
-    "color": "36/a",
+    "color": "32/a",
 }
 
 metric_info["cmk_time_ds"] = {
@@ -3240,12 +3286,6 @@ metric_info["checkpoint_age"] = {
     "color": "#006040",
 }
 
-metric_info["checkpoint_age"] = {
-    "title": _("Time since last checkpoint"),
-    "unit": "s",
-    "color": "#006040",
-}
-
 metric_info["file_age_oldest"] = {
     "title": _("Oldest file"),
     "unit": "s",
@@ -3604,6 +3644,13 @@ def register_netapp_api_vs_traffic_metrics():
                 "color": "44/a",
             }
 
+            if what in ["data", "ops", "latency"]:
+                metric_info["%s_other_%s" % (volume, what)] = {
+                    "title": _("%s other %s") % (volume_info, what),
+                    "unit": unit,
+                    "color": "21/a",
+                }
+
 
 register_netapp_api_vs_traffic_metrics()
 
@@ -3677,6 +3724,18 @@ metric_info["harddrive_udma_crc_errors"] = {
     "title": _("Harddrive UDMA CRC errors"),
     "unit": "count",
     "color": "46/a",
+}
+
+metric_info["harddrive_crc_errors"] = {
+    "title": _("Harddrive CRC errors"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["harddrive_uncorrectable_errors"] = {
+    "title": _("Harddrive uncorrectable errors"),
+    "unit": "count",
+    "color": "13/a",
 }
 
 metric_info["nvme_media_and_data_integrity_errors"] = {
@@ -4764,6 +4823,42 @@ metric_info["k8s_roles"] = {
     "color": "21/b",
 }
 
+metric_info["k8s_daemon_pods_ready"] = {
+    "title": _("Number of nodes ready"),
+    "unit": "",
+    "color": "23/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_desired"] = {
+    "title": _("Desired number of nodes scheduled"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_current"] = {
+    "title": _("Current number of nodes scheduled"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["k8s_daemon_pods_scheduled_updated"] = {
+    "title": _("Number of nodes scheduled with up-to-date pods"),
+    "unit": "",
+    "color": "22/a",
+}
+
+metric_info["k8s_daemon_pods_available"] = {
+    "title": _("Number of nodes scheduled with available pods"),
+    "unit": "",
+    "color": "35/a",
+}
+
+metric_info["k8s_daemon_pods_unavailable"] = {
+    "title": _("Number of nodes scheduled with unavailable pods"),
+    "unit": "",
+    "color": "14/a",
+}
+
 metric_info["ready_replicas"] = {
     "title": _("Ready replicas"),
     "unit": "",
@@ -4977,8 +5072,38 @@ metric_info['aws_costs_unblended'] = {
     'color': '11/a',
 }
 
+metric_info['aws_glacier_number_of_vaults'] = {
+    'title': _('Number of vaults'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_glacier_num_archives'] = {
+    'title': _('Number of archives'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_glacier_vault_size'] = {
+    'title': _('Vault size'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_glacier_total_vault_size'] = {
+    'title': _('Total size of all vaults'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_glacier_largest_vault_size'] = {
+    'title': _('Largest vault size'),
+    'unit': 'bytes',
+    'color': '21/a',
+}
+
 metric_info['aws_num_objects'] = {
-    'title': _('Numer of objects'),
+    'title': _('Number of objects'),
     'unit': 'count',
     'color': '21/a',
 }
@@ -5873,6 +5998,223 @@ metric_info["avg_flush_time"] = {
     "color": "31/a",
 }
 
+metric_info["jenkins_job_score"] = {
+    "title": _("Job score"),
+    "unit": "%",
+    "color": "11/a",
+}
+
+metric_info["jenkins_time_since"] = {
+    "title": _("Time since last successful build"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+metric_info["jenkins_build_duration"] = {
+    "title": _("Build duration"),
+    "unit": "s",
+    "color": "31/a",
+}
+
+metric_info["jenkins_numexecutors"] = {
+    "title": _("Number of executers"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["jenkins_clock"] = {
+    "title": _("Clock difference"),
+    "unit": "s",
+    "color": "43/a",
+}
+
+metric_info["jenkins_temp"] = {
+    "title": _("Available temp space"),
+    "unit": "bytes",
+    "color": "53/a",
+}
+
+metric_info["jenkins_stuck_tasks"] = {
+    "title": _("Number of stuck tasks"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["jenkins_blocked_tasks"] = {
+    "title": _("Number of blocked tasks"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info["jenkins_pending_tasks"] = {
+    "title": _("Number of pending tasks"),
+    "unit": "count",
+    "color": "51/a",
+}
+
+metric_info["msgs_avg"] = {
+    "title": _("Average number of messages"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["index_count"] = {
+    "title": _("Indices"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["store_size"] = {
+    "title": _("Store size"),
+    "unit": "bytes",
+    "color": "32/a",
+}
+
+metric_info["id_cache_size"] = {
+    "title": _("ID cache size"),
+    "unit": "bytes",
+    "color": "25/a",
+}
+
+metric_info["field_data_size"] = {
+    "title": _("Field data size"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
+metric_info["avg_doc_size"] = {
+    "title": _("Average document size"),
+    "unit": "bytes",
+    "color": "25/b",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["num_collections"] = {
+    "title": _("Collections"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_objects"] = {
+    "title": _("Objects"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_input"] = {
+    "title": _("Inputs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_output"] = {
+    "title": _("Outputs"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_stream_rule"] = {
+    "title": _("Stream rules"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_extractor"] = {
+    "title": _("Extractors"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["num_user"] = {
+    "title": _("User"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+for nimble_op_ty in ["read", "write"]:
+    for nimble_key, nimble_title, nimble_color in [
+        ("total", "Total", "11/a"),
+        ("0.1", "0-0.1 ms", "12/a"),
+        ("0.2", "0.1-0.2 ms", "13/a"),
+        ("0.5", "0.2-0.5 ms", "14/a"),
+        ("1", "0.5-1.0 ms", "15/a"),
+        ("2", "1-2 ms", "16/a"),
+        ("5", "2-5 ms", "21/a"),
+        ("10", "5-10 ms", "22/a"),
+        ("20", "10-20 ms", "23/a"),
+        ("50", "20-50 ms", "24/a"),
+        ("100", "50-100 ms", "25/a"),
+        ("200", "100-200 ms", "26/a"),
+        ("500", "200-500 ms", "31/a"),
+        ("1000", "500+ ms", "32/a"),
+    ]:
+        metric_info["nimble_%s_latency_%s" % (nimble_op_ty, nimble_key.replace(".", ""))] = {
+            "title": _("%s latency %s" % (nimble_op_ty.title(), nimble_title)),
+            "unit": "s",
+            "color": nimble_color,
+        }
+
+# DRBD metrics
+metric_info['activity_log_updates'] = {
+    "title": _("Activity log updates"),
+    "unit": "count",
+    "color": "31/a",
+}
+
+metric_info['bit_map_updates'] = {
+    "title": _("Bit map updates"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info['local_count_requests'] = {
+    "title": _("Local count requests"),
+    "unit": "count",
+    "color": "24/b",
+}
+
+metric_info['pending_requests'] = {
+    "title": _("Pending requests"),
+    "unit": "count",
+    "color": "16/a",
+}
+metric_info['unacknowledged_requests'] = {
+    "title": _("Unacknowledged requests"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info['application_pending_requests'] = {
+    "title": _("Application pending requests"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info['epoch_objects'] = {
+    "title": _("Epoch objects"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+# In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
+# 1024) which means an invalidation of historic values.
+metric_info['kb_out_of_sync'] = {
+    "title": _("KiB out of sync"),  # according to documentation
+    "unit": "count",
+    "color": "14/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -5901,13 +6243,13 @@ check_metrics["check_mk_active-icmp"] = {
 # This metric is not for an official Check_MK check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
-    "rta": {
+    "~.*rta": {
         "scale": m
     },
-    "rtmax": {
+    "~.*rtmax": {
         "scale": m
     },
-    "rtmin": {
+    "~.*rtmin": {
         "scale": m
     },
 }
@@ -6009,6 +6351,8 @@ for check in [
             "name": "util_average"
         },
     }
+
+check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
@@ -6176,7 +6520,7 @@ ram_used_swap_translation = {
         "scale": MB
     },
     "memused": {
-        "name": "total_used",
+        "name": "mem_lnx_total_used",
         "auto_graph": False,
         "scale": MB
     },
@@ -6673,7 +7017,6 @@ check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation
-check_metrics["check_mk-mongodb_collections"] = df_translation
 check_metrics["check_mk-3par_cpgs.usage"] = df_translation
 check_metrics["check_mk-3par_capacity"] = df_translation
 check_metrics["check_mk-3par_volumes"] = df_translation
@@ -6717,10 +7060,22 @@ check_metrics["check_mk-netapp_api_volumes"] = {
         "name": "fs_trend",
         "scale": MB / 86400.0
     },
+    "read_latency": {
+        "scale": m
+    },
+    "write_latency": {
+        "scale": m
+    },
+    "other_latency": {
+        "scale": m
+    },
     "nfs_read_latency": {
         "scale": m
     },
     "nfs_write_latency": {
+        "scale": m
+    },
+    "nfs_other_latency": {
         "scale": m
     },
     "cifs_read_latency": {
@@ -6729,10 +7084,16 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "cifs_write_latency": {
         "scale": m
     },
+    "cifs_other_latency": {
+        "scale": m
+    },
     "san_read_latency": {
         "scale": m
     },
     "san_write_latency": {
+        "scale": m
+    },
+    "san_other_latency": {
         "scale": m
     },
     "fcp_read_latency": {
@@ -6741,10 +7102,16 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "fcp_write_latency": {
         "scale": m
     },
+    "fcp_other_latency": {
+        "scale": m
+    },
     "iscsi_read_latency": {
         "scale": m
     },
     "iscsi_write_latency": {
+        "scale": m
+    },
+    "iscsi_other_latency": {
         "scale": m
     },
 }
@@ -7130,6 +7497,7 @@ cpu_util_unix_translate = {
 
 check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
 check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
+check_metrics["check_mk-lxc_container_cpu"] = cpu_util_unix_translate
 
 check_metrics["check_mk-lparstat_aix.cpu_util"] = {
     "wait": {
@@ -7157,7 +7525,7 @@ check_metrics["check_mk-vms_sys.util"] = {
 
 check_metrics["check_mk-winperf.cpuusage"] = {
     "cpuusage": {
-        "name": "util_numcpu_as_max"
+        "name": "util"
     },
 }
 
@@ -7950,6 +8318,12 @@ check_metrics["check_mk-smart.stats"] = {
     "UDMA_CRC_Error_Count": {
         "name": "harddrive_udma_crc_errors"
     },
+    "CRC_Error_Count": {
+        "name": "harddrive_crc_errors",
+    },
+    "Uncorrectable_Error_Cnt": {
+        "name": "harddrive_uncorrectable_errors",
+    },
     "Power_Cycles": {
         "name": "harddrive_power_cycles"
     },
@@ -8375,21 +8749,7 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "context_switches",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
-    "half_value": 1000.0,
-    "exponent": 2.0
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
-    "metric": "process_creations",
     "half_value": 1000.0,
     "exponent": 2.0
 })
@@ -9426,6 +9786,20 @@ perfometer_info.append({
     'exponent': 2.0,
 })
 
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'nimble_read_latency_total',
+    'half_value': 10,
+    'exponent': 2.0,
+})
+
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'nimble_write_latency_total',
+    'half_value': 10,
+    'exponent': 2.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9850,9 +10224,9 @@ graph_info["util_average_2"] = {
 graph_info["cpu_utilization_numcpus"] = {
     "title": _("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
     "metrics": [
-        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
         ("user", "area"),
-        ("util_numcpu_as_max#008000", "line", _("Total")),
+        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
+        ("util_numcpu_as_max#004080", "line", _("Total")),
     ],
     "scalars": [
         "util_numcpu_as_max:warn",
@@ -10476,6 +10850,7 @@ graph_info["active_and_inactive_memory"] = {
 graph_info["ram_used"] = {
     "title": _("RAM used"),
     "metrics": [("mem_used", "area"),],
+    "conflicting_metrics": ["swap_used"],
     "scalars": [
         ("mem_used:max#000000", "Maximum"),
         ("mem_used:warn", "Warning"),
@@ -10616,6 +10991,7 @@ graph_info["tcp_connection_states"] = {
         ("tcp_idle", "stack"),
     ],
     "omit_zero_metrics": True,
+    "optional_metrics": ["tcp_bound", "tcp_idle"]
 }
 
 graph_info["cluster_hosts"] = {
@@ -10964,8 +11340,8 @@ graph_info["packet_loss"] = {
     "title": _("Packet loss"),
     "metrics": [("pl", "area"),],
     "scalars": [
-        "rta:warn",
-        "rta:crit",
+        "pl:warn",
+        "pl:crit",
     ]
 }
 
@@ -11403,5 +11779,45 @@ graph_info["active_shards"] = {
     "metrics": [
         ("active_shards", "area"),
         ("active_primary_shards", "area"),
+    ],
+}
+
+graph_info["read_latency"] = {
+    "title": _("Read latency"),
+    "metrics": [
+        ("nimble_read_latency_total", "area"),
+        ("nimble_read_latency_01", "line"),
+        ("nimble_read_latency_02", "line"),
+        ("nimble_read_latency_05", "line"),
+        ("nimble_read_latency_1", "line"),
+        ("nimble_read_latency_2", "line"),
+        ("nimble_read_latency_5", "line"),
+        ("nimble_read_latency_10", "line"),
+        ("nimble_read_latency_20", "line"),
+        ("nimble_read_latency_50", "line"),
+        ("nimble_read_latency_100", "line"),
+        ("nimble_read_latency_200", "line"),
+        ("nimble_read_latency_500", "line"),
+        ("nimble_read_latency_1000", "line"),
+    ],
+}
+
+graph_info["write_latency"] = {
+    "title": _("Write latency"),
+    "metrics": [
+        ("nimble_write_latency_total", "area"),
+        ("nimble_write_latency_01", "line"),
+        ("nimble_write_latency_02", "line"),
+        ("nimble_write_latency_05", "line"),
+        ("nimble_write_latency_1", "line"),
+        ("nimble_write_latency_2", "line"),
+        ("nimble_write_latency_5", "line"),
+        ("nimble_write_latency_10", "line"),
+        ("nimble_write_latency_20", "line"),
+        ("nimble_write_latency_50", "line"),
+        ("nimble_write_latency_100", "line"),
+        ("nimble_write_latency_200", "line"),
+        ("nimble_write_latency_500", "line"),
+        ("nimble_write_latency_1000", "line"),
     ],
 }

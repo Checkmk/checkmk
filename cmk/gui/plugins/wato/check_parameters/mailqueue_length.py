@@ -70,31 +70,19 @@ mailqueue_params = Dictionary(
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMailqueueLength(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mailqueue_length():
+    return Transform(
+        mailqueue_params,
+        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+    )
 
-    @property
-    def check_group_name(self):
-        return "mailqueue_length"
 
-    @property
-    def title(self):
-        return _("Number of mails in outgoing mail queue")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            mailqueue_params,
-            forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mailqueue_length",
+        group=RulespecGroupCheckParametersApplications,
+        is_deprecated=True,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mailqueue_length,
+        title=lambda: _("Number of mails in outgoing mail queue"),
+    ))

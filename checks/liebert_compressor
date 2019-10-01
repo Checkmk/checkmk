@@ -43,30 +43,14 @@ factory_settings['liebert_compressor_default_levels'] = {
 }
 
 
-def inventory_liebert_compressor(parsed):
-    for key, values in parsed.iteritems():
-        if not "Unavailable" in values[0]:
-            yield (key, {})
-
-
-def check_liebert_compressor(item, params, parsed):
-    for key, values in parsed.iteritems():
-        if item == key and not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "Head pressure at %s %s" % (value, unit)
-
-            state = levels_liebert(value, warn, crit)
-            if state > 0:
-                yield state, "(warn/crit at %s%s/%s%s)" % (warn, unit, crit, unit)
-        elif item == key:
-            yield 3, values[0]
+@get_parsed_item_data
+def check_liebert_compressor(item, params, data):
+    yield check_levels(data[0], None, params['levels'], unit=data[1], infoname="Head pressure")
 
 
 check_info['liebert_compressor'] = {
     'parse_function': parse_liebert,
-    'inventory_function': inventory_liebert_compressor,
+    'inventory_function': discover(),
     'check_function': check_liebert_compressor,
     'service_description': '%s',
     'snmp_info': (

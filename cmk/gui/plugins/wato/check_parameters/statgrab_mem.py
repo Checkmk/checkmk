@@ -39,39 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersStatgrabMem(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_statgrab_mem():
+    return Alternative(elements=[
+        Tuple(
+            title=_("Specify levels in percentage of total RAM"),
+            elements=[
+                Percentage(title=_("Warning at a usage of"), unit=_("% of RAM"), maxvalue=None),
+                Percentage(title=_("Critical at a usage of"), unit=_("% of RAM"), maxvalue=None)
+            ],
+        ),
+        Tuple(
+            title=_("Specify levels in absolute usage values"),
+            elements=[
+                Integer(title=_("Warning at"), unit=_("MB")),
+                Integer(title=_("Critical at"), unit=_("MB"))
+            ],
+        ),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "statgrab_mem"
 
-    @property
-    def title(self):
-        return _("Statgrab Memory Usage")
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def parameter_valuespec(self):
-        return Alternative(elements=[
-            Tuple(
-                title=_("Specify levels in percentage of total RAM"),
-                elements=[
-                    Percentage(title=_("Warning at a usage of"), unit=_("% of RAM"), maxvalue=None),
-                    Percentage(title=_("Critical at a usage of"), unit=_("% of RAM"), maxvalue=None)
-                ],
-            ),
-            Tuple(
-                title=_("Specify levels in absolute usage values"),
-                elements=[
-                    Integer(title=_("Warning at"), unit=_("MB")),
-                    Integer(title=_("Critical at"), unit=_("MB"))
-                ],
-            ),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="statgrab_mem",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        is_deprecated=True,
+        parameter_valuespec=_parameter_valuespec_statgrab_mem,
+        title=lambda: _("Statgrab Memory Usage"),
+    ))

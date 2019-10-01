@@ -24,11 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import ast
 import re
 import socket
 import time
-import os
+from typing import List, Tuple, Text  # pylint: disable=unused-import
+
 from pathlib2 import Path
 import livestatus
 
@@ -48,17 +50,26 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 
-# ASN1 MIB source directory candidates. Non existing dirs are ok.
-# Please sync these paths with htdocs/mkeventd.py
-mib_dirs = [('/usr/share/snmp/mibs', 'System MIBs')]
 
-socket_path = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/status"
-compiled_mibs_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+def _socket_path():
+    # type: () -> Path
+    return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
 
-# Please sync these paths with htdocs/mkeventd.py
-mib_upload_dir = cmk.utils.paths.omd_root + "/local/share/snmp/mibs"
-mib_dirs.insert(0, (cmk.utils.paths.omd_root + "/share/snmp/mibs", 'MIBs shipped with Check_MK'))
-mib_dirs.insert(0, (mib_upload_dir, 'Custom MIBs'))
+
+def mib_upload_dir():
+    # type: () -> Path
+    return cmk.utils.paths.local_mib_dir
+
+
+def mib_dirs():
+    # type: () -> List[Tuple[Path, Text]]
+    # ASN1 MIB source directory candidates. Non existing dirs are ok.
+    return [
+        (mib_upload_dir(), _('Custom MIBs')),
+        (cmk.utils.paths.mib_dir, _('MIBs shipped with Checkmk')),
+        (Path('/usr/share/snmp/mibs'), _('System MIBs')),
+    ]
+
 
 syslog_priorities = [
     (0, "emerg"),
@@ -171,7 +182,8 @@ def eventd_configuration():
 
 
 def daemon_running():
-    return os.path.exists(socket_path)
+    # type: () -> bool
+    return _socket_path().exists()
 
 
 # Note: in order to be able to simulate an original IP address
@@ -210,7 +222,7 @@ def query_ec_directly(query):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(config.mkeventd_connect_timeout)
-        sock.connect(socket_path)
+        sock.connect(str(_socket_path()))
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
@@ -228,7 +240,8 @@ def query_ec_directly(query):
               "<pre>%s</pre>") % response_text)
 
     except Exception as e:
-        raise MKGeneralException(_("Cannot connect to event daemon via %s: %s") % (socket_path, e))
+        raise MKGeneralException(
+            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
 
 
 def execute_command(name, args=None, site=None):
@@ -279,7 +292,8 @@ def get_total_stats(only_sites):
         ]:
             total_stats.setdefault(time_key, 0.0)
             if total_stats[in_relation_to]:  # avoid division by zero
-                my_weight = row[in_relation_to] / total_stats[in_relation_to]
+                my_weight = row[in_relation_to] / total_stats[
+                    in_relation_to]  # fixed: true-division
                 total_stats[time_key] += my_weight * row[time_key]
 
     total_sync_time = 0.0
@@ -290,7 +304,7 @@ def get_total_stats(only_sites):
             total_sync_time += row["status_average_sync_time"]
 
     if count > 0:
-        total_stats["status_average_sync_time"] = total_sync_time / count
+        total_stats["status_average_sync_time"] = total_sync_time / count  # fixed: true-division
 
     return total_stats
 

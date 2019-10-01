@@ -286,7 +286,7 @@ QUERY
 function query_sap_hana_events_high_alerts () {
     cat <<QUERY
 select 'high_alerts', count(*) from _sys_statistics.statistics_current_alerts
-where  alert_rating >=3
+where  alert_rating >=4
 QUERY
 }
 

@@ -1,0 +1,13 @@
+Title: Fix possible "module has no attribute core" issue
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567615399
+
+When configuring timespecific parameters or check periods,
+such an exception could occur during checking. We have only
+seen this issue when using the raw edition.

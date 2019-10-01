@@ -804,7 +804,8 @@ class UserNotificationsMode(NotificationsMode):
 
 
 def _get_notification_sync_sites():
-    return sorted(site_id for site_id, _site in config.wato_slave_sites()
+    return sorted(site_id  #
+                  for site_id in config.wato_slave_sites()
                   if not config.site_is_local(site_id))
 
 

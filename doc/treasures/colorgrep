@@ -3,6 +3,7 @@
 # of *subexpressions*. This is e.g. useful for testing
 # inventory_processes...
 
+from __future__ import print_function
 import re, sys
 
 
@@ -34,7 +35,7 @@ def handle_line(r, line):
         out += line[pos:end]
         out += color(0)
         out += line[end:]
-        print out
+        print(out)
 
 
 r = re.compile(sys.argv[1])

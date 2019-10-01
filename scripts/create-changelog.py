@@ -15,7 +15,7 @@ def create_changelog(dest_file, precompiled_werk_files):
         # Append previous werk changes
         if os.path.exists(dest_file + ".in"):
             f.write("\n\n")
-            f.write(file(dest_file + ".in").read())
+            f.write(open(dest_file + ".in").read())
 
 
 def load_werks(precompiled_werk_files):

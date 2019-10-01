@@ -38,53 +38,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersJvmRequests(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_jvm_requests():
+    return TextAscii(
+        title=_("Name of the virtual machine"),
+        help=_("The name of the application server"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "jvm_requests"
 
-    @property
-    def title(self):
-        return _("JVM request count")
+def _parameter_valuespec_jvm_requests():
+    return Tuple(
+        help=_("This rule sets the warn and crit levels for the number "
+               "of incoming requests to a JVM application server."),
+        elements=[
+            Integer(
+                title=_("Warning if below"),
+                unit=_("requests/sec"),
+                default_value=-1,
+            ),
+            Integer(
+                title=_("Critical if below"),
+                unit=_("requests/sec"),
+                default_value=-1,
+            ),
+            Integer(
+                title=_("Warning at"),
+                unit=_("requests/sec"),
+                default_value=800,
+            ),
+            Integer(
+                title=_("Critical at"),
+                unit=_("requests/sec"),
+                default_value=1000,
+            ),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets the warn and crit levels for the number "
-                   "of incoming requests to a JVM application server."),
-            elements=[
-                Integer(
-                    title=_("Warning if below"),
-                    unit=_("requests/sec"),
-                    default_value=-1,
-                ),
-                Integer(
-                    title=_("Critical if below"),
-                    unit=_("requests/sec"),
-                    default_value=-1,
-                ),
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("requests/sec"),
-                    default_value=800,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("requests/sec"),
-                    default_value=1000,
-                ),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the virtual machine"),
-            help=_("The name of the application server"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="jvm_requests",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_jvm_requests,
+        parameter_valuespec=_parameter_valuespec_jvm_requests,
+        title=lambda: _("JVM request count"),
+    ))

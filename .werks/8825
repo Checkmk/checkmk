@@ -1,0 +1,11 @@
+Title: win_wmi_updates: Do not inventorize header line
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566197975
+
+

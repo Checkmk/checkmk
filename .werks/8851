@@ -1,0 +1,12 @@
+Title: Fix broken "Parameters of X" for clustered services
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1565712910
+
+The "Parameters of X" page always showed an exception like
+"'list' object has no attribute 'check_plugin_name'".

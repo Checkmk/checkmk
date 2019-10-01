@@ -1,0 +1,24 @@
+Title: DCD: Add host deletion grace time after site initialization
+Level: 1
+Component: core
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1566283700
+
+The hosts created with the DCD are based on the piggyback data produced by a
+source host.
+
+This piggyback data is stored in Checkmk sites in a temporary directory below
+<tt>tmp/check_mk/piggyback*</tt>. This temporary directory is initialized
+during the first startup of a site after the Checkmk host was booted.  From the
+initialization to the first contact with the source host, the piggyback data is
+missing and could lead to host being removed by the DCD accidentally.
+
+To prevent this, the DCD connections got a new mandatory configuration option
+"Prevent host deletion right after initialization". It is used to configure the
+duration where no host is deleted after the site (tmpfs) initialization.
+It defaults to 10 minutes, which should be enough for the piggyback sources to
+produce the needed data.

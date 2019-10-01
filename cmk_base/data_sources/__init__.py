@@ -272,10 +272,11 @@ class DataSources(object):
             else:
                 these_sources.set_max_cachefile_age(this_max_cachefile_age)
 
+            host_sections =\
+                multi_host_sections.add_or_get_host_sections(this_hostname, this_ipaddress)
+
             for source in these_sources.get_data_sources():
                 host_sections_from_source = source.run()
-                host_sections = multi_host_sections.add_or_get_host_sections(
-                    this_hostname, this_ipaddress)
                 host_sections.update(host_sections_from_source)
 
             # Store piggyback information received from all sources of this host. This

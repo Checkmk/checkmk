@@ -1,5 +1,6 @@
 LANGUAGES = de ro
 SHELL=/bin/bash -e -o pipefail
+PIPENV=pipenv
 
 .PHONY: $(LANGUAGES)
 
@@ -28,6 +29,7 @@ update-%:
 	         -L python --from-code=utf-8 --omit-header \
 		 -o scanned.po \
 		 ../../../web/app/index.wsgi \
+		 ../../../livestatus/api/python/livestatus.py \
 		 $$(find -L ../../../cmk -type f -name "*.py") 2>&1 < /dev/null | \
 		 sed '/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d' ; \
 	cat ../../header scanned.po > new.po ; \
@@ -41,9 +43,9 @@ cleanup-%:
 	sed -i '/"PO-Revision-Date:/d' $$L/LC_MESSAGES/multisite.po ; \
 	sed -i '/"Last-Translator:/d' $$L/LC_MESSAGES/multisite.po ; \
 
-de:
+de: ../virtual-envs/3.7/.venv
 	$(MAKE) update-$@
-	./add-authors $@
+	$(PIPENV) run ./add-authors $@
 	POEDITOR=$$(which poedit 2>/dev/null || which virtaal 2>/dev/null) ; \
 	if [ -z "$$POEDITOR" ]; then \
 	    echo "ERROR: Unable to find PO file editor (poedit or virtual)" ; \
@@ -58,5 +60,6 @@ ro:
 	poedit $@/LC_MESSAGES/multisite.po
 	sed -i '/^#:/d' $@/LC_MESSAGES/multisite.po
 
-test-%:
-	@L=$@ ; L=$${L#*-} ; ./blame $$L
+
+test-%: ../virtual-envs/3.7/.venv
+	@L=$@ ; L=$${L#*-} ; $(PIPENV) run ./blame $$L

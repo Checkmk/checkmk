@@ -38,35 +38,29 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsexchCopyqueue(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_msexch_copyqueue():
+    return TextAscii(
+        title=_("Database Name"),
+        help=_("The database name on the Mailbox Server."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "msexch_copyqueue"
 
-    @property
-    def title(self):
-        return _("MS Exchange DAG CopyQueue")
+def _parameter_valuespec_msexch_copyqueue():
+    return Tuple(
+        title=_("Upper Levels for CopyQueue Length"),
+        help=_("This rule sets upper levels to the number of transaction logs waiting to be copied "
+               "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+               "(DAG). This is also known as the CopyQueue length."),
+        elements=[Integer(title=_("Warning at")),
+                  Integer(title=_("Critical at"))],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Upper Levels for CopyQueue Length"),
-            help=_(
-                "This rule sets upper levels to the number of transaction logs waiting to be copied "
-                "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
-                "(DAG). This is also known as the CopyQueue length."),
-            elements=[Integer(title=_("Warning at")),
-                      Integer(title=_("Critical at"))],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Database Name"),
-            help=_("The database name on the Mailbox Server."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="msexch_copyqueue",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_msexch_copyqueue,
+        parameter_valuespec=_parameter_valuespec_msexch_copyqueue,
+        title=lambda: _("MS Exchange DAG CopyQueue"),
+    ))

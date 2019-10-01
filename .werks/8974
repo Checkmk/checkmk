@@ -1,0 +1,10 @@
+Title: netapp_api_ports: check plugin for netapp ports
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1567062050
+Class: feature
+
+This is a new check plugin for monitoring netapp ports. The user can configure which port types e.g. physical or vlan are discovered and subsequently monitored. The status of the resulting service is determined by the health status of the respective port.

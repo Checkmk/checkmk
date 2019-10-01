@@ -55,7 +55,7 @@ import cmk.utils.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g
 
 import cmk.gui.plugins.main_modules
 
@@ -105,27 +105,17 @@ g_all_modules_loaded = False
 
 
 # Call the load_plugins() function in all modules
-def load_all_plugins():
+def load_all_plugins(only_modules=None):
     global g_all_modules_loaded
-
-    # Optimization: in case of the graph ajax call only check the metrics module. This
-    # improves the performance for these requests.
-    # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
-    if html.myfile == "ajax_graph" and g_all_modules_loaded:
-        only_modules = ["metrics"]
-    else:
+    # Initially, we have to load all modules, regardless of any optimization.
+    if not g_all_modules_loaded:
         only_modules = None
 
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
-        if only_modules is not None and module.__name__ not in only_modules:
-            continue
-        try:
-            module.load_plugins  # just check if this function exists
-        except AttributeError:
-            pass
-        else:
+        if (only_modules is None or module.__name__ in only_modules) and \
+           hasattr(module, "load_plugins"):
             module.load_plugins(force=need_plugins_reload)
 
     # TODO: Clean this up once we drop support for the legacy plugins
@@ -138,18 +128,20 @@ def load_all_plugins():
 
 
 def _cmk_gui_top_level_modules():
-    return [
-        module for name, module in sys.modules.items()
-        # None entries are only an import optimization of cPython and can be removed:
-        # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-        if module is not None and ((name.startswith("cmk.gui.") and len(name.split(".")) == 3) or (
-            name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4) or
-                                   (name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4))
+    return [module \
+            for name, module in sys.modules.items()
+            # None entries are only an import optimization of cPython and can be removed:
+            # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
+            if module is not None
+            # top level modules only, please...
+            if (name.startswith("cmk.gui.") and len(name.split(".")) == 3 or
+                name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4 or
+                name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)
     ]
 
 
 def _find_local_web_plugins():
-    basedir = cmk.utils.paths.local_web_dir + "/plugins/"
+    basedir = str(cmk.utils.paths.local_web_dir) + "/plugins/"
 
     try:
         plugin_dirs = os.listdir(basedir)
@@ -174,8 +166,8 @@ _last_web_plugins_update = 0
 def _local_web_plugins_have_changed():
     global _last_web_plugins_update
 
-    if "local_web_plugins_have_changed" in current_app.g:
-        return current_app.g["local_web_plugins_have_changed"]
+    if 'local_web_plugins_have_changed' in g:
+        return g.local_web_plugins_have_changed
 
     this_time = 0.0
     for path in _find_local_web_plugins():
@@ -184,5 +176,5 @@ def _local_web_plugins_have_changed():
     _last_web_plugins_update = this_time
 
     have_changed = this_time > last_time
-    current_app.g["local_web_plugins_have_changed"] = have_changed
+    g.local_web_plugins_have_changed = have_changed
     return have_changed

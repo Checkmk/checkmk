@@ -66,7 +66,7 @@ class KeypairStore(object):
             return {}
 
         variables = {self._attr: {}}
-        execfile(filename, variables, variables)
+        exec (open(filename).read(), variables, variables)
         return variables[self._attr]
 
     def save(self, keys):

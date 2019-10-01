@@ -28,7 +28,7 @@
 def parse_juniper_screenos_mem(info):
     new_info = []
     for used, free in info:
-        new_info.append([int(used) / 1024, (int(used) + int(free)) / 1024])
+        new_info.append([int(used) // 1024, (int(used) + int(free)) // 1024])
     return new_info
 
 

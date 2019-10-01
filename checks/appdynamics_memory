@@ -69,7 +69,7 @@ def check_appdynamics_memory(item, params, info):
 
             if isinstance(crit, float):
                 crit_label = '%.2f%%' % crit
-                crit = int((max_available / 100) * crit)
+                crit = int((max_available / 100.0) * crit)
             elif isinstance(crit, int):
                 crit_label = '%d MB free' % (crit)
                 crit = max_available - (crit * mb)
@@ -78,7 +78,7 @@ def check_appdynamics_memory(item, params, info):
 
             if isinstance(warn, float):
                 warn_label = '%.2f%%' % warn
-                warn = int((max_available / 100) * warn)
+                warn = int((max_available / 100.0) * warn)
             elif isinstance(warn, int):
                 warn_label = '%d MB free' % (warn)
                 warn = max_available - (warn * mb)

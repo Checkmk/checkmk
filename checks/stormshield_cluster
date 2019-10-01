@@ -81,6 +81,6 @@ check_info['stormshield_cluster'] = {
             '6',  # 'Number of faulty HA links'
             '8',  # snsHASyncStatus
         ]),
-    'snmp_scan_function': stormshield_scan_function,
+    'snmp_scan_function': stormshield_cluster_scan_function,
     'includes': ['stormshield.include'],
 }

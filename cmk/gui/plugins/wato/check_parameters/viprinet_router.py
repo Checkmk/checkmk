@@ -37,36 +37,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersViprinetRouter(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_viprinet_router():
+    return Dictionary(elements=[
+        ("expect_mode",
+         DropdownChoice(
+             title=_("Set expected router mode"),
+             choices=[
+                 ("inv", _("Mode found during inventory")),
+                 ("0", _("Node")),
+                 ("1", _("Hub")),
+                 ("2", _("Hub running as HotSpare")),
+                 ("3", _("Hotspare-Hub replacing another router")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "viprinet_router"
 
-    @property
-    def title(self):
-        return _("Viprinet router")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("expect_mode",
-             DropdownChoice(
-                 title=_("Set expected router mode"),
-                 choices=[
-                     ("inv", _("Mode found during inventory")),
-                     ("0", _("Node")),
-                     ("1", _("Hub")),
-                     ("2", _("Hub running as HotSpare")),
-                     ("3", _("Hotspare-Hub replacing another router")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="viprinet_router",
+        group=RulespecGroupCheckParametersNetworking,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_viprinet_router,
+        title=lambda: _("Viprinet router"),
+    ))

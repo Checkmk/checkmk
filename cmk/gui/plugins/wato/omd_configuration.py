@@ -28,6 +28,7 @@ import os
 import glob
 import subprocess
 import traceback
+from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -50,7 +51,7 @@ from cmk.gui.plugins.wato import (
     config_variable_group_registry,
     ConfigVariableGroup,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainOMD,
     LivestatusViaTCP,
     config_variable_registry,
@@ -237,7 +238,7 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 
 # TODO: Diskspace cleanup does not support site specific globals!
 @config_domain_registry.register
-class ConfigDomainDiskspace(ConfigDomain):
+class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
     ident = "diskspace"
@@ -246,9 +247,12 @@ class ConfigDomainDiskspace(ConfigDomain):
     def activate(self):
         pass
 
+    def config_dir(self):
+        return ""  # unused, we override load and save below
+
     def load(self, site_specific=False):
         cleanup_settings = {}
-        execfile(self.diskspace_config, {}, cleanup_settings)
+        exec (open(self.diskspace_config).read(), {}, cleanup_settings)
 
         if not cleanup_settings:
             return {}
@@ -294,7 +298,10 @@ class ConfigDomainDiskspace(ConfigDomain):
 
     def default_globals(self):
         diskspace_context = {}
-        execfile("%s/bin/diskspace" % cmk.utils.paths.omd_root, {}, diskspace_context)
+        filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
+        with (open(str(filename))) as f:
+            code = compile(f.read(), str(filename), 'exec')
+            exec (code, {}, diskspace_context)
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }
@@ -403,7 +410,7 @@ add_replication_paths([
 
 
 @config_domain_registry.register
-class ConfigDomainApache(ConfigDomain):
+class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "apache"
@@ -428,7 +435,7 @@ class ConfigDomainApache(ConfigDomain):
 
             return []
         except Exception:
-            logger.exception()
+            logger.exception("error reloading apache")
             return ["Failed to activate apache configuration: %s" % (traceback.format_exc())]
 
     def _write_config_file(self):
@@ -520,7 +527,7 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 
 
 @config_domain_registry.register
-class ConfigDomainRRDCached(ConfigDomain):
+class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "rrdcached"
@@ -545,7 +552,7 @@ class ConfigDomainRRDCached(ConfigDomain):
 
             return []
         except Exception:
-            logger.exception()
+            logger.exception("error restarting rrdcached")
             return ["Failed to activate rrdcached configuration: %s" % (traceback.format_exc())]
 
     def _write_config_file(self):

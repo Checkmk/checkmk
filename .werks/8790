@@ -1,0 +1,11 @@
+Title: Don't crash if no image/file is selected in an upload dialog
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567007497
+
+

@@ -27,8 +27,9 @@
 import errno
 import os
 import collections
+import io
 
-from pathlib2 import Path
+import pathlib2
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -552,7 +553,7 @@ class LogwatchBlockCollector(object):
 
 def check_logwatch_generic(item, params, loglines, found):
     import hashlib
-    logmsg_dir = Path(logwatch_dir, host_name())
+    logmsg_dir = pathlib2.Path(logwatch_dir, host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
 
@@ -604,7 +605,8 @@ def check_logwatch_generic(item, params, loglines, found):
                 # if the file is far too large, truncate it
                 truncate_by_line(logmsg_file_path, logwatch_max_filesize)
             return (2, "unacknowledged messages have exceeded max size, "
-                    "new messages are dropped (limit %d Bytes)" % logwatch_max_filesize)
+                    "new messages are dropped (limit %s)" %
+                    get_bytes_human_readable(logwatch_max_filesize))
 
         for line in logmsg_file_handle:
             line = line.rstrip('\n')
@@ -665,7 +667,8 @@ def check_logwatch_generic(item, params, loglines, found):
     # if logfile has reached maximum size, abort with critical state
     if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > logwatch_max_filesize:
         return (2, "unacknowledged messages have exceeded max size, "
-                "new messages are lost (limit %d Bytes)" % logwatch_max_filesize)
+                "new messages are lost (limit %s)" %
+                get_bytes_human_readable(logwatch_max_filesize))
 
     #
     # Render output
@@ -931,7 +934,8 @@ def logwatch_forward_spool_directory(method, item, messages):
                               '', time.time())
     _makedirs_exist_ok(spool_path)
 
-    file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')
+    io.open('%s/%s' % (spool_path, file_name), 'w',
+            encoding="utf-8").write(('\n'.join(messages)).encode("utf-8") + '\n')
     os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
     return LogwatchFordwardResult(num_forwarded=len(messages))
@@ -1027,7 +1031,7 @@ def logwatch_spool_messages(message_chunks, result):
 
         try:
             # Partially processed chunks or the new one
-            with open(spool_file_path, "w") as handle:
+            with io.open(spool_file_path, "w", encoding="utf-8") as handle:
                 handle.write(repr(message_chunk))
 
             result.num_spooled += len(message_chunk)
@@ -1079,7 +1083,7 @@ def logwatch_load_spooled_messages(method, result):
 
     # Delete by size till half of target size has been deleted (oldest spool files first)
     if total_size > spool_params["max_size"]:
-        target_size = spool_params["max_size"] / 2
+        target_size = int(spool_params["max_size"] / 2.0)
 
         for filename in spool_files:
             path = logwatch_spool_path() + "/" + filename
@@ -1094,7 +1098,7 @@ def logwatch_load_spooled_messages(method, result):
         time_spooled = float(filename[6:])
 
         try:
-            messages = ast.literal_eval(open(path).read())
+            messages = ast.literal_eval(io.open(path, encoding="utf-8").read())
         except IOError as exc:
             if exc.errno == errno.ENOENT:
                 continue
@@ -1108,7 +1112,7 @@ def logwatch_load_spooled_messages(method, result):
 
 def logwatch_spool_drop_messages(path, result):
     import ast
-    messages = ast.literal_eval(open(path).read())
+    messages = ast.literal_eval(io.open(path, encoding="utf-8").read())
     result.num_dropped += len(messages)
 
     file_size = os.stat(path).st_size

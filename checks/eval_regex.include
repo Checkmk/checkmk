@@ -26,6 +26,7 @@
 
 
 def instantiate_regex_pattern_once(pattern, match):
-    from cmk.utils.regex import escape_regex_chars
+    import cmk.utils.regex
     # this correctly handles \( and \) but not [^)] - sorry
-    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
+    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(cmk.utils.regex.escape_regex_chars(match),
+                                                    pattern, 1)

@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e -o pipefail
 
+HOOKROOT=/docker-entrypoint.d
+
+function exec_hook() {
+    HOOKDIR="$HOOKROOT/$1"
+    if [ -d "$HOOKDIR" ]; then
+        pushd "$HOOKDIR" >/dev/null
+        for hook in *; do
+            if [ ! -d "$hook" ] && [ -x "$hook" ]; then
+                echo "### Running $HOOKDIR/$hook"
+                ./"$hook" || true
+            fi
+        done
+        popd >/dev/null
+    fi
+}
+
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
     exit 1
@@ -12,7 +28,7 @@ trap 'omd stop '"$CMK_SITE_ID"'; exit 0' SIGTERM SIGHUP SIGINT
 # TODO: Syslog is only added to support postfix. Can we please find a better solution?
 if [ ! -z "$MAIL_RELAY_HOST" ]; then
     echo "### PREPARE POSTFIX (Hostname: $HOSTNAME, Relay host: $MAIL_RELAY_HOST)"
-    echo "$HOSTNAME" > /etc/mailname
+    echo "$HOSTNAME" >/etc/mailname
     postconf -e myorigin="$HOSTNAME"
     postconf -e mydestination="$(hostname -a), $(hostname -A), localhost.localdomain, localhost"
     postconf -e relayhost="$MAIL_RELAY_HOST"
@@ -32,15 +48,29 @@ fi
 # Check for a file in the directory because the directory itself might have
 # been pre-created by docker when the --tmpfs option is used to create a
 # site tmpfs below tmp.
-if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
+if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ]; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
+    exec_hook pre-create
     omd create --no-tmpfs -u 1000 -g 1000 --admin-password "$CMK_PASSWORD" "$CMK_SITE_ID"
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0
     omd config "$CMK_SITE_ID" set APACHE_TCP_PORT 5000
 
+    # We have the special situation that the site apache is directly accessed from
+    # external without a system apache reverse proxy. We need to disable the canonical
+    # name redirect here to make redirects work as expected.
+    #
+    # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
+    # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
+    APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
+    echo -e "# Created for Checkmk docker container\n\nUseCanonicalName Off\n" >"$APACHE_DOCKER_CFG"
+    chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
+    # Redirect top level requests to the sites base url
+    echo -e "# Redirect top level requests to the sites base url\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\n" >>"$APACHE_DOCKER_CFG"
+
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on
     fi
+    exec_hook post-create
 fi
 
 # In case of an update (see update procedure docs) the container is started
@@ -55,7 +85,7 @@ if ! getent passwd "$CMK_SITE_ID" >/dev/null; then
     useradd -u 1000 -d "/omd/sites/$CMK_SITE_ID" -c "OMD site $CMK_SITE_ID" -g "$CMK_SITE_ID" -G omd -s /bin/bash "$CMK_SITE_ID"
 fi
 if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
-    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" > "/omd/apache/$CMK_SITE_ID.conf"
+    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" >"/omd/apache/$CMK_SITE_ID.conf"
 fi
 
 # In case the version symlink is dangling we are in an update situation: The
@@ -64,7 +94,9 @@ fi
 # to life.
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     echo "### UPDATING SITE"
+    exec_hook pre-update
     omd -f update --conflict=install "$CMK_SITE_ID"
+    exec_hook post-update
 fi
 
 # When a command is given via "docker run" use it instead of this script
@@ -72,8 +104,13 @@ if [ -n "$1" ]; then
     exec "$@"
 fi
 
+echo "### STARTING XINETD"
+service xinetd start
+
 echo "### STARTING SITE"
+exec_hook pre-start
 omd start "$CMK_SITE_ID"
+exec_hook post-start
 
 echo "### STARTING CRON"
 cron -f &

@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 import re
 import copy
-
 import cmk
 import cmk.utils.store as store
 
@@ -446,8 +445,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         texts = []
         self.load_data()
         items = self._contactgroups.items()
-        items.sort(cmp=lambda a, b: cmp(a[1]['alias'], b[1]['alias']))
-        for name, cgroup in items:
+        for name, cgroup in sorted(items, key=lambda x: x[1]['alias']):
             if name in value["groups"]:
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %

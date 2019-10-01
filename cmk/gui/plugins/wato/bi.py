@@ -26,6 +26,7 @@
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
 import os
+import json
 import pprint
 
 import cmk
@@ -34,7 +35,7 @@ import cmk.utils.store as store
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 else:
-    managed = None
+    managed = None  # type: ignore
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -46,31 +47,15 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (
-    Tuple,
-    Transform,
-    Percentage,
-    Integer,
-    Alternative,
-    FixedValue,
-    TextAscii,
-    Dictionary,
-    MonitoringState,
-    IconSelector,
-    ListOf,
-    CascadingDropdown,
-    ListOfStrings,
-    Checkbox,
-    TextUnicode,
-    TextAreaUnicode,
-    Optional,
-    ID,
-    DropdownChoice,
+from cmk.gui.valuespec import (  # pylint: disable=unused-import
+    Text, ValueSpec, Tuple, Transform, Percentage, Integer, Alternative, FixedValue, TextAscii,
+    Dictionary, MonitoringState, IconSelector, ListOf, CascadingDropdown, ListOfStrings, Checkbox,
+    TextUnicode, TextAreaUnicode, Optional, ID, DropdownChoice,
 )
+
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -151,7 +136,7 @@ class BIManagement(object):
             }
             vars_.update(self._bi_constants)
             if os.path.exists(filename):
-                execfile(filename, vars_, vars_)
+                exec (open(filename).read(), vars_, vars_)
             else:
                 exec (bi_example, vars_, vars_)
 
@@ -265,7 +250,7 @@ class BIManagement(object):
         node = self._convert_node_to_bi(aggr["node"])
         option_keys = [
             ("ID", None),
-            ("use_layout_id", ""),
+            ("node_visualization", {}),
             ("hard_states", False),
             ("downtime_aggr_warn", False),
             ("disabled", False),
@@ -537,7 +522,7 @@ class ModeBI(WatoMode, BIManagement):
                                 "back")
 
     def _add_change(self, action_name, text):
-        site_ids = [site[0] for site in config.wato_slave_sites()] + [config.omd_site()]
+        site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     # .--------------------------------------------------------------------.
@@ -818,82 +803,113 @@ class ModeBI(WatoMode, BIManagement):
             title=_("Aggregation Properties"),
             optional_keys=False,
             render="form",
-            elements=cme_elements +
-            [("ID",
-              TextAscii(
-                  title=_("Aggregation ID"),
-                  help=_(
-                      "The ID of the aggregation must be a unique text. It will be as unique ID."),
-                  allow_empty=False,
-                  size=80,
-              )),
-             ("groups",
-              Transform(
-                  ListOf(Alternative(
-                      style="dropdown",
-                      orientation="horizontal",
-                      elements=[
-                          TextUnicode(title=_("Group name")),
-                          ListOfStrings(
-                              title=_("Group path"), orientation="horizontal", separator="/"),
-                      ],
-                  ),
-                         title=_("Aggregation Groups")),
-                  back=transform_aggregation_groups_to_disk,
-                  forth=transform_aggregation_groups_to_gui,
-              )),
-             ("node",
-              CascadingDropdown(title=_("Rule to call"),
-                                choices=self._node_call_choices() +
-                                self._foreach_choices(self._node_call_choices()))),
-             ("disabled",
-              Checkbox(
-                  title=_("Disabled"),
-                  label=_("Currently disable this aggregation"),
-              )),
-             ("hard_states",
-              Checkbox(
-                  title=_("Use Hard States"),
-                  label=_("Base state computation on hard states"),
-                  help=
-                  _("Hard states can only differ from soft states if at least one host or service "
-                    "of the BI aggregate has more than 1 maximum check attempt. For example if you "
-                    "set the maximum check attempts of a service to 3 and the service is CRIT "
-                    "just since one check then it's soft state is CRIT, but its hard state is still OK. "
-                    "<b>Note:</b> When computing the availbility of a BI aggregate this option "
-                    "has no impact. For that purpose always the soft (i.e. real) states will be used."
-                   ),
-              )),
-             ("downtime_aggr_warn",
-              Checkbox(
-                  title=_("Aggregation of Downtimes"),
-                  label=_("Escalate downtimes based on aggregated WARN state"),
-                  help=
-                  _("When computing the state 'in scheduled downtime' for an aggregate "
-                    "first all leaf nodes that are within downtime are assumed CRIT and all others "
-                    "OK. Then each aggregated node is assumed to be in downtime if the state "
-                    "is CRIT under this assumption. You can change this to WARN. The influence of "
-                    "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
-                    "and want the downtime information also escalated in case such a node would go into "
-                    "WARN state."),
-              )),
-             (
-                 "single_host",
-                 Checkbox(
-                     title=_("Optimization"),
-                     label=_("The aggregation covers data from only one host and its parents."),
+            elements=cme_elements + [
+                ("ID",
+                 TextAscii(
+                     title=_("Aggregation ID"),
                      help=_(
-                         "If you have a large number of aggregations that cover only one host and "
-                         "maybe its parents (such as Check_MK cluster hosts), "
-                         "then please enable this optimization. It reduces the time for the "
-                         "computation. Do <b>not</b> enable this for aggregations that contain "
-                         "data of more than one host!"),
-                 ),
-             ),
-             ("use_layout_id",
-              DropdownChoice(title=_("Use visualization layout"),
-                             choices=visualization_choices,
-                             default_value=None))])
+                         "The ID of the aggregation must be a unique text. It will be as unique ID."
+                     ),
+                     allow_empty=False,
+                     size=80,
+                 )),
+                ("groups",
+                 Transform(
+                     ListOf(Alternative(
+                         style="dropdown",
+                         orientation="horizontal",
+                         elements=[
+                             TextUnicode(title=_("Group name")),
+                             ListOfStrings(
+                                 title=_("Group path"), orientation="horizontal", separator="/"),
+                         ],
+                     ),
+                            title=_("Aggregation Groups")),
+                     back=transform_aggregation_groups_to_disk,
+                     forth=transform_aggregation_groups_to_gui,
+                 )),
+                ("node",
+                 CascadingDropdown(title=_("Rule to call"),
+                                   choices=self._node_call_choices() +
+                                   self._foreach_choices(self._node_call_choices()))),
+                ("disabled",
+                 Checkbox(
+                     title=_("Disabled"),
+                     label=_("Currently disable this aggregation"),
+                 )),
+                ("hard_states",
+                 Checkbox(
+                     title=_("Use Hard States"),
+                     label=_("Base state computation on hard states"),
+                     help=
+                     _("Hard states can only differ from soft states if at least one host or service "
+                       "of the BI aggregate has more than 1 maximum check attempt. For example if you "
+                       "set the maximum check attempts of a service to 3 and the service is CRIT "
+                       "just since one check then it's soft state is CRIT, but its hard state is still OK. "
+                       "<b>Note:</b> When computing the availbility of a BI aggregate this option "
+                       "has no impact. For that purpose always the soft (i.e. real) states will be used."
+                      ),
+                 )),
+                ("downtime_aggr_warn",
+                 Checkbox(
+                     title=_("Aggregation of Downtimes"),
+                     label=_("Escalate downtimes based on aggregated WARN state"),
+                     help=
+                     _("When computing the state 'in scheduled downtime' for an aggregate "
+                       "first all leaf nodes that are within downtime are assumed CRIT and all others "
+                       "OK. Then each aggregated node is assumed to be in downtime if the state "
+                       "is CRIT under this assumption. You can change this to WARN. The influence of "
+                       "this setting is especially relevant if you use aggregation functions of type <i>count</i> "
+                       "and want the downtime information also escalated in case such a node would go into "
+                       "WARN state."),
+                 )),
+                (
+                    "single_host",
+                    Checkbox(
+                        title=_("Optimization"),
+                        label=_("The aggregation covers data from only one host and its parents."),
+                        help=_(
+                            "If you have a large number of aggregations that cover only one host and "
+                            "maybe its parents (such as Check_MK cluster hosts), "
+                            "then please enable this optimization. It reduces the time for the "
+                            "computation. Do <b>not</b> enable this for aggregations that contain "
+                            "data of more than one host!"),
+                    ),
+                ),
+                (
+                    "node_visualization",
+                    Dictionary(
+                        title=_("BI Visualization"),
+                        elements=[
+                            (
+                                "layout_id",
+                                DropdownChoice(
+                                    title=_("Base layout"),
+                                    choices=[
+                                        ("builtin_default", _("Default (%s)") %
+                                         config.default_bi_layout["node_style"][8:].title()),
+                                        ("builtin_force", _("Builtin: Force")),
+                                        ("builtin_hierarchy", _("Builtin: Hierarchy")),
+                                        ("builtin_radial", _("Builtin: Radial")),
+                                        # TODO: continue this list with user configurable layouts
+                                    ],
+                                    default_value="builtin_default")),
+                            ("line_style",
+                             DropdownChoice(title=_("Style of connection lines"),
+                                            choices=[
+                                                ("default", _("Default (%s)") %
+                                                 config.default_bi_layout["line_style"].title()),
+                                                ("straight", "Straight"),
+                                                ("round", _("Round")),
+                                                ("elbow", _("Elbow")),
+                                            ],
+                                            default_value="round")),
+                            ("ignore_rule_styles",
+                             Checkbox(title=_("Ignore styles specified in rules"),
+                                      default_value=False)),
+                        ],
+                        optional_keys=[]))
+            ])
 
     # .--------------------------------------------------------------------.
     # | Methods for analysing the rules and aggregations                   |
@@ -1577,7 +1593,7 @@ class ModeBIRules(ModeBI):
         rules_refs = [
             (rule_id, rule, self.count_rule_references(rule_id)) for (rule_id, rule) in rules
         ]
-        rules_refs.sort(cmp=lambda a, b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
+        rules_refs.sort(key=lambda x: (x[1]["title"], x[2][2]))
 
         with table_element("bi_rules", title) as table:
             for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
@@ -2083,6 +2099,10 @@ class ModeBIEditRule(ModeBI):
                      regex_error=_("Parameters must contain only A-Z, a-z, 0-9 and _ "
                                    "and must not begin with a digit."),
                  ))),
+            ("layout_style",
+             NodeVisualizationLayoutStyle(
+                 title="BI visualization layout style",
+                 help=_("The following layout style is applied to the matching node"))),
             ("disabled",
              Checkbox(
                  title=_("Rule activation"),
@@ -2134,12 +2154,45 @@ class ModeBIEditRule(ModeBI):
                           render="form",
                           elements=elements,
                           headers=[
-                              (_("Rule Properties"),
-                               ["id", "title", "docu_url", "comment", "params", "disabled"]),
+                              (_("Rule Properties"), [
+                                  "id", "title", "docu_url", "comment", "params", "layout_style",
+                                  "disabled"
+                              ]),
                               (_("Child Node Generation"), ["nodes"]),
                               (_("Aggregation Function"), ["aggregation", "state_messages",
                                                            "icon"]),
                           ])
+
+
+class NodeVisualizationLayoutStyle(ValueSpec):
+    def __init__(self, **kwargs):
+        super(NodeVisualizationLayoutStyle, self).__init__(**kwargs)
+        self._style_type = kwargs.get("style_type", "hierarchy")
+
+    def render_input(self, varprefix, value):
+        html.div("", id_=varprefix)
+        html.javascript(
+            "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
+            "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value)))
+
+    def value_to_text(self, value):
+        return ""
+
+    def from_html_vars(self, varprefix):
+        value = self.default_value()
+        for key, val in html.request.itervars():
+            if key.startswith(varprefix):
+                clean_key = key[len(varprefix):]
+                if clean_key == "style_type":
+                    value[clean_key] = val
+                elif clean_key.startswith("_type_value_"):
+                    value["style_config"][clean_key[12:]] = int(val)
+                elif clean_key.startswith("_type_checkbox_"):
+                    value["style_config"][clean_key[15:]] = val == "on"
+        return value
+
+    def default_value(self):
+        return {"style_type": "none", "style_config": {}}
 
 
 #.
@@ -2157,16 +2210,18 @@ bi_aggregation_functions = {}
 bi_aggregation_functions["worst"] = {
     "title": _("Worst - take worst of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(help=_(
-            "Normally this value is <tt>1</tt>, which means that the worst state "
-            "of all child nodes is being used as the total state. If you set it for example "
-            "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-            "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
-            "resulting state would be WARN. Or you could say that the worst to nodes are "
-            "first dropped and then the worst of the remaining nodes defines the state. "),
-                title=_("Take n'th worst state for n = "),
-                default_value=1,
-                min_value=1),
+        Integer(
+            help=_(
+                "Normally this value is <tt>1</tt>, which means that the worst state "
+                "of all child nodes is being used as the total state. If you set it for example "
+                "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
+                "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                "resulting state would be WARN. Or you could say that the worst to nodes are "
+                "first dropped and then the worst of the remaining nodes defines the state. "),
+            title=_("Take n'th worst state for n = "),
+            default_value=1,
+            minvalue=1,
+        ),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2179,15 +2234,16 @@ bi_aggregation_functions["worst"] = {
 bi_aggregation_functions["best"] = {
     "title": _("Best - take best of all node states"),
     "valuespec": Tuple(elements=[
-        Integer(help=_(
-            "Normally this value is <tt>1</tt>, which means that the best state "
-            "of all child nodes is being used as the total state. If you set it for example "
-            "to <tt>2</tt>, then the node with the best state is not being regarded. "
-            "If the states of the child nodes would be CRIT, WARN and OK, then to total "
-            "state would be WARN."),
-                title=_("Take n'th best state for n = "),
-                default_value=1,
-                min_value=1),
+        Integer(
+            help=_("Normally this value is <tt>1</tt>, which means that the best state "
+                   "of all child nodes is being used as the total state. If you set it for example "
+                   "to <tt>2</tt>, then the node with the best state is not being regarded. "
+                   "If the states of the child nodes would be CRIT, WARN and OK, then to total "
+                   "state would be WARN."),
+            title=_("Take n'th best state for n = "),
+            default_value=1,
+            minvalue=1,
+        ),
         MonitoringState(
             title=_("Restrict severity to at worst"),
             help=_("Here a maximum severity of the node state can be set. This severity is not "
@@ -2199,23 +2255,30 @@ bi_aggregation_functions["best"] = {
 
 
 def vs_count_ok_count(title, defval, defvalperc):
-    return Alternative(title=title,
-                       style="dropdown",
-                       match=lambda x: str(x).endswith("%") and 1 or 0,
-                       elements=[
-                           Integer(title=_("Explicit number"),
-                                   label=_("Number of OK-nodes"),
-                                   min_value=0,
-                                   default_value=defval),
-                           Transform(
-                               Percentage(label=_("Percent of OK-nodes"),
-                                          display_format="%.0f",
-                                          default_value=defvalperc),
-                               title=_("Percentage"),
-                               forth=lambda x: float(x[:-1]),
-                               back=lambda x: "%d%%" % x,
-                           ),
-                       ])
+    # type: (Text, int, int) -> Alternative
+    return Alternative(
+        title=title,
+        style="dropdown",
+        match=lambda x: str(x).endswith("%") and 1 or 0,
+        elements=[
+            Integer(
+                title=_("Explicit number"),
+                label=_("Number of OK-nodes"),
+                minvalue=0,
+                default_value=defval,
+            ),
+            Transform(
+                Percentage(
+                    label=_("Percent of OK-nodes"),
+                    display_format="%.0f",
+                    default_value=defvalperc,
+                ),
+                title=_("Percentage"),
+                forth=lambda x: float(x[:-1]),
+                back=lambda x: "%d%%" % x,
+            ),
+        ],
+    )
 
 
 bi_aggregation_functions["count_ok"] = {
@@ -2223,7 +2286,7 @@ bi_aggregation_functions["count_ok"] = {
     "valuespec": Tuple(elements=[
         vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
         vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
-    ]),
+    ],),
 }
 
 #.
@@ -2385,7 +2448,7 @@ bi_packs['default'] = {
                          'downtime_aggr_warn': False,
                          'hard_states': False,
                          'ID': 'default_aggregation',
-                         'use_layout_id': None},
+                         'node_visualization': {}},
                         [u'Hosts'],
                         FOREACH_HOST,
                         ['tcp'],

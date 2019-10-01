@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.plugins.metrics.check_mk import metric_number_with_precision
 # If the size_trend function is not provided via size_trend.include raise
 # an exception to provide an error message to the user. If dependencies
 # between include files are possible this will not be necessary anymore.
@@ -236,7 +235,8 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         crit_hr = get_bytes_human_readable(crit * mega)
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
-    if "inodes_levels" in params:
+    inodes_levels = params.get("inodes_levels")
+    if inodes_levels:
         if isinstance(levels["inodes_levels"], tuple):
             warn, crit = levels["inodes_levels"]
         else:
@@ -409,7 +409,7 @@ def check_inodes(levels, inodes_total, inodes_avail):
         return 0, "", []
 
     inodes_warn, inodes_crit = levels["inodes_levels"]
-    human_readable_func = metric_number_with_precision
+    human_readable_func = get_number_with_precision
 
     # Levels in absolute numbers
     if isinstance(inodes_warn, int):
@@ -424,10 +424,9 @@ def check_inodes(levels, inodes_total, inodes_avail):
 
     inode_status, infotext, i_perf = check_levels(inodes_total - inodes_avail,
                                                   'inodes_used', (inodes_warn, inodes_crit),
+                                                  boundaries=(0, inodes_total),
                                                   human_readable_func=human_readable_func,
                                                   infoname="Inodes Used")
-
-    i_perf[0] += (0, inodes_total)  # because check_levels does not include min, max
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]
@@ -436,7 +435,7 @@ def check_inodes(levels, inodes_total, inodes_avail):
         (show_inodes == "onlow" and (inode_status or inodes_avail_perc < 50)) or \
         (show_inodes == "onproblem" and inode_status):
         infotext = ", %s, inodes available: %s/%s" % (infotext,
-                                                      metric_number_with_precision(inodes_avail),
+                                                      get_number_with_precision(inodes_avail),
                                                       get_percent_human_readable(inodes_avail_perc))
     else:
         infotext = ""

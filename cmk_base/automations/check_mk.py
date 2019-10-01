@@ -38,7 +38,9 @@ from typing import Tuple, Optional, Dict, Any, Text, List  # pylint: disable=unu
 
 import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -53,6 +55,7 @@ from cmk_base.automations import automations, Automation, MKAutomationError
 import cmk_base.check_utils
 import cmk_base.autochecks as autochecks
 import cmk_base.nagios_utils
+import cmk_base.checking
 from cmk_base.core_factory import create_core
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.check_api as check_api
@@ -67,12 +70,21 @@ from cmk_base.discovered_labels import (
 
 
 class DiscoveryAutomation(Automation):
-    # if required, schedule an inventory check
-    def _trigger_discovery_check(self, host_config):
-        # TODO: Check the last condition ("or host_config.nodes"). Is this really correct?
-        if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-                (not host_config.is_cluster or host_config.nodes):
-            discovery.schedule_discovery_check(host_config.hostname)
+    def _trigger_discovery_check(self, config_cache, host_config):
+        # type: (config.ConfigCache, config.HostConfig) -> None
+        """if required, schedule the "Check_MK Discovery" check"""
+        if not config.inventory_check_autotrigger:
+            return
+
+        service_discovery_name = config_cache.service_discovery_name()
+        disc_check_params = host_config.discovery_check_parameters
+        if not host_config.add_service_discovery_check(disc_check_params, service_discovery_name):
+            return
+
+        if host_config.is_cluster:
+            return
+
+        discovery.schedule_discovery_check(host_config.hostname)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -127,14 +139,18 @@ class AutomationDiscovery(DiscoveryAutomation):
             result, error = discovery.discover_on_host(config_cache, host_config, how, do_snmp_scan,
                                                        use_caches, on_error)
             counts[hostname] = [
-                result["self_new"], result["self_removed"], result["self_kept"],
-                result["self_total"]
+                result["self_new"],
+                result["self_removed"],
+                result["self_kept"],
+                result["self_total"],
+                result["self_new_host_labels"],
+                result["self_total_host_labels"],
             ]
 
             if error is not None:
                 failed_hosts[hostname] = error
             else:
-                self._trigger_discovery_check(host_config)
+                self._trigger_discovery_check(config_cache, host_config)
 
         return counts, failed_hosts
 
@@ -164,10 +180,14 @@ class AutomationTryDiscovery(Automation):
 
     def execute(self, args):
         with redirect_output(cStringIO.StringIO()) as buf:
-            cmk.utils.log.setup_console_logging()
-            cmk.utils.log.set_verbosity(1)
-            result = self._execute_discovery(args)
-            return {"output": buf.getvalue(), "check_table": result}
+            log.setup_console_logging()
+            log.logger.setLevel(log.VERBOSE)
+            check_preview_table, host_labels = self._execute_discovery(args)
+            return {
+                "output": buf.getvalue(),
+                "check_table": check_preview_table,
+                "host_labels": host_labels.to_dict(),
+            }
 
     def _execute_discovery(self, args):
         use_caches = False
@@ -188,7 +208,7 @@ class AutomationTryDiscovery(Automation):
             on_error = "raise"
             args = args[1:]
         else:
-            on_error = "ignore"
+            on_error = "warn"
 
         data_sources.abstract.DataSource.set_may_use_cache_file(use_caches)
         hostname = args[0]
@@ -231,11 +251,31 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                                             service_labels))
 
         autochecks.set_autochecks_of(host_config, new_services)
-        self._trigger_discovery_check(host_config)
+        self._trigger_discovery_check(config_cache, host_config)
         return None
 
 
 automations.register(AutomationSetAutochecks())
+
+
+class AutomationUpdateHostLabels(DiscoveryAutomation):
+    """Set the new collection of discovered host labels"""
+    cmd = "update-host-labels"
+    needs_config = True
+    needs_checks = True  # TODO: Can we change this?
+
+    def execute(self, args):
+        hostname = args[0]
+        new_host_labels = ast.literal_eval(sys.stdin.read())
+        DiscoveredHostLabelsStore(hostname).save(new_host_labels)
+
+        config_cache = config.get_config_cache()
+        host_config = config_cache.get_host_config(hostname)
+        self._trigger_discovery_check(config_cache, host_config)
+        return None
+
+
+automations.register(AutomationUpdateHostLabels())
 
 
 class AutomationRenameHosts(Automation):
@@ -447,7 +487,7 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            file(cmk.utils.paths.var_dir + "/core/renamed_hosts",
+            open(cmk.utils.paths.var_dir + "/core/renamed_hosts",
                  "w").write("%s\n%s\n" % (oldname, newname))
             actions.append("retention")
 
@@ -564,6 +604,7 @@ class AutomationAnalyseServices(Automation):
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(self, config_cache, host_config, servicedesc):
+        # type: (config.ConfigCache, config.HostConfig, Text) -> Dict
         hostname = host_config.hostname
         check_api_utils.set_hostname(hostname)
 
@@ -592,12 +633,12 @@ class AutomationAnalyseServices(Automation):
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         if host_config.is_cluster:
-            services = []
-            for node in host_config.nodes:
+            services = []  # type: List[cmk_base.check_utils.Service]
+            for node in host_config.nodes or []:
                 for service in config_cache.get_autochecks_of(node):
                     if hostname == config_cache.host_of_clustered_service(
                             node, service.description):
-                        services.append(services)
+                        services += services
         else:
             services = config_cache.get_autochecks_of(hostname)
 
@@ -828,8 +869,8 @@ class AutomationRestart(Automation):
                 cmk_base.core.do_core_action(self._mode())
             else:
                 broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-                file(broken_config_path,
-                     "w").write(file(cmk.utils.paths.nagios_objects_file).read())
+                open(broken_config_path,
+                     "w").write(open(cmk.utils.paths.nagios_objects_file).read())
 
                 if backup_path:
                     os.rename(backup_path, objects_file)
@@ -851,7 +892,7 @@ class AutomationRestart(Automation):
         return configuration_warnings
 
     def _check_plugins_have_changed(self):
-        this_time = self._last_modification_in_dir(cmk.utils.paths.local_checks_dir)
+        this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))
         last_time = self._time_of_last_core_restart()
         return this_time > last_time
 
@@ -941,7 +982,7 @@ class AutomationGetCheckInformation(Automation):
                 manfile = manuals.get(check_plugin_name)
                 # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 if manfile:
-                    title = file(manfile).readline().strip().split(":", 1)[1].strip()
+                    title = open(manfile).readline().strip().split(":", 1)[1].strip()
                 else:
                     title = check_plugin_name
                 check_infos[check_plugin_name] = {"title": title.decode("utf-8")}
@@ -978,7 +1019,7 @@ class AutomationGetRealTimeChecks(Automation):
                 try:
                     manfile = manuals.get(check_plugin_name)
                     if manfile:
-                        title = file(manfile).readline().strip().split(":", 1)[1].strip()
+                        title = open(manfile).readline().strip().split(":", 1)[1].strip()
                 except Exception:
                     if cmk.utils.debug.enabled():
                         raise
@@ -1006,6 +1047,7 @@ class AutomationGetCheckManPage(Automation):
 
         # Add a few informations from check_info. Note: active checks do not
         # have an entry in check_info
+
         if check_plugin_name in config.check_info:
             manpage["type"] = "check_mk"
             info = config.check_info[check_plugin_name]
@@ -1024,6 +1066,12 @@ class AutomationGetCheckManPage(Automation):
         # Assume active check
         elif check_plugin_name.startswith("check_"):
             manpage["type"] = "active"
+        elif check_plugin_name in ['check-mk', "check-mk-inventory"]:
+            manpage["type"] = "check_mk"
+            if check_plugin_name == "check-mk":
+                manpage["service_description"] = "Check_MK"
+            if check_plugin_name == "check-mk-inventory":
+                manpage["service_description"] = "Check_MK Discovery"
         else:
             raise MKAutomationError("Could not detect type of manpage: %s. "
                                     "Maybe the check is missing." % check_plugin_name)
@@ -1123,7 +1171,7 @@ class AutomationDiagHost(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                output = ""
+                state, output = 0, u""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.DSProgramDataSource) and cmd:
                         source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
@@ -1134,11 +1182,23 @@ class AutomationDiagHost(Automation):
                     elif isinstance(source, data_sources.snmp.SNMPDataSource):
                         continue
 
-                    output += source.run_raw()
+                    source_output = source.run_raw()
+
+                    # We really receive a byte string here. The agent sections
+                    # may have different encodings and are normally decoded one
+                    # by one (CheckMKAgentDataSource._parse_info).  For the
+                    # moment we use UTF-8 with fallback to latin-1 by default,
+                    # similar to the CheckMKAgentDataSource, but we do not
+                    # respect the ecoding options of sections.
+                    # If this is a problem, we would have to apply parse and
+                    # decode logic and unparse the decoded output again.
+                    output += config.decode_incoming_string(source_output)
+
                     if source.exception():
+                        state = 1
                         output += "%s" % source.exception()
 
-                return 0, output
+                return state, output
 
             elif test == 'traceroute':
                 family_flag = "-6" if host_config.is_ipv6_primary else "-4"
@@ -1287,7 +1347,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros):
         try:
-            for line in file(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
+            for line in open(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
                 line = line.strip()
                 if not line or line[0] == '#':
                     continue
@@ -1320,7 +1380,7 @@ class AutomationActiveCheck(Automation):
                 status = 0
             else:
                 if ret & 0xff == 0:
-                    status = ret / 256
+                    status = ret >> 8
                 else:
                     status = 3
             if status < 0 or status > 3:

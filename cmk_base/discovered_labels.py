@@ -26,14 +26,13 @@
 
 import abc
 import collections
-from typing import Text, List, Dict  # pylint: disable=unused-import
+from typing import Optional, Tuple, Text, List, Dict  # pylint: disable=unused-import
+import six
 
 from cmk.utils.exceptions import MKGeneralException
 
 
-class ABCDiscoveredLabels(collections.MutableMapping, object):
-    __metaclass__ = abc.ABCMeta
-
+class ABCDiscoveredLabels(six.with_metaclass(abc.ABCMeta, collections.MutableMapping, object)):
     def __init__(self, *args):
         super(ABCDiscoveredLabels, self).__init__()
         self._labels = {}
@@ -68,27 +67,35 @@ class ABCDiscoveredLabels(collections.MutableMapping, object):
 
 class DiscoveredHostLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single host during runtime"""
-    def __init__(self, inventory_tree, *args):
-        super(DiscoveredHostLabels, self).__init__(*args)
-        self._inventory_tree = inventory_tree
+    @classmethod
+    def from_dict(cls, dict_labels):
+        labels = cls()
+        for k, v in dict_labels.iteritems():
+            labels.add_label(HostLabel.from_dict(k, v))
+        return labels
 
-    # TODO: Once we redesign the hw/sw inventory plugin API check if we can move it to the
-    # inventory API.
-    # TODO: Cleanup these different argument
-    def add_label(self, key, value, plugin_name):  # pylint: disable=arguments-differ
-        """Add a label to the collection of discovered labels and inventory tree
+    def add_label(self, label):
+        # type: (HostLabel) -> None
+        self._labels[label.name] = label
 
-        Add it to the inventory tree for debugging purposes
-        """
-        self[key] = value
-        labels = self._inventory_tree.get_list("software.applications.check_mk.host_labels:")
-        labels.append({
-            "label": (key, value),
-            "inventory_plugin_name": plugin_name,
-        })
+    def to_dict(self):
+        return {
+            label.name: label.to_dict()
+            for label in sorted(self._labels.itervalues(), key=lambda x: x.name)
+        }
+
+    def to_list(self):
+        return [label for label in sorted(self._labels.itervalues(), key=lambda x: x.name)]
+
+    def __add__(self, other):
+        if not isinstance(other, DiscoveredHostLabels):
+            raise TypeError('%s not type DiscoveredHostLabels' % other)
+        data = self.to_dict().copy()
+        data.update(other.to_dict())
+        return DiscoveredHostLabels.from_dict(data)
 
 
-class ServiceLabel(object):
+class ABCLabel(object):
     """Representing a service label in Checkmk
 
     This class is meant to be exposed to the check API. It will be usable in
@@ -102,11 +109,11 @@ class ServiceLabel(object):
     def __init__(self, name, value):
         # type: (Text, Text) -> None
 
-        if not isinstance(name, unicode):
+        if not isinstance(name, six.text_type):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
         self._name = name
 
-        if not isinstance(value, unicode):
+        if not isinstance(value, six.text_type):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
         self._value = value
 
@@ -123,31 +130,60 @@ class ServiceLabel(object):
         return "%s:%s" % (self._name, self._value)
 
 
+class ServiceLabel(ABCLabel):
+    pass
+
+
+class HostLabel(ABCLabel):
+    """Representing a host label in Checkmk during runtime
+
+    Besides the label itself it keeps the information which plugin discovered the host label
+    """
+    __slots__ = ["_plugin_name"]
+
+    @classmethod
+    def from_dict(cls, name, dict_label):
+        return cls(name, dict_label["value"], dict_label["plugin_name"])
+
+    def __init__(self, name, value, plugin_name=None):
+        # type: (Text, Text, Optional[str]) -> None
+        super(HostLabel, self).__init__(name, value)
+        self._plugin_name = plugin_name
+
+    @property
+    def plugin_name(self):
+        # type: () -> Optional[str]
+        return self._plugin_name
+
+    @plugin_name.setter
+    def plugin_name(self, plugin_name):
+        # type: (str) -> None
+        self._plugin_name = plugin_name
+
+    def to_dict(self):
+        return {
+            "value": self.value,
+            "plugin_name": self.plugin_name,
+        }
+
+    def __repr__(self):
+        return "HostLabel(%r, %r)" % (self.name, self.value)
+
+    def __eq__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name == other.name and self.value == other.value and
+                self.plugin_name == other.plugin_name)
+
+    def __ne__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name != other.name or self.value != other.value or
+                self.plugin_name != other.plugin_name)
+
+
 class DiscoveredServiceLabels(ABCDiscoveredLabels):
     """Encapsulates the discovered labels of a single service during runtime"""
     def add_label(self, label):
         # type: (ServiceLabel) -> None
         self._labels[label.name] = label.value
-
-
-class DiscoveredServiceLabelsOfHost(object):
-    """Manages the discovered labels of all services of one host
-
-    During the service discovery in Checkmk base code, this class
-    is used to collect all discovered labels.
-    """
-    __slots__ = ["_service_labels"]
-
-    def __init__(self, **kwargs):
-        super(DiscoveredServiceLabelsOfHost, self).__init__()
-        self._service_labels = kwargs  # type: Dict[Text, DiscoveredServiceLabels]
-
-    def add_labels(self, service_desc, service_labels):
-        # type: (Text, DiscoveredServiceLabels) -> None
-        self._service_labels[service_desc] = service_labels
-
-    def to_dict(self):
-        return {
-            service_descr: service_labels.to_dict()
-            for service_descr, service_labels in self._service_labels.items()
-        }

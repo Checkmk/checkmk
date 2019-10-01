@@ -23,7 +23,7 @@ def test_registered_pages():
         'ajax_nagvis_maps_snapin',
         'ajax_pagetype_add_element',
         'ajax_popup_action_menu',
-        'ajax_popup_add_metric_to_custom_graph',
+        'ajax_popup_add_metric_to_graph',
         'ajax_popup_add_visual',
         'ajax_popup_icon_selector',
         'ajax_popup_move_to_folder',
@@ -47,7 +47,7 @@ def test_registered_pages():
         'ajax_load_bi_aggregation_layout',
         'ajax_delete_bi_template_layout',
         'ajax_delete_bi_aggregation_layout',
-        'ajax_fetch_network_topology',
+        'ajax_fetch_topology',
         'ajax_get_all_bi_template_layouts',
         'automation_login',
         'bi',
@@ -85,6 +85,7 @@ def test_registered_pages():
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
+        'edit_forecast_graph',
         'edit_graph_collection',
         'edit_graph_tuning',
         'edit_report',
@@ -97,6 +98,9 @@ def test_registered_pages():
         'edit_views',
         'export_views',
         'fetch_agent_output',
+        'forecast_editor',
+        'forecast_graph',
+        'forecast_graphs',
         'graph_collection',
         'graph_collections',
         'graph_dashlet',
@@ -119,6 +123,7 @@ def test_registered_pages():
         'noauth:run_cron',
         'notify',
         'prediction_graph',
+        'parent_child_topology',
         'register_agent',
         'report',
         'report_download_preview',
@@ -169,7 +174,7 @@ def test_pages_register(monkeypatch, capsys):
         sys.stdout.write("123")
 
     handler = cmk.gui.pages.get_page_handler("123handler")
-    assert callable(handler)
+    assert hasattr(handler, '__call__')
 
     handler()
     assert capsys.readouterr()[0] == "123"
@@ -185,7 +190,7 @@ def test_pages_register_handler(monkeypatch, capsys):
     cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
 
     handler = cmk.gui.pages.get_page_handler("234handler")
-    assert callable(handler)
+    assert hasattr(handler, '__call__')
 
     handler()
     assert capsys.readouterr()[0] == "234"

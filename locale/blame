@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import os
 import subprocess
@@ -7,14 +7,14 @@ import sys
 
 def update_po_file(lang):
     cmd = ["make", "update-%s" % lang]
-    p = subprocess.Popen(cmd, stdout=file("/dev/null", "w"))
+    p = subprocess.Popen(cmd, stdout=open("/dev/null", "w", encoding="utf-8"), encoding="utf-8")
     if p.wait() != 0:
         raise Exception("Command failed: %s" % " ".join(cmd))
 
 
 def cleanup_po_file(lang):
     cmd = ["make", "cleanup-%s" % lang]
-    p = subprocess.Popen(cmd, stdout=file("/dev/null", "w"))
+    p = subprocess.Popen(cmd, stdout=open("/dev/null", "w", encoding="utf-8"), encoding="utf-8")
     if p.wait() != 0:
         raise Exception("Command failed: %s" % " ".join(cmd))
 
@@ -50,7 +50,8 @@ def get_localizations_of_type_raw(po_file, ty):
     p = subprocess.Popen(
         ["msgattrib", "--%s" % ty, "--no-obsolete", "--no-wrap", po_file],
         stdout=subprocess.PIPE,
-        stderr=file("/dev/null", "w"))
+        stderr=open("/dev/null", "w", encoding="utf-8"),
+        encoding="utf-8")
     stdout = p.communicate()[0]
     if p.returncode != 0:
         raise Exception("Command failed!")
@@ -74,36 +75,36 @@ def add_last_commits(untranslated):
 
             try:
                 commit = get_last_commit_of(repo_path(), path, line)
-            except Exception as e:
-                print msg_id, infos
+            except Exception:
+                print(msg_id, infos)
                 raise
 
             commits = infos.setdefault("commits", set([]))
             commits.add(commit)
 
 
-def get_last_commit_of(repo_path, path, line):
+def get_last_commit_of(repo_base_path, path, line):
     env = os.environ.copy()
-    env["GIT_DIR"] = repo_path + "/.git"
-    env["GIT_WORK_TREE"] = repo_path
+    env["GIT_DIR"] = repo_base_path + "/.git"
+    env["GIT_WORK_TREE"] = repo_base_path
 
     cmd = ["git", "blame", "-p", "-L%d,+1" % line, path]
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
-    stdout = p.communicate()[0].decode("utf-8")
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, encoding="utf-8")
+    stdout = p.communicate()[0]
     if p.returncode != 0:
         raise Exception("Command failed: %s" % " ".join(cmd))
 
     commit_id = stdout.split("\n",)[0].split(" ", 1)[0]
 
     msg, name, mail = None, None, None
-    for line in stdout.split("\n"):
-        if line.startswith("summary "):
-            msg = line.split(" ", 1)[1].strip()
-        elif line.startswith("author "):
-            name = line.split(" ", 1)[1].strip()
-        elif line.startswith("author-mail "):
-            mail = line.split(" ", 1)[1].strip("<>\n")
+    for ln in stdout.split("\n"):
+        if ln.startswith("summary "):
+            msg = ln.split(" ", 1)[1].strip()
+        elif ln.startswith("author "):
+            name = ln.split(" ", 1)[1].strip()
+        elif ln.startswith("author-mail "):
+            mail = ln.split(" ", 1)[1].strip("<>\n")
 
     return commit_id, name, mail, msg
 
@@ -116,22 +117,22 @@ def blame_output(untranslated):
             todos = untranslated_of_dev.setdefault(name, {})
             todos[msg_id] = infos
 
-    print "Found %d untranslated strings in total.\n" % len(untranslated)
-    print ""
-    print "Scoreboard:"
-    print ""
+    print("Found %d untranslated strings in total.\n" % len(untranslated))
+    print("")
+    print("Scoreboard:")
+    print("")
 
     for rank, (dev_name, todo) in enumerate(
-            sorted(untranslated_of_dev.items(), key=lambda (n, u): len(u), reverse=True)):
-        print((u"%2d %-25s %4d" % (rank + 1, dev_name, len(todo))).encode("utf-8"))
+            sorted(untranslated_of_dev.items(), key=lambda e: len(e[1]), reverse=True)):
+        print("%2d %-25s %4d" % (rank + 1, dev_name, len(todo)))
 
-    print ""
-    print "-" * 80
+    print("")
+    print("-" * 80)
 
     for dev_name, todo in sorted(untranslated_of_dev.items()):
-        print ""
-        print((u"************* %s" % dev_name).encode("utf-8"))
-        print ""
+        print("")
+        print("************* %s" % dev_name)
+        print("")
 
         entries = []
         for msg_id, infos in todo.items():
@@ -143,7 +144,7 @@ def blame_output(untranslated):
                 entries.append((path, line, msg_id))
 
         for entry in sorted(entries):
-            print "%s:%d: [E0001(untranslated), ] %s" % entry
+            print("%s:%d: [E0001(untranslated), ] %s" % entry)
 
 
 def main():
@@ -163,7 +164,7 @@ def main():
     add_last_commits(untranslated)
 
     if len(untranslated) == 0:
-        print "Did not find any untranslated text. Nice!"
+        print("Did not find any untranslated text. Nice!")
         sys.exit(0)
     else:
         blame_output(untranslated)

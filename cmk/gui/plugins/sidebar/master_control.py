@@ -73,7 +73,7 @@ class MasterControlSnapin(SidebarSnapin):
             sites.live().set_prepend_site(False)
 
         def _render_master_control_site(site_id):
-            site_state = sites.state(site_id)
+            site_state = sites.states().get(site_id)
             if site_state["state"] == "dead":
                 html.show_error(site_state["exception"])
 
@@ -132,7 +132,7 @@ class MasterControlSnapin(SidebarSnapin):
             try:
                 _render_master_control_site(site_id)
             except Exception as e:
-                logger.exception()
+                logger.exception("error rendering master control for site %s", site_id)
                 write_snapin_exception(e)
             finally:
                 if not config.is_single_local_site():

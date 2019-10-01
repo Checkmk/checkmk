@@ -120,7 +120,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -163,7 +163,7 @@ call check_watest.cmd watest
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -208,7 +208,7 @@ call check_watest.cmd watest
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -253,7 +253,7 @@ call check_watest.cmd watest
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WATEST=1;SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR=uR"($(ProjectDir))";NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -315,9 +315,11 @@ call check_watest.cmd watest
     <ClCompile Include="test-encryption.cpp" />
     <ClCompile Include="test-eventlog.cpp" />
     <ClCompile Include="test-external-port.cpp" />
+    <ClCompile Include="test-health.cpp" />
     <ClCompile Include="test-install-auto.cpp" />
     <ClCompile Include="test-log.cpp" />
     <ClCompile Include="test-mrpe.cpp" />
+    <ClCompile Include="test-object_repo.cpp" />
     <ClCompile Include="test-ohm.cpp" />
     <ClCompile Include="test-onlyfrom.cpp" />
     <ClCompile Include="test-player-cmdline.cpp" />
@@ -325,6 +327,7 @@ call check_watest.cmd watest
     <ClCompile Include="test-plugin.cpp" />
     <ClCompile Include="test-realtime.cpp" />
     <ClCompile Include="test-runperf.cpp" />
+    <ClCompile Include="test-section_df.cpp" />
     <ClCompile Include="test-section_fileinfo.cpp" />
     <ClCompile Include="test-section_logwatchevent.cpp" />
     <ClCompile Include="test-section_providers.cpp" />
@@ -334,6 +337,7 @@ call check_watest.cmd watest
     <ClCompile Include="test-service.cpp" />
     <ClCompile Include="test-skype.cpp" />
     <ClCompile Include="test-spool.cpp" />
+    <ClCompile Include="test-stop_watch.cpp" />
     <ClCompile Include="test-upgrade.cpp" />
     <ClCompile Include="test-winperf.cpp" />
     <ClCompile Include="test-wtools.cpp" />

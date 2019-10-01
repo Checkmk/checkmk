@@ -1,12 +1,13 @@
 #include "stdafx.h"
 
+#include "carrier.h"
+
 #include <algorithm>
 #include <iostream>
 
-#include "carrier.h"
-#include "tools/_misc.h"
-
+#include "commander.h"
 #include "logger.h"
+#include "tools/_misc.h"
 
 namespace cma::carrier {
 
@@ -80,7 +81,8 @@ bool CoreCarrier::establishCommunication(const std::string& InternalPort) {
 bool CoreCarrier::sendData(const std::string& PeerName, uint64_t Marker,
                            const void* Data, size_t Length) {
     std::lock_guard lk(lock_);
-    XLOG::d.t("Sending data '{}' id is [{}] length [{}]", PeerName, Marker, Length);
+    XLOG::d.t("Sending data '{}' id is [{}] length [{}]", PeerName, Marker,
+              Length);
     return sendDataDispatcher(DataType::kSegment, PeerName, Marker, Data,
                               Length);
 }
@@ -91,6 +93,13 @@ bool CoreCarrier::sendLog(const std::string& PeerName, const void* Data,
                           size_t Length) {
     std::lock_guard lk(lock_);
     return sendDataDispatcher(DataType::kLog, PeerName, 0, Data, Length);
+}
+
+bool CoreCarrier::sendCommand(std::string_view peer_name,
+                              std::string_view command) {
+    std::lock_guard lk(lock_);
+    return sendDataDispatcher(DataType::kCommand, std::string(peer_name), 0,
+                              command.data(), command.size());
 }
 
 // gtest [+]
@@ -164,6 +173,11 @@ bool CoreCarrier::fileSlotSend(DataType Type, const std::string& PeerName,
             case kLog:
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
+            case kCommand: {
+                std::string cmd(static_cast<const char*>(Data), Length);
+                cma::commander::RunCommand(PeerName, cmd);
+            } break;
+
             default:
                 f.open(carrier_address_ + ".unknown",
                        std::ios::app | std::ios::binary);

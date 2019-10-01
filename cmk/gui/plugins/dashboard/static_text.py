@@ -56,16 +56,21 @@ class StaticTextDashlet(Dashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("text", TextUnicode(
-                title=_('Text'),
-                size=50,
-            )),
+            ("text",
+             TextUnicode(
+                 title=_('Text'),
+                 size=50,
+                 help=_(
+                     "You can enter a text here that will be displayed in the dashlet when "
+                     "viewing the dashboard. It is also possible to insert a limited set of HTML "
+                     "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."),
+             )),
         ]
 
     def show(self):
         html.open_div(class_="nodata")
         html.open_div(class_="msg")
-        html.write(self._dashlet_spec.get("text", ""))
+        html.write_text(self._dashlet_spec.get("text", ""))
         html.close_div()
         html.close_div()
 

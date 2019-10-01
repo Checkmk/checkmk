@@ -1,0 +1,10 @@
+Title: cisco_temperature.dom: Discover up interfaces by default
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1566891799
+Class: fix
+
+

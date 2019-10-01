@@ -54,7 +54,7 @@ def check_pdu_gude(item, params, info):
     for pos, (unit, div) in units.items():
         value = float(values[pos])
         if div:
-            value = value / div
+            value = value / div  # fixed: true-division
         infotext = "%.2f %s" % (value, unit)
 
         warn, crit = params.get(unit, (None, None))

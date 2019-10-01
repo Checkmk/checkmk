@@ -85,7 +85,7 @@ class ModeBulkDiscovery(WatoMode):
         self._error_handling = self._bulk_discovery_params["error_handling"]
 
     def title(self):
-        return _("Bulk Service Discovery")
+        return _("Bulk discovery")
 
     def buttons(self):
         html.context_button(_("Folder"), Folder.current().url(), "back")
@@ -142,8 +142,8 @@ class ModeBulkDiscovery(WatoMode):
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
         msgs.append(
-            _("Check_MK service discovery will automatically find and "
-              "configure services to be checked on your hosts."))
+            _("The Checkmk discovery will automatically find and configure services "
+              "to be checked on your hosts and may also discover host labels."))
         html.open_p()
         html.write_text(" ".join(msgs))
         vs.render_input("bulkinventory", self._bulk_discovery_params)

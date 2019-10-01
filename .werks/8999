@@ -1,0 +1,10 @@
+Title: tcp_conn_stats: display of all tcp metrics in one single graph
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568104279
+Class: fix
+
+In the previous version, the states and associating values of the TCP connection check were displayed in individual graphs. The new version groups these into one single graph.

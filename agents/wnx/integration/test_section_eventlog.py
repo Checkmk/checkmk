@@ -6,6 +6,7 @@ import math
 import os
 import platform
 import re
+import win32evtlog
 from local import (actual_output, assert_subprocess, make_yaml_config, user_dir, local_test,
                    wait_agent, write_config, host)
 import sys
@@ -102,19 +103,20 @@ def testfile():
     return os.path.basename(__file__)
 
 
+def setup_section(config, section, alone):
+    config['global']['sections'] = section if alone else [section, "systemtime"]
+    return config
+
+
 @pytest.fixture(params=['alone', 'with_systemtime'])
 def testconfig_sections(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
-    if Globals.alone:
-        make_yaml_config['global']['sections'] = Globals.section
-    else:
-        make_yaml_config['global']['sections'] = [Globals.section, "systemtime"]
-    return make_yaml_config
+    return setup_section(make_yaml_config, Globals.section, Globals.alone)
 
 
 @pytest.fixture(params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
 def testconfig(request, testconfig_sections):
-    log_files = [{Globals.testlog: 'warn'}, {'Security': 'off'}, {'System': 'off'}]
+    log_files = [{Globals.testlog: 'warn'}, {'Security': 'off'}, {'System': 'off'}, {'*': 'off'}]
     testconfig_sections[Globals.section] = {'vista_api': request.param, 'logfile': log_files}
 
     return testconfig_sections
@@ -122,27 +124,31 @@ def testconfig(request, testconfig_sections):
 
 @pytest.fixture
 def expected_output_no_events():
-    if platform.system() == 'Windows':
-        expected = [re.escape(r'<<<%s>>>' % Globals.section), re.escape(r'[[[Application]]]')]
-        if not Globals.alone:
-            expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
-        return expected
+    if platform.system() != 'Windows':
+        return
+
+    expected = [re.escape(r'<<<%s>>>' % Globals.section), re.escape(r'[[[Application]]]')]
+    if not Globals.alone:
+        expected += [re.escape(r'<<<systemtime>>>'), r'\d+']
+    return expected
 
 
 @pytest.fixture
 def expected_output_application_events():
-    if platform.system() == 'Windows':
-        split_index = logs.index('Application') + 1
-        re_str = r'|'.join([logtitle(l) for l in logs[split_index:]] +
-                           [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])
-        if not Globals.alone:
-            re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
-        return chain([re.escape(r'<<<%s>>>' % Globals.section)],
-                     [logtitle(l) for l in logs[:split_index]], [
-                         r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
-                         (i, Globals.testsource.replace(' ', '_'), Globals.testdescription)
-                         for i in Globals.testids
-                     ], repeat(re_str))
+    if platform.system() != 'Windows':
+        return
+
+    split_index = logs.index('Application') + 1
+    re_str = r'|'.join([logtitle(l) for l in logs[split_index:]] +
+                       [r'[CWOu\.] \w{3} \d{2} \d{2}\:\d{2}:\d{2} \d+\.\d+ .+ .+'])
+    if not Globals.alone:
+        re_str += r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+'
+    return chain([re.escape(r'<<<%s>>>' % Globals.section)],
+                 [logtitle(l) for l in logs[:split_index]], [
+                     r'W \w{3} \d{2} \d{2}\:\d{2}:\d{2} 0\.%d %s %s' %
+                     (i, Globals.testsource.replace(' ', '_'), Globals.testdescription)
+                     for i in Globals.testids
+                 ], repeat(re_str))
 
 
 def last_records():
@@ -193,19 +199,17 @@ def verify_eventstate():
                 (expected_log, expected_state, actual_state, state_tolerance))
 
 
-"""
 # disabled tests
 @pytest.mark.usefixtures('no_statefile')
 def test_section_eventlog__no_statefile__no_events(request, testconfig, expected_output_no_events,
                                                    actual_output, testfile):
     # request.node.name gives test name
-    return
     local_test(expected_output_no_events, actual_output, testfile, request.node.name)
 
+
 @pytest.mark.usefixtures('with_statefile', 'create_events')
-def test_section_eventlog__application_warnings(
-        request, testconfig, expected_output_application_events, actual_output, testfile):
+def test_section_eventlog__application_warnings(request, testconfig,
+                                                expected_output_application_events, actual_output,
+                                                testfile):
     # request.node.name gives test name
-    return
     local_test(expected_output_application_events, actual_output, testfile, request.node.name)
-"""

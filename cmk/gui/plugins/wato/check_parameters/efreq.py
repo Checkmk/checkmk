@@ -38,32 +38,27 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEfreq(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_efreq():
+    return TextAscii(title=_("Phase"),
+                     help=_("The identifier of the phase the power is related to."))
 
-    @property
-    def check_group_name(self):
-        return "efreq"
 
-    @property
-    def title(self):
-        return _("Nominal Frequencies")
+def _parameter_valuespec_efreq():
+    return Tuple(
+        help=_("Levels for the nominal frequencies of AC devices "
+               "like UPSs or PDUs. Several phases may be addressed independently."),
+        elements=[
+            Integer(title=_("warning if below"), unit="Hz", default_value=40),
+            Integer(title=_("critical if below"), unit="Hz", default_value=45),
+        ],
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("Levels for the nominal frequencies of AC devices "
-                   "like UPSs or PDUs. Several phases may be addressed independently."),
-            elements=[
-                Integer(title=_("warning if below"), unit="Hz", default_value=40),
-                Integer(title=_("critical if below"), unit="Hz", default_value=45),
-            ],
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Phase"),
-                         help=_("The identifier of the phase the power is related to."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="efreq",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_efreq,
+        parameter_valuespec=_parameter_valuespec_efreq,
+        title=lambda: _("Nominal Frequencies"),
+    ))

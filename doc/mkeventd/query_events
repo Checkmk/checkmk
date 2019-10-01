@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # Example program for accessing status of event console
 
+from __future__ import print_function
 import socket, os
 
 # Create Unix socket and connect to status socket
@@ -28,5 +29,5 @@ for row in response[1:]:
     with_headers = sorted(zip(headers, row))
 
     for key, value in with_headers:
-        print "%-20s: %s" % (key, value)
-    print
+        print("%-20s: %s" % (key, value))
+    print()

@@ -100,7 +100,7 @@ if config_mails:
     if encoding == 'quoted-printable':
         body = quopri.decodestring(body)
 
-    file("%s/etc/nagios/conf.d/remote-%s.cfg" % (omd_root, ident), "w").write(body)
+    open("%s/etc/nagios/conf.d/remote-%s.cfg" % (omd_root, ident), "w").write(body)
 
 if status_mails:
     for index in status_mails:
@@ -117,7 +117,7 @@ if status_mails:
         fd, path = tempfile.mkstemp('', 'c', "%s/tmp/nagios/checkresults" % omd_root)
         os.write(fd, body)
         os.close(fd)
-        file(path + ".ok", "w")
+        open(path + ".ok", "w")
 
 # alle mails loeschen
 try:

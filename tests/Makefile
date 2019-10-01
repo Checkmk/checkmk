@@ -11,9 +11,9 @@ FUTURIZE := $(PIPENV) run ./test-futurize
 include ../defines.make
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
-        test-gui-crawl test-integration test-packaging test-pylint \
-        test-shellcheck test-format-shell \
-	test-unit test-unit-coverage-html
+        test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
+        test-pylint test-python-futurize test-shellcheck test-unit \
+        list-unit-tests test-unit-one-by-one test-unit-coverage-html
 
 help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
@@ -21,14 +21,17 @@ help:
 	@echo "test-bandit               - Run bandit (security) tests"
 	@echo "test-docker               - Run docker tests"
 	@echo "test-format-python        - Test the python formatting"
+	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-gui-crawl            - Run GUI crawl test"
 	@echo "test-integration          - Run integration tests"
+	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
+	@echo "test-format-python        - Test the python formatting"
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
 	@echo "test-shellcheck           - Run shellcheck tests"
-	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-unit                 - Run unit tests"
+	@echo "test-unit-one-by-one      - Run unit tests one by one"
 	@echo "test-unit-coverage-html   - Create HTML coverage report for unit tests"
 
 # These target need to be phony so it is run every time because only the other
@@ -69,9 +72,8 @@ test-format-python: $(VENV) ../.style.yapf
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
-test-python-futurize: $(VENV)
-	$(FUTURIZE)
-
+test-format-shell:
+	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-gui-crawl: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
@@ -79,11 +81,20 @@ test-gui-crawl: $(VENV) $(NODE_MODULES)
 test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
 
+test-agent-integration: $(VENV)
+	$(PYTEST) -T agent-integration $(realpath agent-integration)
+
+test-composition: $(VENV) $(NODE_MODULES)
+	$(PYTEST) -T composition $(realpath composition)
+
 test-packaging: $(VENV)
 	$(PYTEST) -T packaging packaging
 
 test-pylint: $(VENV)
 	$(PYTEST) -T pylint pylint
+
+test-python-futurize: $(VENV)
+	$(FUTURIZE)
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \
@@ -93,11 +104,25 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
-test-format-shell:
-	sudo docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
-
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit
+
+# Probably a noteworthy entry for any "obfuscated bash/make/sed contest"...
+list-unit-tests: $(VENV)
+	@$(PYTEST) -T unit git unit --collect-only  `# list tests in tree form` | \
+	  grep '^\(<Module\|  <Function\) '         `# remove docstring lines` | \
+	  sed 's/\[.*\]>/>/'                        `# remove test parameters` | \
+	  uniq                                      `# keep only one line from parameterized tests` | \
+	  sed 's,^<Module tests/\(.*\)>$$,#\1,'     `# keep file name plus a leading marker` | \
+	  sed 's,^  <Function \(.*\)>$$,\1,'        `# keep function name` | \
+	  sed -e '/^#/{h;d};G'                      `# precede every function name line with a file name line` \
+	      -e 's/^\(.*\)\n#\(.*\)/\2::\1/'       `# glue the line pairs together`
+
+test-unit-one-by-one: $(VENV)
+	@set -e ; \
+	for i in $$($(MAKE) --silent --no-print-directory list-unit-tests); do \
+	  $(PYTEST) -T unit $$i ; \
+	done
 
 # TODO: We should perhaps use the pytest --cov/--cov-report options, which the
 # pytest-cov plugin package adds to pyttest.

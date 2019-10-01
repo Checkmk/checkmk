@@ -37,30 +37,21 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersBossockFibers(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_bossock_fibers():
+    return Tuple(
+        title=_("Number of fibers"),
+        elements=[
+            Integer(title=_("Warning at"), unit=_("fibers")),
+            Integer(title=_("Critical at"), unit=_("fibers")),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "bossock_fibers"
 
-    @property
-    def title(self):
-        return _("Number of Running Bossock Fibers")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Number of fibers"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("fibers")),
-                Integer(title=_("Critical at"), unit=_("fibers")),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Node ID"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="bossock_fibers",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Node ID")),
+        parameter_valuespec=_parameter_valuespec_bossock_fibers,
+        title=lambda: _("Number of Running Bossock Fibers"),
+    ))

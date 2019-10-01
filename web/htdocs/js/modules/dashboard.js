@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -34,6 +34,14 @@ export function set_reload_on_resize(dashlet_id, url) {
 
 export function set_dashboard_properties(properties) {
     dashboard_properties = properties;
+    // HACK: We JSON-encode refresh/resize actions twice, so undo one layer here...
+    dashboard_properties.refresh_dashlets.forEach(function(refresh) {
+        refresh[2] = eval(refresh[2]);
+    });
+    var resize_actions = dashboard_properties.on_resize_dashlets;
+    for (var nr in resize_actions) {
+        resize_actions[nr] = eval(resize_actions[nr]);
+    }
 }
 
 function size_dashlets() {
@@ -1171,7 +1179,7 @@ function dashlet_resized(nr, dashlet_obj) {
     }
 
     if (typeof dashboard_properties.on_resize_dashlets[nr] != "undefined") {
-        eval(dashboard_properties.on_resize_dashlets[nr])();
+        dashboard_properties.on_resize_dashlets[nr]();
     }
 }
 

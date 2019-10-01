@@ -38,30 +38,17 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlInstance(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_instance():
+    return Dictionary(elements=[("map_connection_state",
+                                 MonitoringState(title=_("Connection status"), default_value=2))],)
 
-    @property
-    def check_group_name(self):
-        return "mssql_instance"
 
-    @property
-    def title(self):
-        return _("MSSQL Instance")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[("map_connection_state",
-                                     MonitoringState(title=_("Connection status"),
-                                                     default_value=2))],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance identifier"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_instance",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Instance identifier"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_instance,
+        title=lambda: _("MSSQL Instance"),
+    ))

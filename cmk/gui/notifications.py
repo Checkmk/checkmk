@@ -26,6 +26,7 @@
 
 import time
 
+from livestatus import MKLivestatusNotFoundError
 import cmk.utils.render
 
 import cmk.gui.config as config
@@ -146,8 +147,9 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         query += extra_headers
 
     if stat_only:
-        result = sites.live().query_summed_stats(query)
-        if result is None:
+        try:
+            result = sites.live().query_summed_stats(query)
+        except MKLivestatusNotFoundError:
             result = [0]  # Normalize the result when no site answered
 
         if result[0] == 0 and not sites.live().dead_sites():
@@ -167,12 +169,13 @@ def render_notification_table(failed_notifications):
 
         for row in failed_notifications:
             table.row()
-            table.cell(_("Time"), cmk.utils.render.approx_age(time.time() - row[header['time']]))
-            table.cell(_("Contact"), row[header['contact_name']])
-            table.cell(_("Plugin"), row[header['type']])
-            table.cell(_("Host"), row[header['host_name']])
-            table.cell(_("Service"), row[header['service_description']])
-            table.cell(_("Output"), row[header['comment']])
+            table.text_cell(_("Time"),
+                            cmk.utils.render.approx_age(time.time() - row[header['time']]))
+            table.text_cell(_("Contact"), row[header['contact_name']])
+            table.text_cell(_("Plugin"), row[header['type']])
+            table.text_cell(_("Host"), row[header['host_name']])
+            table.text_cell(_("Service"), row[header['service_description']])
+            table.text_cell(_("Output"), row[header['comment']])
 
 
 # TODO: We should really recode this to use the view and a normal view command / action

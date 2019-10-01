@@ -1,0 +1,11 @@
+Title: Show host labels in "cmk -D HOST" output
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1564640942
+Class: feature
+
+The effective host labels can now be displayed on
+the command line using "cmk -D HOST".

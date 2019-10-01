@@ -78,11 +78,12 @@ def get_text(context):
     s += "$@OUTPUT$"
 
     if "PARAMETER_URL_PREFIX" in context:
-        utils.extend_context_with_link_urls(context, '<a href="%s">%s</a>')
         s += " <i>Link: </i>"
-        s += context["LINKEDHOSTNAME"]
+        s += utils.format_link('<a href="%s">%s</a>', utils.host_url_from_context(context),
+                               context["HOSTNAME"])
         if context["WHAT"] != "HOST":
-            s += context["LINKEDSERVICEDESC"]
+            s += utils.format_link('<a href="%s">%s</a>', utils.service_url_from_context(context),
+                                   context["SERVICEDESC"])
 
     return utils.substitute_context(s.replace("@", context["WHAT"]), context)
 
@@ -93,7 +94,7 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         ("user", recipient_key),
         ("title", subject.encode("utf-8")),
         ("message", text.encode("utf-8")),
-        ("timestamp", int(context["MICROTIME"]) / 1000000),
+        ("timestamp", int(context["MICROTIME"] / 1000000.0)),
         ("html", 1),
     ]
 

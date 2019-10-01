@@ -38,49 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMcafeeEmailgatewayBridge(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mcafee_emailgateway_bridge():
+    return Dictionary(elements=[
+        ("tcp",
+         Tuple(
+             title=_("TCP packets"),
+             elements=[
+                 Float(title=_("Warning at"), unit=_("packets/s")),
+                 Float(title=_("Critical at"), unit=_("packets/s")),
+             ],
+         )),
+        ("udp",
+         Tuple(
+             title=_("UDP packets"),
+             elements=[
+                 Float(title=_("Warning at"), unit=_("packets/s")),
+                 Float(title=_("Critical at"), unit=_("packets/s")),
+             ],
+         )),
+        ("icmp",
+         Tuple(
+             title=_("ICMP packets"),
+             elements=[
+                 Float(title=_("Warning at"), unit=_("packets/s")),
+                 Float(title=_("Critical at"), unit=_("packets/s")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "mcafee_emailgateway_bridge"
 
-    @property
-    def title(self):
-        return _("McAfee email gateway bridge")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("tcp",
-             Tuple(
-                 title=_("TCP packets"),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_("packets/s")),
-                     Float(title=_("Critical at"), unit=_("packets/s")),
-                 ],
-             )),
-            ("udp",
-             Tuple(
-                 title=_("UDP packets"),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_("packets/s")),
-                     Float(title=_("Critical at"), unit=_("packets/s")),
-                 ],
-             )),
-            ("icmp",
-             Tuple(
-                 title=_("ICMP packets"),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_("packets/s")),
-                     Float(title=_("Critical at"), unit=_("packets/s")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="mcafee_emailgateway_bridge",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mcafee_emailgateway_bridge,
+        title=lambda: _("McAfee email gateway bridge"),
+    ))

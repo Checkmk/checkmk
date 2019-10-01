@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -36,7 +36,7 @@ export function enable_dynamic_form_elements(container=null) {
 
 // html.dropdown() adds the .select2-enable class for all dropdowns
 // that should use the select2 powered dropdowns
-function enable_select2_dropdowns(container) {
+export function enable_select2_dropdowns(container) {
     let elements;
     if (!container)
         container = $(document);
@@ -59,20 +59,35 @@ function enable_label_input_fields(container) {
             return;
         }
 
-        let ajax_obj;
-        let tagify = new Tagify(element, {
-            pattern: /^[^:]+:[^:]+$/,
-        });
-
+        let max_labels = element.getAttribute("data-max-labels");
         let world = element.getAttribute("data-world");
 
-        tagify.on("invalid", function() {
+        let ajax_obj;
+        let tagify_args = {
+            pattern: /^[^:]+:[^:]+$/,
+        };
+
+        if (max_labels !== null) {
+            tagify_args["maxTags"] = max_labels;
+        }
+
+        let tagify = new Tagify(element, tagify_args);
+
+        tagify.on("invalid", function(e) {
+            let message;
+            if (e.type == "invalid" && e.detail.message == "number of tags exceeded") {
+                message = "Only one tag allowed";
+            } else {
+                message = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+            }
+
             $("div.label_error").remove(); // Remove all previous errors
 
             // Print a validation error message
             var msg = document.createElement("div");
             msg.classList.add("message", "error", "label_error");
-            msg.innerHTML = "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>";
+
+            msg.innerHTML = message;
             element.parentNode.insertBefore(msg, element.nextSibling);
         });
 

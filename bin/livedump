@@ -28,6 +28,7 @@ import getopt
 import os
 import sys
 import time
+import six
 
 import livestatus
 
@@ -73,7 +74,7 @@ define timeperiod {
 
 def encode_row(row):
     for key, val in row.items():
-        if isinstance(val, unicode):
+        if isinstance(val, six.text_type):
             row[key] = val.encode("utf-8")
 
 

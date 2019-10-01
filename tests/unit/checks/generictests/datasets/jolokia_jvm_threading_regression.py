@@ -38,7 +38,7 @@ checks = {
             (0, 'Maximum threads: 150', []),
             (1, 'Busy: 12 (warn/crit at 8/135)', [
                 ('currentThreadsBusy', 12, 7.5, 135.0, None, 150)]),
-            (0, 'Total: 25', [('currentThreadCount', 25, None, 150, None, None)]),
+            (0, 'Total: 25', [('currentThreadCount', 25, None, None, None, 150)]),
         ]),
     ],
 }

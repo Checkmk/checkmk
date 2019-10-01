@@ -1,0 +1,17 @@
+Title: Discovery page: Improve usability
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567669213
+
+Several changes have been made:
+
+<ul>
+<li>The plugin name column can now be hidden</li>
+<li>The columns check parameters, discovered labels and plugin names are now hidden by default as intended</li>
+<li>The action buttons on top of the page have been reordered</li>
+</ul>

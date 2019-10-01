@@ -110,7 +110,7 @@ checks = {
              ('fs_size', 141121.1796875, None, None, None, None),
              ('growth', 0.0, None, None, None, None),
              ('trend', 0, None, None, 0, 5880.049153645833),
-             ('inodes_used', 1654576, 0, 9189120, None, None)])]
+             ('inodes_used', 1654576, None, None, 0, 9189120)])]
          ),
          (u'parts', {"patterns": ['*oot', '/']},
           [(0, '75.55% used (104.12 of 137.81 GB), trend: 0.00 B / 24 hours (2 filesystems)',
@@ -118,7 +118,7 @@ checks = {
              ('fs_size', 141121.1796875, None, None, None, None),
              ('growth', 0.0, None, None, None, None),
              ('trend', 0, None, None, 0, 5880.049153645833),
-             ('inodes_used', 1654576, 0, 9189120, None, None)])]
+             ('inodes_used', 1654576, None, None, 0, 9189120)])]
          ),
         ]
 }

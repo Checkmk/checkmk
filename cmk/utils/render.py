@@ -27,12 +27,14 @@
 text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
+from __future__ import division
 
 # THIS IS STILL EXPERIMENTAL
 
 import time
 import math
-from typing import Tuple  # pylint: disable=unused-import
+from datetime import timedelta
+from typing import Tuple, Union  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
 
@@ -52,7 +54,7 @@ def date(timestamp):
 
 
 def date_and_time(timestamp):
-    return time.strftime(_("%Y-%m-%d %H:%M:%S"), time.localtime(timestamp))
+    return "%s %s" % (date(timestamp), time_of_day(timestamp))
 
 
 def time_of_day(timestamp):
@@ -60,12 +62,12 @@ def time_of_day(timestamp):
 
 
 def timespan(seconds):
-    hours, secs = divmod(seconds, 3600)
-    mins, secs = divmod(secs, 60)
-    return "%d:%02d:%02d" % (hours, mins, secs)
+    # type: (Union[float, int]) -> str
+    return str(timedelta(seconds=int(seconds)))
 
 
 def time_since(timestamp):
+    # type: (int) -> str
     return timespan(time.time() - timestamp)
 
 
@@ -89,11 +91,11 @@ class Age(object):
         elif secs < 240:
             return "%d %s" % (secs, _("s"))
 
-        mins = secs / 60
+        mins = int(secs / 60.0)
         if mins < 360:
             return "%d %s" % (mins, _("m"))
 
-        hours = mins / 60
+        hours = int(mins / 60.0)
         if hours < 48:
             return "%d %s" % (hours, _("h"))
 
@@ -104,29 +106,11 @@ class Age(object):
         elif days < 999:
             return "%.0f %s" % (days, _("d"))
         else:
-            years = days / 365
+            years = days / 365.0
             if years < 10:
                 return "%.1f %s" % (years, _("y"))
 
             return "%.0f %s" % (years, _("y"))
-
-    # OLD LOGIC:
-    #
-    #def __str__(self):
-    #    if self.__secs < 240:
-    #        return "%d sec" % self.__secs
-    #    mins = self.__secs / 60
-    #    if mins < 120:
-    #        return "%d min" % mins
-    #    hours, mins = divmod(mins, 60)
-    #    if hours < 12 and mins > 0:
-    #        return "%d hours %d min" % (hours, mins)
-    #    elif hours < 48:
-    #        return "%d hours" % hours
-    #    days, hours = divmod(hours, 24)
-    #    if days < 7 and hours > 0:
-    #        return "%d days %d hours" % (days, hours)
-    #    return "%d days" % days
 
     def __float__(self):
         return float(self.__secs)
@@ -159,7 +143,7 @@ def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
             prefix = unit_prefix
             break
         factor *= base
-    return factor / base, prefix
+    return factor / base, prefix  # fixed: true-division
 
 
 def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
@@ -171,7 +155,7 @@ def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
     changes the returned string, but does not interfere with any calculations."""
     factor, prefix = scale_factor_prefix(b, base)
 
-    return '%.*f %s' % (precision, b / factor, prefix + unit)
+    return '%.*f %s' % (precision, b / factor, prefix + unit)  # fixed: true-division
 
 
 # Precise size of a file - separated decimal separator
@@ -228,8 +212,8 @@ def percent(perc, scientific_notation=False):
 
     # 1000 < oo
     if abs(perc) > 999.5:
-        if scientific_notation and abs(perc) > 1000000:
-            result = "%.1e" % perc
+        if scientific_notation and abs(perc) >= 100000:
+            result = "%1.e" % perc
         else:
             # TODO: in python3 change to >= 999.5
             # the way python rounds x.5 changed between py2 and py3
@@ -339,11 +323,42 @@ def calculate_physical_precision(v, precision):
     return scale_symbols[scale], places_after_comma, 1000**scale
 
 
+def drop_dotzero(v, digits=2):
+    """Renders a number as a floating point number and drops useless
+    zeroes at the end of the fraction
+
+    45.1 -> "45.1"
+    45.0 -> "45"
+    """
+    t = "%%.%df" % digits % v
+    if "." in t:
+        return t.rstrip("0").rstrip(".")
+    return t
+
+
+def fmt_number_with_precision(v, *args, **kwargs):
+    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
+    factor, prefix = scale_factor_prefix(v, base=1000.0)
+    return '%.*f %s' % (precision, float(v) / factor, prefix)
+
+
+#.
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
 def _frexp10(x):
     return _frexpb(x, 10)
 
 
 def _frexpb(x, base):
+    # type: (float, int) -> Tuple[float, int]
     exp = int(math.log(x, base))
     mantissa = x / base**exp
     if mantissa < 1:

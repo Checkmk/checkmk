@@ -1,6 +1,7 @@
 """Managing the available automation calls"""
 
 import abc
+import six
 
 import cmk
 import cmk.utils.plugin_registry
@@ -11,10 +12,8 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.activate_changes import ActivateChanges
 
 
-class AutomationCommand(object):
+class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for all automation commands"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def command_name(self):
         # type: () -> str

@@ -343,6 +343,8 @@ multisite_builtin_views.update({
             'output',
             'service_is_flapping',
             'siteopt',
+            'service_labels',
+            'host_labels',
         ],
         'sorters': [
             ('site', False),
@@ -1938,6 +1940,8 @@ multisite_builtin_views.update({
             'in_downtime',
             'output',
             'service_is_flapping',
+            'service_labels',
+            'host_labels',
         ],
         'sorters': [
             ('site', False),
@@ -2683,6 +2687,7 @@ multisite_builtin_views.update({
             'has_performance_data': {
                 'is_has_performance_data': '1'
             },
+            'service_labels': {},
         },
         'datasource': 'services',
         'description': _('A Matrix of performance data values, grouped by hosts and services'),
@@ -3917,3 +3922,179 @@ multisite_builtin_views.update({
         'topic': _('Other')
     },
 })
+
+_host_view_context = {
+    'host_acknowledged': {
+        'is_host_acknowledged': '-1'
+    },
+    'host_check_command': {
+        'host_check_command': ''
+    },
+    'host_in_notification_period': {
+        'is_host_in_notification_period': '-1'
+    },
+    'host_in_service_period': {
+        'is_host_in_service_period': '-1'
+    },
+    'host_notifications_enabled': {
+        'is_host_notifications_enabled': '-1'
+    },
+    'host_scheduled_downtime_depth': {
+        'is_host_scheduled_downtime_depth': '-1'
+    },
+    'host_tags': {
+        'host_tag_0_grp': '',
+        'host_tag_0_op': '',
+        'host_tag_0_val': '',
+        'host_tag_1_grp': '',
+        'host_tag_1_op': '',
+        'host_tag_1_val': '',
+        'host_tag_2_grp': '',
+        'host_tag_2_op': '',
+        'host_tag_2_val': ''
+    },
+    'hostalias': {
+        'hostalias': '',
+        'neg_hostalias': ''
+    },
+    'hostgroups': {
+        'hostgroups': '',
+        'neg_hostgroups': ''
+    },
+    'hostregex': {
+        'host_regex': '',
+        'neg_host_regex': ''
+    },
+    'hoststate': {
+        'hoststate_filled': '1',
+        'hst0': 'on',
+        'hst1': 'on',
+        'hst2': 'on',
+        'hstp': 'on'
+    },
+    'opthost_contactgroup': {
+        'neg_opthost_contact_group': '',
+        'opthost_contact_group': ''
+    },
+    'opthostgroup': {
+        'neg_opthost_group': '',
+        'opthost_group': ''
+    },
+    'siteopt': {
+        'site': ''
+    }
+}
+
+
+def _simple_host_view(custom_attributes, add_context=None):
+    context = _host_view_context.copy()
+    if add_context:
+        context.update(add_context)
+
+    view_spec = {
+        'browser_reload': 30,
+        'column_headers': 'pergroup',
+        'datasource': 'hosts',
+        'force_checkboxes': False,
+        'hidden': False,
+        'hidebutton': False,
+        'icon': None,
+        'layout': 'table',
+        'mobile': False,
+        'mustsearch': False,
+        'num_columns': 1,
+        'play_sounds': False,
+        'user_sortable': True,
+        'context': context,
+        'group_painters': [('sitealias', '', None),],
+        'painters': [],
+        'single_infos': [],
+        'sorters': [
+            ('site', False),
+            ('site_host', False),
+        ],
+    }
+
+    view_spec.update(custom_attributes)
+    return view_spec
+
+
+multisite_builtin_views["docker_nodes"] = _simple_host_view(
+    {
+        'title': _('Docker nodes'),
+        'topic': _('Applications'),
+        'description':
+            _('Overall state of all docker nodes, with counts of services in the various states.'),
+        'add_context_to_title': False,
+        'painters': host_view_painters + [
+            ('inv_software_applications_docker_version', None, None),
+            ('inv_software_applications_docker_num_containers_total', None, None),
+            ('inv_software_applications_docker_num_containers_running', None, None),
+            ('inv_software_applications_docker_num_containers_paused', None, None),
+            ('inv_software_applications_docker_num_containers_stopped', None, None),
+        ],
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/docker_object:node"}]'
+        },
+    },
+)
+
+multisite_builtin_views["docker_containers"] = _simple_host_view(
+    {
+        'title': _('Docker containers'),
+        'topic': _('Applications'),
+        'description': _(
+            'Overall state of all docker containers, with counts of services in the various states.'
+        ),
+        'add_context_to_title': False,
+        'painters': host_view_painters + [
+            ('host_docker_node', None, None),
+            ('perfometer', None, '', 'CPU utilization'),
+            ('perfometer', None, '', 'Memory used'),
+            ('perfometer', None, '', 'Uptime'),
+        ],
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/docker_object:container"}]'
+        },
+    },
+)
+
+multisite_builtin_views["vsphere_servers"] = _simple_host_view(
+    {
+        'title': _('vSphere Servers'),
+        'topic': _('Applications'),
+        'description': _(
+            'Overall state of all vSphere servers, with counts of services in the various states.'),
+        'add_context_to_title': False,
+        'painters': host_view_painters
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/vsphere_object:server"}]'
+        },
+    },
+)
+
+multisite_builtin_views["vpshere_vms"] = _simple_host_view(
+    {
+        'title': _('vSphere VMs'),
+        'topic': _('Applications'),
+        'description': _('Overall state of all vSphere based virtual machines.'),
+        'add_context_to_title': False,
+        'painters': host_view_painters + [
+            ('svc_plugin_output', None, None, u'ESX Hostsystem', u'Server'),
+            ('perfometer', None, '', 'CPU utilization'),
+            ('perfometer', None, '', 'ESX Memory'),
+            ('svc_plugin_output', None, None, u'ESX Guest Tools', u'Guest tools'),
+        ],
+    },
+    add_context={
+        'host_labels': {
+            'host_label': '[{"value":"cmk/vsphere_object:vm"}]'
+        },
+    },
+)

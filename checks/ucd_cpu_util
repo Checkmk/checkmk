@@ -54,7 +54,7 @@ def check_ucd_cpu_util(item, params, info):
     if total == 0:
         raise MKCounterWrapped("Rates have not changed since last interval")
 
-    parts = [r / total for r in rates]
+    parts = [r / total for r in rates]  # fixed: true-division
     user = 100 * (parts[0] + parts[1])
     system = 100 * (parts[2] + parts[5] + parts[6])
     wait = 100 * (parts[4])

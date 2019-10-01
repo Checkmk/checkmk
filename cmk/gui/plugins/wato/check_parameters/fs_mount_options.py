@@ -38,31 +38,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFsMountOptions(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_fs_mount_options():
+    return ListOfStrings(
+        title=_("Expected mount options"),
+        help=_("Specify all expected mount options here. If the list of "
+               "actually found options differs from this list, the check will go "
+               "warning or critical. Just the option <tt>commit</tt> is being "
+               "ignored since it is modified by the power saving algorithms."),
+        valuespec=TextUnicode(),
+    )
 
-    @property
-    def check_group_name(self):
-        return "fs_mount_options"
 
-    @property
-    def title(self):
-        return _("Filesystem mount options (Linux/UNIX)")
-
-    @property
-    def parameter_valuespec(self):
-        return ListOfStrings(
-            title=_("Expected mount options"),
-            help=_("Specify all expected mount options here. If the list of "
-                   "actually found options differs from this list, the check will go "
-                   "warning or critical. Just the option <tt>commit</tt> is being "
-                   "ignored since it is modified by the power saving algorithms."),
-            valuespec=TextUnicode(),
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Mount point"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="fs_mount_options",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Mount point"), allow_empty=False),
+        parameter_valuespec=_parameter_valuespec_fs_mount_options,
+        title=lambda: _("Filesystem mount options (Linux/UNIX)"),
+    ))

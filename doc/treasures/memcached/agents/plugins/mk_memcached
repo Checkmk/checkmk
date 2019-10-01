@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import os
 
 # sample configuration:
@@ -36,7 +37,7 @@ import os
 settings = {}
 config_file = os.path.join(os.environ.get("MK_CONFDIR", "/etc/check_mk"), "memcached.cfg")
 if os.path.exists(config_file):
-    execfile(config_file, settings, settings)
+    exec (open(config_file).read(), settings, settings)
 
 if 'instances' in settings:
     print("<<<memcached>>>")

@@ -39,7 +39,7 @@ def inventory_liebert_chilled_water(parsed):
             yield (key, {})
 
 
-def check_liebert_chilled_water(item, params, parsed):
+def check_liebert_chilled_water(item, _params, parsed):
     for key, value in parsed.iteritems():
         if item == key and value.lower() == "inactive event":
             yield 0, "Normal"
@@ -48,7 +48,7 @@ def check_liebert_chilled_water(item, params, parsed):
 
 
 check_info['liebert_chilled_water'] = {
-    'parse_function': parse_liebert_without_unit,
+    'parse_function': lambda info: parse_liebert_without_unit(info, str),
     'inventory_function': inventory_liebert_chilled_water,
     'check_function': check_liebert_chilled_water,
     'service_description': '%s',

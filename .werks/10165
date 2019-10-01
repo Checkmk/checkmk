@@ -1,0 +1,17 @@
+Title: Factory settings: Docker container host check command is set now
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568904748
+
+Instead of always assuming the docker containers to be up, the docker containers
+now base their host state on the service state of the "Docker container status"
+service.
+
+This is configured by the factory settings using the ruleset "Host Check Command".
+The factory settings only apply to new created sites. In case you want this in
+existing sites, you need to create a rule in this ruleset manually.

@@ -37,8 +37,8 @@ factory_settings['cisco_ip_sla_default_levels'] = {
 def parse_cisco_ip_sla(info):
     # since the RTT Index, Owner and Tag don't have to be set we use
     # indices for the different items
-    precisions = [list_.pop() for list_ in info[0]]
-    precisions = {str(i): 'ms' if p[0] == '1' else 'us' for i, p in enumerate(precisions)}
+    precisions = (line[-1] for line in info[0])
+    precisions = ['ms' if p[0] == '1' else 'us' for p in precisions]
 
     rtt_types = {
         '1': 'echo',
@@ -100,6 +100,7 @@ def parse_cisco_ip_sla(info):
         (  # rttMonEchoAdminEntry
             ('Target address', to_ip_address, '', None),
             ('Source address', to_ip_address, '', None),
+            # rttMonEchoAdminPrecision is deliberatly dropped by zip below
         ),
         (  # rttMonCtrlAdminEntry
             ('Owner', None, '', None),
@@ -127,14 +128,13 @@ def parse_cisco_ip_sla(info):
             continue
 
         for index, entry in enumerate(entries):
-            index = str(index)
-            parsed.setdefault(index, [])
+            data = parsed.setdefault(str(index), [])
             for (description, parser, unit, type_), value in zip(content, entry):
                 if parser:
                     value = parser(value)
                 if unit == 'ms/us':
                     unit = precisions[index]
-                parsed[index].append((description, value, unit, type_))
+                data.append((description, value, unit, type_))
 
     return parsed
 
@@ -173,7 +173,8 @@ def check_cisco_ip_sla(_item, params, data):
             if state:
                 infotext += ' (warn/crit at %s/%s)' % (warn, crit)
             factor = 1e3 if unit == 'ms' else 1e6
-            perfdata = [('rtt', value / factor, warn / factor, crit / factor)]
+            perfdata = [('rtt', value / factor, warn / factor, crit / factor)
+                       ]  # fixed: true-division
 
         yield state, infotext, perfdata
 

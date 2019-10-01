@@ -35,7 +35,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -200,16 +200,17 @@ class PermissionBackgroundJobsDeleteForeignJobs(Permission):
 class GUIBackgroundProcess(background_job.BackgroundProcess):
     def initialize_environment(self):
         # setup logging
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background_process")
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
-        if html.in_context():
+        if html:
             html.disable_request_timeout()
 
         # Close livestatus connections inherited from the parent process
-        sites.disconnect()
+        if g:
+            sites.disconnect()
 
         super(GUIBackgroundProcess, self).initialize_environment()
 
@@ -376,7 +377,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 if job.is_available():
                     visible_jobs.append(job_id)
             except Exception as e:
-                self._logger.error(_("Exception parsing background job %s: %s") % (job_id, e))
+                self._logger.error("Exception parsing background job %s: %s" % (job_id, e))
                 continue
         return visible_jobs
 
@@ -384,8 +385,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         job_class_infos = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
-            jobs_info = self._get_job_infos(all_job_ids)
-            job_class_infos[job_class] = jobs_info
+            if not all_job_ids:
+                continue  # Skip job classes without current jobs
+            job_class_infos[job_class] = self._get_job_infos(all_job_ids)
+
         JobRenderer.show_job_class_infos(job_class_infos, **kwargs)
 
     def get_status_all_jobs(self, job_class):
@@ -417,7 +420,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 job_status = job.get_status()
                 is_active = job.is_active()
             except Exception as e:
-                self._logger.error(_("Exception parsing background job %s: %s") % (job_id, str(e)))
+                self._logger.error("Exception parsing background job %s: %s" % (job_id, str(e)))
                 continue
 
             if is_active and job.may_stop():

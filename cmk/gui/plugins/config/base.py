@@ -482,7 +482,8 @@ bi_packs = {}
 bi_precompile_on_demand = True
 bi_use_legacy_compilation = False
 
+default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
+bi_layouts = {"templates": {}, "aggregations": {}}
+
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
-default_bi_layout = "hierarchy"
-bi_layouts = {"templates": {}, "aggregations": {}}

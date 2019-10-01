@@ -1,11 +1,8 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import OpenSSL
 import pytest  # type: ignore
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
 
 import omdlib.certs as certs
 
@@ -13,8 +10,8 @@ CA_NAME = "test-ca"
 
 
 @pytest.fixture
-def ca(tmpdir, monkeypatch):
-    p = Path("%s" % tmpdir) / "ca"
+def ca(tmp_path, monkeypatch):
+    p = tmp_path / "ca"
     return certs.CertificateAuthority(p, CA_NAME)
 
 

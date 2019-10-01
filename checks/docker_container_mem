@@ -25,14 +25,34 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _parse_docker_container_mem_plugin(info):
+    parsed = docker_json_get_obj(info[1])
+    # flatten nested stats
+    parsed.update(parsed.pop('stats'))
+    # rename for compatibility with section produced by linux agent
+    for added_key, present_key in (
+        ("limit_in_bytes", "hierarchical_memory_limit"),
+        ("MemTotal", "limit"),
+        ("usage_in_bytes", "usage"),
+    ):
+        parsed[added_key] = parsed.get(present_key)
+
+    return parsed
+
+
 def parse_docker_container_mem(info):
-    # parsed contains memory usages in bytes
-    parsed = {}
-    for line in info:
-        if line[0] == "MemTotal:" and line[2] == "kB":
-            parsed["MemTotal"] = int(line[1]) * 1024
-        else:
-            parsed[line[0]] = int(line[1])
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
+
+    if version is None:
+        # parsed contains memory usages in bytes
+        parsed = {}
+        for line in info:
+            if line[0] == "MemTotal:" and line[2] == "kB":
+                parsed["MemTotal"] = int(line[1]) * 1024
+            else:
+                parsed[line[0]] = int(line[1])
+    else:
+        parsed = _parse_docker_container_mem_plugin(info)
 
     # Populate a dictionary in the format check_memory() form mem.include expects.
     # The values are scaled to kB
@@ -66,5 +86,5 @@ check_info["docker_container_mem"] = {
     "has_perfdata": True,
     "group": "memory",
     "default_levels_variable": "memory_default_levels",
-    "includes": ["mem.include"],
+    "includes": ["docker.include", "mem.include"],
 }

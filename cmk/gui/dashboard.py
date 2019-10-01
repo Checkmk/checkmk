@@ -30,6 +30,7 @@ import json
 from typing import (  # pylint: disable=unused-import
     Any, Dict, Optional,
 )
+import six
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -592,6 +593,7 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
     dashlet['type'] = 'view'
     dashlet['name'] = 'dashlet_%d' % nr
     dashlet['show_title'] = True
+    dashlet['mustsearch'] = False
 
 
 def save_dashboards(us):
@@ -786,12 +788,12 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):
-    logger.exception("Problem while rendering dashlet %d of type %s" %
-                     (nr, dashlet_instance.type_name()))
+    logger.exception("Problem while rendering dashlet %d of type %s", nr,
+                     dashlet_instance.type_name())
 
     # Unify different string types from exception messages to a unicode string
     try:
-        exc_txt = unicode(e)
+        exc_txt = six.text_type(e)
     except UnicodeDecodeError:
         exc_txt = str(e).decode("utf-8")
 
@@ -829,7 +831,11 @@ def dashboard_edit_controls(name, board):
         # The dashlet types which can be added to the view
         html.open_ul(style="display:none", class_=["menu", "sub"], id_="control_add_sub")
 
-        class ExistingView(dashlet_registry['view']):
+        # TODO: Why is this done like this? Looks like a dirty hack.
+        # - Mypy does not understand this. We could probably use type(..., ..., ...) here instead.
+        # - Or event better: Just produce a new menu entry below without registering something new
+        #   to the dashlet registry.
+        class ExistingView(dashlet_registry['view']):  # type: ignore
             @classmethod
             def title(cls):
                 return _('Existing View')
@@ -1391,7 +1397,7 @@ def page_edit_dashlet():
     elif isinstance(params, (Dictionary, Transform)):
         vs_type = params
 
-    elif callable(params):
+    elif hasattr(params, '__call__'):
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params()
 

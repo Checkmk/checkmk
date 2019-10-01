@@ -1,4 +1,4 @@
 #
 # retrigger mk-apt
 #
-DPkg::Post-Invoke {"touch -t 197012081200 /var/lib/check_mk_agent/cache/*mk_apt.cache"; };
+DPkg::Post-Invoke {"touch -t 197012181200 /var/lib/check_mk_agent/cache/*mk_apt.cache"; };

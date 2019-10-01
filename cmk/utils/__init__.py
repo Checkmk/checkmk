@@ -30,5 +30,5 @@ from cmk.utils.misc import (
     make_utf8,
     quote_shell_string,
     pnp_cleanup,
-    cmp_config_paths,
+    key_config_paths,
 )

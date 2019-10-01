@@ -180,7 +180,7 @@ input_ids = [
 def test_parse_ps(check_manager, capture, result):
     check = check_manager.get_check("ps")
 
-    parsed = check.run_parse(capture)
+    parsed = check.context['parse_ps'](capture)
     assert parsed[0] == result[0]  # cpu_cores
     for out, ref in zip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
@@ -294,10 +294,10 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, {
+    ("smss", "~smss.exe", None, (None, False), {
         'cpu_rescale_max': None
     }),
-    ("svchost", "svchost.exe", None, {
+    ("svchost", "svchost.exe", None, (None, False), {
         "cpulevels": (90.0, 98.0),
         'cpu_rescale_max': None,
         "handle_count": (1000, 2000),
@@ -308,11 +308,11 @@ PS_DISCOVERY_SPECS = [
         "single_cpulevels": (90.0, 98.0),
         "virtual_levels": (1073741824000, 2147483648000),
     }),
-    ("firefox is on %s", "~.*(fire)fox", None, {
+    ("firefox is on %s", "~.*(fire)fox", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("emacs %u", "emacs", False, {
+    ("emacs %u", "emacs", False, (None, False), {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "process_info": "html",
@@ -321,24 +321,24 @@ PS_DISCOVERY_SPECS = [
         "resident_levels": (1024**3, 2 * 1024**3),
         "icon": "emacs.png",
     }),
-    ("cron", "~.*cron", "root", {
+    ("cron", "~.*cron", "root", (None, False), {
         "max_age": (3600, 7200),
         'cpu_rescale_max': None,
         "resident_levels_perc": (25.0, 50.0),
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, {
+    ("sshd", "~.*sshd", None, (None, False), {
         'cpu_rescale_max': None
     }),
-    ('PS counter', None, 'zombie', {
+    ('PS counter', None, 'zombie', (None, False), {
         'cpu_rescale_max': None
     }),
-    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, {
+    ("Checkhelpers %s", r"~/omd/sites/(\w+)/lib/cmc/checkhelper", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, {
+    ("Checkhelpers Overall", r"~/omd/sites/\w+/lib/cmc/checkhelper", None, (None, False), {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
@@ -347,6 +347,7 @@ PS_DISCOVERY_SPECS = [
 
 def test_wato_rules(check_manager):
     check = check_manager.get_check("ps")
+    check.set_check_api_utils_globals()  # needed for host name
     assert check.context["ps_wato_configured_inventory_rules"](
         PS_DISCOVERY_WATO_RULES) == PS_DISCOVERY_SPECS
 
@@ -362,8 +363,13 @@ def test_wato_rules(check_manager):
 ])
 def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, result):
     check = check_manager.get_check("ps")
-    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
-                                            ps_pattern, user_pattern) == result
+    process_attributes_match = check.context["process_attributes_match"]
+    process_matches = check.context["process_matches"]
+
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
+    matches_proc = process_matches(ps_line[1:], ps_pattern)
+
+    assert (matches_attr and matches_proc) == result
 
 
 @pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, match_groups, result", [
@@ -376,8 +382,29 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
 def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern,
                                       match_groups, result):
     check = check_manager.get_check("ps")
-    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
-                                            ps_pattern, user_pattern, match_groups) == result
+    process_attributes_match = check.context["process_attributes_match"]
+    process_matches = check.context["process_matches"]
+
+    matches_attr = process_attributes_match(check.context["ps_info"](ps_line[0]), user_pattern, (None, False))
+    matches_proc = process_matches(ps_line[1:], ps_pattern, match_groups)
+
+    assert (matches_attr and matches_proc) == result
+
+
+@pytest.mark.parametrize("attribute, pattern, result", [
+    ("user", "~user", True),
+    ("user", "user", True),
+    ("user", "~foo", False),
+    ("user", "foo", False),
+    ("user", "~u.er", True),
+    ("user", "u.er", False),
+    ("users", "~user", True),
+    ("users", "user", False),
+])
+def test_ps_match_user(check_manager, attribute, pattern, result):
+    check = check_manager.get_check("ps")
+    match_function = check.context["match_attribute"]
+    assert match_function(attribute, pattern) == result
 
 
 @pytest.mark.parametrize("text, result", [
@@ -447,6 +474,7 @@ PS_DISCOVERED_ITEMS = [
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("firefox is on fire", {
         "process": "~.*(fire)fox",
@@ -454,6 +482,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('fire',),
+        'cgroup': (None, False),
     }),
     ("Checkhelpers heute", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
@@ -461,6 +490,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('heute',),
+        'cgroup': (None, False),
     }),
     ("Checkhelpers Overall", {
         "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
@@ -468,6 +498,7 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'match_groups': (),
         'cpu_rescale_max': None,
+        'cgroup': (None, False),
     }),
     ("Checkhelpers twelve", {
         "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
@@ -475,18 +506,21 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
         'match_groups': ('twelve',),
+        'cgroup': (None, False),
     }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("PS counter", {
         'cpu_rescale_max': None,
         'process': None,
         'user': 'zombie',
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -501,20 +535,23 @@ PS_DISCOVERED_ITEMS = [
         "virtual_levels": (1073741824000, 2147483648000),
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
     ("smss", {
         "process": "~smss.exe",
         "user": None,
         'cpu_rescale_max': None,
         "match_groups": (),
+        'cgroup': (None, False),
     }),
 ]
 
 
 def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
+    check.set_check_api_utils_globals()  # needed for host name
     info = sum(generate_inputs(), [])
-    parsed = check.run_parse(info)[1]
+    parsed = check.context['parse_ps'](info)[1]
     assert sorted(check.context["inventory_ps_common"](PS_DISCOVERY_WATO_RULES,
                                                 parsed)) == sorted(PS_DISCOVERED_ITEMS)
 
@@ -632,7 +669,7 @@ check_results = [
     ids=[a[0] for a in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
-    parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
+    parsed = sum([check.context['parse_ps'](info)[1] for info in generate_inputs()], [])
     total_ram = 1024**3 if "emacs" in inv_item[0] else None
     monkeypatch.setattr('time.time', lambda: 1540375342)
     factory_defaults = {"levels": (1, 1, 99999, 99999)}
@@ -678,7 +715,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 
     def time_info(agent_info, check_time, cputime, cpu_cores):
         monkeypatch.setattr('time.time', lambda: check_time)
-        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
         return CheckResult(check.context["check_ps_common"](
             inv_item[0], inv_item[1], parsed, cpu_cores=cpu_cores))
@@ -721,7 +758,7 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
 def test_check_ps_common_count(check_manager, levels, reference):
     check = check_manager.get_check("ps")
 
-    parsed = check.run_parse(splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
+    parsed = check.context['parse_ps'](splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))[1]
 
     params = {
         "process": "~test",
@@ -736,8 +773,9 @@ def test_check_ps_common_count(check_manager, levels, reference):
 def test_subset_patterns(check_manager):
 
     check = check_manager.get_check("ps")
+    check.set_check_api_utils_globals()  # needed for host name
 
-    parsed = check.run_parse(
+    parsed = check.context['parse_ps'](
         splitter("""(user,0,0,0.5) main
 (user,0,0,0.4) main_dev
 (user,0,0,0.1) main_dev
@@ -760,6 +798,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main',),
             'user': None,
+            'cgroup': (None, False),
         }),
         ('main_dev', {
             'cpu_rescale_max': True,
@@ -767,6 +806,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main_dev',),
             'user': None,
+            'cgroup': (None, False),
         }),
         ('main_test', {
             'cpu_rescale_max': True,
@@ -774,6 +814,7 @@ def test_subset_patterns(check_manager):
             'process': '~(main.*)\\b',
             'match_groups': ('main_test',),
             'user': None,
+            'cgroup': (None, False),
         }),
     ]
 
@@ -813,7 +854,7 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
 (on,1869920,359836,00:01:23/6:57,25664) firefox
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
-        parsed = check.run_parse(splitter(agent_info.format(cputime)))[1]
+        parsed = check.context['parse_ps'](splitter(agent_info.format(cputime)))[1]
 
         return CheckResult(check.context["check_ps_common"](
             'firefox', params, parsed, cpu_cores=cpu_cores))
@@ -846,3 +887,26 @@ def test_cpu_util_single_process_levels(check_manager, monkeypatch, cpu_cores):
         reference.insert(4, (1, single_msg, []))
 
     assertCheckResultsEqual(output, CheckResult(reference))
+
+
+PROCESSES = [
+    [("name", ("/bin/sh", "")), ("user", ("root", "")), ("virtual size", (1234, "kB")),
+     ("arguments", ("--feen-gibt-es-nicht quark --invert", ""))],
+]
+
+
+@pytest.mark.parametrize("processes, formatted_list, html_flag", [
+    (PROCESSES, (
+        "name /bin/sh, user root, virtual size 1234kB,"
+        " arguments --feen-gibt-es-nicht quark --invert\r\n"
+    ), False),
+    (PROCESSES, (
+        "<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
+        "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
+        "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"
+    ), True),
+])
+def test_format_process_list(check_manager, processes, formatted_list, html_flag):
+    check = check_manager.get_check("ps")
+    format_process_list = check.context["format_process_list"]
+    assert format_process_list(processes, html_flag) == formatted_list

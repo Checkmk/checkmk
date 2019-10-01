@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -97,9 +98,10 @@ class SidebarSnapinCustomers(SidebarSnapin):
         if status["status_average_rule_trie_rate"] == 0.0:
             entries.append((3.5, _("Rule hit ratio"), _("-.-- %")))
         else:
-            entries.append((3.5, _("Rule hit ratio"),
-                            "%.2f%%" % (status["status_average_rule_hit_rate"] /
-                                        status["status_average_rule_trie_rate"] * 100)))
+            entries.append(
+                (3.5, _("Rule hit ratio"), "%.2f%%" %
+                 (status["status_average_rule_hit_rate"] / status["status_average_rule_trie_rate"] *
+                  100)))  # fixed: true-division
 
         # Time columns
         time_columns = [

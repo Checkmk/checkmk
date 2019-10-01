@@ -45,6 +45,7 @@ from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     FixedValue,
     IconSelector,
+    Checkbox,
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
@@ -228,6 +229,17 @@ def load(what, builtin_visuals, skip_func=None, lock=False):
     visuals.update(load_user_visuals(what, builtin_visuals, skip_func, lock))
 
     return visuals
+
+
+# This is currently not called by load() because some visual type (e.g. view) specific transform
+# needs to be executed in advance. This should be cleaned up.
+def transform_old_visual(visual):
+    """Prepare visuals for working with them. Migrate old formats or add default settings, for example"""
+    visual.setdefault('single_infos', [])
+    visual.setdefault('context', {})
+
+    # 1.6 introduced this setting: Ensure all visuals have it set
+    visual.setdefault("add_context_to_title", True)
 
 
 def load_user_visuals(what, builtin_visuals, skip_func, lock):
@@ -432,6 +444,8 @@ def page_list(what,
         html.context_button(_("Graph collections"), "graph_collections.py", "graph_collection")
     if pagetypes.has_page_type("custom_graph"):
         html.context_button(_("Custom graphs"), "custom_graphs.py", "custom_graph")
+    if pagetypes.has_page_type("forecast_graph"):
+        html.context_button(_("Forecast Graphs"), "forecast_graphs.py", "forecast_graph")
     if pagetypes.has_page_type("graph_tuning"):
         html.context_button(_("Graph tunings"), "graph_tunings.py", "graph_tuning")
     if pagetypes.has_page_type("sla_configuration"):
@@ -467,7 +481,9 @@ def page_list(what,
         except MKUserError as e:
             html.user_error(e)
 
-    keys_sorted = sorted(visuals.keys(), cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
+    keys_sorted = sorted(sorted(visuals.keys(), key=lambda x: x[1]),
+                         key=lambda x: x[0],
+                         reverse=True)
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
@@ -858,6 +874,12 @@ def page_edit_visual(what,
                  size=50,
                  allow_empty=False)),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('add_context_to_title',
+             Checkbox(
+                 title=_('Add context information to title'),
+                 help=_("Whether or not additional information from the page context "
+                        "(filters) should be added to the title given above."),
+             )),
             ('topic', TextUnicode(title=_('Topic') + '<sup>*</sup>', size=50)),
             ('description', TextAreaUnicode(title=_('Description') + '<sup>*</sup>',
                                             rows=4,
@@ -907,6 +929,7 @@ def page_edit_visual(what,
                     'description',
                     'linktitle',
                     'icon',
+                    'add_context_to_title',
             ]:
                 visual[key] = general_properties[key]
 
@@ -1008,7 +1031,7 @@ def show_filter(f):
             f.display()
             html.write(html.drain())
     except Exception as e:
-        logger.exception()
+        logger.exception("error showing filter")
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)
@@ -1237,7 +1260,7 @@ class VisualFilterList(ListOfMultiple):
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore = kwargs.get("ignore", set())
+        ignore = kwargs.pop("ignore", set())
         self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))
@@ -1299,9 +1322,6 @@ class VisualFilter(ValueSpec):
         if not isinstance(value, dict):
             raise MKUserError(varprefix,
                               _("The value must be of type dict, but it has type %s") % type(value))
-
-    def validate_value(self, value, varprefix):
-        ValueSpec.custom_validate(self, value, varprefix)
 
 
 def SingleInfoSelection(info_keys, **args):
@@ -1372,6 +1392,24 @@ def verify_single_contexts(what, visual, link_filters):
 
 
 def visual_title(what, visual):
+    title = _u(visual["title"])
+
+    if visual["add_context_to_title"]:
+        title = _add_context_title(visual, title)
+
+    # Execute title plugin functions which might be added by the user to
+    # the visuals plugins. When such a plugin function returns None, the regular
+    # title of the page is used, otherwise the title returned by the plugin
+    # function is used.
+    for func in title_functions:
+        result = func(what, visual, title)
+        if result is not None:
+            return result
+
+    return title
+
+
+def _add_context_title(visual, title):
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
@@ -1391,7 +1429,6 @@ def visual_title(what, visual):
             if heading:
                 extra_titles.append(heading)
 
-    title = _u(visual["title"])
     if extra_titles:
         title += " " + ", ".join(extra_titles)
 
@@ -1403,15 +1440,6 @@ def visual_title(what, visual):
         heading = get_filter(fn).heading_info()
         if heading:
             title = heading + " - " + title
-
-    # Execute title plugin functions which might be added by the user to
-    # the visuals plugins. When such a plugin function returns None, the regular
-    # title of the page is used, otherwise the title returned by the plugin
-    # function is used.
-    for func in title_functions:
-        result = func(what, visual, title)
-        if result is not None:
-            return result
 
     return title
 
@@ -1479,7 +1507,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
     # sort buttons somehow
     visuals = available_visuals.values()
-    visuals.sort(cmp=lambda b, a: cmp(a.get('icon'), b.get('icon')))
+    visuals.sort(key=lambda x: x.get('icon'))
 
     for visual in visuals:
         name = visual["name"]
@@ -1564,19 +1592,6 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
         return False
 
     return True
-
-
-def transform_old_visual(visual):
-    if 'context_type' in visual:
-        if visual['context_type'] in ['host', 'service', 'hostgroup', 'servicegroup']:
-            visual['single_infos'] = [visual['context_type']]
-        else:
-            visual['single_infos'] = []  # drop the context type and assume a "multiple visual"
-        del visual['context_type']
-    elif 'single_infos' not in visual:
-        visual['single_infos'] = []
-
-    visual.setdefault('context', {})
 
 
 #.

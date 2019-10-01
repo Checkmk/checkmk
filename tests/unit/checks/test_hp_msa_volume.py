@@ -132,5 +132,5 @@ def test_io_check(check_manager):
         }
     }
     _, read, written = check.run_check(item_1st, params, parsed)
-    assert read == (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)])
-    assert written == (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)])
+    assert read == (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None)])
+    assert written == (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None)])

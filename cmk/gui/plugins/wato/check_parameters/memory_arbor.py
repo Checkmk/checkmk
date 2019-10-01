@@ -116,27 +116,18 @@ def DualMemoryLevels(what, default_percents=None):
         ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMemoryArbor(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_memory_arbor():
+    return Dictionary(elements=[
+        ("levels_ram", DualMemoryLevels(_("RAM"))),
+        ("levels_swap", DualMemoryLevels(_("Swap"))),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "memory_arbor"
 
-    @property
-    def title(self):
-        return _("Memory and Swap usage on Arbor devices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels_ram", DualMemoryLevels(_("RAM"))),
-            ("levels_swap", DualMemoryLevels(_("Swap"))),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="memory_arbor",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_memory_arbor,
+        title=lambda: _("Memory and Swap usage on Arbor devices"),
+    ))

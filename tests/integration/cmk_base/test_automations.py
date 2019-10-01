@@ -1,9 +1,11 @@
+from __future__ import print_function
 # pylint: disable=redefined-outer-name
 import re
 import os
 import ast
 import subprocess
 import pytest  # type: ignore
+import six
 
 from testlib import web, repo_path  # pylint: disable=unused-import
 
@@ -13,7 +15,7 @@ import cmk.utils.paths
 
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
-    print "Applying default config"
+    print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
     })
@@ -40,13 +42,13 @@ def test_cfg(web, site):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/modes-test-host",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host2",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
     site.write_file(
         "var/check_mk/agent_output/modes-test-host3",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     web.discover_services("modes-test-host")
     web.discover_services("modes-test-host2")
@@ -58,7 +60,7 @@ def test_cfg(web, site):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     site.delete_dir("var/check_mk/agent_output")
 
@@ -98,7 +100,7 @@ def _execute_automation(site,
     if args:
         args = ["--"] + args
 
-    print ["cmk", "--automation", cmd] + args
+    print(["cmk", "--automation", cmd] + args)
     p = site.execute(["cmk", "--automation", cmd] + args,
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE,
@@ -140,7 +142,7 @@ def test_automation_discovery_single_host(test_cfg, site):
 
     assert len(data[0]) == 1
     assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
 
     assert data[1] == {}
 
@@ -156,8 +158,8 @@ def test_automation_discovery_multiple_hosts(test_cfg, site):
     assert len(data[0]) == 2
     assert "modes-test-host" in data[0]
     assert "modes-test-host2" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
-    assert len(data[0]["modes-test-host2"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
+    assert len(data[0]["modes-test-host2"]) == 6
 
     assert data[1] == {}
 
@@ -168,7 +170,7 @@ def test_automation_discovery_not_existing_host(test_cfg, site):
     assert isinstance(data, tuple)
     assert len(data) == 2
 
-    assert data[0]["xxxhost"] == [0, 0, 0, 0]
+    assert data[0]["xxxhost"] == [0, 0, 0, 0, 0, 0]
     assert data[1] == {"xxxhost": ''}
 
 
@@ -180,7 +182,7 @@ def test_automation_discovery_with_cache_option(test_cfg, site):
 
     assert len(data[0]) == 1
     assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 4
+    assert len(data[0]["modes-test-host"]) == 6
 
     assert data[1] == {}
 
@@ -301,7 +303,7 @@ def test_automation_get_check_information(test_cfg, site):
     assert len(data) > 1000
 
     for _check_type, info in data.items():
-        assert isinstance(info["title"], unicode)
+        assert isinstance(info["title"], six.text_type)
         assert "service_description" in info
         assert "snmp" in info
 
@@ -313,7 +315,7 @@ def test_automation_get_real_time_checks(test_cfg, site):
 
     for check_type, title in data:
         assert isinstance(check_type, str)
-        assert isinstance(title, unicode)
+        assert isinstance(title, six.text_type)
 
 
 def test_automation_get_check_manpage(test_cfg, site):

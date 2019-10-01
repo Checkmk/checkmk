@@ -142,10 +142,10 @@ def check_aws_limits(aws_service, params, parsed):
     - performance data: aws_%s_%s % AWS resource, resource_key
     """
     long_output = []
-    levels_reached = []
+    levels_reached = set()
     max_state = 0
     perfdata = []
-    for resource_key, resource_title, limit, amount, human_readable_func in parsed:
+    for resource_key, resource_title, limit, amount, region, human_readable_func in parsed:
         if human_readable_func is None:
             human_readable_func = lambda x: "%s" % x
 
@@ -155,9 +155,9 @@ def check_aws_limits(aws_service, params, parsed):
         else:
             limit_ref = p_limit
 
-        infotext = '%s: %s (of max. %s)' % (resource_title, human_readable_func(amount),
-                                            human_readable_func(limit_ref))
-
+        infotext = '%s: %s (of max. %s)%s' % (resource_title, human_readable_func(amount),
+                                              human_readable_func(limit_ref),
+                                              " (Region %s)" % region if region else "")
         perfvar = "aws_%s_%s" % (aws_service, resource_key)
         if _is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))
@@ -166,13 +166,13 @@ def check_aws_limits(aws_service, params, parsed):
             continue
 
         state, extrainfo, _perfdata = check_levels(100.0 * amount / limit_ref,
-                                                   "%s_usage" % perfvar, (warn, crit),
+                                                   None, (warn, crit),
                                                    human_readable_func=get_percent_human_readable,
                                                    infoname="Usage")
 
         max_state = max(state, max_state)
         if state:
-            levels_reached.append(resource_title)
+            levels_reached.add(resource_title)
             infotext += ", %s%s" % (extrainfo, state_markers[state])
         long_output.append(infotext)
 

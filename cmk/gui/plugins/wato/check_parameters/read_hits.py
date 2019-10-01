@@ -38,30 +38,21 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersReadHits(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_read_hits():
+    return Tuple(
+        title=_(u"Prefetch hits"),
+        elements=[
+            Float(title=_(u"Warning below"), default_value=95.0),
+            Float(title=_(u"Critical below"), default_value=90.0),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "read_hits"
 
-    @property
-    def title(self):
-        return _("Read prefetch hits for DDN S2A devices")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_(u"Prefetch hits"),
-            elements=[
-                Float(title=_(u"Warning below"), default_value=95.0),
-                Float(title=_(u"Critical below"), default_value=90.0),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_(u"Port index or 'Total'"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="read_hits",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_(u"Port index or 'Total'")),
+        parameter_valuespec=_parameter_valuespec_read_hits,
+        title=lambda: _("Read prefetch hits for DDN S2A devices"),
+    ))

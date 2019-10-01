@@ -38,52 +38,43 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersK8SResources(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_k8s_resources():
+    return Dictionary(elements=[
+        ('pods',
+         Tuple(
+             title=_('Pods'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+        ('cpu',
+         Tuple(
+             title=_('CPU'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+        ('memory',
+         Tuple(
+             title=_('Memory'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Percentage(title=_("Warning above")),
+                 Percentage(title=_("Critical above")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "k8s_resources"
 
-    @property
-    def title(self):
-        return _("Kubernetes resources")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('pods',
-             Tuple(
-                 title=_('Pods'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Percentage(title=_("Warning above")),
-                     Percentage(title=_("Critical above")),
-                 ],
-             )),
-            ('cpu',
-             Tuple(
-                 title=_('CPU'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Percentage(title=_("Warning above")),
-                     Percentage(title=_("Critical above")),
-                 ],
-             )),
-            ('memory',
-             Tuple(
-                 title=_('Memory'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Percentage(title=_("Warning above")),
-                     Percentage(title=_("Critical above")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="k8s_resources",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_k8s_resources,
+        title=lambda: _("Kubernetes resources"),
+    ))

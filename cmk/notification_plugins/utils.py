@@ -27,9 +27,9 @@ import os
 import re
 import subprocess
 import sys
-# suppress missing import error from mypy
 from html import escape as html_escape  # type: ignore
-from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    AnyStr, Dict, List, Optional, Text, Tuple)
 
 import requests
 
@@ -38,7 +38,7 @@ import cmk.utils.password_store
 
 
 def collect_context():
-    # type: () -> Dict
+    # type: () -> Dict[str, Text]
     return {
         var[7:]: value.decode("utf-8")
         for (var, value) in os.environ.items()
@@ -46,24 +46,13 @@ def collect_context():
     }
 
 
-def extend_context_with_link_urls(context, link_template):
-    # type: (Dict, AnyStr) -> None
-
-    host_url, service_url = cmk_links(context)
-
-    if host_url:
-        context['LINKEDHOSTNAME'] = link_template.format(host_url, context['HOSTNAME'])
-    else:
-        context['LINKEDHOSTNAME'] = context['HOSTNAME']
-
-    if service_url:
-        context['LINKEDSERVICEDESC'] = link_template.format(service_url, context['SERVICEDESC'])
-    else:
-        context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
+def format_link(template, url, text):
+    # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
+    return template % (url, text) if url else text
 
 
-def cmk_links(context):
-    # type: (Dict) -> Tuple[Optional[str], Optional[str]]
+def _base_url(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -73,19 +62,21 @@ def cmk_links(context):
     elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
         url_prefix = "https://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
     else:
-        url_prefix = None
+        url_prefix = ''
 
-    if url_prefix:
-        base_url = re.sub('/check_mk/?', '', url_prefix)
-        host_url = base_url + context['HOSTURL']
+    return re.sub('/check_mk/?', '', url_prefix, count=1)
 
-        if context['WHAT'] == 'SERVICE':
-            service_url = base_url + context['SERVICEURL']
-            return host_url, service_url
 
-        return host_url, None
+def host_url_from_context(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
+    base = _base_url(context)
+    return base + context['HOSTURL'] if base else ''
 
-    return None, None
+
+def service_url_from_context(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
+    base = _base_url(context)
+    return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
 
 # There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
@@ -190,6 +181,7 @@ def send_mail_sendmail(m, target, from_address):
 
 
 def read_bulk_contexts():
+    # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}
     contexts = []
     in_params = True
@@ -199,7 +191,7 @@ def read_bulk_contexts():
         line = line.strip()
         if not line:
             in_params = False
-            context = {}
+            context = {}  # type: Dict[str, str]
             contexts.append(context)
         else:
             try:

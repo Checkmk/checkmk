@@ -26,6 +26,7 @@
 
 import os
 import ast
+import logging
 import pprint
 import sys
 import tarfile
@@ -33,17 +34,18 @@ import time
 import subprocess
 import json
 from cStringIO import StringIO
-from typing import NamedTuple
+from typing import NamedTuple, List  # pylint: disable=unused-import
+from pathlib2 import Path
 
 import cmk.ec.export
-import cmk.utils.log
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
 import cmk.utils.debug
 import cmk_base.utils
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.base.packaging")
 _pac_ext = ".mkp"
 
 
@@ -60,29 +62,29 @@ class PackageException(Exception):
 # order matters! See function _get_permissions
 PERM_MAP = (
     (cmk.utils.paths.checks_dir, 0o644),
-    (cmk.utils.paths.local_checks_dir, 0o644),
-    (cmk.utils.paths.notifications_dir, 0o755),
-    (cmk.utils.paths.local_notifications_dir, 0o755),
+    (str(cmk.utils.paths.local_checks_dir), 0o644),
+    (str(cmk.utils.paths.notifications_dir), 0o755),
+    (str(cmk.utils.paths.local_notifications_dir), 0o755),
     (cmk.utils.paths.inventory_dir, 0o644),
-    (cmk.utils.paths.local_inventory_dir, 0o644),
+    (str(cmk.utils.paths.local_inventory_dir), 0o644),
     (cmk.utils.paths.check_manpages_dir, 0o644),
-    (cmk.utils.paths.local_check_manpages_dir, 0o644),
+    (str(cmk.utils.paths.local_check_manpages_dir), 0o644),
     (cmk.utils.paths.agents_dir, 0o755),
-    (cmk.utils.paths.local_agents_dir, 0o755),
+    (str(cmk.utils.paths.local_agents_dir), 0o755),
     (cmk.utils.paths.web_dir, 0o644),
-    (cmk.utils.paths.local_web_dir, 0o644),
-    (cmk.utils.paths.pnp_templates_dir, 0o644),
-    (cmk.utils.paths.local_pnp_templates_dir, 0o644),
-    (cmk.utils.paths.doc_dir, 0o644),
-    (cmk.utils.paths.local_doc_dir, 0o644),
-    (cmk.utils.paths.locale_dir, 0o644),
-    (cmk.utils.paths.local_locale_dir, 0o644),
-    (cmk.utils.paths.local_bin_dir, 0o755),
-    (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0o755),
-    (cmk.utils.paths.local_lib_dir, 0o644),
-    (cmk.utils.paths.local_mib_dir, 0o644),
+    (str(cmk.utils.paths.local_web_dir), 0o644),
+    (str(cmk.utils.paths.pnp_templates_dir), 0o644),
+    (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
+    (str(cmk.utils.paths.doc_dir), 0o644),
+    (str(cmk.utils.paths.local_doc_dir), 0o644),
+    (str(cmk.utils.paths.locale_dir), 0o644),
+    (str(cmk.utils.paths.local_locale_dir), 0o644),
+    (str(cmk.utils.paths.local_bin_dir), 0o755),
+    (str(cmk.utils.paths.local_lib_dir.joinpath("nagios", "plugins")), 0o755),
+    (str(cmk.utils.paths.local_lib_dir), 0o644),
+    (str(cmk.utils.paths.local_mib_dir), 0o644),
     (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-    (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0o755),
+    (str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers")), 0o755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0o644),
 )
 
@@ -102,20 +104,22 @@ PackagePart = NamedTuple("PackagePart", [
 ])
 
 _package_parts = [
-    PackagePart("checks", "Checks", cmk.utils.paths.local_checks_dir),
-    PackagePart("notifications", "Notification scripts", cmk.utils.paths.local_notifications_dir),
-    PackagePart("inventory", "Inventory plugins", cmk.utils.paths.local_inventory_dir),
-    PackagePart("checkman", "Checks' man pages", cmk.utils.paths.local_check_manpages_dir),
-    PackagePart("agents", "Agents", cmk.utils.paths.local_agents_dir),
-    PackagePart("web", "Multisite extensions", cmk.utils.paths.local_web_dir),
-    PackagePart("pnp-templates", "PNP4Nagios templates", cmk.utils.paths.local_pnp_templates_dir),
-    PackagePart("doc", "Documentation files", cmk.utils.paths.local_doc_dir),
-    PackagePart("locales", "Localizations", cmk.utils.paths.local_locale_dir),
-    PackagePart("bin", "Binaries", cmk.utils.paths.local_bin_dir),
-    PackagePart("lib", "Libraries", cmk.utils.paths.local_lib_dir),
-    PackagePart("mibs", "SNMP MIBs", cmk.utils.paths.local_mib_dir),
+    PackagePart("checks", "Checks", str(cmk.utils.paths.local_checks_dir)),
+    PackagePart("notifications", "Notification scripts",
+                str(cmk.utils.paths.local_notifications_dir)),
+    PackagePart("inventory", "Inventory plugins", str(cmk.utils.paths.local_inventory_dir)),
+    PackagePart("checkman", "Checks' man pages", str(cmk.utils.paths.local_check_manpages_dir)),
+    PackagePart("agents", "Agents", str(cmk.utils.paths.local_agents_dir)),
+    PackagePart("web", "Multisite extensions", str(cmk.utils.paths.local_web_dir)),
+    PackagePart("pnp-templates", "PNP4Nagios templates",
+                str(cmk.utils.paths.local_pnp_templates_dir)),
+    PackagePart("doc", "Documentation files", str(cmk.utils.paths.local_doc_dir)),
+    PackagePart("locales", "Localizations", str(cmk.utils.paths.local_locale_dir)),
+    PackagePart("bin", "Binaries", str(cmk.utils.paths.local_bin_dir)),
+    PackagePart("lib", "Libraries", str(cmk.utils.paths.local_lib_dir)),
+    PackagePart("mibs", "SNMP MIBs", str(cmk.utils.paths.local_mib_dir)),
     PackagePart("alert_handlers", "Alert handlers",
-                cmk.utils.paths.local_share_dir + "/alert_handlers"),
+                str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers"))),
 ]
 
 config_parts = [
@@ -129,10 +133,12 @@ package_ignored_files = {
 
 
 def _pac_dir():
-    return cmk.utils.paths.omd_root + "/var/check_mk/packages/"
+    # type: () -> Path
+    return Path(cmk.utils.paths.omd_root, "var", "check_mk", "packages")
 
 
 def get_package_parts():
+    # type: () -> List[PackagePart]
     return _package_parts
 
 
@@ -180,7 +186,7 @@ def do_packaging(args):
         try:
             f(args)
         except PackageException as e:
-            logger.error("%s" % e)
+            logger.error("%s", e)
             sys.exit(1)
     else:
         allc = sorted(commands.keys())
@@ -195,7 +201,7 @@ def package_list(args):
         for name in args:
             show_package_contents(name)
     else:
-        if logger.is_verbose():
+        if logger.isEnabledFor(VERBOSE):
             table = []
             for pacname in all_package_names():
                 package = read_package_info(pacname)
@@ -250,7 +256,7 @@ def show_package(name, show_info=False):
                 " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
-        if logger.is_verbose():
+        if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
                 files = package["files"].get(part.ident, [])
@@ -272,7 +278,7 @@ def package_create(args):
     if read_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
-    logger.verbose("Creating new package %s...", pacname)
+    logger.log(VERBOSE, "Creating new package %s...", pacname)
     filelists = {}
     package = {
         "title": "Title of %s" % pacname,
@@ -291,14 +297,14 @@ def package_create(args):
         filelists[part.ident] = files
         num_files += len(files)
         if len(files) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
 
     write_package_info(package)
-    logger.verbose("New package %s created with %d files.", pacname, num_files)
-    logger.verbose("Please edit package details in %s%s%s", tty.bold,
-                   _pac_dir() + pacname, tty.normal)
+    logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
+    logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
+               _pac_dir().joinpath(pacname), tty.normal)
 
 
 def package_find(_no_args):
@@ -307,18 +313,18 @@ def package_find(_no_args):
         files = unpackaged_files_in_dir(part.ident, part.path)
         if len(files) > 0:
             if first:
-                logger.verbose("Unpackaged files:")
+                logger.log(VERBOSE, "Unpackaged files:")
                 first = False
 
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in files:
-                if logger.is_verbose():
-                    logger.verbose("    %s", f)
+                if logger.isEnabledFor(VERBOSE):
+                    logger.log(VERBOSE, "    %s", f)
                 else:
                     logger.info("%s/%s", part.path, f)
 
     if first:
-        logger.verbose("No unpackaged files found.")
+        logger.log(VERBOSE, "No unpackaged files found.")
 
 
 def release_package(pacname):
@@ -326,13 +332,13 @@ def release_package(pacname):
         raise PackageException("Package %s not installed or corrupt." % pacname)
 
     package = read_package_info(pacname)
-    logger.verbose("Releasing files of package %s into freedom...", pacname)
+    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
             if part.ident == 'ec_rule_packs':
                 cmk.ec.export.release_packaged_rule_packs(filenames)
     remove_package_info(pacname)
@@ -346,8 +352,7 @@ def package_release(args):
 
 
 def package_exists(pacname):
-    pacpath = _pac_dir() + pacname
-    return os.path.exists(pacpath)
+    return _pac_dir().joinpath(pacname).exists()  # pylint: disable=no-member
 
 
 def package_pack(args):
@@ -362,16 +367,16 @@ def package_pack(args):
             raise PackageException(
                 "You are in %s!\n"
                 "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % p)
+                "a packet file. Foreign files lying around here will mix up things." % abs_curdir)
 
     pacname = args[0]
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = "%s-%s%s" % (pacname, package["version"], _pac_ext)
-    logger.verbose("Packing %s into %s...", pacname, tarfilename)
+    logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     create_mkp_file(package, file_name=tarfilename)
-    logger.verbose("Successfully created %s", tarfilename)
+    logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
 def create_mkp_file(package, file_name=None, file_object=None):
@@ -379,7 +384,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
 
     def create_tar_info(filename, size):
         info = tarfile.TarInfo()
-        info.mtime = time.time()
+        info.mtime = int(time.time())
         info.uid = 0
         info.gid = 0
         info.size = size
@@ -404,9 +409,9 @@ def create_mkp_file(package, file_name=None, file_object=None):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
-                logger.verbose("    %s", f)
+                logger.log(VERBOSE, "    %s", f)
             subtarname = part.ident + ".tar"
             subdata = subprocess.check_output(
                 ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames)
@@ -423,18 +428,18 @@ def package_remove(args):
     if not package:
         raise PackageException("No such package %s." % pacname)
 
-    logger.verbose("Removing package %s...", pacname)
+    logger.log(VERBOSE, "Removing package %s...", pacname)
     remove_package(package)
-    logger.verbose("Successfully removed package %s.", pacname)
+    logger.log(VERBOSE, "Successfully removed package %s.", pacname)
 
 
 def remove_package(package):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
             for fn in filenames:
-                logger.verbose("    %s", fn)
+                logger.log(VERBOSE, "    %s", fn)
                 try:
                     path = part.path + "/" + fn
                     if part.ident == 'ec_rule_packs':
@@ -446,7 +451,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    os.remove(_pac_dir() + package["name"])
+    _pac_dir().joinpath(package["name"]).unlink()  # pylint: disable=no-member
 
 
 def create_package(pkg_info):
@@ -518,11 +523,11 @@ def install_package(file_name=None, file_object=None):
     pacname = package["name"]
     old_package = read_package_info(pacname)
     if old_package:
-        logger.verbose("Updating %s from version %s to %s.", pacname, old_package["version"],
-                       package["version"])
+        logger.log(VERBOSE, "Updating %s from version %s to %s.", pacname, old_package["version"],
+                   package["version"])
         update = True
     else:
-        logger.verbose("Installing %s version %s.", pacname, package["version"])
+        logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
         update = False
 
     # Before installing check for conflicts
@@ -548,19 +553,23 @@ def install_package(file_name=None, file_object=None):
     for part in get_package_parts() + config_parts:
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
-            logger.verbose("  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for fn in filenames:
-                logger.verbose("    %s", fn)
+                logger.log(VERBOSE, "    %s", fn)
 
             # make sure target directory exists
             if not os.path.exists(part.path):
-                logger.verbose("    Creating directory %s", part.path)
+                logger.log(VERBOSE, "    Creating directory %s", part.path)
                 os.makedirs(part.path)
 
             tarsource = tar.extractfile(part.ident + ".tar")
 
-            tardest = subprocess.Popen(["tar", "xf", "-", "-C", part.path] + filenames,
-                                       stdin=subprocess.PIPE)
+            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+            # been installed for cache invalidation.
+            tardest = subprocess.Popen(["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                                       stdin=subprocess.PIPE,
+                                       shell=False,
+                                       close_fds=True)
             while True:
                 data = tarsource.read(4096)
                 if not data:
@@ -576,8 +585,8 @@ def install_package(file_name=None, file_object=None):
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 0o7777
                 if has_perm != desired_perm:
-                    logger.verbose("    Fixing permissions of %s: %04o -> %04o", path, has_perm,
-                                   desired_perm)
+                    logger.log(VERBOSE, "    Fixing permissions of %s: %04o -> %04o", path,
+                               has_perm, desired_perm)
                     os.chmod(path, desired_perm)
 
             if part.ident == 'ec_rule_packs':
@@ -591,7 +600,7 @@ def install_package(file_name=None, file_object=None):
             for fn in filenames:
                 if fn not in keep:
                     path = os.path.join(part.path, fn)
-                    logger.verbose("Removing outdated file %s.", path)
+                    logger.log(VERBOSE, "Removing outdated file %s.", path)
                     try:
                         os.remove(path)
                     except Exception as e:
@@ -711,8 +720,10 @@ def packaged_files_in_dir(part):
 
 
 def read_package_info(pacname):
+    pkg_info_path = _pac_dir() / pacname
     try:
-        package = parse_package_info(file(_pac_dir() + pacname).read())
+        with pkg_info_path.open() as f:
+            package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
@@ -720,21 +731,23 @@ def read_package_info(pacname):
     except IOError:
         return None
     except Exception:
-        logger.verbose("Ignoring invalid package file '%s%s'. Please remove it from %s!",
-                       _pac_dir(), pacname, _pac_dir())
+        logger.log(VERBOSE, "Ignoring invalid package file '%s'. Please remove it from %s!",
+                   pkg_info_path, _pac_dir())
         return None
 
 
 def write_package_info(package):
-    file(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
+    pkg_info_path = _pac_dir() / package["name"]
+    with pkg_info_path.open("w") as f:
+        f.write(pprint.pformat(package) + "\n")
 
 
 def remove_package_info(pacname):
-    os.remove(_pac_dir() + pacname)
+    _pac_dir().joinpath(pacname).unlink()  # pylint: disable=no-member
 
 
 def all_package_names():
-    return sorted([p for p in os.listdir(_pac_dir()) if p not in ['.', '..']])
+    return sorted([p.name for p in _pac_dir().iterdir()])
 
 
 def parse_package_info(python_string):

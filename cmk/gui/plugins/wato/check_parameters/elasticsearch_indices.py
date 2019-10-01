@@ -39,62 +39,48 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersElasticsearchIndices(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_elasticsearch_indices():
+    return Dictionary(
+        elements=[
+            ("elasticsearch_count_rate",
+             Tuple(title=_("Document count delta"),
+                   help=_("If this parameter is set, the document count delta of the "
+                          "last minute will be compared to the delta of the average X "
+                          "minutes. You can set WARN or CRIT levels to check if the last "
+                          "minute's delta is X percent higher than the average delta."),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent higher than average")),
+                       Percentage(title=_("Critical at"), unit=_("percent higher than average")),
+                       Integer(title=_("Averaging"),
+                               unit=_("minutes"),
+                               minvalue=1,
+                               default_value=30),
+                   ])),
+            ("elasticsearch_size_rate",
+             Tuple(title=_("Size delta"),
+                   help=_("If this parameter is set, the size delta of the last minute "
+                          "will be compared to the delta of the average X minutes. "
+                          "You can set WARN or CRIT levels to check if the last minute's "
+                          "delta is X percent higher than the average delta."),
+                   elements=[
+                       Percentage(title=_("Warning at"), unit=_("percent higher than average")),
+                       Percentage(title=_("Critical at"), unit=_("percent higher than average")),
+                       Integer(title=_("Averaging"),
+                               unit=_("minutes"),
+                               minvalue=1,
+                               default_value=30),
+                   ])),
+        ],
+        optional_keys=["count_rate", "size_rate"],
+    )
 
-    @property
-    def check_group_name(self):
-        return "elasticsearch_indices"
 
-    @property
-    def title(self):
-        return _("Elasticsearch Indices")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("elasticsearch_count_rate",
-                 Tuple(title=_("Document count delta"),
-                       help=_("If this parameter is set, the document count delta of the "
-                              "last minute will be compared to the delta of the average X "
-                              "minutes. You can set WARN or CRIT levels to check if the last "
-                              "minute's delta is X percent higher than the average delta."),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent higher than average")),
-                           Percentage(title=_("Critical at"),
-                                      unit=_("percent higher than average")),
-                           Integer(title=_("Averaging"),
-                                   unit=_("minutes"),
-                                   minvalue=1,
-                                   default_value=30),
-                       ])),
-                ("elasticsearch_size_rate",
-                 Tuple(title=_("Size delta"),
-                       help=_("If this parameter is set, the size delta of the last minute "
-                              "will be compared to the delta of the average X minutes. "
-                              "You can set WARN or CRIT levels to check if the last minute's "
-                              "delta is X percent higher than the average delta."),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent higher than average")),
-                           Percentage(title=_("Critical at"),
-                                      unit=_("percent higher than average")),
-                           Integer(title=_("Averaging"),
-                                   unit=_("minutes"),
-                                   minvalue=1,
-                                   default_value=30),
-                       ])),
-            ],
-            optional_keys=["count_rate", "size_rate"],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of indice"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="elasticsearch_indices",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of indice")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_elasticsearch_indices,
+        title=lambda: _("Elasticsearch Indices"),
+    ))

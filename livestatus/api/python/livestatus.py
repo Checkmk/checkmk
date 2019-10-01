@@ -33,6 +33,11 @@ import ast
 import ssl
 from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
 
+try:
+    from cmk.gui.i18n import _
+except ImportError:
+    _ = lambda x: x
+
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
 #   |                   / ___| | ___ | |__   __ _| |___                    |
@@ -76,6 +81,12 @@ class MKLivestatusException(Exception):
     def __str__(self):
         return str(self.parameter)
 
+    def plain_title(self):
+        return _("Livestatus problem")
+
+    def title(self):
+        return _("Livestatus problem")
+
 
 class MKLivestatusSocketError(MKLivestatusException):
     pass
@@ -96,6 +107,12 @@ class MKLivestatusQueryError(MKLivestatusException):
 class MKLivestatusNotFoundError(MKLivestatusException):
     def __str__(self):
         return "No matching entries found for query %s" % str(self.parameter)
+
+    def plain_title(self):
+        return _("Livestatus-data not found")
+
+    def title(self):
+        return _("Data not found")
 
 
 class MKLivestatusTableNotFoundError(MKLivestatusException):
@@ -227,18 +244,12 @@ class Helpers(object):
         return result
 
     def query_summed_stats(self, query, add_headers=""):
-        """Conveniance function for adding up numbers from Stats queries
+        """Convenience function for adding up numbers from Stats queries
         Adds up results column-wise. This is useful for multisite queries."""
         data = self.query(query, add_headers)
-        if len(data) == 1:
-            return data[0]
-        elif len(data) == 0:
+        if not data:
             raise MKLivestatusNotFoundError("Empty result to Stats-Query")
-
-        result = []
-        for x in range(0, len(data[0])):
-            result.append(sum([row[x] for row in data]))
-        return result
+        return [sum(column) for column in zip(*data)]
 
 
 # TODO: Add more functionality to the Query class:
@@ -422,7 +433,7 @@ class SingleSiteConnection(Helpers):
                 pass
 
     def receive_data(self, size):
-        result = u""
+        result = b""
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
         while size > 0:
@@ -431,7 +442,7 @@ class SingleSiteConnection(Helpers):
                 raise MKLivestatusSocketClosed(
                     "Read zero data from socket, nagios server closed connection")
             size -= len(packet)
-            result += packet.decode("utf-8")
+            result += packet
         return result
 
     def do_query(self, query, add_headers=""):
@@ -483,6 +494,7 @@ class SingleSiteConnection(Helpers):
     # the query again (once). This is due to timeouts during keepalive.
     def recv_response(self, query=None, add_headers="", timeout_at=None):
         try:
+            # Headers are always ASCII encoded
             resp = self.receive_data(16)
             code = resp[0:3]
             try:
@@ -493,7 +505,7 @@ class SingleSiteConnection(Helpers):
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
                     "encryption settings are used.")
 
-            data = self.receive_data(length)
+            data = self.receive_data(length).decode("utf-8")
 
             if code == "200":
                 try:

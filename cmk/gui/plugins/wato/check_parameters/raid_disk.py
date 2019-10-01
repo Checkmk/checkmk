@@ -39,48 +39,43 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersRaidDisk(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_raid_disk():
+    return TextAscii(title=_("Number or ID of the disk"),
+                     help=_("How the disks are named depends on the type of hardware being "
+                            "used. Please look at already discovered checks for examples."))
 
-    @property
-    def check_group_name(self):
-        return "raid_disk"
 
-    @property
-    def title(self):
-        return _("RAID: state of a single disk")
+def _parameter_valuespec_raid_disk():
+    return Transform(
+        Dictionary(elements=[
+            (
+                "expected_state",
+                TextAscii(title=_("Expected state"),
+                          help=_(
+                              "State the disk is expected to be in. Typical good states "
+                              "are online, host spare, OK and the like. The exact way of how "
+                              "to specify a state depends on the check and hard type being used. "
+                              "Please take examples from discovered checks for reference.")),
+            ),
+            ("use_device_states",
+             DropdownChoice(
+                 title=_("Use device states and overwrite expected status"),
+                 choices=[
+                     (False, _("Ignore")),
+                     (True, _("Use device states")),
+                 ],
+                 default_value=True,
+             )),
+        ],),
+        forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(elements=[
-                (
-                    "expected_state",
-                    TextAscii(
-                        title=_("Expected state"),
-                        help=_("State the disk is expected to be in. Typical good states "
-                               "are online, host spare, OK and the like. The exact way of how "
-                               "to specify a state depends on the check and hard type being used. "
-                               "Please take examples from discovered checks for reference.")),
-                ),
-                ("use_device_states",
-                 DropdownChoice(
-                     title=_("Use device states and overwrite expected status"),
-                     choices=[
-                         (False, _("Ignore")),
-                         (True, _("Use device states")),
-                     ],
-                     default_value=True,
-                 )),
-            ],),
-            forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Number or ID of the disk"),
-                         help=_("How the disks are named depends on the type of hardware being "
-                                "used. Please look at already discovered checks for examples."))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="raid_disk",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_raid_disk,
+        parameter_valuespec=_parameter_valuespec_raid_disk,
+        title=lambda: _("RAID: state of a single disk"),
+    ))

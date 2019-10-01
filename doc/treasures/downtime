@@ -113,7 +113,7 @@ for o, a in opts:
 
 if omd_site and not opt_secret:
     try:
-        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user +
+        opt_secret = open(omd_root + "/var/check_mk/web/" + opt_user +
                           "/automation.secret").read().strip()
     except Exception as e:
         bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))

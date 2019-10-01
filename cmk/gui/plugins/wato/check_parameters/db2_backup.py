@@ -39,35 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Backup(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_db2_backup():
+    return TextAscii(title=_("Instance"),
+                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
-    @property
-    def check_group_name(self):
-        return "db2_backup"
 
-    @property
-    def title(self):
-        return _("DB2 Time since last database Backup")
+def _parameter_valuespec_db2_backup():
+    return Optional(
+        Tuple(elements=[
+            Age(title=_("Warning at"),
+                display=["days", "hours", "minutes"],
+                default_value=86400 * 14),
+            Age(title=_("Critical at"),
+                display=["days", "hours", "minutes"],
+                default_value=86400 * 28)
+        ],),
+        title=_("Specify time since last successful backup"),
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return Optional(
-            Tuple(elements=[
-                Age(title=_("Warning at"),
-                    display=["days", "hours", "minutes"],
-                    default_value=86400 * 14),
-                Age(title=_("Critical at"),
-                    display=["days", "hours", "minutes"],
-                    default_value=86400 * 28)
-            ],),
-            title=_("Specify time since last successful backup"),
-        )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance"),
-                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_backup",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_db2_backup,
+        parameter_valuespec=_parameter_valuespec_db2_backup,
+        title=lambda: _("DB2 Time since last database Backup"),
+    ))

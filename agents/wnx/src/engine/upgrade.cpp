@@ -10,6 +10,7 @@
 
 #include "cvt.h"
 #include "glob_match.h"
+#include "install_api.h"
 #include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
@@ -80,8 +81,11 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
         return 0;
     }
 
-    const std::wstring_view folders[] = {L"config", L"plugins", L"local",
-                                         L"mrpe",   L"state",   L"bin"};
+    static const std::wstring_view folders[] = {
+        L"config", L"plugins", L"local",
+        L"spool",  // may contain important files
+        L"mrpe",   L"state",   L"bin"};
+
     auto count = 0;
     for_each(folders, std::end(folders),
 
@@ -89,7 +93,8 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
               copy_mode](std::wstring_view sub_folder) {
                  auto src = legacy_root / sub_folder;
                  auto tgt = program_data / sub_folder;
-                 XLOG::l.t("Processing '{}':", src.u8string());  //
+                 XLOG::l.t("Processing '{}', mode [{}]:", src.u8string(),
+                           static_cast<int>(copy_mode));  //
                  if (copy_mode == CopyFolderMode::remove_old)
                      fs::remove_all(tgt);
                  auto folder_exists = CreateFolderSmart(tgt);
@@ -108,6 +113,7 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
                      });
                  count += c;
              });
+
     return count;
 }
 
@@ -494,8 +500,9 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
 }
 
 // testing block
-std::filesystem::path G_LegacyAgentPresetPath = "";
-void SetLegacyAgentPath(std::filesystem::path path) {
+// used only during unit testing
+std::filesystem::path G_LegacyAgentPresetPath;
+void SetLegacyAgentPath(const std::filesystem::path& path) {
     G_LegacyAgentPresetPath = path;
 }
 
@@ -766,7 +773,7 @@ bool CreateProtocolFile(const std::filesystem::path& dir,
 
         if (ofs) {
             ofs << "Upgraded:\n";
-            ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
+            ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
             if (!OptionalContent.empty()) {
                 ofs << OptionalContent;
                 ofs << "\n";
@@ -1044,7 +1051,7 @@ std::optional<YAML::Node> LoadIni(std::filesystem::path File) {
     std::error_code ec;
 
     if (!fs::exists(File, ec)) {
-        XLOG::l.i("File not found '{}', this is may be ok", File.u8string());
+        XLOG::l.i("File not found '{}', this may be ok", File.u8string());
         return {};
     }
     if (!fs::is_regular_file(File, ec)) {
@@ -1091,9 +1098,10 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     return false;
 }
 
-bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
-                        const std::filesystem::path& ProgramData,
-                        bool LocalFileExists) {
+bool ConvertUserIniFile(
+    const std::filesystem::path& legacy_root,
+    const std::filesystem::path& pdata,  // programdata/checkmk/agent
+    bool local_ini_exists) {
     namespace fs = std::filesystem;
 
     // simple sanity check
@@ -1102,8 +1110,7 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
         return false;
     }
 
-    const std::string root_ini = "check_mk.ini";
-    auto user_ini_file = LegacyRoot / root_ini;
+    auto user_ini_file = legacy_root / files::kIniFile;
 
     std::error_code ec;
     if (!fs::exists(user_ini_file, ec)) {
@@ -1112,22 +1119,21 @@ bool ConvertUserIniFile(const std::filesystem::path& LegacyRoot,
     }
 
     // check_mk.user.yml or check_mk.bakery.yml
-    const std::wstring name = files::kDefaultMainConfigName;
+    const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
     // generate
-    auto out_folder = ProgramData;
+    auto out_folder = pdata;
 
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
-    auto wato_ini = IsBakeryIni(user_ini_file);
+    auto ini_from_wato = IsBakeryIni(user_ini_file);
     fs::path yaml_file;
 
-    if (wato_ini || LocalFileExists)
-        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder,
-                                            wtools::ConvertToUTF8(name));
+    if (ini_from_wato || local_ini_exists)
+        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder, name);
     else
-        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder,
-                                          wtools::ConvertToUTF8(name));
+        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder, name);
+
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
@@ -1150,7 +1156,33 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
     bool local_file_exists = ConvertLocalIniFile(legacy_root, program_data);
 
     // if installation is baked, than only local ini conversion allowed
-    if (installation_type == InstallationType::wato) return local_file_exists;
+    if (installation_type == InstallationType::wato) {
+        auto ini_file = legacy_root / files::kIniFile;
+        if (!cma::tools::IsValidRegularFile(ini_file)) {
+            XLOG::d.i("File '{}' is absent, nothing to do",
+                      ini_file.u8string());
+            return local_file_exists;
+        }
+
+        XLOG::d(
+            "You have Baked Agent installed.\nYour legacy configuration file '{}' exists and is {}\n"
+            "The Upgrade of above mentioned file is SKIPPED to avoid overriding of your WATO managed configuration file '{}\\{}'\n\n"
+            "If you do want to upgrade legacy configuration file, then you have to:\n"
+            "\t- delete manually the file {}\\{}\n"
+            "\t- call check_mk_agent.exe upgrade -force\n",
+            ini_file.u8string(),
+
+            IsBakeryIni(ini_file) ? "managed by Bakery/WATO" : "user defined",
+            wtools::ConvertToUTF8(cma::cfg::GetBakeryDir()),
+            wtools::ConvertToUTF8(files::kBakeryYmlFile),
+            wtools::ConvertToUTF8(files::kIniFile),
+            wtools::ConvertToUTF8(cma::cfg::GetRootInstallDir()),
+            wtools::ConvertToUTF8(files::kWatoIniFile)
+            //
+        );
+
+        return local_file_exists;
+    }
 
     auto user_or_bakery_exists =
         ConvertUserIniFile(legacy_root, program_data, local_file_exists);
@@ -1296,7 +1328,7 @@ std::string GetNewHash(const std::filesystem::path& dat) noexcept {
     try {
         auto yml = YAML::LoadFile(dat.u8string());
         auto hash = GetVal(yml, kHashName.data(), std::string());
-        if (hash == cma::cfg::kBuidlHashValue) {
+        if (hash == cma::cfg::kBuildHashValue) {
             XLOG::l.t("Hash is from packaged agent, ignoring");
             return {};
         }
@@ -1398,3 +1430,76 @@ bool PatchStateHash(const std::filesystem::path& ini,
 }
 
 }  // namespace cma::cfg::upgrade
+
+namespace cma::cfg::rm_lwa {
+
+bool IsRequestedByRegistry() {
+    using namespace cma::install;
+    return std::wstring(registry::kMsiRemoveLegacyRequest) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiRemoveLegacy,
+                                    registry::kMsiRemoveLegacyDefault);
+}
+
+void SetAlreadyRemoved() {
+    using namespace cma::install;
+    XLOG::l.i("Disabling in registry request to remove Legacy Agent");
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyAlready);
+}
+
+bool IsAlreadyRemoved() {
+    using namespace cma::install;
+    return std::wstring(registry::kMsiRemoveLegacyAlready) ==
+           wtools::GetRegistryValue(registry::GetMsiRegistryPath(),
+                                    registry::kMsiRemoveLegacy,
+                                    registry::kMsiRemoveLegacyDefault);
+}
+
+bool IsToRemove() {
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::t("No legacy agent - nothing to do");
+        return false;
+    }
+
+    if (IsAlreadyRemoved()) {
+        XLOG::l.i(
+            "The Legacy Agent is already removed. "
+            "To remove the Legacy Agent again, please, "
+            "use command line or set registry entry HKLM\\{}\\{} to \"1\"",
+            wtools::ConvertToUTF8(cma::install::registry::GetMsiRegistryPath()),
+            wtools::ConvertToUTF8(cma::install::registry::kMsiRemoveLegacy));
+        return false;
+    }
+
+    if (cma::cfg::GetVal(groups::kGlobal, vars::kGlobalRemoveLegacy, false)) {
+        XLOG::l.i("Config requests to remove Legacy Agent");
+        return true;
+    }
+
+    if (IsRequestedByRegistry()) {
+        XLOG::l.i("Registry requests to remove Legacy Agent");
+        return true;
+    }
+
+    return false;
+}
+
+void Execute() {
+    if (!IsToRemove()) return;
+
+    using namespace cma::cfg;
+
+    // un-installation self
+    auto x = std::thread([]() {
+        XLOG::l.i("Requested remove of Legacy Agent...");
+        auto result = UninstallProduct(products::kLegacyAgent);
+        if (result) SetAlreadyRemoved();
+
+        XLOG::l.i("Result of remove of Legacy Agent is [{}]", result);
+    });
+
+    if (x.joinable()) x.join();
+}
+}  // namespace cma::cfg::rm_lwa

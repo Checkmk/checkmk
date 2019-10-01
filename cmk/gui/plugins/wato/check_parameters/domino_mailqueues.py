@@ -39,49 +39,41 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDominoMailqueues(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_domino_mailqueues():
+    return DropdownChoice(
+        choices=[
+            ('lnDeadMail', _('Mails in Dead Queue')),
+            ('lnWaitingMail', _('Mails in Waiting Queue')),
+            ('lnMailHold', _('Mails in Hold Queue')),
+            ('lnMailTotalPending', _('Total Pending Mails')),
+            ('InMailWaitingforDNS', _('Mails Waiting for DNS Queue')),
+        ],
+        title=_("Domino Mail Queue Names"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "domino_mailqueues"
 
-    @property
-    def title(self):
-        return _("Lotus Domino Mail Queues")
+def _parameter_valuespec_domino_mailqueues():
+    return Dictionary(
+        elements=[
+            ("queue_length",
+             Tuple(
+                 title=_("Number of Mails in Queue"),
+                 elements=[
+                     Integer(title=_("warning at"), default_value=300),
+                     Integer(title=_("critical at"), default_value=350),
+                 ],
+             )),
+        ],
+        required_keys=['queue_length'],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("queue_length",
-                 Tuple(
-                     title=_("Number of Mails in Queue"),
-                     elements=[
-                         Integer(title=_("warning at"), default_value=300),
-                         Integer(title=_("critical at"), default_value=350),
-                     ],
-                 )),
-            ],
-            required_keys=['queue_length'],
-        )
-
-    @property
-    def item_spec(self):
-        return DropdownChoice(
-            choices=[
-                ('lnDeadMail', _('Mails in Dead Queue')),
-                ('lnWaitingMail', _('Mails in Waiting Queue')),
-                ('lnMailHold', _('Mails in Hold Queue')),
-                ('lnMailTotalPending', _('Total Pending Mails')),
-                ('InMailWaitingforDNS', _('Mails Waiting for DNS Queue')),
-            ],
-            title=_("Domino Mail Queue Names"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="domino_mailqueues",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_domino_mailqueues,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_domino_mailqueues,
+        title=lambda: _("Lotus Domino Mail Queues"),
+    ))

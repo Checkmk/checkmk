@@ -25,13 +25,16 @@
 # Boston, MA 02110-1301 USA.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
+import sys
 import abc
 from typing import Any, Dict, Text, List  # pylint: disable=unused-import
+import six
 
-try:
-    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store
@@ -84,7 +87,10 @@ class LabelManager(object):
 
     def _discovered_labels_of_host(self, hostname):
         # type: (str) -> Dict
-        return DiscoveredHostLabelsStore(hostname).load()
+        return {
+            label_id: label["value"]
+            for label_id, label in DiscoveredHostLabelsStore(hostname).load().iteritems()
+        }
 
     def labels_of_service(self, ruleset_matcher, hostname, service_desc):
         # type: (RulesetMatcher, str, Text) -> Dict
@@ -127,10 +133,8 @@ class LabelManager(object):
         return self._autochecks_manager.discovered_labels_of(hostname, service_desc).to_dict()
 
 
-class ABCDiscoveredLabelsStore(object):
+class ABCDiscoveredLabelsStore(six.with_metaclass(abc.ABCMeta, object)):
     """Managing persistance of discovered labels"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def file_path(self):
         # type () -> Path
@@ -138,7 +142,11 @@ class ABCDiscoveredLabelsStore(object):
 
     def load(self):
         # type: () -> Dict
-        return cmk.utils.store.load_data_from_file(str(self.file_path), default={})
+        # Skip labels discovered by the previous HW/SW inventory approach (which was addded+removed in 1.6 beta)
+        return {
+            k: v for k, v in cmk.utils.store.load_data_from_file(str(
+                self.file_path), default={}).iteritems() if isinstance(v, dict)
+        }
 
     def save(self, labels):
         # type: (Dict) -> None

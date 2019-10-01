@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import time
 import os
 
@@ -472,7 +473,6 @@ def get_av_computation_options():
              title=_("Query Time Limit"),
              help=_("Limit the execution time of the query, in order to "
                     "avoid a hanging system."),
-             unit=_("sec"),
              default_value=30,
          )),
         ("logrow_limit", "single", True,
@@ -508,11 +508,11 @@ def render_number_function(timeformat):
     elif timeformat == "minutes":
 
         def render_number(n, d):
-            return "%d min" % (n / 60)
+            return "%d min" % (n / 60)  # fixed: true-division
     elif timeformat == "hours":
 
         def render_number(n, d):
-            return "%d h" % (n / 3600)
+            return "%d h" % (n / 3600)  # fixed: true-division
     else:
 
         def render_number(n, d):
@@ -919,7 +919,7 @@ def compute_availability(what, av_rawdata, avoptions):
 
             availability_table.append(availability_entry)
 
-    availability_table.sort(cmp=cmp_av_entry)
+    availability_table.sort(key=key_av_entry)
 
     # Apply filters
     filtered_table = []
@@ -1062,7 +1062,7 @@ def compute_availability_groups(what, av_data, avoptions):
                 else:
                     title = group_titles.get(group_id, group_id)
                 titled_groups.append((title, group_id))  ## ACHTUNG
-        titled_groups.sort(cmp=lambda a, b: cmp(a[1], b[1]))
+        titled_groups.sort(key=lambda x: x[1])
 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:
@@ -1384,7 +1384,9 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                     for aggr in os_aggrs:
                         if x_cnt is not None:
                             if aggr == "avg":
-                                r = render_number(number / x_cnt, entry["considered_duration"])
+                                r = render_number(
+                                    int(number / x_cnt),
+                                    entry["considered_duration"])  # fixed: true-division
                             elif aggr == "min":
                                 r = render_number(x_min, entry["considered_duration"])
                             elif aggr == "max":
@@ -1533,7 +1535,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
                                                      help_txt and help_txt or sname)
             if "log_output" in row and row["log_output"]:
                 title += " - " + row["log_output"]
-            width = rest_percentage * row["duration"] / total_duration
+            width = rest_percentage * row["duration"] / total_duration  # fixed: true-division
 
             # Information for table of detailed events
             if style == "standalone":
@@ -1589,7 +1591,7 @@ def layout_timeline_choords(time_range):
     # Now comes the difficult part: decide automatically, whether to use
     # hours, days, weeks or months. Days and weeks needs to take local time
     # into account. Months are irregular.
-    hours = duration / 3600
+    hours = duration / 3600.0
     if hours < 12:
         scale = "hours"
     elif hours < 24:
@@ -1633,14 +1635,14 @@ def find_next_choord(broken, scale):
         title = time.strftime("%H:%M", broken)
 
     elif scale == "2hours":
-        broken[3] = broken[3] / 2 * 2
+        broken[3] = int(broken[3] / 2) * 2
         epoch = time.mktime(broken)
         epoch += 2 * 3600
         broken[:] = list(time.localtime(epoch))
         title = defines.weekday_name(broken[6]) + time.strftime(" %H:%M", broken)
 
     elif scale == "6hours":
-        broken[3] = broken[3] / 6 * 6
+        broken[3] = int(broken[3] / 6) * 6
         epoch = time.mktime(broken)
         epoch += 6 * 3600
         broken[:] = list(time.localtime(epoch))
@@ -2035,14 +2037,11 @@ def get_av_groups(availability_table, avoptions):
 
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
-def cmp_av_entry(a, b):
+def key_av_entry(a):
     # This local import currently needed
     import cmk.gui.plugins.views  # pylint: disable=redefined-outer-name
-    return utils.cmp_num_split(a["site"], b["site"]) or \
-           utils.cmp_num_split(a["host"], b["host"]) or \
-           cmp(cmk.gui.plugins.views.cmp_service_name_equiv(a["service"]),
-               cmk.gui.plugins.views.cmp_service_name_equiv(b["service"])) or \
-           utils.cmp_num_split(a["service"], b["service"])
+    return utils.key_num_split(a["service"]), cmk.gui.plugins.views.cmp_service_name_equiv(
+        a["service"]), utils.key_num_split(a["host"]), utils.key_num_split(a["site"])
 
 
 def history_url_of(av_object, time_range):

@@ -5,6 +5,7 @@ from StringIO import StringIO
 
 import pytest  # type: ignore
 from testlib.base import Scenario
+import six
 
 import cmk_base.core_config as core_config
 import cmk_base.core_nagios as core_nagios
@@ -18,7 +19,7 @@ def test_format_nagios_object():
         u"_HÄÄÄÄ": "XXXXXX_YYYY",
     }
     cfg = core_nagios._format_nagios_object("service", spec)
-    assert isinstance(cfg, unicode)
+    assert isinstance(cfg, six.text_type)
     assert cfg == """define service {
   %-29s %s
   %-29s %s

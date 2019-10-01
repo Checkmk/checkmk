@@ -1,0 +1,12 @@
+Title: Removed deprecated host/service visibility handling for webservices
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1566371341
+Class: feature
+
+Werk #3376 deprecated the user attribute {{Visibility of Hosts/Services (Webservice)}}
+and offered a better alternative via the <tt>force_authuser</tt> URL variable.
+This deprecation has been in effect since 1.4.0, so we can finally remove that attribute.

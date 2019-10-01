@@ -33,10 +33,11 @@ import ctypes.util
 from contextlib import contextmanager
 from typing import Generator  # pylint: disable=unused-import
 
-try:
-    from pathlib import Path  # type: ignore  # pylint: disable=unused-import
-except ImportError:
-    from pathlib2 import Path  # pylint: disable=unused-import
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error,unused-import
+else:
+    from pathlib2 import Path
 
 import cmk.utils.store
 from cmk.utils.exceptions import MKGeneralException

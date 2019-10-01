@@ -40,7 +40,15 @@ def check_traceroute_arguments(params):
     for router, state in params["routers"]:
         args += ["-%s" % state, router]
 
-    args.append('"$HOSTADDRESS$"')
+    family = params.get("address_family")
+    if family is None:
+        family = "ipv6" if is_ipv6_primary(host_name()) else "ipv4"
+
+    if family == "ipv6":
+        args.append("-6")
+    else:
+        args.append("-4")
+    args.append("$HOSTADDRESS$")
 
     return args
 

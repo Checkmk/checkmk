@@ -88,3 +88,9 @@ def test_python_modules(site, module_name):
     import importlib
     module = importlib.import_module(module_name)
     assert module.__file__.startswith(site.root)
+
+
+@pytest.mark.skip("Skip until 2019-09-11")
+def test_python_preferred_encoding():
+    import locale
+    assert locale.getpreferredencoding() == "UTF-8"

@@ -1,15 +1,22 @@
 // Windows Tools
 #include "stdafx.h"
 
+#include "wtools.h"
+
+// WINDOWS STUFF
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <WinSock2.h>
 
-#include <WinError.h>
-#include <stdio.h>
-#include <windows.h>
+#include <comdef.h>
+#include <shellapi.h>
+
+#include "psapi.h"
+#pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
+#pragma comment(lib, "psapi.lib")     /// Microsoft Specific
+#endif
 
 #include <cstdint>
-#include <iostream>
 #include <numeric>
 #include <string>
 
@@ -17,11 +24,7 @@
 #include "cfg.h"
 #include "logger.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 #include "upgrade.h"
-#include "wtools.h"
-
-#pragma comment(lib, "wbemuuid.lib")  /// Microsoft Specific
 
 namespace wtools {
 
@@ -432,7 +435,7 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
             // we want to know what is happened with service in windows
             ? RegisterServiceCtrlHandlerEx(name_.get(), ServiceCtrlHandlerEx,
                                            nullptr)
-            // in release w e want to use safe method
+            // in release we want to use safe method
             : RegisterServiceCtrlHandler(name_.get(), ServiceCtrlHandler);
 
     if (!status_handle_) {
@@ -441,7 +444,7 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         throw GetLastError();  // crash here - we have rights
         return;
     }
-    XLOG::l.i("Damned handlers registered");
+    XLOG::l.i("Service handlers registered");
 
     try {
         using namespace cma::cfg;
@@ -456,6 +459,9 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
 
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
+
+        cma::cfg::rm_lwa::Execute();
+
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
@@ -1164,6 +1170,21 @@ bool IsWindowsComInitialized() {
     return g_windows_com_initialized;
 }
 
+// # TODO gtest[-]
+bool WmiObjectContains(IWbemClassObject* object, const std::wstring& name) {
+    if (!object) {
+        XLOG::l.crit(XLOG_FUNC + "Bad Parameter");
+        return false;
+    }
+
+    VARIANT value;
+    HRESULT res = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (FAILED(res)) return false;
+
+    ON_OUT_OF_SCOPE(VariantClear(&value));
+    return value.vt != VT_NULL;
+}
+
 std::wstring WmiGetWstring(const VARIANT& Var) {
     if (Var.vt & VT_ARRAY) {
         return L"<array>";
@@ -1211,6 +1232,12 @@ std::wstring WmiStringFromObject(IWbemClassObject* object,
     for (auto& name : names) {
         // data
         VARIANT value;
+
+        // clearing of the value
+        memset(&value, 0,
+               sizeof(value));  // prevents potential usage
+                                // of the non-initialized data
+                                // when converting I4 to UI4
         // Get the value of the Name property
         auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
@@ -1660,8 +1687,23 @@ uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
     return Default;
 }
 
-// gtest [+]
-// returns data from the root machine registry
+// returns true on success
+bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
+                      std::wstring_view value) {
+    HKEY hKey;
+    auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
+                              REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
+                              &hKey, NULL);
+    if (ERROR_SUCCESS != ret) return false;
+
+    /** Set full application path with a keyname to registry */
+    ret = RegSetValueEx(hKey, key.data(), 0, REG_SZ,
+                        reinterpret_cast<const BYTE*>(value.data()),
+                        static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
+    return ERROR_SUCCESS == ret;
+}
+
+// returns true on success
 bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
                       uint32_t Data) noexcept {
     auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
@@ -1910,6 +1952,107 @@ int FindProcess(std::wstring_view process_name) noexcept {
     });
 
     return count;
+}
+
+void KillProcessTree(uint32_t ProcessId) {
+    // snapshot
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ON_OUT_OF_SCOPE(CloseHandle(snapshot));
+
+    // scan and kill
+    // error management is ignored while this is secondary method for now
+    PROCESSENTRY32 process;
+    ZeroMemory(&process, sizeof(process));
+    process.dwSize = sizeof(process);
+    Process32First(snapshot, &process);
+    do {
+        // process.th32ProcessId is the PID.
+        if (process.th32ParentProcessID == ProcessId) {
+            KillProcess(process.th32ProcessID);
+        }
+
+    } while (Process32Next(snapshot, &process));
+}
+
+std::wstring GetArgv(uint32_t index) noexcept {
+    int n_args = 0;
+    auto argv = ::CommandLineToArgvW(GetCommandLineW(), &n_args);
+
+    if (argv == nullptr) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(argv));
+
+    if (index < static_cast<uint32_t>(n_args)) return argv[index];
+
+    return {};
+}
+
+std::wstring GetCurrentExePath() noexcept {
+    namespace fs = std::filesystem;
+
+    std::wstring exe_path;
+    int args_count = 0;
+    auto arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
+    if (nullptr == arg_list) return {};
+
+    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
+    fs::path exe = arg_list[0];
+
+    std::error_code ec;
+    if (fs::exists(exe, ec)) return exe.parent_path();
+    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
+
+    return {};
+}
+
+size_t GetOwnVirtualSize() noexcept {
+#if defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS_EX pmcx = {};
+    pmcx.cb = sizeof(pmcx);
+    ::GetProcessMemoryInfo(GetCurrentProcess(),
+                           reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmcx),
+                           pmcx.cb);
+
+    return pmcx.WorkingSetSize;
+#else
+#error "Not implemented"
+    return 0;
+#endif
+}
+
+namespace monitor {
+bool IsAgentHealthy() noexcept {
+    return GetOwnVirtualSize() < kMaxMemoryAllowed;
+}
+}  // namespace monitor
+
+// Low level function to get parent reliable
+uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
+{
+    ULONG_PTR pbi[6];
+    ULONG ulSize = 0;
+    LONG(WINAPI * NtQueryInformationProcess)
+    (HANDLE ProcessHandle, ULONG ProcessInformationClass,
+     PVOID ProcessInformation, ULONG ProcessInformationLength,
+     PULONG ReturnLength);
+    *(FARPROC*)&NtQueryInformationProcess =
+        GetProcAddress(LoadLibraryA("NTDLL.DLL"), "NtQueryInformationProcess");
+    if (!NtQueryInformationProcess) return 0;
+
+    auto h = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (h == 0) {
+        XLOG::l.w("Can't get info from process [{}] error [{}]", pid,
+                  GetLastError());
+
+        return 0;
+    }
+    ON_OUT_OF_SCOPE(CloseHandle(h));
+
+    if (NtQueryInformationProcess(h, 0, &pbi, sizeof(pbi), &ulSize) >= 0 &&
+        ulSize == sizeof(pbi))
+        return (uint32_t)(pbi[5]);
+
+    return 0;
 }
 
 }  // namespace wtools

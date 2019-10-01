@@ -50,6 +50,7 @@
 import abc
 import copy
 import errno
+import logging
 from multiprocessing.pool import ThreadPool
 from multiprocessing import TimeoutError
 import os
@@ -57,7 +58,7 @@ import re
 import shutil
 import sys
 import time
-from typing import Union, Dict, List, Text  # pylint: disable=unused-import
+from typing import Union, Dict, List, Set, Text  # pylint: disable=unused-import
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore
@@ -67,7 +68,6 @@ import six
 
 import cmk
 import cmk.utils.paths
-import cmk.utils.log
 
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -92,7 +92,11 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
-from cmk.gui.plugins.userdb.utils import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb.utils import (
+    UserConnector,
+    user_connector_registry,
+    get_user_attributes,
+)
 
 import cmk.gui.sites as sites
 
@@ -163,7 +167,7 @@ class MKLDAPException(MKGeneralException):
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
-    connection_suffixes = {}
+    connection_suffixes = {}  # type: Dict[str, str]
 
     @classmethod
     def transform_config(cls, cfg):
@@ -239,7 +243,7 @@ class LDAPUserConnector(UserConnector):
     def connect_server(self, server):
         try:
             trace_args = {}
-            if self._logger.isEnabledFor(cmk.utils.log.DEBUG):
+            if self._logger.isEnabledFor(logging.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_args["trace_level"] = 2
@@ -354,10 +358,10 @@ class LDAPUserConnector(UserConnector):
     def _discover_nearest_dc(self, domain):
         cached_server = self._get_nearest_dc_from_cache()
         if cached_server:
-            self._logger.info(_('Using cached DC %s') % cached_server)
+            self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # pylint: disable=import-error
+        import ad  # type: ignore  # pylint: disable=import-error
         locator = ad.Locator()
         locator.m_logger = self._logger
         try:
@@ -367,18 +371,18 @@ class LDAPUserConnector(UserConnector):
             return server
         except Exception:
             self._logger.info('  DISCOVERY: Failed to discover a server from domain %r' % domain)
-            self._logger.exception()
+            self._logger.exception("error discovering LDAP server")
             self._logger.info('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
 
     def _get_nearest_dc_from_cache(self):
         try:
-            return file(self._nearest_dc_cache_filepath()).read()
+            return open(self._nearest_dc_cache_filepath()).read()
         except IOError:
             pass
 
     def _cache_nearest_dc(self, server):
-        self._logger.debug(_('Caching nearest DC %s') % server)
+        self._logger.debug('Caching nearest DC %s' % server)
         cmk.utils.store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):
@@ -539,10 +543,10 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        if isinstance(base, unicode):
+        if isinstance(base, six.text_type):
             base = base.encode("utf-8")
 
-        if isinstance(filt, unicode):
+        if isinstance(filt, six.text_type):
             filt = filt.encode("utf-8")
 
         results = []
@@ -1072,25 +1076,37 @@ class LDAPUserConnector(UserConnector):
         if enforce_this_connection is False:
             return None  # Skip this connection, another one is enforced
         else:
+            # Always use the stripped user ID for communication with the LDAP server
             user_id = self._strip_suffix(user_id)
 
         # Returns None when the user is not found or not uniq, else returns the
         # distinguished name and the user_id as tuple which are both needed for
         # the further login process.
-        result = self._get_user(user_id, True)
-        if not result:
+        fetch_user_result = self._get_user(user_id, True)
+        if not fetch_user_result:
             # The user does not exist
             if enforce_this_connection:
                 return False  # Refuse login
             return None  # Try next connection (if available)
 
-        user_dn, user_id = result
+        user_dn, user_id = fetch_user_result
 
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
             self._bind(user_dn, password)
-            result = user_id
+            if not self._has_suffix():
+                result = user_id
+            else:
+                # Does the user without suffix exist and is it related to this connection? Always
+                # use it in case it exists. If not, use the user with the suffix. A connection may
+                # have created users while the connection had no suffix and a suffix has been added
+                # to the connection later.
+                import cmk.gui.userdb as userdb  # TODO: Cleanup
+                if userdb.connection_id_of_user(user_id) == self.id():
+                    result = user_id
+                else:
+                    result = self._add_suffix(user_id)
         except Exception:
             self._logger.exception("  Exception during authentication (User: %s)", user_id)
             result = False
@@ -1292,7 +1308,7 @@ class LDAPUserConnector(UserConnector):
         self._group_search_cache.clear()
 
     def _set_last_sync_time(self):
-        file(self._sync_time_file, 'w').write('%s\n' % time.time())
+        open(self._sync_time_file, 'w').write('%s\n' % time.time())
 
     # no ldap check, just check the WATO attribute. This handles setups where
     # the locked attribute is not synchronized and the user is enabled in LDAP
@@ -1315,7 +1331,7 @@ class LDAPUserConnector(UserConnector):
 
     def _get_last_sync_time(self):
         try:
-            return float(file(self._sync_time_file).read().strip())
+            return float(open(self._sync_time_file).read().strip())
         except Exception:
             return 0
 
@@ -1325,6 +1341,7 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
     def locked_attributes(self):
+        # type: () -> List[str]
         locked = {'password'}  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
@@ -1334,7 +1351,8 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes added in this connector which shal be written to
     # the multisites users.mk
     def multisite_attributes(self):
-        attrs = set([])
+        # type: () -> List[str]
+        attrs = set()  # type: Set[str]
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.multisite_attributes)
@@ -1343,7 +1361,8 @@ class LDAPUserConnector(UserConnector):
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
     def non_contact_attributes(self):
-        attrs = set([])
+        # type: () -> List[str]
+        attrs = set()  # type: Set[str]
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.non_contact_attributes)
@@ -1857,10 +1876,8 @@ class LDAPConnectionValuespec(Transform):
 #   '----------------------------------------------------------------------'
 
 
-class LDAPAttributePlugin(object):
+class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all LDAP attribute synchronization plugins"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -1973,7 +1990,7 @@ def ldap_attribute_plugins_elements(connection):
     return elements
 
 
-def register_user_attribute_sync_plugins(user_attribute_registry):
+def register_user_attribute_sync_plugins():
     """Register sync plugins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
@@ -1981,12 +1998,11 @@ def register_user_attribute_sync_plugins(user_attribute_registry):
         if not plugin.is_builtin:
             del ldap_attribute_plugin_registry[ident]
 
-    for attr, attribute_class in user_attribute_registry.items():
-        attribute = attribute_class()
-        plugin_class = type("LDAPUserAttributePlugin%s" % attr.title(), (LDAPUserAttributePlugin,), {
-            "ident": attr,
-            "title": attribute.valuespec().title(),
-            "help": attribute.valuespec().help(),
+    for name, attr in get_user_attributes():
+        plugin_class = type("LDAPUserAttributePlugin%s" % name.title(), (LDAPUserAttributePlugin,), {
+            "ident": name,
+            "title": attr.valuespec().title(),
+            "help": attr.valuespec().help(),
             'needed_attributes': lambda self, connection, params: [params.get("attr", connection.ldap_attr(self.ident)).lower()],
             'lock_attributes': lambda self, params: [ self.ident ],
             'parameters': lambda self, connection: Dictionary(
@@ -2245,10 +2261,12 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 
     @property
     def multisite_attributes(self):
+        # type: () -> List[str]
         return ["ldap_pw_last_changed"]
 
     @property
     def non_contact_attributes(self):
+        # type: () -> List[str]
         return ["ldap_pw_last_changed"]
 
     def needed_attributes(self, connection, params):
@@ -2474,8 +2492,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
         # First clean all previously set values from attributes to be synced where
         # user is not a member of
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        user_attrs = dict(userdb.get_user_attributes())
+        user_attrs = dict(get_user_attributes())
         for group_spec in params["groups"]:
             attr_name, value = group_spec["attribute"]
             if group_spec["cn"] not in groups \
@@ -2531,11 +2548,8 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         )
 
     def _get_user_attribute_choices(self):
-        choices = []
-        import cmk.gui.userdb as userdb  # TODO: Cleanup
-        for attr, val in userdb.get_user_attributes():
-            choices.append((attr, val.valuespec().title(), val.valuespec()))
-        return choices
+        return [(name, attr.valuespec().title(), attr.valuespec())
+                for name, attr in get_user_attributes()]
 
 
 #.

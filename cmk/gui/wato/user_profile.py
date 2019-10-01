@@ -54,7 +54,7 @@ def user_profile_async_replication_page():
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
     html.end_context_buttons()
 
-    sites = [site_id for site_id, _site in config.user.authorized_login_sites()]
+    sites = config.user.authorized_login_sites().keys()
     user_profile_async_replication_dialog(sites=sites)
 
     html.footer()
@@ -114,11 +114,16 @@ def _add_profile_replication_change(site_id, result):
 
 @cmk.gui.pages.register("user_change_pw")
 def page_change_own_password():
-    page_user_profile(change_pw=True)
+    _show_page_user_profile(change_pw=True)
 
 
 @cmk.gui.pages.register("user_profile")
-def page_user_profile(change_pw=False):
+def page_user_profile():
+    _show_page_user_profile(change_pw=False)
+
+
+# TODO: Refactor this to page classes
+def _show_page_user_profile(change_pw):
     start_async_replication = False
 
     if not config.user.id:
@@ -360,7 +365,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
-        status = cmk.gui.sites.state(site_id, {}).get("state", "unknown")
+        status = cmk.gui.sites.states().get(site_id, {}).get("state", "unknown")
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 

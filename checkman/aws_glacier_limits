@@ -1,0 +1,19 @@
+title: AWS/Glacier Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/Glacier limits, ie. the number of
+ allowed vaults withing a region.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max.
+ value of 1000. These levels are configurable.
+
+ If limits are enabled all vaults are fetched regardless of
+ possibly configured restriction to names or tags.
+
+inventory:
+ One service will be created.

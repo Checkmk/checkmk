@@ -1,0 +1,30 @@
+Title: Windows Agent 1.6: Now able to remove the Legacy Agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1565004282
+Class: feature
+
+Now it is possible to remove the Legacy Agent during or after the Windows Agent 1.6 installation. 
+
+There are three methods:
+
+1. From the command line please, call 'check_mk_agent.exe remove_legacy' to remove the Legacy Agent 
+immediately 
+
+2. During GUI-based MSI installation, please set the check box 'Remove Legacy Agent' to remove agent 
+immediately after the installation of the Windows Agent
+
+3. To remove the Legacy Agent through user configuration file, please add to the section global 
+the line 
+
+  remove_legacy: yes
+  
+In this case the Legacy Agent will be removed after reload of the configuration file.
+
+Important notes: method 3 removes the Legacy Agent only once. This is done to avoid infinite 
+'remove Legacy Agent' after every agent restart and or configuration reload.
+
+Through the method 1 the Legacy Agent may be removed unconditionally at any moment.

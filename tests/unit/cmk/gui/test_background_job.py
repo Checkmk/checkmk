@@ -1,9 +1,10 @@
+import logging
 import time
 import multiprocessing
 import sys
 import pytest  # type: ignore
-from pathlib2 import Path
 import testlib  # type: ignore
+import six
 
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
@@ -16,9 +17,9 @@ import cmk.gui.log
 
 @pytest.fixture(autouse=True)
 def debug_logging():
-    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.DEBUG})
+    cmk.gui.log.set_log_levels({"cmk.web": logging.DEBUG})
     yield
-    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.INFO})
+    cmk.gui.log.set_log_levels({"cmk.web": logging.INFO})
 
 
 def test_registered_background_jobs():
@@ -39,12 +40,12 @@ def test_registered_background_jobs():
 def test_registered_background_jobs_attributes():
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
-        assert isinstance(job_class.gui_title(), unicode)
+        assert isinstance(job_class.gui_title(), six.text_type)
 
 
 @pytest.fixture(autouse=True)
-def job_base_dir(tmpdir, monkeypatch):
-    var_dir = Path("%s" % tmpdir)
+def job_base_dir(tmp_path, monkeypatch):
+    var_dir = tmp_path
 
     log_dir = var_dir / "log"
     log_dir.mkdir()  # pylint: disable=no-member

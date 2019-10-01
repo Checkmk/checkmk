@@ -1,0 +1,16 @@
+Title: Correct wording in Eternus DX checks
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1569506989
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+What checkmk calls "Channel Module" is called "Controller
+Module" in Fujitsu wording.  This patch corrects checks and the
+man pages.
+
+<b>Note:</b> This patch changes the service description.
+<i>History of these services will be lost</i>.

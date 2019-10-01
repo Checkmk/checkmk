@@ -38,40 +38,32 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPowerMultiitem(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _item_spec_power_multiitem():
+    return TextAscii(
+        title=_("Component"),
+        help=_("The identifier of device component the consumed power is related to."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "power_multiitem"
 
-    @property
-    def title(self):
-        return _("Device Component Power Consumption")
+def _parameter_valuespec_power_multiitem():
+    return Dictionary(elements=[
+        ("power_upper_levels",
+         Tuple(
+             title=_("Alert on too high power consumption"),
+             elements=[
+                 Integer(title=_("Warning at"), unit=_("W"), default_value=90),
+                 Integer(title=_("Critical at"), unit=_("W"), default_value=100),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("power_upper_levels",
-             Tuple(
-                 title=_("Alert on too high power consumption"),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=_("W"), default_value=90),
-                     Integer(title=_("Critical at"), unit=_("W"), default_value=100),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Component"),
-            help=_("The identifier of device component the consumed power is related to."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="power_multiitem",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=_item_spec_power_multiitem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_power_multiitem,
+        title=lambda: _("Device Component Power Consumption"),
+    ))

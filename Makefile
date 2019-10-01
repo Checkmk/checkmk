@@ -43,6 +43,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := iwyu_tool
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
+ARTIFACT_STORAGE   := http://nexus:8081
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -74,13 +75,23 @@ FILES_TO_FORMAT_LINUX := \
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
-JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed)))\
-                      $(wildcard web/htdocs/js/modules/*.js)\
-                      $(wildcard web/htdocs/js/modules/node_visualization/*.js)
+JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
+                          $(wildcard \
+                              $(foreach edir,. enterprise managed, \
+                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
+
+JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
-RRDTOOL_VERS := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
+RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
+
+WEBPACK_MODE       ?= production
+THEMES             := classic facelift modern-dark
+THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
+THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
+THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
+THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc cppcheck dist documentation format format-c \
@@ -168,7 +179,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js web/htdocs/themes/facelift/theme.css ChangeLog web/htdocs/themes/classic/theme.css
+$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -200,7 +211,15 @@ $(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).ta
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs app
+	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
+      app \
+      htdocs/css \
+      htdocs/images \
+      htdocs/jquery \
+      $(patsubst web/%,%,$(JAVASCRIPT_MINI)) \
+      $(patsubst web/%,%.map,$(JAVASCRIPT_MINI)) \
+      htdocs/sounds \
+      $(patsubst web/%,%,$(THEME_RESOURCES))
 
 	tar xzf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
@@ -307,17 +326,22 @@ optimize-images:
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
-node_modules: package.json
-	if curl --head 'http://nexus:8081/#browse/browse:npm-proxy' | grep '200\ OK'; then \
-            npm config set registry http://nexus:8081/repository/npm-proxy/; \
-        fi
-	npm install --unsafe-perm
+node_modules: package.json package-lock.json
+	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
+            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
+	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
+	else \
+	    REGISTRY= ; \
+	    echo "Installing from public registry" ; \
+        fi ; \
+	npm install --audit=false --unsafe-perm $$REGISTRY
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
-	ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=development
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
-	ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=development
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -363,7 +387,7 @@ setup:
 	    valgrind \
 	    direnv \
 	    python-pip \
-            python3.7 \
+	    python3.7-dev \
 	    chrpath \
 	    enchant \
 	    ksh \
@@ -535,10 +559,10 @@ virtual-envs/%/Pipfile.lock: virtual-envs/%/Pipfile
 # broken virtual environments which may have been caused by network issues.
 .PRECIOUS: virtual-envs/%/.venv
 virtual-envs/%/.venv: virtual-envs/%/Pipfile.lock
+	@type python$* >/dev/null 2>&1 || (echo "ERROR: python$* can not be found. Execute: \"make setup\"" && exit 1)
 	cd virtual-envs/$*/; \
 	$(RM) -r .venv; \
-	($(PIPENV) sync --dev) || ($(RM) -r .venv ; exit 1); \
-	touch .venv
+	($(PIPENV) sync --dev && touch .venv) || ($(RM) -r .venv ; exit 1)
 
 .venv-%: virtual-envs/%/.venv
 	rm -rf {Pipfile,Pipfile.lock,.venv*}

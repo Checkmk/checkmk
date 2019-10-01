@@ -1,0 +1,10 @@
+Title: aws_glacier_limits and aws_glacier_summary: New checks to monitor AWS/Glacier limits and to overview over all AWS/Glacier vaults
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564062870
+Class: feature
+
+

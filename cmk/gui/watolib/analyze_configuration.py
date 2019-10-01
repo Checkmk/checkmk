@@ -28,6 +28,7 @@ checks and tells the user what could be improved."""
 
 import traceback
 
+from livestatus import LocalConnection
 import cmk.utils.defines
 
 import cmk.gui.sites
@@ -39,7 +40,7 @@ from cmk.gui.globals import html
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.plugins.watolib.utils import ConfigDomain
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
@@ -190,7 +191,7 @@ class ACTest(object):
             total_result.from_test(self)
             yield total_result
         except Exception:
-            logger.exception()
+            logger.exception("error executing configuration test %s", self.__class__.__name__)
             result = ACResultCRIT(
                 "<pre>%s</pre>" % _("Failed to execute the test %s: %s") %
                 (html.attrencode(self.__class__.__name__), traceback.format_exc()))
@@ -211,13 +212,13 @@ class ACTest(object):
 
     def _uses_microcore(self):
         """Whether or not the local site is using the CMC"""
-        local_connection = cmk.gui.sites.livestatus.LocalConnection()
+        local_connection = LocalConnection()
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 
     def _get_effective_global_setting(self, varname):
         global_settings = load_configuration_settings()
-        default_values = ConfigDomain().get_all_default_globals()
+        default_values = ABCConfigDomain.get_all_default_globals()
 
         if cmk.gui.config.is_wato_slave_site():
             current_settings = load_configuration_settings(site_specific=True)

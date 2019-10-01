@@ -1,0 +1,12 @@
+Title: mongodb_cluster: Monitoring of cluster balance and size
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1566804879
+Class: feature
+
+New check to monitor cluster relevant parameters: Balance of chunks, number of jumbo chunks, status of balancer.
+
+For using this new feature, you have to re-deploy the agent with the new mongodb plugin.

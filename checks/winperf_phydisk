@@ -176,8 +176,10 @@ def check_winperf_phydisk(item, params, info):
                 sec_per_write_counter = get_rate("spw_counter_" + disk_id, this_time, disk[11])
                 sec_per_write_base = get_rate("spw_base_" + disk_id, this_time, disk[12]) or 1
                 result[disk[1]].update({
-                    'average_read_wait': (sec_per_read_counter / frequency) / sec_per_read_base,
-                    'average_write_wait': (sec_per_write_counter / frequency) / sec_per_write_base,
+                    'average_read_wait': (sec_per_read_counter / frequency) /
+                                         sec_per_read_base,  # fixed: true-division
+                    'average_write_wait': (sec_per_write_counter / frequency) /
+                                          sec_per_write_base,  # fixed: true-division
                 })
 
             # Queue Lengths (currently only Windows). Windows uses counters here.

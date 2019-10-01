@@ -2,6 +2,8 @@
 
 import abc
 import random
+import six
+
 from cmk.special_agents.agent_aws import (
     AWSEC2InstTypes,)
 
@@ -17,9 +19,7 @@ from cmk.special_agents.agent_aws import (
 #   ---abc------------------------------------------------------------------
 
 
-class Entity(object):
-    __metaclass__ = abc.ABCMeta
-
+class Entity(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, key):
         self.key = key
 
@@ -122,9 +122,7 @@ class BoolChoice(Choice):
 #   .--abc------------------------------------------------------------------
 
 
-class InstanceBuilder(object):
-    __metaclass__ = abc.ABCMeta
-
+class InstanceBuilder(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, idx, amount):
         self._idx = idx
         self._amount = amount
@@ -141,6 +139,30 @@ class InstanceBuilder(object):
     @classmethod
     def create_instances(cls, amount):
         return [cls(idx, amount).create_instance() for idx in xrange(amount)]
+
+
+#.
+#   .--S3-------------------------------------------------------------------
+
+
+class GlacierListVaultsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str('VaultARN'),
+            Str('VaultName'),
+            Str('CreationDate'),
+            Str('LastInventoryDate'),
+            Int('NumberOfArchives'),
+            Int('SizeInBytes')
+        ]
+
+
+class GlacierVaultTaggingIB(InstanceBuilder):
+    def _fill_instance(self):
+        return [
+            Str('Key'),
+            Str('Value'),
+        ]
 
 
 #.
@@ -560,7 +582,7 @@ class ELBDescribeInstanceHealthIB(InstanceBuilder):
     def _fill_instance(self):
         return [
             Str('InstanceId'),
-            Choice('State', ["InService", "OutOfServic", "Unknown"]),
+            Choice('State', ["InService", "OutOfService", "Unknown"]),
             Choice('ReasonCode', ["ELB", "Instance", "N/A"]),
             Str('Description'),
         ]

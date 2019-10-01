@@ -38,46 +38,38 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersApacheStatus(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_apache_status():
+    return TextAscii(
+        title=_("Apache Server"),
+        help=_("A string-combination of servername and port, e.g. 127.0.0.1:5000."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "apache_status"
 
-    @property
-    def title(self):
-        return _("Apache Status")
+def _parameter_valuespec_apache_status():
+    return Dictionary(elements=[
+        ("OpenSlots",
+         Tuple(title=_("Remaining Open Slots"),
+               help=_("Here you can set the number of remaining open slots"),
+               elements=[
+                   Integer(title=_("Warning below"), label=_("slots")),
+                   Integer(title=_("Critical below"), label=_("slots"))
+               ])),
+        ("BusyWorkers",
+         Tuple(title=_("Busy workers"),
+               help=_("Here you can set upper levels of busy workers"),
+               elements=[
+                   Integer(title=_("Warning at"), label=_("busy workers")),
+                   Integer(title=_("Critical at"), label=_("busy workers"))
+               ])),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("OpenSlots",
-             Tuple(title=_("Remaining Open Slots"),
-                   help=_("Here you can set the number of remaining open slots"),
-                   elements=[
-                       Integer(title=_("Warning below"), label=_("slots")),
-                       Integer(title=_("Critical below"), label=_("slots"))
-                   ])),
-            ("BusyWorkers",
-             Tuple(title=_("Busy workers"),
-                   help=_("Here you can set upper levels of busy workers"),
-                   elements=[
-                       Integer(title=_("Warning at"), label=_("busy workers")),
-                       Integer(title=_("Critical at"), label=_("busy workers"))
-                   ])),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Apache Server"),
-            help=_("A string-combination of servername and port, e.g. 127.0.0.1:5000."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="apache_status",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_apache_status,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_apache_status,
+        title=lambda: _("Apache Status"),
+    ))

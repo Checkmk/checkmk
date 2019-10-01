@@ -58,7 +58,8 @@ def check_emcvnx_sp_util(item, params, parsed):
     if busy_ticks_rate + idle_ticks_rate == 0:
         sp_util = 0
     else:
-        sp_util = 100 * (busy_ticks_rate / (busy_ticks_rate + idle_ticks_rate))
+        sp_util = 100 * (busy_ticks_rate /
+                         (busy_ticks_rate + idle_ticks_rate))  # fixed: true-division
     infotext = "%.1f%%" % sp_util
     if sp_util >= crit:
         state = 2

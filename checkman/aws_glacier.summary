@@ -1,0 +1,16 @@
+title: AWS/Glacier Summary
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors all AWS Glacier vaults and reports
+ a summary of their states.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ There are no default levels set for the total vault size. Upper
+ levels are configurable.
+
+inventory:
+ One summary service is created.

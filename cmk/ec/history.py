@@ -33,6 +33,7 @@ import time
 import six
 
 import cmk.ec.actions
+from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
@@ -264,7 +265,7 @@ def _get_mongodb(history, query):
     result = history._mongodb.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
-    #file(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
+    #open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
     #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
     if limit:
@@ -396,8 +397,8 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
         try:
             days = config["history_lifetime"]
             min_mtime = time.time() - days * 86400
-            logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                           (days, cmk.utils.render.date_and_time(min_mtime)))
+            logger.log(VERBOSE, "Expiring logfiles (Horizon: %d days -> %s)", days,
+                       cmk.utils.render.date_and_time(min_mtime))
             for path in settings.paths.history_dir.value.glob('*.log'):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info("Deleting log file %s (age %s)" %
@@ -606,7 +607,7 @@ def _get_logfile_timespan(path):
 def scrub_string(s):
     if isinstance(s, str):
         return s.translate(scrub_string.str_table, "\0\1\2\n")
-    if isinstance(s, unicode):
+    if isinstance(s, six.text_type):
         return s.translate(scrub_string.unicode_table)
     raise TypeError("scrub_string expects a string argument")
 

@@ -30,15 +30,21 @@ def inventory_k8s_pod_container(parsed):
 
 
 def check_k8s_pod_container(_no_item, params, parsed):
-    container = len(parsed)
+    total = len(parsed)
     ready = sum(container['ready'] for container in parsed.itervalues())
-
-    state = 2 if ready != container else 0
+    state = collections.defaultdict(int)
+    exit_code = 0
+    for container in parsed.itervalues():
+        state[container["state"]] += 1
+        exit_code = max(exit_code, 0 if int(container["state_exit_code"]) == 0 else 2)
     perfdata = [
-        ('docker_all_containers', container, None, None, 0, container),
-        ('ready_containers', ready, None, None, 0, container),
+        ('docker_all_containers', total, None, None, 0, total),
+        ('ready_containers', ready, None, None, 0, total),
     ]
-    yield state, "Ready: %d/%d" % (ready, container), perfdata
+    yield 0, "Ready: %d/%d" % (ready, total), perfdata
+    yield 0, "Running: %d" % state["running"]
+    yield 0, "Waiting: %d" % state["waiting"]
+    yield 0 if not exit_code else 2, "Terminated: %d" % state["terminated"]
 
 
 check_info['k8s_pod_container'] = {

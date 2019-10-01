@@ -1,43 +1,31 @@
 # -*- encoding: utf-8
-# pylint: disable=redefined-outer-name
-import imp
+# pylint: disable=protected-access,redefined-outer-name
+from __future__ import print_function
 import os
 import re
 import sys
-
-import pytest
+import locale
+import pytest  # type: ignore
+from testlib import import_module
+import six
 
 from testlib import cmk_path  # pylint: disable=import-error
 
 
 @pytest.fixture(scope="module")
-def mk_logwatch(request):
-    """
-    Fixture to inject mk_logwatch as module
-
-    imp.load_source() has the side effect of creating mk_logwatchc, so remove it
-    before and after importing it (just to be safe).
-    """
-    agent_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch'))
-
-    for action in ('setup', 'teardown'):
-        try:
-            os.remove(agent_path + "c")
-        except OSError:
-            pass
-
-        if action == 'setup':
-            yield imp.load_source("mk_logwatch", agent_path)
+def mk_logwatch():
+    return import_module("agents/plugins/mk_logwatch")
 
 
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
-    for attribute in ('maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex', 'overflow',
-                      'nocontext', 'maxoutputsize'):
+    for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
+                      'overflow', 'nocontext', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
 @pytest.mark.parametrize("option_string, key, expected_value", [
+    ("encoding=utf8", 'encoding', 'utf8'),
     ("maxfilesize=42", 'maxfilesize', 42),
     ("maxlines=23", 'maxlines', 23),
     ("maxlinesize=13", 'maxlinesize', 13),
@@ -45,7 +33,10 @@ def test_options_defaults(mk_logwatch):
     ("overflow=I", 'overflow', 'I'),
     ("nocontext=tRuE", 'nocontext', True),
     ("nocontext=FALse", 'nocontext', False),
-    ("fromstart=True", 'fromstart', True),
+    ("fromstart=1", 'fromstart', True),
+    ("fromstart=yEs", 'fromstart', True),
+    ("fromstart=0", 'fromstart', False),
+    ("fromstart=no", 'fromstart', False),
     ("maxoutputsize=1024", 'maxoutputsize', 1024),
 ])
 def test_options_setter(mk_logwatch, option_string, key, expected_value):
@@ -67,20 +58,27 @@ def test_options_setter_regex(mk_logwatch, option_string, expected_pattern, expe
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(mk_logwatch, tmpdir):
-    fake_config_dir = tmpdir.mkdir("test")
-    fake_config_dir.mkdir("logwatch.d").join("custom.cfg").open('w')
+def test_get_config_files(mk_logwatch, tmp_path):
+    fake_config_dir = tmp_path / "test"
+    fake_config_dir.mkdir()
+    (fake_config_dir / "logwatch.d").mkdir()
+    (fake_config_dir / "logwatch.d").joinpath("custom.cfg").open(mode="w")
 
-    expected = ['%s/logwatch.cfg' % fake_config_dir, '%s/logwatch.d/custom.cfg' % fake_config_dir]
+    expected = [
+        str(fake_config_dir / "logwatch.cfg"),
+        str(fake_config_dir / "logwatch.d/custom.cfg")
+    ]
 
     assert mk_logwatch.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_iter_config_lines(mk_logwatch, tmpdir):
+def test_iter_config_lines(mk_logwatch, tmp_path):
     """Fakes a logwatch config file and checks if the agent plugin reads it appropriately"""
     # setup
-    fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
-    fake_config_file.write("# this is a comment\nthis is a line   ")
+    fake_config_path = tmp_path / "test"
+    fake_config_path.mkdir()
+    fake_config_file = fake_config_path.joinpath("logwatch.cfg")
+    fake_config_file.write_text(u"# this is a comment\nthis is a line   ", encoding="utf-8")
     files = [str(fake_config_file)]
 
     read = list(mk_logwatch.iter_config_lines(files))
@@ -124,7 +122,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 @pytest.mark.parametrize("config_lines, logfiles_files, logfiles_patterns", [
     (
         [
-            u'',
             u'/var/log/messages',
             u' C Fail event detected on md device',
             u' I mdadm.*: Rebuild.*event detected',
@@ -149,7 +146,6 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'',
             u'/var/log/auth.log',
             u' W sshd.*Corrupted MAC on input',
         ],
@@ -158,14 +154,14 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'/var/log/syslog /var/log/kern.log',
+            u'"c:\\a path\\with spaces" "d:\\another path\\with spaces"',
             u' I registered panic notifier',
             u' C panic',
             u' C Oops',
             u' W generic protection rip',
             u' W .*Unrecovered read error - auto reallocate failed',
         ],
-        [u'/var/log/syslog', u'/var/log/kern.log'],
+        [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces'],
         [
             (u'I', u'registered panic notifier', [], []),
             (u'C', u'panic', [], []),
@@ -224,11 +220,14 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     assert status_filename == statusfile
 
 
-def test_read_status(mk_logwatch, tmpdir):
+def test_read_status(mk_logwatch, tmp_path):
     # setup
-    fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
-    fake_status_file.write("""/var/log/messages|7767698|32455445
-/var/test/x12134.log|12345|32444355""")
+    fake_status_path = tmp_path / "test"
+    fake_status_path.mkdir()
+    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
+    fake_status_file.write_text(u"""/var/log/messages|7767698|32455445
+/var/test/x12134.log|12345|32444355""",
+                                encoding="utf-8")
     file_path = str(fake_status_file)
 
     # execution
@@ -240,16 +239,18 @@ def test_read_status(mk_logwatch, tmpdir):
     }
 
 
-def test_save_status(mk_logwatch, tmpdir):
-    fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
-    fake_status_file.write("")
+def test_save_status(mk_logwatch, tmp_path):
+    fake_status_path = tmp_path / "test"
+    fake_status_path.mkdir()
+    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
+    fake_status_file.write_text(u"", encoding="utf-8")
     file_path = str(fake_status_file)
     fake_status = {
         '/var/log/messages': (7767698, 32455445),
         '/var/test/x12134.log': (12345, 32444355)
     }
     mk_logwatch.save_status(fake_status, file_path)
-    assert sorted(fake_status_file.read().splitlines()) == [
+    assert sorted(fake_status_file.read_text().splitlines()) == [
         '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
     ]
 
@@ -280,25 +281,25 @@ def test_ip_in_subnetwork(mk_logwatch):
 @pytest.mark.parametrize("buff,encoding,position", [
     ('\xFE\xFF', 'utf_16_be', 2),
     ('\xFF\xFE', 'utf_16', 2),
-    ('no encoding in this file!', 'utf_8', 0),
+    ('no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
 def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, position):
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    log_iter = mk_logwatch.LogLinesIter('void')
+    log_iter = mk_logwatch.LogLinesIter('void', None)
     assert log_iter._enc == encoding
     assert log_iter.get_position() == position
 
 
 def test_log_lines_iter(mk_logwatch):
-    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__)
+    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__, None)
 
     log_iter.set_position(710)
     assert log_iter.get_position() == 710
 
     line = log_iter.next_line()
-    assert isinstance(line, unicode)
+    assert isinstance(line, six.text_type)
     assert line == u"# This file is part of Check_MK.\n"
     assert log_iter.get_position() == 743
 
@@ -309,6 +310,62 @@ def test_log_lines_iter(mk_logwatch):
     log_iter.skip_remaining()
     assert log_iter.next_line() is None
     assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+
+
+@pytest.mark.parametrize(
+    "use_specific_encoding,lines,expected_result",
+    [
+        # UTF-8 encoding works by default
+        (None, [
+            b"abc1",
+            u"äbc2".encode("utf-8"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+        # Replace characters that can not be decoded
+        (None, [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"\ufffdbc2\n",
+            u"abc3\n",
+        ]),
+        # Set custom encoding
+        ("latin-1", [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+    ])
+def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
+                                   expected_result):
+    # Write test logfile first
+    log_path = tmp_path.joinpath("testlog")
+    with log_path.open("wb") as f:
+        f.write(b"\n".join(lines) + "\n")
+
+    # Now test processing
+    log_iter = mk_logwatch.LogLinesIter(str(log_path), None)
+    if use_specific_encoding:
+        log_iter._enc = use_specific_encoding
+
+    result = []
+    while True:
+        l = log_iter.next_line()
+        if l is None:
+            break
+        result.append(l)
+
+    assert result == expected_result
 
 
 class MockStdout(object):
@@ -386,7 +443,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
-    assert all(isinstance(item, unicode) for item in output)
+    assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert logfile in status
@@ -447,20 +504,3 @@ def fake_filesystem(tmp_path):
     assert os.stat(str(hard_linked_file_a)) == os.stat(str(hard_linked_file_b))
 
     return fake_fs
-
-
-def _print_tree(directory, resolve=True):
-    """
-    Print fake filesystem with optional expansion of symlinks.
-    Don't remove this helper function. Used for debugging.
-    """
-    print('%s' % directory)
-    for path in sorted(directory.rglob('*')):
-        if resolve:
-            try:  # try resolve symlinks
-                path = path.resolve()
-            except Exception:
-                pass
-        depth = len(path.relative_to(directory).parts)
-        spacer = '    ' * depth
-        print('%s%s' % (spacer, path.name))

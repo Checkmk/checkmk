@@ -38,29 +38,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMemoryRelative(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_memory_relative():
+    return OptionalDropdownChoice(title=_("Memory usage"),
+                                  choices=[(None, _("Do not impose levels"))],
+                                  otherlabel=_("Percentual levels ->"),
+                                  explicit=Tuple(elements=[
+                                      Integer(title=_("Warning at"), default_value=85, unit="%"),
+                                      Integer(title=_("Critical at"), default_value=90, unit="%"),
+                                  ],))
 
-    @property
-    def check_group_name(self):
-        return "memory_relative"
 
-    @property
-    def title(self):
-        return _("Main memory usage for Brocade fibre channel switches")
-
-    @property
-    def parameter_valuespec(self):
-        return OptionalDropdownChoice(title=_("Memory usage"),
-                                      choices=[(None, _("Do not impose levels"))],
-                                      otherlabel=_("Percentual levels ->"),
-                                      explicit=Tuple(elements=[
-                                          Integer(title=_("Warning at"), default_value=85,
-                                                  unit="%"),
-                                          Integer(title=_("Critical at"),
-                                                  default_value=90,
-                                                  unit="%"),
-                                      ],))
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="memory_relative",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_memory_relative,
+        title=lambda: _("Main memory usage for Brocade fibre channel switches"),
+    ))

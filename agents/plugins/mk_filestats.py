@@ -159,9 +159,9 @@ class LazyFileStats(object):
     def __init__(self, path):
         super(LazyFileStats, self).__init__()
         LOGGER.debug("Creating LazyFileStats(%r)", path)
-        if not isinstance(path, unicode):
-            path = unicode(path, 'utf8')
-        self.path = os.path.abspath(path)
+        if not isinstance(path, unicode):  # pylint: disable=bad-builtin
+            path = path.decode('utf8')
+        self.path = path
         self.stat_status = None
         self._size = None
         self._age = None
@@ -237,7 +237,7 @@ class PatternIterator(object):
     """Recursively iterate over all files"""
     def __init__(self, pattern_list):
         super(PatternIterator, self).__init__()
-        self._patterns = [os.path.expanduser(p) for p in pattern_list]
+        self._patterns = [os.path.abspath(os.path.expanduser(p)) for p in pattern_list]
 
     def _iter_files(self, pattern):
         for item in glob.iglob(pattern):
@@ -343,8 +343,8 @@ class RegexFilter(AbstractFilter):
     def __init__(self, regex_pattern):
         super(RegexFilter, self).__init__()
         LOGGER.debug("initializing with pattern: %r", regex_pattern)
-        if not isinstance(regex_pattern, unicode):
-            regex_pattern = unicode(regex_pattern, 'utf8')
+        if not isinstance(regex_pattern, unicode):  # pylint: disable=bad-builtin
+            regex_pattern = regex_pattern.decode('utf8')
         self._regex = re.compile(regex_pattern, re.UNICODE)
 
     def matches(self, lazy_file):

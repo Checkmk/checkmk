@@ -27,6 +27,7 @@
 import os
 import time
 
+import cmk
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -42,6 +43,9 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
     multisite_cronjobs, register_job,
 )
+
+if not cmk.is_raw_edition():
+    import cmk.gui.cee.plugins.cron
 
 loaded_with_language = False
 
@@ -73,7 +77,7 @@ def page_run_cron():
         last_run = os.stat(lock_file).st_mtime
         if time.time() - last_run < 59:
             raise MKGeneralException("Cron called too early. Skipping.")
-    file(lock_file, "w")  # touches the file
+    open(lock_file, "w")  # touches the file
     store.aquire_lock(lock_file)
 
     # The cron page is accessed unauthenticated. After leaving the page_run_cron area
@@ -89,12 +93,12 @@ def page_run_cron():
         try:
             job_name = cron_job.__name__
 
-            logger.debug("Starting [%s]" % job_name)
+            logger.debug("Starting [%s]", job_name)
             cron_job()
-            logger.debug("Finished [%s]" % job_name)
+            logger.debug("Finished [%s]", job_name)
         except Exception:
             html.write("An exception occured. Take a look at the web.log.\n")
-            logger.exception("Exception in cron job [%s]" % job_name)
+            logger.exception("Exception in cron job [%s]", job_name)
 
     logger.debug("Finished all cron jobs")
     html.write("OK\n")

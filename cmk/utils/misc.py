@@ -28,9 +28,11 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
+import six
+
 
 def make_utf8(x):
-    if isinstance(x, unicode):
+    if isinstance(x, six.text_type):
         return x.encode('utf-8')
     return x
 
@@ -50,8 +52,8 @@ def pnp_cleanup(s):
         .replace('\\', '_')
 
 
-def cmp_config_paths(a, b):
-    """Compare function for Check_MK configuration file paths
+def key_config_paths(a):
+    """Key function for Check_MK configuration file paths
 
     Helper functions that determines the sort order of the
     configuration files. The following two rules are implemented:
@@ -64,7 +66,4 @@ def cmp_config_paths(a, b):
        the *.mk files in that directory.
     """
     pa = a.parts
-    pb = b.parts
-    return cmp(pa[:-1], pb[:-1]) or \
-           cmp(len(pa), len(pb)) or \
-           cmp(pa, pb)
+    return pa[:-1], len(pa), pa

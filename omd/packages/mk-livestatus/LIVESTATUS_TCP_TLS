@@ -7,23 +7,21 @@
 #  can configure the communication to be SSL encrypted.
 
 case "$1" in
-    default)
-        echo "on"
+default)
+    echo "on"
     ;;
-    choices)
-        echo "on: encrypt"
-        echo "off: clear text"
+choices)
+    echo "on: encrypt"
+    echo "off: clear text"
     ;;
-    set)
-        if [ "$2" == "on" ]; then
-            SOCK=$OMD_ROOT/tmp/run/live-tls
-        else
-            SOCK=$OMD_ROOT/tmp/run/live
-        fi
-        sed -ri 's#^([[:space:]]*server_args[[:space:]]*=[[:space:]]*)(/.+)$#\1'$SOCK'#' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
+set)
+    # Do not patch the xinetd config directly here, because that would lead to
+    # later conflicts during omd cp/mv. The xinetd config points to a link
+    # live-tcp instead which always points to the correct socket. This is
+    # done by "omd", because the hook can not change things in tmp since the
+    # tmpfs may not be available during hook execution.
     ;;
-    depends)
-        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+depends)
+    [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
     ;;
 esac
-

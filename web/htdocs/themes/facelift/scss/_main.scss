@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -84,9 +84,13 @@ input, select, textarea {
 select:not([multiple]) {
   padding: 8px 16px;
   padding-right: 2.5em;
-  background: #fff url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
+  background: $primary-bg-color url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
   -webkit-appearance: none;  /* Removes default chrome and safari style */
   -moz-appearance: none;     /* Removes default style Firefox */
+}
+
+div.popup_menu select:not([multiple]) {
+  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px no-repeat;
 }
 
 select::-ms-expand {
@@ -103,7 +107,7 @@ form {
 
 input:hover, select:hover, textarea:hover,
 input[type="checkbox"]:hover + label:before {
-  background-color: #edeceb;
+  background-color: $input-hover-bg-color;
 }
 
 td.checkbox input[type="checkbox"] + label:before {
@@ -123,20 +127,20 @@ input[type="checkbox"] {
     width: 12.5px;
     height: 12.5px;
     padding: 0;
-    margin: 0 .6em 0 0;
+    margin: -2px 4px 0 0;
     font-size: 12px;
     vertical-align: middle;
-    background-color: #fff;
-    border: 1px #73767a solid;
+    background-color: $primary-bg-color;
+    border: 1px $checkbox-border-color solid;
     content: "\00a0";
-    box-shadow: 0.1px 1px 1.2px 0 #888 inset;
+    box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
   }
 
   &:checked {
     + label:before {
-      color: #000;
+      color: $checkbox-checked-color;
       text-align: center;
-      background-color: #ddd;
+      background-color: $checkbox-checked-bg-color;
       content: "\2716";
     }
 
@@ -155,6 +159,8 @@ select.icon option {
   background-size: 18px;
 }
 
+
+// TODO : Figure out where these can be found in the front end
 input.button,
 table.vs_duallist a.control,
 .wato div.mainmenu a {
@@ -213,6 +219,7 @@ input.button:not([type=password]) {
 
 input.button.hot {
   &, &:active {
+    color: $hot-font-color;
     background-color: #11bd7b;
     border: 1px solid #11bd7b;
   }
@@ -223,12 +230,11 @@ input.button.hot {
 }
 
 /* on/off toggle button */
-
 .toggle_switch {
   width: 56px;
   height: 22px;
   padding: 2px;
-  background: $theme-color-white;
+  background: $primary_bg_color;
   border: 1px solid $theme-color-table-border;
   border-radius: 11px;
   box-shadow: none;
@@ -243,10 +249,10 @@ input.button.hot {
   .wato div.globalvars & a,
   .wato div.globalvars & body.main .popup_menu span,
   body.main .popup_menu .wato div.globalvars & {
-    height: 16px;
+    height: $toggle-switch-height;
     font-size: 8px;
     font-weight: $theme-font-weight-bold;
-    line-height: 16px;
+    line-height: $toggle-switch-height;
     letter-spacing: $theme-letter-spacing-table;
     text-transform: uppercase;
     border: none;
@@ -257,21 +263,25 @@ input.button.hot {
   a, .wato div.globalvars & a {
     display: block;
     width: 30px;
-    color: #fff;
+    color: $toggle-switch-font-color;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
   }
 
-  &.on a {
-    float: right;
-    background-color: #54a626;
-    border-width: 0 0 0 1px;
+  &.on {
+    a, .wato div.globalvars & a {
+      float: right;
+      background-color: $toggle-switch-on-bg-color;
+      border: $toggle-switch-on-border;
+    }
   }
 
-  &.off a {
-    background-color: #f60000;
-    border-width: 0 1px 0 0;
+  &.off {
+    a, .wato div.globalvars & a {
+      background-color: $toggle-switch-off-bg-color;
+      border: $toggle-switch-off-border;
+    }
   }
 
   a:hover, .wato div.globalvars & a:hover {
@@ -308,10 +318,6 @@ a.button {
 /*for IE8 */
 input[type="submit"]:focus {
   outline: none;
-}
-
-input:hover, select:hover, textarea:hover {
-  background-color: #edeceb;
 }
 
 /* Images have a native size of 48x48 and are scaled down by the
@@ -364,9 +370,10 @@ img.treeangle {
   margin-right: 3px;
   vertical-align: middle;
   cursor: pointer;
+  filter: invert(20%);
+  transition: transform .2s ease-in-out;
   -webkit-transition: -webkit-transform .2s ease-in-out;
   -moz-transition: -moz-transform .2s ease-in-out;
-  transition: transform .2s ease-in-out;
 
   &.open {
     -webkit-transform: rotate(90deg);
@@ -444,8 +451,8 @@ div.really {
 }
 
 div.success {
-  background-color: #9dbecd;
-  border-color: #080;
+  background-color: $success-alert-bg-color;
+  border: 1px solid $success-alert-border-color;
 }
 
 div.message {
@@ -455,22 +462,27 @@ div.message {
 }
 
 div.error {
-  color: #fff;
-  background-color: #e70000;
+  color: $theme-color-lightgrey;
+  background-color: $theme-color-state-2-background;
   border-color: #e40;
 
   a {
     color: #fff;
   }
+
+  tt {
+    color: inherit;
+  }
 }
 
-div.warning {
+.warning,
+body.main div.warning {
   color: #000;
-  background-color: #ff4;
+  background-color: $theme-color-main;
   border-color: #fc0;
 
-  a {
-    color: #000;
+  a, a:link {
+    color: $black;
   }
 }
 
@@ -621,9 +633,6 @@ table.valuespec_listof {
       white-space: nowrap;
       vertical-align: middle;
     }
-
-    td.vlof_content {
-    }
   }
 
   option[selected] {
@@ -639,12 +648,43 @@ div.valuespec_listof.floating > table > tbody > tr > td:first-child {
   vertical-align: top;
 }
 
-div.valuespec_listof_floating_container > table {
-  float: left;
+div.valuespec_listof_floating_container {
+  margin-top: -4px;
+  vertical-align: top;
+
+  > table {
+    float: left;
+
+    td {
+      vertical-align: top;
+
+      &.vlof_buttons img {
+	margin-top: 4px;
+      }
+
+      &.vlof_content .tagify {
+	tag {
+	  margin: 4px 5px 2px 4px;
+
+	  x {
+	    display: none;
+	  }
+
+	  > div {
+	    padding-right: .3em;
+	  }
+	}
+
+	span.tagify__input {
+	  margin: 3px 5px 2px 4px;
+	}
+      }
+    }
+  }
 }
 
 table.nform table.valuespec_listof div.valuespec_listof_floating_container > table > tbody > tr > td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 table.valuespec_listof.regular > tbody > tr {
@@ -684,6 +724,11 @@ table.vs_duallist {
     width: 14px;
     text-align: center;
     text-decoration: none;
+
+    &:hover {
+      text-decoration: none;
+      background-color: $duallist-control-a-hover-bg-color;
+    }
 
     &.add {
       float: right;
@@ -795,7 +840,6 @@ div.popup {
   }
 }
 
-/* TODO: Reproduce these #hover_menu elements */
 div#hover_menu {
   position: absolute;
   /* The hover menu needs to have a higher z-index than the highest element
@@ -810,7 +854,7 @@ div#hover_menu {
   }
 
   div.message {
-    color: $theme-color-white;
+    color: $primary-sidebar-font-color;
     background-color: $theme-color-black;
   }
 
@@ -820,6 +864,11 @@ div#hover_menu {
 
   .graph_container div.time {
     letter-spacing: 0;
+  }
+
+  /* For pnp4nagios hover_menu graphs in the Raw Edition */
+  table tbody tr td img {
+    filter: $pnp4nagios-img-filter;
   }
 }
 
@@ -934,6 +983,13 @@ tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
   width: 100px;
   text-align: center;
   white-space: nowrap;
+}
+
+table.data.werks {
+  td.werkclassfeature, td.werkclassfix, td.werklevel2, td.werklevel3,
+  td.werkcompincomp_ack {
+    color: $dark-font-color;
+  }
 }
 
 table.data.werks {
@@ -1078,30 +1134,52 @@ table.modifydowntimes > tbody > tr {
   }
 }
 
-.select2-container--default .select2-results {
-  color: #000;
-}
-
-.select2-container--default .select2-selection--single
-.select2-selection__rendered {
-  line-height: 23px;
-}
-
 .select2-container .select2-selection--single {
   height: 23px;
 }
 
-.select2-container--default .select2-selection--single
-.select2-selection__arrow b {
-  margin-top: -4px;
-}
+.select2-container--default {
 
+  .select2-results {
+    color: #000;
+  }
+
+  .select2-selection--single {
+    border-radius: 4px;
+
+    .select2-selection__rendered {
+      line-height: 23px;
+      color: $select2-rendered-color;
+    }
+
+    .select2-selection__arrow b {
+      margin-top: -4px;
+    }
+  }
+
+  .select2-dropdown {
+    background-color: $primary-bg-color;
+    border: $primary-border;
+  }
+
+  .select2-results__option {
+    color: $select2-rendered-color;
+    background-color: $primary-bg-color;
+  }
+
+  .select2-results__option[aria-selected=true] {
+    background-color: $select2-selected-bg-color;
+  }
+
+  .select2-results__option--highlighted[aria-selected] {
+    background-color: $select2-highlighted-bg-color;
+  }
+}
 
 /* TODO: Go through these following styles and move them to specific scss
  *       where needed
  */
 * {
-  font-family: $theme-font;
   letter-spacing: $theme-letter-spacing;
   text-shadow: none;
 }
@@ -1112,7 +1190,7 @@ html {
 
 .link, .title {
   display: inline-block;
-  padding: 0px 2px; /* affects spacing in sidebar plugins */
+  padding: 0 2px; /* affects spacing in sidebar plugins */
   font-size: $theme-font-size-main;
   font-weight: $theme-font-weight-global;
   letter-spacing: $theme-letter-spacing-table;
@@ -1128,7 +1206,51 @@ a.iconlink img, body.main .popup_menu span.iconlink img {
 div.graph {
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+
+
+  &.preview {
+    padding: 4px !important;
+  }
+
+  table.legend {
+    td {
+      color: $graph-legend-color;
+    }
+
+    th {
+      border-bottom: $graph-legend-th-border-bottom;
+    }
+  }
+
+  div.time {
+    color: $graph-time-color;
+  }
+
+  &.brokengraph {
+    box-shadow: none;
+
+    div.title {
+      padding: 8px;
+    }
+
+    pre {
+      padding: 0 8px 8px;
+      margin: 0;
+      color: $graph-time-color;
+    }
+  }
+}
+
+div.graph_hover_popup {
+  color: $graph-hover-popup-font-color;
+  background-color: $graph-hover-popup-bg-color;
+  border: $graph-hover-popup-border;
+  box-shadow: $graph-hover-popup-box-shadow;
+}
+
+.graph {
+  background-color: $graph-bg-color;
 }
 
 div.content {
@@ -1139,7 +1261,7 @@ div.content {
 }
 
 body.main img.treeangle {
-  filter: invert(100%);
+  filter: invert($filter-inversion-percentage);
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1147,9 +1269,15 @@ body.main img.treeangle {
   width: 60px !important;
 }
 
-.bi_rule_tree img.treeangle, .invtree img.treeangle, .grouped_row_header img.treeangle.nform {
+.bi_rule_tree img.treeangle, .invtree img.treeangle,
+.grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
   &, body.main & {
     filter: invert(0%);
+
+    &.open, &.closed {
+      margin: 1px 4px 0;
+      filter: $tree-collapse-img-filter;
+    }
   }
 }
 
@@ -1179,7 +1307,7 @@ div.graph_with_timeranges {
     }
 
     &.preview canvas {
-      margin-bottom: 0px;
+      margin-bottom: 0;
     }
 
     &.preview .title {
@@ -1206,7 +1334,7 @@ div.graph_with_timeranges {
   }
 
   table.timeranges > tbody > tr > td {
-    padding: 0 8px 8px;
+    padding: 0 8px 4px;
     border: none solid $theme-color-white;
 
     &:first-child {
@@ -1219,34 +1347,17 @@ div.graph_with_timeranges {
   }
 }
 
-td.agent_config table.rulesets td {
-  vertical-align: top;
+table.data td > div:first-child div.graph_with_timeranges {
+  margin-top: 8px;
+}
 
-  table {
-    border: none solid;
-    box-shadow: none;
-
-    td {
-      padding: 4px 8px 4px 0;
-      vertical-align: top;
-
-      td.title {
-        height: auto;
-        font-weight: $theme-font-weight-bold;
-        color: $theme-color-black;
-        background-color: $theme-color-white;
-      }
-
-      table tbody tr td {
-        padding: 0;
-      }
-    }
-  }
+table.data td > div:last-child div.graph_with_timeranges {
+  margin-bottom: 8px;
 }
 
 div.metricchoice select, div.metricchoice input, div.metricchoice select,
 div.metricchoice textarea, div.metricchoice #mk_side_search_field {
-  margin: 4px 0px;
+  margin: 4px 0;
 }
 
 td.title {
@@ -1271,6 +1382,7 @@ table.cmc_stats {
 #form_search input, #form_search select, #form_search textarea,
 #form_search #mk_side_search_field {
   width: auto;
+  border: $primary-border;
 }
 
 select.vlof_filter {
@@ -1287,8 +1399,9 @@ body.main.visible div.foldable .title {
 }
 
 div.color {
-  border-radius: $theme-border-radius;
-  box-shadow: none;
+  border-color: $color-div-border-color !important;
+  border-radius: 0;
+  box-shadow: $color-div-box-shadow;
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1301,26 +1414,9 @@ th.header_state {
   }
 }
 
-div.error {
-  color: $theme-color-lightgrey;
-  background-color: $theme-color-state-2-background;
-
-  tt {
-    color: inherit;
-  }
-}
-
-div.warning {
-  background-color: $theme-color-main;
-}
-
-div.success {
-  background-color: $theme-color-state-success-background;
-  border-color: $theme-color-state-success-border;
-}
-
 .hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
-  background-color: $theme-color-state-3-background;
+  color: $hot-font-color;
+  background-color: $hot-bg-color;
   border-color: $theme-color-nuance-16;
 }
 

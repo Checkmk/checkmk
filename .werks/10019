@@ -1,0 +1,12 @@
+Title: mk_jolokia,agent_jolokia: Continue on missing SEARCH permission
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568728082
+Class: fix
+
+Some preconfigured MBeans require the SEARCH command to be allowed
+for the inquiring host. The plugin and agent no longer crash if this
+permission is missing, but continue processing all other MBeans.

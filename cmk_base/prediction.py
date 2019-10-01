@@ -24,19 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
+from __future__ import division
 
 import json
+import logging
 import math
 import os
 import time
 
 import cmk.utils.debug
 import cmk.utils
-import cmk.utils.log
 import cmk.utils.defines as defines
+from cmk.utils.log import VERBOSE
 import cmk.utils.prediction
 
-logger = cmk.utils.log.get_logger(__name__)
+logger = logging.getLogger("cmk.prediction")
 
 
 def window_start(timestamp, span):
@@ -206,12 +208,12 @@ def is_prediction_up2date(pred_file, timegroup, params):
     period_info = prediction_periods[params["period"]]
     now = time.time()
     if last_info["time"] + period_info["valid"] * period_info["slice"] < now:
-        logger.verbose("Prediction of %s outdated", timegroup)
+        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return False
 
     jsonized_params = json.loads(json.dumps(params))
     if last_info.get('params') != jsonized_params:
-        logger.verbose("Prediction parameters have changed.")
+        logger.log(VERBOSE, "Prediction parameters have changed.")
         return False
 
     return True
@@ -239,7 +241,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     if is_prediction_up2date(pred_file, timegroup, params):
         data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
     else:
-        logger.verbose("Calculating prediction data for time group %s", timegroup)
+        logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
         cmk.utils.prediction.clean_prediction_files(pred_file, force=True)
 
         time_windows = time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
@@ -260,6 +262,6 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred["step"])
+    index = int(rel_time / data_for_pred["step"])  # fixed: true-division
     reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
     return cmk.utils.prediction.estimate_levels(reference, params, levels_factor)

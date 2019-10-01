@@ -1,0 +1,15 @@
+Title: only_from is correctly reported
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569245943
+Class: fix
+
+Previously Windows Agent send only_from IP Adresses in network form.
+For example, instead of 127.0.0.1 the Agent reported 127.0.0.1/32
+As result, Check MK Site provides the Warning due to IP Addresses mismatch.
+
+Now this error has been fixed and the Agent reports allowed IP adress(es) "as is"
+

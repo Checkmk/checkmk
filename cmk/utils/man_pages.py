@@ -29,6 +29,7 @@ used as base for the list of supported checks and catalogs of checks.
 
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
+from __future__ import division
 
 import os
 import re
@@ -36,9 +37,10 @@ import sys
 import StringIO
 import subprocess
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
     from pathlib2 import Path
 
 import cmk.utils.debug
@@ -176,6 +178,8 @@ catalog_titles = {
         "artec"         : "ARTEC",
         "db2"           : "IBM DB2",
         "elasticsearch" : "Elasticsearch",
+        "graylog"       : "Graylog",
+        "jenkins"       : "Jenkins",
         "splunk"        : "Splunk",
         "mongodb"       : "MongoDB",
         "citrix"        : "Citrix",
@@ -240,6 +244,7 @@ catalog_titles = {
     "cloud"    : "Cloud Based Environments",
         "azure"       : "Microsoft Azure",
         "aws"         : "Amazon Web Services",
+        "quanta"      : "Quanta Cloud Technology",
     "containerization" : "Containerization",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",
@@ -274,7 +279,7 @@ def man_page_exists(name):
 def man_page_path(name):
     if name[0] != "." and name[-1] != "~":
         for basedir in [
-                Path(cmk.utils.paths.local_check_manpages_dir),
+                cmk.utils.paths.local_check_manpages_dir,
                 Path(cmk.utils.paths.check_manpages_dir)
         ]:
             p = basedir / name
@@ -286,15 +291,17 @@ def man_page_path(name):
 def all_man_pages():
     manuals = {}
 
-    for basedir in [cmk.utils.paths.check_manpages_dir, cmk.utils.paths.local_check_manpages_dir]:
-        if not os.path.exists(basedir):
+    for basedir in [
+            Path(cmk.utils.paths.check_manpages_dir), cmk.utils.paths.local_check_manpages_dir
+    ]:
+        if not basedir.exists():
             continue
 
-        for name in os.listdir(basedir):
-            if name[0] == "." or name[-1] == "~":
+        for file_path in basedir.iterdir():
+            if file_path.name.startswith(".") or file_path.name.endswith("~"):
                 continue
 
-            manuals[name] = basedir + "/" + name
+            manuals[file_path.name] = str(file_path)
 
     return manuals
 
@@ -783,7 +790,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         for word in words[1:]:
             newline += ' '
             x += 1.0
-            while s / x < need_spaces / spaces:
+            while s / x < need_spaces / spaces:  # fixed: true-division
                 newline += ' '
                 s += 1
             newline += word

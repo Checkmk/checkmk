@@ -916,7 +916,7 @@ class CommandGroupDowntimes(CommandGroup):
 
     @property
     def title(self):
-        return _("Downtimes")
+        return _("Schedule downtimes")
 
     @property
     def sort_index(self):

@@ -1,0 +1,56 @@
+Title: Docker container: Add hook functions to docker entrypoint
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564670893
+Class: feature
+
+With this change it is possible to to execute custom hook scripts during the
+container startup. This is useful in case you want to integrate your own
+logic into containers based on the Checkmk images.
+
+These hooks have been created:
+
+pre-create - Is executed on the very first container startup before the Checkmk
+             site in the container is created  with "omd create".
+post-create - Is executed after site has been created and internal "omd config" is done.
+pre-update - Is executed after a volume has been moved to a container basing on an image
+            with another Checkmk version. Is called before "omd update" is executed.
+post-update - Is executed after a volume has been moved to a container basing on an image
+            with another Checkmk version. Is called after "omd update" was executed.
+pre-start - Is executed each time when the container is started before "omd start"
+post-start - Is executed each time when the container is started after "omd start"
+
+To use them you need to either mount the scripts into your container or create
+a custom image based on our container images. Your scripts need to be located
+in one of the below directories and need to be executable.
+
+C+:
+docker-entrypoint.d/
+|-- post-create
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- post-update
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- post-start
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- pre-create
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+|-- pre-update
+|   |-- 01_foo.sh
+|   |-- 02_bar.sh
+|   `-- 03_baz.sh
+`-- pre-start
+    |-- 01_foo.sh
+    |-- 02_bar.sh
+    `-- 03_baz.sh
+C-:

@@ -1,0 +1,12 @@
+Title: mk_nfsiostat: Plugin could not be packed using the bakery
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1569500334
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

@@ -25,7 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import six
 
+from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
@@ -39,9 +41,7 @@ from cmk.gui.plugins.dashboard import (
 )
 
 
-class DashletStats(Dashlet):
-    __metaclass__ = abc.ABCMeta
-
+class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
     @classmethod
     def is_resizable(cls):
         return False
@@ -99,7 +99,10 @@ class DashletStats(Dashlet):
             result = sites.live().query_row(query)
             sites.live().set_only_sites()
         else:
-            result = sites.live().query_summed_stats(query)
+            try:
+                result = sites.live().query_summed_stats(query)
+            except MKLivestatusNotFoundError:
+                result = []
 
         pies = zip(table, result)
         total = sum([x[1] for x in pies])
@@ -180,7 +183,8 @@ class DashletStats(Dashlet):
 
         html.close_div()
 
-        html.javascript("""
+        html.javascript(
+            """
 function chart_pie(pie_id, x_scale, radius, color, right_side) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if (!context)
@@ -208,11 +212,11 @@ if (cmk.dashboard.has_canvas_support()) {
     %(p)s
 }
 """ % {
-            "x": pie_diameter / 2,
-            "y": pie_diameter / 2,
-            "d": pie_diameter,
-            'p': '\n'.join(pie_parts)
-        })
+                "x": int(pie_diameter / 2.0),
+                "y": int(pie_diameter / 2.0),
+                "d": pie_diameter,
+                'p': '\n'.join(pie_parts)
+            })
 
 
 @dashlet_registry.register

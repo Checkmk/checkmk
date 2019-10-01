@@ -37,26 +37,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersInnovaphoneMem(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersOperatingSystem
+def _parameter_valuespec_innovaphone_mem():
+    return Tuple(
+        title=_("Specify levels in percentage of total RAM"),
+        elements=[
+            Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
+            Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "innovaphone_mem"
 
-    @property
-    def title(self):
-        return _("Innovaphone Memory Usage")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            title=_("Specify levels in percentage of total RAM"),
-            elements=[
-                Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
-                Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="innovaphone_mem",
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_innovaphone_mem,
+        title=lambda: _("Innovaphone Memory Usage"),
+    ))

@@ -39,40 +39,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersPrinterOutput(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersPrinters
+def _parameter_valuespec_printer_output():
+    return Dictionary(
+        elements=[
+            ('capacity_levels',
+             Tuple(
+                 title=_('Capacity filled'),
+                 elements=[
+                     Percentage(title=_("Warning at"), default_value=0.0),
+                     Percentage(title=_("Critical at"), default_value=0.0),
+                 ],
+             )),
+        ],
+        default_keys=['capacity_levels'],
+    )
 
-    @property
-    def check_group_name(self):
-        return "printer_output"
 
-    @property
-    def title(self):
-        return _("Printer Output Units")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('capacity_levels',
-                 Tuple(
-                     title=_('Capacity filled'),
-                     elements=[
-                         Percentage(title=_("Warning at"), default_value=0.0),
-                         Percentage(title=_("Critical at"), default_value=0.0),
-                     ],
-                 )),
-            ],
-            default_keys=['capacity_levels'],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_('Unit Name'), allow_empty=True)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="printer_output",
+        group=RulespecGroupCheckParametersPrinters,
+        item_spec=lambda: TextAscii(title=_('Unit Name'), allow_empty=True),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_printer_output,
+        title=lambda: _("Printer Output Units"),
+    ))

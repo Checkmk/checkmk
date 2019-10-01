@@ -33,6 +33,7 @@ import six
 import cmk
 import cmk.utils.debug
 import cmk.utils.defines
+from cmk.utils.log import VERBOSE
 import livestatus
 
 #.
@@ -199,9 +200,9 @@ def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).iteritems():
-        if isinstance(key, unicode):
+        if isinstance(key, six.text_type):
             key = key.encode("utf-8")
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -275,10 +276,10 @@ def do_notify(event_server, logger, event, username=None, is_cancelling=False):
 
     context = _create_notification_context(event_server, event, username, is_cancelling, logger)
 
-    if logger.is_verbose():
-        logger.verbose("Sending notification via Check_MK with the following context:")
+    if logger.isEnabledFor(VERBOSE):
+        logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
         for varname, value in sorted(context.iteritems()):
-            logger.verbose("  %-25s: %s" % (varname, value))
+            logger.log(VERBOSE, "  %-25s: %s", varname, value)
 
     if context["HOSTDOWNTIME"] != "0":
         logger.info("Host %s is currently in scheduled downtime. "
@@ -417,8 +418,8 @@ def _add_contact_information_to_context(context, contact_groups, logger):
     contact_names = _rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
-                   (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
+    logger.log(VERBOSE, "Setting %d contacts %s resulting from rule contact groups %s",
+               len(contact_names), ",".join(contact_names), ",".join(contact_groups))
 
 
 # NOTE: This function is an exact copy from modules/notify.py. We need
@@ -463,6 +464,6 @@ def _core_has_notifications_disabled(event, logger):
 
 
 def to_utf8(x):
-    if isinstance(x, unicode):
+    if isinstance(x, six.text_type):
         return x.encode("utf-8")
     return x

@@ -57,7 +57,7 @@ def read_config():
     globals().update(default_config)
 
     try:
-        execfile(config_file, globals(), globals())
+        exec (open(config_file).read(), globals(), globals())
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
@@ -120,7 +120,7 @@ def load_plugins():
             path = base_dir + '/' + f
             verbose('Loading plugin: %s' % path)
             try:
-                execfile(path, plugins[f], plugins[f])
+                exec (open(path).read(), plugins[f], plugins[f])
             except Exception as e:
                 error('Exception while loading plugin "%s": %s' % (path, e))
 
@@ -321,7 +321,7 @@ def get_configured_hosts():
     distr_wato_filepath = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
     file_vars = {}
     if os.path.exists(distr_wato_filepath):
-        execfile(distr_wato_filepath, file_vars, file_vars)
+        exec (open(distr_wato_filepath).read(), file_vars, file_vars)
 
     if file_vars.get("is_wato_slave_site", False):
         host_names.update(

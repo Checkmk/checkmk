@@ -100,7 +100,7 @@ def check_omd_apache(item, _no_params, parsed):
                 stats['requests'][key] += 1
 
                 stats['secs'].setdefault(key, 0)
-                stats['secs'][key] += int(microsec) / 1000.0 / 1000.0
+                stats['secs'][key] += (int(microsec) / 1000.0) / 1000.0
 
                 stats['bytes'].setdefault(key, 0)
                 stats['bytes'][key] += int(size_bytes)

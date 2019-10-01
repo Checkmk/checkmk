@@ -1,0 +1,12 @@
+Title: mk_mongodb: Fixed crash introduced by Python 2.5 compatibility change in 1.6.0p2
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p3
+Date: 1569583698
+Class: fix
+
+Python backward compatibility introduced by Werk #10184 also added a bug crashing the plugin or reporting incorrect data by the plugin.
+
+To resolve the issue the fixed version of the mk_mongodb plugin has to be deployed on the affected hosts.

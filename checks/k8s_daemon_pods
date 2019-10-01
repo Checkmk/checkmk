@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_k8s_daemon_pods(parsed):
+    return [(None, {})]
+
+
+def check_k8s_daemon_pods(_no_item, _params, parsed):
+    ready = parsed["number_ready"]
+    yield 0, "Ready: %s" % ready, [("k8s_daemon_pods_ready", ready)]
+
+    desired_scheduled = parsed["desired_number_scheduled"]
+    current_scheduled = parsed["current_number_scheduled"]
+    infotext = "Scheduled: %s/%s" % (current_scheduled, desired_scheduled)
+    perfdata = [
+        ("k8s_daemon_pods_scheduled_desired", desired_scheduled),
+        ("k8s_daemon_pods_scheduled_current", current_scheduled),
+    ]
+    yield 0 if current_scheduled == desired_scheduled else 1, infotext, perfdata
+
+    uptodate = parsed["updated_number_scheduled"]
+    if uptodate is None:
+        uptodate = 0
+    infotext = "Up to date: %s" % uptodate
+    perfdata = [
+        ("k8s_daemon_pods_scheduled_updated", uptodate),
+    ]
+    yield 0, infotext, perfdata
+
+    available = parsed["number_available"]
+    unavailable = parsed["number_unavailable"]
+    if unavailable is None:
+        unavailable = 0
+    total = available + unavailable
+    infotext = "Available: %s/%s" % (available, total)
+    perfdata = [
+        ("k8s_daemon_pods_available", available),
+        ("k8s_daemon_pods_unavailable", unavailable),
+    ]
+    yield 0 if available == total else 1, infotext, perfdata
+
+
+check_info["k8s_daemon_pods"] = {
+    "parse_function": parse_k8s,
+    "inventory_function": inventory_k8s_daemon_pods,
+    "check_function": check_k8s_daemon_pods,
+    "service_description": "Daemon Pods",
+    "has_perfdata": True,
+    "includes": ["k8s.include"],
+}

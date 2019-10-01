@@ -5,6 +5,7 @@ import json
 import six
 import pytest  # type: ignore
 from pathlib2 import Path
+import six
 
 import cmk.utils.paths
 import cmk.gui.modules as modules
@@ -17,6 +18,34 @@ from cmk.gui.permissions import (
 )
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
+
+
+def test_sorted_sites(mocker):
+    mocker.patch.object(config.user,
+                        "authorized_sites",
+                        return_value={
+                            'site1': {
+                                'alias': 'Site 1'
+                            },
+                            'site3': {
+                                'alias': 'Site 3'
+                            },
+                            'site5': {
+                                'alias': 'Site 5'
+                            },
+                            'site23': {
+                                'alias': 'Site 23'
+                            },
+                            'site6': {
+                                'alias': 'Site 6'
+                            },
+                            'site12': {
+                                'alias': 'Site 12'
+                            },
+                        })
+    expected = [('site1', 'Site 1'), ('site12', 'Site 12'), ('site23', 'Site 23'),
+                ('site3', 'Site 3'), ('site5', 'Site 5'), ('site6', 'Site 6')]
+    assert config.sorted_sites() == expected
 
 
 def test_registered_permission_sections():
@@ -40,6 +69,7 @@ def test_registered_permission_sections():
         ('nagvis', (50, u'NagVis', False)),
         ('view', (50, u'Views', True)),
         ('icons_and_actions', (50, u'Icons', True)),
+        ('forecast_graph', (50, u'Forecast Graphs', True)),
     ]
 
     section_names = permission_section_registry.keys()
@@ -84,6 +114,7 @@ def test_registered_permissions():
         'general.delete_foreign_custom_graph',
         'general.delete_foreign_custom_snapin',
         'general.delete_foreign_dashboards',
+        'general.delete_foreign_forecast_graph',
         'general.delete_foreign_graph_collection',
         'general.delete_foreign_graph_tuning',
         'general.delete_foreign_reports',
@@ -96,10 +127,12 @@ def test_registered_permissions():
         'general.edit_custom_graph',
         'general.edit_custom_snapin',
         'general.edit_dashboards',
+        'general.edit_forecast_graph',
         'general.edit_foreign_bookmark_list',
         'general.edit_foreign_custom_graph',
         'general.edit_foreign_custom_snapin',
         'general.edit_foreign_dashboards',
+        'general.edit_foreign_forecast_graph',
         'general.edit_foreign_graph_collection',
         'general.edit_foreign_graph_tuning',
         'general.edit_foreign_reports',
@@ -117,6 +150,7 @@ def test_registered_permissions():
         'general.force_custom_graph',
         'general.force_custom_snapin',
         'general.force_dashboards',
+        'general.force_forecast_graph',
         'general.force_graph_collection',
         'general.force_graph_tuning',
         'general.force_reports',
@@ -136,6 +170,7 @@ def test_registered_permissions():
         'general.publish_to_foreign_groups_custom_snapin',
         'general.publish_dashboards',
         'general.publish_dashboards_to_foreign_groups',
+        'general.publish_forecast_graph',
         'general.publish_graph_collection',
         'general.publish_to_foreign_groups_graph_collection',
         'general.publish_graph_tuning',
@@ -145,6 +180,7 @@ def test_registered_permissions():
         'general.publish_sla_configuration',
         'general.publish_to_foreign_groups_sla_configuration',
         'general.publish_stored_report',
+        'general.publish_to_foreign_groups_forecast_graph',
         'general.publish_views',
         'general.publish_views_to_foreign_groups',
         'general.reporting',
@@ -161,6 +197,7 @@ def test_registered_permissions():
         'general.see_user_custom_graph',
         'general.see_user_custom_snapin',
         'general.see_user_dashboards',
+        'general.see_user_forecast_graph',
         'general.see_user_graph_collection',
         'general.see_user_graph_tuning',
         'general.see_user_reports',
@@ -203,6 +240,7 @@ def test_registered_permissions():
         'icons_and_actions.status_shadow',
         'icons_and_actions.status_stale',
         'icons_and_actions.wato',
+        'icons_and_actions.parent_child_topology',
         'mkeventd.actions',
         'mkeventd.activate',
         'mkeventd.archive_events_of_hosts',
@@ -306,6 +344,10 @@ def test_registered_permissions():
         'view.downtimes',
         'view.downtimes_of_host',
         'view.downtimes_of_service',
+        'view.docker_containers',
+        'view.docker_nodes',
+        'view.vpshere_vms',
+        'view.vsphere_servers',
         'view.ec_event',
         'view.ec_event_mobile',
         'view.ec_events',
@@ -436,6 +478,8 @@ def test_registered_permissions():
         'view.svcnotifications',
         'view.svcproblems',
         'view.svcproblems_dash',
+        'view.topology_hover_host',
+        'view.topology_filters',
         'view.uncheckedsvc',
         'view.unmonitored_services',
         'wato.activate',
@@ -741,7 +785,7 @@ def theme_dirs(tmp_path, monkeypatch):
     local_theme_path.mkdir(parents=True)
 
     monkeypatch.setattr(cmk.utils.paths, "web_dir", str(tmp_path))
-    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", str(tmp_path / "local"))
+    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", tmp_path / "local")
 
     return theme_path, local_theme_path
 
@@ -752,7 +796,7 @@ def my_theme(theme_dirs):
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Määh Theme :-)"})))
+        six.text_type(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
 
@@ -770,7 +814,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Määh Bettr Theme :-D"})))
+        six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Määh Theme :-)"),
@@ -784,7 +828,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Fixed theme"})))
+        six.text_type(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Fixed theme"),
@@ -793,7 +837,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 def test_theme_broken_meta(my_theme):
     my_theme.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode("{\"titlewrong\": xyz\"bla\"}"))
+        six.text_type("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"my_theme"),

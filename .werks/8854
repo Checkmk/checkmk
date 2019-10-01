@@ -1,0 +1,16 @@
+Title: Dashboard: Static text dashlet only allows limited HTML
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1565787135
+
+The "static text" dashlet is meant to add some static text information to dashboards.
+In the past it was possible to add arbitrary HTML code to it, which could be useful
+e.g. to format the text information.
+
+To prevent injections of arbitrary script the static text dashlet now allows only a
+limited set of HTML codes. These are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol.

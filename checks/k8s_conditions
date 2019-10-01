@@ -24,30 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+K8S_OK_CONDITIONS = {
+    "Ready": "True",
+    # Node conditions
+    "DiskPressure": "False",
+    "OutOfDisk": "False",
+    "MemoryPressure": "False",
+    "NetworkUnavailable": "False",
+    "KernelDeadlock": "False",
+    # Pod conditions
+    "PodScheduled": "True",
+    "Initialized": "True",
+    "Unschedulable": "False",
+    "ContainersReady": "True",
+}
+
 
 @discover
 def inventory_k8s_conditions(condition, _value):
-    return condition in {
-        "DiskPressure",
-        "OutOfDisk",
-        "MemoryPressure",
-        "Ready",
-        "NetworkUnavailable",
-        "KernelDeadlock",
-    }
+    return condition in K8S_OK_CONDITIONS.keys()
 
 
 @get_parsed_item_data
 def check_k8s_conditions(item, _no_params, value):
-    expected_values = {
-        "DiskPressure": "False",
-        "OutOfDisk": "False",
-        "MemoryPressure": "False",
-        "Ready": "True",
-        "NetworkUnavailable": "False",
-        "KernelDeadlock": "False",
-    }
-    status = 0 if value == expected_values[item] else 2
+    status = 0 if value == K8S_OK_CONDITIONS[item] else 2
     return status, value
 
 

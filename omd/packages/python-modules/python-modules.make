@@ -137,7 +137,7 @@ endif
 
 PYTHON_MODULES_LIST += certifi-2018.10.15.tar.gz
 PYTHON_MODULES_LIST += chardet-3.0.4.tar.gz
-PYTHON_MODULES_LIST += urllib3-1.24.1.tar.gz
+PYTHON_MODULES_LIST += urllib3-1.24.2.tar.gz
 # Added for check_bi_aggr with kerberos support
 PYTHON_MODULES_LIST += pykerberos-1.2.1.tar.gz
 PYTHON_MODULES_LIST += requests-kerberos-0.12.0.tar.gz
@@ -187,7 +187,12 @@ PYTHON_MODULES_LIST += pdbpp-0.10.0.tar.gz
 PYTHON_MODULES_LIST += PySnooper-0.0.31.tar.gz
 # Added to support Python 3 transition
 PYTHON_MODULES_LIST += future-0.17.1.tar.gz
-
+# Added VCR + Dependencies for testing special agents (CMK-2414)
+PYTHON_MODULES_LIST += contextlib2-0.5.5.tar.gz
+PYTHON_MODULES_LIST += funcsigs-1.0.2.tar.gz
+PYTHON_MODULES_LIST += mock-3.0.5.tar.gz
+PYTHON_MODULES_LIST += wrapt-1.11.2.tar.gz
+PYTHON_MODULES_LIST += vcrpy-2.1.0.tar.gz
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
 # because the SSSE3 detection in pycryptodomex is slightly broken. :-/
@@ -284,7 +289,6 @@ python-modules-dump-Pipfile:
 	@echo 'astroid = "*"  # used by testlib.pylint_checker_localization'
 	@echo 'bandit = "*"  # used by test/Makefile'"'"'s test-bandit target'
 	@echo '"beautifulsoup4" = "*"  # used by the GUI crawler and various tests'
-	@echo 'bson = "*"  # used by test_mk_mongodb unit test'
 	@echo 'compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json'
 	@echo 'docker = "*"  # used by test_docker test and mk_docker agent plugin'
 	@echo 'freezegun = "*"  # used by various unit tests'

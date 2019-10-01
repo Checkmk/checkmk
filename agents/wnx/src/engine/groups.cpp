@@ -17,10 +17,9 @@
 namespace cma::cfg {
 
 Global::Global() {
-    XLOG::l.t("Global init");
+    // may crash on init XLOG::l.t("Global init");
     setDefaults();
-    calcDerivatives();
-    setupEnvironment();
+    setupLogEnvironment();
 }
 
 // loader of yaml is going here
@@ -78,8 +77,9 @@ void Global::loadFromMainConfig() {
         realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
 
+        // we must reuse already set location
         auto yml_log_location =
-            GetVal(logging, vars::kLogLocation, std::string());
+            GetVal(logging, vars::kLogLocation, yaml_log_path_.u8string());
         yaml_log_path_ =
             cma::cfg::details::ConvertLocationToLogPath(yml_log_location);
 
@@ -100,8 +100,7 @@ void Global::loadFromMainConfig() {
         event_log_ = GetVal(logging, vars::kLogEvent, true);
 
         log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
-
-        calcDerivatives();
+        updateLogNames();
     }
     // UNLOCK HERE
 }
@@ -136,43 +135,59 @@ void Global::setDefaults() {
     log_file_name_ = kDefaultLogFileName;
 }
 
-void Global::updateLogNames(std::filesystem::path log_path) {
-    if (log_path.empty()) XLOG::d.i("log_path is empty");
+static std::filesystem::path CheckAndCreateLogPath(
+    const std::filesystem::path& forced_path) {
+    namespace fs = std::filesystem;
+    try {
+        std::error_code ec;
+        if (fs::exists(forced_path, ec)) return forced_path;
+
+        fs::create_directories(forced_path, ec);
+        if (fs::exists(forced_path, ec)) return forced_path;
+
+        XLOG::l.bp("Failed to create [{}' folder as log",
+                   forced_path.u8string());
+
+    } catch (const std::exception& e) {
+        XLOG::l.bp("Failed to use [{}' folder as log, exception is '{}'",
+                   forced_path.u8string(), e.what());
+    }
+    return details::GetDefaultLogPath();
+}
+
+// should be called to keep invariant
+void Global::updateLogNames() {
+    auto yaml_path = yaml_log_path_.u8string();
+
+    auto log_path = details::ConvertLocationToLogPath(yaml_path);
+
+    auto yaml_file = log_file_name_;
+    if (yaml_file.empty()) log_file_name_ = kDefaultLogFileName;
 
     logfile_dir_ = log_path;
-
-    logfile_dir_ =
-        cma::cfg::details::ConvertLocationToLogPath(logfile_dir_.u8string());
-
-    if (log_file_name_.empty()) log_file_name_ = kDefaultLogFileName;
 
     logfile_ = logfile_dir_ / log_file_name_;
     logfile_as_string_ = logfile_.u8string();
     logfile_as_wide_ = logfile_.wstring();
 }
 
-// may be called only during start
-void Global::updateLogNamesByDefault() {
-    //
-    updateLogNames({});
-}
-// optimization
-void Global::calcDerivatives() {
-#if 0
-    auto rfid = public_log_ ? cma::cfg::kPublicFolderId : kWindowsFolderId;
-    const auto dir = cma::tools::win::GetSomeSystemFolder(rfid);
-    logfile_dir_ = dir;
-    if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
-#endif
-    updateLogNames(yaml_log_path_);
+// empty string does nothing
+// used to set values during start
+void Global::setLogFolder(const std::filesystem::path& forced_path) {
+    std::unique_lock lk(lock_);
+    if (forced_path.empty()) return;
+
+    yaml_log_path_ = CheckAndCreateLogPath(forced_path);
+
+    updateLogNames();
 }
 
 // transfer global data into app environment
-void Global::setupEnvironment() {
+void Global::setupLogEnvironment() {
     using namespace XLOG;
 
     setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);
-    details::G_ConfigInfo.setLogFileDir(logfile_dir_.wstring());
+    GetCfg().setLogFileDir(logfile_dir_.wstring());
 }
 
 // loader
@@ -241,11 +256,48 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
                 ExeUnit.emplace_back(pattern, timeout, cache_age, retry, run);
             else
                 ExeUnit.emplace_back(pattern, timeout, retry, run);
+            ExeUnit.back().assign(entry);
             // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
                     vars::kPluginsExecution, e.what());
         }
+    }
+}
+
+void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
+    try {
+        source_ = YAML::Clone(entry);
+        ApplyValueIfScalar(source_, run_, vars::kPluginRun);
+    } catch (const std::exception& e) {
+        pattern_ = "";
+        source_.reset();
+        XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
+                vars::kPluginsExecution, e.what());
+    }
+}
+
+void Plugins::ExeUnit::apply(std::string_view filename,
+                             const YAML::Node& entry) noexcept {
+    try {
+        if (entry.IsMap()) {
+            ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
+            ApplyValueIfScalar(entry, run_, vars::kPluginRun);
+            ApplyValueIfScalar(entry, retry_, vars::kPluginRetry);
+            ApplyValueIfScalar(entry, cache_age_, vars::kPluginCacheAge);
+            ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
+            if (cache_age_ && !async_) {
+                XLOG::d.t(
+                    "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
+                    filename, cache_age_);
+                async_ = true;
+            }
+        }
+    } catch (const std::exception& e) {
+        pattern_ = "";
+        source_.reset();
+        XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
+                vars::kPluginsExecution, e.what());
     }
 }
 
@@ -310,8 +362,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     // case when there is NO folder in array
     const auto default_folder_mark =
         wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
-    auto default_plugins_folder =
-        cma::cfg::details::G_ConfigInfo.getSystemPluginsDir();
+    auto default_plugins_folder = cma::cfg::GetCfg().getSystemPluginsDir();
     if (folders.size() == 0) folders.emplace_back(default_folder_mark);
 
     Plugins::CmdLineInfo cli;
@@ -363,6 +414,6 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
               wtools::ConvertToUTF8(cli.cmd_line_));
 
     return cli;
-}  // namespace cma::cfg
+}
 
 }  // namespace cma::cfg

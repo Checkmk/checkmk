@@ -39,7 +39,7 @@ def check_innovaphone_channels(item, params, info):
             if link != 'Up' or physical != 'Up':
                 return 2, "Link: %s, Physical: %s" % (link, physical)
             idle, total = map(float, line[3:])
-            perc_used = (idle / total) * 100
+            perc_used = (idle / total) * 100  # fixed: true-division
             perc_free = 100 - perc_used
             message = "(used: %.0f, free: %.0f, total: %.0f)" % (total - idle, idle, total)
             return check_innovaphone(params, [[None, perc_free]], '%', message)

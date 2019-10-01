@@ -1,8 +1,10 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 from pathlib2 import Path
 import pytest  # type: ignore
+from testlib import CheckManager
 from testlib.base import Scenario
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -10,8 +12,8 @@ import cmk
 import cmk.utils.paths
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
-import cmk_base.check_api as check_api
-from cmk_base.discovered_labels import DiscoveredServiceLabels
+from cmk_base.check_utils import Service
+from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -236,7 +238,7 @@ def test_is_piggyback_host(monkeypatch, hostname, tags, result):
     }),
 ])
 def test_is_piggyback_host_auto(monkeypatch, hostname, tags, with_data, result):
-    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda cache_age, hostname: with_data)
+    monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
     config_cache = Scenario().add_host(hostname, tags).apply(monkeypatch)
     assert config_cache.get_host_config(hostname).is_piggyback_host == result
 
@@ -319,6 +321,74 @@ def test_host_config_management_address(monkeypatch, attrs, result):
     config_cache = ts.apply(monkeypatch)
 
     assert config_cache.get_host_config("hostname").management_address == result
+
+
+def _management_config_ruleset():
+    return [
+        {
+            'condition': {},
+            'value': ('snmp', 'eee')
+        },
+        {
+            'condition': {},
+            'value': ('ipmi', {
+                'username': 'eee',
+                'password': 'eee'
+            })
+        },
+    ]
+
+
+@pytest.mark.parametrize("expected_result,protocol,credentials,ruleset", [
+    (None, None, None, []),
+    ("public", "snmp", None, []),
+    (None, "ipmi", None, []),
+    ("aaa", "snmp", "aaa", []),
+    ({
+        'username': 'aaa',
+        'password': 'aaa'
+    }, "ipmi", {
+        'username': 'aaa',
+        'password': 'aaa'
+    }, []),
+    (None, None, None, _management_config_ruleset()),
+    ("eee", "snmp", None, _management_config_ruleset()),
+    ({
+        'username': 'eee',
+        'password': 'eee'
+    }, "ipmi", None, _management_config_ruleset()),
+    ("aaa", "snmp", "aaa", _management_config_ruleset()),
+    ({
+        'username': 'aaa',
+        'password': 'aaa'
+    }, "ipmi", {
+        'username': 'aaa',
+        'password': 'aaa'
+    }, _management_config_ruleset()),
+])
+def test_host_config_management_credentials(monkeypatch, protocol, credentials, expected_result,
+                                            ruleset):
+    ts = Scenario().add_host("hostname")
+    ts.set_option("host_attributes", {"hostname": {"management_address": "127.0.0.1"}})
+    ts.set_option("management_protocol", {"hostname": protocol})
+
+    if credentials is not None:
+        if protocol == "snmp":
+            ts.set_option("management_snmp_credentials", {"hostname": credentials})
+        elif protocol == "ipmi":
+            ts.set_option("management_ipmi_credentials", {"hostname": credentials})
+        else:
+            raise NotImplementedError()
+
+    ts.set_ruleset("management_board_config", ruleset)
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.get_host_config("hostname")
+
+    assert host_config.management_credentials == expected_result
+
+    # Test management_snmp_config on the way...
+    if protocol == "snmp":
+        assert host_config.management_snmp_config.credentials == expected_result
 
 
 @pytest.mark.parametrize("attrs,result", [
@@ -1028,7 +1098,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     ("testhost2", "snmp_uptime", 4),
 ])
 def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, result):
-    config.load_checks(check_api.get_check_api_context, ["checks/uptime", "checks/snmp_uptime"])
+    CheckManager().load(["uptime", "snmp_uptime"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("snmp_check_interval", [
         (("snmp_uptime", 4), [], ["testhost2"], {}),
@@ -1133,8 +1203,8 @@ def test_config_cache_tag_list_of_host(monkeypatch):
     ts.add_host("xyz")
     config_cache = ts.apply(monkeypatch)
 
-    print config_cache._hosttags["test-host"]
-    print config_cache._hosttags["xyz"]
+    print(config_cache._hosttags["test-host"])
+    print(config_cache._hosttags["xyz"])
     assert config_cache.tag_list_of_host("xyz") == {
         '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
         'site:unit', 'prod'
@@ -1271,7 +1341,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch, tmp_path):
     monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", tmp_path)
     host_file = (tmp_path / "test-host").with_suffix(".mk")
     with host_file.open(mode="wb") as f:
-        f.write(repr({u"äzzzz": u"eeeeez"}) + "\n")
+        f.write(repr({u"äzzzz": {"value": u"eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config("test-host").labels == {u"äzzzz": u"eeeeez"}
@@ -1310,8 +1380,7 @@ def test_labels_of_service(monkeypatch):
 
 
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
-    config.load_checks(check_api.get_check_api_context, ["checks/cpu"])
-
+    CheckManager().load(["cpu"])
     ts = Scenario().add_host("test-host")
 
     monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
@@ -1376,7 +1445,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     ("testhost2", ["icon1", "icon2"]),
 ])
 def test_config_cache_icons_and_actions(monkeypatch, hostname, result):
-    config.load_checks(check_api.get_check_api_context, ["checks/ps"])
+    CheckManager().load(["ps"])
     ts = Scenario().add_host(hostname)
     ts.set_ruleset("service_icons_and_actions", [
         ("icon1", [], ["testhost2"], "CPU load$", {}),
@@ -1502,7 +1571,6 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     cache = ts.apply(monkeypatch)
 
     assert cache.__class__.__name__ == expected_cache_class_name
-    assert cache._host_configs.keys() == ["xyz"]
 
     host_config = cache.get_host_config("xyz")
     assert host_config.__class__.__name__ == expected_host_class_name
@@ -1510,89 +1578,49 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
     assert host_config is cache.get_host_config("xyz")
 
 
-def test_config_cache_ruleset_match_object_of_host(monkeypatch):
+@pytest.mark.parametrize("use_new_descr,result", [
+    (True, "Check_MK Discovery"),
+    (False, "Check_MK inventory"),
+])
+def test_config_cache_service_discovery_name(monkeypatch, use_new_descr, result):
     ts = Scenario()
-    ts.add_host("test-host", tags={"agent": "no-agent"})
-    ts.add_host("xyz")
+    if use_new_descr:
+        ts.set_option("use_new_descriptions_for", ["cmk-inventory"])
     config_cache = ts.apply(monkeypatch)
 
-    ruleset_match_object = config_cache.ruleset_match_object_of_host("xyz")
-    assert isinstance(ruleset_match_object, RulesetMatchObject)
-    assert ruleset_match_object.to_dict() == {
-        "host_folder": '/wato/',
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-            'tcp': 'tcp',
-        },
-        "host_name": "xyz",
-    }
-
-    ruleset_match_object = config_cache.ruleset_match_object_of_host("test-host")
-    assert isinstance(ruleset_match_object, RulesetMatchObject)
-    assert ruleset_match_object.to_dict() == {
-        "host_folder": '/wato/',
-        "host_name": "test-host",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'no-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-        }
-    }
+    assert config_cache.service_discovery_name() == result
 
 
 def test_host_ruleset_match_object_of_service(monkeypatch):
     ts = Scenario()
-    ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.add_host("xyz")
+    ts.add_host("test-host", tags={"agent": "no-agent"})
+    ts.set_autochecks("test-host", [
+        Service("cpu.load",
+                None,
+                "CPU load",
+                "{}",
+                service_labels=DiscoveredServiceLabels(ServiceLabel(u"abc", u"xä"),))
+    ])
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service("xyz", "bla blä")
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
-        "host_folder": '/wato/',
         "host_name": "xyz",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-            'tcp': 'tcp',
-        },
         "service_description": "bla blä",
+        "service_labels": {},
+        "service_cache_id": ('bla bl\xc3\xa4', None),
     }
 
     obj = config_cache.ruleset_match_object_of_service("test-host", "CPU load")
+    service_labels = {u"abc": u"xä"}
     assert isinstance(obj, RulesetMatchObject)
     assert obj.to_dict() == {
-        "host_folder": '/wato/',
         "host_name": "test-host",
-        "host_tags": {
-            'address_family': 'ip-v4-only',
-            'agent': 'no-agent',
-            'criticality': 'prod',
-            'ip-v4': 'ip-v4',
-            'networking': 'lan',
-            'piggyback': 'auto-piggyback',
-            'site': 'unit',
-            'snmp_ds': 'no-snmp',
-        },
         "service_description": "CPU load",
+        "service_labels": service_labels,
+        "service_cache_id": ('CPU load', obj._generate_hash(service_labels)),
     }
 
 
@@ -1618,28 +1646,6 @@ def test_host_config_do_status_data_inventory(monkeypatch, result, ruleset):
     assert config_cache.get_host_config("abc").do_status_data_inventory == result
 
 
-@pytest.mark.parametrize("result,ruleset", [
-    (True, None),
-    (True, []),
-    (True, [(None, [], config.ALL_HOSTS, {})]),
-    (True, [({}, [], config.ALL_HOSTS, {})]),
-    (True, [({
-        "host_label_inventory": True
-    }, [], config.ALL_HOSTS, {})]),
-    (False, [({
-        "host_label_inventory": False
-    }, [], config.ALL_HOSTS, {})]),
-])
-def test_host_config_do_host_label_discovery_for(monkeypatch, result, ruleset):
-    ts = Scenario().add_host("abc")
-    ts.set_option("active_checks", {
-        "cmk_inv": ruleset,
-    })
-    config_cache = ts.apply(monkeypatch)
-
-    assert config_cache.get_host_config("abc").do_host_label_discovery == result
-
-
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", None),
     ("testhost2", 10),
@@ -1655,3 +1661,212 @@ def test_host_config_service_level(monkeypatch, hostname, result):
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).service_level == result
+
+
+@pytest.mark.parametrize("params,ignored,ping,result", [
+    (None, False, False, False),
+    ({
+        "check_interval": 0
+    }, False, False, False),
+    ({
+        "check_interval": 3600
+    }, False, False, True),
+    ({
+        "check_interval": 3600
+    }, True, False, False),
+    ({
+        "check_interval": 3600
+    }, False, True, False),
+])
+def test_host_config_add_discovery_check(monkeypatch, params, ignored, ping, result):
+    if ping:
+        tags = {
+            "agent": "no-agent",
+            "snmp_ds": "no-snmp",
+            "piggyback": "no-piggyback",
+        }
+    else:
+        tags = {}
+
+    ts = Scenario().add_host("xyz", tags=tags)
+
+    if ignored:
+        ts.set_ruleset(
+            "ignored_services",
+            [
+                {
+                    'condition': {
+                        'service_description': [{
+                            '$regex': u'Check_MK Discovery'
+                        }],
+                        'host_name': ['xyz'],
+                    },
+                    'value': True
+                },
+            ],
+        )
+    config_cache = ts.apply(monkeypatch)
+
+    host_config = config_cache.get_host_config("xyz")
+    assert host_config.add_service_discovery_check(params, "Check_MK Discovery") == result
+
+
+def test_get_config_file_paths_with_confd(folder_path_test_config):
+    rel_paths = [
+        "%s" % p.relative_to(cmk.utils.paths.default_config_dir)
+        for p in config._get_config_file_paths(with_conf_d=True)
+    ]
+    assert rel_paths == [
+        'main.mk',
+        'conf.d/wato/hosts.mk',
+        'conf.d/wato/rules.mk',
+        'conf.d/wato/lvl1/hosts.mk',
+        'conf.d/wato/lvl1/rules.mk',
+        'conf.d/wato/lvl1/lvl2/hosts.mk',
+        'conf.d/wato/lvl1/lvl2/rules.mk',
+        'conf.d/wato/lvl1_aaa/hosts.mk',
+        'conf.d/wato/lvl1_aaa/rules.mk',
+    ]
+
+
+def test_load_config_folder_paths(folder_path_test_config):
+    assert config.host_paths == {
+        'lvl1-host': '/wato/lvl1/hosts.mk',
+        'lvl1aaa-host': '/wato/lvl1_aaa/hosts.mk',
+        'lvl2-host': '/wato/lvl1/lvl2/hosts.mk',
+        'lvl0-host': '/wato/hosts.mk',
+    }
+
+    config_cache = config.get_config_cache()
+
+    assert config_cache.host_path("main-host") == "/"
+    assert config_cache.host_path("lvl0-host") == "/wato/"
+    assert config_cache.host_path("lvl1-host") == "/wato/lvl1/"
+    assert config_cache.host_path("lvl1aaa-host") == "/wato/lvl1_aaa/"
+    assert config_cache.host_path("lvl2-host") == "/wato/lvl1/lvl2/"
+
+    assert config.cmc_host_rrd_config[0]["condition"]["host_folder"] == "/wato/lvl1_aaa/"
+    assert config.cmc_host_rrd_config[1]["condition"]["host_folder"] == "/wato/lvl1/lvl2/"
+    assert config.cmc_host_rrd_config[2]["condition"]["host_folder"] == "/wato/lvl1/"
+    assert "host_folder" not in config.cmc_host_rrd_config[3]["condition"]
+    assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
+
+    assert config_cache.host_extra_conf("main-host", config.cmc_host_rrd_config) == ["LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl0-host", config.cmc_host_rrd_config) == ["LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl1-host",
+                                        config.cmc_host_rrd_config) == ["LVL1", "LVL0", "MAIN"]
+    assert config_cache.host_extra_conf("lvl1aaa-host",
+                                        config.cmc_host_rrd_config) == ["LVL1aaa", "LVL0", "MAIN"]
+    assert config_cache.host_extra_conf(
+        "lvl2-host", config.cmc_host_rrd_config) == ["LVL2", "LVL1", "LVL0", "MAIN"]
+
+
+@pytest.fixture()
+def folder_path_test_config(monkeypatch):
+    config_dir = Path(cmk.utils.paths.check_mk_config_dir)
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    with Path(cmk.utils.paths.main_config_file).open("w", encoding="utf-8") as f:
+        f.write(u"""
+all_hosts += ['%(name)s']
+
+host_tags.update({'%(name)s': {}})
+
+ipaddresses.update({'%(name)s': '127.0.0.1'})
+
+host_tags.update({
+    '%(name)s': {
+        'piggyback': 'auto-piggyback',
+        'networking': 'lan',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'snmp_ds': 'no-snmp',
+        'ip-v4': 'ip-v4',
+        'ip-v6': 'ip-v6',
+        'site': 'unit',
+        'tcp': 'tcp',
+        'address_family': 'ip-v4v6',
+    }
+})
+
+cmc_host_rrd_config = [
+{'condition': {}, 'value': 'MAIN'},
+] + cmc_host_rrd_config
+
+""" % {"name": "main-host"})
+
+    wato_main_folder = config_dir.joinpath("wato")
+    wato_main_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_main_folder, "lvl0-host")
+    _add_rule_in_folder(wato_main_folder, "LVL0")
+
+    wato_lvl1_folder = wato_main_folder.joinpath("lvl1")
+    wato_lvl1_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl1_folder, "lvl1-host")
+    _add_rule_in_folder(wato_lvl1_folder, "LVL1")
+
+    wato_lvl1a_folder = wato_main_folder.joinpath("lvl1_aaa")
+    wato_lvl1a_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl1a_folder, "lvl1aaa-host")
+    _add_rule_in_folder(wato_lvl1a_folder, "LVL1aaa")
+
+    wato_lvl2_folder = wato_main_folder.joinpath("lvl1", "lvl2")
+    wato_lvl2_folder.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
+    _add_rule_in_folder(wato_lvl2_folder, "LVL2")
+
+    config.load()
+
+    yield
+
+    # Cleanup after the test. Would be better to use a dedicated test directory
+    Path(cmk.utils.paths.main_config_file).unlink()  # pylint: disable=no-member
+    wato_main_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_main_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1a_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl1a_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    wato_lvl2_folder.joinpath("hosts.mk").unlink()  # pylint: disable=no-member
+    wato_lvl2_folder.joinpath("rules.mk").unlink()  # pylint: disable=no-member
+    config._initialize_config()
+
+
+def _add_host_in_folder(folder_path, name):
+    with folder_path.joinpath("hosts.mk").open("w", encoding="utf-8") as f:
+        f.write(u"""
+all_hosts += ['%(name)s']
+
+host_tags.update({'%(name)s': {}})
+
+ipaddresses.update({'%(name)s': '127.0.0.1'})
+
+host_tags.update({
+    '%(name)s': {
+        'piggyback': 'auto-piggyback',
+        'networking': 'lan',
+        'agent': 'cmk-agent',
+        'criticality': 'prod',
+        'snmp_ds': 'no-snmp',
+        'ip-v4': 'ip-v4',
+        'ip-v6': 'ip-v6',
+        'site': 'unit',
+        'tcp': 'tcp',
+        'address_family': 'ip-v4v6',
+    }
+})
+""" % {"name": name})
+
+
+def _add_rule_in_folder(folder_path, value):
+    with folder_path.joinpath("rules.mk").open("w", encoding="utf-8") as f:
+        if value == "LVL0":
+            condition = "{}"
+        else:
+            condition = "{'host_folder': '/%s/' % FOLDER_PATH}"
+
+        f.write(u"""
+cmc_host_rrd_config = [
+{'condition': %s, 'value': '%s'},
+] + cmc_host_rrd_config
+""" % (condition, value))

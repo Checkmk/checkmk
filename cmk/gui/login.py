@@ -29,6 +29,7 @@ import os
 import time
 import traceback
 from hashlib import md5
+import six
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -70,7 +71,7 @@ def authenticate(request):
 # After the user has been authenticated, tell the different components
 # of the GUI which user is authenticated.
 def login(user_id):
-    if not isinstance(user_id, unicode):
+    if not isinstance(user_id, six.text_type):
         raise MKInternalError("Invalid user id type")
     config.set_user_by_id(user_id)
     html.set_user_id(user_id)
@@ -97,7 +98,7 @@ def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     secret = ''
     if os.path.exists(secret_path):
-        secret = file(secret_path).read().strip()
+        secret = open(secret_path).read().strip()
 
     # Create new secret when this installation has no secret
     #
@@ -107,7 +108,7 @@ def load_secret():
     # renew their login after update.
     if secret == '' or len(secret) == 32:
         secret = generate_secret()
-        file(secret_path, 'w').write(secret)
+        open(secret_path, 'w').write(secret)
 
     return secret
 
@@ -290,7 +291,7 @@ def check_auth(request):
     if user_id is None:
         user_id = check_auth_by_cookie()
 
-    if (user_id is not None and not isinstance(user_id, unicode)) or user_id == u'':
+    if (user_id is not None and not isinstance(user_id, six.text_type)) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
 
     if user_id and not userdb.is_customer_user_allowed_to_login(user_id):
@@ -309,7 +310,7 @@ def check_auth_automation():
     html.request.del_var('_secret')
     if secret and user_id and "/" not in user_id:
         path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
-        if os.path.isfile(path) and file(path).read().strip() == secret:
+        if os.path.isfile(path) and open(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.transaction_manager.ignore()
             set_auth_type("automation")

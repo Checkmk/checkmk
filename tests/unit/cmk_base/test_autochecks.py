@@ -3,13 +3,13 @@ import ast
 import pytest  # type: ignore
 
 from pathlib2 import Path
+from testlib import CheckManager
 from testlib.base import Scenario
+import six
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk_base.config as config
-import cmk_base.check_api as check_api
 import cmk_base.autochecks as autochecks
 import cmk_base.discovery as discovery
 from cmk_base.check_utils import Service
@@ -26,9 +26,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch):
-    config.load_checks(check_api.get_check_api_context,
-                       ["checks/df", "checks/cpu", "checks/chrony", "checks/lnx_if"])
-
+    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
     ts = Scenario().add_host("host")
     return ts.apply(monkeypatch)
 
@@ -40,103 +38,6 @@ def test_config(monkeypatch):
         (u"", []),
         (u"@", []),
         (u"[abc123]", []),
-        # Tuple: Handle old format
-        (u"""[
-  ('hostxyz', 'df', '/', {}),
-]""", [
-            Service(
-                'df', u'/', u"", {
-                    'inodes_levels': (10.0, 5.0),
-                    'levels': (80.0, 90.0),
-                    'levels_low': (50.0, 60.0),
-                    'magic_normsize': 20,
-                    'show_inodes': 'onlow',
-                    'show_levels': 'onmagic',
-                    'show_reserved': False,
-                    'trend_perfdata': True,
-                    'trend_range': 24
-                }),
-        ]),
-        # Tuple: Convert non unicode item
-        (
-            u"""[
-  ('df', '/', {}),
-]""",
-            [
-                Service(
-                    'df', u'/', u"", {
-                        'inodes_levels': (10.0, 5.0),
-                        'levels': (80.0, 90.0),
-                        'levels_low': (50.0, 60.0),
-                        'magic_normsize': 20,
-                        'show_inodes': 'onlow',
-                        'show_levels': 'onmagic',
-                        'show_reserved': False,
-                        'trend_perfdata': True,
-                        'trend_range': 24
-                    }),
-            ],
-        ),
-        # Tuple: Allow non string items
-        (
-            u"""[
-  ('df', 123, {}),
-]""",
-            [
-                Service(
-                    'df', 123, u"", {
-                        'inodes_levels': (10.0, 5.0),
-                        'levels': (80.0, 90.0),
-                        'levels_low': (50.0, 60.0),
-                        'magic_normsize': 20,
-                        'show_inodes': 'onlow',
-                        'show_levels': 'onmagic',
-                        'show_reserved': False,
-                        'trend_perfdata': True,
-                        'trend_range': 24
-                    }),
-            ],
-        ),
-        # Tuple: Exception on invalid check type
-        (
-            u"""[
-  (123, 'abc', {}),
-]""",
-            MKGeneralException,
-        ),
-        # Tuple: Regular processing
-        (
-            u"""[
-  ('df', u'/', {}),
-  ('cpu.loads', None, cpuload_default_levels),
-  ('chrony', None, {}),
-  ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
-]""",
-            [
-                Service(
-                    'df', u'/', u"", {
-                        'inodes_levels': (10.0, 5.0),
-                        'levels': (80.0, 90.0),
-                        'levels_low': (50.0, 60.0),
-                        'magic_normsize': 20,
-                        'show_inodes': 'onlow',
-                        'show_levels': 'onmagic',
-                        'show_reserved': False,
-                        'trend_perfdata': True,
-                        'trend_range': 24
-                    }),
-                Service('cpu.loads', None, u"", (5.0, 10.0)),
-                Service('chrony', None, u"", {
-                    'alert_delay': (300, 3600),
-                    'ntp_levels': (10, 200.0, 500.0)
-                }),
-                Service('lnx_if', u'2', u"", {
-                    'errors': (0.01, 0.1),
-                    'speed': 10000000,
-                    'state': ['1']
-                }),
-            ],
-        ),
         # Dict: Allow non string items
         (
             u"""[
@@ -203,7 +104,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     with autochecks_file.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
         f.write(autochecks_content)
 
-    manager = autochecks.AutochecksManager()
+    manager = test_config._autochecks_manager
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
@@ -219,7 +120,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
     # Check that there are no str items (None, int, ...)
     assert all(not isinstance(s.item, str) for s in result)
     # All desriptions need to be unicode
-    assert all(isinstance(s.description, unicode) for s in result)
+    assert all(isinstance(s.description, six.text_type) for s in result)
 
 
 def test_parse_autochecks_file_not_existing():
@@ -266,6 +167,7 @@ def test_parse_autochecks_file_not_existing():
           ('cpu.loads', None, cpuload_default_levels),
           ('chrony', None, {}),
           ('lnx_if', u'2', {'state': ['1'], 'speed': 10000000}),
+          ('if64', u'00001001', { "errors" : if_default_error_levels, "traffic" : if_default_traffic_levels, "average" : if_default_average , "state" : "1", "speed" : 1000000000}),
         ]""",
             [
                 ('df', u'/', '{}'),
@@ -273,7 +175,10 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/zzz', "['abc', 'xyz']"),
                 ('cpu.loads', None, 'cpuload_default_levels'),
                 ('chrony', None, '{}'),
-                ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
+                ('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
+                ('if64', u'00001001',
+                 "{'average': if_default_average, 'errors': if_default_error_levels, 'speed': 1000000000, 'state': '1', 'traffic': if_default_traffic_levels}"
+                ),
             ],
         ),
         # Dict: Allow non string items
@@ -301,7 +206,7 @@ def test_parse_autochecks_file_not_existing():
                 ('df', u'/zzz', "['abc', 'xyz']"),
                 ('cpu.loads', None, 'cpuload_default_levels'),
                 ('chrony', None, '{}'),
-                ('lnx_if', u'2', "{'state': ['1'], 'speed': 10000000}"),
+                ('lnx_if', u'2', "{'speed': 10000000, 'state': ['1']}"),
             ],
         ),
     ])
@@ -322,13 +227,7 @@ def test_parse_autochecks_file(test_config, autochecks_content, expected_result)
         expected = expected_result[index]
         assert service.check_plugin_name == expected[0]
         assert service.item == expected[1]
-
-        if isinstance(service.parameters_unresolved,
-                      str) and service.parameters_unresolved.startswith("{"):
-            # Work around random dict key sorting
-            assert ast.literal_eval(service.parameters_unresolved) == ast.literal_eval(expected[2])
-        else:
-            assert service.parameters_unresolved == expected[2]
+        assert service.parameters_unresolved == expected[2]
 
 
 def test_has_autochecks():

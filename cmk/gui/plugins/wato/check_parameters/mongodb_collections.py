@@ -33,38 +33,29 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMongodbCollections(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _mongodb_collections_size_tuple(title, course):
+    return Tuple(title=_(title),
+                 elements=[
+                     Integer(title=_("Warning if %s") % course, unit=_("MiB"), minvalue=0),
+                     Integer(title=_("Critical if %s") % course, unit=_("MiB"), minvalue=0),
+                 ])
 
-    @property
-    def check_group_name(self):
-        return "mongodb_collections"
 
-    @property
-    def title(self):
-        return _("MongoDB Collection Size")
+def _parameter_valuespec_mongodb_collections():
+    return Dictionary(elements=[
+        ("levels_size", _mongodb_collections_size_tuple("Uncompressed size in memory", "above")),
+        ("levels_storagesize",
+         _mongodb_collections_size_tuple("Allocated for document storage", "above")),
+    ])
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels_size", self._size_tuple("Uncompressed size in memory", "above")),
-            ("levels_storagesize", self._size_tuple("Allocated for document storage", "above")),
-        ])
-
-    def _size_tuple(self, title, course):
-        return Tuple(title=_(title),
-                     elements=[
-                         Integer(title=_("Warning if %s") % course, unit=_("MiB"), minvalue=0),
-                         Integer(title=_("Critical if %s") % course, unit=_("MiB"), minvalue=0),
-                     ])
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database/Collection name ('<DB name> <collection name>')"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mongodb_collections",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_(
+            "Database/Collection name ('<DB name> <collection name>')"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mongodb_collections,
+        title=lambda: _("MongoDB Collection Size"),
+    ))

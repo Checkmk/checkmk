@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
+from __future__ import print_function
 import os
 import sys
 import pytest
@@ -65,7 +66,7 @@ def test_pylint(pylint_test_dir):
     ]
 
     # Add the compiled files for things that are no modules yet
-    file(pylint_test_dir + "/__init__.py", "w")
+    open(pylint_test_dir + "/__init__.py", "w")
     _compile_check_and_inventory_plugins(pylint_test_dir)
     _compile_bakery_plugins(pylint_test_dir)
     modules_or_packages += [

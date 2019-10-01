@@ -51,7 +51,7 @@ def h3c_lanswitch_cpu_genitem(item):
 
     # othwise, if above 64k it is a known stackable switch
     elif cpuid >= 65536:
-        switchid = cpuid / 65536
+        switchid = cpuid // 65536
         cputype = "CPU"
         cpunum = cpuid % 65536
 

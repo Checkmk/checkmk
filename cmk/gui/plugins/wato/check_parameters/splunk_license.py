@@ -39,42 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSplunkLicenseState(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_splunk_license_state():
+    return Dictionary(
+        elements=[
+            ("state", MonitoringState(title=_("State if license is expired"), default_value=2)),
+            ("expiration_time",
+             Tuple(
+                 title=_("Time until license expiration"),
+                 help=_("Remaining days until the Windows license expires"),
+                 elements=[
+                     Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
+                     Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
+                 ],
+             )),
+        ],
+        optional_keys=["state", "expiration_time", "usage_bytes"],
+    )
 
-    @property
-    def check_group_name(self):
-        return "splunk_license_state"
 
-    @property
-    def title(self):
-        return _("Splunk License State")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ("state", MonitoringState(title=_("State if license is expired"), default_value=2)),
-                ("expiration_time",
-                 Tuple(
-                     title=_("Time until license expiration"),
-                     help=_("Remaining days until the Windows license expires"),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
-                         Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
-                     ],
-                 )),
-            ],
-            optional_keys=["state", "expiration_time", "usage_bytes"],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of license"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="splunk_license_state",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Name of license")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_splunk_license_state,
+        title=lambda: _("Splunk License State"),
+    ))

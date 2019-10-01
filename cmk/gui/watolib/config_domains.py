@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import errno
+import logging
 import os
 import re
 import signal
@@ -50,12 +51,12 @@ from cmk.gui.watolib.utils import (
 )
 from cmk.gui.plugins.watolib import (
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
 )
 
 
 @config_domain_registry.register
-class ConfigDomainCore(ConfigDomain):
+class ConfigDomainCore(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "check_mk"
@@ -76,7 +77,7 @@ class ConfigDomainCore(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainGUI(ConfigDomain):
+class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
     ident = "multisite"
@@ -96,7 +97,7 @@ class ConfigDomainGUI(ConfigDomain):
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
 @config_domain_registry.register
-class ConfigDomainLiveproxy(ConfigDomain):
+class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
     ident = "liveproxyd"
@@ -120,7 +121,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
         try:
             pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
             try:
-                pid = int(file(pidfile).read().strip())
+                pid = int(open(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
             except IOError as e:
                 # No liveproxyd running: No reload needed.
@@ -138,7 +139,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pass
 
         except Exception as e:
-            logger.exception()
+            logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
                 _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
                   "for further information.") % e)
@@ -148,7 +149,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
     def default_globals(self):
         return {
             "liveproxyd_log_levels": {
-                "cmk.liveproxyd": cmk.utils.log.INFO,
+                "cmk.liveproxyd": logging.INFO,
             },
             "liveproxyd_default_connection_params":
                 ConfigDomainLiveproxy.connection_params_defaults(),
@@ -167,7 +168,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainEventConsole(ConfigDomain):
+class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "ec"
@@ -193,7 +194,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainCACertificates(ConfigDomain):
+class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
@@ -217,6 +218,8 @@ class ConfigDomainCACertificates(ConfigDomain):
         return multisite_dir()
 
     def config_file(self, site_specific=False):
+        if site_specific:
+            return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False):
@@ -242,7 +245,7 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)
         except Exception:
-            logger.exception()
+            logger.exception("error updating trusted CAs")
             return [
                 "Failed to create trusted CA file '%s': %s" %
                 (self.trusted_cas_file, traceback.format_exc())
@@ -276,7 +279,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except IOError:
-                    logger.exception()
+                    logger.exception("error updating CA")
 
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -316,7 +319,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainOMD(ConfigDomain):
+class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"
@@ -381,7 +384,7 @@ class ConfigDomainOMD(ConfigDomain):
             return {}
 
         try:
-            for line in file(path):
+            for line in open(path):
                 line = line.strip()
 
                 if line == "" or line.startswith("#"):

@@ -2,6 +2,8 @@
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore
 from testlib.base import Scenario
+from cmk_base.check_utils import Service
+from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 
 
@@ -77,7 +79,7 @@ ruleset = [
     },
 ]
 
-label_ruleset = [
+host_label_ruleset = [
     # test simple label match
     {
         "value": "os_linux",
@@ -134,7 +136,7 @@ def test_ruleset_matcher_get_host_ruleset_values_labels(monkeypatch, hostname, e
     assert list(
         matcher.get_host_ruleset_values(RulesetMatchObject(host_name=hostname,
                                                            service_description=None),
-                                        ruleset=label_ruleset,
+                                        ruleset=host_label_ruleset,
                                         is_binary=False)) == expected_result
 
 
@@ -171,8 +173,9 @@ def test_basic_get_host_ruleset_values(monkeypatch):
 def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
     ts = Scenario().add_host("abc")
     ts.add_host("xyz")
-    ts.add_host("lvl1", host_path="/level1/hosts.mk")
-    ts.add_host("lvl2", host_path="/level1/level2/hosts.mk")
+    ts.add_host("lvl1", host_path="/lvl1/hosts.mk")
+    ts.add_host("lvl2", host_path="/lvl1/lvl2/hosts.mk")
+    ts.add_host("lvl1a", host_path="/lvl1_a/hosts.mk")
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
@@ -185,9 +188,14 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
         matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl1",
                                                            service_description=None),
                                         ruleset=ruleset,
-                                        is_binary=False)) == []
+                                        is_binary=False)) == ["LEVEL1"]
     assert list(
         matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl2",
+                                                           service_description=None),
+                                        ruleset=ruleset,
+                                        is_binary=False)) == ["LEVEL1", "LEVEL2"]
+    assert list(
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name="lvl1a",
                                                            service_description=None),
                                         ruleset=ruleset,
                                         is_binary=False)) == []
@@ -425,3 +433,82 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(monkeypatch, hostname, exp
                                                            service_description=None),
                                         ruleset=tag_ruleset,
                                         is_binary=False)) == expected_result
+
+
+service_label_ruleset = [
+    # test simple label match
+    {
+        "value": "os_linux",
+        "condition": {
+            "service_labels": {
+                u"os": u"linux",
+            },
+        },
+        "options": {},
+    },
+    # test implicit AND and unicode value match
+    {
+        "value": "abc",
+        "condition": {
+            "service_labels": {
+                u"os": u"linux",
+                u"abc": u"xä",
+            },
+        },
+        "options": {},
+    },
+    # test negation of label
+    {
+        "value": "hu",
+        "condition": {
+            "service_labels": {
+                u"hu": {
+                    "$ne": u"ha"
+                }
+            }
+        },
+        "options": {},
+    },
+    # test unconditional match
+    {
+        "value": "BLA",
+        "condition": {},
+        "options": {},
+    },
+]
+
+
+@pytest.mark.parametrize("hostname,service_description,expected_result", [
+    ("host1", "CPU load", ["os_linux", "abc", "BLA"]),
+    ("host2", "CPU load", ["hu", "BLA"]),
+])
+def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname,
+                                                           service_description, expected_result):
+    ts = Scenario()
+
+    ts.add_host("host1")
+    ts.set_autochecks("host1", [
+        Service("cpu.load",
+                None,
+                "CPU load",
+                "{}",
+                service_labels=DiscoveredServiceLabels(
+                    ServiceLabel(u"os", u"linux"),
+                    ServiceLabel(u"abc", u"xä"),
+                    ServiceLabel(u"hu", u"ha"),
+                ))
+    ])
+
+    ts.add_host("host2")
+    ts.set_autochecks("host2", [
+        Service("cpu.load", None, "CPU load", "{}", service_labels=DiscoveredServiceLabels()),
+    ])
+
+    config_cache = ts.apply(monkeypatch)
+    matcher = config_cache.ruleset_matcher
+
+    assert list(
+        matcher.get_service_ruleset_values(config_cache.ruleset_match_object_of_service(
+            hostname, service_description),
+                                           ruleset=service_label_ruleset,
+                                           is_binary=False)) == expected_result

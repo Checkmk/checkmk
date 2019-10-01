@@ -38,69 +38,60 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersRuckusMac(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_ruckus_mac():
+    return Dictionary(elements=[
+        ("inside",
+         Dictionary(
+             title=_("Inside unique MACs"),
+             elements=[
+                 ("levels_upper",
+                  Tuple(
+                      title=_("Upper levels"),
+                      elements=[
+                          Integer(title=_("Warning at")),
+                          Integer(title=_("Critical at")),
+                      ],
+                  )),
+                 ("levels_lower",
+                  Tuple(
+                      title=_("Lower levels"),
+                      elements=[
+                          Integer(title=_("Warning if below")),
+                          Integer(title=_("Critical if below")),
+                      ],
+                  )),
+             ],
+         )),
+        ("outside",
+         Dictionary(
+             title=_("Outside unique MACs"),
+             elements=[
+                 ("levels_upper",
+                  Tuple(
+                      title=_("Upper levels"),
+                      elements=[
+                          Integer(title=_("Warning at")),
+                          Integer(title=_("Critical at")),
+                      ],
+                  )),
+                 ("levels_lower",
+                  Tuple(
+                      title=_("Lower levels"),
+                      elements=[
+                          Integer(title=_("Warning if below")),
+                          Integer(title=_("Critical if below")),
+                      ],
+                  )),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "ruckus_mac"
 
-    @property
-    def title(self):
-        return _("Ruckus Spot Unique MAC addresses")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("inside",
-             Dictionary(
-                 title=_("Inside unique MACs"),
-                 elements=[
-                     ("levels_upper",
-                      Tuple(
-                          title=_("Upper levels"),
-                          elements=[
-                              Integer(title=_("Warning at")),
-                              Integer(title=_("Critical at")),
-                          ],
-                      )),
-                     ("levels_lower",
-                      Tuple(
-                          title=_("Lower levels"),
-                          elements=[
-                              Integer(title=_("Warning if below")),
-                              Integer(title=_("Critical if below")),
-                          ],
-                      )),
-                 ],
-             )),
-            ("outside",
-             Dictionary(
-                 title=_("Outside unique MACs"),
-                 elements=[
-                     ("levels_upper",
-                      Tuple(
-                          title=_("Upper levels"),
-                          elements=[
-                              Integer(title=_("Warning at")),
-                              Integer(title=_("Critical at")),
-                          ],
-                      )),
-                     ("levels_lower",
-                      Tuple(
-                          title=_("Lower levels"),
-                          elements=[
-                              Integer(title=_("Warning if below")),
-                              Integer(title=_("Critical if below")),
-                          ],
-                      )),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="ruckus_mac",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ruckus_mac,
+        title=lambda: _("Ruckus Spot Unique MAC addresses"),
+    ))

@@ -40,8 +40,8 @@ factory_settings["nimble_latency_default_levels"] = {
     "1000": (2, 20),
 }
 
-NimbleReadsType = "reads"
-NimbleWritesType = "writes"
+NimbleReadsType = "read"
+NimbleWritesType = "write"
 
 
 def parse_nimble_read_latency(info):
@@ -85,7 +85,7 @@ def parse_nimble_read_latency(info):
                     "500+ ms",
             ], values):
                 try:
-                    value = int(value_str)
+                    value = int(value_str) * 1000.0
                 except ValueError:
                     continue
                 inst = parsed.setdefault(vol_name, {}).setdefault(ty, {})
@@ -107,16 +107,20 @@ def _check_nimble_latency(item, params, data, ty):
     timestamp = time.time()
     for (key, title), value in ty_data.iteritems():
         rate = get_rate("nimble_%s_latency.%s.%s" % (ty, item, key), timestamp, value)
+
+        yield 0, None, [("nimble_%s_latency_%s" % (ty, key.replace(".", "")), rate)]
+
+        rate_readable = get_age_human_readable(rate)
         if key == "total":
-            yield 0, '%s: %s' % (title, rate)
+            yield 0, '%s: %s' % (title, rate_readable)
             continue
 
         state, state_count = params[key]
         if rate > state_count:
             level_info = ""
             if state:
-                level_info = " (level at %s)" % state_count
-            yield state, "%s: %d%s" % (title, rate, level_info)
+                level_info = " (level at %s)" % get_age_human_readable(state_count)
+            yield state, "%s: %s%s" % (title, rate_readable, level_info)
         else:
             continue
 
@@ -168,6 +172,7 @@ check_info['nimble_latency'] = {
                                                                           ),
     'group': "nimble_latency",
     'default_levels_variable': "nimble_latency_default_levels",
+    'has_perfdata': True,
 }
 
 
@@ -182,4 +187,5 @@ check_info['nimble_latency.write'] = {
     'service_description': 'Volume %s Write IO',
     'group': "nimble_latency",
     'default_levels_variable': "nimble_latency_default_levels",
+    'has_perfdata': True,
 }

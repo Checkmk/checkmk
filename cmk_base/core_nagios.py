@@ -203,10 +203,27 @@ def _create_nagios_host_spec(cfg, config_cache, hostname, attrs):
         if key[0] == '_':
             host_spec[key] = value
 
+    def host_check_via_service_status(service):
+        command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
+        cfg.hostcheck_commands_to_define.append(
+            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
+             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
+              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+        return command
+
+    def host_check_via_custom_check(command_name, command):
+        cfg.custom_commands_to_define.add(command_name)
+        return command
+
     # Host check command might differ from default
-    command = core_config.host_check_command(config_cache, host_config, ip, host_config.is_cluster,
-                                             cfg.hostcheck_commands_to_define,
-                                             cfg.custom_commands_to_define)
+    command = core_config.host_check_command(
+        config_cache,  #
+        host_config,
+        ip,
+        host_config.is_cluster,
+        "ping",
+        host_check_via_service_status,
+        host_check_via_custom_check)
     if command:
         host_spec["check_command"] = command
 
@@ -476,16 +493,11 @@ def _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs):
             # write service dependencies for custom checks
             outfile.write(get_dependencies(hostname, description).encode("utf-8"))
 
-    # FIXME: Remove old name one day
-    service_discovery_name = 'Check_MK inventory'
-    if 'cmk-inventory' in config.use_new_descriptions_for:
-        service_discovery_name = 'Check_MK Discovery'
+    service_discovery_name = config_cache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
     params = host_config.discovery_check_parameters
-    if params["check_interval"] \
-        and not config.service_ignored(hostname, None, service_discovery_name) \
-        and not host_config.is_ping_host:
+    if host_config.add_service_discovery_check(params, service_discovery_name):
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
@@ -814,9 +826,12 @@ def _quote_nagios_string(s):
 def _extra_service_conf_of(cfg, config_cache, hostname, description):
     service_spec = {}
 
-    # Contact groups
+    # Add contact groups to the config only if the user has defined them.
+    # Otherwise inherit the contact groups from the host.
+    # "check-mk-notify" is always returned for rulebased notifications and
+    # the Nagios core and not defined by the user.
     sercgr = config_cache.contactgroups_of_service(hostname, description)
-    if sercgr:
+    if sercgr != ['check-mk-notify']:
         service_spec["contact_groups"] = ",".join(sercgr)
         cfg.contactgroups_to_define.update(sercgr)
 
@@ -859,9 +874,9 @@ def _find_check_plugins(checktype):
 
     paths = []
     for candidate in candidates:
-        filename = cmk.utils.paths.local_checks_dir + "/" + candidate
-        if os.path.exists(filename):
-            paths.append(filename)
+        local_file_path = cmk.utils.paths.local_checks_dir / candidate
+        if local_file_path.exists():
+            paths.append(str(local_file_path))
             continue
 
         filename = cmk.utils.paths.checks_dir + "/" + candidate
@@ -899,7 +914,7 @@ def stripped_python_file(filename):
     if filename in g_stripped_file_cache:
         return g_stripped_file_cache[filename]
     a = ""
-    for line in file(filename):
+    for line in open(filename):
         l = line.strip()
         if l == "" or l[0] != '#':
             a += line  # not stripped line because of indentation!
@@ -928,10 +943,11 @@ def _precompile_hostcheck(config_cache, hostname):
         console.verbose("(no Check_MK checks)\n")
         return
 
-    output = file(source_filename + ".new", "w")
+    output = open(source_filename + ".new", "w")
     output.write("#!/usr/bin/env python\n")
     output.write("# encoding: utf-8\n\n")
 
+    output.write("import logging\n")
     output.write("import sys\n\n")
 
     output.write("if not sys.executable.startswith('/omd'):\n")
@@ -978,11 +994,11 @@ if os.path.islink(%(dst)r):
 # very simple commandline parsing: only -v (once or twice) and -d are supported
 
 cmk.utils.log.setup_console_logging()
-logger = cmk.utils.log.get_logger("base")
+logger = logging.getLogger("cmk.base")
 
 # TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
 #       The later regular argument parsing is handling this correctly. Try to clean this up.
-cmk.utils.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
+cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(len([ a for a in sys.argv if a in [ "-v", "--verbose"] ])))
 
 if '-d' in sys.argv:
     cmk.utils.debug.enable()
@@ -1056,7 +1072,7 @@ if '-d' in sys.argv:
     # code has not changed. The Python compilation is the most costly
     # operation here.
     if os.path.exists(source_filename):
-        if file(source_filename).read() == file(source_filename + ".new").read():
+        if open(source_filename).read() == open(source_filename + ".new").read():
             console.verbose(" (%s is unchanged)\n", source_filename, stream=sys.stderr)
             os.remove(source_filename + ".new")
             return
@@ -1116,8 +1132,9 @@ def _get_needed_check_file_names(needed_check_plugin_names):
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
         for lib in set(config.check_includes.get(section_name, [])):
-            if os.path.exists(cmk.utils.paths.local_checks_dir + "/" + lib):
-                to_add = cmk.utils.paths.local_checks_dir + "/" + lib
+            local_path = cmk.utils.paths.local_checks_dir / lib
+            if local_path.exists():
+                to_add = str(local_path)
             else:
                 to_add = cmk.utils.paths.checks_dir + "/" + lib
 

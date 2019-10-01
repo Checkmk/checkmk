@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "on_start.h"
 #include "onlyfrom.h"
+#include "tools/_misc.h"
 #include "yaml-cpp/yaml.h"
 
 namespace cma {
@@ -19,7 +20,7 @@ bool IsTest();
 }  // namespace cma
 
 namespace cma::cfg {
-constexpr std::string_view kBuidlHashValue = "DEFADEFADEFA";
+constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
 // bit mask
 enum LoadCfgStatus {
     kAllFailed = -2,    // root config not found
@@ -43,10 +44,12 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
+constexpr const wchar_t* kWatoIniFile = L"check_mk.ini";
 constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
 
 constexpr std::wstring_view kDatFile = L"checkmk.dat";
 constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";
+constexpr std::wstring_view kBakeryYmlFile = L"check_mk.bakery.yml";
 
 // extensions
 constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
@@ -75,7 +78,7 @@ constexpr const wchar_t* kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
 // we have to init folders depending from start type
 // test, exe or service
 // This is done once for whole life-cycle
-bool DetermineWorkingFolders(AppType Type);
+bool FindAndPrepareWorkingFolders(AppType Type);
 
 // 2. Prepare List of possible config names
 std::vector<std::wstring> DefaultConfigArray(AppType Type);
@@ -121,7 +124,7 @@ std::string GetPathOfLoadedConfigAsString() noexcept;
 std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
-std::wstring GetFileInstallDir() noexcept;  // for cap, ini and dat
+std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
@@ -202,7 +205,7 @@ T GetVal(std::string Section, std::string Name, T Default,
 }
 
 // usage auto x = GetVal("global", "name");
-inline YAML::Node GetNode(std::string Section, std::string Name,
+inline YAML::Node GetNode(const std::string& Section, const std::string& Name,
                           int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -257,6 +260,20 @@ T GetVal(const YAML::Node& Yaml, std::string Name, T Default,
                 wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
     }
     return Default;
+}
+
+inline YAML::Node GetNode(const YAML::Node& Yaml, std::string Name,
+                          int* ErrorOut = nullptr) noexcept {
+    try {
+        YAML::Node val = Yaml[Name];
+        if (!val.IsDefined()) return {};
+        if (val.IsNull()) return {};
+        return val;
+    } catch (const std::exception& e) {
+        XLOG::l("Cannot read yml node in file {} with {} code:{}",
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
+    }
+    return {};
 }
 
 template <typename T>
@@ -487,7 +504,7 @@ public:
 
     // #TODO move somewhere!
     // transfer global data into app environment
-    void setupEnvironment();
+    void setupLogEnvironment();
 
     // accessors
     bool ipv6() const {
@@ -646,13 +663,12 @@ public:
         if (encrypt_) return password_;
         return {};
     }
-
-    void updateLogNamesByDefault();
+    void setLogFolder(const std::filesystem::path& forced_path);
 
 private:
+    void updateLogNames();
+
     // called from ctor or loader
-    void calcDerivatives();
-    void updateLogNames(std::filesystem::path log_path);
     void setDefaults();
 
     // check contents of only_from from the yml and fills array correct
@@ -900,23 +916,42 @@ protected:
     bool defined_ = false;
     bool async_ = false;
 
-    int timeout_ = 0;    // from the config file, #TODO use chrono
-    int cache_age_ = 0;  // from the config file, #TODO use chrono
+    int timeout_ =
+        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
+    int cache_age_ = 0;         // from the config file, #TODO use chrono
 
     int retry_ = 0;
 };
+
+template <typename T>
+void ApplyValueIfScalar(const YAML::Node& entry, T& var,
+                        std::string_view name) noexcept {
+    if (!name.data()) {
+        XLOG::l(XLOG_FUNC + "name is null");
+        return;
+    }
+    try {
+        auto v = entry[name.data()];
+        if (v.IsDefined() && v.IsScalar()) var = v.as<T>(var);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FUNC + "Exception '{}'", e.what());
+    }
+}
 
 struct Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public cma::cfg::PluginInfo {
         ExeUnit() = default;
+
+        // deprecated
         // Sync
         ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
             : PluginInfo(Timeout, Retry)  //
             , pattern_(Pattern)           //
             , run_(Run) {}
 
+        // deprecated
         // Async
         ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
                 bool Run)
@@ -924,6 +959,14 @@ public:
             , pattern_(Pattern)                //
             , run_(Run) {
             validateAndFix();
+        }
+
+        // only for testing
+        ExeUnit(std::string_view pattern, const std::string& entry)
+            : pattern_(pattern)  //
+        {
+            source_text_ = entry;
+            assign(YAML::Load(entry));
         }
 
         // Only For Testing Automation with Initializer Lists
@@ -944,6 +987,18 @@ public:
 
         auto pattern() const noexcept { return pattern_; }
         auto run() const noexcept { return run_; }
+        void assign(const YAML::Node& node) noexcept;
+        void apply(std::string_view filename, const YAML::Node& node) noexcept;
+        const YAML::Node source() const noexcept { return source_; }
+        const std::string sourceText() const noexcept { return source_text_; }
+
+        void resetConfig() {
+            async_ = false;
+            timeout_ = kDefaultPluginTimeout;
+            cache_age_ = 0;
+            retry_ = 0;
+            run_ = true;
+        }
 
     private:
         void validateAndFix() {
@@ -958,8 +1013,14 @@ public:
             cache_age_ = kMinimumCacheAge;
         }
 
-        const std::string pattern_;
-        bool run_;
+        std::string pattern_;
+        std::string source_text_;
+        bool run_ = true;
+        YAML::Node source_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+        friend class AgentConfig;
+        FRIEND_TEST(AgentConfig, ExeUnitTest);
+#endif
     };
 
     struct CmdLineInfo {
@@ -1063,7 +1124,16 @@ InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
     const std::filesystem::path& dir) noexcept;
-std::string GetTimeString();
+std::string ConstructTimeString();
+
+namespace products {
+constexpr std::string_view kLegacyAgent = "Check_mk Agent";
+}
+
+std::string CreateWmicCommand(std::string_view product_name) noexcept;
+bool UninstallProduct(std::string_view name);
+std::filesystem::path CreateWmicUninstallFile(
+    std::filesystem::path temp_dir, std::string_view product_name) noexcept;
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

@@ -13,6 +13,6 @@ if not "%errorlevel%" == "0"  powershell Write-Host "Failed Enable 'New' Agent S
 powershell Write-Host "'New' Agent Service starting..." -Foreground Cyan
 net start %wnx% 2> nul > nul
 if "%errorlevel%" == "2"  powershell Write-Host "'New' Agent Service already started" -Foreground Green && set errorlevel=0 && goto end
-if not "%errorlevel%" == "0"  powershell Write-Host "Failed Start 'New' Agent Service, Error=[%errorlevel%]" -Foreground Red && exit 1
+if not "%errorlevel%" == "0"  powershell Write-Host "Failed Start 'New' Agent Service, Error=[%errorlevel%]" -Foreground Red &&  exit /b 1
 powershell Write-Host "'New' Agent Service started successfully" -Foreground Green
 :end

@@ -1,0 +1,44 @@
+title: MongoDB Cluster Information
+agents: linux
+catalog: app/mongodb
+license: GPL
+distribution: check_mk
+description:
+ This check displays and monitors collection and shard parameters relevant for a MongoDB cluster:
+
+ Collection:
+
+  - Shards: Total number of shards used by the collection
+
+  - Chunks: Total number of chunks in all shards
+
+  - Docs: Total number of documents stored in the collection
+
+  - Size: Uncompressed size in memory
+
+  - Storage: Allocated for document storage
+
+  - Balancer: Show if balancer is enabled/disabled for the collection
+
+ Per Shard:
+
+  - Chunks: Number of chunks of the shard
+
+  - Jumbos: Number of jumbo chunks of the shard
+
+  - Docs: Number of documents of the shard
+
+  --- per chunk: Estimated number of documents per chunk
+
+  - Size: Uncompressed size in memory of the shard
+
+  --- per chunk: Estimated uncompressed size in memory
+
+  - Host: Hostname where the shard is running on
+
+
+ Note: This check will only be discovered, if the agent runs on the primary mongos router node.
+
+
+inventory:
+ One service is created for each collection named 'MongoDB Cluster: <database name>.<collection_name>'

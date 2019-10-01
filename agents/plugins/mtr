@@ -105,7 +105,7 @@ def read_config():
         try:
             if not cfg.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
-        except Exception as e:
+        except Exception, e:
             sys.stdout.write("**ERROR** Failed to parse config file %s: %s\n" %
                              (config_file, repr(e)))
 
@@ -124,7 +124,7 @@ def read_status():
     if not os.path.exists(status_filename):
         return current_status
 
-    for line in file(status_filename):
+    for line in open(status_filename):
         try:
             parts = line.split('|')
             if len(parts) < 2:
@@ -146,14 +146,14 @@ def read_status():
                     'wrst': parts[i * 8 + 9].rstrip(),
                     'stddev': parts[i * 8 + 10].rstrip(),
                 }
-        except Exception as e:
+        except Exception, e:
             sys.stdout.write("*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" %
                              (line, repr(e)))
     return current_status
 
 
 def save_status(current_status):
-    f = file(status_filename, "w")
+    f = open(status_filename, "w")
     for host, hostdict in current_status.items():
         hopnum = len(hostdict["hops"].keys())
         lastreport = hostdict["lasttime"]
@@ -180,13 +180,13 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    host = unicode(host, 'UTF-8')
+    host = host.decode("utf8")
     result = []
     for word in _punct_re.split(host.lower()):
         word = normalize('NFKD', word).encode('ascii', 'ignore')
         if word:
             result.append(word)
-    return unicode(delim.join(result))
+    return delim.join(result).decode("utf8")
 
 
 def check_mtr_pid(pid):
@@ -199,7 +199,7 @@ def check_mtr_pid(pid):
         pid_cmdline = "/proc/%d/cmdline" % pid
         try:
             return os.path.exists(pid_cmdline) and \
-                   file(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide")
+                   open(pid_cmdline).read().startswith("mtr\x00--report\x00--report-wide")
         except Exception:
             return False  # any error
 
@@ -227,7 +227,7 @@ def parse_report(host):
     if os.path.exists(reportfile + ".pid"):
         # See if it's running
         try:
-            pid = int(file(reportfile + ".pid", 'r').readline().rstrip())
+            pid = int(open(reportfile + ".pid", 'r').readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.
                 if not host in status.keys():
@@ -242,7 +242,7 @@ def parse_report(host):
         os.unlink(reportfile + ".pid")
 
     # Parse the existing report
-    lines = file(reportfile).readlines()
+    lines = open(reportfile).readlines()
     if len(lines) < 3:
         sys.stdout.write("**ERROR** Report file %s has less than 3 lines, "
                          "expecting at least 1 hop! Throwing away invalid report\n" % reportfile)

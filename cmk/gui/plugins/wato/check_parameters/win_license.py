@@ -39,40 +39,31 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersWinLicense(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_win_license():
+    return Dictionary(elements=[
+        ("status",
+         ListOfStrings(
+             title=_("Allowed license states"),
+             help=_("Here you can specify the allowed license states for windows."),
+             default_value=['Licensed', 'Initial grace period'],
+         )),
+        ("expiration_time",
+         Tuple(
+             title=_("Time until license expiration"),
+             help=_("Remaining days until the Windows license expires"),
+             elements=[
+                 Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
+                 Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "win_license"
 
-    @property
-    def title(self):
-        return _("Windows License")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("status",
-             ListOfStrings(
-                 title=_("Allowed license states"),
-                 help=_("Here you can specify the allowed license states for windows."),
-                 default_value=['Licensed', 'Initial grace period'],
-             )),
-            ("expiration_time",
-             Tuple(
-                 title=_("Time until license expiration"),
-                 help=_("Remaining days until the Windows license expires"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
-                     Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="win_license",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_win_license,
+        title=lambda: _("Windows License"),
+    ))

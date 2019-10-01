@@ -1,0 +1,11 @@
+Title: Fix UnicodeDecodeError in complain phase of "Predefined conditions" edit dialog
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567499875
+
+

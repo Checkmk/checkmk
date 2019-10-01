@@ -1,0 +1,10 @@
+Title: netstat: Support of netstat functionality for Solaris Operating System 
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564142952
+Class: feature
+
+This is an agent plugin which allows users to include netstat services in their monitoring site

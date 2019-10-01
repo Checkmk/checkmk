@@ -38,49 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetscalerDnsrates(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "netscaler_dnsrates"
-
-    @property
-    def title(self):
-        return _("Citrix Netscaler DNS counter rates")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
-                   "Appliances"),
-            elements=[
-                (
-                    "query",
-                    Tuple(
-                        title=_("Upper Levels for Total Number of DNS queries"),
-                        elements=[
-                            Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                            Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
-                        ],
-                    ),
+def _parameter_valuespec_netscaler_dnsrates():
+    return Dictionary(
+        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
+               "Appliances"),
+        elements=[
+            (
+                "query",
+                Tuple(
+                    title=_("Upper Levels for Total Number of DNS queries"),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
+                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                    ],
                 ),
-                (
-                    "answer",
-                    Tuple(
-                        title=_("Upper Levels for Total Number of DNS replies"),
-                        elements=[
-                            Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                            Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
-                        ],
-                    ),
+            ),
+            (
+                "answer",
+                Tuple(
+                    title=_("Upper Levels for Total Number of DNS replies"),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
+                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="netscaler_dnsrates",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_netscaler_dnsrates,
+        title=lambda: _("Citrix Netscaler DNS counter rates"),
+    ))

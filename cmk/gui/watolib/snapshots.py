@@ -83,7 +83,7 @@ def _do_create_snapshot(data):
         filename_target = "%s/%s" % (snapshot_dir, snapshot_name)
         filename_work = "%s/%s.work" % (work_dir, snapshot_name)
 
-        file(filename_target, "w").close()
+        open(filename_target, "w").close()
 
         def get_basic_tarinfo(name):
             tarinfo = tarfile.TarInfo(name)
@@ -132,7 +132,7 @@ def _do_create_snapshot(data):
                     "Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
                     (name, exit_code, stderr, command))
 
-            subtar_hash = sha256(file(path_subtar).read()).hexdigest()
+            subtar_hash = sha256(open(path_subtar).read()).hexdigest()
             subtar_signed = sha256(subtar_hash + _snapshot_secret()).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
@@ -342,7 +342,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
             # Read snapshot status file (regularly updated by snapshot process)
             if os.path.exists(path_status):
-                lines = file(path_status, "r").readlines()
+                lines = open(path_status, "r").readlines()
                 status["comment"] = lines[0].split(":", 1)[1]
                 file_info = {}
                 for filename in lines[1:]:
@@ -383,12 +383,12 @@ def _get_default_backup_domains():
 def _snapshot_secret():
     path = cmk.utils.paths.default_config_dir + '/snapshot.secret'
     try:
-        return file(path).read()
+        return open(path).read()
     except IOError:
         # create a secret during first use
         try:
             s = os.urandom(256)
         except NotImplementedError:
             s = sha256(time.time())
-        file(path, 'w').write(s)
+        open(path, 'w').write(s)
         return s

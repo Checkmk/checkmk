@@ -26,11 +26,13 @@
 """This module serves the path structure of the Check_MK environment
 to all components of Check_MK."""
 
+import sys
 import os
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
     from pathlib2 import Path
 
 
@@ -60,7 +62,9 @@ modules_dir = _omd_path("share/check_mk/modules")
 var_dir = _omd_path("var/check_mk")
 log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
-autochecks_dir = _omd_path("var/check_mk/autochecks")
+core_autochecks_dir = _omd_path("var/check_mk/core/autochecks")
+base_autochecks_dir = _omd_path("var/check_mk/autochecks")
+autochecks_dir = base_autochecks_dir
 precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
 snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")
 counters_dir = _omd_path("tmp/check_mk/counters")
@@ -86,36 +90,36 @@ livebackendsdir = _omd_path("share/check_mk/livestatus")
 inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
-discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
+core_discovered_host_labels_dir = Path(_omd_path("var/check_mk/core/discovered_host_labels"))
+base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
+discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")
-notifications_dir = _omd_path("share/check_mk/notifications")
+notifications_dir = Path(_omd_path("share/check_mk/notifications"))
 inventory_dir = _omd_path("share/check_mk/inventory")
 check_manpages_dir = _omd_path("share/check_mk/checkman")
 agents_dir = _omd_path("share/check_mk/agents")
-mibs_dir = _omd_path("share/check_mk/mibs")
 web_dir = _omd_path("share/check_mk/web")
-pnp_templates_dir = _omd_path("share/check_mk/pnp-templates")
-doc_dir = _omd_path("share/doc/check_mk")
-locale_dir = _omd_path("share/check_mk/locale")
+pnp_templates_dir = Path(_omd_path("share/check_mk/pnp-templates"))
+doc_dir = Path(_omd_path("share/doc/check_mk"))
+locale_dir = Path(_omd_path("share/check_mk/locale"))
 bin_dir = _omd_path("bin")
 lib_dir = _omd_path("lib")
-mib_dir = _omd_path("share/snmp/mibs")
+mib_dir = Path(_omd_path("share/snmp/mibs"))
 
-local_share_dir = _local_path(share_dir)
-local_checks_dir = _local_path(checks_dir)
-local_notifications_dir = _local_path(notifications_dir)
-local_inventory_dir = _local_path(inventory_dir)
-local_check_manpages_dir = _local_path(check_manpages_dir)
-local_agents_dir = _local_path(agents_dir)
-local_mibs_dir = _local_path(mibs_dir)
-local_web_dir = _local_path(web_dir)
-local_pnp_templates_dir = _local_path(pnp_templates_dir)
-local_doc_dir = _local_path(doc_dir)
-local_locale_dir = _local_path(locale_dir)
-local_bin_dir = _local_path(bin_dir)
-local_lib_dir = _local_path(lib_dir)
-local_mib_dir = _local_path(mib_dir)
+local_share_dir = Path(_local_path(share_dir))
+local_checks_dir = Path(_local_path(checks_dir))
+local_notifications_dir = Path(_local_path(notifications_dir))
+local_inventory_dir = Path(_local_path(inventory_dir))
+local_check_manpages_dir = Path(_local_path(check_manpages_dir))
+local_agents_dir = Path(_local_path(agents_dir))
+local_web_dir = Path(_local_path(web_dir))
+local_pnp_templates_dir = Path(_local_path(pnp_templates_dir))
+local_doc_dir = Path(_local_path(doc_dir))
+local_locale_dir = Path(_local_path(locale_dir))
+local_bin_dir = Path(_local_path(bin_dir))
+local_lib_dir = Path(_local_path(lib_dir))
+local_mib_dir = Path(_local_path(mib_dir))

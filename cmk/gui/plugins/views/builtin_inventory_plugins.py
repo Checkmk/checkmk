@@ -408,7 +408,8 @@ inventory_displayhints.update({
     ".software.packages:*.size": {"title": _("Size"), "paint": "count"},
     ".software.packages:*.path": {"title": _("Path")},
     ".software.applications.": {"title": _("Applications")},
-    ".software.applications.check_mk.": {"title": _("Check_MK")},
+    ".software.applications.check_mk.": {"title": _("Checkmk")},
+    ".software.applications.check_mk.agent_version": {"title": _("Checkmk Agent Version")},
     ".software.applications.check_mk.cluster.is_cluster": {
         "title": _("Cluster host"), "short": _("Cluster"), "paint": "bool"
     },
@@ -417,15 +418,15 @@ inventory_displayhints.update({
         "title": _("Discovered host labels"),
         "keyorder": [
             "label",
-            "inventory_plugin_name",
+            "plugin_name",
         ],
     },
     ".software.applications.check_mk.host_labels:*.label": {
         "title": _("Label"),
         "paint": "cmk_label",
     },
-    ".software.applications.check_mk.host_labels:*.inventory_plugin_name": {
-        "title": _("Discovered by inventory plugin"),
+    ".software.applications.check_mk.host_labels:*.plugin_name": {
+        "title": _("Discovered by plugin"),
     },
     ".software.applications.docker.": {
         "icon": "docker", "title": "Docker", "keyorder": [
@@ -438,10 +439,11 @@ inventory_displayhints.update({
             "registry",
         ]
     },
-    ".software.applications.docker.num_containers_total": {"title": _("# Containers")},
-    ".software.applications.docker.num_containers_running": {"title": _("# Containers running")},
-    ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped")},
-    ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused")},
+    ".software.applications.docker.version": {"title": _("Version")},
+    ".software.applications.docker.num_containers_total": {"title": _("# Containers"), "short": _("Containers"),},
+    ".software.applications.docker.num_containers_running": {"title": _("# Containers running"), "short": _("Running"),},
+    ".software.applications.docker.num_containers_stopped": {"title": _("# Containers stopped"), "short": _("Stopped"),},
+    ".software.applications.docker.num_containers_paused": {"title": _("# Containers paused"), "short": _("Paused"),},
     ".software.applications.docker.num_images": {"title": _("# Images")},
     ".software.applications.docker.images:": {
         "title": _("Images"),
@@ -449,6 +451,7 @@ inventory_displayhints.update({
         "view": "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
+    ".software.applications.docker.images:*.size": {"paint": "size"},
     ".software.applications.docker.images:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
     ".software.applications.docker.images:*.repotags": {"title": _("Repository/Tag"), "paint": "csv_labels"},
@@ -511,9 +514,18 @@ inventory_displayhints.update({
             "container_id",
         ],
     },
+    ".software.applications.kubernetes.job_container:": {
+        "title": _("Containers"),
+        "keyorder": [
+            "name",
+            "image",
+            "image_pull_policy",
+        ],
+    },
     ".software.applications.kubernetes.roles:*.role" : {"title": _("Name")},
     ".software.applications.kubernetes.roles:*.namespace" : {"title": _("Namespace")},
     ".software.applications.kubernetes.nodes:*.name" : {"title": _("Name")},
+    ".software.applications.kubernetes.ingresses:": {"title": _("Ingress")},
     ".software.applications.kubernetes.pod_container:*.name": {"title": _("Name")},
     ".software.applications.kubernetes.pod_container:*.image": {"title": _("Image")},
     ".software.applications.kubernetes.pod_container:*.image_pull_policy": {"title": _("Image pull policy")},
@@ -521,6 +533,12 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.pod_container:*.ready": {"title": _("Ready"), "paint": "container_ready"},
     ".software.applications.kubernetes.pod_container:*.restart_count": {"title": _("Restart count")},
     ".software.applications.kubernetes.pod_container:*.container_id": {"title": _("Container ID")},
+    ".software.applications.kubernetes.job_container:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.job_container:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.job_container:*.image_pull_policy": {"title": _("Image pull policy")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.name": {"title": _("Name")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image": {"title": _("Image")},
+    ".software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy": {"title": _("Image pull policy")},
     ".software.applications.kubernetes.pod_info.": {
         "title": _("Pod"),
     },

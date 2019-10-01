@@ -27,7 +27,7 @@
 
 # Transforms all lines into a dictionary.
 # The first key is the dictionary key, unless modified by the custom_keys
-def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None):
+def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None, ports=False):
     if custom_keys is None:
         custom_keys = []
 
@@ -48,6 +48,9 @@ def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func
 
         if item_func:
             name = item_func(name)
+
+        if ports:
+            name = "%s port %s" % (instance.get("port-type").capitalize(), name)
 
         if as_dict_list:
             instances.setdefault(name, [])

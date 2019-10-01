@@ -1,0 +1,12 @@
+Title: check_http: GUI error in case 1.5.0 config included proxy port
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568198067
+Class: fix
+
+From version 1.6.0b1 to 1.6.0b9 a GUI error was encountered when trying to
+display a configuration from 1.5.0 which included a port specification in
+the configured proxy address.

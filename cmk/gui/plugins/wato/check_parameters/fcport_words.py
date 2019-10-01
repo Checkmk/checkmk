@@ -38,34 +38,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFcportWords(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_fcport_words():
+    return Dictionary(
+        title=_("Levels for transmitted and received words"),
+        elements=[
+            ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
+            ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "fcport_words"
 
-    @property
-    def title(self):
-        return _("Atto Fibrebridge FC port")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Levels for transmitted and received words"),
-            elements=[
-                ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
-                ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Port index"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="fcport_words",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Port index"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_fcport_words,
+        title=lambda: _("Atto Fibrebridge FC port"),
+    ))

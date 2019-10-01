@@ -1,0 +1,12 @@
+Title: Fix cmcdump issue during config activation
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568959019
+
+During config activation a KeyError with reference to a shadow host name
+could be raises.

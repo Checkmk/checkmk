@@ -657,25 +657,21 @@ def check_skype_mobile(item, params, parsed):
     # LS:WEB - UCWA
     # LS:WEB - Throttling and Authentication\WEB - Total Requests in Processing
 
+    ucwa_table = parsed["LS:WEB - UCWA"]
+
     for instance, name in [
         ("AndroidLync", "Android"),
         ("iPadLync", "iPad"),
         ("iPhoneLync", "iPhone"),
         ("LyncForMac", "Mac"),
     ]:
-        status, infotext, perfdata =\
-            wmi_yield_raw_counter(parsed["LS:WEB - UCWA"], instance,
-                                  "UCWA - Active Session Count",
-                                  label=" active",
-                                  perfvar="ucwa_active_sessions")
-        if status != 3:
-            perfdata = [('%s_%s' % (p[0], name.lower()),) + p[1:] for p in perfdata]
-            yield status, "%s: %s" % (name, infotext), perfdata
 
-        else:
-            # add a perfcounter with 0 sessions for all missing devices so we can
-            # still properly build a combined graph for active sessions
-            yield 0, "", [("active_sessions_%s" % name.lower(), 0, None, None, None, None)]
+        try:
+            value = int(ucwa_table.get(instance, "UCWA - Active Session Count"))
+        except KeyError:
+            continue
+        yield 0, "%s: %s active" % (name, value), [("ucwa_active_sessions_%s" % name.lower(), value)
+                                                  ]
 
     yield wmi_yield_raw_counter(parsed["LS:WEB - Throttling and Authentication"],
                                 item,

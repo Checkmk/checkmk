@@ -94,10 +94,8 @@ def parse_mssql_backup(info):
         if len(line) == 4 and " " in line[2]:
             line = line[:2] + line[2].split(" ") + line[3:]
 
-        # fill up with Nones:
-        line += [None] * (6 - len(line))
-
-        inst, tablespace, b_date, b_time, b_type, b_state = line
+        # (fill up with Nones)
+        inst, tablespace, b_date, b_time, b_type, b_state = line + [None] * (6 - len(line))
         timestamp = _parse_date_and_time(b_date, b_time)
 
         item = "%s %s" % (inst, tablespace)

@@ -39,43 +39,35 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Sortoverflow(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_db2_sortoverflow():
+    return TextAscii(title=_("Instance"),
+                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
-    @property
-    def check_group_name(self):
-        return "db2_sortoverflow"
 
-    @property
-    def title(self):
-        return _("DB2 Sort Overflow")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule allows you to set percentual limits for sort overflows."),
-            elements=[
-                (
-                    "levels_perc",
-                    Tuple(
-                        title=_("Overflows"),
-                        elements=[
-                            Percentage(title=_("Warning at"), unit=_("%"), default_value=2.0),
-                            Percentage(title=_("Critical at"), unit=_("%"), default_value=4.0),
-                        ],
-                    ),
+def _parameter_valuespec_db2_sortoverflow():
+    return Dictionary(
+        help=_("This rule allows you to set percentual limits for sort overflows."),
+        elements=[
+            (
+                "levels_perc",
+                Tuple(
+                    title=_("Overflows"),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%"), default_value=2.0),
+                        Percentage(title=_("Critical at"), unit=_("%"), default_value=4.0),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance"),
-                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_sortoverflow",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_db2_sortoverflow,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_db2_sortoverflow,
+        title=lambda: _("DB2 Sort Overflow"),
+    ))

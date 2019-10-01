@@ -39,57 +39,45 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersApcAtsOutput(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_apc_ats_output():
+    return Dictionary(
+        title=_("Levels for ATS Output parameters"),
+        optional_keys=True,
+        elements=[
+            ("output_voltage_max",
+             Tuple(title=_("Maximum Levels for Voltage"),
+                   elements=[
+                       Integer(title=_("Warning at"), unit="Volt"),
+                       Integer(title=_("Critical at"), unit="Volt"),
+                   ])),
+            ("output_voltage_min",
+             Tuple(title=_("Minimum Levels for Voltage"),
+                   elements=[
+                       Integer(title=_("Warning if below"), unit="Volt"),
+                       Integer(title=_("Critical if below"), unit="Volt"),
+                   ])),
+            ("load_perc_max",
+             Tuple(title=_("Maximum Levels for load in percent"),
+                   elements=[
+                       Percentage(title=_("Warning at")),
+                       Percentage(title=_("Critical at")),
+                   ])),
+            ("load_perc_min",
+             Tuple(title=_("Minimum Levels for load in percent"),
+                   elements=[
+                       Percentage(title=_("Warning if below")),
+                       Percentage(title=_("Critical if below")),
+                   ])),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "apc_ats_output"
 
-    @property
-    def title(self):
-        return _("APC Automatic Transfer Switch Output")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Levels for ATS Output parameters"),
-            optional_keys=True,
-            elements=[
-                ("output_voltage_max",
-                 Tuple(title=_("Maximum Levels for Voltage"),
-                       elements=[
-                           Integer(title=_("Warning at"), unit="Volt"),
-                           Integer(title=_("Critical at"), unit="Volt"),
-                       ])),
-                ("output_voltage_min",
-                 Tuple(title=_("Minimum Levels for Voltage"),
-                       elements=[
-                           Integer(title=_("Warning if below"), unit="Volt"),
-                           Integer(title=_("Critical if below"), unit="Volt"),
-                       ])),
-                ("load_perc_max",
-                 Tuple(title=_("Maximum Levels for load in percent"),
-                       elements=[
-                           Percentage(title=_("Warning at")),
-                           Percentage(title=_("Critical at")),
-                       ])),
-                ("load_perc_min",
-                 Tuple(title=_("Minimum Levels for load in percent"),
-                       elements=[
-                           Percentage(title=_("Warning if below")),
-                           Percentage(title=_("Critical if below")),
-                       ])),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("ID of phase"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="apc_ats_output",
+        group=RulespecGroupCheckParametersEnvironment,
+        item_spec=lambda: TextAscii(title=_("ID of phase"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_apc_ats_output,
+        title=lambda: _("APC Automatic Transfer Switch Output"),
+    ))

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 __version__ = "1.7.0i1"
 
 # TODO:
@@ -71,6 +72,7 @@ import traceback
 import subprocess
 import collections
 import multiprocessing
+import six
 
 import psutil
 import npyscreen
@@ -913,7 +915,8 @@ class Measurement(object):
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
-                    averaged = tuple([sum(y) / len(y) for y in zip(*values)])
+                    averaged = tuple([sum(y) / len(y) for y in zip(*values)
+                                     ])  # fixed: true-division
                 else:
                     # averages of dict items
                     averaged = {}
@@ -923,7 +926,7 @@ class Measurement(object):
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, unicode):
+                            if isinstance(value, six.text_type):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values
@@ -1027,11 +1030,11 @@ class Measurement(object):
             self.disk_io = DiskIO(0.0, 0.0)
             return
 
-        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) \
-                                / (self.time - last.time)
+        read_bytes_per_sec = (self.disk_counters.read_bytes - last.disk_counters.read_bytes) / (
+            self.time - last.time)  # fixed: true-division
 
-        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) \
-                                / (self.time - last.time)
+        write_bytes_per_sec = (self.disk_counters.write_bytes - last.disk_counters.write_bytes) / (
+            self.time - last.time)  # fixed: true-division
 
         self.disk_io = DiskIO(read_bytes_per_sec, write_bytes_per_sec)
 
@@ -1050,7 +1053,7 @@ class Measurement(object):
 
     def _get_site_state(self):
         self.site_state = subprocess.call(["omd", "status", "--bare"],
-                                          stdout=file(os.devnull, "w"),
+                                          stdout=open(os.devnull, "w"),
                                           close_fds=True)
 
     def _get_site_stats(self):
@@ -3134,7 +3137,7 @@ class ConsoleRenderer(npyscreen.NPSApp):
 
         max_y, max_x = self._window.curses_pad.getmaxyx()
         form_border = 1 * 2
-        info_box_width = (max_x - form_border) / 2
+        info_box_width = int((max_x - form_border) / 2.0)
         info_box_height = 10
         help_height = 2
         log_height = max_y - info_box_height - form_border - help_height
@@ -3264,7 +3267,7 @@ def verify_is_site():
 
 def verify_site_is_running():
     site_state = subprocess.call(["omd", "status", "--bare"],
-                                 stdout=file(os.devnull, "w"),
+                                 stdout=open(os.devnull, "w"),
                                  close_fds=True)
     if site_state != 0:
         raise MKGeneralException("Site needs to be running")

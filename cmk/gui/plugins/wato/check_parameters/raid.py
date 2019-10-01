@@ -33,25 +33,19 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class ManualCheckParameterRAID(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksStorage
+def _item_spec_raid():
+    return TextAscii(
+        title=_("Name of the device"),
+        help=_("For Linux MD specify the device name without the "
+               "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
+               "please refer to the manual of the actual check being used."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "raid"
 
-    @property
-    def title(self):
-        return _("RAID: overall state")
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the device"),
-            help=_("For Linux MD specify the device name without the "
-                   "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
-                   "please refer to the manual of the actual check being used."),
-        )
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="raid",
+        group=RulespecGroupManualChecksStorage,
+        item_spec=_item_spec_raid,
+        title=lambda: _("RAID: overall state"),
+    ))

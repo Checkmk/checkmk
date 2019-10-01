@@ -38,61 +38,49 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlDatabases(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_databases():
+    return Dictionary(elements=[
+        ("map_db_states",
+         Dictionary(
+             elements=[
+                 ("ONLINE", MonitoringState(title=_("Database Online"))),
+                 ("OFFLINE", MonitoringState(title=_("Database Offline"))),
+                 ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
+                 ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
+                 ("RECOVERY_PENDING", MonitoringState(title=_("Database must be recovered"))),
+                 ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
+                 ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
+             ],
+             title=_('Map Database States'),
+             optional_keys=[],
+         )),
+        ("map_auto_close_state",
+         Dictionary(
+             elements=[
+                 ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
+                 ("off", MonitoringState(title=_("Auto close off"))),
+             ],
+             title=_('Map auto close status'),
+             optional_keys=[],
+         )),
+        ("map_auto_shrink_state",
+         Dictionary(
+             elements=[
+                 ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
+                 ("off", MonitoringState(title=_("Auto shrink off"))),
+             ],
+             title=_('Map auto shrink status'),
+             optional_keys=[],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "mssql_databases"
 
-    @property
-    def title(self):
-        return _("MSSQL Databases properties")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("map_db_states",
-             Dictionary(
-                 elements=[
-                     ("ONLINE", MonitoringState(title=_("Database Online"))),
-                     ("OFFLINE", MonitoringState(title=_("Database Offline"))),
-                     ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
-                     ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
-                     ("RECOVERY_PENDING", MonitoringState(title=_("Database must be recovered"))),
-                     ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
-                     ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
-                 ],
-                 title=_('Map Database States'),
-                 optional_keys=[],
-             )),
-            ("map_auto_close_state",
-             Dictionary(
-                 elements=[
-                     ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
-                     ("off", MonitoringState(title=_("Auto close off"))),
-                 ],
-                 title=_('Map auto close status'),
-                 optional_keys=[],
-             )),
-            ("map_auto_shrink_state",
-             Dictionary(
-                 elements=[
-                     ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
-                     ("off", MonitoringState(title=_("Auto shrink off"))),
-                 ],
-                 title=_('Map auto shrink status'),
-                 optional_keys=[],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database identifier"),)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_databases",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database identifier"),),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_databases,
+        title=lambda: _("MSSQL Databases properties"),
+    ))

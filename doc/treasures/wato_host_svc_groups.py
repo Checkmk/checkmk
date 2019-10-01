@@ -36,6 +36,7 @@
 #}
 # Means alias has to follow the name
 
+from __future__ import print_function
 import sys
 path = sys.argv[1]
 
@@ -44,7 +45,7 @@ next_ = False
 
 servicegroups = {}
 hostgroups = {}
-for line in file(path).readlines():
+for line in open(path).readlines():
     line = line.strip()
     if line != "" and line[0] != '#' and line != '}' and not line.startswith('define'):
         try:
@@ -68,8 +69,8 @@ for line in file(path).readlines():
         except:
             pass
 
-print "Hostgroups:"
-print hostgroups
-print ""
-print "Service groups"
-print servicegroups
+print("Hostgroups:")
+print(hostgroups)
+print("")
+print("Service groups")
+print(servicegroups)

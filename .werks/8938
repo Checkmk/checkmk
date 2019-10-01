@@ -1,0 +1,10 @@
+Title: websphere_mq_queues: Skip lines if agent sends testing or invalid data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566460042
+Class: fix
+
+

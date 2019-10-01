@@ -313,17 +313,15 @@ int MainFunction(int argc, wchar_t const* argv[]) {
     argc -= 2;
     argv += 2;
 
-    cma::OnStart(cma::AppType::srv, cma::YamlCacheOp::nothing);
+    cma::OnStart(cma::AppType::srv);
     ON_OUT_OF_SCOPE(cma::OnExit());
 
     // check and call:
-    if (command == kTestParam) {
-        return cma::player::MainTest(argc, argv);
-    } else if (command == kRunParam) {
-        return cma::player::MainRun(argc, argv);
-    } else if (command == kRunOnceParam) {
-        return cma::player::MainRunOnce(argc, argv);
-    }
+    if (command == kTestParam) return cma::player::MainTest(argc, argv);
+
+    if (command == kRunParam) return cma::player::MainRun(argc, argv);
+
+    if (command == kRunOnceParam) return cma::player::MainRunOnce(argc, argv);
 
     return 11;
 }

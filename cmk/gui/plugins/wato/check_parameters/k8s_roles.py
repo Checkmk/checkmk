@@ -38,52 +38,43 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersK8SRoles(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_k8s_roles():
+    return Dictionary(elements=[
+        ('total',
+         Tuple(
+             title=_('Total'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('cluster_roles',
+         Tuple(
+             title=_('Cluster roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('roles',
+         Tuple(
+             title=_('Roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "k8s_roles"
 
-    @property
-    def title(self):
-        return _("Kubernetes roles")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('total',
-             Tuple(
-                 title=_('Total'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Integer(title=_("Warning above")),
-                     Integer(title=_("Critical above")),
-                 ],
-             )),
-            ('cluster_roles',
-             Tuple(
-                 title=_('Cluster roles'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Integer(title=_("Warning above")),
-                     Integer(title=_("Critical above")),
-                 ],
-             )),
-            ('roles',
-             Tuple(
-                 title=_('Roles'),
-                 default_value=(80.0, 90.0),
-                 elements=[
-                     Integer(title=_("Warning above")),
-                     Integer(title=_("Critical above")),
-                 ],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="k8s_roles",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_k8s_roles,
+        title=lambda: _("Kubernetes roles"),
+    ))

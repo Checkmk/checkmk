@@ -31,10 +31,12 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+from __future__ import division
 import abc
 import ast
 import errno
 import json
+import logging
 import os
 import pprint
 import re
@@ -58,7 +60,8 @@ import cmk.ec.export
 import cmk.ec.history
 import cmk.ec.settings
 import cmk.ec.snmp
-import cmk.utils.log
+import cmk.utils.log as log
+from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.render
@@ -151,7 +154,7 @@ def decode_from_bytes(string_as_bytes):
     # conversions between str and unicode are a fundamentally broken idea, just
     # like all implicit things and "helpful" ideas in general. :-P For further
     # info see e.g. http://nedbatchelder.com/text/unipain.html
-    if isinstance(string_as_bytes, unicode):
+    if isinstance(string_as_bytes, six.text_type):
         return string_as_bytes
 
     try:
@@ -408,7 +411,7 @@ class TimePeriods(object):
         self._last_update = 0
 
     def _update(self):
-        if self._periods is not None and int(time.time()) / 60 == self._last_update:
+        if self._periods is not None and int(time.time() / 60.0) == self._last_update:
             return  # only update once a minute
         try:
             table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
@@ -416,7 +419,7 @@ class TimePeriods(object):
             for tpname, alias, isin in table:
                 periods[tpname] = (alias, bool(isin))
             self._periods = periods
-            self._last_update = int(time.time()) / 60
+            self._last_update = int(time.time() / 60.0)
         except Exception as e:
             self._logger.exception("Cannot update timeperiod information: %s" % e)
             raise
@@ -521,7 +524,7 @@ class HostConfig(object):
             # Lookup maps to improve performance of host searches
             self._hosts_by_lower_name[host["name"].lower()] = host
             self._hosts_by_lower_alias[host["alias"].lower()] = host
-            self._hosts_by_lower_address[host["alias"].lower()] = host
+            self._hosts_by_lower_address[host["address"].lower()] = host
 
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._got_config_from_core = self._get_core_start_time()
@@ -613,7 +616,7 @@ class Perfcounters(object):
             for name, value in self._counters.iteritems():
                 if duration:
                     delta = value - self._old_counters[name]
-                    rate = delta / duration
+                    rate = delta / duration  # fixed: true-divsion
                     self._rates[name] = rate
                     if name in self._average_rates:
                         # We could make the weight configurable
@@ -772,7 +775,7 @@ class EventServer(ECServerThread):
         ]
 
     def _virtual_memory_size(self):
-        parts = file('/proc/self/stat').read().split()
+        parts = open('/proc/self/stat').read().split()
         return int(parts[22])  # in Bytes
 
     def _add_replication_status(self):
@@ -1081,8 +1084,8 @@ class EventServer(ECServerThread):
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
 
-            self._logger.verbose("Remove event %d (created in downtime, host left downtime)" %
-                                 event["id"])
+            self._logger.log(VERBOSE, "Remove event %d (created in downtime, host left downtime)",
+                             event["id"])
             self._event_status.remove_event(event)
 
     def hk_handle_event_timeouts(self):
@@ -1544,12 +1547,6 @@ class EventServer(ECServerThread):
                     # Remember the rule id that this event originated from
                     event["rule_id"] = rule["id"]
 
-                    # Lookup the monitoring core hosts and add the core host
-                    # name to the event when one can be matched
-                    # For the moment we have no rule/condition matching on this
-                    # field. So we only add the core host info for matched events.
-                    self._add_core_host_to_new_event(event)
-
                     # Attach optional contact group information for visibility
                     # and eventually for notifications
                     self._add_rule_contact_groups_to_event(rule, event)
@@ -1561,6 +1558,16 @@ class EventServer(ECServerThread):
                     event["match_groups_syslog_application"] = match_groups.get(
                         "match_groups_syslog_application", ())
                     self.rewrite_event(rule, event, match_groups)
+
+                    # Lookup the monitoring core hosts and add the core host
+                    # name to the event when one can be matched.
+                    #
+                    # Needs to be done AFTER event rewriting, because the rewriting
+                    # may change the "host" field.
+                    #
+                    # For the moment we have no rule/condition matching on this
+                    # field. So we only add the core host info for matched events.
+                    self._add_core_host_to_new_event(event)
 
                     if "count" in rule:
                         count = rule["count"]
@@ -1821,8 +1828,8 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def new_event_respecting_limits(self, event):
-        self._logger.verbose("Checking limit for message from %s (rule '%s')" %
-                             (event["host"], event["rule_id"]))
+        self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
+                         (event["host"], event["rule_id"]))
 
         with self._event_status.lock:
             if self._handle_event_limit("overall", event):
@@ -1851,8 +1858,8 @@ class EventServer(ECServerThread):
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
         limit, action = self._get_event_limit(ty, event)
-        self._logger.verbose("  Type: %s, already open events: %d, Limit: %d" %
-                             (ty, num_already_open, limit))
+        self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
+                         num_already_open, limit)
 
         # Limit not reached: add new event
         if num_already_open < limit:
@@ -1873,7 +1880,7 @@ class EventServer(ECServerThread):
         # Limit reached already in the past: Simply drop silently
         if num_already_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
-            self._logger.verbose("  Skip processing because limit is already in effect")
+            self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
             self._perfcounters.count("overflows")
             return True  # Prevent creation and prevent one time actions (below)
 
@@ -3047,7 +3054,7 @@ class StatusServer(ECServerThread):
                                        "")
 
                     duration = time.time() - before
-                    self._logger.verbose("Answered request in %0.2f ms" % (duration * 1000))
+                    self._logger.log(VERBOSE, "Answered request in %0.2f ms", duration * 1000)
                     self._perfcounters.count_time("request", duration)
 
             except Exception as e:
@@ -3065,7 +3072,7 @@ class StatusServer(ECServerThread):
 
     def handle_client(self, client_socket, allow_commands, client_ip):
         for query in Queries(self, client_socket, self._logger):
-            self._logger.verbose("Client livestatus query: %r" % query)
+            self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
                 if query.method == "GET":
@@ -3182,7 +3189,7 @@ class StatusServer(ECServerThread):
         # self._event_status.lock too. The lock can not be allocated twice.
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
-        with file(str(self.settings.paths.event_pipe.value), "w") as pipe:
+        with open(str(self.settings.paths.event_pipe.value), "w") as pipe:
             pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
     def handle_command_changestate(self, arguments):
@@ -3201,7 +3208,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self):
         self._logger.info("Closing this logfile")
-        cmk.utils.log.open_log(str(self.settings.paths.log_file.value))
+        log.open_log(str(self.settings.paths.log_file.value))
         self._logger.info("Opened new logfile")
 
     # Erase our current state and history!
@@ -3466,7 +3473,7 @@ class EventStatus(object):
             os.fsync(f.fileno())
         path_new.rename(path)
         elapsed = time.time() - now
-        self._logger.verbose("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
+        self._logger.log(VERBOSE, "Saved event state to %s in %.3fms.", path, elapsed * 1000)
 
     def reset_counters(self, rule_id):
         if rule_id:
@@ -3557,13 +3564,13 @@ class EventStatus(object):
     # protected by self.lock
     def remove_oldest_event(self, ty, event):
         if ty == "overall":
-            self._logger.verbose("  Removing oldest event")
+            self._logger.log(VERBOSE, "  Removing oldest event")
             self._remove_event_by_nr(0)
         elif ty == "by_rule":
-            self._logger.verbose("  Removing oldest event of rule \"%s\"" % event["rule_id"])
+            self._logger.log(VERBOSE, "  Removing oldest event of rule \"%s\"", event["rule_id"])
             self._remove_oldest_event_of_rule(event["rule_id"])
         elif ty == "by_host":
-            self._logger.verbose("  Removing oldest event of host \"%s\"" % event["host"])
+            self._logger.log(VERBOSE, "  Removing oldest event of host \"%s\"", event["host"])
             self._remove_oldest_event_of_host(event["host"])
 
     # protected by self.lock
@@ -4095,21 +4102,21 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 def main():
     os.unsetenv("LANG")
-    logger = cmk.utils.log.get_logger("mkeventd")
+    logger = logging.getLogger("cmk.mkeventd")
     settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.utils.paths.omd_root),
                                         pathlib.Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:
-        cmk.utils.log.open_log(sys.stderr)
-        cmk.utils.log.set_verbosity(settings.options.verbosity)
+        log.setup_logging_handler(sys.stderr)
+        log.logger.setLevel(log.verbosity_to_log_level(settings.options.verbosity))
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:
-            cmk.utils.log.open_log(str(settings.paths.log_file.value))
+            log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
-        logger.info("mkeventd version %s starting" % cmk.__version__)
+        logger.info("mkeventd version %s starting", cmk.__version__)
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
@@ -4125,8 +4132,8 @@ def main():
                     "Old PID file %s still existing and mkeventd still running with PID %d." %
                     (pid_path, old_pid))
             pid_path.unlink()
-            logger.info("Removed orphaned PID file %s (process %d not running anymore)." %
-                        (pid_path, old_pid))
+            logger.info("Removed orphaned PID file %s (process %d not running anymore).", pid_path,
+                        old_pid)
 
         # Make sure paths exist
         settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
@@ -4151,13 +4158,13 @@ def main():
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
             cmk.utils.daemon.daemonize()
-            logger.info("Daemonized with PID %d." % os.getpid())
+            logger.info("Daemonized with PID %d.", os.getpid())
 
         cmk.utils.daemon.lock_with_pid_file(pid_path)
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
-            logger.verbose("Got signal %d." % signum)
+            logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)
 
         signal.signal(signal.SIGHUP, signal_handler)
@@ -4177,23 +4184,23 @@ def main():
         # Remove event pipe and drain it, so that we make sure
         # that processes (syslog, etc) will not hang when trying
         # to write into the pipe.
-        logger.verbose("Cleaning up event pipe")
+        logger.log(VERBOSE, "Cleaning up event pipe")
         pipe = event_server.open_pipe()  # Open it
         settings.paths.event_pipe.value.unlink()  # Remove pipe
         drain_pipe(pipe)  # Drain any data
         os.close(pipe)  # Close pipe
 
-        logger.verbose("Saving final event state")
+        logger.log(VERBOSE, "Saving final event state")
         event_status.save_status()
 
-        logger.verbose("Cleaning up sockets")
+        logger.log(VERBOSE, "Cleaning up sockets")
         settings.paths.unix_socket.value.unlink()
         settings.paths.event_socket.value.unlink()
 
-        logger.verbose("Output hash stats")
+        logger.log(VERBOSE, "Output hash stats")
         event_server.output_hash_stats()
 
-        logger.verbose("Closing fds which might be still open")
+        logger.log(VERBOSE, "Closing fds which might be still open")
         for fd in [
                 settings.options.syslog_udp, settings.options.syslog_tcp,
                 settings.options.snmptrap_udp

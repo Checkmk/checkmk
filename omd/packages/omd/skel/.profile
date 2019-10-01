@@ -1,4 +1,3 @@
-
 export OMD_SITE=###SITE###
 export OMD_ROOT=###ROOT###
 
@@ -25,15 +24,20 @@ export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 # manual testing, the plugins may behave differently depending on the
 # localization of the user's environment variables. This can lead to confusion
 # during tests.
-export LANG=C LC_ALL=C
+INSTALLED_LOCALES=`locale -a`
+for i in "C.UTF-8" "en_US.utf8" "C"; do
+    if echo $INSTALLED_LOCALES | grep -q -w -F "$i"; then
+        export LANG="$i" LC_ALL="$i"
+        break
+    fi
+done
 
 # Set environment for the monitoring plugins that use state retention (like check_snmp).
 export NAGIOS_PLUGIN_STATE_DIRECTORY="$OMD_ROOT/var/monitoring-plugins"
 export MP_STATE_DIRECTORY=$NAGIOS_PLUGIN_STATE_DIRECTORY
 
-if [ -f $OMD_ROOT/etc/environment ]
-then
-    eval $(egrep -v '^[[:space:]]*(#|$)' < $OMD_ROOT/etc/environment | sed 's/^/export /')
+if [ -f $OMD_ROOT/etc/environment ]; then
+    eval $(egrep -v '^[[:space:]]*(#|$)' <$OMD_ROOT/etc/environment | sed 's/^/export /')
 fi
 
 # Only load bashrc when in a bash shell and not loaded yet.
@@ -41,4 +45,3 @@ fi
 if [ "$BASH" -a -s $OMD_ROOT/.bashrc -a -z "$BASHRC" ]; then
     . $OMD_ROOT/.bashrc
 fi
-

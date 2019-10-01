@@ -38,38 +38,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAcmeCertificates(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_acme_certificates():
+    return TextAscii(
+        title=_("Name of certificate"),
+        allow_empty=False,
+    )
 
-    @property
-    def check_group_name(self):
-        return "acme_certificates"
 
-    @property
-    def title(self):
-        return _("ACME certificates")
+def _parameter_valuespec_acme_certificates():
+    return Dictionary(elements=[("expire_lower",
+                                 Tuple(title=_("Lower age levels for expire date"),
+                                       elements=[
+                                           Age(title=_("Warning if below"), default_value=604800),
+                                           Age(title=_("Critical if below"), default_value=2592000),
+                                       ]))],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[("expire_lower",
-                                     Tuple(title=_("Lower age levels for expire date"),
-                                           elements=[
-                                               Age(title=_("Warning if below"),
-                                                   default_value=604800),
-                                               Age(title=_("Critical if below"),
-                                                   default_value=2592000),
-                                           ]))],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of certificate"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="acme_certificates",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_acme_certificates,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_acme_certificates,
+        title=lambda: _("ACME certificates"),
+    ))

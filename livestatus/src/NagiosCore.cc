@@ -185,11 +185,6 @@ Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
 size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
 
-// TODO(sp) Unused in Livestatus NEB: Strange & ugly...
-AuthorizationKind NagiosCore::hostAuthorization() const {
-    return AuthorizationKind::loose;
-}
-
 AuthorizationKind NagiosCore::serviceAuthorization() const {
     return _authorization._service;
 }

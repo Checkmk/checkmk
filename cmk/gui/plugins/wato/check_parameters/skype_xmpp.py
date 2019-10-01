@@ -38,49 +38,40 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSkypeXmpp(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_skype_xmpp():
+    return Dictionary(elements=[
+        ('failed_outbound_streams',
+         Dictionary(
+             title=_("XMPP Failed outbound stream establishes"),
+             elements=[
+                 ("upper",
+                  Tuple(elements=[
+                      Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
+                      Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
+                  ],)),
+             ],
+             optional_keys=[],
+         )),
+        ('failed_inbound_streams',
+         Dictionary(
+             title=_("XMPP Failed inbound stream establishes"),
+             elements=[
+                 ("upper",
+                  Tuple(elements=[
+                      Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
+                      Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
+                  ],)),
+             ],
+             optional_keys=[],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "skype_xmpp"
 
-    @property
-    def title(self):
-        return _("Skype for Business XMPP")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('failed_outbound_streams',
-             Dictionary(
-                 title=_("XMPP Failed outbound stream establishes"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
-                      ],)),
-                 ],
-                 optional_keys=[],
-             )),
-            ('failed_inbound_streams',
-             Dictionary(
-                 title=_("XMPP Failed inbound stream establishes"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
-                      ],)),
-                 ],
-                 optional_keys=[],
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="skype_xmpp",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_skype_xmpp,
+        title=lambda: _("Skype for Business XMPP"),
+    ))

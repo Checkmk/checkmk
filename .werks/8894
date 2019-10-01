@@ -1,0 +1,12 @@
+Title: Windows Agent: The log file message level is now configurable via Agent Bakery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b5
+Date: 1565690392
+Class: feature
+
+Now it  is possible to configure the verbosity level of the Windows Agent's log file using the new option 'Logging Level'.
+
+The old option 'Crash-Debugging' has been removed from the Agent Bakery as deprecated.

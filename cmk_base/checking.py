@@ -35,6 +35,7 @@ from typing import List, Tuple, Optional  # pylint: disable=unused-import
 import six
 
 import cmk
+import cmk.utils
 import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
@@ -42,6 +43,7 @@ from cmk.utils.regex import regex
 import cmk.utils.debug
 
 import cmk_base.utils
+import cmk_base.core
 import cmk_base.crash_reporting
 import cmk_base.console as console
 import cmk_base.config as config
@@ -551,7 +553,7 @@ def _submit_check_result(host, servicedesc, result, cached_at=None, cache_interv
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar
-    if isinstance(infotext, unicode):
+    if isinstance(infotext, six.text_type):
         # regular check results are unicode...
         infotext = infotext.replace(u"|", u"\u2758")
     else:
@@ -595,10 +597,9 @@ def _output_check_result(servicedesc, state, infotext, perftexts):
         p = ''
         infotext_fmt = "%s"
 
-    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n",
-                    servicedesc.encode('utf-8'), tty.bold, tty.states[state],
-                    cmk_base.utils.make_utf8(infotext.split('\n')[0]), tty.normal,
-                    cmk_base.utils.make_utf8(p))
+    console.verbose("%-20s %s%s" + infotext_fmt + "%s%s\n", servicedesc.encode('utf-8'), tty.bold,
+                    tty.states[state], cmk.utils.make_utf8(infotext.split('\n')[0]), tty.normal,
+                    cmk.utils.make_utf8(p))
 
 
 def _do_submit_to_core(host, service, state, output, cached_at=None, cache_interval=None):
@@ -636,7 +637,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (host, cmk_base.utils.make_utf8(service), now, now, state, cmk_base.utils.make_utf8(output)))
+""" % (host, cmk.utils.make_utf8(service), now, now, state, cmk.utils.make_utf8(output)))
 
 
 def _open_checkresult_file():
@@ -655,7 +656,7 @@ def _close_checkresult_file():
     global _checkresult_file_fd
     if _checkresult_file_fd is not None:
         os.close(_checkresult_file_fd)
-        file(_checkresult_file_path + ".ok", "w")
+        open(_checkresult_file_path + ".ok", "w")
         _checkresult_file_fd = None
 
 
@@ -664,9 +665,8 @@ def _submit_via_command_pipe(host, service, state, output):
     _open_command_pipe()
     if _nagios_command_pipe:
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-        _nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                                   (int(time.time()), host, cmk_base.utils.make_utf8(service),
-                                    state, cmk_base.utils.make_utf8(output)))
+        _nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (int(
+            time.time()), host, cmk.utils.make_utf8(service), state, cmk.utils.make_utf8(output)))
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
@@ -683,7 +683,7 @@ def _open_command_pipe():
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
                 signal.alarm(3)  # three seconds to open pipe
-                _nagios_command_pipe = file(cmk.utils.paths.nagios_command_pipe_path, 'w')
+                _nagios_command_pipe = open(cmk.utils.paths.nagios_command_pipe_path, 'w')
                 signal.alarm(0)  # cancel alarm
             except Exception as e:
                 _nagios_command_pipe = False

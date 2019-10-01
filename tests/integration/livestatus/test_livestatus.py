@@ -2,8 +2,10 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from __future__ import print_function
 import collections
 import pytest  # type: ignore
+import six
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
@@ -15,7 +17,7 @@ def default_cfg(request, site, web):
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
-    print "Applying default config (%s)" % config.core
+    print("Applying default config (%s)" % config.core)
     create_linux_test_host(request, web, site, "livestatus-test-host")
     create_linux_test_host(request, web, site, "livestatus-test-host.domain")
     web.discover_services("livestatus-test-host")
@@ -68,7 +70,7 @@ def test_host_custom_variables(default_cfg, site):
         u'ip-v4': u'ip-v4',
         u'networking': u'lan',
         u'piggyback': u'auto-piggyback',
-        u'site': unicode(site.id),
+        u'site': six.text_type(site.id),
         u'snmp_ds': u'no-snmp',
         u'tcp': u'tcp',
     }

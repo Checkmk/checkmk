@@ -34,7 +34,7 @@ def add_file(f, path):
     f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")
     f.write("\n")
-    f.write(file(path).read())
+    f.write(open(path).read())
 
 
 def run_pylint(base_path, check_files=None):  #, cleanup_test_dir=False):
@@ -88,8 +88,8 @@ def num_jobs_to_use():
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
     if getpass.getuser() == "jenkins":
-        return multiprocessing.cpu_count() / 8
-    return multiprocessing.cpu_count() / 8 + 5
+        return int(multiprocessing.cpu_count() / 8.0)
+    return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
 def get_pylint_files(base_path, file_pattern):
@@ -111,8 +111,8 @@ def is_python_file(path):
         return True
 
     # Only add python files
-    shebang = file(path, "r").readline()
-    if shebang.startswith("#!") and "python" in shebang:
+    shebang = open(path, "r").readline().rstrip()
+    if shebang.startswith("#!") and shebang.endswith("python"):
         return True
 
     return False
@@ -143,7 +143,7 @@ class CMKFixFileMixin(object):
         return os.path.relpath(msg.abspath, cmk_path())
 
     def _orig_location_from_compiled_file(self, msg):
-        lines = file(msg.abspath).readlines()
+        lines = open(msg.abspath).readlines()
         line_nr = msg.line
         orig_file, went_back = None, -3
         while line_nr > 0:

@@ -1,0 +1,10 @@
+Title: kernel.performance: Check pages that get swapped in/out from the linux kernel
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568033468
+Class: feature
+
+You can now monitore the rate of Linux Kernel pages being swap in/out from disk. Both upper and lower levels can be set.

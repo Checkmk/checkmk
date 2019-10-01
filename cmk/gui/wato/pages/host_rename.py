@@ -61,7 +61,6 @@ from cmk.gui.valuespec import (
     Dictionary,
 )
 
-from cmk.gui.plugins.wato.utils import WatoBackgroundJob
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -77,7 +76,7 @@ except ImportError:
 
 
 @gui_background_job.job_registry.register
-class RenameHostsBackgroundJob(WatoBackgroundJob):
+class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
     job_prefix = "rename-hosts"
 
     @classmethod
@@ -92,7 +91,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
         kwargs["title"] = title
         kwargs["lock_wato"] = True
         kwargs["stoppable"] = False
-        last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
+        last_job_status = watolib.WatoBackgroundJob(self.job_prefix).get_status()
         if "duration" in last_job_status:
             kwargs["estimated_duration"] = last_job_status["duration"]
 

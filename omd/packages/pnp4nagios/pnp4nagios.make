@@ -6,7 +6,7 @@ PNP4NAGIOS_BUILD := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-build
 PNP4NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-install
 PNP4NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)-patching
 
-.PHONY: $(PNP4NAGIOS) $(PNP4NAGIOS)-install $(PNP4NAGIOS)-clean 
+.PHONY: $(PNP4NAGIOS) $(PNP4NAGIOS)-install $(PNP4NAGIOS)-clean
 
 $(PNP4NAGIOS): $(PNP4NAGIOS_BUILD)
 
@@ -57,10 +57,10 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	install -m 644 $(PNP4NAGIOS_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/THANKS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
-	
+
 	# Install the diskspace cleanup plugin
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
-	
+
 	# Move default config files to skel
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/pnp4nagios
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/stats
@@ -68,11 +68,16 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/log
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/spool
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/tmp/pnp4nagios/run
-	
+
 	# Install the facelift theme for pnp4nagios
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
+
+	# Install the modern-dark theme for pnp4nagios
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark/images
+	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-modern-dark/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark
+	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-modern-dark/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-modern-dark/images
 
 	# Install Hooks
 	install -m 755 $(PACKAGE_DIR)/$(PNP4NAGIOS)/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

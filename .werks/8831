@@ -1,0 +1,10 @@
+Title: ups_test: Show generic message 'Item not found' if needed values (UPS diagnostics) are missing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566366999
+Class: fix
+
+

@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import six
+
 import cmk.gui.config as config
 import cmk.gui.views as views
 import cmk.gui.sites as sites
@@ -37,9 +39,7 @@ from cmk.gui.plugins.sidebar import (
 )
 
 
-class HostSnapin(SidebarSnapin):
-    __metaclass__ = abc.ABCMeta
-
+class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
     @abc.abstractmethod
     def _host_mode_ident(self):
         raise NotImplementedError()

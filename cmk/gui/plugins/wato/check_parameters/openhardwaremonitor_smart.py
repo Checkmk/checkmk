@@ -39,41 +39,33 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOpenhardwaremonitorSmart(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _item_spec_openhardwaremonitor_smart():
+    return TextAscii(
+        title=_("Device Name"),
+        help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
+    )
 
-    @property
-    def check_group_name(self):
-        return "openhardwaremonitor_smart"
 
-    @property
-    def title(self):
-        return _("OpenHardwareMonitor S.M.A.R.T.")
+def _parameter_valuespec_openhardwaremonitor_smart():
+    return Dictionary(elements=[
+        ("remaining_life",
+         Tuple(
+             title=_("Remaining Life"),
+             help=_("Estimated remaining health of the disk based on other readings."),
+             elements=[
+                 Percentage(title=_("Warning below"), default_value=30),
+                 Percentage(title=_("Critical below"), default_value=10),
+             ],
+         )),
+    ],)
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("remaining_life",
-             Tuple(
-                 title=_("Remaining Life"),
-                 help=_("Estimated remaining health of the disk based on other readings."),
-                 elements=[
-                     Percentage(title=_("Warning below"), default_value=30),
-                     Percentage(title=_("Critical below"), default_value=10),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Device Name"),
-            help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="openhardwaremonitor_smart",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=_item_spec_openhardwaremonitor_smart,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_openhardwaremonitor_smart,
+        title=lambda: _("OpenHardwareMonitor S.M.A.R.T."),
+    ))

@@ -1,0 +1,15 @@
+Title: graylog_cluster_stats: New check to monitor cluster statistics of a graylog instance
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569230706
+Class: feature
+
+With this check you can monitor graylog cluster statistics like number of
+inputs, outputs, streams, stream rules, extractors and user. It also outputs
+elasticsearch statistics, eg. number of nodes, data nodes, shards, timeouts and
+indices. Also mongodb statistics are shown, eg. allocated storage, total,
+uncompressed data and average document size and number of extents, collections
+and objects. Needs the datasource "Check state of graylog" to be configured.

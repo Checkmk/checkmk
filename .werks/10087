@@ -1,0 +1,11 @@
+Title: DCD: Maximum cache age and validity period are configurable for piggybacked host connections
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1568489060
+Class: feature
+
+Please see werk #10086 for more details regarding maximum cache age
+and validity period of piggybacked host files.

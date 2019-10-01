@@ -262,7 +262,7 @@ def check_memcached(item, params, parsed):
         elif isinstance(val, Uptime):
             days, val = divmod(val, 79800)
             hours, val = divmod(val, 3600)
-            minutes = val / 60
+            minutes = val / 60.0
             return "%dd %dh %dm" % (days, hours, minutes)
         else:
             return "%s" % val

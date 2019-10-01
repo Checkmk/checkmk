@@ -69,17 +69,17 @@ def check_esx_vsphere_datastores(item, params, data):
         return
 
     yield df_check_filesystem_single(  # pylint: disable=undefined-variable
-        item, size_bytes / mib, avail_bytes / mib, 0, None, None, params)
+        item, size_bytes / mib, avail_bytes / mib, 0, None, None, params)  # fixed: true-division
 
     uncommitted_bytes = data.get("uncommitted")
     if uncommitted_bytes is None:
         return
     text_uncommitted = "Uncommitted: %s" % get_bytes_human_readable(uncommitted_bytes)
-    yield 0, text_uncommitted, [('uncommitted', uncommitted_bytes / mib)]
+    yield 0, text_uncommitted, [('uncommitted', uncommitted_bytes / mib)]  # fixed: true-division
 
     used_bytes = size_bytes - avail_bytes
     prov_bytes = used_bytes + uncommitted_bytes
-    prov_percent = (prov_bytes * 100.) / size_bytes if size_bytes != 0 else 0
+    prov_percent = (prov_bytes * 100.0) / size_bytes if size_bytes != 0 else 0
 
     warn, crit = params.get('provisioning_levels', (None, None))
     yield check_levels(prov_percent,
@@ -89,10 +89,11 @@ def check_esx_vsphere_datastores(item, params, data):
 
     if warn is not None:
         # convert percent to abs MiB
-        scale = size_bytes / mib / 100.
-        yield 0, "", [('overprovisioned', prov_bytes / mib, scale * warn, scale * crit)]
+        scale = (size_bytes / mib) / 100.0  # fixed: true-division
+        yield 0, "", [('overprovisioned', prov_bytes / mib, scale * warn, scale * crit)
+                     ]  # fixed: true-division
     else:
-        yield 0, "", [('overprovisioned', prov_bytes / mib)]
+        yield 0, "", [('overprovisioned', prov_bytes / mib)]  # fixed: true-division
 
 
 check_info['esx_vsphere_datastores'] = {

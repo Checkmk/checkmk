@@ -36,23 +36,17 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersAntivirUpdateAge(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_antivir_update_age():
+    return Tuple(elements=[
+        Age(title=_("Warning level for time since last update")),
+        Age(title=_("Critical level for time since last update")),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "antivir_update_age"
 
-    @property
-    def title(self):
-        return _("Age of last AntiVirus update")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(elements=[
-            Age(title=_("Warning level for time since last update")),
-            Age(title=_("Critical level for time since last update")),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="antivir_update_age",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_antivir_update_age,
+        title=lambda: _("Age of last AntiVirus update"),
+    ))

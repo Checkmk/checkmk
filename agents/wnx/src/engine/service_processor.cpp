@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
+#include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "external_port.h"
@@ -17,6 +18,8 @@
 #include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
+extern bool global_stop_signaled;  // semi-hidden global variable for global
+                                   // status #TODO ???
 
 // Implementation of the Windows signals
 
@@ -43,7 +46,8 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 }
 
 void ServiceProcessor::stopService() {
-    XLOG::t(XLOG_FUNC + " called");
+    XLOG::l.i("Stop Service called");
+    cma::srv::global_stop_signaled = true;
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up
@@ -186,6 +190,26 @@ void ServiceProcessor::informDevice(cma::rt::Device& Device,
     Device.connectFrom(Ip, rt_port, s_view, password);
 }
 
+void ServiceProcessor::updateMaxWaitTime(int timeout_seconds) noexcept {
+    if (timeout_seconds <= 0) return;
+
+    {
+        std::lock_guard lk(max_wait_time_lock_);
+        max_wait_time_ = std::max(timeout_seconds, max_wait_time_);
+    }
+
+    XLOG::t.i("Max Wait Time for Answer is set to [{}]", max_wait_time_);
+}
+
+void ServiceProcessor::checkMaxWaitTime() noexcept {
+    if (max_wait_time_ <= 0) {
+        max_wait_time_ = cma::cfg::kDefaultAgentMinWait;
+        XLOG::t.i("Max Wait Time for Answer set to valid value [{}]",
+                  max_wait_time_);
+    } else
+        XLOG::t.i("Max Wait Time for Answer is [{}]", max_wait_time_);
+}
+
 // Global config reloaded here
 // our list of plugins is GLOBAl
 // so process it as global one
@@ -209,8 +233,24 @@ void ServiceProcessor::preLoadConfig() {
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
 }
 
-void ServiceProcessor::preStart() {
+static void ReloadConfigInServiceMode() {
+    // service may install cap, install ini or upgrade installation and
+    // continue to work, config must be reloaded
+    auto app_type = AppDefaultType();
+    if (app_type == AppType::srv) {
+        XLOG::l.i("Reloading config for SERVICE is required");
+        cma::ReloadConfig();  // service on start
+        return;
+    }
+
+    XLOG::l.i("Reloading config for application type [{}] is NOT required",
+              static_cast<int>(app_type));
+}
+
+void ServiceProcessor::preStartBinaries() {
     XLOG::l.i("Pre Start actions");
+
+    //
     cma::cfg::SetupPluginEnvironment();
     ohm_started_ = conditionallyStartOhm();
 
@@ -251,6 +291,17 @@ void ServiceProcessor::resetOhm() noexcept {
     cma::tools::RunStdCommand(cmd_line, true);
 }
 
+bool ServiceProcessor::stopRunningOhmProcess() noexcept {
+    auto running = ohm_process_.running();
+    if (running) {
+        XLOG::l.i("Stopping running OHM");
+        ohm_process_.stop();
+        return true;
+    }
+
+    return false;
+}
+
 // conditions are: yml + exists(ohm) + elevated
 // true on successful start or if OHM is already started
 bool ServiceProcessor::conditionallyStartOhm() noexcept {
@@ -259,6 +310,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     auto& ohm_engine = ohm_provider_.getEngine();
     if (!ohm_engine.isAllowedByCurrentConfig()) {
         XLOG::t.i("OHM starting skipped due to config");
+        stopRunningOhmProcess();
         return false;
     }
 
@@ -272,6 +324,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
     auto ohm_exe = cma::provider::GetOhmCliPath();
     if (!IsValidRegularFile(ohm_exe)) {
         XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
+        stopRunningOhmProcess();
         return false;
     }
 
@@ -281,35 +334,47 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
             "Too many errors [{}] on the OHM, stopping, cleaning and starting",
             error_count);
         // no ohm, nop reset
-        auto running = ohm_process_.running();
-        if (running) ohm_process_.stop();
+        auto running = stopRunningOhmProcess();
 
         resetOhm();
 
         ohm_engine.resetError();
         if (running) ohm_process_.start(ohm_exe.wstring());
-    } else
+    } else {
+        if (!ohm_process_.running()) {
+            XLOG::l.i("OHM is not running by Agent");
+            if (wtools::FindProcess(cma::provider::ohm::kExeModuleWide)) {
+                XLOG::l.i("OHM is found: REUSE running OHM");
+                return true;
+            }
+        }
         ohm_process_.start(ohm_exe.wstring());
+    }
     return true;
 }
 
 // This is relative simple function which kicks to call
 // different providers
-int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
+int ServiceProcessor::startProviders(AnswerId Tp, const std::string& Ip) {
     using namespace cma::cfg;
 
     vf_.clear();
-    max_timeout_ = 0;
+    max_wait_time_ = 0;
 
     preLoadConfig();
+
+    // call of sensible to CPU-load sections
+    bool started_sync = tryToDirectCall(wmi_cpuload_provider_, Tp, Ip);
+
     // sections to be kicked out
     tryToKick(uptime_provider_, Tp, Ip);
 
-    // #TODO remove warning and relocate this block back at the end after
-    // beta-testing We have RElocated winperf here just to be compatible with
-    // older servers to winperf check crash. This is not 100% guarantee, that we
-    // get winperf before plugin winperf but good enough for older servers(which
-    // we should not support in any case)
+    // #TODO remove warning and relocate this block back at the end
+    // after beta-testing We have RElocated winperf here just to be
+    // compatible with older servers to winperf check crash. This is not
+    // 100% guarantee, that we get winperf before plugin winperf but
+    // good enough for older servers(which we should not support in any
+    // case)
     //
     // WinPerf Processing
     if (groups::winperf.enabledInConfig() &&
@@ -327,7 +392,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     tryToKick(local_provider_, Tp, Ip);
 
     tryToKick(dotnet_clrmemory_provider_, Tp, Ip);
-    tryToKick(wmi_cpuload_provider_, Tp, Ip);
     tryToKick(wmi_webservices_provider_, Tp, Ip);
     tryToKick(msexch_provider_, Tp, Ip);
 
@@ -335,22 +399,20 @@ int ServiceProcessor::startProviders(AnswerId Tp, std::string Ip) {
     tryToKick(skype_provider_, Tp, Ip);
     tryToKick(spool_provider_, Tp, Ip);
     tryToKick(ohm_provider_, Tp, Ip);
+
     // Plugins Processing
 #if 0
     // we do not use anymore separate plugin process(player)
-    // code is here as future refernce to use again separate process
+    // code is here as future reference to use again separate process
     if (groups::plugins.enabledInConfig()) {
         cma::cfg::SetupPluginEnvironment();
         kickPlugins(Tp, Ip);
     }
 #endif
 
-    if (max_timeout_ <= 0) {
-        max_timeout_ = cma::cfg::kDefaultAgentMinWait;
-        XLOG::l.i("Max Timeout set to valid value {}", max_timeout_);
-    }
+    checkMaxWaitTime();
 
-    return static_cast<int>(vf_.size());
+    return static_cast<int>(vf_.size()) + (started_sync ? 1 : 0);
 }
 
 // test function to be used when no real connection
@@ -360,7 +422,6 @@ void ServiceProcessor::sendDebugData() {
     auto tp = openAnswer("127.0.0.1");
     if (!tp) return;
     auto started = startProviders(tp.value(), "");
-    cma::tools::sleep(2000);  // a bit of time to finish async plugins
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
     auto count = printf("%s", block.data());
@@ -372,7 +433,12 @@ void ServiceProcessor::sendDebugData() {
 // called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      cma::rt::Device& rt_device) {
-    cma::OnStartApp();
+    auto value = cma::tools::win::GetEnv(cma::kAutoReload);
+
+    if (cma::cfg::ReloadConfigAutomatically() ||
+        cma::tools::IsEqual(value, L"yes"))
+        cma::ReloadConfig();  // automatic config reload
+
     cma::cfg::SetupRemoteHostEnvironment(ip_from);
     ohm_started_ = conditionallyStartOhm();  // start may happen when
                                              // config changed
@@ -395,6 +461,55 @@ cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     return makeTestString("No Answer");
 }
 
+bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t& last_cfg_id) {
+    // this may race condition, still probability is zero
+    // Config Reload is for manual usage
+    auto new_cfg_id = cma::cfg::GetCfg().uniqId();
+    if (last_cfg_id == new_cfg_id) return false;  // same config
+
+    XLOG::l.i("NEW CONFIG with id [{}] prestart binaries", new_cfg_id);
+    last_cfg_id = new_cfg_id;
+    preStartBinaries();
+    return true;
+}
+
+// returns break type(what todo)
+ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
+    using namespace cma::cfg;
+    XLOG::l.i("main Wait Loop");
+    // memorize vars to check for changes in loop below
+    auto ipv6 = groups::global.ipv6();
+    auto port = groups::global.port();
+    auto uniq_cfg_id = GetCfg().uniqId();
+    while (1) {
+        using namespace std::chrono;
+
+        // Perform main service function here...
+
+        // special case when thread is one time run
+        if (!callback_(static_cast<const void*>(this))) break;
+        if (delay_ == 0ms) break;
+
+        // check for config update and inform external port
+        auto new_ipv6 = groups::global.ipv6();
+        auto new_port = groups::global.port();
+        if (new_ipv6 != ipv6 || new_port != port) {
+            XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
+                      new_port, new_port);
+            return Signal::restart;
+        }
+
+        // wait and check
+        if (timedWaitForStop()) {
+            XLOG::l.t("Stop request is set");
+            break;  // signaled stop
+        }
+        restartBinariesIfCfgChanged(uniq_cfg_id);
+    }
+    XLOG::l.t("main Wait Loop END");
+    return Signal::quit;
+}
+
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
@@ -405,6 +520,27 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
                                           : cma::cfg::kTestingMailSlot;
 
+#if 0
+    // ARtificial memory allocator in thread
+    std::vector<std::string> z;
+
+    auto alloca = std::thread([&z]() {
+        for (;;) {
+            std::string s =
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s + s +
+                s + s + s + s + s + s + s + s + s + s + s + s;
+            z.push_back(s);
+            ::Sleep(100);
+        }
+    });
+#endif
     cma::MailSlot mailbox(mailslot_name, 0);
     using namespace cma::carrier;
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
@@ -414,7 +550,9 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any
-        preStart();
+        ReloadConfigInServiceMode();
+        preStartBinaries();
+        // *******************
 
         // check that we have something for testing
         if (ex_port == nullptr) {
@@ -430,14 +568,15 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
             // this is main processing loop
             rt_device.start();
             auto io_started = ex_port->startIo(
-                [this,
-                 &rt_device](const std::string Ip) -> std::vector<uint8_t> {
+                [this, &rt_device](
+                    const std::string ip_addr) -> std::vector<uint8_t> {
                     // most important entry point for external port io
                     // this is internal implementation of the io_context
                     // called upon kicking in port, i.e. LATER. NOT NOW.
 
-                    prepareAnswer(Ip, rt_device);
-                    return generateAnswer(Ip);
+                    prepareAnswer(ip_addr, rt_device);
+                    XLOG::d.i("Generating answer number [{}]", answer_.num());
+                    return generateAnswer(ip_addr);
                 });
             ON_OUT_OF_SCOPE({
                 ex_port->shutdownIo();
@@ -466,22 +605,23 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
 void ServiceProcessor::startTestingMainThread() {
     if (thread_.joinable()) {
-        xlog::l("Attempt to start service twice, no way!").print();
+        XLOG::l("Attempt to start service twice, no way!");
         return;
     }
+
     thread_ = std::thread(&ServiceProcessor::mainThread, this, nullptr);
-    XLOG::l(XLOG::kStdio)("Successful start of thread");
+    XLOG::l.i("Successful start of main thread");
 }
 
 // Implementation of the Windows signals
 // ---------------- END ----------------
 
-bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
-                           void* Context) {
+bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
+                           void* context) {
     using namespace std::chrono;
-    auto processor = static_cast<cma::srv::ServiceProcessor*>(Context);
+    auto processor = static_cast<cma::srv::ServiceProcessor*>(context);
     if (!processor) {
-        xlog::l("error in param\n");
+        XLOG::l("error in param");
         return false;
     }
 
@@ -489,16 +629,16 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 
     auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(Data);
-    XLOG::d.i("Received [{}] bytes from '{}'\n", Len, dt->providerId());
+    auto dt = static_cast<const cma::carrier::CarrierDataHeader*>(data);
+    XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             {
-                std::string to_log;
                 if (dt->data()) {
-                    auto data = (const char*)dt->data();
+                    std::string to_log;
+                    auto data = static_cast<const char*>(dt->data());
                     to_log.assign(data, data + dt->length());
                     XLOG::l(XLOG::kNoPrefix)("{} : {}", dt->providerId(),
                                              to_log);
@@ -530,6 +670,15 @@ bool SystemMailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
         case cma::carrier::DataType::kYaml:
             XLOG::l.bp(XLOG_FUNC + " NOT SUPPORTED now");
             break;
+
+        case cma::carrier::DataType::kCommand: {
+            std::string cmd(static_cast<const char*>(dt->data()),
+                            static_cast<size_t>(dt->length()));
+            std::string peer(cma::commander::kMainPeer);
+            cma::commander::RunCommand(peer, cmd);
+
+            break;
+        }
     }
 
     return true;
@@ -549,8 +698,9 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
     if (process_handle_ != INVALID_HANDLE_VALUE) {
         // check status and reset handle if required
         DWORD exit_code = STILL_ACTIVE;
-        if (!::GetExitCodeProcess(process_handle_, &exit_code) ||  // no access
-            exit_code != STILL_ACTIVE) {                           // exit?
+        if (!::GetExitCodeProcess(process_handle_,
+                                  &exit_code) ||  // no access
+            exit_code != STILL_ACTIVE) {          // exit?
             if (exit_code != STILL_ACTIVE) {
                 XLOG::l.i("Finished with {} code", exit_code);
             }
@@ -595,7 +745,7 @@ bool TheMiniProcess::stop() {
 
     process_id_ = 0;
     process_name_.clear();
-    CloseHandle(process_handle_);
+    CloseHandle(handle);
     process_handle_ = INVALID_HANDLE_VALUE;
 
     // check status and reset handle if required
@@ -604,14 +754,16 @@ bool TheMiniProcess::stop() {
         exit_code == STILL_ACTIVE) {                  // running
         lk.unlock();
 
-        // our process either running or we have no access to the process
+        // our process either running or we have no access to the
+        // process
         // -> try to kill
         if (pid == 0) {
             XLOG::l.bp("Killing 0 process '{}' not allowed", name);
             return false;
         }
 
-        wtools::KillProcessTree(pid);
+        if (wtools::kProcessTreeKillAllowed) wtools::KillProcessTree(pid);
+
         wtools::KillProcess(pid);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
         return true;

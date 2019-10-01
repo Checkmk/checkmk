@@ -1,0 +1,17 @@
+Title: Still allow working with old customized builtin tag groups
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1567789831
+
+With 1.4 some sample config tag groups have been changed to be "builtin"
+tag groups. A prominent one is the "agent" tag group. Previous 1.6 releases
+totally disallowed saving tag configs in case such a tag group was present.
+
+To make the migration easier, the validation is now less strict for the 1.6.
+It is possible to keep the old builtin tag group until updating to 1.7. With
+1.7 these tag groups will not be usable anymore and have to be migrated.

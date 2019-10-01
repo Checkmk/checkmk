@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -82,9 +82,9 @@ body {
   }
 
   &.main {
-    padding: 68px 32px;
+    padding: $main-body-padding;
     margin: 0;
-    font-family: arial, helvetica, sans-serif;
+    font-family: $theme-font;
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-global;
     color: $theme-color-text;
@@ -122,71 +122,68 @@ body {
       padding: 8px 32px;
       margin: 0 0 5px;
       color: #fff;
-      background: $theme-color-white;
-      border-bottom: 1px solid $theme-color-table-border;
+      background: $secondary-bg-color;
+      border-bottom: $table-header-border-bottom;
       border-spacing: 0;
-    }
 
-    table.header td {
-      overflow: hidden;
-      color: #fff;
-      text-overflow: ellipsis;
-      -o-text-overflow: ellipsis;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
+      td {
+	overflow: hidden;
+	color: #fff;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	vertical-align: middle;
+	white-space: nowrap;
 
-    table.header td.heading {
-      height: 31px;
-      max-width: 100px;
-      padding-left: 0;
-      font-size: 21px;
-    }
+	&.heading {
+	  height: 31px;
+	  max-width: 100px;
+	  padding-left: 0;
+	  font-size: 21px;
 
-    table.header td.heading img {
-      width: 24px;
-      height: 24px;
-      margin-right: 3px;
-      vertical-align: middle;
-    }
+	  img {
+	    width: 24px;
+	    height: 24px;
+	    margin-right: 3px;
+	    vertical-align: middle;
+	  }
 
-    table.header td.heading a,
-    table.header td.heading a:hover {
-      text-decoration: none;
-    }
+	  a, a:hover {
+	    text-decoration: none;
+	  }
 
-    table.header td.heading a,
-    table.header td.heading .popup_menu span,
-    .popup_menu table.header td.heading span {
-      color: $theme-color-text;
-    }
+	  a, .popup_menu span, .popup_menu & span {
+	    color: $theme-color-text;
+	  }
+	}
 
-    table.header td.right {
-      width: 1%;
-      font-size: 13px;
-      color: $theme-color-text;
-      text-align: right;
-    }
+	&.right {
+	  width: 1%;
+	  font-size: 13px;
+	  color: $theme-color-text;
+	  text-align: right;
 
-    table.header td.right img {
-      width: 19px;
-      height: 19px;
-      vertical-align: middle;
-    }
+	  img {
+	    width: 19px;
+	    height: 19px;
+	    vertical-align: middle;
+	  }
 
-    table.header td.right a.head_logo img {
-      width: 20px;
-      height: 23px;
-      margin: 0 0 1px 5px;
-    }
+	  a.head_logo img {
+	    width: 20px;
+	    height: 23px;
+	    margin: 0 0 1px 5px;
 
-    table.header td.right a.head_logo img:hover {
-      opacity: 0.5;
-      filter: alpha(opacity=50);
-    }
+	    &:hover {
+	      opacity: 0.5;
+	      filter: alpha(opacity=50);
+	    }
+	  }
 
-    table.header td.right * {
-      color: $theme-color-text;
+	  * {
+	    color: $primary-link-color;
+	  }
+	}
+      }
     }
 
     hr.header {
@@ -329,7 +326,7 @@ div.togglebutton {
   white-space: nowrap;
   vertical-align: middle;
   border: none;
-  border-radius: $theme-border-radius;
+  border-radius: $primary-border-radius;
   box-sizing: border-box;
 
   a,
@@ -348,13 +345,13 @@ div.togglebutton {
     font-weight: $theme-font-weight-global;
     line-height: 18px;
     letter-spacing: $theme-letter-spacing;
-    color: $theme-color-text;
+    color: $primary-link-color;
     text-decoration: none;
     text-overflow: ellipsis;
     cursor: pointer;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
-    border-radius: 5px;
+    border-radius: $primary-border-radius;
     box-shadow: none;
     box-sizing: border-box;
   }
@@ -376,7 +373,7 @@ div.togglebutton {
       letter-spacing: $theme-letter-spacing;
       color: $theme-color-text;
       text-decoration: none;
-      background: $theme-button-background;
+      background: $theme-button-background-hover;
       border: 1px solid $theme-color-table-border;
       outline: none;
       box-shadow: none;
@@ -389,13 +386,14 @@ div.down.togglebutton {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    background-color: $theme-color-text-light;
-    border-color: $theme-button-border;
+    background-color: $toggle-button-down-bg-color;
+    border-color: $toggle-button-down-border-color;
     box-shadow: none;
 
     &:hover {
-      background-color: $theme-button-border;
-      border-color: #ccc;
+      background-color: $toggle-button-down-hover-bg-color;
+      border-color: $toggle-button-down-hover-border-color;
+
     }
   }
 }
@@ -407,7 +405,8 @@ div.contextlink {
   }
 
   &.hot a {
-    background-color: $theme-color-state-3-background;
+    color: $hot-font-color;
+    background-color: $hot-bg-color;
     border-color: $theme-color-nuance-16;
   }
 
@@ -426,7 +425,7 @@ div.togglebutton {
   height: $theme-button-height;
 
   &.off {
-    border: none;
+    border: $toggle-button-off-border;
     opacity: 0.5;
     filter: alpha(opacity=50);
 
@@ -441,7 +440,7 @@ div.togglebutton {
         text-decoration: none;
         text-overflow: ellipsis;
         cursor: default;
-        background: $theme-color-white;
+        background: $secondary-bg-color;
         border-radius: 5px;
         box-shadow: none;
       }
@@ -480,12 +479,21 @@ div.togglebutton {
 | Status-GUI, in WATO and in custom modules that use similar tables.       |
 '-------------------------------------------------------------------------*/
 
+#data_container {
+  min-width: min-content;
+  padding: 10px;
+  background: $data-container-bg-color;
+  border: $data-container-border;
+  border-radius: $primary-border-radius;
+}
+
 table.data {
   width: 100%;
   padding: 0;
   margin: 0;
   color: $theme-color-text;
-  border-spacing: 0 2px;
+  border-collapse: $data-table-border-collapse;
+  border-spacing: $data-table-border-spacing;
   empty-cells: show;
 
   .checkbox_hover {
@@ -494,11 +502,11 @@ table.data {
   }
 
   th {
-    padding: 0 8px;
+    padding: 0 8px 2px;
     font-size: $theme-font-size-main;
     font-weight: $theme-font-weight-bold;
     letter-spacing: $theme-letter-spacing-table;
-    color: $theme-color-text;
+    color: $primary-link-color;
     text-align: left;
     text-transform: uppercase;
     background: transparent;
@@ -516,9 +524,9 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: #000;
+      color: $primary-hover-font-color;
       cursor: pointer;
-      background-color: inherit;
+      background-color: $data-th-sort-hover-bg-color;
     }
 
     /* TODO: Reproduce this html element */
@@ -539,6 +547,10 @@ table.data {
     &.buttons {
       width: 1%;
       white-space: nowrap;
+
+      &.visuals {
+	width: 75px;
+      }
     }
 
     /* TODO: Reproduce this html element */
@@ -546,6 +558,10 @@ table.data {
       font-family: sans-serif;
       font-weight: bold;
       text-align: right;
+
+      &[class*="state"] {
+        border-color: $data-table-td-count-state-border-color;
+      }
     }
 
     &.number {
@@ -563,14 +579,21 @@ table.data {
 
     &.unused {
       color: #888;
-      text-shadow: 1px 1px 0.5px #fff;
+    }
+
+    &:not(.state) {
+      color: $secondary-font-color;
+    }
+
+    &.nowrap {
+      white-space: nowrap;
     }
   }
 
   &.oddeven > tbody > tr:nth-child(odd),
   &.oddeven > tbody > tr:nth-child(even),
   &.oddeven > tbody > tr.groupheader {
-    background-color: transparent;
+    background-color: $oddeven-table-bg-color;
   }
 
   /* Two-lined header, for example in WATO: ChangeLog->Site Status */
@@ -584,29 +607,57 @@ table.data {
     box-sizing: border-box;
     transition: all .15s ease-in;
 
+    /* TODO: Refactor these messy and complicated styles */
     > td {
       height: 26px;
       padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
-      background-color: $theme-color-white;
-      border-top: 1px solid $theme-color-table-border;
+      background-color: $data-td-bg-color;
       border-right: none;
-      border-bottom: 1px solid $theme-color-table-border;
 
-      &:first-child {
-        border-left: 1px solid $theme-color-table-border;
-        border-radius: $theme-border-radius 0 0 4px;
+      &:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+	border-top: $data-table-border-top;
+	border-bottom: $data-table-border-bottom;
       }
 
-      &:last-child,
-      &.last_col {
+      &:first-child {
+        border-radius: $first-child-border-radius;
+
+	&:not(.state):not(.gap):not(.bulksearch):not(.bulkactions) {
+	  border-left: 1px solid $theme-color-table-border;
+	}
+      }
+
+      &:last-child:not(.fillup):not(.bulkactions), &.last_col {
         border-right: 1px solid $theme-color-table-border;
-        border-radius: 0 4px 4px 0;
+        border-radius: $table-cell-last-child-border-radius;
       }
 
       &:only-child {
         border: 1px solid $theme-color-table-border;
         border-radius: $theme-border-radius;
+      }
+
+      a {
+	color: $secondary-font-color;
+
+	&:hover {
+	  color: $primary-hover-font-color;
+	}
+      }
+
+      &:not(.gap):not(.last_col) {
+	border-left: $td-border-left-right;
+	border-right: $td-border-left-right;
+      }
+
+      &.state {
+	border-top: $data-table-state-border-top;
+	border-bottom: $data-table-state-border-bottom;
+      }
+
+      &:not(.state) {
+	text-overflow: $td-text-overflow;
       }
     }
 
@@ -621,8 +672,8 @@ table.data {
   }
 
   tr td.gap, tr td.fillup {
-    background: $theme-color-background;
-    border: 1px solid $theme-color-background;
+    background: $td-gap-bg-color;
+    border: 1px solid $td-gap-bg-color;
   }
 
   a {
@@ -716,7 +767,7 @@ table.data {
   tr th a.toggle_actions img,
   tr th body.main .popup_menu span.toggle_actions img,
   body.main .popup_menu & tr th span.toggle_actions img {
-    filter: invert(100%);
+    filter: invert($filter-inversion-percentage);
   }
 
   tr.groupheader,
@@ -727,6 +778,12 @@ table.data {
 
 table.data .popup_menu, body.main table.data .popup_menu {
   color: $theme-color-text;
+}
+
+/* Give each table's topmost row a top border */
+table.data tr:not(.data) + tr.data
+> td:not(.gap):not(.fillup):not(.bulksearch):not(.bulkactions) {
+  border-top: $data-table-border-topmost;
 }
 
 
@@ -795,6 +852,7 @@ tr.groupheader {
       &.state {
         width: auto;
         padding: 0 8px;
+	margin-top: 12px;
         font-size: 14px;
         text-transform: uppercase;
         box-shadow: none;
@@ -830,6 +888,16 @@ tr.groupheader {
   body.main .popup_menu & span {
     color: $theme-color-text;
     text-decoration: none;
+  }
+
+  &:first-of-type td.groupheader table.groupheader {
+    &, tbody tr td {
+      padding-top: 0;
+
+      .state {
+	margin-top: 0;
+      }
+    }
   }
 }
 
@@ -884,7 +952,7 @@ table.data.headerleft {
       vertical-align: top;
       background: $theme-color-white;
       border-top: 1px solid $theme-color-table-border;
-      border-bottom: none;
+      border-bottom: $table-headerleft-border-bottom;
       border-left: 1px solid $theme-color-table-border;
       border-radius: 0;
     }
@@ -899,7 +967,7 @@ table.data.headerleft {
     border-right: 1px solid $theme-color-table-border;
 
     &.nowiki p {
-        margin: 0;
+      margin: 0;
     }
   }
 
@@ -921,15 +989,24 @@ table.data.headerleft {
 '-------------------------------------------------------------------------*/
 
 input:not(.button), input[type=text], input[type=password],
-select, textarea, div.snapin textarea, #mk_side_search_field {
+select, textarea, div.snapin textarea, #mk_side_search_field, .tagify__input {
   height: auto;
   padding: 3px 6px;
   color: $theme-color-text;
-  background: $theme-color-white;
+  background: $primary-bg-color;
   background-image: none;
   border: 1px solid $theme-color-table-border;
   border-radius: $theme-border-radius;
   box-shadow: none;
+
+  &:focus, &:active {
+    box-shadow: 0 0 1px $input-focus-box-shadow-color inset;
+  }
+}
+
+span.select2 .select2-selection {
+  background-color: $primary-bg-color;
+  border-color: $select2-border-color;
 }
 
 input[type=text], textarea {
@@ -968,9 +1045,15 @@ input, select, textarea, div.snapin select, div.snapin textarea,
     margin-left: 0;
     font-size: $theme-font-size-main;
     letter-spacing: $theme-letter-spacing-table;
-    color: #fff;
-    background-color: #13d389;
+    color: $input-button-color;
+    background-color: $input-button-bg-color;
+    border-color: $input-button-bg-color;
     box-shadow: none;
+
+    &:hover, &:active {
+      background-color: $input-button-hover-bg-color;
+      border-color: $input-button-hover-bg-color;
+    }
   }
 
   &[type=radio] {
@@ -982,17 +1065,11 @@ input, select, textarea, div.snapin select, div.snapin textarea,
 input.button {
   &:not([type=text]), &:not([type=password]) {
     padding: 4px 8px;
-    border: 1px solid #13d389;
+    border: 1px solid $input-button-bg-color;
 
     &:hover, &:active {
-      border: 1px solid #11bd7b;
+      border: 1px solid $input-button-hover-bg-color;
     }
-  }
-}
-
-input, select, textarea, #mk_side_search_field {
-  &.button:hover, &.button:active {
-    background-color: #11bd7b;
   }
 }
 
@@ -1058,10 +1135,10 @@ table.nform {
   width: 100%;
   padding: 0;
   margin: 5px 0;
-  background: $theme-color-white;
+  background: $secondary-bg-color;
   border: 1px solid $theme-color-table-border;
   border-spacing: 7px 5px;
-  border-radius: $theme-border-radius;
+  border-radius: $primary-border-radius;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
   empty-cells: show;
 
@@ -1070,18 +1147,18 @@ table.nform {
     background-image: none;
   }
 
-  tr.closed {
+  tbody.closed {
     display: none;
   }
 
   tr.heading {
     height: auto;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
 
     > td {
       vertical-align: middle;
       cursor: pointer;
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: transparent;
       border-radius: 5px 5px 0 0;
     }
 
@@ -1090,18 +1167,18 @@ table.nform {
       padding: 3px 4px 0 ;
       font-size: $theme-font-size-global;
       letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-table-text;
+      color: $secondary-font-color;
       text-transform: uppercase;
     }
 
     img.treeangle.nform {
       margin: 0 8px 0 0;
-      filter: invert(100%);
+      filter: invert($filter-inversion-percentage);
     }
   }
 
   > tbody > tr td {
-    color: #000;
+    color: $primary-font-color;
   }
 
   > tbody > tr > td {
@@ -1112,9 +1189,9 @@ table.nform {
     }
   }
 
-  tr.open td.legend {
-    width: 320px;
-    min-width: 320px;
+  tr td.legend {
+    width: 400px;
+    min-width: 400px;
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
@@ -1125,7 +1202,7 @@ table.nform {
 
     div.title {
       float: left;
-      max-width: 278px;
+      max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
       font-weight: $theme-font-weight-bold;
@@ -1136,7 +1213,7 @@ table.nform {
       }
 
       &.withcheckbox {
-        max-width: 278px;
+        max-width: 361px;
         margin: 5px 6px 5px 0;
       }
     }
@@ -1158,7 +1235,7 @@ table.nform {
 
   .dots {
     margin-left: 5px;
-    color: #444;
+    color: $span-dots-color;
   }
 
   td.content {
@@ -1167,6 +1244,14 @@ table.nform {
 
     &.simple {
       padding-bottom: 0;
+    }
+
+    span.checkbox {
+      display: inline-block;
+
+      &:not(first-of-type) {
+	margin-top: 4px;
+      }
     }
   }
 
@@ -1203,7 +1288,7 @@ table.nform {
 
   hr {
     margin: 8px 0;
-    background-color: #e5e5e5;
+    background-color: $nform-table-hr-color;
   }
 
   .ruleset {
@@ -1255,12 +1340,17 @@ div.really, div.success, div.error, div.message, div.warning {
   }
 }
 
+// TODO: Check whether this must be $primary-font-color as is for .success
 div.message {
   color: #000;
 }
 
-div.really, div.success {
-  color: #000;
+div.really {
+  color: $black;
+}
+
+div.success {
+  color: $primary-font-color;
 }
 
 /* TODO: Reproduce this html element */
@@ -1299,7 +1389,7 @@ div.help {
   font-weight: normal;
   color: #000;
   text-align: left;
-  background-color: #ffc;
+  background-color: $help-bg-color;
   background-image: none;
   border-radius: 5px;
   box-shadow: none;
@@ -1315,8 +1405,8 @@ div.help {
     content: "i";
   }
 
-  a {
-    color: $theme-color-text;
+  a, a:link {
+    color: $help-link-color;
 
     &:hover {
       text-decoration: none;
@@ -1358,8 +1448,6 @@ table.data div.help {
 
 body.main .popup_menu {
   position: absolute;
-  top: 15px;
-  left: 15px;
   z-index: 50;
   min-width: 300px;
   color: #fff;
@@ -1449,7 +1537,7 @@ body.main .popup_menu span {
     padding: 0;
     margin: 0;
     list-style: none;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid $nform-table-hr-color;
   }
 
   li {
@@ -1460,7 +1548,6 @@ body.main .popup_menu span {
       height: 21px;
       padding: 0 5px;
       line-height: 21px;
-      border-right: 1px solid #fff;
 
       &:hover {
         color: #fff;
@@ -1470,7 +1557,7 @@ body.main .popup_menu span {
     }
 
     &.active a {
-      color: #000;
+      color: $primary-font-color;
       border-bottom: 1px solid #508aa1;
     }
   }
@@ -1600,6 +1687,7 @@ a.element_dragger {
 
 .dragging {
   cursor: move;
+  background-color: $dragging-bg-color;
   transform: scale(1.005);
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.6);
   -webkit-transform: scale(1.005);
@@ -1650,38 +1738,56 @@ table.debug_vars {
 }
 
 /* Popup for adding to visuals (Dashboard, Reports */
-/* TODO: Reproduce div.pnp_graph */
-div.pnp_graph, div.popup_trigger {
-  position: relative;
-}
-
 div.popup_trigger {
+  position: relative;
   display: inline-block;
 
   img.iconbutton {
     padding: 0;
+    filter: $iconbutton-filter;
+  }
+
+  &[id*="popup_trigger_move"] img.iconbutton {
+    filter: none;
   }
 }
 
-div.pnp_graph a.popup_trigger {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: block;
-  width: 20px;
-  height: 20px;
-  background-image: url("images/icon_menu.png");
-  background-size: contain;
+div.pnp_graph a {
+  &.popup_trigger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url("images/icon_menu.png");
+    background-size: contain;
 
-  &:hover {
-    cursor: pointer;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  img {
+    filter: $pnp4nagios-img-filter;
   }
 }
 
-tr.data td.pnpgraph div.pnp_graph > a.popup_trigger > img.icon {
-  margin: 0;
-  border: none;
-  box-shadow: none;
+table.data tr.data td.pnpgraph {
+  padding: 0;
+
+  div.pnp_graph > a {
+    > img {
+      margin: 4px;
+      border: 1px solid $pnp-graph-img-border-color;
+    }
+
+    &.popup_trigger > img.icon {
+      margin: 0;
+      border: none;
+      box-shadow: none;
+    }
+  }
 }
 
 td.job_state {
@@ -1693,12 +1799,13 @@ td.job_state {
 
 table.data > tbody > tr > td.job_state {
   &.job_finished {
+    color: $theme-color-table-text;
     background-color: $theme-color-state-success-background;
     box-shadow: none;
   }
 
   &.job_exception {
-    background-color: $theme-color-state-3-background;
+    background-color: $hot-bg-color;
     box-shadow: none;
   }
 
@@ -1722,23 +1829,29 @@ table.data.job_details div.log_output > pre {
 }
 
 /* Fixed job columns */
-table.data.job_table > tbody > tr > td {
-  &.job_actions {
-    width: 50px;
+table.data.job_table {
+  td {
+    padding: 0;
   }
 
-  &.job_state {
-    width: 50px;
-  }
+  > tbody > tr > td {
+    &.job_actions {
+      width: 50px;
+    }
+
+    &.job_state {
+      width: 50px;
+    }
 
 
-  &.job_started {
-    width: 160px;
-  }
+    &.job_started {
+      width: 160px;
+    }
 
-  &.job_pid{
-    width: 40px;
-    text-align: right;
+    &.job_pid {
+      width: 40px;
+      text-align: right;
+    }
   }
 }
 
@@ -1751,6 +1864,18 @@ table.data.job_table > tbody > tr > td {
   #{ $self }__input {
     padding: $tag-padding;
     margin: $tag-margin;
+  }
+
+  &.hasMaxTags #{ $self }__input {
+    display: none;
+  }
+
+  &__input::before {
+    color: inherit;
+  }
+
+  &__input:not(:empty)::before {
+    content: none;
   }
 
   &[readonly] {
@@ -1766,7 +1891,7 @@ table.data.job_table > tbody > tr > td {
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
       margin: $tag-margin;
-      color: #fff;
+      color: $tag-font-color;
     }
 
     x {
@@ -1776,25 +1901,32 @@ table.data.job_table > tbody > tr > td {
       line-height: 14px;
     }
 
-    &:hover:not([readonly]) div::before {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      opacity: 0.5;
-      box-shadow: none;
+    &, &.discovered {
+      &:hover:not([readonly]) div::before {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	opacity: $tag-hover-opacity;
+	box-shadow: none;
+      }
     }
   }
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before {
-      background: #cccfdb;
+    > div::before, &:hover > div::before {
+      background: $tag-input-bg-color;
+      opacity: 1;
     }
 
     > div {
       color: #000;
     }
+  }
+
+  &__tag-text {
+    color: $tag-dropdown-active-color;
   }
 
   tag, &[readonly] tag {
@@ -1804,6 +1936,7 @@ table.data.job_table > tbody > tr > td {
       bottom: 0;
       left: 0;
       background: #00a8b5;
+      opacity: $tag-opacity;
       box-shadow: none;
       animation: none;
     }
@@ -1812,12 +1945,13 @@ table.data.job_table > tbody > tr > td {
       background: #774898;
     }
 
-    &.ruleset > div::before {
-      background: #de4383;
-    }
-
     &.discovered > div::before {
       background: #f3ae4b;
+      opacity: $tag-discovered-opacity;
+    }
+
+    &.ruleset > div::before {
+      background: #de4383;
     }
   }
 
@@ -1828,9 +1962,25 @@ table.data.job_table > tbody > tr > td {
   a tag {
     cursor: pointer;
   }
+
+  &__dropdown {
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    &__item {
+      margin: 1px;
+
+      &--active {
+	color: $tag-dropdown-active-color;
+	background-color: $tag-dropdown-active-bg-color;
+	border: $primary-table-border;
+      }
+    }
+  }
 }
 
 .tagify.display[readonly] tag {
-    padding: 1px 0px;
-    margin: 0px 0px;
+  padding: 1px 0;
+  margin: 0;
 }

@@ -29,12 +29,17 @@ to hosts and that is the basis of the rules."""
 from typing import Text, Dict, List  # pylint: disable=unused-import
 import abc
 from enum import Enum
+import six
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.exceptions import (
+    MKUserError,
+    MKAuthException,
+    MKGeneralException,
+)
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -72,8 +77,36 @@ from cmk.gui.plugins.wato import (
 )
 
 
+class ABCTagMode(six.with_metaclass(abc.ABCMeta, WatoMode)):
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+    def __init__(self):
+        super(ABCTagMode, self).__init__()
+        self._tag_config_file = TagConfigFile()
+        self._load_effective_config()
+
+    def _save_tags_and_update_hosts(self, tag_config):
+        self._tag_config_file.save(tag_config)
+        config.load_config()
+        watolib.Folder.invalidate_caches()
+        watolib.Folder.root_folder().rewrite_hosts_files()
+
+    def _load_effective_config(self):
+        self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
+
+        self._tag_config = cmk.utils.tags.TagConfig()
+        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
+
+        self._effective_config = cmk.utils.tags.TagConfig()
+        self._effective_config.parse_config(self._tag_config.get_dict_format())
+        self._effective_config += self._builtin_config
+
+
 @mode_registry.register
-class ModeTags(WatoMode):
+class ModeTags(ABCTagMode):
     @classmethod
     def name(cls):
         return "tags"
@@ -81,18 +114,6 @@ class ModeTags(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
-
-    def __init__(self):
-        super(ModeTags, self).__init__()
-        self._builtin_config = cmk.utils.tags.BuiltinTagConfig()
-
-        self._tag_config_file = TagConfigFile()
-        self._tag_config = cmk.utils.tags.TagConfig()
-        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
-
-        self._effective_config = cmk.utils.tags.TagConfig()
-        self._effective_config.parse_config(self._tag_config.get_dict_format())
-        self._effective_config += self._builtin_config
 
     def title(self):
         return _("Tag groups")
@@ -129,10 +150,11 @@ class ModeTags(WatoMode):
 
         if message:
             self._tag_config.remove_tag_group(del_id)
-            self._tag_config.validate_config()
-            self._tag_config_file.save(self._tag_config.get_dict_format())
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
+            try:
+                self._tag_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
+            self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
 
@@ -161,10 +183,11 @@ class ModeTags(WatoMode):
 
         if message:
             self._tag_config.aux_tag_list.remove(del_id)
-            self._tag_config.validate_config()
-            self._tag_config_file.save(self._tag_config.get_dict_format())
-            watolib.Folder.invalidate_caches()
-            watolib.Folder.root_folder().rewrite_hosts_files()
+            try:
+                self._tag_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
+            self._save_tags_and_update_hosts(self._tag_config.get_dict_format())
             add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
             return "tags", message != True and message or None
 
@@ -175,8 +198,12 @@ class ModeTags(WatoMode):
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
 
-        self._tag_config.validate_config()
+        try:
+            self._tag_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
         self._tag_config_file.save(self._tag_config.get_dict_format())
+        self._load_effective_config()
         watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
     def page(self):
@@ -192,10 +219,30 @@ class ModeTags(WatoMode):
             ]).show()
             return
 
-        self._render_tag_list()
+        self._show_customized_builtin_warning()
+
+        self._render_tag_group_list()
         self._render_aux_tag_list()
 
-    def _render_tag_list(self):
+    def _show_customized_builtin_warning(self):
+        customized = [
+            tg.id
+            for tg in self._effective_config.tag_groups
+            if self._builtin_config.tag_group_exists(tg.id) and
+            self._tag_config.tag_group_exists(tg.id)
+        ]
+
+        if not customized:
+            return
+
+        html.show_warning(
+            _("You have customized the tag group(s) <tt>%s</tt> in your tag configuration. "
+              "In current Checkmk versions these are <i>builtin</i> tag groups which "
+              "can not be customized anymore. Your customized tag group will work for "
+              "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
+              "anymore." % ", ".join(customized)))
+
+    def _render_tag_group_list(self):
         with table_element("tags",
                            _("Tag groups"),
                            help=(_("Tags are the basis of Check_MK's rule based configuration. "
@@ -223,7 +270,12 @@ class ModeTags(WatoMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_group, nr):
-        if self._builtin_config.tag_group_exists(tag_group.id):
+        # Tag groups were made builtin with ~1.4. Previously users could modify
+        # these groups.  These users now have the modified tag groups in their
+        # user configuration and should be able to cleanup this using the GUI
+        # for the moment. Make the buttons available to the users.
+        if self._builtin_config.tag_group_exists(
+                tag_group.id) and not self._tag_config.tag_group_exists(tag_group.id):
             html.i("(%s)" % _("builtin"))
             return
 
@@ -273,23 +325,13 @@ class ModeTags(WatoMode):
         return sorted(used_tags)
 
 
-class ABCEditTagMode(WatoMode):
-    __metaclass__ = abc.ABCMeta
-
+class ABCEditTagMode(six.with_metaclass(abc.ABCMeta, ABCTagMode)):
     @classmethod
     def permissions(cls):
         return ["hosttags"]
 
     def __init__(self):
         super(ABCEditTagMode, self).__init__()
-        self._tag_config_file = TagConfigFile()
-        self._untainted_hosttags_config = cmk.utils.tags.TagConfig()
-        self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
-
-        self._effective_config = cmk.utils.tags.TagConfig()
-        self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
-        self._effective_config += cmk.utils.tags.BuiltinTagConfig()
-
         self._id = self._get_id()
         self._new = self._is_new_tag()
 
@@ -300,19 +342,18 @@ class ABCEditTagMode(WatoMode):
     def _is_new_tag(self):
         return html.request.var("edit") is None
 
-    def _basic_elements(self):
+    def _basic_elements(self, id_title):
         if self._new:
             vs_id = ID(
-                title=_("Tag ID"),
+                title=id_title,
                 size=60,
                 allow_empty=False,
-                help=_("The internal ID of the tag is used as it's unique identifier "
-                       "It cannot be changed later."),
+                help=_("This ID is used as it's unique identifier. It cannot be changed later."),
             )
         else:
             vs_id = FixedValue(
                 self._id,
-                title=_("Tag ID"),
+                title=id_title,
             )
 
         return [
@@ -349,14 +390,13 @@ class ModeEditAuxtag(ABCEditTagMode):
         if self._new:
             self._aux_tag = cmk.utils.tags.AuxTag()
         else:
-            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_aux_tag(self._id)
+            self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
     def _get_id(self):
         if not html.request.has_var("edit"):
             return None
 
-        return html.get_item_input(
-            "edit", dict(self._untainted_hosttags_config.aux_tag_list.get_choices()))[1]
+        return html.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
     def title(self):
         if self._new:
@@ -385,7 +425,10 @@ class ModeEditAuxtag(ABCEditTagMode):
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
             changed_hosttags_config.aux_tag_list.update(self._id, self._aux_tag)
-        changed_hosttags_config.validate_config()
+        try:
+            changed_hosttags_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
 
         self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
@@ -405,7 +448,7 @@ class ModeEditAuxtag(ABCEditTagMode):
     def _valuespec(self):
         return Dictionary(
             title=_("Basic settings"),
-            elements=self._basic_elements(),
+            elements=self._basic_elements(_("Tag ID")),
             render="form",
             form_narrow=True,
             optional_keys=[],
@@ -421,12 +464,11 @@ class ModeEditTagGroup(ABCEditTagMode):
     def __init__(self):
         super(ModeEditTagGroup, self).__init__()
 
-        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._id)
+        self._untainted_tag_group = self._tag_config.get_tag_group(self._id)
         if not self._untainted_tag_group:
             self._untainted_tag_group = cmk.utils.tags.TagGroup()
 
-        self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._id) or cmk.utils.tags.TagGroup()
+        self._tag_group = self._tag_config.get_tag_group(self._id) or cmk.utils.tags.TagGroup()
 
     def _get_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -458,17 +500,20 @@ class ModeEditTagGroup(ABCEditTagMode):
         if self._new:
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
-            changed_hosttags_config.validate_config()
-            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
-
-            # Make sure, that all tags are active (also manual ones from main.mk)
-            config.load_config()
+            try:
+                changed_hosttags_config.validate_config()
+            except MKGeneralException as e:
+                raise MKUserError(None, "%s" % e)
+            self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "tags", _("Created new host tag group '%s'") % changed_tag_group.title
 
         # Updates and verifies changed tag group
         changed_hosttags_config.update_tag_group(changed_tag_group)
-        changed_hosttags_config.validate_config()
+        try:
+            changed_hosttags_config.validate_config()
+        except MKGeneralException as e:
+            raise MKUserError(None, "%s" % e)
 
         remove_tag_ids, replace_tag_ids = [], {}
         new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
@@ -493,8 +538,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(operation)
         if message:
-            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
-            config.load_config()
+            self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
             add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
             return "tags", message != True and message or None
 
@@ -513,7 +557,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         html.end_form()
 
     def _valuespec(self):
-        basic_elements = self._basic_elements()
+        basic_elements = self._basic_elements(_("Tag group ID"))
         tag_choice_elements = self._tag_choices_elements()
 
         return Dictionary(
@@ -539,24 +583,29 @@ class ModeEditTagGroup(ABCEditTagMode):
             ListOf(
                 Tuple(
                     elements=[
-                        TextAscii(title=_("Tag ID"),
-                                  size=16,
-                                  regex="^[-a-z0-9A-Z_]*$",
-                                  none_is_empty=True,
-                                  regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                                "0-9, _ and - are allowed.")),
-                        TextUnicode(title=_("Title") + "*", allow_empty=False, size=40),
+                        TextAscii(
+                            title=_("Tag ID"),
+                            size=16,
+                            regex="^[-a-z0-9A-Z_]*$",
+                            none_is_empty=True,
+                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                          "0-9, _ and - are allowed."),
+                        ),
+                        TextUnicode(
+                            title=_("Title") + "*",
+                            allow_empty=False,
+                            size=40,
+                        ),
                         Foldable(
                             ListChoice(
                                 title=_("Auxiliary tags"),
                                 choices=self._effective_config.aux_tag_list.get_choices(),
-                            )),
+                            ),),
                     ],
                     show_titles=True,
                     orientation="horizontal",
                 ),
                 add_label=_("Add tag choice"),
-                row_label="@. Choice",
                 sort_by=1,  # sort by description
                 help=_("The first choice of a tag group will be its default value. "
                        "If a tag group has only one choice, it will be displayed "
@@ -583,17 +632,20 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(object):
+class ABCOperation(six.with_metaclass(abc.ABCMeta, object)):
     """Base for all tag cleanup operations"""
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def confirm_title(self):
         # type: () -> Text
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(ABCOperation):
+class ABCTagGroupOperation(six.with_metaclass(abc.ABCMeta, ABCOperation)):
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
     def __init__(self, tag_group_id):
         # type: (str) -> None
         super(ABCTagGroupOperation, self).__init__()

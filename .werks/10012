@@ -1,0 +1,11 @@
+Title: mk_jolokia, agent_jolokia: Improved handling of connection errors
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568230968
+Class: feature
+
+If no server can be contacted at the specified base URL, create one
+jolokia_info service which goes to CRIT.

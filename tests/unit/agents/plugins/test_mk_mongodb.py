@@ -1,22 +1,15 @@
 # -*- encoding: utf-8
+# pylint: disable=protected-access,redefined-outer-name
 
-import imp
 import os
-from bson.json_util import loads
-import pytest
-from testlib import cmk_path  # pylint: disable=import-error
+from bson.json_util import loads  # type: ignore
+import pytest  # type: ignore
+from testlib import import_module, cmk_path
 
 
 @pytest.fixture(scope="module")
-def mk_mongodb(request):
-    agent_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'plugins', 'mk_mongodb'))
-    for action in ('setup', 'teardown'):
-        try:
-            os.remove(agent_path + "c")
-        except OSError:
-            pass
-        if action == 'setup':
-            yield imp.load_source("mk_mongodb", agent_path)
+def mk_mongodb():
+    return import_module("agents/plugins/mk_mongodb")
 
 
 def read_dataset(filename):

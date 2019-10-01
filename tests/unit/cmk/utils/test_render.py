@@ -15,3 +15,8 @@ import cmk.utils.render
 ])
 def test_fmt_bytes(entry, result):
     assert cmk.utils.render.fmt_bytes(*entry) == result
+
+
+@pytest.mark.parametrize("args, result", [((0.433 / 1, 10), (4.33, -1)), ((5, 10), (5, 0))])
+def test_frexpb(args, result):
+    assert cmk.utils.render._frexpb(*args) == result

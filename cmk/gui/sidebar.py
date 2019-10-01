@@ -37,7 +37,6 @@ import cmk.utils.paths
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -446,7 +445,7 @@ class SidebarRenderer(object):
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
-        html.b(HTML(snapin_class.title()), class_=["heading"], **toggle_actions)
+        html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
 
         # End of header
         html.close_div()
@@ -465,7 +464,7 @@ class SidebarRenderer(object):
                     "cmk.ajax.get_url(\"%s\", cmk.utils.update_contents, \"snapin_%s\")" %
                     (refresh_url, name))
         except Exception as e:
-            logger.exception()
+            logger.exception("error rendering snapin %s", name)
             write_snapin_exception(e)
         html.close_div()
         html.close_div()
@@ -615,8 +614,8 @@ def ajax_snapin():
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')"
                              ) % snapin_instance.type_name()
-                logger.error("%s %s: %s" %
-                             (html.request.requested_url, e_message, traceback.format_exc()))
+                logger.error("%s %s: %s", html.request.requested_url, e_message,
+                             traceback.format_exc())
             finally:
                 snapin_code.append(html.drain())
 

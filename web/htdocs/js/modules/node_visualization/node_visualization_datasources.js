@@ -1,3 +1,27 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
 //#.
 //#   .-Datasource Manager-------------------------------------------------.
 //#   |          ____        _                                             |
@@ -24,13 +48,12 @@ export class DatasourceManager {
         // Datasources lookup {id: instance}
         this.datasources = {}
         this._initialize_datasources()
-        // TODO: enable interval
-        // setInterval(() => this.schedule(), 1000)
+        setInterval(() => this.schedule(true), 10000)
     }
 
     _initialize_datasources() {
         this._register_datasource(AggregationsDatasource)
-        this._register_datasource(NetworkTopologyDatasource)
+        this._register_datasource(TopologyDatasource)
     }
 
     _register_datasource(datasource_class) {
@@ -70,7 +93,7 @@ export class AbstractDatasource {
     constructor(description) {
         this.description = description
 
-        this._enabled = true
+        this._enabled = false
         this._supports_regular_updates = true
         this._update_interval = 30
         this._last_update = 0
@@ -78,6 +101,9 @@ export class AbstractDatasource {
 
         this._data = null
         this._new_data_subscribers = []
+
+        this._fetch_url = null
+        this._fetch_params = null
     }
 
     subscribe_new_data(func) {
@@ -108,16 +134,26 @@ export class AbstractDatasource {
         this._enabled = false
     }
 
-    fetch(url) {
+    fetch(url, params={}) {
         this._fetch_start = Math.floor(new Date().getTime()/1000)
         this._fetch_url = url
+        this._fetch_params = params
         this._fetch()
     }
 
-    _fetch() {
+    _fetch(params={}) {
         if (!this._fetch_url)
             return
-        d3.json(encodeURI(this._fetch_url), {credentials: "include"}).then(json_data=>this._set_data(json_data))
+        d3.json(encodeURI(this._fetch_url),
+                {
+                    credentials: "include",
+                    method: "POST",
+                    body: this._fetch_params,
+                    headers: {
+                        "Content-type": "application/x-www-form-urlencoded"
+                    }
+                }
+        ).then(json_data=>this._set_data(json_data))
     }
 
     get_data() {
@@ -148,7 +184,7 @@ export class AggregationsDatasource extends AbstractDatasource {
 
     constructor() {
         super("Aggregation datasource")
-        this._update_interval = 1
+        this._update_interval = 30
     }
 
     fetch_aggregations(list_of_aggregations, use_layout_id) {
@@ -160,16 +196,17 @@ export class AggregationsDatasource extends AbstractDatasource {
 }
 
 
-export class NetworkTopologyDatasource extends AbstractDatasource {
+export class TopologyDatasource extends AbstractDatasource {
     static id() {
-        return "network_topology"
+        return "topology"
     }
 
     constructor() {
-        super("Network topology")
+        super("Topology")
     }
 
-    fetch_hosts(list_of_hosts) {
-        this.fetch("ajax_fetch_network_topology.py?hostnames=" + JSON.stringify(list_of_hosts))
+    fetch_hosts(topology_config) {
+        let fetch_params = "topology_config=" + JSON.stringify(topology_config)
+        this.fetch("ajax_fetch_topology.py", fetch_params)
     }
 }

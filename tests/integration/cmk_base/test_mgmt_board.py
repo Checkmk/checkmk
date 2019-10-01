@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # TODO: This should be realized as unit tests
 
+from __future__ import print_function
 import pytest
 from testlib import web
 
@@ -42,7 +43,7 @@ def test_cfg(web, clear_config_caches, enable_debug):
     #
     # Cleanup code
     #
-    print "Cleaning up test config"
+    print("Cleaning up test config")
 
     if web.host_exists("mgmt-host"):
         web.delete_host("mgmt-host")

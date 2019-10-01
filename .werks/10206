@@ -1,0 +1,13 @@
+Title: check_mk_agent.solaris: Fixed missing MTIME which broke the agent data parsing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569415336
+Class: fix
+
+The MTIME for cached sections was empty such that Checkmk could not
+calculate the cache age of these sections.
+The fixed Solaris agent has to be deployed or installed on the
+affected hosts.

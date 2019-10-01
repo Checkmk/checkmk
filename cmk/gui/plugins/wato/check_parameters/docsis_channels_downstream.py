@@ -39,38 +39,26 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDocsisChannelsDownstream(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
+def _parameter_valuespec_docsis_channels_downstream():
+    return Dictionary(elements=[
+        ("power",
+         Tuple(
+             title=_("Transmit Power"),
+             help=_("The operational transmit power"),
+             elements=[
+                 Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
+                 Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
+             ],
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "docsis_channels_downstream"
 
-    @property
-    def title(self):
-        return _("Docsis Downstream Channels")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("power",
-             Tuple(
-                 title=_("Transmit Power"),
-                 help=_("The operational transmit power"),
-                 elements=[
-                     Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
-                     Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
-                 ],
-             )),
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("ID of the channel (usually ranging from 1)"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="docsis_channels_downstream",
+        group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextAscii(title=_("ID of the channel (usually ranging from 1)")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_docsis_channels_downstream,
+        title=lambda: _("Docsis Downstream Channels"),
+    ))

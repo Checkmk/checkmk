@@ -26,12 +26,14 @@
 """Code for processing Check_MK werks. This is needed by several components,
 so it's best place is in the central library."""
 
+import sys
 import itertools
 import json
 
-try:
-    from pathlib import Path  # type: ignore
-except ImportError:
+# Explicitly check for Python 3 (which is understood by mypy)
+if sys.version_info[0] >= 3:
+    from pathlib import Path  # pylint: disable=import-error
+else:
     from pathlib2 import Path
 
 import cmk.utils.paths
@@ -164,6 +166,7 @@ _REQUIRED_WERK_FIELDS = {
 _OPTIONAL_WERK_FIELDS = {
     "compatible",
     "edition",
+    "knowledge",
     # TODO: What's this? Can we simply nuke the fields below from all werks?
     "state",
     "targetversion",

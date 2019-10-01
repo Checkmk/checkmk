@@ -18,7 +18,7 @@ the Free Software Foundation in version 2.  check_mk is  distributed
 in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-ails.  You should have  received  a copy of the  GNU  General Public
+tails.  You should have received  a copy of the  GNU  General Public
 License along with GNU Make; see the file  COPYING.  If  not,  write
 to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 Boston, MA 02110-1301 USA.
@@ -51,13 +51,25 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato table.data {
-  th {
-    background: transparent;
+  border: $wato-data-table-border;
+  box-shadow: $wato-data-table-box-shadow;
+
+  &.job_table {
+    border: none;
+    box-shadow: none;
+  }
+
+  &:not(.job_table) th {
+    background: $wato-data-th-bg-color;
     border-radius: 0;
+
+    &.header_state {
+      background: $wato-data-th-bg-color !important;
+    }
   }
 
   tr {
-    background-color: transparent;
+    background-color: $wato-tr-bg-color;
   }
 
   /* TODO: Reproduce this html element */
@@ -87,7 +99,7 @@ Boston, MA 02110-1301 USA.
   /* TODO: Reproduce this html element */
   &.left {
     border-left-style: none;
-    border-radius: 4px 0 0 0;
+    border-radius: 4px 0 0;
   }
 
   /* TODO: Reproduce these .right elements */
@@ -174,15 +186,15 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato div.inherited {
-  color: #444;
+  color: $wato-inherited-color;
 
   a {
-    color: #444;
+    color: $wato-inherited-color;
   }
 
   b {
     font-weight: normal;
-    color: black;
+    color: $primary-font-color;
   }
 }
 
@@ -208,6 +220,11 @@ table.validationerror  {
 }
 
 /* bulk actions in host table */
+.wato table.data tr.data td.bulksearch,
+.wato table.data tr.data td.bulkactions {
+  padding-top: 25px;
+}
+
 .wato td.bulkactions {
   text-align: right;
 
@@ -219,6 +236,28 @@ table.validationerror  {
     width: auto;
   }
 }
+
+div#service_container {
+  div.action_buttons div.button_spacer {
+    display: inline-block;
+    height: 19px;
+    margin-right: 16px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-right: 2px solid $button-spacer-color;
+  }
+
+  table.data {
+    tr.groupheader {
+      background-color: $service-container-groupheader-bg-color;
+    }
+
+    td h3 {
+      margin-top: $td-h3-margin-top;
+    }
+  }
+}
+
 
 table.data tr.data > td.bulkactions {
   background: transparent;
@@ -254,7 +293,7 @@ table.data tr.data > td.bulksearch {
     display: inline-block;
     width: 32px;
     height: 32px;
-    margin-top: 8px;
+    margin-top: 7px;
     margin-right: 8px;
   }
 }
@@ -280,8 +319,8 @@ table.data tr.data > td.bulksearch {
 table.data tr.data > td.bulksearch div.togglebutton.checkbox a,
 table.data tr.data > td.bulksearch div.togglebutton.checkbox body.main .popup_menu span,
 body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkbox span {
-  height: 32px;
-  padding: 6px;
+  height: 24px;
+  padding: 1.5px;
   box-sizing: border-box;
 }
 
@@ -440,7 +479,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       left: 0;
       overflow: hidden;
       font-size: $theme-font-size-main;
-      color: #bde;
+      color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -682,13 +721,27 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
-.wato table.data.ruleset tr.disabled td * {
-  color: #999;
-  text-shadow: 0 1px 0 #fff;
+.wato table.data.ruleset tr.disabled td {
+  * {
+    color: #999;
+  }
+
+  .tagify__tag-text {
+    color: inherit;
+  }
+
+  tag > div::before {
+    opacity: .5;
+  }
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-  background-color: $theme-color-nuance-2;
+  color: $matches-search-font-color;
+  background-color: $matches-search-bg-color;
+
+  &.buttons {
+    border-radius: 0;
+  }
 }
 
 /* Special styling for Timeperiods editor */
@@ -731,12 +784,12 @@ form.search, div.filter_buttons {
     width: 330px;
     height: 80px;
     margin: 0 8px 8px 0;
-    background: $theme-color-white;
+    background: $secondary-bg-color;
     border: 1px solid $theme-color-table-border;
     box-shadow: none;
 
     &:hover {
-      background: $theme-color-table-background;
+      background: $wato-a-hover-bg-color;
     }
   }
 
@@ -744,7 +797,12 @@ form.search, div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0;
+    padding: 0 0 14px;
+    border: $wato-a-border;
+
+    &:hover div.title {
+      color: $secondary-font-color;
+    }
   }
 
   div {
@@ -756,12 +814,12 @@ form.search, div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $theme-color-table-text;
+      color: $secondary-link-color;
     }
 
     &.subtitle {
       position: absolute;
-      top: 22px;
+      top: 20px;
       left: 72px;
       width: 234px;
       padding: 16px 0;
@@ -770,7 +828,7 @@ form.search, div.filter_buttons {
       font-weight: 500;
       line-height: 1.5;
       letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-darkgrey;
+      color: $wato-subtitle-color;
       text-rendering: optimizeLegibility;
     }
   }
@@ -818,7 +876,7 @@ form.search, div.filter_buttons {
 
   a {
     margin-right: 3px;
-    color: #000;
+    color: $primary-font-color;
     text-decoration: none;
     white-space: nowrap;
 
@@ -855,7 +913,7 @@ div.varname {
 /* page "global settings*/
 .wato div.globalvars {
   a {
-    color: #000;
+    color: $primary-font-color;
     text-decoration: none;
 
     &:hover {
@@ -868,15 +926,15 @@ div.varname {
   td.content a.modified > table {
     padding: 1px 4px 2px;
     margin-left: -4px;
-    border: 1px solid #cdf;
+    border: 1px solid $globalvars-modified-border-color;
     border-radius: 5px;
-    box-shadow: 3px 3px 5px #eee inset;
+    box-shadow: $globalvars-modified-box-shadow;
   }
 
   td.simple a.modified.globally,
   td.simple div.toggle_switch_container.modified.globally,
   td.content a.modified.globally > table {
-    box-shadow: 3px 3px 5px #8bc7e5 inset;
+    box-shadow: $globalvars-modified-globally-box-shadow;
   }
 
   td.simple div.toggle_switch_container {
@@ -900,11 +958,11 @@ div.varname {
   }
 
   td.legend {
-    width: 320px;
+    width: 400px;
     padding-top: 0;
 
     div.title {
-      max-width: 284px;
+      max-width: 390px;
     }
   }
 }
@@ -963,12 +1021,16 @@ div.varname {
 .wato td.repprogress {
   div.msg {
     position: absolute;
-    top: 6px;
+    top: 10px;
     left: 0;
     z-index: 20;
     width: 160px;
     height: 16px;
     text-align: center;
+
+    &.state_success {
+      color: $dark-font-color;
+    }
   }
 
   div.progress {
@@ -980,8 +1042,8 @@ div.varname {
     padding-top: 10px;
     font-size: 11px;
     color: $theme-color-black;
-    background: $theme-color-state-6-background;
-    border: 1px solid $theme-color-nuance-17;
+    background: $repprogress-progress-bg-color;
+    border: 1px solid $repprogress-progress-border-color;
     border-radius: $theme-border-radius;
     box-shadow: none;
     box-sizing: border-box;
@@ -1001,7 +1063,7 @@ div.varname {
     &.state_warning {
       /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
       background: $theme-color-main;
-      border-color: $theme-color-state-warning-border;
+      border-color: $theme-color-state-1-border;
     }
   }
 }
@@ -1035,13 +1097,13 @@ table.data tr.notification_context table {
   th {
     padding: 2px 4px;
     color: $theme-color-text;
-    background-color: #f5f5f5;
+    background-color: $primary-th-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 
   td {
     padding: 2px 4px;
-    background-color: $theme-color-table-background;
+    background-color: $primary-td-bg-color;
     border: 1px solid $theme-color-table-border;
   }
 }
@@ -1109,7 +1171,7 @@ table.data tr.data.dcd_log_entries {
       div.exc {
         padding: 5px;
         margin: 10px;
-        border: 1px solid #ff0000;
+        border: 1px solid #f00;
       }
     }
 
@@ -1300,14 +1362,22 @@ table.data td.bi_rule_tree {
   overflow-y: scroll;
   font-family: monospace, sans-serif;
   vertical-align: top;
-  background-color: #fff;
+  background-color: $primary-bg-color;
   box-shadow: 1px 1px 3px #888 inset;
   /* below resize option is css3 */
   resize: both;
 }
 
-.backup_job .log pre {
-  margin: 2px;
+.backup_job {
+
+  .log pre {
+    margin: 2px;
+  }
+
+  td.left {
+    min-width: 200px;
+    width: 12%;
+  }
 }
 
 .wato .diag_host {
@@ -1335,10 +1405,11 @@ table.data td.bi_rule_tree {
     box-shadow: none;
 
     &.diag_success {
-      background-color: #efe;
+      background-color: $host-diag-success-bg-color;
     }
+
     &.diag_failed {
-      background-color: #fee;
+      background-color: $host-diag-failed-bg-color;
     }
   }
 
@@ -1406,11 +1477,11 @@ table.setting td.reason {
 
 td.settingvalue.unused, td.settingvalue.unused td {
   font-style: italic;
-  color: #256;
+  color: $td-unused-color;
 }
 
 .wato table.nform div.title a {
-  color: #000;
+  color: $primary-font-color;
   text-decoration: none;
 
   &:hover {
@@ -1529,11 +1600,6 @@ table.nform.rulesettings td.legend {
     background: transparent;
   }
 
-  td.state.acknowledged {
-    background-image: url("images/white_60percent.png");
-    background-repeat: repeat;
-  }
-
   tr.ac_test_details td a {
     text-decoration: underline;
 
@@ -1552,9 +1618,30 @@ table.data.analyze_config td.buttons {
   display: block;
 }
 
+.wato h2, .wato h3 {
+  margin-bottom: $wato-h3-margin-bottom;
+
+  + div.info {
+    padding: $wato-info-padding;
+    padding-top: 10px;
+    margin-top: 0;
+    background-color: $data-container-bg-color;
+    border: $primary-border;
+  }
+}
+
 .wato h3 {
   font-size: $theme-font-table-header;
   font-weight: $theme-font-weight-global;
   letter-spacing: $theme-letter-spacing-table;
   color: $theme-color-text;
+}
+
+.wato table.data.job_table {
+  td div.info {
+    padding: $wato-info-padding;
+    margin: $wato-info-margin;
+    background-color: $data-container-bg-color;
+    border: $primary-border;
+  }
 }

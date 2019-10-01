@@ -1,0 +1,161 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<jenkins_queue>>>
+# [[u'[{"task": {"color": "blue_anime", "_class":
+# "org.jenkinsci.plugins.workflow.job.WorkflowJob", "name": "testbuild"},
+# "inQueueSince": 1566823138742, "why": "Build #471 is already in progress
+# (ETA: 38 min)", "stuck": false, "_class": "hudson.model.Queue$BlockedItem",
+# "buildableStartMilliseconds": 1566823144626, "id": 174032, "blocked":
+# true}]']]
+
+import json
+
+MAP_QUEUE_STATES = {
+    True: "yes",
+    False: "no",
+}
+
+
+def parse_jenkins_queue(info):
+    parsed = []
+
+    for line in info:
+        parsed.extend(json.loads(line[0]))
+
+    return parsed
+
+
+def inventory_jenkins_queue(parsed):
+    yield None, {}
+
+
+factory_settings["jenkins_queue_default_levels"] = {
+    "in_queue_since": (3600, 7200),
+    "stuck": 2,
+    "blocked": 0,
+    "pending": 0,
+    "jenkins_stuck_tasks": (1, 2),
+}
+
+
+def check_jenkins_queue(no_item, params, parsed):
+    if not parsed:
+        yield 0, "Queue length: 0 Tasks"
+        return
+
+    long_output = []
+
+    yield check_levels(len(parsed),
+                       "queue",
+                       params.get("queue_length"),
+                       human_readable_func=int,
+                       unit="Tasks",
+                       infoname="Queue length")
+
+    levels = params["in_queue_since"]
+    stuck_tasks = 0
+    blocked_tasks = 0
+    pending_tasks = 0
+
+    for task in sorted(parsed,
+                       key=lambda k: (k['stuck'], k['blocked'], -k['inQueueSince']),
+                       reverse=True):
+        now = time.time()
+        len_state = 0
+        timestamp_in_queue = task["inQueueSince"] / 1000
+        since = now - timestamp_in_queue
+
+        len_state, _since_infotext, _perf_data = check_levels(since, None, levels)
+
+        stuck_state = 0
+        if task["stuck"]:
+            stuck_tasks += 1
+            stuck_state = params["stuck"]
+
+        blocked_state = 0
+        if task["blocked"]:
+            blocked_tasks += 1
+            blocked_state = params["blocked"]
+
+        long_output_str = "ID: %d, Stuck: %s%s, Blocked: %s%s" % (
+            task["id"], MAP_QUEUE_STATES[task["stuck"]], state_markers[stuck_state],
+            MAP_QUEUE_STATES[task["blocked"]], state_markers[blocked_state])
+
+        pending_state = 0
+        # pending can be missing
+        task_pending = task.get("pending")
+        if task_pending or task_pending is False:
+            if task_pending:
+                pending_tasks += 1
+            pending_state = params["pending"]
+            long_output_str += ", Pending: %s%s" % (MAP_QUEUE_STATES[task_pending],
+                                                    state_markers[pending_state])
+
+        long_output_str += ", In queue since: %s (%s)" % (
+            get_age_human_readable(since), get_timestamp_human_readable(timestamp_in_queue))
+
+        if len_state:
+            long_output_str += " (warn/crit at %s/%s)%s" % (get_age_human_readable(
+                levels[0]), get_age_human_readable(levels[1]), state_markers[len_state])
+
+        state = max([len_state, stuck_state, blocked_state, pending_state])
+
+        long_output_str += ", Why kept: %s" % task["why"]
+
+        long_output.append((state, long_output_str))
+
+    max_state = max([state for state, _infotext in long_output])
+
+    if stuck_tasks or blocked_tasks or pending_tasks:
+        for key, value, infotext in [(stuck_tasks, "stuck_tasks", "Stuck"),
+                                     (blocked_tasks, "blocked_tasks", "Blocked"),
+                                     (pending_tasks, "pending_tasks", "Pending")]:
+
+            jenkins_value = "jenkins_%s" % value
+
+            yield check_levels(key,
+                               jenkins_value,
+                               params.get(jenkins_value),
+                               human_readable_func=int,
+                               infoname=infotext)
+
+    if long_output:
+        yield max_state, "See long output for further information"
+
+        for state, line in long_output:
+            yield 0, "\n%s" % line
+
+
+check_info["jenkins_queue"] = {
+    "parse_function": parse_jenkins_queue,
+    "check_function": check_jenkins_queue,
+    "inventory_function": inventory_jenkins_queue,
+    'default_levels_variable': "jenkins_queue_default_levels",
+    "service_description": "Jenkins Queue",
+    "has_perfdata": True,
+    "group": "jenkins_queue",
+}

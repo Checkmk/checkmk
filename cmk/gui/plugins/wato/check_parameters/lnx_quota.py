@@ -38,45 +38,36 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersLnxQuota(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_lnx_quota():
+    return TextAscii(
+        title=_("filesystem"),
+        help=_("Name of filesystem with quotas enabled"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "lnx_quota"
 
-    @property
-    def title(self):
-        return _("Linux quota check")
+def _parameter_valuespec_lnx_quota():
+    return Dictionary(
+        optional_keys=None,
+        elements=[
+            ("user", Checkbox(
+                title=_("Monitor user quotas"),
+                label=_("Enable"),
+                default_value=True,
+            )),
+            ("group", Checkbox(
+                title=_("Monitor group quotas"),
+                label=_("Enable"),
+            )),
+        ],
+    )
 
-    @property
-    def match_type(self):
-        return "dict"
 
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            optional_keys=None,
-            elements=[
-                ("user",
-                 Checkbox(
-                     title=_("Monitor user quotas"),
-                     label=_("Enable"),
-                     default_value=True,
-                 )),
-                ("group", Checkbox(
-                    title=_("Monitor group quotas"),
-                    label=_("Enable"),
-                )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("filesystem"),
-            help=_("Name of filesystem with quotas enabled"),
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="lnx_quota",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_lnx_quota,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_lnx_quota,
+        title=lambda: _("Linux quota check"),
+    ))

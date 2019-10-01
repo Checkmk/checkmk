@@ -1,0 +1,10 @@
+Title: enterasys_powersupply: Do not crashed while translating redundancy and supply types
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566372320
+Class: fix
+
+

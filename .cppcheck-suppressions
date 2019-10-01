@@ -10,8 +10,6 @@ missingOverride:test_*.cc
 *:*/include/re2/*
 // Why on earth do we need this???
 unmatchedSuppression:test_*.cc
-unmatchedSuppression:test-*.cpp
-unmatchedSuppression:*/extlibs/*
 unmatchedSuppression:*/include/boost/*
 unmatchedSuppression:*/include/gtest/*
 unmatchedSuppression:*/include/re2/*

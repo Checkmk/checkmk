@@ -85,5 +85,5 @@ def notification_result_message(plugin, context, exit_code, output):
         spec = hostname
     state = _state_for(exit_code)
     comment = " -- ".join(output)
-    output = output[-1]
-    return "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, output, comment)
+    short_output = output[-1] if output else ""
+    return "%s: %s;%s;%s;%s;%s;%s" % (what, contact, spec, state, plugin, short_output, comment)

@@ -4,6 +4,7 @@
 
 from __future__ import print_function
 
+import imp
 import os
 import glob
 import pwd
@@ -21,13 +22,14 @@ import json
 import fcntl
 from contextlib import contextmanager
 from urlparse import urlparse
+import six
 
 import pathlib2 as pathlib
 import pytest  # type: ignore
 import requests  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
-import freezegun
+import freezegun  # type: ignore
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -76,9 +78,30 @@ def current_branch_name():
 def get_cmk_download_credentials():
     cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(file(cred).read().strip().split(":"))
+        return tuple(open(cred).read().strip().split(":"))
     except IOError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
+
+
+def import_module(pathname):
+    """Return the module loaded from `pathname`.
+
+    `pathname` is a path relative to the top-level directory
+    of the repository.
+
+    This function loads the module at `pathname` even if it does not have
+    the ".py" extension.
+
+    """
+    modpath = os.path.join(cmk_path(), pathname)
+    modname = os.path.splitext(os.path.basename(pathname))[0]
+    try:
+        return imp.load_source(modname, modpath)
+    finally:
+        try:
+            os.remove(modpath + "c")
+        except OSError:
+            pass
 
 
 def wait_until(condition, timeout=1, interval=0.1):
@@ -127,6 +150,10 @@ def InterProcessLock(filename):
             else:
                 os.close(fd)
                 fd = fd_new
+
+        # Prevent inheritance of the FD+lock to subprocesses
+        prev_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        fcntl.fcntl(fd, fcntl.F_SETFD, prev_flags | fcntl.FD_CLOEXEC)
 
         print("[%0.2f] Have lock: %s" % (time.time(), filename))
         yield
@@ -296,7 +323,7 @@ class CMKVersion(object):
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
-        file(temp_package_path, "w").write(response.content)
+        open(temp_package_path, "w").write(response.content)
         return temp_package_path
 
     def _install_package(self, package_path):
@@ -341,8 +368,6 @@ class Site(object):
         self._apache_port = None  # internal cache for the port
         self._livestatus_port = None
 
-        #self._gather_livestatus_port()
-
     @property
     def apache_port(self):
         if self._apache_port is None:
@@ -363,9 +388,25 @@ class Site(object):
     @property
     def live(self):
         import livestatus
-        live = livestatus.LocalConnection()
+        # Note: If the site comes from a SiteFactory instance, the TCP connection
+        # is insecure, i.e. no TLS.
+        live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
+                livestatus.SingleSiteConnection("tcp:%s:%d" %
+                                                (self.http_address, self.livestatus_port)))
         live.set_timeout(2)
         return live
+
+    def url_for_path(self, path):
+        """
+        Computes a full URL inkl. http://... from a URL starting with the path.
+        In case no path component is in URL, prepend "/[site]/check_mk" to the path.
+        """
+        assert not path.startswith("http")
+        assert "://" not in path
+
+        if "/" not in urlparse(path).path:
+            path = "/%s/check_mk/%s" % (self.id, path)
+        return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
 
     def wait_for_core_reloaded(self, after):
         # Activating changes can involve an asynchronous(!) monitoring
@@ -379,7 +420,6 @@ class Site(object):
                 # Seems like the socket may vanish for a short time. Keep waiting in case
                 # of livestatus (connection) issues...
                 return False
-
             return new_t > after
 
         reload_time, timeout = time.time(), 10
@@ -401,85 +441,93 @@ class Site(object):
     def send_host_check_result(self, hostname, state, output, expected_state=None):
         if expected_state is None:
             expected_state = state
-
-        last_check_before = self._get_last_check(hostname)
-        schedule_ts, wait_timeout = time.time(), 20
-
-        # Ensure the next check result is not in same second as the previous check
-        while int(last_check_before) == int(schedule_ts):
-            schedule_ts = time.time()
-            time.sleep(0.1)
-
-        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
-
+        last_check_before = self._last_host_check(hostname)
+        command_timestamp = self._command_timestamp(last_check_before)
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
-                          (schedule_ts, hostname, state, output))
-        self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout,
-                                  expected_state)
+                          (command_timestamp, hostname, state, output))
+        self._wait_for_next_host_check(hostname, last_check_before, command_timestamp,
+                                       expected_state)
+
+    def send_service_check_result(self,
+                                  hostname,
+                                  service_description,
+                                  state,
+                                  output,
+                                  expected_state=None):
+        if expected_state is None:
+            expected_state = state
+        last_check_before = self._last_service_check(hostname, service_description)
+        command_timestamp = self._command_timestamp(last_check_before)
+        self.live.command("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s" %
+                          (command_timestamp, hostname, service_description, state, output))
+        self._wait_for_next_service_check(hostname, service_description, last_check_before,
+                                          command_timestamp, expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
-        last_check_before = self._get_last_check(hostname, service_description)
-        schedule_ts, wait_timeout = int(time.time()), 20
+        last_check_before = self._last_service_check(hostname, service_description)
+        command_timestamp = self._command_timestamp(last_check_before)
+        self.live.command(
+            "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
+            (command_timestamp, hostname, service_description.encode("utf-8"), command_timestamp))
+        self._wait_for_next_service_check(hostname, service_description, last_check_before,
+                                          command_timestamp, expected_state)
 
+    def _command_timestamp(self, last_check_before):
         # Ensure the next check result is not in same second as the previous check
-        while int(last_check_before) == int(schedule_ts):
-            schedule_ts = time.time()
+        timestamp = time.time()
+        while int(last_check_before) == int(timestamp):
+            timestamp = time.time()
             time.sleep(0.1)
+        return timestamp
 
-        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
-        self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
-                          (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
-
-        self._wait_for_next_check(hostname,
-                                  last_check_before,
-                                  schedule_ts,
-                                  wait_timeout,
-                                  expected_state,
-                                  service_description=service_description)
-
-    def _wait_for_next_check(self,
-                             hostname,
-                             last_check_before,
-                             schedule_ts,
-                             wait_timeout,
-                             expected_state,
-                             service_description=None):
-        if not service_description:
-            table = "hosts"
-            filt = "Filter: host_name = %s\n" % hostname
-            wait_obj = "%s" % hostname
-        else:
-            table = "services"
-            filt = "Filter: host_name = %s\nFilter: description = %s\n" % (hostname,
-                                                                           service_description)
-            wait_obj = "%s;%s" % (hostname, service_description)
-
+    def _wait_for_next_host_check(self, hostname, last_check_before, command_timestamp,
+                                  expected_state):
+        wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
-            "GET %s\n" \
+            "GET hosts\n" \
             "Columns: last_check state plugin_output\n" \
-            "%s" \
+            "Filter: host_name = %s\n" \
             "WaitObject: %s\n" \
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
-            "WaitTrigger: check\n" % (table, filt, wait_obj, wait_timeout*1000, last_check_before, expected_state))
+            "WaitTrigger: check\n" % (hostname, hostname, wait_timeout*1000, last_check_before, expected_state))
+        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
+                                       expected_state, plugin_output, wait_timeout)
 
-        print("processing check result took %0.2f seconds" % (time.time() - schedule_ts))
+    def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
+                                     command_timestamp, expected_state):
+        wait_timeout = 20
+        last_check, state, plugin_output = self.live.query_row(
+            "GET services\n" \
+            "Columns: last_check state plugin_output\n" \
+            "Filter: host_name = %s\n" \
+            "Filter: description = %s\n" \
+            "WaitObject: %s;%s\n" \
+            "WaitTimeout: %d\n" \
+            "WaitCondition: last_check > %d\n" \
+            "WaitCondition: state = %d\n" \
+            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
+        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
+                                       expected_state, plugin_output, wait_timeout)
 
+    def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
+                                  expected_state, plugin_output, wait_timeout):
+        print("processing check result took %0.2f seconds" % (time.time() - command_timestamp))
         assert last_check > last_check_before, \
                 "Check result not processed within %d seconds (last check before reschedule: %d, " \
                 "scheduled at: %d, last check: %d)" % \
-                (wait_timeout, last_check_before, schedule_ts, last_check)
-
+                (wait_timeout, last_check_before, command_timestamp, last_check)
         assert state == expected_state, \
             "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
 
-    def _get_last_check(self, hostname, service_description=None):
-        if not service_description:
-            return self.live.query_value(
-                "GET hosts\n" \
-                "Columns: last_check\n" \
-                "Filter: host_name = %s\n" % (hostname))
+    def _last_host_check(self, hostname):
+        return self.live.query_value(
+            "GET hosts\n" \
+            "Columns: last_check\n" \
+            "Filter: host_name = %s\n" % (hostname))
+
+    def _last_service_check(self, hostname, service_description):
         return self.live.query_value(
                 "GET services\n" \
                 "Columns: last_check\n" \
@@ -1027,26 +1075,80 @@ class Site(object):
         print("Livestatus ports already in use: %r, using port: %d" % (used_ports, port))
         return port
 
-    # Problem: The group change only affects new sessions of the test_user
-    #def add_test_user_to_site_group(self):
-    #    test_user = pwd.getpwuid(os.getuid())[0]
 
-    #    if os.system("sudo usermod -a -G %s %s" % (self.id, test_user)) >> 8 != 0:
-    #        raise Exception("Failed to add test user \"%s\" to site group")
+class SiteFactory(object):
+    def __init__(self, version, edition, branch, prefix=None):
+        self._base_ident = prefix or "s_%s_" % branch[:6]
+        self._version = version
+        self._edition = edition
+        self._branch = branch
+        self._sites = {}
+        self._index = 1
+
+    @property
+    def sites(self):
+        return self._sites
+
+    def get_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            return self._sites["%s%s" % (self._base_ident, name)]
+        # For convenience, allow to retreive site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+        return self._new_site(name)
+
+    def remove_site(self, name):
+        if "%s%s" % (self._base_ident, name) in self._sites:
+            site_id = "%s%s" % (self._base_ident, name)
+        elif name in self._sites:
+            site_id = name
+        else:
+            print("Found no site for name %s." % name)
+            return
+        print("Removing site %s" % site_id)
+        self._sites[site_id].rm()
+        del self._sites[site_id]
+
+    def _get_ident(self):
+        new_ident = self._base_ident + str(self._index)
+        self._index += 1
+        return new_ident
+
+    def _new_site(self, name):
+        site_id = "%s%s" % (self._base_ident, name)
+        site = Site(site_id=site_id,
+                    reuse=False,
+                    version=self._version,
+                    edition=self._edition,
+                    branch=self._branch)
+        site.create()
+        site.open_livestatus_tcp()
+        # No TLS for testing
+        site.set_config("LIVESTATUS_TCP_TLS", "off")
+        site.start()
+        site.prepare_for_tests()
+        # There seem to be still some changes that want to be activated
+        CMKWebSession(site).activate_changes()
+        print("Created site %s" % site_id)
+        self._sites[site_id] = site
+        return site
+
+    def cleanup(self):
+        for site_id in list(self._sites.keys()):
+            self.remove_site(site_id)
 
 
-class WebSession(requests.Session):
-    def __init__(self):
+class CMKWebSession(object):
+    def __init__(self, site):
+        super(CMKWebSession, self).__init__()
         self.transids = []
         # Resources are only fetched and verified once per session
         self.verified_resources = set()
-        self.via_system_apache = False
-        super(WebSession, self).__init__()
+        self.site = site
+        self.session = requests.Session()
 
-    def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):
-        url = self.url(proto, path)
-
-        response = self.get(path, expected_code=expected_code, allow_redirects=False)
+    def check_redirect(self, path, expected_target=None):
+        response = self.get(path, expected_code=302, allow_redirects=False)
         if expected_target:
             if response.headers['Location'] != expected_target:
                 raise AssertionError("REDIRECT FAILED: '%s' != '%s'" %
@@ -1054,30 +1156,21 @@ class WebSession(requests.Session):
             assert response.headers['Location'] == expected_target
 
     def get(self, *args, **kwargs):
-        return self._request("get", *args, **kwargs)
+        return self.request("get", *args, **kwargs)
 
     def post(self, *args, **kwargs):
-        return self._request("post", *args, **kwargs)
+        return self.request("post", *args, **kwargs)
 
-    def _request(self,
-                 method,
-                 path,
-                 proto="http",
-                 expected_code=200,
-                 expect_redirect=None,
-                 allow_errors=False,
-                 add_transid=False,
-                 allow_redirect_to_login=False,
-                 allow_retry=True,
-                 **kwargs):
-        url = self.url(proto, path)
-
+    def request(self,
+                method,
+                path,
+                expected_code=200,
+                add_transid=False,
+                allow_redirect_to_login=False,
+                **kwargs):
+        url = self.site.url_for_path(path)
         if add_transid:
             url = self._add_transid(url)
-
-        # Enforce non redirect following in case of expecting one
-        if expect_redirect:
-            kwargs["allow_redirects"] = False
 
         # May raise "requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",))"
         # suddenly without known reason. This may be related to some
@@ -1086,112 +1179,73 @@ class WebSession(requests.Session):
         #   https://github.com/mikem23/keepalive-race
         # Trying to workaround this by trying the problematic request a second time.
         try:
-            response = super(WebSession, self).request(method, url, **kwargs)
+            response = self.session.request(method, url, **kwargs)
         except requests.ConnectionError as e:
-            if allow_retry and "Connection aborted" in "%s" % e:
-                response = super(WebSession, self).request(method, url, **kwargs)
+            if "Connection aborted" in "%s" % e:
+                response = self.session.request(method, url, **kwargs)
             else:
                 raise
 
-        self._handle_http_response(response, expected_code, allow_errors, expect_redirect,
-                                   allow_redirect_to_login)
+        self._handle_http_response(response, expected_code, allow_redirect_to_login)
         return response
 
     def _add_transid(self, url):
         if not self.transids:
             raise Exception('Tried to add a transid, but none available at the moment')
+        return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
-        if "?" in url:
-            url += "&"
-        else:
-            url += "?"
-        url += "_transid=" + self.transids.pop()
-        return url
-
-    def _handle_http_response(self, response, expected_code, allow_errors, expect_redirect,
-                              allow_redirect_to_login):
-        assert "Content-Type" in response.headers
-
-        # TODO: Copied from CMA tests. Needed?
-        # Apache error responses are sent as ISO-8859-1. Ignore these pages.
-        #if r.status_code == 200 \
-        #   and (not self._allow_wrong_encoding and not mime_type.startswith("image/")):
-        #    assert r.encoding == "UTF-8", "Got invalid encoding (%s) for URL %s" % (r.encoding, r.url))
-
-        mime_type = self._get_mime_type(response)
-
-        if expect_redirect:
-            expected_code, redirect_target = expect_redirect
-            assert response.headers["Location"] == redirect_target, \
-                "Expected %d redirect to %s but got this location: %s" % \
-                    (expected_code, redirect_target,
-                     response.headers.get('Location', "None"))
-
+    def _handle_http_response(self, response, expected_code, allow_redirect_to_login):
         assert response.status_code == expected_code, \
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \
                   (response.status_code, expected_code,
                    response.url, response.headers.get('Location', "None"))
 
-        if response.history:
-            #print("Followed redirect (%d) %s -> %s" % \
-            #    (response.history[0].status_code, response.history[0].url, response.url))
-            if not allow_redirect_to_login:
-                assert "check_mk/login.py" not in response.url, \
-                       "Followed redirect (%d) %s -> %s" % \
-                    (response.history[0].status_code, response.history[0].url, response.url)
+        if not allow_redirect_to_login and response.history:
+            assert "check_mk/login.py" not in response.url, \
+                    "Followed redirect (%d) %s -> %s" % \
+                (response.history[0].status_code, response.history[0].url, response.url)
 
-        if mime_type == "text/html":
-            self._check_html_page(response, allow_errors)
+        if self._get_mime_type(response) == "text/html":
+            self.transids += self._extract_transids(response.text)
+            self._find_errors(response.text)
+            self._check_html_page_resources(response.url, response.text)
 
     def _get_mime_type(self, response):
+        assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _check_html_page(self, response, allow_errors):
-        self._extract_transids(response.text)
-        self._find_errors(response.text, allow_errors)
-        self._check_html_page_resources(response)
-
     def _extract_transids(self, body):
-        # Extract transids from the pages to be used in later actions
-        # issued by the tests
-        matches = re.findall('name="_transid" value="([^"]+)"', body)
-        matches += re.findall('_transid=([0-9/]+)', body)
-        for match in matches:
-            self.transids.append(match)
+        """Extract transids from pages used in later actions issued by tests."""
+        return re.findall('name="_transid" value="([^"]+)"', body) + \
+               re.findall('_transid=([0-9/]+)', body)
 
-    def _find_errors(self, body, allow_errors):
+    def _find_errors(self, body):
         matches = re.search('<div class=error>(.*?)</div>', body, re.M | re.DOTALL)
-        if allow_errors and matches:
-            print("Found error message, but it's allowed: %s" % matches.groups())
-        else:
-            assert not matches, "Found error message: %s" % matches.groups()
+        assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, response):
-        soup = BeautifulSoup(response.text, "lxml")
+    def _check_html_page_resources(self, url, body):
+        soup = BeautifulSoup(body, "lxml")
+
+        base_url = urlparse(url).path
+        if ".py" in base_url:
+            base_url = os.path.dirname(base_url)
 
         # There might be other resources like iframe, audio, ... but we don't care about them
-
-        self._check_resources(soup, response, "img", "src", ["image/png"])
-        self._check_resources(soup, response, "script", "src",
+        self._check_resources(soup, base_url, "img", "src", ["image/png"])
+        self._check_resources(soup, base_url, "script", "src",
                               ["application/javascript", "text/javascript"])
         self._check_resources(soup,
-                              response,
+                              base_url,
                               "link",
                               "href", ["text/css"],
                               filters=[("rel", "stylesheet")])
         self._check_resources(soup,
-                              response,
+                              base_url,
                               "link",
                               "href", ["image/vnd.microsoft.icon"],
                               filters=[("rel", "shortcut icon")])
 
-    def _check_resources(self, soup, response, tag, attr, allowed_mime_types, filters=None):
-        parsed_url = urlparse(response.url)
-
-        base_url = parsed_url.path
-        if ".py" in base_url:
-            base_url = os.path.dirname(base_url)
-
+    def _check_resources(self, soup, base_url, tag, attr, allowed_mime_types, filters=None):
         for url in self._find_resource_urls(tag, attr, soup, filters):
             # Only check resources once per session
             if url in self.verified_resources:
@@ -1199,7 +1253,7 @@ class WebSession(requests.Session):
             self.verified_resources.add(url)
 
             assert not url.startswith("/")
-            req = self.get(base_url + "/" + url, proto=parsed_url.scheme, verify=False)
+            req = self.get(base_url + "/" + url, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
@@ -1221,33 +1275,6 @@ class WebSession(requests.Session):
                 pass
 
         return urls
-
-    def login(self, username=None, password=None):
-        raise NotImplementedError()
-
-    def logout(self):
-        raise NotImplementedError()
-
-
-class CMKWebSession(WebSession):
-    def __init__(self, site):
-        self.site = site
-        super(CMKWebSession, self).__init__()
-
-    # Computes a full URL inkl. http://... from a URL starting with the path.
-    def url(self, proto, path):
-        assert not path.startswith("http")
-        assert "://" not in path
-
-        # In case no path component is in URL, add the path to the "/[site]/check_mk"
-        if "/" not in urlparse(path).path:
-            path = "/%s/check_mk/%s" % (self.site.id, path)
-
-        if self.via_system_apache:
-            return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
-
-        return '%s://%s:%d%s' % (self.site.http_proto, self.site.http_address,
-                                 self.site.apache_port, path)
 
     def login(self, username="cmkadmin", password="cmk"):
         login_page = self.get("", allow_redirect_to_login=True).text
@@ -1342,7 +1369,8 @@ class CMKWebSession(WebSession):
                  attributes=None,
                  cluster_nodes=None,
                  create_folders=True,
-                 expect_error=False):
+                 expect_error=False,
+                 verify_set_attributes=True):
         if attributes is None:
             attributes = {}
 
@@ -1359,15 +1387,16 @@ class CMKWebSession(WebSession):
 
         assert result is None
 
-        host = self.get_host(hostname)
+        if verify_set_attributes:
+            host = self.get_host(hostname)
 
-        assert host["hostname"] == hostname
-        assert host["path"] == folder
+            assert host["hostname"] == hostname
+            assert host["path"] == folder
 
-        # Ignore the automatically generated meta_data attribute for the moment
-        del host["attributes"]["meta_data"]
+            # Ignore the automatically generated meta_data attribute for the moment
+            del host["attributes"]["meta_data"]
 
-        assert host["attributes"] == attributes
+            assert host["attributes"] == attributes
 
     # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
     def add_hosts(self, create_hosts):
@@ -1384,7 +1413,9 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result is None
+        assert isinstance(result, dict)
+        assert result["succeeded_hosts"] == [h["hostname"] for h in hosts]
+        assert result["failed_hosts"] == {}
         hosts = self.get_all_hosts()
         for hostname, _folder, _attributes in create_hosts:
             assert hostname in hosts
@@ -1430,7 +1461,9 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert result is None
+        assert isinstance(result, dict)
+        assert result["succeeded_hosts"] == [h["hostname"] for h in hosts]
+        assert result["failed_hosts"] == {}
 
         hosts = self.get_all_hosts()
         for hostname, attributes, unset_attributes in edit_hosts:
@@ -1661,6 +1694,23 @@ class CMKWebSession(WebSession):
 
         assert result is None
 
+    def login_site(self, site_id, user="cmkadmin", password="cmk"):
+        result = self._api_request(
+            "webapi.py?action=login_site",
+            {"request": json.dumps({
+                "site_id": site_id,
+                "username": user,
+                "password": password
+            })})
+        assert result is None
+
+    def logout_site(self, site_id):
+        result = self._api_request("webapi.py?action=logout_site",
+                                   {"request": json.dumps({
+                                       "site_id": site_id,
+                                   })})
+        assert result is None
+
     def add_group(self, group_type, group_name, attributes, expect_error=False):
         request_object = {"groupname": group_name}
         request_object.update(attributes)
@@ -1722,7 +1772,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, unicode)
+        assert isinstance(result, six.text_type)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -1770,8 +1820,32 @@ class CMKWebSession(WebSession):
         assert isinstance(result, list)
         return result
 
-    def activate_changes(self, mode=None, allow_foreign_changes=None):
+    def get_combined_graph_identifications(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_combined_graph_identifications",
+            {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error,
+        )
+        assert isinstance(result, list)
+        return result
+
+    def get_graph_annotations(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=get_graph_annotations",
+            {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error,
+        )
+        assert isinstance(result, dict)
+        return result
+
+    def activate_changes(self, mode=None, allow_foreign_changes=None, relevant_sites=None):
         request = {}
+        if not relevant_sites:
+            relevant_sites = [self.site]
 
         if mode is not None:
             request["mode"] = mode
@@ -1779,7 +1853,9 @@ class CMKWebSession(WebSession):
         if allow_foreign_changes is not None:
             request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
-        old_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+        old_t = {}
+        for site in relevant_sites:
+            old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
@@ -1788,31 +1864,38 @@ class CMKWebSession(WebSession):
 
         assert isinstance(result, dict)
         assert len(result["sites"]) > 0
+        involved_sites = result["sites"].keys()
 
         for site_id, status in result["sites"].items():
             assert status["_state"] == "success", \
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        self.site.wait_for_core_reloaded(old_t)
+        for site in relevant_sites:
+            if site.id in involved_sites:
+                site.wait_for_core_reloaded(old_t[site.id])
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
-        result = self._api_request("webapi.py?action=get_graph", {
-            "request": json.dumps({
-                "specification": [
-                    "template", {
-                        "service_description": service_description,
-                        "site": self.site.id,
-                        "graph_index": graph_index,
-                        "host_name": hostname,
+        result = self._api_request(
+            "webapi.py?action=get_graph&output_format=json",
+            {
+                "request": json.dumps({
+                    "specification": [
+                        "template", {
+                            "service_description": service_description,
+                            "site": self.site.id,
+                            "graph_index": graph_index,
+                            "host_name": hostname,
+                        }
+                    ],
+                    "data_range": {
+                        "time_range": [time.time() - 3600, time.time()]
                     }
-                ],
-                "data_range": {
-                    "time_range": [time.time() - 3600, time.time()]
-                }
-            }),
-        },
-                                   expect_error=expect_error)
+                }),
+            },
+            expect_error=expect_error,
+            output_format="json",
+        )
 
         assert isinstance(result, dict)
         assert "start_time" in result
@@ -1851,11 +1934,12 @@ class CMKWebSession(WebSession):
         return result
 
 
-class CMKEventConsole(CMKWebSession):
+class CMKEventConsole(object):
     def __init__(self, site):
-        super(CMKEventConsole, self).__init__(site)
-        #self._gather_status_port()
+        super(CMKEventConsole, self).__init__()
+        self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
+        self.web_session = CMKWebSession(site)
 
     def _config(self):
         cfg = {}
@@ -1898,15 +1982,13 @@ class CMKEventConsole(CMKWebSession):
     def activate_changes(self, web):
         old_t = web.site.live.query_value(
             "GET eventconsolestatus\nColumns: status_config_load_time\n")
-        #print("Old config load time: %s" % old_t)
         assert old_t > time.time() - 86400
 
-        super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
+        self.web_session.activate_changes(allow_foreign_changes=True)
 
         def config_reloaded():
             new_t = web.site.live.query_value(
                 "GET eventconsolestatus\nColumns: status_config_load_time\n")
-            #print("New config load time: %s" % new_t)
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10
@@ -1919,14 +2001,15 @@ class CMKEventConsole(CMKWebSession):
 
     @classmethod
     def new_event(cls, attrs):
+        now = time.time()
         default_event = {
             "rule_id": 815,
             "text": "",
             "phase": "open",
             "count": 1,
-            "time": time.time(),
-            "first": time.time(),
-            "last": time.time(),
+            "time": now,
+            "first": now,
+            "last": now,
             "comment": "",
             "host": "test-host",
             "ipaddress": "127.0.0.1",
@@ -1979,41 +2062,34 @@ class CMKEventConsoleStatus(object):
 
 class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
-    def __init__(self, site, rel_path, default_timeout=5):
+    def __init__(self, site, log_path, default_timeout=5):
         self._site = site
-        self._rel_path = rel_path
+        self._log_path = log_path
         self._log = self._open_log()
         self._default_timeout = default_timeout
-        self._buf = []
-
-    def _log_path(self):
-        return self._rel_path
 
     def _open_log(self):
-        if not self._site.file_exists(self._log_path()):
-            self._site.write_file(self._log_path(), "")
+        if not self._site.file_exists(self._log_path):
+            self._site.write_file(self._log_path, "")
 
-        fobj = open(self._site.path(self._log_path()), "r")
+        fobj = open(self._site.path(self._log_path), "r")
         fobj.seek(0, 2)  # go to end of file
         return fobj
 
     def check_logged(self, match_for, timeout=None):
-        if timeout is None:
-            timeout = self._default_timeout
-
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
-                            (match_for, self._log_path(), timeout))
+                            (match_for, self._log_path, timeout))
 
     def check_not_logged(self, match_for, timeout=None):
+        if self._check_for_line(match_for, timeout):
+            raise Exception("Found %r in %s after %d seconds" %
+                            (match_for, self._log_path, timeout))
+
+    def _check_for_line(self, match_for, timeout):
         if timeout is None:
             timeout = self._default_timeout
 
-        if self._check_for_line(match_for, timeout):
-            raise Exception("Found %r in %s after %d seconds" %
-                            (match_for, self._log_path(), timeout))
-
-    def _check_for_line(self, match_for, timeout):
         timeout_at = time.time() + timeout
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))
@@ -2040,10 +2116,7 @@ def web(site):
 
 @pytest.fixture(scope="module")
 def ec(site, web):
-    ec = CMKEventConsole(site)
-    #ec.enable_remote_status_port(web)
-    #ec.activate_changes(web)
-    return ec
+    return CMKEventConsole(site)
 
 
 def create_linux_test_host(request, web, site, hostname):
@@ -2065,7 +2138,7 @@ def create_linux_test_host(request, web, site, hostname):
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
         "var/check_mk/agent_output/%s" % hostname,
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
 
 #.
@@ -2115,10 +2188,8 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(object):
+class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
     """Abstract base class for Check and ActiveCheck"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, name):
         import cmk_base.check_api_utils
         self.set_hostname = cmk_base.check_api_utils.set_hostname
@@ -2130,6 +2201,7 @@ class BaseCheck(object):
         description = None
         if set_service:
             description = self.info["service_description"]
+            assert description, '%r is missing a service_description' % self.name
             if item is not None:
                 assert "%s" in description, \
                     "Missing '%%s' formatter in service description of %r" \

@@ -36,10 +36,11 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.userdb.utils import (
-    UserAttribute,
-    user_attribute_registry,
-    UserConnector,
+from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
+    UserAttribute,  #
+    user_attribute_registry,  #
+    get_user_attributes,  #
+    UserConnector,  #
     user_connector_registry,
 )
 

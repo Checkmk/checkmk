@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import logging as _logging
-from typing import Any  # pylint: disable=unused-import
+import logging
+from typing import IO, Any  # pylint: disable=unused-import
 
 # Just for reference, the predefined logging levels:
 #
@@ -58,73 +58,28 @@ from typing import Any  # pylint: disable=unused-import
 # levels, this would force us to log normal stuff with a WARNING level, which
 # looks wrong.
 
-# Users should be able to set log levels without importing "logging"
-
-CRITICAL = _logging.CRITICAL
-ERROR = _logging.ERROR
-WARNING = _logging.WARNING
-INFO = _logging.INFO
-DEBUG = _logging.DEBUG
-
 # We need an additional log level between INFO and DEBUG to reflect the
 # verbose() and vverbose() mechanisms of Check_MK.
-
 VERBOSE = 15
-
-_logger_class = _logging.getLoggerClass()  # type: Any
-
-
-class CMKLogger(_logger_class):
-    def __init__(self, name, level=_logging.NOTSET):
-        super(CMKLogger, self).__init__(name, level)
-
-        _logging.addLevelName(VERBOSE, "VERBOSE")
-
-    def verbose(self, msg, *args, **kwargs):
-        if self.is_verbose():
-            self._log(VERBOSE, msg, args, **kwargs)
-
-    def is_verbose(self):
-        return self.isEnabledFor(VERBOSE)
-
-    def is_very_verbose(self):
-        return self.isEnabledFor(DEBUG)
-
-    def set_format(self, fmt):
-        handler = _logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(get_formatter(fmt))
-
-        del self.handlers[:]  # Remove all previously existing handlers
-        self.addHandler(handler)
-
-
-_logging.setLoggerClass(CMKLogger)
+logging.addLevelName(VERBOSE, "VERBOSE")
 
 # Set default logging handler to avoid "No handler found" warnings.
 # Python 2.7+
-logger = _logging.getLogger("cmk")
-logger.addHandler(_logging.NullHandler())
-logger.setLevel(INFO)
-
-
-def get_logger(name):
-    """This function provides the logging object for client code.
-
-    It returns a child logger of the "cmk" main logger, identified
-    by the given name. The name of the child logger will be prefixed
-    with "cmk.", for example "cmk.mkeventd" in case of "mkeventd".
-    """
-    return logger.getChild(name)
+logger = logging.getLogger("cmk")
+logger.addHandler(logging.NullHandler())
+logger.setLevel(logging.INFO)
 
 
 def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
+    # type: (str) -> logging.Formatter
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
-    return _logging.Formatter(format_str)
+    return logging.Formatter(format_str)
 
 
-def setup_console_logging(stream=None, formatter=None):
+def setup_console_logging():
+    # type: () -> None
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -132,39 +87,27 @@ def setup_console_logging(stream=None, formatter=None):
     This can be used for existing command line applications which were
     using sys.stdout.write() or print() before.
     """
-    if stream is None:
-        stream = sys.stdout
-
-    if formatter is None:
-        formatter = get_formatter("%(message)s")
-
-    setup_logging_handler(stream, formatter)
+    setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-def open_log(log_file_path, fallback_to=None):
+# TODO: Cleanup IO[Any] to IO[Text]
+def open_log(log_file_path):
+    # type: (str) -> IO[Any]
     """Open logfile and fall back to stderr if this is not successfull
-    The opened file() object is returned.
+    The opened file-like object is returned.
     """
-    if fallback_to is None:
-        fallback_to = sys.stderr
-
-    logfile = None
     try:
-        logfile = file(log_file_path, "a")
+        logfile = open(log_file_path, "a")  # type: IO[Any]
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
-
-        if fallback_to:
-            logfile = fallback_to
-
-    if logfile:
-        setup_logging_handler(logfile)
-
+        logfile = sys.stderr
+    setup_logging_handler(logfile)
     return logfile
 
 
 def setup_logging_handler(stream, formatter=None):
+    # type: (IO[Any], logging.Formatter) -> None
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.
@@ -172,14 +115,15 @@ def setup_logging_handler(stream, formatter=None):
     if formatter is None:
         formatter = get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
 
-    handler = _logging.StreamHandler(stream=stream)
+    handler = logging.StreamHandler(stream=stream)
     handler.setFormatter(formatter)
 
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
 
 
-def set_verbosity(verbosity):
+def verbosity_to_log_level(verbosity):
+    # type: (int) -> int
     """Values for "verbosity":
 
       0: enables INFO and above
@@ -187,39 +131,9 @@ def set_verbosity(verbosity):
       2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
-        logger.setLevel(INFO)
-
-    elif verbosity == 1:
-        logger.setLevel(VERBOSE)
-
-    elif verbosity == 2:
-        logger.setLevel(DEBUG)
-
-    else:
-        raise NotImplementedError()
-
-
-# TODO: Experiment. Not yet used.
-class LogMixin(object):
-    """Inherit from this class to provide logging support.
-
-    Makes a logger available via "self.logger" for objects and
-    "self.cls_logger" for the class.
-    """
-    __parent_logger = None
-    __logger = None
-    __cls_logger = None
-
-    @property
-    def _logger(self):
-        if not self.__logger:
-            parent = self.__parent_logger or logger
-            self.__logger = parent.getChild('.'.join([self.__class__.__name__]))
-        return self.__logger
-
-    @classmethod
-    def _cls_logger(cls):
-        if not cls.__cls_logger:
-            parent = cls.__parent_logger or logger
-            cls.__cls_logger = parent.getChild('.'.join([cls.__name__]))
-        return cls.__cls_logger
+        return logging.INFO
+    if verbosity == 1:
+        return VERBOSE
+    if verbosity == 2:
+        return logging.DEBUG
+    raise ValueError()

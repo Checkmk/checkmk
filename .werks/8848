@@ -1,0 +1,11 @@
+Title: Fix broken service discovery on remote sites (1.6.0b4 regression)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1564738091
+
+

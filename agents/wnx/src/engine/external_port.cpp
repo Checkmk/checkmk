@@ -79,7 +79,7 @@ static size_t WriteDataToSocket(asio::ip::tcp::socket &sock, const char *data,
 
     // error processing
     if (ec.value() != 0) {
-        XLOG::d(XLOG_FUNC + " write [{}] bytes to socket failed [{}] '{}'", sz,
+        XLOG::l(XLOG_FUNC + " write [{}] bytes to socket failed [{}] '{}'", sz,
                 ec.value(), ec.message());
         return 0;
     }
@@ -206,6 +206,27 @@ void ExternalPort::timedWaitForSession() {
     wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
                             [this]() { return !session_queue_.empty(); });
 }
+#define TEST_RESTART_OVERLOAD  // should be defined in production
+
+//#define TEST_OVERLOAD_MEMORY
+// internal testing code
+#if defined(TEST_OVERLOAD_MEMORY)
+// a bit complicated method to eat memory in release target
+static std::vector<std::unique_ptr<char>> bad_vector;
+#endif
+
+static void OverLoadMemory() {
+#if defined(TEST_OVERLOAD_MEMORY)
+#pragma message("**************************************")
+#pragma message("ATTENTION: Your code tries to eat RAM!")
+#pragma message("**************************************")
+    // this code is intentionally left here as example
+    // how to allocate a lot of memory and to verify protection
+    bad_vector.emplace_back(new char[20'000'000]);
+    auto data = bad_vector.back().get();
+    memset(data, 1, 20'000'000);  // must for the release
+#endif
+}
 
 // singleton thread
 void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
@@ -213,17 +234,36 @@ void ExternalPort::processQueue(cma::world::ReplyFunc reply) noexcept {
         // we must to catch exception in every thread, even so simple one
         try {
             // processing block
-            auto as = getSession();
+            {
+                auto as = getSession();
 
-            if (as) {
-                const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
-                XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
+                if (as) {
+                    const auto [ip, ipv6] = GetSocketInfo(as->currentSocket());
+                    XLOG::d.i("Connected from '{}' ipv6:{} <- queue", ip, ipv6);
 
-                // only_from checking
-                if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
-                    as->start(reply);
-                } else {
-                    XLOG::d("Address '{}' is not allowed, this call should happen", ip);
+                    OverLoadMemory();  // do nothing
+                    // only_from checking
+                    if (cma::cfg::groups::global.isIpAddressAllowed(ip)) {
+                        as->start(reply);
+
+                        // check memory block, terminate service if memory is
+                        // overused
+                        if (!wtools::monitor::IsAgentHealthy()) {
+                            XLOG::l.crit("Memory usage is too high [{}]",
+                                         wtools::GetOwnVirtualSize());
+#if defined(TEST_RESTART_OVERLOAD)
+                            if (IsService()) std::terminate();
+#else
+#pragma message("**************************************")
+#pragma message("ATTENTION: Your has no RESTART on overload")
+#pragma message("**************************************")
+#endif
+                        }
+                    } else {
+                        XLOG::d(
+                            "Address '{}' is not allowed, this call should happen",
+                            ip);
+                    }
                 }
             }
 

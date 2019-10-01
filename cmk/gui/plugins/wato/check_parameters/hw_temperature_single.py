@@ -36,29 +36,20 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHwTemperatureSingle(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersEnvironment
+def _parameter_valuespec_hw_temperature_single():
+    return Tuple(help=_("Temperature levels for hardware devices like "
+                        "DELL Powerconnect that have just one temperature sensor. "),
+                 elements=[
+                     Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                     Integer(title=_("critical at"), unit=u"°C", default_value=40),
+                 ])
 
-    @property
-    def check_group_name(self):
-        return "hw_temperature_single"
 
-    @property
-    def title(self):
-        return _("Hardware temperature, single sensor")
-
-    @property
-    def is_deprecated(self):
-        return True
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(help=_("Temperature levels for hardware devices like "
-                            "DELL Powerconnect that have just one temperature sensor. "),
-                     elements=[
-                         Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                         Integer(title=_("critical at"), unit=u"°C", default_value=40),
-                     ])
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="hw_temperature_single",
+        group=RulespecGroupCheckParametersEnvironment,
+        is_deprecated=True,
+        parameter_valuespec=_parameter_valuespec_hw_temperature_single,
+        title=lambda: _("Hardware temperature, single sensor"),
+    ))

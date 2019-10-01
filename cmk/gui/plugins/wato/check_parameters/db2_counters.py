@@ -39,54 +39,46 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersDb2Counters(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_db2_counters():
+    return TextAscii(title=_("Instance"),
+                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
-    @property
-    def check_group_name(self):
-        return "db2_counters"
 
-    @property
-    def title(self):
-        return _("DB2 Counters")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This rule allows you to configure limits for the deadlocks and lockwaits "
-                   "counters of a DB2."),
-            elements=[
-                (
-                    "deadlocks",
-                    Tuple(
-                        title=_("Deadlocks"),
-                        elements=[
-                            Float(title=_("Warning at"), unit=_("deadlocks/sec")),
-                            Float(title=_("Critical at"), unit=_("deadlocks/sec")),
-                        ],
-                    ),
+def _parameter_valuespec_db2_counters():
+    return Dictionary(
+        help=_("This rule allows you to configure limits for the deadlocks and lockwaits "
+               "counters of a DB2."),
+        elements=[
+            (
+                "deadlocks",
+                Tuple(
+                    title=_("Deadlocks"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("deadlocks/sec")),
+                        Float(title=_("Critical at"), unit=_("deadlocks/sec")),
+                    ],
                 ),
-                (
-                    "lockwaits",
-                    Tuple(
-                        title=_("Lockwaits"),
-                        elements=[
-                            Float(title=_("Warning at"), unit=_("lockwaits/sec")),
-                            Float(title=_("Critical at"), unit=_("lockwaits/sec")),
-                        ],
-                    ),
+            ),
+            (
+                "lockwaits",
+                Tuple(
+                    title=_("Lockwaits"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("lockwaits/sec")),
+                        Float(title=_("Critical at"), unit=_("lockwaits/sec")),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Instance"),
-                         help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="db2_counters",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_db2_counters,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_db2_counters,
+        title=lambda: _("DB2 Counters"),
+    ))

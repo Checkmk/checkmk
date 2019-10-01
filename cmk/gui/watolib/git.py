@@ -32,7 +32,7 @@ import subprocess
 import cmk.utils
 
 import cmk.gui.config as config
-from cmk.gui.globals import current_app
+from cmk.gui.globals import g
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
@@ -44,7 +44,7 @@ def add_message(message):
 
 def _git_messages():
     """Initializes the request global data structure and returns it"""
-    return current_app.g.setdefault("wato_git_messages", [])
+    return g.setdefault("wato_git_messages", [])
 
 
 def do_git_commit():
@@ -93,8 +93,8 @@ def _git_add_files():
 
 def _git_command(args):
     command = ["git"] + [a.encode("utf-8") for a in args]
-    logger.debug("GIT: Execute in %s: %s" %
-                 (cmk.utils.paths.default_config_dir, subprocess.list2cmdline(command)))
+    logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
+                 subprocess.list2cmdline(command))
     try:
         p = subprocess.Popen(command,
                              cwd=cmk.utils.paths.default_config_dir,
@@ -133,7 +133,7 @@ def _write_gitignore_files():
 
     Only files below the "wato" directories should be under git control. The files in
     etc/check_mk/*.mk should not be put under control."""
-    file(cmk.utils.paths.default_config_dir + "/.gitignore",
+    open(cmk.utils.paths.default_config_dir + "/.gitignore",
          "w").write("# This file is under control of Check_MK. Please don't modify it.\n"
                     "# Your changes will be overwritten.\n"
                     "\n"
@@ -145,10 +145,10 @@ def _write_gitignore_files():
 
     for subdir in os.listdir(cmk.utils.paths.default_config_dir):
         if subdir.endswith(".d"):
-            file(cmk.utils.paths.default_config_dir + "/" + subdir + "/.gitignore",
+            open(cmk.utils.paths.default_config_dir + "/" + subdir + "/.gitignore",
                  "w").write("*\n"
                             "!wato\n")
 
             if os.path.exists(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato"):
-                file(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato/.gitignore",
+                open(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato/.gitignore",
                      "w").write("!*\n")

@@ -39,7 +39,7 @@ def parse_postgres_dbs(info):
                 while True:
                     line = next(lines)
                     if line[0] == "[databases_end]":
-                        headers = lines.next()[1:]
+                        headers = next(lines)[1:]
                         break
                     else:
                         dbs["%s%s" % (inst_name, line[0])] = []

@@ -54,33 +54,9 @@ def check_netstat_generic(item, params, connections):
         if match:
             found += 1
 
-    infotext = "Found %d matching entries" % found
-    states = [0]
-    if params.get("min_states"):
-        min_warn, min_crit = params["min_states"]
-        if found < min_crit:
-            min_state = 2
-        elif found < min_warn:
-            min_state = 1
-        else:
-            min_state = 0
-        if min_state:
-            states.append(min_state)
-            infotext += " (warn/crit below %d/%d)" % (min_warn, min_crit)
-
-    if params.get("max_states"):
-        max_warn, max_crit = params["max_states"]
-        perfdata = [("connections", found, max_warn, max_crit)]
-        if found >= max_crit:
-            max_state = 2
-        elif found >= max_warn:
-            max_state = 1
-        else:
-            max_state = 0
-        if max_state:
-            states.append(max_state)
-            infotext += " (warn/crit at %d/%d)" % (max_warn, max_crit)
-    else:
-        perfdata = [("connections", found)]
-
-    yield max(states), infotext, perfdata
+    warn_lower, crit_lower = params.get("min_states", (None, None))
+    warn_upper, crit_upper = params.get("max_states", (None, None))
+    yield check_levels(found,
+                       "connections", (warn_upper, crit_upper, warn_lower, crit_lower),
+                       infoname="Matching entries found",
+                       human_readable_func=lambda x: "%d" % x)

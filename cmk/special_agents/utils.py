@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 """Place for common code shared among different Check_MK special agents"""
+from __future__ import print_function
 
 import abc
 import datetime
@@ -37,6 +38,7 @@ import time
 
 import requests
 from pathlib2 import Path
+import six
 
 import cmk.utils.store
 
@@ -98,7 +100,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
                 try:
                     pprint.pprint(json.loads(line))
                 except Exception:
-                    print line
+                    print(line)
         else:
             return content
 
@@ -111,9 +113,7 @@ def datetime_serializer(obj):
     raise TypeError("%r is not JSON serializable" % obj)
 
 
-class DataCache(object):
-    __metaclass__ = abc.ABCMeta
-
+class DataCache(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, cache_file_dir, cache_file_name, debug=False):
         self._cache_file_dir = Path(cache_file_dir)
         self._cache_file = self._cache_file_dir / ("%s.cache" % cache_file_name)

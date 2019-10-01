@@ -1,0 +1,31 @@
+Title: jolokia_jvm_memory: New check plugin
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.7.0i1
+Date: 1568893404
+Class: feature
+
+We introduce the new check plugin {{jolokia_jvm_memory}}. It replaces the old
+memory subcheck {{mem}} and the permanent generation subcheck {{perm_gen}}
+of the {{jolokia_metrics}} plugin.
+
+In addition it features monitoring of the JVM memory pools in general;
+including but not limited to "Code Cache", the legacy "Permanent Generation"
+and the newer "Metaspace" pool.
+
+If you are using the plugin {{mk_jolokia}}, you have to redeploy it in order
+to get the new services. If you are using the special agent {{agent_jolokia}}
+a rediscovery will suffice.
+
+The applicable rulesets are called "JVM memory levels" and "JVM memory pool levels".
+Note that rules that you have configured already will not be applied. Please revisit
+the WATO page to reconfigure those rules.
+Only values configured in percentage will be converted from your legacy rules -
+absolute levels for the remaining *free* space are no longer considered,
+as the maximum amount of available space may not be known.
+
+Note that the performance data belonging to the "JVM MyInstance Memory" service
+will be lost, even though the service name will not change.
+

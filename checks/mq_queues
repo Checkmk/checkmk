@@ -36,7 +36,7 @@
 # [[EDATA_SERIALNUMBERQUERY_INBOX]]
 # 0 0 0 0
 
-mq_queues_default_levels = {
+factory_settings["mq_queues_default_levels"] = {
     "size": (None, None),
     "consumerCount": (None, None),
 }
@@ -47,7 +47,7 @@ def inventory_mq_queues(info):
     for line in info:
         if line[0].startswith('[['):
             item = line[0][2:-2]
-            inventory.append((item, mq_queues_default_levels))
+            inventory.append((item, {}))
     return inventory
 
 
@@ -95,4 +95,5 @@ check_info["mq_queues"] = {
     "service_description": "Queue %s",
     "has_perfdata": True,
     "group": "mq_queues",
+    "default_levels_variable": "mq_queues_default_levels",
 }

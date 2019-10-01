@@ -39,48 +39,36 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersOracleRecoveryStatus(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_oracle_recovery_status():
+    return Dictionary(elements=[
+        ("levels",
+         Tuple(
+             title=_("Levels for checkpoint time"),
+             elements=[
+                 Age(title=_("warning if higher then"), default_value=1800),
+                 Age(title=_("critical if higher then"), default_value=3600),
+             ],
+         )),
+        ("backup_age",
+         Tuple(
+             title=_("Levels for user managed backup files"),
+             help=_("Important! This checks is only for monitoring of datafiles "
+                    "who were left in backup mode. "
+                    "(alter database datafile ... begin backup;) "),
+             elements=[
+                 Age(title=_("warning if higher then"), default_value=1800),
+                 Age(title=_("critical if higher then"), default_value=3600),
+             ],
+         ))
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "oracle_recovery_status"
 
-    @property
-    def title(self):
-        return _("Oracle Recovery Status")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ("levels",
-             Tuple(
-                 title=_("Levels for checkpoint time"),
-                 elements=[
-                     Age(title=_("warning if higher then"), default_value=1800),
-                     Age(title=_("critical if higher then"), default_value=3600),
-                 ],
-             )),
-            ("backup_age",
-             Tuple(
-                 title=_("Levels for user managed backup files"),
-                 help=_("Important! This checks is only for monitoring of datafiles "
-                        "who were left in backup mode. "
-                        "(alter database datafile ... begin backup;) "),
-                 elements=[
-                     Age(title=_("warning if higher then"), default_value=1800),
-                     Age(title=_("critical if higher then"), default_value=3600),
-                 ],
-             ))
-        ],)
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="oracle_recovery_status",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_oracle_recovery_status,
+        title=lambda: _("Oracle Recovery Status"),
+    ))

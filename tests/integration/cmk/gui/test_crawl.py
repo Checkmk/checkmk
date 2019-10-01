@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
+from __future__ import division
 import errno
 import os
 import sys
 import time
 import pprint
-import pytest
 import signal
 import threading
 import Queue
@@ -14,6 +15,7 @@ import traceback
 from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
 from urllib import urlencode
 from bs4 import BeautifulSoup
+import pytest
 from testlib import web
 
 from testlib import CMKWebSession
@@ -90,7 +92,7 @@ class Worker(threading.Thread):
             response = self.client.get(url.url_without_host())
         except AssertionError as e:
             if "This view can only be used in mobile mode" in "%s" % e:
-                print "Skipping mobile mode view checking"
+                print("Skipping mobile mode view checking")
                 return
             else:
                 raise
@@ -214,7 +216,7 @@ class Worker(threading.Thread):
                     self.crawler.handled.add(url)
 
             if crawl_it:
-                #file("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
+                #open("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
                 self.crawler.todo.put(Url(url, orig_url=orig_url, referer_url=referer_url.url))
 
     def verify_is_valid_url(self, url):
@@ -328,7 +330,7 @@ class TestCrawler(object):
 
     def load_stats(self):
         try:
-            self.stats = eval(file(self.stats_file()).read())
+            self.stats = eval(open(self.stats_file()).read())
         except IOError as e:
             if e.errno == errno.ENOENT:
                 pass  # Not existing files are OK
@@ -336,7 +338,7 @@ class TestCrawler(object):
                 raise
 
     def save_stats(self):
-        file(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
+        open(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
         os.rename(self.stats_file() + ".tmp", self.stats_file())
 
     def update_total_stats(self, finished):
@@ -361,7 +363,7 @@ class TestCrawler(object):
             stats["last_finished_errors"] = stats["last_errors"]
 
     def report(self):
-        with file(self.report_file() + ".tmp", "w") as f:
+        with open(self.report_file() + ".tmp", "w") as f:
             f.write("Skipped URLs:\n")
             for skipped_url in sorted(self.skipped):
                 f.write("  %s\n" % skipped_url)
@@ -414,10 +416,11 @@ class TestCrawler(object):
                 duration = max(now - start, 1)
                 num_visited = len(self.visited)
                 num_idle = len([w for w in workers if w.idle])
-                rate_runtime = num_visited / duration
+                rate_runtime = num_visited / duration  # fixed: true-division
 
                 if now > last_tick and num_visited > last_num_visited:
-                    rate_tick = (num_visited - last_num_visited) / (now - last_tick)
+                    rate_tick = (num_visited - last_num_visited) / (now - last_tick
+                                                                   )  # fixed: true-division
                 else:
                     rate_tick = 0
 
@@ -438,7 +441,7 @@ class TestCrawler(object):
         except KeyboardInterrupt:
             for t in workers:
                 t.stop()
-            print "Waiting for workers to finish..."
+            print("Waiting for workers to finish...")
         finally:
             self.update_total_stats(finished)
             self.save_stats()

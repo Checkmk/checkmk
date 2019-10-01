@@ -42,7 +42,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.plugins.wato import WatoBackgroundJob
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 DiscoveryHost = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
                                              ("host_name", str)])
@@ -98,10 +98,11 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                  orientation="vertical",
                  default_value="new",
                  choices=[
-                     ("new", _("Add unmonitored services")),
+                     ("new", _("Add unmonitored services and new host labels")),
                      ("remove", _("Remove vanished services")),
-                     ("fixall", _("Add unmonitored & remove vanished services")),
-                     ("refresh", _("Refresh all services (tabula rasa)")),
+                     ("fixall",
+                      _("Add unmonitored services and new host labels, remove vanished services")),
+                     ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
                  ],
              )),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
@@ -152,11 +153,14 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
         job_interface.send_progress_update(
-            _("Hosts: %d total, %d succeeded, %d skipped, %d failed") %
+            _("Hosts: %d total (%d succeeded, %d skipped, %d failed)") %
             (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped,
              self._num_hosts_failed))
         job_interface.send_progress_update(
-            _("Services: %d total, %d added, %d removed, %d kept") %
+            _("Host labels: %d total (%d added)") %
+            (self._num_host_labels_total, self._num_host_labels_added))
+        job_interface.send_progress_update(
+            _("Services: %d total (%d added, %d removed, %d kept)") %
             (self._num_services_total, self._num_services_added, self._num_services_removed,
              self._num_services_kept))
 
@@ -171,6 +175,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_services_removed = 0
         self._num_services_kept = 0
         self._num_services_total = 0
+        self._num_host_labels_total = 0
+        self._num_host_labels_added = 0
 
     def _bulk_discover_item(self, task, mode, use_cache, do_scan, error_handling, job_interface):
         self._num_hosts_total += len(task.host_names)
@@ -225,6 +231,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_services_removed += host_counts[1]
         self._num_services_kept += host_counts[2]
         self._num_services_total += host_counts[3]
+        if len(host_counts) > 5:  # Added in 1.6b
+            self._num_host_labels_added += host_counts[4]
+            self._num_host_labels_total += host_counts[5]
 
     def _process_discovery_result_for_host(self, host, failed_reason, host_counts):
         if failed_reason is None:
@@ -242,7 +251,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         add_service_change(
             host, "bulk-discovery",
             _("Did service discovery on host %s: %d added, %d removed, %d kept, "
-              "%d total services") % tuple([host.name()] + host_counts))
+              "%d total services and %d host labels added, %d host labels total") %
+            tuple([host.name()] + host_counts))
 
         if not host.locked():
             host.clear_discovery_failed()

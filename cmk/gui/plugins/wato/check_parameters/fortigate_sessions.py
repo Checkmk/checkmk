@@ -44,20 +44,10 @@ def fortigate_sessions_element():
     )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersFortigateSessions(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersNetworking
-
-    @property
-    def check_group_name(self):
-        return "fortigate_sessions"
-
-    @property
-    def title(self):
-        return _("Fortigate Active Sessions")
-
-    @property
-    def parameter_valuespec(self):
-        return fortigate_sessions_element()
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="fortigate_sessions",
+        group=RulespecGroupCheckParametersNetworking,
+        parameter_valuespec=fortigate_sessions_element,
+        title=lambda: _("Fortigate Active Sessions"),
+    ))

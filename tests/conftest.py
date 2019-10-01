@@ -3,14 +3,14 @@
 
 from __future__ import print_function
 
-import pytest
+import pytest  # type: ignore
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
     "unit.checks.generictests.run")
 
-import _pytest.monkeypatch
+import _pytest.monkeypatch  # type: ignore
 import re
 import collections
 import errno
@@ -19,10 +19,7 @@ import pwd
 import shutil
 import sys
 import tempfile
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib2 import Path
 import testlib
 
 #
@@ -42,9 +39,11 @@ test_types = collections.OrderedDict([
     ("unit", EXECUTE_IN_VENV),
     ("pylint", EXECUTE_IN_VENV),
     ("docker", EXECUTE_IN_VENV),
+    ("agent-integration", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl", EXECUTE_IN_SITE),
     ("packaging", EXECUTE_IN_VENV),
+    ("composition", EXECUTE_IN_VENV),
 ])
 
 
@@ -88,8 +87,12 @@ def pytest_collection_modifyitems(items):
             ty = "pylint"
         elif "tests/docker" in file_path:
             ty = "docker"
+        elif "tests/agent-integration" in file_path:
+            ty = "agent-integration"
         elif "tests/integration" in file_path:
             ty = "integration"
+        elif "tests/composition" in file_path:
+            ty = "composition"
         else:
             raise Exception("Test not TYPE marked: %r" % item)
 
@@ -115,8 +118,9 @@ def fake_version_and_paths():
     import cmk
     monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
 
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", "%s/notifications" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
@@ -129,10 +133,13 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "tmp/check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
                         os.path.join(tmp_dir, "etc/check_mk/conf.d"))
+    monkeypatch.setattr("cmk.utils.paths.main_config_file",
+                        os.path.join(tmp_dir, "etc/check_mk/main.mk"))
     monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
     monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
                         Path(tmp_dir) / "var/check_mk/piggyback_sources")
+    monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
 
 
 # Cleanup temporary directory created above

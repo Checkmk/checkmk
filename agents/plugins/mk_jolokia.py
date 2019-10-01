@@ -31,10 +31,10 @@ import urllib2
 
 try:
     try:
-        from simplejson import json
+        import simplejson as json
     except ImportError:
         import json
-except ImportError as import_error:
+except ImportError, import_error:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
         "Error: mk_jolokia requires either the json or simplejson library."
@@ -46,7 +46,7 @@ try:
     import requests
     from requests.auth import HTTPDigestAuth
     from requests.packages import urllib3
-except ImportError as import_error:
+except ImportError, import_error:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
                      " Please install it on the monitored system.\n")
@@ -57,6 +57,10 @@ DEBUG = sys.argv.count('--debug')
 
 MBEAN_SECTIONS = {
     'jvm_threading': ("java.lang:type=Threading",),
+    'jvm_memory': (
+        "java.lang:type=Memory",
+        "java.lang:name=*,type=MemoryPool",
+    ),
 }
 
 MBEAN_SECTIONS_SPECIFIC = {
@@ -67,15 +71,9 @@ MBEAN_SECTIONS_SPECIFIC = {
 }
 
 QUERY_SPECS_LEGACY = [
-    ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
-    ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
-    ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
-    ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
     ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
     ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
     ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [], False),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
      "", [], True),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
@@ -262,6 +260,7 @@ class JolokiaInstance(object):
 
         self.base_url = self._get_base_url()
         self.target = self._get_target()
+        self.post_config = {"ignoreErrors": "true"}
         self._session = self._initialize_http_session()
 
     def _get_base_url(self):
@@ -287,6 +286,8 @@ class JolokiaInstance(object):
 
     def _initialize_http_session(self):
         session = requests.Session()
+        # Watch out: we must provide the verify keyword to every individual request call!
+        # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
@@ -325,6 +326,7 @@ class JolokiaInstance(object):
         data["type"] = function
         if use_target and self.target:
             data["target"] = self.target
+        data["config"] = self.post_config
         return data
 
     def post(self, data):
@@ -332,7 +334,13 @@ class JolokiaInstance(object):
         if VERBOSE:
             sys.stderr.write("\nDEBUG: POST data: %r\n" % post_data)
         try:
-            raw_response = self._session.post(self.base_url, data=post_data)
+            # Watch out: we must provide the verify keyword to every individual request call!
+            # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
+            raw_response = self._session.post(self.base_url,
+                                              data=post_data,
+                                              verify=self._session.verify)
+        except () if DEBUG else requests.exceptions.ConnectionError:
+            raise SkipInstance("Cannot connect to server at %s" % self.base_url)
         except () if DEBUG else Exception as exc:
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
@@ -461,7 +469,11 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, "search", mbean)
+    try:
+        value = fetch_var(inst, "search", mbean)
+    except () if DEBUG else SkipMBean:
+        return []
+
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -504,7 +516,7 @@ def generate_jolokia_info(inst):
     # Determine type of server
     try:
         data = fetch_var(inst, "version", "")
-    except (SkipInstance, SkipMBean) as exc:
+    except (SkipInstance, SkipMBean), exc:
         yield inst.name, "ERROR", str(exc)
         raise SkipInstance(exc)
 
@@ -553,7 +565,7 @@ def yield_configured_instances(custom_config=None):
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
-        execfile(conffile, {}, custom_config)
+        exec (open(conffile).read(), {}, custom_config)
 
     # Generate list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list of dicts).

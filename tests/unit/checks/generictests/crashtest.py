@@ -30,18 +30,22 @@ append new files)
 Note that this will only work, if the crash report contains the
 local variables 'parsed' or 'info'.
 """
+from __future__ import print_function
 import base64
 import json
-import os
 import tarfile
-import pytest
 import pprint
+import pytest
+from pathlib2 import Path
 
 import generictests
 from generictests.regression import WritableDataset
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
+
+#FIXME automatic download crashreports to ~git/zeug_cmk/crashreports/crashdata
+CRASHDATA_DIR = Path.home() / "crashdata"
 
 
 class SkipReport(RuntimeError):
@@ -74,9 +78,6 @@ class CrashDataset(WritableDataset):
             full_checkname = self._find_checkname_from_traceback(traceback)
             if not full_checkname:
                 raise SkipReport("found no check plugin from traceback")
-            self.is_discovery = True
-        else:
-            self.is_discovery = False
 
         self.full_checkname = full_checkname
         checkname = self.full_checkname.split('.', 1)[0]
@@ -104,9 +105,8 @@ class CrashDataset(WritableDataset):
         init_dict['parsed'] = local_vars.get('parsed')
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
-        self.crash_id = crash_report_fn[-20:-7]
-        filepath = '/tmp/%s_%s.py' % (checkname, self.crash_id)
-        super(CrashDataset, self).__init__(filepath, init_dict)
+        self.crash_id = crash_report_fn.split("/")[-1].replace(".gz", "").replace(".tar", "")
+        super(CrashDataset, self).__init__('%s_%s.py' % (checkname, self.crash_id), init_dict)
 
     def _find_checkname_from_traceback(self, traceback):
         for line in traceback[::-1]:
@@ -119,48 +119,46 @@ class CrashDataset(WritableDataset):
 
 
 class CrashReportList(list):
-    def __init__(self, statefile):
-        self.statefile = statefile
-        with open(self.statefile) as file_:
-            lines = [l.strip() for l in file_.read().splitlines() if l.strip()]
-        words = (line.split() for line in lines)
-        self.state_info = [w + ([''] * max(2, 2 - len(w))) for w in words]
-        self.dir = os.path.abspath(os.path.dirname(statefile))
-        super(CrashReportList, self).__init__(self.load())
+    """Save crash reports below $HOME/crashdata.
+    Use update_crashes.py in order to read new crash reports and list them in the state file.
+    Crash reports are read from state_file in order to speed up generic crash report tests"""
+    def __init__(self, state_file):
+        self.state_file = state_file
+        with open(self.state_file) as file_:
+            # A line contains: ID STATE AMOUNT I N F O
+            lines = [line.strip().split() for line in file_.readlines()]
 
-    def _iter_applicable_crashes(self):
-        for item in self.state_info:
-            if item[1] == 'SKIP':
-                continue
-            crash_report_fn = os.path.join(self.dir, item[0])
-            try:
-                yield CrashDataset(crash_report_fn)
-            except SkipReport as exc:
-                item[1] = 'SKIP %s (%s)' % (item[2], exc)
+        self.state_info = [[l[0], l[1], l[2], " ".join(l[3:])] for l in lines if l]
+        super(CrashReportList, self).__init__(self.load())
 
     def load(self):
         try:
             for crashdata in self._iter_applicable_crashes():
                 yield crashdata
         finally:
-            with open(self.statefile, 'w') as file_:
-                lines = (' '.join(words).strip() for words in self.state_info)
-                file_.write('\n'.join(lines))
+            with open(self.state_file, 'w') as file_:
+                file_.write('\n'.join([" ".join(line).strip() for line in self.state_info]))
+
+    def _iter_applicable_crashes(self):
+        for cr_info in self.state_info:
+            if cr_info[1] == 'SKIP':
+                continue
+
+            crash_report_path = CRASHDATA_DIR / Path("%s.tar.gz" % cr_info[0])
+            if not crash_report_path.exists():  # pylint: disable=no-member
+                continue
+
+            try:
+                yield CrashDataset(str(crash_report_path))
+            except SkipReport as exc:
+                cr_info[1] = 'SKIP'
+                cr_info[3] = 'Exception: %s' % exc
 
 
 def test_crashreport(check_manager, crashdata):
     try:
         generictests.run(check_manager, crashdata)
         check = check_manager.get_check(crashdata.full_checkname)
-        #FIXME
-        #if crashdata.is_discovery:
-        #    if crashdata.parsed:
-        #        raw_result = check.run_discovery(crashdata.parsed)
-        #    else:
-        #        raw_result = check.run_discovery(crashdata.info)
-        #    print(DiscoveryResult(raw_result))
-        #    return
-
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']
             params = crashdata.vars.get('params', {})
@@ -171,5 +169,5 @@ def test_crashreport(check_manager, crashdata):
             print(CheckResult(raw_result))
     except:
         pprint.pprint(crashdata.__dict__)
-        crashdata.write()
+        crashdata.write('/tmp')
         raise

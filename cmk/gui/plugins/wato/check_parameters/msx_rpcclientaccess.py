@@ -39,43 +39,34 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMsxRpcclientaccess(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_msx_rpcclientaccess():
+    return Dictionary(
+        title=_("Set Levels"),
+        elements=[('latency',
+                   Tuple(
+                       title=_("Average latency for RPC requests"),
+                       elements=[
+                           Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
+                           Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
+                       ],
+                   )),
+                  ('requests',
+                   Tuple(
+                       title=_("Maximum number of RPC requests per second"),
+                       elements=[
+                           Integer(title=_("Warning at"), unit=_('requests'), default_value=30),
+                           Integer(title=_("Critical at"), unit=_('requests'), default_value=40)
+                       ],
+                   ))],
+        optional_keys=[],
+    )
 
-    @property
-    def check_group_name(self):
-        return "msx_rpcclientaccess"
 
-    @property
-    def title(self):
-        return _("MS Exchange RPC Client Access")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("Set Levels"),
-            elements=[('latency',
-                       Tuple(
-                           title=_("Average latency for RPC requests"),
-                           elements=[
-                               Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
-                               Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
-                           ],
-                       )),
-                      ('requests',
-                       Tuple(
-                           title=_("Maximum number of RPC requests per second"),
-                           elements=[
-                               Integer(title=_("Warning at"), unit=_('requests'), default_value=30),
-                               Integer(title=_("Critical at"), unit=_('requests'), default_value=40)
-                           ],
-                       ))],
-            optional_keys=[],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="msx_rpcclientaccess",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_msx_rpcclientaccess,
+        title=lambda: _("MS Exchange RPC Client Access"),
+    ))

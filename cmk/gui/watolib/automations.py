@@ -186,7 +186,7 @@ def sync_changes_before_remote_automation(site_id):
     if not manager.is_sync_needed(site_id):
         return
 
-    logger.info("Syncing %s" % site_id)
+    logger.info("Syncing %s", site_id)
 
     manager.start([site_id], activate_foreign=True, prevent_activate=True)
 
@@ -198,9 +198,8 @@ def sync_changes_before_remote_automation(site_id):
 
     state = manager.get_site_state(site_id)
     if state and state["_state"] != "success":
-        logger.error(
-            _("Remote automation tried to sync pending changes but failed: %s") %
-            state.get("_status_details"))
+        logger.error(_("Remote automation tried to sync pending changes but failed: %s"),
+                     state.get("_status_details"))
 
 
 # This hook is executed when one applies the pending configuration changes
@@ -289,6 +288,10 @@ def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
+def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
+    return get_url_raw(url, insecure, auth, data, files, timeout).json()
+
+
 def do_site_login(site_id, name, password):
     sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]
@@ -321,6 +324,14 @@ def do_site_login(site_id, name, password):
         raise MKAutomationException(_("Empty response from web service"))
     else:
         try:
-            return ast.literal_eval(response)
+            eval_response = ast.literal_eval(response)
         except SyntaxError:
             raise MKAutomationException(response)
+        if isinstance(eval_response, dict):
+            if cmk.is_managed_edition() and eval_response["edition_short"] != "cme":
+                raise MKUserError(
+                    None,
+                    _("The Check_MK Managed Services Edition can only "
+                      "be connected with other sites using the CME."))
+            return eval_response["login_secret"]
+        return eval_response

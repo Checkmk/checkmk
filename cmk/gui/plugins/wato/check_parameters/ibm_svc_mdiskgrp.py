@@ -40,45 +40,33 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersIbmSvcMdiskgrp(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
+def _parameter_valuespec_ibm_svc_mdiskgrp():
+    return Dictionary(
+        elements=filesystem_elements + [
+            ("provisioning_levels",
+             Tuple(
+                 title=_("Provisioning Levels"),
+                 help=_("A provisioning of over 100% means over provisioning."),
+                 elements=[
+                     Percentage(title=_("Warning at a provisioning of"),
+                                default_value=110.0,
+                                maxvalue=None),
+                     Percentage(title=_("Critical at a provisioning of"),
+                                default_value=120.0,
+                                maxvalue=None),
+                 ],
+             )),
+        ],
+        hidden_keys=["flex_levels"],
+    )
 
-    @property
-    def check_group_name(self):
-        return "ibm_svc_mdiskgrp"
 
-    @property
-    def title(self):
-        return _("IBM SVC Pool Capacity")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            elements=filesystem_elements + [
-                ("provisioning_levels",
-                 Tuple(
-                     title=_("Provisioning Levels"),
-                     help=_("A provisioning of over 100% means over provisioning."),
-                     elements=[
-                         Percentage(title=_("Warning at a provisioning of"),
-                                    default_value=110.0,
-                                    maxvalue=None),
-                         Percentage(title=_("Critical at a provisioning of"),
-                                    default_value=120.0,
-                                    maxvalue=None),
-                     ],
-                 )),
-            ],
-            hidden_keys=["flex_levels"],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Name of the pool"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ibm_svc_mdiskgrp",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Name of the pool"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_ibm_svc_mdiskgrp,
+        title=lambda: _("IBM SVC Pool Capacity"),
+    ))

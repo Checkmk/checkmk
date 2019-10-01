@@ -27,8 +27,10 @@
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _
+
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+
 from cmk.gui.log import logger
 
 from cmk.gui.plugins.views.perfometers import (
@@ -88,9 +90,8 @@ class Perfometer(object):
             return None, None
 
         # Legacy Perf-O-Meters: find matching Perf-O-Meter function
-        logger.info("Legacy perfometer rendered for %s / %s / %s" % \
-             (self._row["host_name"], self._row["service_description"],
-              self._row["service_check_command"]))
+        logger.info("Legacy perfometer rendered for %s / %s / %s", self._row["host_name"],
+                    self._row["service_description"], self._row["service_check_command"])
         return self._render_legacy_perfometer()
 
     def _render_metrics_perfometer(self):
@@ -249,7 +250,7 @@ class PainterPerfometer(Painter):
             if title is None and h is None:
                 return "", ""
         except Exception as e:
-            logger.exception()
+            logger.exception("error rendering performeter")
             if config.debug:
                 raise
             return " ".join(classes), _("Exception: %s") % e
@@ -297,9 +298,9 @@ class SorterPerfometer(Sorter):
         try:
             p1 = Perfometer(r1)
             p2 = Perfometer(r2)
-            return cmp(p1.sort_value(), p2.sort_value())
+            return (p1.sort_value() > p2.sort_value()) - (p1.sort_value() < p2.sort_value())
         except Exception:
-            logger.exception()
+            logger.exception("error sorting perfometer values")
             if config.debug:
                 raise
             return 0

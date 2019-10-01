@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import six
+
 import cmk.gui.views as views
 import cmk.gui.config as config
 import cmk.gui.visuals as visuals
@@ -157,7 +159,7 @@ def jqm_page_navfooter(items, current, page_id):
 def jqm_page_index(title, items):
     manual_sort = [_("Hosts"), _("Services"), _("Events")]
 
-    items.sort(cmp=lambda a, b: cmp((a[0], a[2]), (b[0], b[2])))
+    items.sort(key=lambda x: (x[0], x[2]))
     for topic in manual_sort:
         jqm_page_index_topic_renderer(topic, items)
 
@@ -292,7 +294,7 @@ def page_view():
         view_renderer = MobileViewRenderer(view)
         views.show_view(view, view_renderer)
     except Exception as e:
-        logger.exception()
+        logger.exception("error showing mobile view")
         if config.debug:
             raise
         html.write("ERROR showing view: %s" % html.attrencode(e))
@@ -367,7 +369,7 @@ class MobileViewRenderer(views.ViewRenderer):
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:
-                    logger.exception()
+                    logger.exception("error rendering mobile view")
                     html.write(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, 'data', page_id)
@@ -454,7 +456,7 @@ def do_commands(view, what, rows):
         nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
             if command not in already_executed:
-                if isinstance(command, unicode):
+                if isinstance(command, six.text_type):
                     command = command.encode("utf-8")
                 executor(command, row["site"])
                 already_executed.add(command)

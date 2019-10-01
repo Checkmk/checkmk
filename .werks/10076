@@ -1,0 +1,10 @@
+Title: check_traceroute: Fixed IP address error while doing the check
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568723275
+Class: fix
+
+When running the check the result always returned an error message, that the IP address cannot handle the commandline.

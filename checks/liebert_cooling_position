@@ -34,28 +34,14 @@ factory_settings['liebert_cooling_position_default_levels'] = {
 }
 
 
-def inventory_liebert_cooling_position(parsed):
-    for key, values in parsed.iteritems():
-        if key.startswith("Free Cooling") and not "Unavailable" in values[0]:
-            yield (key, {})
-
-
-def check_liebert_cooling_position(item, params, parsed):
-    for values in parsed.itervalues():
-        if not "Unavailable" in values[0]:
-            value = float(values[0])
-            unit = values[1]
-            warn, crit = params['levels']
-            yield 0, "%s%s" % (value, unit), [('filehandler_perc', value, warn, crit)]
-
-            state = levels_liebert(value, warn, crit, 'higher')
-            if state > 0:
-                yield state, "(warn/crit below %s%s/%s%s)" % (warn, unit, crit, unit)
+@get_parsed_item_data
+def check_liebert_cooling_position(item, params, data):
+    yield check_levels(data[0], 'filehandler_perc', params['levels'], unit=data[1])
 
 
 check_info['liebert_cooling_position'] = {
     'parse_function': parse_liebert,
-    'inventory_function': inventory_liebert_cooling_position,
+    'inventory_function': discover(lambda key, _value: key.startswith("Free Cooling")),
     'check_function': check_liebert_cooling_position,
     'service_description': '%s',
     'snmp_info': (

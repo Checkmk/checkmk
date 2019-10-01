@@ -13,6 +13,6 @@ if not "%errorlevel%" == "0"  powershell Write-Host "Failed Enable 'LEGACY' Agen
 powershell Write-Host "'Legacy' Agent Service starting..." -Foreground Cyan
 net start %lwa% 2> nul > nul
 if "%errorlevel%" == "2"  powershell Write-Host "'Legacy' Agent Service already started" -Foreground Green && set errorlevel=0 && goto end
-if not "%errorlevel%" == "0"  powershell Write-Host "Failed Start 'Legacy' Agent Service, Error=[%errorlevel%]" -Foreground Red && exit 1
+if not "%errorlevel%" == "0"  powershell Write-Host "Failed Start 'Legacy' Agent Service, Error=[%errorlevel%]" -Foreground Red && exit /b 1
 powershell Write-Host "'Legacy' Agent Service started successfully" -Foreground Green
 :end

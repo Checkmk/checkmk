@@ -40,27 +40,9 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersNetappDisks(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "netapp_disks"
-
-    @property
-    def title(self):
-        return _("Filer Disk Levels (NetApp, IBM SVC)")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(Dictionary(elements=[
+def _parameter_valuespec_netapp_disks():
+    return Transform(
+        Dictionary(elements=[
             ("failed_spare_ratio",
              Tuple(
                  title=_("Failed to spare ratio"),
@@ -86,10 +68,21 @@ class RulespecCheckgroupParametersNetappDisks(CheckParameterRulespecWithoutItem)
                  title=_("Number of spare disks"),
                  help=_("You can set a lower limit to the absolute number of spare disks."),
                  elements=[
-                     Integer(title=_("Warning below"), default_value=2, min_value=0),
-                     Integer(title=_("Critical below"), default_value=1, min_value=0),
+                     Integer(title=_("Warning below"), default_value=2, minvalue=0),
+                     Integer(title=_("Critical below"), default_value=1, minvalue=0),
                  ],
              )),
         ],),
-                         forth=lambda a: "broken_spare_ratio" in a and
-                         {"failed_spare_ratio": a["broken_spare_ratio"]} or a)
+        forth=lambda a: "broken_spare_ratio" in a and
+        {"failed_spare_ratio": a["broken_spare_ratio"]} or a,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="netapp_disks",
+        group=RulespecGroupCheckParametersStorage,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_netapp_disks,
+        title=lambda: _("Filer Disk Levels (NetApp, IBM SVC)"),
+    ))

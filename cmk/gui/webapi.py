@@ -154,7 +154,7 @@ def page_api():
     except Exception as e:
         if config.debug:
             raise
-        logger.exception()
+        logger.exception("error handling web API call")
         response = {
             "result_code": 1,
             "result": _("Unhandled exception: %s") % traceback.format_exc(),

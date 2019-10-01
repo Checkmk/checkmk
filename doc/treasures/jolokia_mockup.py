@@ -27,6 +27,7 @@
 # small mock server simulating a jolokia server. Not very sophisticated
 # but enough to get several checks to display something
 
+from __future__ import print_function
 import SocketServer
 import SimpleHTTPServer
 import urlparse

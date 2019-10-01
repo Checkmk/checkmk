@@ -1,11 +1,15 @@
 Title: ps: only show processes which do not belong to a docker container
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
+State: unknown
 Version: 1.7.0i1
 Date: 1558598280
-Class: fix
+
+<b>Note:</b> This Werk is no longer up to date. Please refer to Werk #7958
+for the new behaviour.
 
 On hosts which run Docker the ps section contained processes which belong
 to Docker containers. This Werk omits these container processes and only

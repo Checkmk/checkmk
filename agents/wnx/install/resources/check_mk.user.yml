@@ -6,9 +6,8 @@
 # Copyright Mathias Kettner GmbH
 # ********************************
 
-# version 10011
-
-# section global must be presented
+# The Agent will accept YML-File as a valid configuration file
+# only when the section global is presented
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
 # $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
@@ -56,7 +55,7 @@ global:
     # source adresses in their ipv6-mapped form. I.e. if
     # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
     # are also possible
-    only_from: # 127.0.0.1 192.168.56.0/24 ::1
+    _only_from: # 127.0.0.1 192.168.56.0/24 ::1
 
     # Change port where the agent is listening ( default 6556 )
     # port: 6556
@@ -179,10 +178,10 @@ winperf:
         #- 638: tcp_conn
         #- Terminal Services: ts_sessions
 
-logfiles:
+_logfiles:
     enabled: no
-    ## Define textfiles to be monitored
-    ## This section is not supported, please use mk_logwatch plugin
+    # We do not support logfiles monitoring in agent at the moment
+    # Please, use plugin mk_logwatch
 
 fileinfo:
     # enabled: yes
@@ -297,6 +296,9 @@ mrpe:
 
     # entries and cfg are the same as in the Legacy agent
     config:
+        # *Relative* path are supported for checks and includes
+        # Path below is equal to '$CUSTOM_AGENT_PATH$\plugins\your_check.com'
+        # - check = Console 'plugins\your_check.com' CON CP /STATUS
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg

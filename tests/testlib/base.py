@@ -1,4 +1,5 @@
 import cmk_base.config as config
+import cmk_base.autochecks as autochecks
 import cmk.utils.tags
 
 
@@ -98,8 +99,8 @@ class Scenario(object):
         self.config[varname] = ruleset
         return self
 
-    def set_autochecks(self, hostname, autochecks):
-        self._autochecks[hostname] = autochecks
+    def set_autochecks(self, hostname, services):
+        self._autochecks[hostname] = services
 
     def apply(self, monkeypatch):
         for key, value in self.config.items():
@@ -108,6 +109,13 @@ class Scenario(object):
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
 
-        monkeypatch.setattr(self.config_cache._autochecks_manager, "_autochecks", self._autochecks)
+        if self._autochecks:
+            monkeypatch.setattr(self.config_cache._autochecks_manager,
+                                "_raw_autochecks",
+                                {e[0]: e[1] for e in self._autochecks.iteritems()},
+                                raising=False)
+
+            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_of",
+                                lambda self, hostname: self._raw_autochecks.get(hostname, []))
 
         return self.config_cache

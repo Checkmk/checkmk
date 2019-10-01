@@ -28,12 +28,13 @@
 # Rewrites existing logfiles for CMC. You can concatenate several
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
+import logging
 
 from cmk.utils.exceptions import MKBailOut
-
-import cmk.utils.log
+from cmk.utils.log import VERBOSE
 import cmk.utils.debug
-logger = cmk.utils.log.get_logger(__name__)
+
+logger = logging.getLogger("cmk.base.compress_history")
 
 
 def do_compress_history(args):
@@ -42,7 +43,7 @@ def do_compress_history(args):
 
     for filename in args:
         try:
-            logger.verbose("%s...", filename)
+            logger.log(VERBOSE, "%s...", filename)
             compress_history_file(filename, filename + ".compressed")
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -54,8 +55,8 @@ def compress_history_file(input_path, output_path):
     known_services = {}
     machine_state = "START"
 
-    output = file(output_path, "w")
-    for line in file(input_path):
+    output = open(output_path, "w")
+    for line in open(input_path):
         skip_this_line = False
         timestamp = int(line[1:11])
         line_type, host, service = parse_history_line(line)

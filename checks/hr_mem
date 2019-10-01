@@ -99,7 +99,7 @@ def check_hr_mem(_no_item, params, parsed):
                     ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb)]
 
         infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
-               (totalused_mb / 1024.0, ramused_mb / 1024, virtused_mb / 1024, totalused_perc, totalram_mb / 1024.0)
+               (totalused_mb / 1024.0, ramused_mb / 1024.0, virtused_mb / 1024.0, totalused_perc, totalram_mb / 1024.0)
 
         warn, crit = params
         if isinstance(warn, float):

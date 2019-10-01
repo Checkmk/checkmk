@@ -37,30 +37,21 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSolarisServicesSummary(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_solaris_services_summary():
+    return Dictionary(elements=[
+        ('maintenance_state',
+         MonitoringState(
+             title=_("State if 'maintenance' services are found"),
+             default_value=0,
+         )),
+    ],)
 
-    @property
-    def check_group_name(self):
-        return "solaris_services_summary"
 
-    @property
-    def title(self):
-        return _("Solaris Services Summary")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            ('maintenance_state',
-             MonitoringState(
-                 title=_("State if 'maintenance' services are found"),
-                 default_value=0,
-             )),
-        ],)
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="solaris_services_summary",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_solaris_services_summary,
+        title=lambda: _("Solaris Services Summary"),
+    ))

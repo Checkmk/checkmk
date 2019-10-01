@@ -26,6 +26,7 @@
 
 # TODO: Rework connection management and multiplexing
 
+from typing import Any, Callable, Dict, List, Optional, Tuple  # pylint: disable=unused-import
 import time
 import os
 import traceback
@@ -52,39 +53,25 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 
-from cmk.gui.plugins.userdb.utils import (
-    user_attribute_registry,
+from cmk.gui.plugins.userdb.utils import (  # pylint: disable=unused-import
+    user_attribute_registry,  #
+    get_user_attributes,  #
+    UserConnector,  #
     user_connector_registry,
 )
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 
-# Custom user attributes
-user_attributes = {}
-builtin_user_attribute_names = []
-
-# Connection configuration
-connection_dict = {}
-# Connection object dictionary
-g_connections = {}
 auth_logger = logger.getChild("auth")
 
 
 # Load all userdb plugins
 def load_plugins(force):
-    connection_dict.clear()
-    for connection in config.user_connections:
-        connection_dict[connection['id']] = connection
-
-    # Cleanup eventual still open connections
-    if g_connections:
-        g_connections.clear()
-
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -97,60 +84,84 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-# Cleans up at the end of a request: Cleanup eventual open connections
-def finalize():
-    if g_connections:
-        g_connections.clear()
-
-
-# Returns a list of two part tuples where the first element is the unique
-# connection id and the second element the connector specification dict
-def get_connections(only_enabled=False):
-    connections = []
-    for connector_id, connector_class in user_connector_registry.items():
-        if connector_id == 'htpasswd':
-            # htpasswd connector is enabled by default and always executed first
-            connections.insert(0, ('htpasswd', connector_class({})))
-        else:
-            for connection_config in config.user_connections:
-                if only_enabled and connection_config.get('disabled'):
-                    continue
-
-                connection = connector_class(connection_config)
-
-                if only_enabled and not connection.is_enabled():
-                    continue
-
-                connections.append((connection_config['id'], connection))
-    return connections
+def _all_connections():
+    # type: () -> List[Tuple[str, UserConnector]]
+    return _get_connections_for(_get_connection_configs())
 
 
 def active_connections():
-    return get_connections(only_enabled=True)
+    # type: () -> List[Tuple[str, UserConnector]]
+    enabled_configs = [
+        cfg  #
+        for cfg in _get_connection_configs()
+        if not cfg['disabled']
+    ]
+    return [
+        (connection_id, connection)  #
+        for connection_id, connection in _get_connections_for(enabled_configs)
+        if connection.is_enabled()
+    ]
+
+
+def _get_connections_for(configs):
+    # type: (List[Dict[str, Any]]) -> List[Tuple[str, UserConnector]]
+    return [(cfg['id'], user_connector_registry[cfg['type']](cfg)) for cfg in configs]
+
+
+def _get_connection_configs():
+    # type: () -> List[Dict[str, Any]]
+    # The htpasswd connector is enabled by default and always executed first.
+    return [_HTPASSWD_CONNECTION] + config.user_connections
+
+
+_HTPASSWD_CONNECTION = {
+    'type': 'htpasswd',
+    'id': 'htpasswd',
+    'disabled': False,
+}
+
+
+# The saved configuration for user connections is a bit inconsistent, let's fix
+# this here once and for all.
+def _fix_user_connections():
+    # type: () -> None
+    for cfg in config.user_connections:
+        # Although our current configuration always seems to have a 'disabled'
+        # entry, this might not have always been the case.
+        cfg.setdefault('disabled', False)
+        # Only migrated configurations have a 'type' entry, all others are
+        # implictly LDAP connections.
+        cfg.setdefault('type', 'ldap')
+
+
+config.register_post_config_load_hook(_fix_user_connections)
 
 
 def connection_choices():
-    return sorted([(cid, "%s (%s)" % (cid, c.type()))
-                   for cid, c in get_connections(only_enabled=False)
-                   if c.type() == "ldap"],
-                  key=lambda x_y: x_y[1])
+    # type: () -> List[Tuple[str, str]]
+    return sorted([(connection_id, "%s (%s)" % (connection_id, connection.type()))
+                   for connection_id, connection in _all_connections()
+                   if connection.type() == "ldap"],
+                  key=lambda id_and_description: id_and_description[1])
 
 
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible():
+    # type: () -> bool
     return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
 
 
 def cleanup_connection_id(connection_id):
+    # type: (Optional[str]) -> str
     if connection_id is None:
-        connection_id = 'htpasswd'
+        return 'htpasswd'
 
     # Old Check_MK used a static "ldap" connector id for all LDAP users.
     # Since Check_MK now supports multiple LDAP connections, the ID has
     # been changed to "default". But only transform this when there is
     # no connection existing with the id LDAP.
     if connection_id == 'ldap' and not get_connection('ldap'):
-        connection_id = 'default'
+        return 'default'
 
     return connection_id
 
@@ -159,37 +170,40 @@ def cleanup_connection_id(connection_id):
 # maintains a cache that for a single connection_id only one object per request
 # is created.
 def get_connection(connection_id):
-    if connection_id in g_connections:
-        return g_connections[connection_id]
+    # type: (str) -> Optional[UserConnector]
+    if 'user_connections' not in g:
+        g.user_connections = {}
 
-    connection = dict(get_connections()).get(connection_id)
+    if connection_id not in g.user_connections:
+        connections_with_id = [c for cid, c in _all_connections() if cid == connection_id]
+        # NOTE: We cache even failed lookups.
+        g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
 
-    if connection:
-        g_connections[connection_id] = connection
-
-    return connection
+    return g.user_connections[connection_id]
 
 
 # Returns a list of connection specific locked attributes
 def locked_attributes(connection_id):
-    return get_attributes(connection_id, "locked_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.locked_attributes())
 
 
 # Returns a list of connection specific multisite attributes
 def multisite_attributes(connection_id):
-    return get_attributes(connection_id, "multisite_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
 # Returns a list of connection specific non contact attributes
 def non_contact_attributes(connection_id):
-    return get_attributes(connection_id, "non_contact_attributes")
+    # type: (str) -> List[str]
+    return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
-def get_attributes(connection_id, what):
+def _get_attributes(connection_id, selector):
+    # type: (str, Callable[[UserConnector], List[str]]) -> List[str]
     connection = get_connection(connection_id)
-    if connection:
-        return getattr(connection, what)()
-    return []
+    return selector(connection) if connection else []
 
 
 def new_user_template(connection_id):
@@ -363,11 +377,12 @@ def transform_userdb_automatic_sync(val):
     return val
 
 
+# TODO: Change to factory
 class UserSelection(DropdownChoice):
     """Dropdown for choosing a multisite user"""
     def __init__(self, **kwargs):
-        only_contacts = kwargs.get("only_contacts", False)
-        only_automation = kwargs.get("only_automation", False)
+        only_contacts = kwargs.pop("only_contacts", False)
+        only_automation = kwargs.pop("only_automation", False)
         kwargs["choices"] = self._generate_wato_users_elements_function(
             kwargs.get("none"), only_contacts=only_contacts, only_automation=only_automation)
         kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
@@ -597,10 +612,6 @@ def declare_user_attribute(name,
             )
 
 
-def get_user_attributes():
-    return [(k, v()) for k, v in user_attribute_registry.items()]
-
-
 def load_users(lock=False):
     filename = _root_dir() + "contacts.mk"
 
@@ -609,8 +620,8 @@ def load_users(lock=False):
         #       end of page request automatically.
         store.aquire_lock(filename)
 
-    if "users" in current_app.g:
-        return current_app.g["users"]
+    if 'users' in g:
+        return g.users
 
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -660,7 +671,7 @@ def load_users(lock=False):
 
     def readlines(f):
         try:
-            return file(f)
+            return open(f)
         except IOError:
             return []
 
@@ -724,7 +735,7 @@ def load_users(lock=False):
             # read automation secrets and add them to existing
             # users or create new users automatically
             try:
-                secret = file(directory + d + "/automation.secret").read().strip()
+                secret = open(directory + d + "/automation.secret").read().strip()
             except IOError:
                 secret = None
             if secret:
@@ -737,7 +748,7 @@ def load_users(lock=False):
                     }
 
     # populate the users cache
-    current_app.g['users'] = result
+    g.users = result
 
     return result
 
@@ -749,7 +760,7 @@ def custom_attr_path(userid, key):
 def load_custom_attr(userid, key, conv_func, default=None):
     path = custom_attr_path(userid, key)
     try:
-        return conv_func(file(path).read().strip())
+        return conv_func(open(path).read().strip())
     except IOError:
         return default
 
@@ -798,7 +809,7 @@ def save_users(profiles):
     release_users_lock()
 
     # populate the users cache
-    current_app.g['users'] = updated_profiles
+    g.users = updated_profiles
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)
@@ -814,7 +825,9 @@ def _add_custom_macro_attributes(profiles):
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
-    core_custom_macros = [k for k, o in user_attributes.items() if o.get('add_custom_macro')]
+    core_custom_macros = set(name  #
+                             for name, attr in get_user_attributes()
+                             if attr.add_custom_macro())
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
@@ -942,6 +955,7 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
 
 # User attributes not to put into contact definitions for Check_MK
 def _non_contact_keys():
+    # type: () -> List[str]
     return [
         "roles",
         "password",
@@ -960,6 +974,7 @@ def _non_contact_keys():
 
 # User attributes to put into multisite configuration
 def _multisite_keys():
+    # type: () -> List[str]
     return [
         "roles",
         "locked",
@@ -971,7 +986,12 @@ def _multisite_keys():
 
 
 def _get_multisite_custom_variable_names():
-    return [k for k, v in user_attributes.items() if v["domain"] == "multisite"]
+    # type: () -> List[str]
+    return [
+        name  #
+        for name, attr in get_user_attributes()
+        if attr.domain() == "multisite"
+    ]
 
 
 def _save_auth_serials(updated_profiles):
@@ -1018,17 +1038,27 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
     config.save_user_file("cached_profile", cache, user_id=user_id)
 
 
-def load_cached_profile():
-    return config.user.load_file("cached_profile", None)
+def _load_cached_profile(user_id):
+    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
+    return user.load_file("cached_profile", None)
 
 
 def contactgroups_of_user(user_id):
-    user = load_cached_profile()
+    user = _load_cached_profile(user_id)
     if user is None:
         # No cached profile present. Load all users to get the users data
         user = load_users(lock=False).get(user_id, {})
 
     return user.get("contactgroups", [])
+
+
+def connection_id_of_user(user_id):
+    user = _load_cached_profile(user_id)
+    if user is None:
+        # No cached profile present. Load all users to get the users data
+        user = load_users(lock=False).get(user_id, {})
+
+    return user.get("connector")
 
 
 def convert_idle_timeout(value):
@@ -1128,13 +1158,11 @@ def update_config_based_user_attributes():
             from_config=True,
         )
 
-    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins(
-        user_attribute_registry)
+    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
 
 
 def _clear_config_based_user_attributes():
-    for attr_class in user_attribute_registry.values():
-        attr = attr_class()
+    for _name, attr in get_user_attributes():
         if attr.from_config():
             del user_attribute_registry[attr.name()]
 
@@ -1321,7 +1349,7 @@ def ajax_sync():
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         html.write('OK Started synchronization\n')
     except Exception as e:
-        logger.exception()
+        logger.exception("error synchronizing user DB")
         if config.debug:
             raise
         else:
@@ -1367,8 +1395,8 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
                     _("[%s] Finished sync for connection") % connection_id)
             except Exception as e:
                 job_interface.send_exception(_("[%s] Exception: %s") % (connection_id, e))
-                logger.error('Exception (%s, userdb_job): %s' %
-                             (connection_id, traceback.format_exc()))
+                logger.error('Exception (%s, userdb_job): %s', connection_id,
+                             traceback.format_exc())
 
         job_interface.send_progress_update(_("Finalizing synchronization"))
         general_userdb_job()

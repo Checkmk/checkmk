@@ -30,6 +30,7 @@
 import abc
 import json
 from hashlib import md5
+import six
 
 import cmk.utils.plugin_registry
 
@@ -43,9 +44,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
 
 
-class APICallCollection(object):
-    __metaclass__ = abc.ABCMeta
-
+class APICallCollection(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")
@@ -108,7 +107,7 @@ def compute_config_hash(entity):
         entity_encoded = json.dumps(entity, sort_keys=True)
         entity_hash = md5(entity_encoded).hexdigest()
     except Exception as e:
-        logger.error("Error %s" % e)
+        logger.error("Error %s", e)
         entity_hash = "0"
 
     return entity_hash

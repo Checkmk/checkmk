@@ -70,106 +70,70 @@ def _vs_license():
         ])
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCitrixLicenses(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "citrix_licenses"
-
-    @property
-    def title(self):
-        return _("Number of used Citrix licenses")
-
-    @property
-    def parameter_valuespec(self):
-        return _vs_license()
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
-            allow_empty=False,
-        )
+def _item_spec_citrix_licenses():
+    return TextAscii(
+        title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
+        allow_empty=False,
+    )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersEsxLicenses(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "esx_licenses"
-
-    @property
-    def title(self):
-        return _("Number of used VMware licenses")
-
-    @property
-    def parameter_valuespec(self):
-        return _vs_license()
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Name of the license"),
-            help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="citrix_licenses",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_citrix_licenses,
+        parameter_valuespec=_vs_license,
+        title=lambda: _("Number of used Citrix licenses"),
+    ))
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersIbmsvcLicenses(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
-
-    @property
-    def check_group_name(self):
-        return "ibmsvc_licenses"
-
-    @property
-    def title(self):
-        return _("Number of used IBM SVC licenses")
-
-    @property
-    def parameter_valuespec(self):
-        return _vs_license()
-
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("ID of the license, e.g. <tt>virtualization</tt>"),
-            allow_empty=False,
-        )
+def _item_spec_esx_licenses():
+    return TextAscii(
+        title=_("Name of the license"),
+        help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
+        allow_empty=False,
+    )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersRdsLicenses(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="esx_licenses",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_esx_licenses,
+        parameter_valuespec=_vs_license,
+        title=lambda: _("Number of used VMware licenses"),
+    ))
 
-    @property
-    def check_group_name(self):
-        return "rds_licenses"
 
-    @property
-    def title(self):
-        return _("Number of used Remote Desktop Licenses")
+def _item_spec_ibmsvc_licenses():
+    return TextAscii(
+        title=_("ID of the license, e.g. <tt>virtualization</tt>"),
+        allow_empty=False,
+    )
 
-    @property
-    def parameter_valuespec(self):
-        return _vs_license()
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
-            allow_empty=False,
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="ibmsvc_licenses",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_ibmsvc_licenses,
+        parameter_valuespec=_vs_license,
+        title=lambda: _("Number of used IBM SVC licenses"),
+    ))
+
+
+def _item_spec_rds_licenses():
+    return TextAscii(
+        title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
+        allow_empty=False,
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="rds_licenses",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_rds_licenses,
+        parameter_valuespec=_vs_license,
+        title=lambda: _("Number of used Remote Desktop Licenses"),
+    ))

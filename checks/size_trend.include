@@ -143,13 +143,13 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
             if hours > 365 * 24:
                 return "more than a year"
             elif hours > 90 * 24:
-                return "%0d months" % (hours / (30 * 24))
+                return "%0d months" % (hours / (30 * 24))  # fixed: true-division
             elif hours > 4 * 7 * 24:  # 4 weeks
-                return "%0d weeks" % (hours / (7 * 24))
+                return "%0d weeks" % (hours / (7 * 24))  # fixed: true-division
             elif hours > 7 * 24:  # 1 week
-                return "%0.1f weeks" % (hours / (7 * 24))
+                return "%0.1f weeks" % (hours / (7 * 24))  # fixed: true-division
             elif hours > 2 * 24:  # 2 days
-                return "%0.1f days" % (hours / 24)
+                return "%0.1f days" % (hours / 24)  # fixed: true-division
             return "%d hours" % hours
 
         hours_left = (size_mb - used_mb) / trend * range_hours
@@ -176,7 +176,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
             (warn_perf / range_sec * H24) if warn_perf is not None else None,
             (crit_perf / range_sec * H24) if crit_perf is not None else None,
             0,
-            size_mb / range_hours,
+            size_mb / range_hours,  # fixed: true-division
         ))
 
     if levels.get("trend_showtimeleft"):

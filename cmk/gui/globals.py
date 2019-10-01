@@ -24,39 +24,121 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Imports are needed for type hints. These type hints are useful for
-# editors completion of "html" object methods and for mypy.
-from typing import Union  # pylint: disable=unused-import
+# This is our home-grown version of flask.globals and flask.ctx. It
+# can be removed when fully do things the flasky way.
+
+from functools import partial
+import logging
+from typing import Any, Union  # pylint: disable=unused-import
+
+from werkzeug.local import LocalProxy
+from werkzeug.local import LocalStack
+
 import cmk.gui.htmllib  # pylint: disable=unused-import
 
+#####################################################################
+# a namespace for storing data during an application context
 
-class Proxy(object):
-    def __init__(self, name):
-        super(Proxy, self).__init__()
-        self._proxy_name = name
-        self._current_obj = None
-
-    def set_current(self, obj):
-        self._current_obj = obj
-
-    def unset_current(self):
-        self._current_obj = None
-
-    def in_context(self):
-        return self._current_obj is not None
-
-    def __getattribute__(self, name):
-        if name in ["set_current", "unset_current", "in_context", "_current_obj", "_proxy_name"]:
-            return object.__getattribute__(self, name)
-
-        h = self._current_obj
-        if h is None:
-            raise AttributeError("Not in %s context" % self._proxy_name)
-        return getattr(h, name)
-
-    def __repr__(self):
-        return repr(self._current_obj)
+_sentinel = object()
 
 
-html = Proxy(name="html")  # type: Union[cmk.gui.htmllib.html, Proxy]
-current_app = Proxy(name="application")
+class _AppCtxGlobals(object):
+    def get(self, name, default=None):
+        return self.__dict__.get(name, default)
+
+    def pop(self, name, default=_sentinel):
+        if default is _sentinel:
+            return self.__dict__.pop(name)
+        return self.__dict__.pop(name, default)
+
+    def setdefault(self, name, default=None):
+        return self.__dict__.setdefault(name, default)
+
+    def __contains__(self, item):
+        return item in self.__dict__
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+
+#####################################################################
+# application context
+
+_app_ctx_stack = LocalStack()
+
+
+def _lookup_app_object(name):
+    top = _app_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of application context.")
+    return getattr(top, name)
+
+
+class AppContext(object):
+    def __init__(self, app):
+        self.app = app
+        self.g = _AppCtxGlobals()
+
+    def __enter__(self):
+        _app_ctx_stack.push(self)
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        _app_ctx_stack.pop()
+
+
+current_app = LocalProxy(partial(_lookup_app_object, "app"))
+g = LocalProxy(partial(_lookup_app_object, "g"))  # type: Any
+
+######################################################################
+# TODO: This should live somewhere else...
+
+
+class _PrependURLFilter(logging.Filter):
+    def filter(self, record):
+        if record.levelno >= logging.ERROR:
+            record.msg = "%s %s" % (html.request.requested_url, record.msg)
+        return True
+
+
+######################################################################
+# request context
+
+_request_ctx_stack = LocalStack()
+
+
+def _lookup_req_object(name):
+    top = _request_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of request context.")
+    return getattr(top, name)
+
+
+class RequestContext(object):
+    def __init__(self, html_obj):
+        self.html = html_obj
+
+    def __enter__(self):
+        _request_ctx_stack.push(self)
+        # TODO: Move this plus the corresponding cleanup code to hooks.
+        self._web_log_handler = logging.getLogger().handlers[0]
+        self._prepend_url_filter = _PrependURLFilter()
+        self._web_log_handler.addFilter(self._prepend_url_filter)
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self._web_log_handler.removeFilter(self._prepend_url_filter)
+        _request_ctx_stack.pop()
+        self.html.finalize()
+
+
+# NOTE: Flask offers the proxies below, and we should go into that direction,
+# too. But currently our html class is a swiss army knife with tons of
+# resposibilites which we should really, really split up...
+#
+# request = LocalProxy(partial(_lookup_req_object, "request"))
+# session = LocalProxy(partial(_lookup_req_object, "session"))
+
+html = LocalProxy(partial(_lookup_req_object,
+                          "html"))  # type: Union[cmk.gui.htmllib.html, LocalProxy]

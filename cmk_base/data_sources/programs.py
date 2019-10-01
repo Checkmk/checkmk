@@ -28,6 +28,7 @@ import os
 import signal
 import subprocess
 import collections
+from pathlib2 import Path
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout
@@ -198,12 +199,9 @@ class SpecialAgentDataSource(ProgramDataSource):
                                                        self._hostname,
                                                        description=None)
 
-        special_agents_dir = cmk.utils.paths.agents_dir + "/special"
-        local_special_agents_dir = cmk.utils.paths.local_agents_dir + "/special"
+        agent_name = "agent_" + self._special_agent_id
+        special_agent_path = Path(cmk.utils.paths.agents_dir, "special", agent_name)
+        local_special_agent_path = cmk.utils.paths.local_agents_dir.joinpath("special", agent_name)
 
-        if os.path.exists(local_special_agents_dir + "/agent_" + self._special_agent_id):
-            path = local_special_agents_dir + "/agent_" + self._special_agent_id
-        else:
-            path = special_agents_dir + "/agent_" + self._special_agent_id
-
-        return path + " " + final_arguments, command_stdin
+        path = local_special_agent_path if local_special_agent_path.exists() else special_agent_path
+        return "%s %s" % (path, final_arguments), command_stdin

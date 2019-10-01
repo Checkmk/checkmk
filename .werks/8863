@@ -1,0 +1,16 @@
+Title: Discovery page: Add action to update the discovered host labels
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1566063943
+
+The discovery page of a host shows the discovered host labels for the
+selected host. It is now possible to persist the new found host labels
+using the button "Update host labels" without updating the services.
+
+The "automatic refresh (tabula rasa)" also updates the discovered host
+labels in addition to the discovered services of the host.

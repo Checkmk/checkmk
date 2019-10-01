@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import print_function
 import getopt
 import json
 import sys
@@ -155,10 +156,10 @@ else:
 # to get better performance in the checkplugin if less data is needed.
 
 for value in opt_values:
-    print "<<<3par_%s:sep(0)>>>" % value
+    print("<<<3par_%s:sep(0)>>>" % value)
     req = requests.get("%s/%s" % (url, value), headers=headers, timeout=10, verify=opt_verify)
     value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
-    print value_data
+    print(value_data)
 
 # Perform a proper disconnect. The Connection is closed if the session key
 # is deleted. The standard timeout for a session would be 15 minutes.

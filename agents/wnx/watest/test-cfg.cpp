@@ -7,15 +7,19 @@
 
 #include "cfg.h"
 #include "cfg_details.h"
+#include "commander.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "install_api.h"
 #include "providers/mrpe.h"
 #include "read_file.h"
+#include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
+#include "upgrade.h"
 #include "yaml-cpp/yaml.h"
 
 // we want to avoid those data public
@@ -25,6 +29,74 @@ extern bool G_Service;
 extern bool G_Test;
 }  // namespace details
 }  // namespace cma
+
+namespace cma::commander {
+
+static bool GetEnabledFlag(bool dflt) {
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    return cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+}
+
+static void SetEnabledFlag(bool flag) {
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    yaml_global[cma::cfg::vars::kEnabled] = flag;
+}
+
+TEST(Cma, Commander) {
+    using namespace std::chrono;
+    //
+    auto yaml = cma::cfg::GetLoadedConfig();
+    auto yaml_global = yaml[cma::cfg::groups::kGlobal];
+    EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
+    auto enabled =
+        cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, false);
+    ASSERT_TRUE(enabled);
+    SetEnabledFlag(false);
+    enabled = cma::cfg::GetVal(yaml_global, cma::cfg::vars::kEnabled, true);
+    ASSERT_FALSE(enabled);
+    cma::commander::RunCommand("a", cma::commander::kReload);
+    EXPECT_FALSE(enabled);
+    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    cma::commander::RunCommand(cma::commander::kMainPeer, "aa");
+    EXPECT_FALSE(enabled);
+
+    EXPECT_NO_THROW(cma::commander::RunCommand("", ""));
+    cma::commander::RunCommand(cma::commander::kMainPeer,
+                               cma::commander::kReload);
+    enabled = GetEnabledFlag(false);
+    EXPECT_TRUE(enabled);
+    SetEnabledFlag(false);
+
+    cma::MailSlot mailbox("WinAgentTestLocal", 0);
+    using namespace cma::carrier;
+    auto internal_port =
+        BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
+    cma::srv::ServiceProcessor processor;
+    mailbox.ConstructThread(cma::srv::SystemMailboxCallback, 20, &processor);
+    ON_OUT_OF_SCOPE(mailbox.DismantleThread());
+    cma::tools::sleep(100ms);
+
+    cma::carrier::CoreCarrier cc;
+    // "mail"
+    auto ret = cc.establishCommunication(internal_port);
+    EXPECT_TRUE(ret);
+    cc.sendCommand(cma::commander::kMainPeer, "a");
+    cma::tools::sleep(100ms);
+    enabled = GetEnabledFlag(true);
+    EXPECT_FALSE(enabled);
+    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+    cma::tools::sleep(100ms);
+
+    enabled = GetEnabledFlag(false);
+    EXPECT_TRUE(enabled);
+
+    cc.shutdownCommunication();
+}
+}  // namespace cma::commander
 
 namespace cma::cfg {
 
@@ -54,6 +126,23 @@ std::string wato_ini =
 extern void SetTestInstallationType(InstallationType);
 
 namespace details {
+TEST(CmaCfg, InitEnvironment) {
+    auto msi = FindMsiExec();
+    auto host = FindHostName();
+
+    ConfigInfo ci;
+    EXPECT_TRUE(ci.getCwd().empty());
+    EXPECT_TRUE(ci.getMsiExecPath().empty());
+    EXPECT_TRUE(ci.getHostName().empty());
+    ci.initEnvironment();
+    EXPECT_EQ(ci.getCwd(), std::filesystem::current_path().wstring());
+    EXPECT_EQ(ci.getMsiExecPath(), msi);
+    EXPECT_EQ(ci.getHostName(), host);
+
+    cma::OnStartTest();
+    EXPECT_FALSE(cma::cfg::GetUserDir().empty());
+}
+
 TEST(CmaCfg, LogFileLocation) {
     namespace fs = std::filesystem;
     //
@@ -70,9 +159,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty data to user/public
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
         fs::path dflt = details::GetDefaultLogPath();
         EXPECT_TRUE(!dflt.empty());
@@ -88,9 +177,9 @@ TEST(CmaCfg, LogFileLocation) {
 
     {
         // empty without user gives us default to the public/user
-        auto& user = details::G_ConfigInfo.folders_.data_;
+        auto& user = GetCfg().folders_.data_;
         auto old_user = user;
-        ON_OUT_OF_SCOPE(details::G_ConfigInfo.folders_.data_ = old_user);
+        ON_OUT_OF_SCOPE(GetCfg().folders_.data_ = old_user);
         user.clear();
 
         fs::path dflt = details::ConvertLocationToLogPath("");
@@ -107,8 +196,68 @@ TEST(CmaCfg, LogFileLocation) {
 }
 }  // namespace details
 
+TEST(CmaCfg, RemoveLegacy_Base) {
+    using namespace cma::install;
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio(
+            "To test Agent, you have to install Legacy Agent",
+            XLOG::Colors::yellow);
+        return;
+    }
+    // set default
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyDefault);
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_FALSE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    // set already
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyAlready);
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_TRUE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    // set request
+    wtools::SetRegistryValue(registry::GetMsiRegistryPath(),
+                             registry::kMsiRemoveLegacy,
+                             registry::kMsiRemoveLegacyRequest);
+    EXPECT_TRUE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_FALSE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_TRUE(rm_lwa::IsToRemove());
+
+    // set already with high-level API
+    rm_lwa::SetAlreadyRemoved();
+
+    EXPECT_FALSE(rm_lwa::IsRequestedByRegistry());
+    EXPECT_TRUE(rm_lwa::IsAlreadyRemoved());
+    EXPECT_FALSE(rm_lwa::IsToRemove());
+
+    ON_OUT_OF_SCOPE(wtools::SetRegistryValue(
+        registry::GetMsiRegistryPath(), registry::kMsiRemoveLegacy,
+        registry::kMsiRemoveLegacyDefault));
+}
+
+TEST(CmaCfg, RemoveLegacy_Long) {
+    namespace fs = std::filesystem;
+    auto temp_dir = cma::cfg::GetTempDir();
+    auto path = cma::cfg::CreateWmicUninstallFile(temp_dir, "zzz");
+    EXPECT_TRUE(!path.empty());
+    EXPECT_TRUE(fs::exists(path));
+    auto content = cma::tools::ReadFileInString(path.wstring().c_str());
+    ON_OUT_OF_SCOPE(fs::remove(path););
+    ASSERT_TRUE(content.has_value());
+    EXPECT_EQ(content.value(), cma::cfg::CreateWmicCommand("zzz"));
+    auto result = cma::cfg::UninstallProduct("zzz");
+    EXPECT_TRUE(result);
+}
+
 TEST(CmaCfg, SmallFoos) {
-    auto s = GetTimeString();
+    auto s = ConstructTimeString();
     EXPECT_TRUE(!s.empty());
 }
 
@@ -156,7 +305,7 @@ TEST(CmaCfg, InstallationTypeCheck) {
 
     cma::details::G_Test = false;
 
-    fs::path install_ini = cma::cfg::GetFileInstallDir();
+    fs::path install_ini = cma::cfg::GetRootInstallDir();
     std::error_code ec;
     fs::create_directories(install_ini, ec);
     install_ini /= files::kIniFile;
@@ -177,4 +326,118 @@ TEST(CmaCfg, InstallationTypeCheck) {
     // fs::remove(install_ini, ec);
 }
 
+namespace details {
+TEST(CmaToolsDetails, FindServiceImage) {
+    EXPECT_TRUE(FindServiceImagePath(L"").empty());
+    auto x = FindServiceImagePath(L"check_mk_agent");
+    if (x.empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is not installed, test is not full",
+            XLOG::Colors::yellow);
+    } else {
+        EXPECT_TRUE(std::filesystem::exists(x));
+    }
+}
+TEST(CmaToolsDetails, ExtractPathFromServiceName) {
+    auto x = ExtractPathFromServiceName(L"check_mk_agent");
+    if (x.empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is not installed, test is not full",
+            XLOG::Colors::yellow);
+    } else {
+        EXPECT_TRUE(std::filesystem::exists(x));
+        EXPECT_TRUE(cma::tools::IsEqual(x.u8string(),
+                                        "c:\\Program Files (x86)\\check_mk"));
+    }
+}
+}  // namespace details
+
+TEST(Cma, OnStart) {
+    {
+        auto [r, d] = cma::FindAlternateDirs(L"");
+        EXPECT_TRUE(r.empty());
+        EXPECT_TRUE(d.empty());
+    }
+    {
+        auto [r, d] = cma::FindAlternateDirs(kRemoteMachine);
+        EXPECT_EQ(r, cma::tools::win::GetEnv(kRemoteMachine));
+        EXPECT_EQ(d,
+                  cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
+    }
+}
+
+TEST(CmaCfg, ReloadCfg) {
+    cma::OnStartTest();
+    auto id = GetCfg().uniqId();
+    EXPECT_TRUE(id > 0);
+    cma::LoadConfig(AppType::test, {});
+    auto id2 = GetCfg().uniqId();
+    EXPECT_TRUE(id2 > id);
+}
+
+TEST(Cma, PushPop) {
+    cma::OnStartTest();
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [r, u] = tst::CreateInOut();
+    auto root = r.wstring();
+    auto user = u.wstring();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    std::error_code ec;
+
+    auto old_root = GetRootDir();
+    auto old_user = GetUserDir();
+
+    ASSERT_TRUE(GetCfg().pushFolders(root, user));
+    EXPECT_EQ(root, GetRootDir());
+    EXPECT_EQ(user, GetUserDir());
+
+    GetCfg().popFolders();
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().pushFolders(root, user));
+        EXPECT_EQ(root, GetRootDir());
+        EXPECT_EQ(user, GetUserDir());
+    }
+    EXPECT_FALSE(GetCfg().pushFolders(root, user));
+
+    for (size_t k = 0; k < details::kMaxFoldersStackSize; k++) {
+        EXPECT_TRUE(GetCfg().popFolders());
+    }
+    EXPECT_FALSE(GetCfg().popFolders());
+    EXPECT_EQ(old_root, GetRootDir());
+    EXPECT_EQ(old_user, GetUserDir());
+}
+
 }  // namespace cma::cfg
+
+namespace cma::cfg {
+TEST(CmaCfg, ConfigManagement) {
+    auto node = CreateNode("test");
+    ASSERT_TRUE(node);
+    node->setLogFileDir(L"test");
+    auto node2 = GetNode("test");
+    EXPECT_EQ(node2->getLogFileDir(), L"test");
+    ASSERT_TRUE(node2);
+    RemoveNode("test");
+    auto node3 = GetNode("test");
+    ASSERT_FALSE(node3);
+}
+
+}  // namespace cma::cfg
+
+namespace cma::srv {
+TEST(CmaCfg, RestartBinaries) {
+    cma::srv::ServiceProcessor sp;
+    uint64_t id = cma::cfg::GetCfg().uniqId();
+    auto old_id = id;
+    EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_EQ(old_id, id);
+    ReloadConfig();
+    EXPECT_TRUE(sp.restartBinariesIfCfgChanged(id));
+    EXPECT_NE(old_id, id);
+}
+
+}  // namespace cma::srv

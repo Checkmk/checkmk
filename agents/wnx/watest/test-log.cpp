@@ -48,18 +48,10 @@ TEST(LogTest, RotationFileCfgParam) {
     EXPECT_TRUE(max_size < 1'000'000'000);
 }
 
-static std::vector<std::string> ReadFileAsTable(const std::string& Name) {
-    std::ifstream in(Name.c_str());
-    std::stringstream sstr;
-    sstr << in.rdbuf();
-    auto content = sstr.str();
-    return cma::tools::SplitString(content, "\n");
-}
-
 static bool FindString(const std::string& name, unsigned int index,
                        const std::string& Text) {
     auto filename = details::MakeBackupLogName(name, index);
-    auto data = ReadFileAsTable(filename);
+    auto data = tst::ReadFileAsTable(filename);
     if (data.size() != 1) return false;
     auto table = cma::tools::SplitString(data[0], " ");
     if (table.size() != 3) return false;
@@ -86,7 +78,7 @@ TEST(LogTest, RotationFile) {
         WriteToLogFileWithBackup(log_file.string(), 40, 3, val0);
         EXPECT_TRUE(fs::exists(log_file, ec));
         EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
-        auto data = ReadFileAsTable(log_file.string());
+        auto data = tst::ReadFileAsTable(log_file.string());
         ASSERT_TRUE(data.size() == 1);
         auto table = cma::tools::SplitString(data[0], " ");
         ASSERT_TRUE(table.size() == 3);
@@ -99,13 +91,13 @@ TEST(LogTest, RotationFile) {
         auto log_file_1 = MakeBackupLogName(log_file.string(), 1);
         EXPECT_TRUE(fs::exists(log_file_1, ec));
 
-        auto data = ReadFileAsTable(log_file.string());
+        auto data = tst::ReadFileAsTable(log_file.string());
         ASSERT_TRUE(data.size() == 1);
         auto table = cma::tools::SplitString(data[0], " ");
         ASSERT_TRUE(table.size() == 3);
         EXPECT_TRUE(table[2] == val1);
 
-        auto data1 = ReadFileAsTable(log_file_1);
+        auto data1 = tst::ReadFileAsTable(log_file_1);
         ASSERT_TRUE(data1.size() == 1);
         auto table1 = cma::tools::SplitString(data1[0], " ");
         ASSERT_TRUE(table1.size() == 3);
@@ -130,7 +122,7 @@ TEST(LogTest, RotationFile) {
         WriteToLogFileWithBackup(log_file.string(), 40, 0, val0);
         EXPECT_TRUE(fs::exists(log_file, ec));
         EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
-        auto data = ReadFileAsTable(log_file.string());
+        auto data = tst::ReadFileAsTable(log_file.string());
         ASSERT_TRUE(data.size() == 1);
         auto table = cma::tools::SplitString(data[0], " ");
         ASSERT_TRUE(table.size() == 3);
@@ -141,7 +133,7 @@ TEST(LogTest, RotationFile) {
         WriteToLogFileWithBackup(log_file.string(), 40, 0, val1);
         EXPECT_TRUE(fs::exists(log_file, ec));
         EXPECT_FALSE(fs::exists(MakeBackupLogName(log_file.string(), 1), ec));
-        auto data = ReadFileAsTable(log_file.string());
+        auto data = tst::ReadFileAsTable(log_file.string());
         ASSERT_TRUE(data.size() == 1);
         auto table = cma::tools::SplitString(data[0], " ");
         ASSERT_TRUE(table.size() == 3);

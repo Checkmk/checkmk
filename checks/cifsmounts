@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example out from agent:
 # <<<cifsmounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
@@ -34,6 +33,7 @@ check_info["cifsmounts"] = {
     'check_function': check_network_fs_mounts,
     'inventory_function': inventory_network_fs_mounts,
     'service_description': 'CIFS mount %s',
+    'has_perfdata': True,
     'group': 'network_fs',
     'includes': ['network_fs.include'],
 }

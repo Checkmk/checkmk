@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-from typing import Optional  # pylint: disable=unused-import
+from typing import List, Optional  # pylint: disable=unused-import
+import six
 
 import cmk.utils.plugin_registry
 
@@ -44,9 +45,7 @@ import cmk.utils.plugin_registry
 #   '----------------------------------------------------------------------'
 
 
-class UserConnector(object):
-    __metaclass__ = abc.ABCMeta
-
+class UserConnector(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, config):
         super(UserConnector, self).__init__()
         self._config = config
@@ -78,6 +77,10 @@ class UserConnector(object):
     @classmethod
     def migrate_config(cls):
         pass
+
+    @abc.abstractmethod
+    def is_enabled(self):
+        raise NotImplementedError()
 
     # Optional: Hook function can be registered here to be executed
     # to validate a login issued by a user.
@@ -113,12 +116,15 @@ class UserConnector(object):
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in WATO.
     def locked_attributes(self):
+        # type: () -> List[str]
         return []
 
     def multisite_attributes(self):
+        # type: () -> List[str]
         return []
 
     def non_contact_attributes(self):
+        # type: () -> List[str]
         return []
 
 
@@ -135,9 +141,7 @@ class UserConnector(object):
 #   '----------------------------------------------------------------------'
 
 
-class UserAttribute(object):
-    __metaclass__ = abc.ABCMeta
-
+class UserAttribute(six.with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def name(cls):
@@ -217,3 +221,7 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 user_attribute_registry = UserAttributeRegistry()
+
+
+def get_user_attributes():
+    return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]

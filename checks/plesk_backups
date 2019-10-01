@@ -70,10 +70,10 @@ def check_plesk_backups(item, params, info):
 
         age_seconds = int(time.time()) - timestamp
         seconds = age_seconds % 60
-        rem = age_seconds / 60
+        rem = int(age_seconds / 60.0)
         minutes = rem % 60
-        hours = (rem % 1440) / 60
-        days = rem / 1440
+        hours = int((rem % 1440) / 60)
+        days = int(rem / 1440)
 
         # 2. check age of last backup < 24h
         status_txt = ''

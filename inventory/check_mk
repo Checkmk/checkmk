@@ -33,12 +33,17 @@
 # Hostname: dbserver-01
 
 
-def inv_check_mk(info):
-    node = inv_tree("networking.")
+def inv_check_mk(info, inventory_tree):
+    hostname, version = None, None
     for line in info:
         if len(line) == 2 and line[0] == "Hostname:":
-            node["hostname"] = line[1]
-            break
+            hostname = line[1]
+        elif len(line) == 2 and line[0] == "Version:":
+            version = line[1]
+    if hostname:
+        inventory_tree.get_dict("networking.")["hostname"] = hostname
+    if version:
+        inventory_tree.get_dict("software.applications.check_mk.")["agent_version"] = version
 
 
 inv_info['check_mk'] = {

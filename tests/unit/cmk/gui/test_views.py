@@ -2,6 +2,7 @@
 # pylint: disable=redefined-outer-name
 import copy
 import pytest # type: ignore
+import six
 import cmk.gui.config as config
 
 # Make it load all plugins (CEE + CME)
@@ -153,7 +154,7 @@ def test_layout_properties():
 
     for ident, spec in expected.items():
         plugin = cmk.gui.plugins.views.layout_registry[ident]()
-        assert isinstance(plugin.title, unicode)
+        assert isinstance(plugin.title, six.text_type)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
         assert spec["hide"] == plugin.is_hidden
@@ -676,7 +677,7 @@ def test_registered_datasources():
         ds = ds_class()
         spec = expected[ds.ident]
         assert ds.title == spec["title"]
-        if callable(ds.table):
+        if hasattr(ds.table, '__call__'):
             assert ("func", ds.table.__name__) == spec["table"]
         elif isinstance(ds.table, tuple):
             assert spec["table"][0] == "tuple"
@@ -1296,7 +1297,7 @@ def test_registered_painters():
                 'site',
                 'host_pnpgraph_present',
                 'host_check_type',
-                'host_active_passive_checks',
+                'host_accept_passive_checks',
                 'host_icon_image',
                 'host_is_flapping',
                 'host_in_notification_period',
@@ -4022,17 +4023,17 @@ def test_registered_painters():
         spec = expected[painter.ident]
 
         if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert callable(painter.title)
+            assert hasattr(painter.title, '__call__')
         else:
             assert painter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
-            assert callable(painter.columns)
+            assert hasattr(painter.columns, '__call__')
         else:
             assert painter.columns == spec["columns"]
 
         if isinstance(spec.get("short"), tuple) and spec["short"][0] == "func":
-            assert callable(painter.short_title)
+            assert hasattr(painter.short_title, '__call__')
         else:
             assert painter.short_title == spec.get("short", spec["title"])
 
@@ -5687,12 +5688,12 @@ def test_registered_sorters():
         spec = expected[sorter.ident]
 
         if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
-            assert callable(sorter.title)
+            assert hasattr(sorter.title, '__call__')
         else:
             assert sorter.title == spec["title"]
 
         if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
-            assert callable(sorter.columns)
+            assert hasattr(sorter.columns, '__call__')
         else:
             assert sorter.columns == spec["columns"]
 
@@ -5734,7 +5735,7 @@ def test_get_needed_regular_columns(view):
         'host_downtimes_with_extra_info',
         'host_pnpgraph_present',
         'host_check_type',
-        'host_active_passive_checks',
+        'host_accept_passive_checks',
         'host_num_services_crit',
         'host_icon_image',
         'host_is_flapping',
@@ -6040,10 +6041,11 @@ def test_registered_display_hints(load_plugins):
     '.software.',
     '.software.applications.',
     '.software.applications.check_mk.',
+    '.software.applications.check_mk.agent_version',
     '.software.applications.check_mk.cluster.is_cluster',
     '.software.applications.check_mk.cluster.nodes:',
     '.software.applications.check_mk.host_labels:',
-    '.software.applications.check_mk.host_labels:*.inventory_plugin_name',
+    '.software.applications.check_mk.host_labels:*.plugin_name',
     '.software.applications.check_mk.host_labels:*.label',
     '.software.applications.citrix.',
     '.software.applications.citrix.controller.',
@@ -6065,6 +6067,7 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.docker.containers:*.id',
     '.software.applications.docker.containers:*.labels',
     '.software.applications.docker.images:',
+    '.software.applications.docker.images:*.size',
     '.software.applications.docker.images:*.amount_containers',
     '.software.applications.docker.images:*.id',
     '.software.applications.docker.images:*.labels',
@@ -6082,10 +6085,12 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.docker.num_containers_stopped',
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
+    '.software.applications.docker.version',
     '.software.applications.kubernetes.assigned_pods:',
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',
     '.software.applications.kubernetes.nodes:*.name',
+    '.software.applications.kubernetes.ingresses:',
     '.software.applications.kubernetes.pod_container:',
     '.software.applications.kubernetes.pod_container:*.container_id',
     '.software.applications.kubernetes.pod_container:*.image',
@@ -6094,6 +6099,13 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.kubernetes.pod_container:*.name',
     '.software.applications.kubernetes.pod_container:*.ready',
     '.software.applications.kubernetes.pod_container:*.restart_count',
+    '.software.applications.kubernetes.job_container:',
+    '.software.applications.kubernetes.job_container:*.name',
+    '.software.applications.kubernetes.job_container:*.image',
+    '.software.applications.kubernetes.job_container:*.image_pull_policy',
+    '.software.applications.kubernetes.daemon_pod_containers:*.name',
+    '.software.applications.kubernetes.daemon_pod_containers:*.image',
+    '.software.applications.kubernetes.daemon_pod_containers:*.image_pull_policy',
     '.software.applications.kubernetes.pod_info.',
     '.software.applications.kubernetes.pod_info.dns_policy',
     '.software.applications.kubernetes.pod_info.host_ip',

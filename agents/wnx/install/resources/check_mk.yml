@@ -4,10 +4,8 @@
 
 # Copyright Mathias Kettner GmbH
 
-# version 10011
-
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
-# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/check/service/plugins
+# $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
 # $CUSTOM_AGENT_PATH$    -> is ProgramData/checkmk/agent/
 # $CUSTOM_LOCAL_PATH$    -> is ProgramData/checkmk/agent/local
 
@@ -127,7 +125,7 @@ ps:
     # This is required for the additional ps feature below.
     use_wmi: yes
     # Include the whole path of a process and its arguments in the process list.
-    full_path: yes
+    full_path: no
 
 winperf:
     enabled: yes
@@ -151,10 +149,10 @@ winperf:
         - 510: if
         - 238: processor
 
-logfiles:
+_logfiles:
     enabled: no
     # Define textfiles to be monitored
-    # We do not support logfiles monitoring at he moment
+    # We do not support logfiles monitoring in agent at the moment
     # Please, use plugin mk_logwatch
 
 fileinfo:
@@ -224,6 +222,10 @@ local:
 
 mrpe:
     enabled: yes
+
+    # Allows to run MRPE scripts in parallel, this parameter is intended only
+    # for experienced users and developers.
+    parallel: no
 
     # 60 is default, this is safe value, because mrpe checks are relative fast ->
     # hitting this timeout is virtually not possible

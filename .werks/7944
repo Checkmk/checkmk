@@ -1,0 +1,20 @@
+Title: Fixed handling of unfresh services
+Level: 2
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.7.0i1
+Date: 1567774269
+Class: fix
+
+The 1.6.0 branch introduced a regression: When a service was detected as
+unfresh, the CMC terminated with a log message of the form:
+
+   host name mismatch in active check result: expected 'FOO', got 'BAR'
+
+Even worse, this state was permanent: After restarting the same thing
+happened again, so the only way to get out of this was to remove the CMC's
+state file. Note that this only affected unfresh services, not hosts.
+
+The problem was caused by an internal confusion of host name and service
+name of the unfresh service, which has been fixed.

@@ -27,6 +27,7 @@
 hosts. Examples are the IP address and the host tags."""
 
 import abc
+import functools
 import re
 from typing import Dict, Optional, Any, Set, List, Tuple, Type, Text  # pylint: disable=unused-import
 import six
@@ -45,9 +46,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.utils import host_attribute_matches
 
 
-class HostAttributeTopic(object):
-    __metaclass__ = abc.ABCMeta
-
+class HostAttributeTopic(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
@@ -205,10 +204,8 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
         return 60
 
 
-class ABCHostAttribute(object):
+class ABCHostAttribute(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for all registered host attributes"""
-    __metaclass__ = abc.ABCMeta
-
     @classmethod
     def sort_index(cls):
         return 85
@@ -456,8 +453,8 @@ def get_sorted_host_attribute_topics(for_what, new):
         if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
             needed_topics.add(attr.topic())
 
-    return [(t.ident, t.title)
-            for t in sorted([t_class() for t_class in needed_topics], key=lambda e: e.sort_index)]
+    return [(t.ident, t.title) for t in sorted([t_class() for t_class in needed_topics],
+                                               key=lambda e: (e.sort_index, e.title))]
 
 
 def get_sorted_host_attributes_by_topic(topic_id):
@@ -470,7 +467,7 @@ def get_sorted_host_attributes_by_topic(topic_id):
 
     sorted_attributes = []
     for attr in sorted(host_attribute_registry.get_sorted_host_attributes(),
-                       cmp=sort_host_attributes):
+                       key=functools.cmp_to_key(sort_host_attributes)):
         if attr.topic() == host_attribute_topic_registry[topic_id]:
             sorted_attributes.append(attr)
     return sorted_attributes
@@ -575,7 +572,14 @@ def undeclare_host_tag_attribute(tag_id):
     undeclare_host_attribute(attrname)
 
 
-def update_config_based_host_attributes():
+def _update_config_based_host_attributes():
+    def _compute_config_hash():
+        return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+
+    if hasattr(_update_config_based_host_attributes, "_config_hash") \
+       and _update_config_based_host_attributes._config_hash == _compute_config_hash():
+        return  # No re-register needed :-)
+
     _clear_config_based_host_attributes()
     _declare_host_tag_attributes()
     declare_custom_host_attrs()
@@ -583,9 +587,11 @@ def update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder
     Folder.invalidate_caches()
 
+    _update_config_based_host_attributes._config_hash = _compute_config_hash()
+
 
 # Make the config module initialize the host attributes after loading the config
-config.register_post_config_load_hook(update_config_based_host_attributes)
+config.register_post_config_load_hook(_update_config_based_host_attributes)
 
 
 def _clear_config_based_host_attributes():
@@ -739,8 +745,15 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     return host
 
 
-class ABCHostAttributeText(ABCHostAttribute):
+class ABCHostAttributeText(six.with_metaclass(abc.ABCMeta, ABCHostAttribute)):
     """A simple text attribute. It is stored in a Python unicode string"""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+
     @property
     def _allow_empty(self):
         return True
@@ -812,12 +825,19 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         self.valuespec().validate_value(value, varprefix + self.name())
 
 
-class ABCHostAttributeFixedText(ABCHostAttributeText):
+class ABCHostAttributeFixedText(six.with_metaclass(abc.ABCMeta, ABCHostAttributeText)):
     """A simple text attribute that is not editable by the user.
 
     It can be used to store context information from other
     systems (e.g. during an import of a host database from
     another system)."""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+
     def render_input(self, varprefix, value):
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
@@ -859,9 +879,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
         return html.request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
-class ABCHostAttributeTag(ABCHostAttributeValueSpec):
-    __metaclass__ = abc.ABCMeta
-
+class ABCHostAttributeTag(six.with_metaclass(abc.ABCMeta, ABCHostAttributeValueSpec)):
     @abc.abstractproperty
     def is_checkbox_tag(self):
         # type: () -> bool
@@ -883,8 +901,15 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
         return self._tag_group.get_tag_group_config(value)
 
 
-class ABCHostAttributeHostTagList(ABCHostAttributeTag):
+class ABCHostAttributeHostTagList(six.with_metaclass(abc.ABCMeta, ABCHostAttributeTag)):
     """A selection dropdown for a host tag"""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+
     def valuespec(self):
         choices = self._tag_group.get_tag_choices()
         return DropdownChoice(
@@ -904,8 +929,15 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag):
         return True
 
 
-class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
+class ABCHostAttributeHostTagCheckbox(six.with_metaclass(abc.ABCMeta, ABCHostAttributeTag)):
     """A checkbox for a host tag group"""
+
+    # NOTE: This class is obviously still abstract, but pylint fails to see
+    # this, even in the presence of the meta class assignment below, see
+    # https://github.com/PyCQA/pylint/issues/179.
+
+    # pylint: disable=abstract-method
+
     def valuespec(self):
         choice = self._tag_group.get_tag_choices()[0]
         return Checkbox(

@@ -202,6 +202,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\common\cfg_yaml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commander.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\stop_watch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="on_start.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\object_repo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -417,6 +429,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="realtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="commander.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\object_repo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

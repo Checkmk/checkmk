@@ -17,7 +17,7 @@
 // in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 // out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 // PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
+// tails.  You should have received  a copy of the  GNU  General Public
 // License along with GNU Make; see the file  COPYING.  If  not,  write
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
@@ -159,6 +159,12 @@ function list_of_strings_add_new_field(input) {
     new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + ">", "=" + new_name + ">");
     container.appendChild(new_div);
 
+    // In case there was some TextAsciiAutocomplete popup menu cloned, remove it!
+    var popup_menus = new_div.getElementsByClassName("vs_autocomplete");
+    for (var i = 0; i < popup_menus.length; i++) {
+        popup_menus[i].parentNode.removeChild(popup_menus[i]);
+    }
+
     return new_div.getElementsByTagName("input")[0];
 }
 
@@ -203,6 +209,10 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
 
             var container = document.getElementById(handler_data.varprefix + "_sub");
             container.innerHTML = response.result.html_code;
+
+            utils.execute_javascript_by_object(container);
+            forms.enable_dynamic_form_elements(container);
+
         },
         handler_data: {
             varprefix: varprefix,
@@ -605,6 +615,7 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
             }
 
             tbody.appendChild(new_row);
+            utils.execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements
             var active = document.getElementById(varprefix + "_active");
@@ -612,6 +623,10 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 active.value += ";"+ident;
             else
                 active.value = ident;
+
+            // Put in a line break following the table if the added row is the first
+            if (tbody.childNodes.length == 1)
+                table.after(document.createElement("br"));
         }
     });
 }
@@ -619,7 +634,8 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
 export function listofmultiple_del(varprefix, ident) {
     // make the filter invisible
     var row = document.getElementById(varprefix + "_" + ident + "_row");
-    row.parentNode.removeChild(row);
+    var tbody = row.parentNode;
+    tbody.removeChild(row);
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + "_choice");
@@ -642,11 +658,25 @@ export function listofmultiple_del(varprefix, ident) {
         }
     }
     active.value = l.join(";");
+
+    // Remove the line break following the table if the deleted row was the last
+    if (tbody.childNodes.length == 0) {
+        var table = document.getElementById(varprefix + "_table");
+        var br = table.nextSibling;
+        if (br.nodeName == "BR")
+            br.parentNode.removeChild(br);
+    }
 }
 
 export function listofmultiple_init(varprefix) {
+    var table = document.getElementById(varprefix + "_table");
+    var tbody = table.getElementsByTagName("tbody")[0];
+
     document.getElementById(varprefix + "_choice").value = "";
     listofmultiple_disable_selected_options(varprefix);
+    // Put in a line break following the table if it's not empty
+    if (tbody.childNodes.length >= 1)
+        table.after(document.createElement("br"));
 }
 
 // The <option> elements in the <select> field of the currently choosen
@@ -769,6 +799,35 @@ function autocomplete_show(input_id, inner_html)
     }
 
     popup.innerHTML = inner_html;
+
+    // Register some unfocus handlers for hiding
+    autocomplete_hide_on_unrelated_events(popup);
+}
+
+export function autocomplete_hide_on_unrelated_events(origin_element) {
+    const outside_click_listener = evt => {
+        let target_element = evt.target;
+
+        do {
+            if (target_element == origin_element) {
+                return; // This click inside
+            }
+            target_element = target_element.parentNode;
+        } while (target_element);
+
+        // Click outside!
+        if (origin_element.parentNode) {
+            origin_element.parentNode.removeChild(origin_element);
+        }
+        remove_click_listener();
+    };
+
+    const remove_click_listener = () => {
+        document.removeEventListener("click", outside_click_listener);
+    };
+
+    document.addEventListener("click", outside_click_listener);
+    origin_element.addEventListener("blur", outside_click_listener);
 }
 
 function autocomplete_close(input_id)

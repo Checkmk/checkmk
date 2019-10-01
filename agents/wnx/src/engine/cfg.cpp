@@ -15,6 +15,8 @@
 #include "cfg.h"
 #include "cfg_details.h"
 #include "common/cfg_info.h"
+#include "common/object_repo.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "logger.h"
 #include "read_file.h"
@@ -22,14 +24,30 @@
 #include "tools/_process.h"  // GetSomeFolder...
 #include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
+#include "windows_service_api.h"
 #include "yaml-cpp/yaml.h"
 
+namespace cma::cfg {
+using ConfigRepo = MicroRepo<cma::cfg::details::ConfigInfo>;
+extern ConfigRepo cfgs;
+ConfigRepo cfgs;
+
+CfgNode CreateNode(const std::string& name) { return cfgs.createObject(name); }
+
+CfgNode GetNode(const std::string& name) { return cfgs.getObject(name); }
+
+bool RemoveNode(const std::string& name) { return cfgs.removeObject(name); }
+
+}  // namespace cma::cfg
+
 namespace cma {
+
 namespace details {
-// internal and hidden variables
-// #TODO to be relocated in the application parameters global
+
+// internal and hidden global variables
 bool G_Service = false;  // set to true only when we run service
 bool G_Test = false;     // set to true only when we run watest
+
 }  // namespace details
 
 bool IsService() { return details::G_Service; }
@@ -47,7 +65,7 @@ void SetTestInstallationType(InstallationType installation_type) {
 InstallationType DetermineInstallationType() noexcept {
     if (cma::IsTest()) return G_TestInstallationType;
 
-    std::filesystem::path source_ini = cma::cfg::GetFileInstallDir();
+    std::filesystem::path source_ini = cma::cfg::GetRootInstallDir();
     source_ini /= files::kIniFile;
     return IsIniFileFromInstaller(source_ini) ? InstallationType::packaged
                                               : InstallationType::wato;
@@ -240,35 +258,28 @@ uint64_t GetPerformanceFrequency() noexcept {
     return details::RegisteredPerformanceFreq;
 }
 
-YAML::Node GetLoadedConfig() noexcept {
-    return details::G_ConfigInfo.getConfig();
-}
+YAML::Node GetLoadedConfig() noexcept { return GetCfg().getConfig(); }
 
 std::wstring GetPathOfRootConfig() noexcept {
-    return details::G_ConfigInfo.getRootYamlPath();
+    return GetCfg().getRootYamlPath();
 }
 std::wstring GetPathOfBakeryConfig() noexcept {
-    return details::G_ConfigInfo.getBakeryYamlPath();
+    return GetCfg().getBakeryYamlPath();
 }
 std::wstring GetPathOfUserConfig() noexcept {
-    return details::G_ConfigInfo.getUserYamlPath();
+    return GetCfg().getUserYamlPath();
 }
 
-int GetBackupLogMaxCount() noexcept {
-    return details::G_ConfigInfo.getBackupLogMaxCount();
-}
+int GetBackupLogMaxCount() noexcept { return GetCfg().getBackupLogMaxCount(); }
 
-size_t GetBackupLogMaxSize() noexcept {
-    return details::G_ConfigInfo.getBackupLogMaxSize();
-}
+size_t GetBackupLogMaxSize() noexcept { return GetCfg().getBackupLogMaxSize(); }
 
 std::wstring GetPathOfLoadedConfig() noexcept {
     using namespace wtools;
 
     std::wstring wstr = fmt::format(
-        L"'{}','{}','{}'", details::G_ConfigInfo.getRootYamlPath().c_str(),
-        details::G_ConfigInfo.getBakeryDir().c_str(),
-        details::G_ConfigInfo.getUserYamlPath().c_str());
+        L"'{}','{}','{}'", GetCfg().getRootYamlPath().c_str(),
+        GetCfg().getBakeryDir().c_str(), GetCfg().getUserYamlPath().c_str());
     return wstr;
 }
 
@@ -277,102 +288,78 @@ std::string GetPathOfLoadedConfigAsString() noexcept {
 }
 
 std::wstring GetPathOfLoadedUserConfig() noexcept {
-    return details::G_ConfigInfo.getUserYamlPath();
+    return GetCfg().getUserYamlPath();
 }
 
 std::wstring GetUserPluginsDir() noexcept {
-    return details::G_ConfigInfo.getUserPluginsDir();
+    return GetCfg().getUserPluginsDir();
 }
 
 std::wstring GetSystemPluginsDir() noexcept {
-    return details::G_ConfigInfo.getSystemPluginsDir();
+    return GetCfg().getSystemPluginsDir();
 }
 
-std::wstring GetUserDir() noexcept {
-    return details::G_ConfigInfo.getUserDir();
-}
+std::wstring GetUserDir() noexcept { return GetCfg().getUserDir(); }
 
 std::wstring GetUpgradeProtocolDir() noexcept {
-    auto dir = details::G_ConfigInfo.getUserDir() / dirs::kPluginConfig;
+    auto dir = GetCfg().getUserDir() / dirs::kPluginConfig;
     return dir;
 }
 
-std::wstring GetBakeryDir() noexcept {
-    return details::G_ConfigInfo.getBakeryDir();
-}
+std::wstring GetBakeryDir() noexcept { return GetCfg().getBakeryDir(); }
 
 std::filesystem::path GetBakeryFile() noexcept {
-    auto bakery = details::G_ConfigInfo.getBakeryDir();
+    auto bakery = GetCfg().getBakeryDir();
     bakery /= files::kDefaultMainConfig;
     bakery.replace_extension(files::kDefaultBakeryExt);
     return bakery;
 }
 
 std::wstring GetUserInstallDir() noexcept {
-    auto data_dir = details::G_ConfigInfo.getUserDir();
+    auto data_dir = GetCfg().getUserDir();
     return data_dir / dirs::kUserInstallDir;
 }
 
-std::wstring GetRootDir() noexcept {
-    return details::G_ConfigInfo.getRootDir();
-}
+std::wstring GetRootDir() noexcept { return GetCfg().getRootDir(); }
 
-std::wstring GetFileInstallDir() noexcept {
-    auto root = details::G_ConfigInfo.getRootDir();
+std::wstring GetRootInstallDir() noexcept {
+    auto root = GetCfg().getRootDir();
     return root / dirs::kFileInstallDir;
 }
 
-std::wstring GetLocalDir() noexcept {
-    return details::G_ConfigInfo.getLocalDir();
-}
+std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
 
-std::wstring GetStateDir() noexcept {
-    return details::G_ConfigInfo.getStateDir();
-}
+std::wstring GetStateDir() noexcept { return GetCfg().getStateDir(); }
 
-std::wstring GetAuStateDir() noexcept {
-    return details::G_ConfigInfo.getAuStateDir();
-}
+std::wstring GetAuStateDir() noexcept { return GetCfg().getAuStateDir(); }
 
 std::wstring GetPluginConfigDir() noexcept {
-    return details::G_ConfigInfo.getPluginConfigDir();
+    return GetCfg().getPluginConfigDir();
 }
 
-std::wstring GetUpdateDir() noexcept {
-    return details::G_ConfigInfo.getUpdateDir();
-}
+std::wstring GetUpdateDir() noexcept { return GetCfg().getUpdateDir(); }
 
-std::wstring GetSpoolDir() noexcept {
-    return details::G_ConfigInfo.getSpoolDir();
-}
+std::wstring GetSpoolDir() noexcept { return GetCfg().getSpoolDir(); }
 
-std::wstring GetTempDir() noexcept {
-    return details::G_ConfigInfo.getTempDir();
-}
+std::wstring GetTempDir() noexcept { return GetCfg().getTempDir(); }
 
-std::string GetHostName() noexcept {
-    return details::G_ConfigInfo.getHostName();
-}
+std::string GetHostName() noexcept { return GetCfg().getHostName(); }
 
-std::wstring GetLogDir() noexcept {
-    return details::G_ConfigInfo.getLogFileDir();
-}
+std::wstring GetLogDir() noexcept { return GetCfg().getLogFileDir(); }
 
-std::wstring GetWorkingDir() noexcept { return details::G_ConfigInfo.getCwd(); }
+std::wstring GetWorkingDir() noexcept { return GetCfg().getCwd(); }
 
-std::wstring GetMsiExecPath() noexcept {
-    return details::G_ConfigInfo.getMsiExecPath();
-}
+std::wstring GetMsiExecPath() noexcept { return GetCfg().getMsiExecPath(); }
 
 // #TODO gtest
-bool IsLoadedConfigOk() noexcept { return details::G_ConfigInfo.isOk(); }
+bool IsLoadedConfigOk() noexcept { return GetCfg().isOk(); }
 
 bool StoreUserYamlToCache() noexcept {
     namespace fs = std::filesystem;
     auto loaded = GetLoadedConfig();
     if (loaded.IsNull() || !loaded.IsMap()) return false;
 
-    auto user_file = cma::cfg::details::G_ConfigInfo.getUserYamlPath();
+    auto user_file = cma::cfg::GetCfg().getUserYamlPath();
 
     StoreFileToCache(user_file);
     return true;
@@ -388,7 +375,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
         return {};
     }
 
-    auto cache_path = details::G_ConfigInfo.getCacheDir();
+    auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
         XLOG::l(XLOG_FLINE + "Can't create folder {}", cache_path.u8string());
         return {};
@@ -423,7 +410,7 @@ std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept {
 // gtest [+]
 // returns address where we could found cached config file
 std::wstring GetYamlFromCache() noexcept {
-    auto cache_path = details::G_ConfigInfo.getCacheDir();
+    auto cache_path = GetCfg().getCacheDir();
     if (cache_path.empty()) {
         XLOG::l(XLOG_FLINE + "Can\'t create folder %s", cache_path.u8string());
         return {};
@@ -441,11 +428,11 @@ std::filesystem::path G_SolutionPath = SOLUTION_DIR;
 
 void LoadGlobal() {
     groups::global.loadFromMainConfig();
-    groups::global.setupEnvironment();
+    groups::global.setupLogEnvironment();
 }
 
 // test and reset function
-void KillDefaultConfig() { details::G_ConfigInfo.cleanAll(); }
+void KillDefaultConfig() { GetCfg().cleanConfig(); }
 
 //
 // creates predefined list of folders where we are going to search for a files
@@ -469,10 +456,14 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     // filling
     vector<path> full;
     {
-        auto remote_machine_string = cma::tools::win::GetEnv(L"REMOTE_MACHINE");
+        auto remote_machine_string =
+            cma::tools::win::GetEnv(cma::kRemoteMachine);
 
         // development deployment
-        if (remote_machine_string[0]) full.emplace_back(remote_machine_string);
+        if (!remote_machine_string.empty()) {
+            XLOG::l.i("THIS IS DEVELOPMENT MACHINE");
+            full.emplace_back(remote_machine_string);
+        }
 
         // tests
         if (!cur_dir.empty()) full.emplace_back(cur_dir);
@@ -494,9 +485,108 @@ static std::vector<std::filesystem::path> FillExternalCommandPaths() {
     return v;
 }
 
+static std::filesystem::path ExtractPathFromTheExecutable() {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    std::wstring cmd_line = wtools::GetArgv(0);
+    if (cmd_line.empty()) return {};  // something really bad
+
+    fs::path exe = cma::tools::RemoveQuotes(cmd_line);
+    exe = exe.lexically_normal();
+    if (!fs::exists(exe, ec)) return {};  // something wrong probably
+
+    fs::path path = FindServiceImagePath(cma::srv::kServiceName);
+    if (path == exe) return path.parent_path().lexically_normal();
+
+    return {};
+}
+
+std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept {
+    if (service_name.empty()) return {};
+
+    XLOG::l.t("Try registry '{}'", wtools::ConvertToUTF8(service_name));
+
+    std::wstring key_path = L"System\\CurrentControlSet\\services\\";
+    key_path += service_name;
+    auto service_path_new =
+        wtools::GetRegistryValue(key_path, L"ImagePath", std::wstring());
+
+    return cma::tools::RemoveQuotes(service_path_new);
+}
+
+std::filesystem::path ExtractPathFromServiceName(
+    std::wstring_view service_name) noexcept {
+    namespace fs = std::filesystem;
+    if (service_name.empty()) return {};
+    XLOG::l.t("Try service '{}'", wtools::ConvertToUTF8(service_name));
+
+    fs::path service_path = FindServiceImagePath(service_name);
+    std::error_code ec;
+    if (fs::exists(service_path, ec)) {
+        // location of the services
+        auto p = service_path.parent_path();
+        return p.lexically_normal();
+    } else {
+        XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'",
+                service_path.u8string(), ec.value(), ec.message());
+    }
+    return {};
+}
+
 // Typically called ONLY by ConfigInfo
-bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
-                      const std::wstring& RootFolder         // look in disk
+// tries to find best suitable root folder
+// Order: service_name, preset_root, argv[0], cwd
+bool Folders::setRoot(const std::wstring& service_name,  // look in registry
+                      const std::wstring& preset_root    // look in disk
+) {
+    namespace fs = std::filesystem;
+    XLOG::d.t("Setting root. service: '{}', preset: '{}'",
+              wtools::ConvertToUTF8(service_name),
+              wtools::ConvertToUTF8(preset_root));
+
+    // Path from registry if provided
+    auto service_path_new = ExtractPathFromServiceName(service_name);
+    if (!service_path_new.empty()) {
+        // location of the services
+        root_ = service_path_new.lexically_normal();
+        XLOG::l.i("Set root '{}' from registry '{}'", root_.u8string(),
+                  wtools::ConvertToUTF8(service_name));
+        return true;
+    }
+
+    // working folder is defined
+    std::error_code ec;
+    fs::path work_dir = preset_root;
+    if (!work_dir.empty() && fs::exists(work_dir, ec)) {
+        root_ = work_dir.lexically_normal();
+        XLOG::l.i("Set root '{}' direct from folder", root_.u8string());
+        return true;
+    }
+
+    // argv[0]
+    auto ret = ExtractPathFromTheExecutable();
+    if (!ret.empty()) {
+        root_ = ret.lexically_normal();
+        XLOG::l.i("Set root '{}' from executable", root_.u8string());
+        return true;
+    }
+
+    // Current exe path used for tests
+    auto cur_dir = fs::current_path(ec);
+    if (ec.value() == 0 && fs::exists(cur_dir, ec)) {
+        root_ = cur_dir.lexically_normal();
+        XLOG::l.i("Set root '{}' from current path", root_.u8string());
+        return true;
+    }
+
+    XLOG::l(XLOG_FUNC + " Parameters are invalid");
+    return false;
+}
+
+// old API
+bool Folders::setRootEx(
+    const std::wstring& ServiceValidName,  // look in registry
+    const std::wstring& RootFolder         // look in disk
 )
 
 {
@@ -550,10 +640,12 @@ bool Folders::setRoot(const std::wstring& ServiceValidName,  // look in registry
     return true;
 }  // namespace cma::cfg::details
 
-void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
+void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
+                                        CreateMode mode) {
     try {
-        std::filesystem::path folder = AgentDataFolder;
-        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring());
+        std::filesystem::path folder = proposed_folder;
+        data_ =
+            makeDefaultDataFolder(folder.lexically_normal().wstring(), mode);
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
                    e.what());
@@ -561,10 +653,10 @@ void Folders::createDataFolderStructure(const std::wstring& AgentDataFolder) {
 }
 
 void Folders::cleanAll() {
-    root_ = L"";
-    data_ = L"";
-    public_logs_ = L"";
-    private_logs_ = L"";
+    root_.clear();
+    data_.clear();
+    public_logs_.clear();
+    private_logs_.clear();
 }
 
 //
@@ -606,13 +698,15 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // 1. ProgramData/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view AgentDataFolder) {
+    std::wstring_view AgentDataFolder, CreateMode mode) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
-    auto draw_folder = [](std::wstring_view DataFolder) -> auto {
+    auto draw_folder = [mode](std::wstring_view DataFolder) -> auto {
         fs::path app_data = DataFolder;
-        app_data /= cma::cfg::kAppDataCompanyName;
-        app_data /= cma::cfg::kAppDataAppName;
+        if (mode == CreateMode::with_path) {
+            app_data /= cma::cfg::kAppDataCompanyName;
+            app_data /= cma::cfg::kAppDataAppName;
+        }
         return app_data;
     };
 
@@ -622,23 +716,25 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
         if (ret == 0) return app_data;
-        XLOG::l("Failed to access ProgramData Folder {}", ret);
+        XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
 
-        // Public, usually during testing
-        app_data_folder = win::GetSomeSystemFolder(FOLDERID_Public);
-        app_data = draw_folder(app_data_folder);
-        ret = CreateTree(app_data);
-        if (ret == 0) return app_data;
-        XLOG::l("Failed to access Public Folder {}", ret);
-        return {};
-    } else {
-        // testing path
-        auto app_data = draw_folder(AgentDataFolder);
-        auto ret = CreateTree(app_data);
-        if (ret == 0) return app_data;
-        XLOG::l("Failed to access Public Folder {}", ret);
+        if constexpr (false) {
+            // Public fallback
+            app_data_folder = win::GetSomeSystemFolder(FOLDERID_Public);
+            app_data = draw_folder(app_data_folder);
+            ret = CreateTree(app_data);
+            if (ret == 0) return app_data;
+            XLOG::l.crit("Failed to access Public Folder {}", ret);
+        }
         return {};
     }
+
+    // testing path
+    auto app_data = draw_folder(AgentDataFolder);
+    auto ret = CreateTree(app_data);
+    if (ret == 0) return app_data;
+    XLOG::l.bp("Failed to access Public Folder {}", ret);
+    return {};
 }
 
 }  // namespace cma::cfg::details
@@ -661,7 +757,7 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
             XLOG::l.i(
                 "Loading {} direct. User and Bakery files will be IGNORED",
                 wtools::ConvertToUTF8(name));
-            auto loaded = details::G_ConfigInfo.loadDirect(name);
+            auto loaded = GetCfg().loadDirect(name);
             if (!loaded) continue;
 
             // file is loaded, write info in config file
@@ -681,13 +777,13 @@ bool InitializeMainConfig(const std::vector<std::wstring>& config_filenames,
         break;
     }
 
-    auto code = details::G_ConfigInfo.loadAggregated(usable_name, cache_op);
+    auto code = GetCfg().loadAggregated(usable_name, cache_op);
 
     if (code >= 0) return true;
 
     XLOG::l.e("Failed usable_name: '{}' at root: '{}' code is '{}'",
               wtools::ConvertToUTF8(usable_name),
-              details::G_ConfigInfo.getRootDir().u8string(), code);
+              GetCfg().getRootDir().u8string(), code);
 
     return false;
 }
@@ -709,16 +805,16 @@ void ProcessKnownConfigGroups() {
 
 // API take loaded config and use it!
 void SetupEnvironmentFromGroups() {
-    groups::global.setupEnvironment();  // at the moment only global
+    groups::global.setupLogEnvironment();  // at the moment only global
 }
 
-bool ReloadConfigAutomatically() { return true; }
+bool ReloadConfigAutomatically() { return false; }
 
 // Find any file, usually executable on one of the our paths
 // for execution
 const std::wstring FindExeFileOnPath(const std::wstring& File) {
     using namespace std::filesystem;
-    auto paths = details::G_ConfigInfo.getExePaths();
+    auto paths = GetCfg().getExePaths();
     for (const auto& dir : paths) {
         auto file_path = dir / File;
         if (exists(file_path)) {
@@ -729,7 +825,7 @@ const std::wstring FindExeFileOnPath(const std::wstring& File) {
 }
 
 std::vector<std::filesystem::path> GetExePaths() {
-    return details::G_ConfigInfo.getExePaths();
+    return GetCfg().getExePaths();
 }
 
 // Find cfg file, usually YAML on one of the our paths for config
@@ -1030,8 +1126,10 @@ std::tuple<bool, std::filesystem::path> IsInstallProtocolExists(
     return {std::filesystem::exists(install_file, ec), install_file};
 }
 
-void UpdateInstallProtocolFile(bool exists_install_protocol,
-                               const std::filesystem::path& install_file) {
+// #TODO deprecated
+[[deprecated]] void UpdateInstallProtocolFile(
+    bool exists_install_protocol, const std::filesystem::path& install_file) {
+
     if (install_file.empty()) {
         XLOG::l("Install file cannot be generated, because it is not correct");
         return;
@@ -1048,50 +1146,74 @@ void UpdateInstallProtocolFile(bool exists_install_protocol,
 
     if (ofs) {
         ofs << "Installed:\n";
-        ofs << "  time: '" << cma::cfg::GetTimeString() << "'\n";
+        ofs << "  time: '" << cma::cfg::ConstructTimeString() << "'\n";
     }
 }
 
-void ConfigInfo::initAll(
-    const std::wstring& ServiceValidName,  // look in registry
-    const std::wstring& RootFolder,        // look in disk
-    const std::wstring& AgentDataFolder)   // look in dis
-{
-    initEnvironment();
-    folders_.setRoot(ServiceValidName, RootFolder);
-    auto root = folders_.getRoot();
-    auto [exists_install_protocol, install_file] =
-        IsInstallProtocolExists(root);
+void ConfigInfo::fillExePaths(std::filesystem::path root) {
+    constexpr const wchar_t* dir_tails[] = {
+        dirs::kAgentPlugins, dirs::kAgentProviders, dirs::kAgentUtils};
 
-    folders_.createDataFolderStructure(AgentDataFolder);
-
-    if (folders_.getData().empty())
-        XLOG::l.crit("Data folder is empty.This is bad.");
-    else
-        UpdateInstallProtocolFile(exists_install_protocol, install_file);
-
-    // exe
-    root = folders_.getRoot();
-    constexpr const wchar_t* dir_tails[] = {dirs::kUserBin, dirs::kAgentPlugins,
-                                            dirs::kAgentProviders,
-                                            dirs::kAgentUtils};
-    for (auto& d : dir_tails) exe_command_paths_.emplace_back((root / d));
+    for (auto& d : dir_tails) exe_command_paths_.emplace_back(root / d);
     exe_command_paths_.emplace_back(root);
+}
 
-    // all paths where we are looking for config files
+void ConfigInfo::fillConfigDirs() {
+    config_dirs_.clear();
     config_dirs_.emplace_back(folders_.getRoot());
     config_dirs_.emplace_back(folders_.getBakery());
     config_dirs_.emplace_back(folders_.getUser());
 }
 
-// normally used to reload configs or testing
-void ConfigInfo::cleanAll() {
+// not thread safe, but called only on program start
+void ConfigInfo::initFolders(
+    const std::wstring& ServiceValidName,  // look in registry
+    const std::wstring& RootFolder,        // look in disk
+    const std::wstring& AgentDataFolder)   // look in dis
+{
+    cleanFolders();
+    folders_.createDataFolderStructure(AgentDataFolder,
+                                       Folders::CreateMode::with_path);
+
+    // This is not very good idea, but we want
+    // to start logging as early as possible
+    XLOG::setup::ChangeDebugLogLevel(LogLevel::kLogDebug);
+    groups::global.setLogFolder(folders_.getData() / dirs::kLog);
+    groups::global.setupLogEnvironment();
+
+    initEnvironment();
+
+    folders_.setRoot(ServiceValidName, RootFolder);
+    auto root = folders_.getRoot();
+
+    if (folders_.getData().empty())
+        XLOG::l.crit("Data folder is empty.This is bad.");
+    else {
+        // code is disabled as deprecated
+        // auto [exists_install_protocol, install_file] =
+        //    IsInstallProtocolExists(root);
+        // UpdateInstallProtocolFile(exists_install_protocol, install_file);
+    }
+
+    // exe
+    fillExePaths(root);
+
+    // all paths where we are looking for config files
+    fillConfigDirs();
+}
+
+// normally used only during start
+void ConfigInfo::cleanFolders() {
     std::lock_guard lk(lock_);
-    XLOG::t(XLOG_FUNC + " !");
     exe_command_paths_.resize(0);  // root/utils, root/plugins etc
     config_dirs_.resize(0);        // root und data
 
     folders_.cleanAll();
+}
+
+// normally used to reload configs and/or testing
+void ConfigInfo::cleanConfig() {
+    std::lock_guard lk(lock_);
 
     yaml_.reset();
     root_yaml_path_ = L"";
@@ -1102,31 +1224,64 @@ void ConfigInfo::cleanAll() {
     ok_ = false;
 }
 
-void ConfigInfo::initEnvironment() {
-    namespace fs = std::filesystem;
+bool ConfigInfo::pushFolders(const std::filesystem::path& root,
+                             const std::filesystem::path& data) {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.size() >= kMaxFoldersStackSize) {
+        XLOG::l("Folders Stack is overflown, max size is [{}]",
+                kMaxFoldersStackSize);
+        return false;
+    }
+    folders_stack_.push(folders_);
+    folders_.setRoot({}, root.wstring());
+    folders_.createDataFolderStructure(data, Folders::CreateMode::direct);
+
+    return true;
+}
+
+bool ConfigInfo::popFolders() {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.empty()) {
+        XLOG::l("Imbalanced pop call for folders stack");
+        return false;
+    }
+
+    folders_ = folders_stack_.top();
+    folders_stack_.pop();
+    return true;
+}
+
+std::wstring FindMsiExec() noexcept {
+    std::filesystem::path p = cma::tools::win::GetSystem32Folder();
+    p /= "msiexec.exe";
+
+    std::error_code ec;
+    if (std::filesystem::exists(p, ec)) {
+        XLOG::t.i("Found msiexec {}", p.u8string());
+        return p.wstring();
+    }
+
+    XLOG::l.crit(
+        "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
+        p.u8string(), ec.value(), ec.message());
+    return {};
+}
+
+std::string FindHostName() noexcept {
     // host name
     char host_name[256] = "";
     auto ret = ::gethostname(host_name, 256);
     if (ret != 0) {
-        XLOG::l("Can\'t call gethostname, error [{}]", ret);
+        XLOG::l("Can't call gethostname, error [{}]", ret);
+        return {};
     }
-    host_name_ = host_name;
+    return host_name;
+}
 
-    // working directory
-    cwd_ = fs::current_path().wstring();
-
-    // msi exec
-    path_to_msi_exec_.clear();
-    fs::path p = cma::tools::win::GetSystem32Folder();
-    p /= "msiexec.exe";
-    std::error_code ec;
-    if (fs::exists(p, ec)) {
-        XLOG::t.i("Found msiexec {}", p.u8string());
-        path_to_msi_exec_ = p.wstring();
-    } else
-        XLOG::l.crit(
-            "Cannot find msiexec {} error [{}] '{}', automatic update is not possible",
-            p.u8string(), ec.value(), ec.message());
+void ConfigInfo::initEnvironment() {
+    host_name_ = FindHostName();
+    cwd_ = std::filesystem::current_path().wstring();
+    path_to_msi_exec_ = FindMsiExec();
 }
 
 // probably global in the future
@@ -1136,7 +1291,7 @@ static void PrepareEnvironment() {
 
     namespace fs = std::filesystem;
 
-    auto fs_state_path = details::G_ConfigInfo.getStateDir();
+    auto fs_state_path = GetCfg().getStateDir();
     auto state_path = fs_state_path.u8string();
 
     // delete all files in folder - this is DEBUG ONLY
@@ -1193,9 +1348,8 @@ constexpr Combine GetCombineMode(std::string_view name) {
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node source_value, Combine combine) {
     if (source_value.IsScalar()) {
-        XLOG::d(
-            XLOG_FLINE + " overriding seq with scalar '{}' this is temporary",
-            name);  // may happen when with empty sequence sections
+        XLOG::d.t("Overriding seq named '{}' with scalar, this is allowed",
+                  name);  // may happen when with empty sequence sections
         target_value = source_value;
         return;
     }
@@ -1489,6 +1643,7 @@ void ConfigInfo::loadYamlDataWithMerge(YAML::Node node,
     user_yaml_path_ = Yd[2].path_;
 
     aggregated_ = true;
+    uniq_id_++;
     ok_ = true;
 }
 
@@ -1603,6 +1758,7 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& FullPath) {
     user_yaml_time_ = user_yaml_time_;
     aggregated_ = false;
     ok_ = true;
+    uniq_id_++;
     return true;
 }
 
@@ -1623,7 +1779,7 @@ bool IsIniFileFromInstaller(const std::filesystem::path& filename) {
 }
 
 // generates standard agent time string
-std::string GetTimeString() {
+std::string ConstructTimeString() {
     using namespace std::chrono;
     auto cur_time = system_clock::now();
     auto in_time_t = system_clock::to_time_t(cur_time);
@@ -1714,8 +1870,9 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
 }
 
 // converts "any/relative/path" into
-// "$CUSTOM_PLUGINS_PATH$\\any\\relative\\path" return false if yaml is not
-// suitable for patching
+// "marker\\any\\relative\\path"
+// return false if yaml is not suitable for patching
+// normally used only by cvt
 bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
                        const std::string& key_name,
                        std::string_view subkey_name, std::string_view marker) {
@@ -1752,5 +1909,47 @@ bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
     }
     return true;
 }
+
+constexpr std::string_view kWmicUninstallCommand =
+    "wmic product where name=\"{}\" call uninstall /nointeractive";
+std::string CreateWmicCommand(std::string_view product_name) noexcept {
+    return fmt::format(kWmicUninstallCommand, product_name);
+}
+
+std::filesystem::path CreateWmicUninstallFile(
+    std::filesystem::path temp_dir, std::string_view product_name) noexcept {
+    auto file = temp_dir / "exec_uninstall.cmd";
+    try {
+        std::ofstream ofs(file.u8string());
+        ofs << CreateWmicCommand(product_name);
+        ofs.close();
+        if (std::filesystem::exists(file)) return file;
+        XLOG::l("Attempt to create '{}' file is failed", file.u8string());
+        return {};
+    } catch (const std::exception& e) {
+        XLOG::l("Attempt to create '{}' file is failed with exception {}",
+                file.u8string(), e.what());
+    }
+
+    return {};
+}
+
+bool UninstallProduct(std::string_view name) {
+    if constexpr (tgt::IsWindows()) {
+        std::filesystem::path temp = cma::cfg::GetTempDir();
+        auto fname = CreateWmicUninstallFile(temp, name);
+        if (fname.empty()) return false;
+        auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
+        if (pid == 0) {
+            XLOG::l("Failed to start '{}'", fname.u8string());
+        }
+        return true;
+    }
+
+    return false;
+}
+
+details::ConfigInfo& GetCfg() { return details::G_ConfigInfo; }
+std::atomic<uint64_t> details::ConfigInfo::uniq_id_ = 1;
 
 }  // namespace cma::cfg

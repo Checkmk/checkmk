@@ -36,8 +36,8 @@ def license_check_levels(total, in_use, params):
         warn = max(0, total - params[0])
         crit = max(0, total - params[1])
     else:
-        warn = total * (1 - params[0] / 100)
-        crit = total * (1 - params[1] / 100)
+        warn = total * (1 - params[0] / 100.0)
+        crit = total * (1 - params[1] / 100.0)
 
     perfdata = [("licenses", in_use, warn, crit, 0, total)]
     if in_use <= total:

@@ -2,7 +2,7 @@
 # principle we could use any tag by exporting it manually via:
 #    ( TAG=2018-02-01; git archive --prefix=re2-$TAG/ --output=re2-$TAG.tar.gz $TAG )
 RE2 := re2
-RE2_VERS := 2019-04-01
+RE2_VERS := 2019-09-01
 RE2_DIR := $(RE2)-$(RE2_VERS)
 
 RE2_BUILD := $(BUILD_HELPER_DIR)/$(RE2_DIR)-build

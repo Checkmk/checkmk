@@ -43,7 +43,6 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
-from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.tags import (
     TagConfigFile,)
 from cmk.gui.watolib.groups import (
@@ -284,8 +283,27 @@ class APICallHosts(APICallCollection):
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
 
     def _add_hosts(self, request):
+        return self._bulk_action(request, "add")
+
+    def _bulk_action(self, request, action_name):
+        result = {
+            "succeeded_hosts": [],
+            "failed_hosts": {},
+        }
         for host_request in request["hosts"]:
-            self._add(host_request)
+            try:
+                if action_name == "add":
+                    self._add(host_request)
+                elif action_name == "edit":
+                    self._edit(host_request)
+                else:
+                    raise NotImplementedError()
+
+                result["succeeded_hosts"].append(host_request["hostname"])
+            except Exception as e:
+                result["failed_hosts"][host_request["hostname"]] = "%s" % e
+
+        return result
 
     def _edit(self, request):
         hostname = request.get("hostname")
@@ -320,8 +338,7 @@ class APICallHosts(APICallCollection):
         host.edit(current_attributes, cluster_nodes)
 
     def _edit_hosts(self, request):
-        for host_request in request["hosts"]:
-            self._edit(host_request)
+        return self._bulk_action(request, "edit")
 
     def _get(self, request):
         hostname = request.get("hostname")
@@ -679,10 +696,6 @@ class APICallRules(APICallCollection):
         # Verify all rules
         rule_vs = watolib.Ruleset(ruleset_name, tag_to_group_map).rulespec.valuespec
 
-        # Binary rulesets currently don't have a valuespec attribute set.
-        if rule_vs is None:
-            rule_vs = Checkbox()
-
         for folder_path, rules in new_ruleset.items():
             for rule in rules:
                 value = rule["value"]
@@ -879,6 +892,9 @@ class APICallHosttags(APICallCollection):
 @api_call_collection_registry.register
 class APICallSites(APICallCollection):
     def get_api_calls(self):
+        if cmk.is_demo():
+            return {}
+
         required_permissions = ["wato.sites"]
         return {
             "get_site": {
@@ -1107,8 +1123,8 @@ class APICallOther(APICallCollection):
                 hostname, counts[hostname][3])
             watolib.add_service_change(host, "set-autochecks", message)
 
-        msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d"
-               ) % tuple(counts[hostname])
+        msg = _("Service discovery successful. Added %d, removed %d, kept %d, total %d services "
+                "and %d new, %d total host labels") % tuple(counts[hostname])
         return msg
 
     def _activate_changes(self, request):

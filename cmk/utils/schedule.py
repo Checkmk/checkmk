@@ -32,20 +32,19 @@
 import abc
 import datetime
 import time
+import six
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, DAILY, WEEKLY, MONTHLY
 
 
-class Schedule(object):
+class Schedule(six.with_metaclass(abc.ABCMeta, object)):
     """
     Abstract base class for schedules. A default implementation
     for the last and next event at a given datetime are provided.
     Subclasses have to define the class attribute _delta and the
     instance attribute _rule.
     """
-    __metaclass__ = abc.ABCMeta
-
     @abc.abstractproperty
     def rule(self):
         pass

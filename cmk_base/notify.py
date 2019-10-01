@@ -46,7 +46,11 @@ import time
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk.utils.debug
-from cmk.utils.notify import find_wato_folder, notification_message
+from cmk.utils.notify import (
+    find_wato_folder,
+    notification_message,
+    notification_result_message,
+)
 from cmk.utils.regex import regex
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -188,18 +192,9 @@ def do_notify(options, args):
                 notify_usage()
                 sys.exit(1)
 
-            if len(args) != 2 and notify_mode not in ["stdin", "replay", "send-bulks"]:
-                console.error("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
+            if notify_mode == 'spoolfile' and len(args) != 2:
+                console.error("ERROR: need an argument to --notify spoolfile.\n\n")
                 sys.exit(1)
-
-            elif notify_mode == 'spoolfile':
-                filename = args[1]
-
-            elif notify_mode == 'replay':
-                try:
-                    replay_nr = int(args[1])
-                except (IndexError, ValueError):
-                    replay_nr = 0
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
         # This spoolfile contains a python dictionary
@@ -207,21 +202,20 @@ def do_notify(options, args):
         # Any problems while reading the spoolfile results in returning 2
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
+            filename = args[1]
             return handle_spoolfile(filename)
-
         elif keepalive and keepalive.enabled():
             notify_keepalive()
-
         elif notify_mode == 'replay':
-            raw_context = raw_context_from_backlog(replay_nr)
-            notify_notify(raw_context)
-
+            try:
+                replay_nr = int(args[1])
+            except (IndexError, ValueError):
+                replay_nr = 0
+            notify_notify(raw_context_from_backlog(replay_nr))
         elif notify_mode == 'stdin':
-            notify_notify(events.raw_context_from_stdin())
-
+            notify_notify(raw_context_from_stdin())
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
-
         else:
             notify_notify(raw_context_from_env())
 
@@ -229,7 +223,7 @@ def do_notify(options, args):
         crash_dir = cmk.utils.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
-        file(crash_dir + "/crash.log", "a").write(
+        open(crash_dir + "/crash.log", "a").write(
             "CRASH (%s):\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
@@ -1240,7 +1234,7 @@ def notify_via_email(plugin_context):
     os.putenv("LANG", old_lang)  # Important: do not destroy our environment
     if exitcode != 0:
         notify_log("ERROR: could not deliver mail. Exit code of command is %r" % exitcode)
-        for line in (stdout_txt + stderr_txt).splitlines():
+        for line in (stdout_txt + stderr_txt).decode('utf-8').splitlines():
             notify_log("mail: %s" % line.rstrip())
         return 2
 
@@ -1272,7 +1266,7 @@ def notify_via_email(plugin_context):
 def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context)  # Make a real copy
-    events.add_to_event_context(plugin_context, "PARAMETER", params, log_function=notify_log)
+    events.add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
 
 
@@ -1286,19 +1280,19 @@ def create_bulk_parameter_context(params):
 
 def path_to_notification_script(plugin):
     # Call actual script without any arguments
-    local_path = cmk.utils.paths.local_notifications_dir + "/" + plugin
-    if os.path.exists(local_path):
+    local_path = cmk.utils.paths.local_notifications_dir / plugin
+    if local_path.exists():
         path = local_path
     else:
-        path = cmk.utils.paths.notifications_dir + "/" + plugin
+        path = cmk.utils.paths.notifications_dir / plugin
 
-    if not os.path.exists(path):
+    if not path.exists():
         notify_log("Notification plugin '%s' not found" % plugin)
         notify_log("  not in %s" % cmk.utils.paths.notifications_dir)
         notify_log("  and not in %s" % cmk.utils.paths.local_notifications_dir)
         return None
 
-    return path
+    return str(path)
 
 
 # This is the function that finally sends the actual notification.
@@ -1529,7 +1523,7 @@ def do_bulk_notify(plugin, params, plugin_context, bulk):
     bulk_dirname = create_bulk_dirname(bulk_path)
     uuid = fresh_uuid()
     filename = bulk_dirname + "/" + uuid
-    file(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
+    open(filename + ".new", "w").write("%r\n" % ((params, plugin_context),))
     os.rename(filename + ".new", filename)  # We need an atomic creation!
     notify_log("        - stored in %s" % filename)
 
@@ -1726,17 +1720,7 @@ def notify_bulk(dirname, uuids):
             unhandled_uuids.append((mtime, uuid))
             continue
 
-        part_block = []
-        part_block.append("\n")
-        for varname, value in context.items():
-            part_block.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
-        bulk_context.append(part_block)
-
-        # Do not forget to add this to the monitoring log. We create
-        # a single entry for each notification contained in the bulk.
-        # It is important later to have this precise information.
-        plugin_name = "bulk " + (plugin or "plain email")
-        _log_to_history(notification_message(plugin_name, context))
+        bulk_context.append(context)
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
@@ -1745,12 +1729,29 @@ def notify_bulk(dirname, uuids):
         if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
-        # Converts bulk context from [[1,2],[3,4]] to [1,2,3,4]
-        bulk_context = [x for y in bulk_context for x in y]
+        context_lines = create_bulk_parameter_context(old_params)
+        for context in bulk_context:
+            # Do not forget to add this to the monitoring log. We create
+            # a single entry for each notification contained in the bulk.
+            # It is important later to have this precise information.
+            plugin_name = "bulk " + (plugin or "plain email")
+            _log_to_history(notification_message(plugin_name, context))
 
-        parameter_context = create_bulk_parameter_context(old_params)
-        context_text = "".join(parameter_context + bulk_context)
-        call_bulk_notification_script(plugin, context_text)
+            context_lines.append("\n")
+            for varname, value in context.iteritems():
+                line = "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
+                context_lines.append(line)
+
+        exitcode, output_lines = call_bulk_notification_script(plugin, context_lines)
+
+        for context in bulk_context:
+            _log_to_history(
+                notification_result_message(
+                    "bulk " + (plugin or "plain email"),
+                    context,
+                    exitcode,
+                    output_lines,
+                ))
     else:
         notify_log("No valid notification file left. Skipping this bulk.")
 
@@ -1775,7 +1776,7 @@ def notify_bulk(dirname, uuids):
             notify_log("Warning: cannot remove directory %s: %s" % (dirname, e))
 
 
-def call_bulk_notification_script(plugin, context_text):
+def call_bulk_notification_script(plugin, context_lines):
     path = path_to_notification_script(plugin)
     if not path:
         raise MKGeneralException("Notification plugin %s not found" % plugin)
@@ -1793,7 +1794,7 @@ def call_bulk_notification_script(plugin, context_text):
                              stdin=subprocess.PIPE,
                              close_fds=True)
 
-        stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
+        stdout_txt, stderr_txt = p.communicate("".join(context_lines).encode("utf-8"))
         exitcode = p.returncode
 
         clear_notification_timeout()
@@ -1806,8 +1807,12 @@ def call_bulk_notification_script(plugin, context_text):
 
     if exitcode:
         notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
-    for line in (stdout_txt + stderr_txt).splitlines():
+
+    output_lines = (stdout_txt + stderr_txt).decode('utf-8').splitlines()
+    for line in output_lines:
         notify_log("%s: %s" % (plugin, line.rstrip()))
+
+    return exitcode, output_lines
 
 
 #.
@@ -1850,6 +1855,14 @@ def raw_context_from_backlog(nr):
 
     notify_log("Replaying notification %d from backlog...\n" % nr)
     return backlog[nr]
+
+
+def raw_context_from_stdin():
+    context = {}
+    for line in sys.stdin:
+        varname, value = line.strip().split("=", 1)
+        context[varname] = events.expand_backslashes(value)
+    return context
 
 
 def raw_context_from_env():
@@ -1921,7 +1934,7 @@ def notify_log_debug(message):
 
 def fresh_uuid():
     try:
-        return file('/proc/sys/kernel/random/uuid').read().strip()
+        return open('/proc/sys/kernel/random/uuid').read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback

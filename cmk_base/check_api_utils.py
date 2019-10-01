@@ -30,7 +30,9 @@
 # incremental cleanup is impossible.
 
 from typing import Dict, Text  # pylint: disable=unused-import
-from cmk_base.check_utils import CheckParameters, Item, DiscoveredServiceLabels  # pylint: disable=unused-import
+
+from cmk_base.discovered_labels import DiscoveredServiceLabels, DiscoveredHostLabels  # pylint: disable=unused-import
+from cmk_base.check_utils import CheckParameters, Item  # pylint: disable=unused-import
 
 # Symbolic representations of states in plugin output
 state_markers = ["", "(!)", "(!!)", "(?)"]
@@ -48,11 +50,12 @@ _service_description = None
 
 class Service(object):
     """Can be used to by the discovery function to tell Checkmk about a new service"""
-    def __init__(self, item, parameters=None, service_labels=None):
-        # type: (Item, CheckParameters, DiscoveredServiceLabels) -> None
+    def __init__(self, item, parameters=None, service_labels=None, host_labels=None):
+        # type: (Item, CheckParameters, DiscoveredServiceLabels, DiscoveredHostLabels) -> None
         self.item = item
         self.parameters = parameters
         self.service_labels = service_labels or DiscoveredServiceLabels()
+        self.host_labels = host_labels or DiscoveredHostLabels()
 
 
 def set_hostname(hostname):

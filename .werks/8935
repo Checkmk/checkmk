@@ -1,0 +1,10 @@
+Title: dell_om_processors: Unknown device or CPU state cause an UNKNOWN service state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1566457522
+Class: fix
+
+

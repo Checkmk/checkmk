@@ -18,6 +18,8 @@
 #include "section_header.h"
 
 namespace cma::provider {
+constexpr bool kParallelMrpe = false;
+constexpr bool kMrpeRemoveAbsentFiles = false;
 
 // actual regex is ("([^"]+)"|'([^']+)'|[^" \t]+)
 // verified https://regex101.com/r/p89I0B/1
@@ -37,13 +39,6 @@ inline std::vector<std::string> TokenizeString(const std::string &val,
     return {std::sregex_token_iterator{val.cbegin(), val.cend(), regex_val,
                                        sub_match},
             std::sregex_token_iterator{}};
-}
-
-inline void removeQuotes(std::string &val) {
-    if (val.size() < 2) return;
-
-    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
-    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
 }
 
 struct MrpeEntry {
@@ -103,8 +98,6 @@ protected:
     std::vector<std::string> checks_;    // "check = ...."
     std::vector<std::string> includes_;  // "include = ......"
 
-    std::string accu_;  // filled by updateSectionStatus
-
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SectionProviderOhm;
     FRIEND_TEST(SectionProviderMrpe, ConfigLoad);
@@ -112,11 +105,14 @@ protected:
     FRIEND_TEST(SectionProviderMrpe, Run);
 #endif
 };
-std::pair<std::string, std::filesystem::path> parseIncludeEntry(
+std::pair<std::string, std::filesystem::path> ParseIncludeEntry(
     const std::string &entry);
 
 void FixCrCnForMrpe(std::string &str);
-
+std::string ExecMrpeEntry(const MrpeEntry &entry,
+                          std::chrono::milliseconds timeout);
+void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
+                         std::vector<MrpeEntry> &entries);
 }  // namespace cma::provider
 
 #endif  // mrpe_h__

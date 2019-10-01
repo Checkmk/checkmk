@@ -296,6 +296,49 @@ inline bool SetEnv(const std::basic_string<T>& EnvVarName,
     }
 }
 
+// safe temporary setting environment variable
+// sets variable on ctor
+// remove variable on dtor
+// NOT THREAD SAFE and cannot be Thread Safe by nature of the _setenv
+// Usage {WithEnv we("PATH", ".");.........;}
+template <typename T>
+class WithEnv {
+public:
+    // ctor
+    WithEnv(const std::basic_string<T>& name, const std::basic_string<T>& value)
+        : name_(name) {
+        if (!name_.empty()) SetEnv(name, value);
+    }
+
+    ~WithEnv() {
+        if (!name_.empty()) SetEnv(name_, {});
+    }
+
+    // no copy - environment variable are persistent globals
+    WithEnv(const WithEnv& rhs) = delete;
+    WithEnv& operator=(const WithEnv& rhs) = delete;
+
+    // move is allowed
+    WithEnv(WithEnv&& rhs) {
+        name_ = rhs.name_;
+        rhs.name_.clear();
+    }
+    WithEnv& operator=(WithEnv&& rhs) {
+        if (!name_.empty()) SetEnv(name_, {});
+        name_ = rhs.name_;
+        rhs.name_.clear();
+    }
+
+    const auto name() noexcept { return name_; }
+
+private:
+    std::basic_string<T> name_;
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class Misc;
+    FRIEND_TEST(Misc, WithEnv);
+#endif
+};
+
 template <typename T>
 std::basic_string<T> GetEnv(const T* Name) noexcept {
     T env_var_value[MAX_PATH];
@@ -313,6 +356,11 @@ std::basic_string<T> GetEnv(const T* Name) noexcept {
 template <typename T>
 std::basic_string<T> GetEnv(const std::basic_string<T>& Name) noexcept {
     return GetEnv(Name.c_str());
+}
+
+template <typename T>
+std::basic_string<T> GetEnv(const std::basic_string_view<T>& Name) noexcept {
+    return GetEnv(Name.data());
 }
 
 // #TODO check do we really need this.
@@ -540,6 +588,24 @@ inline auto SecondsSinceEpoch() {
     const auto now =
         std::chrono::duration_cast<std::chrono::seconds>(time_since);
     return now.count();
+}
+
+inline std::string RemoveQuotes(const std::string& in) {
+    auto val = in;
+    if (val.size() < 2) return val;
+
+    if (val.back() == '\'' || val.back() == '\"') val.pop_back();
+    if (val[0] == '\'' || val[0] == '\"') val = val.substr(1, val.size() - 1);
+    return val;
+}
+
+inline std::wstring RemoveQuotes(const std::wstring& in) {
+    auto val = in;
+    if (val.size() < 2) return val;
+
+    if (val.back() == L'\'' || val.back() == L'\"') val.pop_back();
+    if (val[0] == L'\'' || val[0] == L'\"') val = val.substr(1, val.size() - 1);
+    return val;
 }
 
 }  // namespace cma::tools

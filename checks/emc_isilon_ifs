@@ -34,10 +34,10 @@ def inventory_emc_isilon_ifs(info):
 
 
 def check_emc_isilon_ifs(item, params, info):
-    ONE_MB = 1024 * 1024
+    ONE_MB = 1024**2
     for total, avail in info:
-        size_mb = int(total) / ONE_MB
-        avail_mb = int(avail) / ONE_MB
+        size_mb = int(total) // ONE_MB
+        avail_mb = int(avail) // ONE_MB
         return df_check_filesystem_list("ifs", params, [("ifs", size_mb, avail_mb, 0)])
 
 

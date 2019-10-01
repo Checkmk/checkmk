@@ -50,6 +50,8 @@ const char* const kGlobalEncrypt = "encrypted";       // bool
 const char* const kGlobalPassword = "passphrase";     // string
 const char* const kGlobalWmiTimeout = "wmi_timeout";  // int
 
+const char* const kGlobalRemoveLegacy = "remove_legacy";  // bool
+
 const char* const kRealTime = "realtime";    // map
 const char* const kRtTimeout = "timeout";    // int
 const char* const kRtPort = "port";          // int
@@ -155,7 +157,8 @@ const char* const kPsFullPath = "full_path";  // bool
 const char* const kFileInfoPath = "path";  // sequence
 
 // group "mrpe"
-const char* const kMrpeConfig = "config";  // sequence
+const char* const kMrpeConfig = "config";      // sequence
+const char* const kMrpeParallel = "parallel";  // boool
 
 }  // namespace vars
 }  // namespace cma::cfg

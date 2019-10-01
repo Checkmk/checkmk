@@ -56,7 +56,7 @@ ssl_ports = [
 ]
 
 if os.path.exists(config_file):
-    execfile(config_file)
+    exec (open(config_file).read())
 
 
 def try_detect_servers():

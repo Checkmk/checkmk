@@ -27,6 +27,7 @@
 import abc
 import re
 import time
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
@@ -45,9 +46,7 @@ from cmk.gui.plugins.visuals import (
 )
 
 
-class FilterInvtableText(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableText(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
@@ -82,9 +81,7 @@ class FilterInvtableText(Filter):
         return newrows
 
 
-class FilterInvtableTimestampAsAge(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableTimestampAsAge(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
@@ -92,8 +89,9 @@ class FilterInvtableTimestampAsAge(Filter):
     def __init__(self):
         self._from_varprefix = self.ident + "_from"
         self._to_varprefix = self.ident + "_to"
-        Filter.__init__(self, self._invinfo,
-                        [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
+        super(FilterInvtableTimestampAsAge,
+              self).__init__(self._invinfo,
+                             [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
 
     def display(self):
         html.open_table()
@@ -145,15 +143,14 @@ class FilterInvtableTimestampAsAge(Filter):
 
 
 # Filter for choosing a range in which a certain integer lies
-class FilterInvtableIDRange(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableIDRange(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
+        super(FilterInvtableIDRange, self).__init__(self._invinfo,
+                                                    [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.write_text(_("from:") + " ")
@@ -181,16 +178,14 @@ class FilterInvtableIDRange(Filter):
         return newrows
 
 
-class FilterInvtableOperStatus(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableOperStatus(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
         varnames = [self.ident + "_" + str(x) for x in defines.interface_oper_states()]
-        Filter.__init__(self, self._invinfo, varnames, [])
+        super(FilterInvtableOperStatus, self).__init__(self._invinfo, varnames, [])
 
     def display(self):
         html.begin_checkbox_group()
@@ -224,15 +219,13 @@ class FilterInvtableOperStatus(Filter):
         return new_rows
 
 
-class FilterInvtableAdminStatus(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableAdminStatus(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident], [])
+        super(FilterInvtableAdminStatus, self).__init__(self._invinfo, [self.ident], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
@@ -253,15 +246,13 @@ class FilterInvtableAdminStatus(Filter):
         return new_rows
 
 
-class FilterInvtableAvailable(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableAvailable(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident], [])
+        super(FilterInvtableAvailable, self).__init__(self._invinfo, [self.ident], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
@@ -284,15 +275,13 @@ class FilterInvtableAvailable(Filter):
         return new_rows
 
 
-class FilterInvtableInterfaceType(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableInterfaceType(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident], [])
+        super(FilterInvtableInterfaceType, self).__init__(self._invinfo, [self.ident], [])
 
     def double_height(self):
         return True
@@ -327,22 +316,21 @@ class FilterInvtableInterfaceType(Filter):
         return new_rows
 
 
-class FilterInvtableVersion(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvtableVersion(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invinfo(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
+        super(FilterInvtableVersion, self).__init__(self._invinfo,
+                                                    [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], size=9)
+        html.text_input(self.htmlvars[0], size=7)
         html.write_text(" &nbsp; ")
         html.write_text(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], size=9)
+        html.text_input(self.htmlvars[1], size=7)
 
     def filter_table(self, rows):
         from_version = html.request.var(self.htmlvars[0])
@@ -362,15 +350,13 @@ class FilterInvtableVersion(Filter):
         return new_rows
 
 
-class FilterInvText(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvText(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invpath(self):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, "host", [self.ident], [])
+        super(FilterInvText, self).__init__("host", [self.ident], [])
 
     @property
     def filtertext(self):
@@ -409,9 +395,7 @@ class FilterInvText(Filter):
         return newrows
 
 
-class FilterInvFloat(Filter):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvFloat(six.with_metaclass(abc.ABCMeta, Filter)):
     @abc.abstractmethod
     def _invpath(self):
         raise NotImplementedError()
@@ -425,7 +409,7 @@ class FilterInvFloat(Filter):
         raise NotImplementedError()
 
     def __init__(self):
-        Filter.__init__(self, "host", [self.ident + "_from", self.ident + "_to"], [])
+        super(FilterInvFloat, self).__init__("host", [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.write_text(_("From: "))
@@ -472,15 +456,13 @@ class FilterInvFloat(Filter):
         return newrows
 
 
-class FilterInvBool(FilterTristate):
-    __metaclass__ = abc.ABCMeta
-
+class FilterInvBool(six.with_metaclass(abc.ABCMeta, FilterTristate)):
     @abc.abstractmethod
     def _invpath(self):
         raise NotImplementedError()
 
     def __init__(self):
-        FilterTristate.__init__(self, "host", self.ident)
+        super(FilterInvBool, self).__init__("host", self.ident)
 
     def need_inventory(self):
         return self.tristate_value() != -1
@@ -622,7 +604,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     def find_package(self, packages, name, from_version, to_version):
         for package in packages:
-            if isinstance(name, unicode):
+            if isinstance(name, six.text_type):
                 if package["name"] != name:
                     continue
             else:

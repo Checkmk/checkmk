@@ -1,0 +1,11 @@
+Title: HW/SW Inventory: Shows Checkmk agent version in Software > Applications > Checkmk
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1568802173
+Class: feature
+
+HW/SW Inventory now shows the Checkmk agent version for situations
+where the Checkmk agent is not listed in the software packages.

@@ -1,3 +1,27 @@
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils"
 import * as node_visualization_layout from "node_visualization_layout"
 import * as node_visualization_toolbar_utils from "node_visualization_toolbar_utils"
@@ -41,15 +65,24 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
         // Setup layout applier and instantiate default style_force
         this.layout_applier = new LayoutApplier(this)
-        this.force_style = this.layout_applier.layout_style_factory.instantiate_style_class(node_visualization_layout_styles.LayoutStyleForce)
 
         // Edit tools
         this.edit_layout = false // Indicates whether the layout manager is active
+        this._node_dragging_allowed = false // If the user is able to drag nodes with the mouse
+        this._node_dragging_enforced = false // If the user is able to drag nodes with the mouse
         this.allow_layout_updates = true // Indicates if layout updates are allowed
 
         // Instantiated styles
         this._active_styles = {}
+    }
 
+    create_undo_step() {
+        this.layout_applier.create_undo_step()
+        this.toolbar_plugin._update_history_icons()
+    }
+
+    get_overlay_config() {
+        return this.layout_applier.current_layout_group.overlay_config
     }
 
     add_active_style(style) {
@@ -70,25 +103,43 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         return this.layout_applier.get_context_menu_elements(node)
     }
 
-
     setup() {
         this.styles_selection = this.selection.append("g").attr("id", "hierarchies")
     }
 
     show_layout_options() {
         this.edit_layout = true
+        this.enable_node_dragging()
         this.allow_layout_updates = false
         this._mouse_events_overlay.update_data()
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", true)
+        this.update_style_indicators()
     }
 
     hide_layout_options() {
         this.edit_layout = false
+        this.disable_node_dragging()
         this.allow_layout_updates = true
         this.viewport.selection.select("#svg_layers #nodes").classed("edit", false)
         this.styles_selection.selectAll(".layout_style").selectAll("*").remove()
         this.div_selection.selectAll("img").remove()
         this.update_style_indicators(true)
+    }
+
+    enforce_node_drag() {
+        this._node_dragging_enforced = true
+    }
+
+    enable_node_dragging() {
+        this._node_dragging_allowed = true
+    }
+
+    disable_node_dragging() {
+        this._node_dragging_allowed = false
+    }
+
+    is_node_drag_allowed() {
+        return (this._node_dragging_enforced || this._node_dragging_allowed)
     }
 
     register_toolbar_plugin() {
@@ -99,7 +150,8 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
 
 
     size_changed() {
-        this.force_style.size_changed()
+        // TODO: check this
+//        node_visualization_layout_styles.force_simulation.size_changed()
     }
 
     update_data() {
@@ -107,31 +159,38 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
             this.register_toolbar_plugin()
         }
 
-        // TODO: use only update_current_style
+        // TODO: use only show_style_configuration
         this.toolbar_plugin.update_content()
-        this.force_style.update_data()
 
-        for (var idx in this._active_styles) {
-            this._active_styles[idx].update_data()
+        let sorted_styles = []
+        for (let idx in this._active_styles) {
+            sorted_styles.push([this._active_styles[idx].style_root_node.depth, this._active_styles[idx]])
         }
+
+        // Sort styles, ordering them from leaf to root
+        // Style in leaf need be be computed first, since they have a size-impact on any parent style
+        sorted_styles.sort(function(a,b) {
+            if (a[0] > b[0])
+                return -1
+            if (a[0] < b[0])
+                return 1
+            return 0
+        })
+        sorted_styles.forEach(sorted_style=>sorted_style[1].update_data())
 
         this.translate_layout()
         this.compute_node_positions()
         this._mouse_events_overlay.update_data()
-
     }
 
     update_gui() {
-        this.force_style.update_gui()
-
         for (var idx in this._active_styles) {
             this._active_styles[idx].update_gui()
         }
-
-        this.update_style_indicators()
     }
 
-    update_style_indicators(force) {
+    update_style_indicators(force=false) {
+        node_visualization_utils.log(7, "Updating style indicators, forced: " + force)
         if (!force && !this.edit_layout)
             return
 
@@ -141,11 +200,6 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
                     node.data.use_style.update_style_indicator(this.edit_layout)
             })
         )
-    }
-
-    compute_layout() {
-        this.compute_tree_layout()
-        this.compute_node_layout()
     }
 
     translate_layout() {
@@ -192,14 +246,21 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         // Determines the positioning force with the highest weight
         // console.log("compute node positions")
         this.viewport.get_hierarchy_list().forEach(hierarchy=>{
-                hierarchy.nodes.forEach(node=>this.compute_node_position(node))
+            hierarchy.nodes.forEach(node=>this.compute_node_position(node))
         })
+    }
+
+    compute_node_positions_from_list_of_nodes(list_of_nodes) {
+        if (list_of_nodes == undefined)
+            return
+        list_of_nodes.forEach(node=>this.compute_node_position(node))
     }
 
     compute_node_position(node) {
         var current_positioning = {
                 weight: 0,
                 free: true,
+                style_type: "force"
         }
 
         for (var force_id in node.data.node_positioning) {
@@ -215,14 +276,14 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
         if (current_positioning.free) {
             node.fx = null
             node.fy = null
-            node.use_transition = false
+            node.data.transition_info.use_transition = false
         } else {
             let viewport_boundary = 5000
             node.fx = Math.max(Math.min(current_positioning.fx, viewport_boundary), -viewport_boundary)
             node.fy = Math.max(Math.min(current_positioning.fy, viewport_boundary), -viewport_boundary)
             node.x = node.fx
             node.y = node.fy
-            node.use_transition = current_positioning.use_transition
+            node.data.transition_info.use_transition = current_positioning.use_transition
         }
         if (node.selection) {
             node.selection.selectAll("circle").classed("style_root_node", node.data.use_style)
@@ -288,49 +349,63 @@ export class LayoutStyleConfiguration {
                       .classed("style_component", true)
 
 
-        // Add foldable trees for basic and advanced matchers
-        let style_matcher = style_div_enter.select("#style_matcher")
-        style_matcher.append("b").text("Matcher settings")
-        style_matcher.append("br")
-        style_matcher.append("label").text("(How to find the root node of this style)")
-        style_matcher.append("br")
-        style_matcher.append("br")
+// TODO: matchers are currently disabled
+//        // Add foldable trees for basic and advanced matchers
+//        let style_matcher = style_div_enter.select("#style_matcher")
+//        style_matcher.append("b").text("Matcher settings")
+//        style_matcher.append("br")
+//        style_matcher.append("label").text("(How to find the root node of this style)")
+//        style_matcher.append("br")
+//        style_matcher.append("br")
+//
+//        let theme_prefix = this.layout_manager.viewport.main_instance.get_theme_prefix()
+//        let matcher_topics = [
+//            {id: "basic_matchers", text: "Basic matching", default_open: true},
+//            {id: "advanced_matchers", text: "Advanced matching", default_open: false},
+//        ]
+//        let matchers_enter = style_matcher.selectAll("div.foldable#matcher_topic").data(matcher_topics, d=>d.id).enter()
+//                        .append("div").classed("matcher_topic", true).classed("foldable", true)
+//        matchers_enter.append("img")
+//                        .classed("treeangle", true)
+//                        .classed("open", d=>d.default_open)
+//                        .attr("src",  theme_prefix + "/images/tree_closed.png")
+//                        .on("click", function() {
+//                            let image = d3.select(this)
+//                            image.classed("open", !image.classed("open"))
+//                            image.classed("closed", image.classed("open"))
+//                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
+//                        })
+//        matchers_enter.append("b").classed("treeangle", true).classed("title", true).text(d=>d.text).style("color", "black")
+//                        .on("click", function() {
+//                            let image = d3.select(this.parentNode).select("img")
+//                            image.classed("open", !image.classed("open"))
+//                            image.classed("closed", image.classed("open"))
+//                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
+//                        })
+//        matchers_enter.append("div").classed("matcher_topic_content", true).attr("id", d=>d.id)
+//                       .style("display", d=>d.default_open ? null : "none")
+//        matchers_enter.append("br")
 
-        let theme_prefix = this.layout_manager.viewport.main_instance.get_theme_prefix()
-        let matcher_topics = [
-            {id: "basic_matchers", text: "Basic matching", default_open: true},
-            {id: "advanced_matchers", text: "Advanced matching", default_open: false},
-        ]
-        let matchers_enter = style_matcher.selectAll("div.foldable#matcher_topic").data(matcher_topics, d=>d.id).enter()
-                        .append("div").classed("matcher_topic", true).classed("foldable", true)
-        matchers_enter.append("img")
-                        .classed("treeangle", true)
-                        .classed("open", d=>d.default_open)
-                        .attr("src",  theme_prefix + "/images/tree_closed.png")
-                        .on("click", function() {
-                            let image = d3.select(this)
-                            image.classed("open", !image.classed("open"))
-                            image.classed("closed", image.classed("open"))
-                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
-                        })
-        matchers_enter.append("b").classed("treeangle", true).classed("title", true).text(d=>d.text).style("color", "black")
-                        .on("click", function() {
-                            let image = d3.select(this.parentNode).select("img")
-                            image.classed("open", !image.classed("open"))
-                            image.classed("closed", image.classed("open"))
-                            d3.select(this.parentNode).select(".matcher_topic_content").style("display", image.classed("open") ? null : "none")
-                        })
-        matchers_enter.append("div").classed("matcher_topic_content", true).attr("id", d=>d.id)
-                       .style("display", d=>d.default_open ? null : "none")
-        matchers_enter.append("br")
-
-        this.update_current_style(this.current_style)
+        this.show_style_configuration(this.current_style)
     }
 
-    update_current_style(style) {
+    show_style_configuration(style) {
+        // Cleanup GUI config
         if (style != this.current_style)
             this._cleanup_old_style_config()
 
+        // Remove style focus on old style
+        if (this.current_style)
+            this.current_style.style_root_node.selection.select("circle.style_indicator").classed("focus", false)
+
+        if (!style) {
+            this.selection.style("display", "none")
+            return
+        }
+        this.selection.style("display", null)
+
+        // Set style focus on new style
+        style.style_root_node.selection.select("circle.style_indicator").classed("focus", true)
         this.current_style = style
 
         let hide_style_config = false
@@ -351,8 +426,9 @@ export class LayoutStyleConfiguration {
         this.selection.style("height", null)
         this.selection.style("display", null)
 
-        this._update_current_style_options()
-        this._update_current_style_matcher()
+        this._show_style_configuration_options()
+// TODO: matchers are currently disabled
+//        this._show_style_configuration_matcher()
     }
 
     _cleanup_old_style_config() {
@@ -360,12 +436,12 @@ export class LayoutStyleConfiguration {
         this.selection.selectAll(".matcher_topic_content").selectAll("*").remove()
     }
 
-    _update_current_style_options() {
+    _show_style_configuration_options() {
         let options_selection = this.selection.select("#style_options")
         this.current_style.render_options(options_selection)
     }
 
-    _update_current_style_matcher() {
+    _show_style_configuration_matcher() {
         let matcher = this.current_style.get_matcher()
         if (!matcher) {
             this.selection.select("#style_matcher").style("display", "none")
@@ -482,41 +558,39 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     render_togglebutton(selection) {
+        this.togglebutton_selection.style("cursor", "pointer")
         this.togglebutton_selection.append("img")
                         .attr("src", this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png")
                         .attr("title", "Layout Designer")
+                        .style("opacity", 1)
     }
 
     enable_actions() {
         this.layout_manager.show_layout_options()
 
-        // TODO: update_gui instead of update_data
-        this.layout_manager.update_data()
+        this.layout_manager.viewport.update_gui_of_layers()
+        for (var idx in this.layout_manager._active_styles) {
+            this.layout_manager._active_styles[idx].generate_overlay()
+        }
 
-        this.content_selection.selectAll(".edit_mode_only").style("display", null)
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", null)
-
-        this.fetch_all_layouts()
+                .style("opacity", 1)
+                .style("display", null)
     }
 
     disable_actions() {
         this.layout_manager.hide_layout_options()
         this.layout_manager.viewport.update_gui_of_layers()
-        this.content_selection.selectAll(".edit_mode_only").style("display", "none")
 
         this.content_selection
                 .transition().duration(node_visualization_utils.DefaultTransition.duration())
-                .style("height", "0px")
-
-//        this.content_selection.selectAll("div.box")
-//                .transition().duration(node_visualization_utils.DefaultTransition.duration())
-//                .style("height", "0px")
+                .style("opacity", 0)
+                .style("display", "none")
     }
 
     remove() {
-//        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
+        this.content_selection.select("div.toolbar_layouting").transition().duration(node_visualization_utils.DefaultTransition.duration()).style("height", "0px").remove()
     }
 
     render_content() {
@@ -527,56 +601,51 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         if (!this.layout_manager.edit_layout)
             return
 
-        let layouting_div = this.content_selection.selectAll("div#layout_management").data([null])
-
-        // Layout management box
-        layouting_div = layouting_div.enter().append("div").attr("id", "layout_management")
+        // Layout configuration box
+        let configuration_div_box = this.content_selection.selectAll("div#configuration_management").data([null])
+        configuration_div_box = configuration_div_box.enter().append("div").attr("id", "configuration_management")
                                     .classed("noselect", true)
                                     .classed("box", true)
-                                .merge(layouting_div)
-        let aggr_div = layouting_div.selectAll("div#aggr_div").data([null])
-        aggr_div = aggr_div.enter().append("div").attr("id", "aggr_div").merge(aggr_div)
-        let template_div = layouting_div.selectAll("div#template_div").data([null])
-        template_div = template_div.enter().append("div").attr("id", "template_div").merge(template_div)
+                                .merge(configuration_div_box)
+    
+        let configuration_div = configuration_div_box.selectAll("div#configuration_div").data([null])
+        configuration_div = configuration_div.enter().append("div").attr("id", "configuration_div").merge(configuration_div)
+        configuration_div.selectAll("#layout_configuration_headline").data([null]).enter().append("h2")
+                        .attr("id", "layout_configuration_headline").text("Layout Configuration")
+        if (this.layout_manager.viewport.get_current_datasource() == "bi_aggregations") {
+            this._render_aggregation_configuration(configuration_div)
 
-        // Overlay management box
-        let overlay_div_box = this.content_selection.selectAll("div#overlay_management").data([null])
-        overlay_div_box = overlay_div_box.enter().append("div").attr("id", "overlay_management")
-                                    .classed("noselect", true)
-                                    .classed("box", true)
-                                .merge(overlay_div_box)
+            // Render layout history
+            let history_div_box = this.content_selection.selectAll("div#history_icons").data([null])
+            history_div_box = history_div_box.enter().append("div").attr("id", "history_icons")
+                                        .classed("noselect", true)
+                                    .merge(history_div_box)
+            this._render_layout_history(history_div_box)
 
-
-        let overlay_div = overlay_div_box.selectAll("div#overlay_div").data([null])
-        overlay_div = overlay_div.enter().append("div").attr("id", "overlay_div").merge(overlay_div)
-
-        // Style management box
-        let style_div_box = this.content_selection.selectAll("div#style_management").data([null])
-        style_div_box = style_div_box.enter().append("div").attr("id", "style_management")
-                                    .classed("noselect", true)
-                                    .classed("box", true)
-                                .merge(style_div_box)
-
-
-
-        this._render_aggregation_configuration(aggr_div)
-        this._render_layout_management(template_div)
-        this._render_layout_overlays_configuration(overlay_div)
-        this.layout_style_configuration.render_style_config(style_div_box)
+            // Style management box
+            let style_div_box = this.content_selection.selectAll("div#style_management").data([null])
+            style_div_box = style_div_box.enter().append("div").attr("id", "style_management")
+                                        .classed("noselect", true)
+                                        .classed("box", true)
+                                    .merge(style_div_box)
+            this.layout_style_configuration.render_style_config(style_div_box)
+        }
+        this._render_layout_configuration(configuration_div)
     }
 
     _render_aggregation_configuration(into_selection) {
-        let chunk = this.layout_manager.viewport.get_hierarchy_list()[0]
-        let aggr_name = chunk.tree.data.name
+        let chunks = this.layout_manager.viewport.get_hierarchy_list()
+        if (chunks.length == 0)
+            return
 
-        into_selection.selectAll("#aggregation_headline").data([null]).enter().append("h2")
-                        .attr("id", "aggregation_headline").text("Aggregation layout")
+        let chunk = chunks[0]
+        let aggr_name = chunk.tree.data.name
 
         let table_selection = into_selection.selectAll("table#layout_settings").data([null])
         let table_enter = table_selection.enter().append("table").attr("id", "layout_settings")
 
         let row_enter = table_enter.append("tr")
-        row_enter.append("td").text("Name")
+        row_enter.append("td").text("Aggregation Name")
         row_enter.append("td").text(aggr_name)
 
         row_enter = table_enter.append("tr")
@@ -586,7 +655,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         row_enter = table_enter.append("tr")
         row_enter.append("td").append("input").attr("type", "button")
             .classed("button", true)
-            .attr("value", "Use this layout")
+            .attr("value", "Save this layout")
             .style("margin-top", null)
             .style("margin-bottom", null)
             .style("width", "100%")
@@ -596,7 +665,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
 
         row_enter.append("td").append("input").attr("type", "button")
             .classed("button", true)
-            .attr("value", "Use configured template")
+            .attr("value", "Use auto-generated layout")
             .attr("id", "remove_explicit_layout")
             .style("margin-top", null)
             .style("margin-bottom", null)
@@ -608,9 +677,9 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             })
 
         let table = table_enter.merge(table_selection)
-        table.select("#layout_origin").text(chunk.layout_origin)
+        table.select("#layout_origin").text(chunk.layout_settings.origin_info)
 
-        let explicit_set = chunk.layout_origin == "Explicit set"
+        let explicit_set = chunk.layout_settings.origin_type == "explicit"
         table.select("input#remove_explicit_layout")
             .classed("disabled", !explicit_set)
             .attr("disabled", explicit_set ? null : true)
@@ -618,9 +687,8 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
 
-    _render_layout_overlays_configuration(into_selection) {
-        into_selection.selectAll("#overlays_headline").data([null]).enter().append("h2")
-                        .attr("id", "overlays_headline").text("Layout Overlays")
+    _render_layout_configuration(into_selection) {
+        this.layout_manager.viewport.get_layer("nodes").render_line_style(into_selection)
 
         let layers = this.layout_manager.viewport.get_layers()
         let configurable_layers = []
@@ -666,8 +734,61 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         }
     }
 
+    _render_layout_history(history_selection) {
+        let icons = [{"icon": "icons8-undo.svg", "id": "undo", "title": "Undo", "handler": ()=>this._move_in_history(1)},
+                     {"icon": "icons8-redo.svg", "id": "redo", "title": "Redo", "handler": ()=>this._move_in_history(-1)}]
+
+
+        let icon_selection = history_selection.selectAll("img.icon").data(icons)
+        icon_selection = icon_selection.enter()
+            .append("img")
+                .classed("icon", true)
+                .classed("box", true)
+                .attr("id", d=>d.id)
+                .attr("title", d=>d.title)
+                .attr("src", d=>this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icons/" + d.icon)
+                .on("click", d=>d.handler())
+            .merge(icon_selection)
+
+        if (this.layout_manager.layout_applier._undo_history.length == 0)
+            this.layout_manager.layout_applier.create_undo_step()
+
+        this._update_history_icons()
+
+    }
+
+    _update_history_icons() {
+        let history_icons = this.content_selection.select("#history_icons")
+        let end_offset = this.layout_manager.layout_applier._undo_end_offset
+        let history_length = this.layout_manager.layout_applier._undo_history.length
+        history_icons.selectAll("#undo").classed("disabled", history_length - end_offset <= 1)
+        history_icons.selectAll("#redo").classed("disabled", end_offset == 0)
+    }
+
+    _move_in_history(step_direction) {
+        let total_length = this.layout_manager.layout_applier._undo_history.length
+        if (total_length == 0)
+            return
+
+        let new_index = total_length - 1 - this.layout_manager.layout_applier._undo_end_offset - step_direction
+        if (new_index > total_length - 1 || new_index < 0)
+            return
+
+        this.layout_manager.layout_applier._undo_end_offset += step_direction
+
+        let layout_settings = JSON.parse(JSON.stringify(this.layout_manager.layout_applier._undo_history[new_index]))
+        this.layout_manager.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            node_chunk.layout_settings = layout_settings
+            delete node_chunk.layout_instance
+        })
+
+        this._update_history_icons()
+        this.layout_manager.layout_applier.apply_all_layouts()
+    }
+
     fetch_all_layouts() {
-        d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
+        // d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
     }
 
     update_available_layouts(layouts) {
@@ -694,10 +815,16 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     layout_changed_callback() {
         let selected_id = d3.event.target.value
         this.layout_manager.layout_applier.apply_layout_id(selected_id)
-        this.layout_style_configuration.update_current_style()
+        this.layout_style_configuration.show_style_configuration()
         this.content_selection.select("#layout_name").property("value", selected_id)
         this.update_content()
         this.update_save_layout_button()
+    }
+
+    set_overlay_options(overlay_id, active, configurable) {
+        let current_overlay_config = this.layout_manager.layout_applier.current_layout_group.overlay_config
+        current_overlay_config[overlay_id] = {active: active, configurable: configurable}
+        this.layout_manager.viewport.update_active_overlays()
     }
 
     overlay_options_changed() {
@@ -796,25 +923,27 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
     }
 
     _save_layout_clicked() {
-       let new_id = this.content_selection.select("#layout_name").property("value");
-       let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
-       let new_layout = {}
-       new_layout[new_id] = current_layout_group
-       this.layout_manager.save_layout_template(new_layout)
-       this.layout_manager.layout_applier.current_layout_group.id = new_id
+        let new_id = this.content_selection.select("#layout_name").property("value");
+        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
+        let new_layout = {}
+        new_layout[new_id] = current_layout_group
+        this.layout_manager.save_layout_template(new_layout)
+        this.layout_manager.layout_applier.current_layout_group.id = new_id
     }
 
     _save_explicit_layout_clicked(){
-       let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
-       let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
-       let new_layout = {}
-       new_layout[aggr_name] = current_layout_group
-       this.layout_manager.save_layout_for_aggregation(new_layout, aggr_name)
+        let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
+        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
+        let new_layout = {}
+        new_layout[aggr_name] = current_layout_group
+        this.layout_manager.save_layout_for_aggregation(new_layout, aggr_name)
     }
 
     _delete_explicit_layout_clicked(){
-       let aggr_name = this.layout_manager.viewport.get_hierarchy_list()[0].tree.data.name
-       this.layout_manager.delete_layout_for_aggregation(aggr_name)
+        let node_chunks = this.layout_manager.viewport.get_hierarchy_list()
+        let aggr_name = node_chunks[0].tree.data.name
+        node_chunks.forEach(chunk=>{chunk.layout_instance=null})
+        this.layout_manager.delete_layout_for_aggregation(aggr_name)
     }
 
     add_text_input(into_selection, value) {
@@ -886,16 +1015,21 @@ class LayoutingMouseEventsOverlay {
     }
 
     _dragstarted() {
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
         d3.event.sourceEvent.stopPropagation();
-        this._dragged_node = d3.select(d3.event.sourceEvent.target).datum()
-        this._apply_drag_force(this._dragged_node, d3.event.x, d3.event.y)
+        this._dragged_node = d3.select(d3.event.sourceEvent.target)
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        this._apply_drag_force(dragged_node_datum, d3.event.x, d3.event.y)
         this.drag_start_x = d3.event.x
         this.drag_start_y = d3.event.y
 
-        if (this._dragged_node.data.use_style)
-            this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(this._dragged_node.data.use_style)
+        if (dragged_node_datum.data.use_style) {
+            this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(dragged_node_datum.data.use_style)
+        }
 
         this.layout_manager.dragging = true
     }
@@ -913,8 +1047,23 @@ class LayoutingMouseEventsOverlay {
     }
 
     _dragging() {
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
+
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        if (dragged_node_datum.data.use_style) {
+            if (!dragged_node_datum.data.use_style.style_config.options.detach_from_parent) {
+                dragged_node_datum.data.use_style.style_config.options.detach_from_parent = true
+                // TODO: fix refresh
+                this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(null);
+                this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(dragged_node_datum.data.use_style);
+            }
+        }
+
+
         let scale = 1.0
         let delta_x = d3.event.x - this.drag_start_x
         let delta_y = d3.event.y - this.drag_start_y
@@ -922,14 +1071,24 @@ class LayoutingMouseEventsOverlay {
         let last_zoom = this.layout_manager.viewport.last_zoom
         scale = 1/last_zoom.k
 
-        this._apply_drag_force(this._dragged_node, this.drag_start_x + (delta_x * scale),
+        this._apply_drag_force(dragged_node_datum, this.drag_start_x + (delta_x * scale),
                                                  this.drag_start_y + (delta_y * scale))
 
         let node_data = d3.select(d3.event.sourceEvent.target).datum()
-        this.layout_manager.force_style.restart_with_alpha(0.5)
-        this.layout_manager.compute_node_position(this._dragged_node)
-        if (this._dragged_node.data.use_style)
-            this._dragged_node.data.use_style.force_style_translation()
+        node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5)
+        if (dragged_node_datum.data.use_style) {
+            dragged_node_datum.data.use_style.force_style_translation()
+            dragged_node_datum.data.use_style.translate_coords()
+        }
+        this.layout_manager.compute_node_position(dragged_node_datum)
+
+
+        // TODO: EXPERIMENTAL, will be removed in later commit
+        for (var idx in this.layout_manager._active_styles) {
+            this.layout_manager._active_styles[idx].update_data()
+        }
+
+        // TODO: translate and compute node is overkill for a simple drag procedure
         this.layout_manager.translate_layout()
         this.layout_manager.compute_node_positions()
         this.layout_manager.viewport.update_gui_of_layers()
@@ -937,20 +1096,29 @@ class LayoutingMouseEventsOverlay {
 
     _dragended() {
         this.layout_manager.dragging = false
-        if (!this.layout_manager.edit_layout)
+        if (!this.layout_manager.is_node_drag_allowed())
             return
 
-        if (this._dragged_node.data.use_style) {
-            let new_position = this.layout_manager.get_viewport_percentage_of_node(this._dragged_node)
-            this._dragged_node.data.use_style.style_config.position = new_position
+        let dragged_node_datum = this._dragged_node.datum()
+        if (!dragged_node_datum)
+            return
+
+        if (dragged_node_datum.data.use_style) {
+            let new_position = this.layout_manager.get_viewport_percentage_of_node(dragged_node_datum)
+            node_visualization_utils.log(7, "dragended: new position", new_position)
+            dragged_node_datum.data.use_style.style_config.position = new_position
+            dragged_node_datum.data.use_style.force_style_translation()
         }
 
-        if (this._dragged_node.data.use_style && this._dragged_node.data.use_style.type() == "fixed") {
-            this._dragged_node.data.use_style.fix_node(this._dragged_node)
+        if (dragged_node_datum.data.use_style && dragged_node_datum.data.use_style.type() == "fixed") {
+            dragged_node_datum.data.use_style.fix_node(dragged_node_datum)
         } 
 
-        delete this._dragged_node.data.node_positioning["drag"]
-        this.layout_manager.compute_node_position(this._dragged_node)
+        delete dragged_node_datum.data.node_positioning["drag"]
+        this.layout_manager.translate_layout()
+
+        this.layout_manager.compute_node_position(dragged_node_datum)
+        this.layout_manager.create_undo_step()
     }
 }
 
@@ -963,12 +1131,18 @@ class LayoutApplier{
         this.current_layout_group = new node_visualization_layout.NodeVisualizationLayout(this.viewport)
 
         this.layouts = {}
+
+        this._align_layouts = true
+        this._undo_history = []
+        this._undo_end_offset = 0
     }
 
     get_context_menu_elements(node) {
-        if (node && !(node.data.node_type == "bi_leaf" || node.data.node_type == "bi_aggregator")) {
+        if (node && !(node.data.node_type == "bi_leaf" || node.data.node_type == "bi_aggregator") ||
+            this.viewport.get_current_datasource() != "bi_aggregations") {
             return []
         }
+
 
         let elements = []
         let styles = this.layout_style_factory.get_styles()
@@ -986,20 +1160,22 @@ class LayoutApplier{
                            img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
             }
         }
-        let modification_element = this.layout_manager.toolbar_plugin.layout_style_configuration
-        elements.push({text: "Show " + node_visualization_layout_styles.LayoutStyleForce.prototype.description() + " options",
-                       on: ()=>modification_element.update_current_style(this.layout_manager.force_style),
-                       href: "",
-                       img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+        if (node && node.data.use_style) {
+            elements.push({text: "Remove style",
+                           on: ()=> this._convert_node(node, null),
+                           href: "",
+                           img: this.layout_manager.viewport.main_instance.get_theme_prefix() + "/images/icon_aggr.png"})
+        }
+
         return elements
     }
 
     _convert_node(node, style_class) {
-        let chunk_layout = node.data.chunk.layout
+        let chunk_layout = node.data.chunk.layout_instance
         let current_style = node.data.use_style
 
         // Do nothing on same style
-        if (current_style && current_style.type() == style_class.prototype.type())
+        if (current_style && style_class != null && current_style.type() == style_class.prototype.type())
             return
 
         // Remove existing style
@@ -1008,104 +1184,135 @@ class LayoutApplier{
         }
 
         let new_style = null
-        if (style_class != node_visualization_layout_styles.LayoutStyleForce) {
+        if (style_class != null) {
             new_style = this.layout_style_factory.instantiate_style_class(style_class, node)
             chunk_layout.save_style(new_style.style_config)
         }
+
         this.layout_manager.layout_applier.apply_all_layouts()
-        // TODO: fix workaround
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(new_style)
+        if (new_style)
+            new_style.update_style_indicator()
+        this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(new_style)
+        this.layout_manager.create_undo_step()
     }
 
     _convert_all(style_class) {
         let current_style = null
         this.layout_manager.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            node_chunk.layout.clear_styles()
+            node_chunk.layout_instance.clear_styles()
             if (style_class == node_visualization_layout_styles.LayoutStyleFixed) {
                 node_chunk.nodes.forEach(node=>{
-                    node_chunk.layout.save_style(this.layout_style_factory.instantiate_style_class(style_class, node).style_config)
+                    node_chunk.layout_instance.save_style(this.layout_style_factory.instantiate_style_class(style_class, node).style_config)
                 })
             }
-            else if (style_class != node_visualization_layout_styles.LayoutStyleForce) {
+            else {
                 current_style = this.layout_style_factory.instantiate_style_class(style_class, node_chunk.nodes[0])
-                node_chunk.layout.save_style(current_style.style_config)
+                node_chunk.layout_instance.save_style(current_style.style_config)
             }
         })
 
         this.apply_all_layouts()
-        // TODO: fix workaround
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(null)
-        this.layout_manager.toolbar_plugin.layout_style_configuration.update_current_style(current_style)
+        current_style.update_style_indicator()
+        this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(current_style)
+        this.layout_manager.create_undo_step()
+    }
+
+
+    create_undo_step() {
+       this._undo_history = this._undo_history.slice(0, this._undo_history.length - this._undo_end_offset)
+       this._undo_end_offset = 0
+       this._undo_history.push(this._create_manual_layout_settings())
+    }
+
+    _create_manual_layout_settings() {
+        let current_layout_group = this.layout_manager.layout_applier.get_current_layout_group()
+        let layout_settings = {
+            origin_info: "Explicit set",
+            origin_type: "explicit",
+            config: JSON.parse(JSON.stringify(current_layout_group))
+        }
+        return layout_settings
     }
 
     apply_layout_id(layout_id) {
-        let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport, layout_id)
-        if (layout_id != "") {
-            let config = JSON.parse(JSON.stringify(this.layouts[layout_id]))
-            config.id = layout_id
-            new_layout.deserialize(config)
-        }
-        this.apply(new_layout)
-    }
-
-    apply(new_layout) {
-        this._apply_force_style_options(new_layout)
-
-        let node_matcher = new node_visualization_utils.NodeMatcher(this.layout_manager.viewport.get_hierarchy_list())
-        let nodes_with_style = this.find_nodes_for_layout(new_layout, node_matcher)
-        this._update_node_specific_styles(nodes_with_style)
-
-        this.current_layout_group = new_layout
-
         this.layout_manager.viewport.get_hierarchy_list().forEach(chunk=>{
-            chunk.layout = new_layout
+            let new_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport, layout_id)
+            if (layout_id != "") {
+                let config = JSON.parse(JSON.stringify(this.layouts[layout_id]))
+                config.id = layout_id
+                new_layout.deserialize(config)
+            }
+            chunk.layout_instance = new_layout
         })
-
-        this.viewport.update_active_overlays()
+        this.apply_multiple_layouts()
     }
 
-    apply_all_layouts(global_layout_config=null) {
-        this.apply_multiple_layouts(this.viewport.get_hierarchy_list(), global_layout_config)
+    apply_all_layouts() {
+        this.apply_multiple_layouts(this.viewport.get_hierarchy_list())
     }
 
-    apply_multiple_layouts(node_chunk_list, global_layout_config) {
+    apply_multiple_layouts(node_chunk_list, update_layouts=true) {
         let nodes_with_style = []
         let skip_layout_alignment = false
 
         let used_layout_id = null
 
         node_chunk_list.forEach(node_chunk=>{
+            let layout_settings = node_chunk.layout_settings
             let node_matcher = new node_visualization_utils.NodeMatcher([node_chunk])
-            // TODO: When removing an explicit layout, the new layout should replace the explict one
-            if (!node_chunk.layout) {
-                node_chunk.layout = new node_visualization_layout.NodeVisualizationLayout(this)
+            // TODO: When removing an explicit layout, the new layout should replace the explicit one
+            if (!node_chunk.layout_instance) {
+                node_chunk.layout_instance = new node_visualization_layout.NodeVisualizationLayout(this)
 
-                if (global_layout_config) {
-                    // A layout which may span over multiple chunks has been set
-                    // Each chunk gets its own layout config instance, since config-wise chunks are still separated after all..
-                    let enforced_layout = new node_visualization_layout.NodeVisualizationLayout(this.viewport)
-                    enforced_layout.deserialize(global_layout_config)
-                    node_chunk.layout = enforced_layout
-                } else if (node_chunk.use_layout) {
-                    node_chunk.layout.deserialize(node_chunk.use_layout)
-                    // TODO: fix id handling
-                    if (node_chunk.template_layout_id)
-                        used_layout_id = node_chunk.template_layout_id
+                // Add styles from aggregation rules only during instance creation
+                if (layout_settings.config) {
+                    if (!layout_settings.config.ignore_rule_styles)
+                        node_chunk.nodes.forEach(node=>{
+                            if (node.data.rule_layout_style != undefined && node.data.rule_layout_style.style_type != "none") {
+                                let style_name = node.data.rule_layout_style.style_type;
+                                let style_options = node.data.rule_layout_style.style_config;
+                                let new_style = this.layout_style_factory.instantiate_style_name(style_name, node);
+                                new_style.style_config.options = style_options;
+    
+                                node_chunk.layout_instance.save_style(new_style.style_config)
+                                nodes_with_style.push({node: node, style: new_style.style_config});
+                            }
+                        });
                 }
-                else if (node_chunk.use_default_layout && node_chunk.use_default_layout != "force") {
-                    let default_style = this.layout_style_factory.instantiate_style_name(node_chunk.use_default_layout, node_chunk.tree)
-                    default_style.style_config.position = {x: 50, y: 50}
-                    node_chunk.layout.save_style(default_style.style_config)
+
+                if (layout_settings.origin_type) {
+                    // Add generic and explicit styles
+                    if (layout_settings.origin_type == "default_template") {
+                        let default_style = this.layout_style_factory.instantiate_style_name(layout_settings.default_id, node_chunk.tree)
+                        default_style.style_config.position = {x: 50, y: 50}
+                        node_chunk.layout_instance.save_style(default_style.style_config)
+                    }
+                    else {
+                        node_chunk.layout_instance.deserialize(layout_settings.config)
+                        if (node_chunk.template_layout_id)
+                            used_layout_id = node_chunk.template_layout_id
+                    }
                 }
             }
-            else
-                skip_layout_alignment = true
 
-            nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout, node_matcher))
-            this._apply_force_style_options(node_chunk.layout)
+            nodes_with_style = nodes_with_style.concat(this.find_nodes_for_layout(node_chunk.layout_instance, node_matcher));
+        });
+
+        // Sort styles
+        nodes_with_style.sort(function(a,b) {
+            if (a.node.depth > b.node.depth)
+                return 1
+            if (a.node.depth < b.node.depth)
+                return -1
+            return 0
         })
-        this._update_node_specific_styles(nodes_with_style, skip_layout_alignment)
+
+        // Add boxed style indicators
+        let grouped_styles = this._get_grouped_styles(nodes_with_style)
+
+        nodes_with_style = grouped_styles.concat(nodes_with_style)
+
+        this._update_node_specific_styles(nodes_with_style)
 
         this.current_layout_group = this.get_current_layout_group()
         // TODO: fix id handling
@@ -1116,23 +1323,63 @@ class LayoutApplier{
 
         if (this.layout_manager.edit_layout)
             this.layout_manager.allow_layout_updates = false
+
+        if (update_layouts)
+            node_visualization_layout_styles.force_simulation.restart_with_alpha(2)
+    }
+
+    _get_grouped_styles(nodes_with_style) {
+        // Cycle through the sorted styles and add the box_leaf_nodes hint 
+        nodes_with_style.forEach(entry=>{
+            let box_leafs = entry.style.options.box_leaf_nodes == true
+            entry.node.each(node=>{
+                node.data.box_leaf_nodes = box_leafs
+            })
+            entry.node.data.box_leaf_nodes = box_leafs
+        })
+        // Apply styles
+        let box_candidates = []
+        this.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            node_chunk.nodes.forEach(node=>{
+                if (!node._children)
+                    return
+                if (!node.data.box_leaf_nodes)
+                    return
+                node.count()
+                if (node.value == node._children.length) {
+                    let child_with_childs = false
+                    node._children.forEach(child=>{
+                        if (child._children)
+                            child_with_childs = true
+                    })
+                    if (!child_with_childs)
+                        box_candidates.push(node)
+                }
+            })
+        })
+
+        // Cleanup box_leaf_nodes hint
+        nodes_with_style.forEach(entry=>entry.node.descendants().forEach(d=>delete d.data.box_leaf_nodes))
+
+
+        let grouped_styles = []
+
+        // Add styles for box candidates
+        box_candidates.forEach(node=>{
+            let new_style = this.layout_style_factory.instantiate_style_name("block", node)
+            new_style.style_config.options = {}
+            grouped_styles.push({node: node, style: new_style.style_config})
+        })
+        return grouped_styles
     }
 
     align_layouts(nodes_with_style) {
+        node_visualization_utils.log(7, "LayoutManager:align_layouts")
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            let box = {x_min: 50000, x_max: -50000, y_min: 50000, y_max: -50000}
-            node_chunk.nodes.forEach(node=>{
-                box.x_min = Math.min(box.x_min, node.x)
-                box.x_max = Math.max(box.x_max, node.x)
-                box.y_min = Math.min(box.y_min, node.y)
-                box.y_max = Math.max(box.y_max, node.y)
-            })
-
-            let box_width = box.x_max - box.x_min
-            let box_height = box.y_max - box.y_min
+            let bounding_rect = node_visualization_utils.get_bounding_rect(node_chunk.nodes)
             let translate_perc = {
-                x: -((box.x_min - (node_chunk.coords.width - box_width)/2)/node_chunk.coords.width) * 100,
-                y: -((box.y_min - (node_chunk.coords.height - box_height)/2)/node_chunk.coords.height) * 100,
+                x: -((bounding_rect.x_min - (node_chunk.coords.width - bounding_rect.width)/2)/node_chunk.coords.width) * 100,
+                y: -((bounding_rect.y_min - (node_chunk.coords.height - bounding_rect.height)/2)/node_chunk.coords.height) * 100,
             }
 
             node_chunk.nodes.forEach(node=>{
@@ -1142,26 +1389,19 @@ class LayoutApplier{
                 }
             })
         })
-        this._update_node_specific_styles(nodes_with_style, true)
+        this._update_node_specific_styles(nodes_with_style)
     }
 
-    _apply_force_style_options(new_layout) {
-        for (let idx in new_layout.style_configs) {
-            let style = new_layout.style_configs[idx]
-            if (style.type == node_visualization_layout_styles.LayoutStyleForce.prototype.type())
-                this.layout_manager.force_style.style_config.options = style.options
-        }
-    }
-
-    _update_node_specific_styles(nodes_with_style, skip_align=false) {
-//        console.log("update node styles")
+    _update_node_specific_styles(nodes_with_style) {
+        node_visualization_utils.log(6, "LayoutManager:update_node_specific styles")
         let filtered_nodes_with_style = []
         let used_nodes = []
         for (let idx in nodes_with_style) {
             let config = nodes_with_style[idx]
             if (used_nodes.indexOf(config.node) >= 0) {
-//                console.log("filtered duplicate style assignment",
-//                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
+                node_visualization_utils.log(7,
+                    "  filtered duplicate style assignment",
+                    this.layout_style_factory.get_style_class(config.style).prototype.compute_id(config.node))
                 continue
             }
             used_nodes.push(config.node)
@@ -1175,7 +1415,7 @@ class LayoutApplier{
                     })
 
         node_styles.exit().each(d=>{
-//                console.log("removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+            node_visualization_utils.log(7, "  removing style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
             this.layout_manager.remove_active_style(d.node.data.use_style)
             this.layout_manager.compute_node_position(d.node)
         }).remove()
@@ -1183,41 +1423,73 @@ class LayoutApplier{
         node_styles.enter().append("g")
             .classed("layout_style", true)
             .each((d, idx, nodes)=> {
-//                console.log("create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+                node_visualization_utils.log(7, "  create style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 if (d.node.data.use_style) {
                     this.layout_manager.remove_active_style(d.node.data.use_style)
                 }
                 let new_style = this.layout_style_factory.instantiate_style(
                     d.style,
                     d.node,
-                    d3.select(nodes[idx]),
+                    d3.select(nodes[idx])
                 )
                 this.layout_manager.add_active_style(new_style)
             }).merge(node_styles).each(d=>{
-//                console.log("updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
+                node_visualization_utils.log(7, "  updating style " + this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node))
                 let style_id = this.layout_style_factory.get_style_class(d.style).prototype.compute_id(d.node)
 
                 let style = this.layout_manager.get_active_style(style_id)
                 d.node.data.use_style = style
                 d.node.data.use_style.style_config.options = d.style.options
+                d.node.data.use_style.style_config.position = d.style.position
                 d.node.data.use_style.style_root_node = d.node
                 d.node.data.use_style.force_style_translation()
 
-                let abs_coords = this.layout_manager.get_absolute_node_coords({x: style.style_config.position.x, y: style.style_config.position.y}, d.node)
-                d.node.fx = abs_coords.x
-                d.node.fy = abs_coords.y
-                d.node.x  = abs_coords.x
-                d.node.y  = abs_coords.y
+                if (style.type() != node_visualization_layout_styles.LayoutStyleForce.prototype.type()) {
+                    let abs_coords = this.layout_manager.get_absolute_node_coords({x: style.style_config.position.x, y: style.style_config.position.y}, d.node)
+                    d.node.fx = abs_coords.x
+                    d.node.fy = abs_coords.y
+                    d.node.x  = abs_coords.x
+                    d.node.y  = abs_coords.y
+                }
             })
 
-//        console.log("############ active styles")
-//        for (let idx in this.layout_manager._active_styles)
-//            console.log(idx, this.layout_manager._active_styles[idx].style_config)
+
+        // Compute force options an initialize transition_info
+        this.viewport.get_hierarchy_list().forEach(node_chunk=>{
+            this._compute_force_options(node_chunk.tree)
+        })
+
+        let all_nodes = this.viewport.get_all_nodes()
+        let all_links = this.viewport.get_all_links()
+
+        node_visualization_layout_styles.force_simulation.register_viewport(this.layout_manager.viewport)
+        node_visualization_layout_styles.force_simulation.update_nodes_and_links(all_nodes, all_links)
         this.layout_manager.update_data()
 
         // Experimental
-        if (!skip_align)
+        if (this._align_layouts) {
+            this._align_layouts = false
             this.align_layouts(nodes_with_style)
+        }
+    }
+
+    _compute_force_options(node) {
+        node_visualization_utils.log(6, "LayoutManager: _compute_force_options")
+        let new_force_options = null
+        if (node.data.use_style && node.data.use_style.type() == node_visualization_layout_styles.LayoutStyleForce.prototype.type())
+            new_force_options = node.data.use_style.style_config.options
+        else if (node.parent)
+            new_force_options = node.parent.data.force_options
+        else {
+            let force_style = this.layout_style_factory.instantiate_style_class(node_visualization_layout_styles.LayoutStyleForce, node.data.chunk.tree)
+            new_force_options = force_style.style_config.options
+        }
+
+        node.data.force_options = new_force_options
+        if (!node._children)
+            return
+
+        node._children.forEach(child=>this._compute_force_options(child))
     }
 
     find_nodes_for_layout(layout, node_matcher) {
@@ -1236,18 +1508,20 @@ class LayoutApplier{
     }
 
     get_current_layout_group() {
-        // TODO: experimental, use layout_manager active_styles instead
         let layouts = []
         let style_configs = []
         let chunk_layout = null
         this.viewport.get_hierarchy_list().forEach(node_chunk=>{
-            chunk_layout = node_chunk.layout.serialize()
-            for (let idx in chunk_layout.style_configs)
-                if (chunk_layout.style_configs[idx].type != "force")
-                    style_configs.push(chunk_layout.style_configs[idx])
+            if (node_chunk.layout_instance)
+                chunk_layout = node_chunk.layout_instance.serialize()
         })
+        if (!chunk_layout)
+            return this.current_layout_group
+
+        for (let idx in this.layout_manager._active_styles) {
+            style_configs.push(this.layout_manager._active_styles[idx].style_config)
+        }
         chunk_layout.style_configs = style_configs
-        chunk_layout.style_configs.push(this.layout_manager.force_style.get_config())
         chunk_layout.reference_size = {width: this.viewport.width, height: this.viewport.height}
         return chunk_layout
     }

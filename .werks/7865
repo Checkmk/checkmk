@@ -1,0 +1,13 @@
+Title: aws_agent and aws checks: Fixed exception with empty EC2 instance list and output of identical WARN/CRIT messages
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1564566509
+Class: fix
+
+Fixed exception in AWS Agent when there are no EC2 instances but EC2 monitoring is enabled.
+Fixed output of multiple identical WARN and CRIT messages if limits were reached.
+
+

@@ -31,17 +31,9 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-
-@rulespec_registry.register
-class ManualCheckParameterHWErrors(ManualCheckParameterRulespec):
-    @property
-    def group(self):
-        return RulespecGroupManualChecksHardware
-
-    @property
-    def check_group_name(self):
-        return "hw_errors"
-
-    @property
-    def title(self):
-        return _("Simple checks for BIOS/Hardware errors")
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="hw_errors",
+        group=RulespecGroupManualChecksHardware,
+        title=lambda: _("Simple checks for BIOS/Hardware errors"),
+    ))

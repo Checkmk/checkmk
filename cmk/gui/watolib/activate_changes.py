@@ -44,7 +44,7 @@ import cmk.gui.config as config
 import cmk.gui.multitar as multitar
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import g, html
 from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -61,10 +61,9 @@ import cmk.gui.watolib.snapshots
 from cmk.gui.watolib.changes import (
     SiteChanges,
     log_audit,
-    activation_site_ids,
     activation_sites,
 )
-from cmk.gui.plugins.watolib import ConfigDomain
+from cmk.gui.plugins.watolib import ABCConfigDomain
 
 # TODO: Make private
 PHASE_INITIALIZED = "initialized"  # Thread object has been initialized (not in thread yet)
@@ -217,7 +216,7 @@ class ActivateChanges(object):
 
         self._migrate_old_changes()
 
-        for site_id in activation_site_ids():
+        for site_id in activation_sites():
             self._changes_by_site[site_id] = SiteChanges(site_id).load()
 
     # Between 1.4.0i* and 1.4.0b4 the changes were stored in
@@ -273,7 +272,7 @@ class ActivateChanges(object):
 
     def get_changes_estimate(self):
         changes_counter = 0
-        for site_id in activation_site_ids():
+        for site_id in activation_sites():
             changes_counter += len(SiteChanges(site_id).load())
             if changes_counter > 10:
                 return _("10+ changes")
@@ -292,7 +291,7 @@ class ActivateChanges(object):
     # affected sites.
     def dirty_and_active_activation_sites(self):
         dirty = []
-        for site_id, site in activation_sites():
+        for site_id, site in activation_sites().iteritems():
             status = self._get_site_status(site_id, site)[1]
             is_online = self._site_is_online(status)
             is_logged_in = self._site_is_logged_in(site_id, site)
@@ -312,7 +311,7 @@ class ActivateChanges(object):
             site_status = {}
             status = "disabled"
         else:
-            site_status = cmk.gui.sites.state(site_id, {})
+            site_status = cmk.gui.sites.states().get(site_id, {})
             status = site_status.get("state", "unknown")
 
         return site_status, status
@@ -354,7 +353,7 @@ class ActivateChanges(object):
         return change["user_id"] and change["user_id"] != config.user.id
 
     def _affects_all_sites(self, change):
-        return not set(change["affected_sites"]).symmetric_difference(set(activation_site_ids()))
+        return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
     def update_activation_time(self, site_id, ty, duration):
         repl_status = _load_site_replication_status(site_id, lock=True)
@@ -505,7 +504,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites):
         for site_id in sites:
-            if site_id not in dict(activation_sites()):
+            if site_id not in activation_sites():
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
 
         return sites
@@ -550,7 +549,7 @@ class ActivateChangesManager(ActivateChanges):
                 hooks.call("pre-distribute-changes",
                            cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
         except Exception as e:
-            logger.exception()
+            logger.exception("error calling pre-distribute-changes hook")
             if config.debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %s") % e)
@@ -583,7 +582,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 self._generate_snapshots(work_dir)
 
-            logger.debug("Snapshot creation took %.4f" % (time.time() - start))
+            logger.debug("Snapshot creation took %.4f", time.time() - start)
 
     def _get_site_configurations(self):
         site_configurations = {}
@@ -727,7 +726,7 @@ class ActivateChangesManager(ActivateChanges):
             site_activation.start()
             os._exit(0)
         except Exception:
-            logger.exception()
+            logger.exception("error starting site activation for site %s", site_id)
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
@@ -854,7 +853,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         os.setsid()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
-        cmk.gui.sites.disconnect()
+        if g:
+            cmk.gui.sites.disconnect()
 
         # Cleanup resources of the apache
         for x in range(3, 256):
@@ -867,12 +867,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     raise
 
         # Reinitialize logging targets
-        log.init_logging()
+        log.init_logging()  # NOTE: We run in a subprocess!
 
         try:
             self._do_run()
         except Exception:
-            logger.exception()
+            logger.exception("error running activate changes")
 
     def _do_run(self):
         try:
@@ -893,7 +893,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             self._set_done_result(configuration_warnings)
         except Exception as e:
-            logger.exception()
+            logger.exception("error activating changes")
             self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
 
         finally:
@@ -984,7 +984,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     # This is done on the central site to initiate the sync process
     def _synchronize_site(self):
-        self._set_result(PHASE_SYNC, _("Sychronizing"))
+        self._set_result(PHASE_SYNC, _("Synchronizing"))
 
         start = time.time()
 
@@ -1164,11 +1164,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
 def execute_activate_changes(domains):
-    domains = set(domains).union(ConfigDomain.get_always_activate_domain_idents())
+    domains = set(domains).union(ABCConfigDomain.get_always_activate_domain_idents())
 
     results = {}
     for domain in sorted(domains):
-        domain_class = ConfigDomain.get_class(domain)
+        domain_class = ABCConfigDomain.get_class(domain)
         warnings = domain_class().activate()
         results[domain] = warnings or []
 

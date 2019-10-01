@@ -547,6 +547,16 @@ class MetricCache(DataCache):
 
 
 class UsageClient(DataCache):
+    NO_CONSUPTION_API = (
+        'offer MS-AZR-0145P',
+        'offer MS-AZR-0146P',
+        'offer MS-AZR-159P',
+        'offer MS-AZR-0036P',
+        'offer MS-AZR-0143P',
+        'offer MS-AZR-0015P',
+        'offer MS-AZR-0144P',
+    )
+
     def __init__(self, subscription, debug=False):
         super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
                                           "%s-usage" % subscription,
@@ -557,14 +567,23 @@ class UsageClient(DataCache):
         midnight = NOW.combine(NOW.date(), datetime.time(0))
         return (NOW - midnight).seconds
 
+    @classmethod
+    def offerid_has_no_consuption_api(cls, errmsg):
+        return any(s in errmsg for s in cls.NO_CONSUPTION_API)
+
     def get_validity_from_args(self, *args):
         return True
 
     def get_live_data(self):  # pylint: disable=arguments-differ
         LOG.debug("UsageClient: get live data")
 
-        # (mo) I am unable to get the filter for usage_end working :-(
-        unfiltered_usages = rest_client.usagedetails()
+        try:
+            # (mo) I am unable to get the filter for usage_end working :-(
+            unfiltered_usages = rest_client.usagedetails()
+        except ApiError as exc:
+            if self.offerid_has_no_consuption_api(exc.message):
+                return []
+            raise
         LOG.debug('unfiltered usage details: %d', len(unfiltered_usages))
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')

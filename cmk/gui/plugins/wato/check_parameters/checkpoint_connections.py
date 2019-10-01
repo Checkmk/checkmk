@@ -37,28 +37,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersCheckpointConnections(CheckParameterRulespecWithoutItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_checkpoint_connections():
+    return Tuple(
+        help=_("This rule sets limits to the current number of connections through "
+               "a Checkpoint firewall."),
+        title=_("Maximum number of firewall connections"),
+        elements=[
+            Integer(title=_("Warning at"), default_value=40000),
+            Integer(title=_("Critical at"), default_value=50000),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "checkpoint_connections"
 
-    @property
-    def title(self):
-        return _("Checkpoint Firewall Connections")
-
-    @property
-    def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets limits to the current number of connections through "
-                   "a Checkpoint firewall."),
-            title=_("Maximum number of firewall connections"),
-            elements=[
-                Integer(title=_("Warning at"), default_value=40000),
-                Integer(title=_("Critical at"), default_value=50000),
-            ],
-        )
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="checkpoint_connections",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_checkpoint_connections,
+        title=lambda: _("Checkpoint Firewall Connections"),
+    ))

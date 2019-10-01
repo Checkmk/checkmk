@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import cmk.utils.render
 import cmk.gui.utils as utils
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from . import (
     perfometers,
@@ -56,11 +58,11 @@ def number_human_readable(n, precision=1, unit="B"):
     n = float(n)
     f = "%." + str(precision) + "f"
     if abs(n) > base * base * base:
-        return (f + "G%s") % (n / (base * base * base), unit)
+        return (f + "G%s") % (n / (base * base * base), unit)  # fixed: true-division
     elif abs(n) > base * base:
-        return (f + "M%s") % (n / (base * base), unit)
+        return (f + "M%s") % (n / (base * base), unit)  # fixed: true-division
     elif abs(n) > base:
-        return (f + "k%s") % (n / base, unit)
+        return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
 
 
@@ -83,14 +85,14 @@ def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
         data = [
             (perc_used, "#00ffc6"),
             (perc_uncommitted, "#eeccff"),
-            (perc_totally_free, "white"),
+            (perc_totally_free, get_themed_perfometer_bg_color()),
         ]
     else:
         # Visualize overcommitted space by scaling to total overcommittment value
         # and drawing the capacity as red line in the perfometer
         total = perc_used + perc_uncommitted
-        perc_used_bar = perc_used * 100 / total
-        perc_free = (100 - perc_used) * 100 / total
+        perc_used_bar = perc_used * 100.0 / total
+        perc_free = (100 - perc_used) * 100.0 / total
         data = [
             (perc_used_bar, "#00ffc6"),
             (perc_free, "#eeccff"),
@@ -139,18 +141,19 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
     ram_color, swap_color = "#80ff40", "#008030"
 
     data = [
-        (100 * ram_used / virt_total, ram_color),
-        (100 * swap_used / virt_total, swap_color),
+        (ram_used * 100.0 / virt_total, ram_color),
+        (swap_used * 100.0 / virt_total, swap_color),
     ]
 
     # used virtual memory < ram => show free ram and free total virtual memory
     if virt_used < ram_total:
-        data.append((100 * (ram_total - virt_used) / virt_total, "#fff"))
-        data.append((100 * (virt_total - ram_total) / virt_total, "#ccc"))
+        data.append(
+            ((ram_total - virt_used) * 100.0 / virt_total, get_themed_perfometer_bg_color()))
+        data.append(((virt_total - ram_total) * 100.0 / virt_total, "#ccc"))
     # usage exceeds ram => show only free virtual memory
     else:
         data.append((100 * (virt_total - virt_used), "#ccc"))
-    return "%d%%" % (100 * (virt_used / ram_total)), render_perfometer(data)
+    return "%d%%" % (100 * (virt_used / ram_total)), render_perfometer(data)  # fixed: true-division
 
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
@@ -164,7 +167,7 @@ def perfometer_check_mk_mem_win(row, check_command, perf_data):
     color = "#5090c0"
     ram_total = float(perf_data[0][6])
     ram_used = float(perf_data[0][1])
-    perc = ram_used / ram_total * 100.0
+    perc = ram_used / ram_total * 100.0  # fixed: true-division
     return "%d%%" % perc, perfometer_linear(perc, color)
 
 
@@ -186,13 +189,15 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
     max_ = crit * 2
     if absoffset > max_:
         absoffset = max_
-    rel = 50 * (absoffset / max_)
+    rel = 50 * (absoffset / max_)  # fixed: true-division
 
     color = {0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
     if offset > 0:
-        data = [(50, "#fff"), (rel, color), (50 - rel, "#fff")]
+        data = [(50, get_themed_perfometer_bg_color()), (rel, color),
+                (50 - rel, get_themed_perfometer_bg_color())]
     else:
-        data = [(50 - rel, "#fff"), (rel, color), (50, "#fff")]
+        data = [(50 - rel, get_themed_perfometer_bg_color()), (rel, color),
+                (50, get_themed_perfometer_bg_color())]
     return "%.2f %s" % (offset, unit), render_perfometer(data)
 
 
@@ -210,16 +215,17 @@ def perfometer_ipmi_sensors(row, check_command, perf_data):
     if not crit:
         return "%d" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
-    perc = 100 * value / crit
+    perc = value * 100.0 / crit
     # some sensors get critical if the value is < crit (fans), some if > crit (temp)
     if value <= crit:
-        data = [(perc, color), (100 - perc, "#fff")]
+        data = [(perc, color), (100 - perc, get_themed_perfometer_bg_color())]
     elif state == 0:  # fan, OK
         m = max(value, 10000.0)
-        perc_crit = 100 * crit / m
-        perc_value = 100 * (value - crit) / m
-        perc_free = 100 * (m - value) / m
-        data = [(perc_crit, color), (perc_value, color), (perc_free, "#fff")]
+        perc_crit = crit * 100.0 / m
+        perc_value = (value - crit) * 100.0 / m
+        perc_free = (m - value) * 100.0 / m
+        data = [(perc_crit, color), (perc_value, color),
+                (perc_free, get_themed_perfometer_bg_color())]
     else:
         data = []
 
@@ -310,7 +316,7 @@ def perfometer_power(row, check_command, perf_data):
     value = utils.savefloat(perf_data[0][1])
     crit = utils.savefloat(perf_data[0][4])
     warn = utils.savefloat(perf_data[0][3])
-    power_perc = value / crit * 90  # critical is at 90% to allow for more than crit
+    power_perc = value / crit * 90  # critical is at 90% to allow for more than crit # fixed: true-division
 
     if value > warn:
         display_color = "#FFC840"
@@ -376,12 +382,12 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
     txt, data = [], []
     for name, bytes_, bw, color in [("in", in_traffic, in_bw, "#0e6"),
                                     ("out", out_traffic, out_bw, "#2af")]:
-        rrate = bytes_ / bw
+        rrate = bytes_ / bw  # fixed: true-division
         drate = max(0.02, rrate**0.5**0.5)
         rperc = 100 * rrate
         dperc = 100 * drate
-        a = (dperc / 2, color)
-        b = (50 - dperc / 2, "#fff")
+        a = (dperc / 2.0, color)
+        b = (50 - dperc / 2.0, get_themed_perfometer_bg_color())
 
         txt.append("%.1f%%" % rperc)
         if name == "in":
@@ -461,8 +467,8 @@ def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])
     used = float(perf_data[1][1])
     max_ = float(perf_data[2][1])
-    used_perc = used / max_ * 100
-    curr_perc = (current / max_ * 100) - used_perc
+    used_perc = used / max_ * 100  # fixed: true-division
+    curr_perc = (current / max_ * 100) - used_perc  # fixed: true-division
     data = [
         (used_perc, "#f0b000"),
         (curr_perc, "#00ff80"),
@@ -561,7 +567,7 @@ def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
         (float(perf_data[0][1]), "#60f020"),
         (float(perf_data[1][1]), "#ff6000"),
         (float(perf_data[2][1]), "#00d080"),
-        (float(perf_data[3][1]), "#ffffff"),
+        (float(perf_data[3][1]), get_themed_perfometer_bg_color()),
     ]
     total = float(perf_data[0][1]) + float(perf_data[1][1]) + float(perf_data[2][1])
     return "%.0f%%" % total, render_perfometer(data)
@@ -595,7 +601,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
     write_bytes = float(perf_data[1][1])
 
     text = "%-.2f M/s  %-.2f M/s" % \
-            (read_bytes / (1024*1024.0), write_bytes / (1024*1024.0))
+            (read_bytes / (1024.0*1024.0), write_bytes / (1024.0*1024.0))
 
     return text, perfometer_logarithmic_dual(
         read_bytes,
@@ -687,7 +693,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
 
     # If there is no 100% given, calculate the percentage
     if maxi != 100.0 and maxi != 0.0:
-        left = left * 100 / maxi
+        left = left * 100.0 / maxi
 
     s = row['service_description'].lower()
 
@@ -774,9 +780,9 @@ def perfometer_mssql_tablespaces(row, check_command, perf_data):
     indexes = float(perf_data[4][1])
     unused = float(perf_data[5][1])
 
-    data_perc = data / reserved * 100
-    indexes_perc = indexes / reserved * 100
-    unused_perc = unused / reserved * 100
+    data_perc = data / reserved * 100  # fixed: true-division
+    indexes_perc = indexes / reserved * 100  # fixed: true-division
+    unused_perc = unused / reserved * 100  # fixed: true-division
 
     data = [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
     return "%.1f%%" % (data_perc + indexes_perc), render_perfometer(data)
@@ -787,7 +793,7 @@ perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
 
 def perfometer_mssql_counters_cache_hits(row, check_command, perf_data):
     perc = float(perf_data[0][1])
-    data = [(perc, "#69EA96"), (100 - perc, "#ffffff")]
+    data = [(perc, "#69EA96"), (100 - perc, get_themed_perfometer_bg_color())]
     return "%.1f%%" % perc, render_perfometer(data)
 
 
@@ -817,7 +823,7 @@ def perfometer_hpux_tunables(row, check_command, perf_data):
         # otherwise it could be "green" all the way to 100%
         color = "#f4a460"
 
-    used = value / threshold * 100
+    used = value / threshold * 100  # fixed: true-division
 
     return "%.0f%%" % (used), perfometer_linear(used, color)
 
@@ -1018,22 +1024,22 @@ def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
     total = active + inactive + degraded + offline + other
     data = []
     if active > 0:
-        perc_active = 100 * active / total
+        perc_active = active * 100.0 / total
         data.append((perc_active, "#008000"))
     if inactive > 0:
-        perc_inactive = 100 * inactive / total
+        perc_inactive = inactive * 100.0 / total
         data.append((perc_inactive, "#0000FF"))
     if degraded > 0:
-        perc_degraded = 100 * degraded / total
+        perc_degraded = degraded * 100.0 / total
         data.append((perc_degraded, "#F84"))
     if offline > 0:
-        perc_offline = 100 * offline / total
+        perc_offline = offline * 100.0 / total
         data.append((perc_offline, "#FF0000"))
     if other > 0:
-        perc_other = 100 * other / total
+        perc_other = other * 100.0 / total
         data.append((perc_other, "#000000"))
     if total == 0:
-        data.append((100, "white"))
+        data.append((100, get_themed_perfometer_bg_color()))
     return "%d active" % active, render_perfometer(data)
 
 
@@ -1047,11 +1053,11 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
     licensed = float(perf_data[0][1])
     used = float(perf_data[1][1])
     if used == 0 and licensed == 0:
-        return "0 of 0 used", perfometer_linear(100, "white")
+        return "0 of 0 used", perfometer_linear(100, get_themed_perfometer_bg_color())
     elif licensed == 0:
         return "completely unlicensed", perfometer_linear(100, "silver")
 
-    perc_used = 100 * used / licensed
+    perc_used = used * 100.0 / licensed
     return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
 
 
@@ -1063,7 +1069,8 @@ def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
     total_cache_pc = int(perf_data[1][1])
     read_cache_pc = total_cache_pc - write_cache_pc
     free_cache_pc = 100 - total_cache_pc
-    data = [(write_cache_pc, "#60e0a0"), (read_cache_pc, "#60a0e0"), (free_cache_pc, "white")]
+    data = [(write_cache_pc, "#60e0a0"), (read_cache_pc, "#60a0e0"),
+            (free_cache_pc, get_themed_perfometer_bg_color())]
     return "%d %% write, %d %% read" % (write_cache_pc, read_cache_pc), render_perfometer(data)
 
 
@@ -1114,7 +1121,7 @@ def perfometer_current(row, check_command, perf_data):
     value = utils.savefloat(perf_data[0][1])
     crit = utils.savefloat(perf_data[0][4])
     warn = utils.savefloat(perf_data[0][3])
-    current_perc = value / crit * 90  # critical is at 90% to allow for more than crit
+    current_perc = value / crit * 90  # critical is at 90% to allow for more than crit # fixed: true-division
 
     if value > warn:
         display_color = "#FDC840"
@@ -1152,7 +1159,7 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     elif cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
 
-    return "unimplemented", perfometer_linear(0, "#ffffff")
+    return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
 
 
 perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet

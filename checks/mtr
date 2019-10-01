@@ -106,11 +106,11 @@ def check_mtr(item, params, parsed):
         pl = float(hop['pl'])
         #        snt    = float(hop['snt'])
         #        perfdata.append( ( 'hop_%d_snt' % idx, snt, "", "", "", "" ) )  # packets sent
-        perfdata.append( ('hop_%d_rta'           % idx, rta / 1000 , rta_warn and rta_warn / 1000,\
-                                                   rta_crit and rta_crit / 1000) )
-        perfdata.append(('hop_%d_rtmin' % idx, rtmin / 1000))
-        perfdata.append(('hop_%d_rtmax' % idx, rtmax / 1000))
-        perfdata.append( ('hop_%d_rtstddev'      % idx, rtstddev / 1000, rtstddev_warn and rtstddev_warn / 1000,\
+        perfdata.append(('hop_%d_rta' % idx, rta / 1000.0, rta_warn and rta_warn / 1000.0),
+                        rta_crit and rta_crit / 1000.0)
+        perfdata.append(('hop_%d_rtmin' % idx, rtmin / 1000.0))
+        perfdata.append(('hop_%d_rtmax' % idx, rtmax / 1000.0))
+        perfdata.append( ('hop_%d_rtstddev'      % idx, rtstddev / 1000.0, rtstddev_warn and rtstddev_warn / 1000.0,\
                                                    rtstddev_crit and rtstddev_crit / 1000) )
         perfdata.append(('hop_%d_response_time' % idx, response_time / 1000))
         perfdata.append(('hop_%d_pl' % idx, pl, pl_warn, pl_crit))

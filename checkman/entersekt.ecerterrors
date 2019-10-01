@@ -1,0 +1,9 @@
+title: Number of errors for Entersekt Ecert
+agents: snmp
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This checks verifies the number of HTTP errors for Entersekt Ecert
+inventory:
+ One service for Entersekt Ecert error

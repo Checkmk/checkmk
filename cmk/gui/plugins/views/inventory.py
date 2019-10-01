@@ -24,28 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from __future__ import division
 import time
-
+import six
 from cmk.utils.regex import regex
+
 import cmk.utils.defines as defines
+
 import cmk.utils.render
 
 import cmk.gui.pages
+
 import cmk.gui.config as config
+
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Checkbox, Hostname
-from cmk.gui.exceptions import MKUserError
 
+from cmk.gui.valuespec import Checkbox, Hostname
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
     visual_info_registry,
 )
+
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -236,7 +242,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
 def cmp_inventory_node(a, b, invpath):
     val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
     val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
-    return cmp(val_a, val_b)
+    return (val_a > val_b) - (val_a < val_b)
 
 
 @painter_option_registry.register
@@ -317,10 +323,10 @@ def inv_paint_hz(hz):
     elif hz < 1500:
         return "number", "%.0f" % hz
     elif hz < 1000000:
-        return "number", "%.1f kHz" % (hz / 1000)
+        return "number", "%.1f kHz" % (hz / 1000.0)
     elif hz < 1000000000:
-        return "number", "%.1f MHz" % (hz / 1000000)
-    return "number", "%.2f GHz" % (hz / 1000000000)
+        return "number", "%.1f MHz" % (hz / 1000000.0)
+    return "number", "%.2f GHz" % (hz / 1000000000.0)
 
 
 @decorate_inv_paint
@@ -331,7 +337,7 @@ def inv_paint_bytes(b):
     units = ['B', 'kB', 'MB', 'GB', 'TB']
     i = 0
     while b % 1024 == 0 and i + 1 < len(units):
-        b = b / 1024
+        b = int(b / 1024.0)
         i += 1
     return "number", "%d %s" % (b, units[i])
 
@@ -367,7 +373,7 @@ def inv_paint_bytes_rounded(b):
         fac = fac / 1024.0
 
     if i:
-        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
+        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])  # fixed: true-division
     return "number", "%d&nbsp;%s" % (b, units[0])
 
 
@@ -381,10 +387,10 @@ def _nic_speed_human_readable(bits_per_second):
     elif bits_per_second < 1500:
         return "%d bit/s" % bits_per_second
     elif bits_per_second < 1000000:
-        return "%s Kbit/s" % utils.drop_dotzero(bits_per_second / 1000.0, digits=1)
+        return "%s Kbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000.0, digits=1)
     elif bits_per_second < 1000000000:
-        return "%s Mbit/s" % utils.drop_dotzero(bits_per_second / 1000000.0, digits=2)
-    return "%s Gbit/s" % utils.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
+        return "%s Mbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000.0, digits=2)
+    return "%s Gbit/s" % cmk.utils.render.drop_dotzero(bits_per_second / 1000000000.0, digits=2)
 
 
 @decorate_inv_paint
@@ -509,7 +515,7 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
     now_day = round_to_day(time.time())
     change_day = round_to_day(timestamp)
-    age_days = (now_day - change_day) / 86400
+    age_days = int((now_day - change_day) / 86400.0)
 
     css_class = "number"
     if age_days == 0:
@@ -632,7 +638,7 @@ def inv_titleinfo(invpath, node):
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
-        if callable(title):
+        if hasattr(title, '__call__'):
             title = title(node)
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",
@@ -764,7 +770,7 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(cmp=lambda a, b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a, b))
+    columns.sort(key=lambda x: order.get(x, 999) or x)
     return columns
 
 
@@ -821,7 +827,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
         column, {
             "title": _("Inventory") + ": " + title,
             "columns": [column],
-            "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
         })
 
     filter_registry.register(filter_class)
@@ -988,7 +994,7 @@ def _create_view_enabled_check_func(invpath, is_history=False):
 
 
 def _get_struct_tree(is_history, hostname, site_id):
-    struct_tree_cache = current_app.g.setdefault("struct_tree_cache", {})
+    struct_tree_cache = g.setdefault("struct_tree_cache", {})
     cache_id = (is_history, hostname, site_id)
     if cache_id in struct_tree_cache:
         return struct_tree_cache[cache_id]
@@ -1723,7 +1729,7 @@ class NodeRenderer(object):
             except UnicodeDecodeError:
                 text = value
             html.write_text(text)
-        elif isinstance(value, unicode):
+        elif isinstance(value, six.text_type):
             html.write_text(value)
         elif isinstance(value, int):
             html.write(str(value))

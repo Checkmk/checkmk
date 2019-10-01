@@ -35,7 +35,7 @@ def inventory_socomec_ups_out_voltage(info):
 def check_socomec_ups_out_voltage(item, params, info):
     conv_info = []
     for line in info:
-        conv_info.append([line[0], saveint(line[1]) / 10, line[1]])
+        conv_info.append([line[0], saveint(line[1]) // 10, line[1]])
     return check_ups_out_voltage(item, params, conv_info)
 
 

@@ -32,8 +32,8 @@ factory_settings['aws_elb_limits_default_levels'] = {
 
 
 def parse_aws_elb_limits(info):
-    return [(resource_key, resource_title, limit, amount, None)
-            for resource_key, resource_title, limit, amount in parse_aws(info)]
+    return [(resource_key, resource_title, limit, amount, region, None)
+            for resource_key, resource_title, limit, amount, region in parse_aws(info)]
 
 
 def check_aws_elb_limits(item, params, parsed):

@@ -116,6 +116,8 @@
 #        In the older version, all of these go to WARN(1).
 #        We keep it that way, but make it configurable.
 
+import functools
+
 factory_settings['veritas_vcs_defaults'] = {
     'map_frozen': {
         'tfrozen': 1,
@@ -180,7 +182,7 @@ def veritas_vcs_boil_down_states_in_cluster(states):
 
 
 def inventory_veritas_vcs(parsed, item_type):
-    for item_name in parsed[item_type]:
+    for item_name in parsed.get(item_type, {}):
         yield item_name, None
 
 
@@ -213,7 +215,7 @@ def check_veritas_vcs(item, params, parsed, item_type):
     yield state, "%s" % ", ".join(infotexts)
 
     # get last not None cluster name
-    cluster_name = reduce(lambda x, y: y if y.cluster else x, data).cluster
+    cluster_name = functools.reduce(lambda x, y: y if y.cluster else x, data).cluster
     if cluster_name is not None:
         yield 0, "Cluster: %s" % cluster_name
 

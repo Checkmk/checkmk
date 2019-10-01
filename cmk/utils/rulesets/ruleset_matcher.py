@@ -40,21 +40,19 @@ from cmk.utils.exceptions import MKGeneralException
 
 class RulesetMatchObject(object):
     """Wrapper around dict to ensure the ruleset match objects are correctly created"""
-    __slots__ = ["host_name", "host_tags", "host_folder", "host_labels", "service_description"]
+    __slots__ = ["host_name", "service_description", "service_labels", "service_cache_id"]
 
-    def __init__(self,
-                 host_name=None,
-                 host_tags=None,
-                 host_folder=None,
-                 host_labels=None,
-                 service_description=None):
-        # type: (Optional[str], Optional[Dict[Text, Text]], Optional[str], Optional[Dict[Text, Text]], Optional[Text]) -> None
+    def __init__(self, host_name=None, service_description=None, service_labels=None):
+        # type: (Optional[str], Optional[Text], Optional[Dict[Text, Text]]) -> None
         super(RulesetMatchObject, self).__init__()
         self.host_name = host_name
-        self.host_tags = host_tags
-        self.host_folder = host_folder
-        self.host_labels = host_labels
         self.service_description = service_description
+        self.service_labels = service_labels
+        self.service_cache_id = (self.service_description, self._generate_hash(self.service_labels)
+                                 if self.service_labels else None)
+
+    def _generate_hash(self, service_labels):
+        return hash(frozenset(self.service_labels))
 
     def to_dict(self):
         # type: () -> Dict
@@ -67,10 +65,6 @@ class RulesetMatchObject(object):
     def __repr__(self):
         kwargs = ", ".join(["%s=%r" % e for e in self.to_dict().iteritems()])
         return "RulesetMatchObject(%s)" % kwargs
-
-    def service_cache_id(self):
-        # type: () -> Tuple
-        return (self.service_description,)
 
 
 class RulesetMatcher(object):
@@ -175,28 +169,45 @@ class RulesetMatcher(object):
                                                                        with_foreign_hosts,
                                                                        is_binary=is_binary)
 
-        for value, hosts, service_description_condition in optimized_ruleset:
-            if match_object.host_name not in hosts:
-                continue
-
+        for value, hosts, service_labels_condition, service_labels_condition_cache_id, service_description_condition in optimized_ruleset:
             if match_object.service_description is None:
                 continue
 
-            service_cache_id = (match_object.service_cache_id(), service_description_condition)
+            if match_object.host_name not in hosts:
+                continue
+
+            service_cache_id = (match_object.service_cache_id, service_description_condition,
+                                service_labels_condition_cache_id)
+
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
                 match = self._matches_service_conditions(service_description_condition,
-                                                         match_object.service_description)
+                                                         service_labels_condition, match_object)
                 self._service_match_cache[service_cache_id] = match
 
             if match:
                 yield value
 
-    def _matches_service_conditions(self, service_description_condition, service_description):
-        # type: (Tuple[bool, Pattern[Text]], Text) -> bool
+    def _matches_service_conditions(self, service_description_condition, service_labels_condition,
+                                    match_object):
+        # type: (Tuple[bool, Pattern[Text]], Dict[Text, Text], RulesetMatchObject) -> bool
+        if not self._matches_service_description_condition(service_description_condition,
+                                                           match_object):
+            return False
+
+        if service_labels_condition \
+           and not _matches_labels(match_object.service_labels, service_labels_condition):
+            return False
+
+        return True
+
+    def _matches_service_description_condition(self, service_description_condition, match_object):
+        # type: (Tuple[bool, Pattern[Text]], RulesetMatchObject) -> bool
         negate, pattern = service_description_condition
-        if pattern.match(service_description) is not None:
+
+        if match_object.service_description is not None \
+            and pattern.match(match_object.service_description) is not None:
             return not negate
         return negate
 
@@ -307,7 +318,7 @@ class RulesetOptimizer(object):
         for the current hostset """
         used_groups = set()
         for hostname in self._all_processed_hosts:
-            used_groups.add(self._host_grouped_ref[hostname])
+            used_groups.add(self._host_grouped_ref.get(hostname, ()))
 
         if not used_groups:
             self._all_processed_hosts_similarity = 1
@@ -364,11 +375,16 @@ class RulesetOptimizer(object):
             # recomputation later
             hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
 
+            # Prepare cache id
+            service_labels_condition = rule["condition"].get("service_labels", {})
+            service_labels_condition_cache_id = tuple(
+                (label_id, _tags_or_labels_cache_id(label_spec))
+                for label_id, label_spec in service_labels_condition.iteritems())
+
             # And now preprocess the configured patterns in the servlist
             new_rules.append(
-                (rule["value"], hosts,
+                (rule["value"], hosts, service_labels_condition, service_labels_condition_cache_id,
                  self._convert_pattern_list(rule["condition"].get("service_description"))))
-
         return new_rules
 
     def _convert_pattern_list(self, patterns):
@@ -683,11 +699,20 @@ class RulesetToDictTransformer(object):
     def __init__(self, tag_to_group_map):
         super(RulesetToDictTransformer, self).__init__()
         self._tag_groups = tag_to_group_map
+        self._transformed_ids = set()
 
-    def transform_in_place(self, ruleset, is_service, is_binary):
+    def transform_in_place(self, ruleset, is_service, is_binary, use_ruleset_id_cache=True):
+        if use_ruleset_id_cache:
+            ruleset_id = id(ruleset)
+            if ruleset_id in self._transformed_ids:
+                return
+
         for index, rule in enumerate(ruleset):
             if not isinstance(rule, dict):
                 ruleset[index] = self._transform_rule(rule, is_service, is_binary)
+
+        if use_ruleset_id_cache:
+            self._transformed_ids.add(ruleset_id)
 
     def _transform_rule(self, tuple_rule, is_service, is_binary):
         rule = {

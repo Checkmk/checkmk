@@ -3,6 +3,7 @@
 # Run this script within a (started) OMD site in order to
 # retrieve cache statistics of the RRD cache.
 
+from __future__ import print_function
 import socket, os, sys
 
 try:
@@ -21,7 +22,7 @@ try:
         stats[key[:len(key) - 1]] = int(value)
 
     for key, value in stats.items():
-        print "%-15s :%15d" % (key, value)
+        print("%-15s :%15d" % (key, value))
 
 except:
     sys.stderr.write("Unable to retrieve statistics.\n")

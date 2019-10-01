@@ -40,61 +40,49 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersSnapvault(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersStorage
-
-    @property
-    def check_group_name(self):
-        return "snapvault"
-
-    @property
-    def title(self):
-        return _("NetApp Snapvaults / Snapmirror Lag Time")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(elements=[
-            (
-                "lag_time",
-                Tuple(
-                    title=_("Default levels"),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
-                ),
+def _parameter_valuespec_snapvault():
+    return Dictionary(elements=[
+        (
+            "lag_time",
+            Tuple(
+                title=_("Default levels"),
+                elements=[
+                    Age(title=_("Warning at")),
+                    Age(title=_("Critical at")),
+                ],
             ),
-            ("policy_lag_time",
-             ListOf(
-                 Tuple(
-                     orientation="horizontal",
-                     elements=[
-                         TextAscii(title=_("Policy name")),
-                         Tuple(
-                             title=_("Maximum age"),
-                             elements=[
-                                 Age(title=_("Warning at")),
-                                 Age(title=_("Critical at")),
-                             ],
-                         ),
-                     ],
-                 ),
-                 title=_('Policy specific levels (Clustermode only)'),
-                 help=_(
-                     "Here you can specify levels for different policies which overrule the levels "
-                     "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."
-                 ),
-                 allow_empty=False,
-             ))
-        ],)
+        ),
+        ("policy_lag_time",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     TextAscii(title=_("Policy name")),
+                     Tuple(
+                         title=_("Maximum age"),
+                         elements=[
+                             Age(title=_("Warning at")),
+                             Age(title=_("Critical at")),
+                         ],
+                     ),
+                 ],
+             ),
+             title=_('Policy specific levels (Clustermode only)'),
+             help=_(
+                 "Here you can specify levels for different policies which overrule the levels "
+                 "from the <i>Default levels</i> parameter. This setting only works in NetApp Clustermode setups."
+             ),
+             allow_empty=False,
+         ))
+    ],)
 
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Source Path"), allow_empty=False)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="snapvault",
+        group=RulespecGroupCheckParametersStorage,
+        item_spec=lambda: TextAscii(title=_("Source Path"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_snapvault,
+        title=lambda: _("NetApp Snapvaults / Snapmirror Lag Time"),
+    ))

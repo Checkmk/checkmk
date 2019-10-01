@@ -27,6 +27,8 @@
 import abc
 import os
 import time
+import io
+import six
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -35,9 +37,10 @@ from cmk.utils.defines import short_service_state_name, short_host_state_name
 
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
+import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import g, html
 from cmk.gui.valuespec import (
     Timerange,
     TextAscii,
@@ -1485,11 +1488,21 @@ class PainterCheckManpage(Painter):
 
     def render(self, row, cell):
         command = row["service_check_command"]
-        if not command.startswith("check_mk-"):
+
+        if not command.startswith(("check_mk-", "check-mk", "check_mk_active-cmk_inv")):
             return "", ""
-        checktype = command[9:]
+
+        if command == "check-mk":
+            checktype = "check-mk"
+        elif command == "check-mk-inventory":
+            checktype = "check-mk-inventory"
+        elif "check_mk_active-cmk_inv" in command:
+            checktype = "check_cmk_inv"
+        else:
+            checktype = command[9:]
 
         page = man_pages.load_man_page(checktype)
+
         if page is None:
             return "", _("Man page %s not found.") % checktype
 
@@ -1595,7 +1608,7 @@ def paint_custom_notes(what, row):
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
 
     for f in files:
-        contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
+        contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
     return "", "<hr>".join(contents)
 
 
@@ -1734,9 +1747,7 @@ class PainterServiceCustomVariables(Painter):
         return paint_custom_vars('service', row)
 
 
-class ABCPainterCustomVariable(Painter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCPainterCustomVariable(six.with_metaclass(abc.ABCMeta, Painter)):
     @property
     def title(self):
         return self._dynamic_title
@@ -2869,7 +2880,7 @@ class PainterNumProblems(Painter):
 
     @property
     def short_title(self):
-        return _("Pro.")
+        return _("Prob.")
 
     @property
     def columns(self):
@@ -4408,7 +4419,7 @@ class PainterDowntimeDuration(Painter):
 
     def render(self, row, cell):
         if row["downtime_fixed"] == 0:
-            return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
+            return "number", "%02d:%02d:00" % divmod(int(row["downtime_duration"] / 60.0), 60)
         return "", ""
 
 
@@ -5030,9 +5041,7 @@ class PainterHostTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
 
 
-class ABCPainterTagsWithTitles(Painter):
-    __metaclass__ = abc.ABCMeta
-
+class ABCPainterTagsWithTitles(six.with_metaclass(abc.ABCMeta, Painter)):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -5197,6 +5206,73 @@ class PainterServiceLabels(Painter):
                                  label_sources=get_label_sources(row, "service"))
 
 
+@painter_registry.register
+class PainterHostDockerNode(Painter):
+    @property
+    def ident(self):
+        return "host_docker_node"
+
+    @property
+    def title(self):
+        return _("Docker node")
+
+    @property
+    def short_title(self):
+        return _("Node")
+
+    @property
+    def columns(self):
+        return ["host_labels", "host_label_sources"]
+
+    def render(self, row, cell):
+        source_hosts = [
+            k[21:]
+            for k in get_labels(row, "host").iterkeys()
+            if k.startswith("cmk/piggyback_source_")
+        ]
+
+        if not source_hosts:
+            return "", ""
+
+        # We need the labels of the piggyback hosts to know which of them is
+        # the docker node. We can not do livestatus queries per host/row here.
+        # For this reason we perform a single query for all hosts of the users
+        # sites which is then cached to prevent additional queries.
+        host_labels = _get_host_labels()
+
+        docker_nodes = [
+            h for h in source_hosts if host_labels.get(h, {}).get("cmk/docker_object") == "node"
+        ]
+
+        content = []
+        for host_name in docker_nodes:
+            url = html.makeuri_contextless(
+                [
+                    ("view_name", "host"),
+                    ("host", host_name),
+                ],
+                filename="view.py",
+            )
+            content.append(html.render_a(host_name, href=url))
+        return "", HTML(", ").join(content)
+
+
+def _get_host_labels():
+    """Returns a map of all known hosts with their host labels
+
+    It is important to cache this query per request and also try to use the
+    liveproxyd query cached.
+    """
+    if 'host_labels' in g:
+        return g.host_labels
+
+    query = "GET hosts\nColumns: name labels\nCache: reload\n"
+    host_labels = {name: labels for name, labels in sites.live().query(query)}
+
+    g.host_labels = host_labels
+    return host_labels
+
+
 class AbstractPainterSpecificMetric(Painter):
     @property
     def ident(self):
@@ -5225,15 +5301,14 @@ class AbstractPainterSpecificMetric(Painter):
 
     @property
     def parameters(self):
-        cache_id = "painter_specific_metric_choices"
-        if cache_id in current_app.g:
-            choices = current_app.g[cache_id]
+        if 'painter_specific_metric_choices' in g:
+            choices = g.painter_specific_metric_choices
         else:
             choices = []
             for key, value in metrics.metric_info.iteritems():
                 choices.append((key, value.get("title")))
             choices.sort(key=lambda x: x[1])
-            current_app.g[cache_id] = choices
+            g.painter_specific_metric_choices = choices
 
         return Dictionary(elements=[
             ("metric",

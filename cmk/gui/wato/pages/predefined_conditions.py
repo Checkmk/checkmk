@@ -55,13 +55,12 @@ from cmk.gui.plugins.wato import (
 
 
 def dummy_rulespec():
-    rulespec_class = type("DummyRulespec", (ServiceRulespec,), {
-        "group": RulespecGroupUserInterface,
-        "name": "dummy",
-        "valuespec": None,
-    })
-    # Pylint does not get this right for some reason
-    return rulespec_class()  # pylint: disable=abstract-class-instantiated
+    # type: () -> ServiceRulespec
+    return ServiceRulespec(
+        name="dummy",
+        group=RulespecGroupUserInterface,
+        valuespec=lambda: FixedValue(None),
+    )
 
 
 def vs_conditions():

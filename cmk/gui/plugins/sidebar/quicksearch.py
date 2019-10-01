@@ -27,6 +27,7 @@
 import abc
 import re
 import traceback
+import six
 
 import livestatus
 
@@ -90,7 +91,7 @@ class QuicksearchSnapin(SidebarSnapin):
         except MKException as e:
             html.show_error(e)
         except Exception as e:
-            logger.exception()
+            logger.exception("error generating quicksearch results")
             if config.debug:
                 raise
             html.show_error(traceback.format_exc())
@@ -547,9 +548,7 @@ def generate_search_results(query):
 
 # TODO: Simplify code by making static things like _filter_shortname class members
 # and it's getters class methods
-class QuicksearchMatchPlugin(object):
-    __metaclass__ = abc.ABCMeta
-
+class QuicksearchMatchPlugin(six.with_metaclass(abc.ABCMeta, object)):
     def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
         self._filter_shortname = filter_shortname
         self._supported_livestatus_tables = supported_livestatus_tables

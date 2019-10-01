@@ -27,16 +27,21 @@ int TestIo();                              // on check -io
 int TestMt();                              // on check -mt
 int TestMainServiceSelf(int Interval);     // on check self
 int TestLegacy();                          // on test
+int RestoreWATOConfig();                   // on restore
 int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
 int ExecCap();                             // on cap
+int ExecVersion();                         // on version
 int ExecPatchHash();                       // on patch_hash
 int ExecShowConfig(std::string_view sec);  // on showconfig
 int ExecUpgradeParam(bool Force);          // om upgrade
 
 int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
+
+int ExecReloadConfig();
+int ExecRemoveLegacyAgent();
 
 int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
@@ -68,6 +73,8 @@ void SelfConfigure();
 SC_HANDLE SelfOpen();
 bool IsServiceConfigured(SC_HANDLE handle);
 bool ConfigureServiceAsRestartable(SC_HANDLE handle);
+
+bool IsGlobalStopSignaled();
 
 }  // namespace srv
 };  // namespace cma

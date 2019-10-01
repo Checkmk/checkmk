@@ -39,39 +39,30 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersHacmpResources(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_hacmp_resources():
+    return Transform(
+        Dictionary(
+            elements=[
+                ("expect_online_on",
+                 DropdownChoice(
+                     title=_(u"Expect resource to be online on"),
+                     choices=[
+                         ("first", _(u"the first node")),
+                         ("any", _(u"any node")),
+                     ],
+                 )),
+            ],
+            optional_keys=[],
+        ),
+        forth=lambda x: {"expect_online_on": "first"},
+    )
 
-    @property
-    def check_group_name(self):
-        return "hacmp_resources"
 
-    @property
-    def title(self):
-        return _("AIX HACMP Resource Groups")
-
-    @property
-    def parameter_valuespec(self):
-        return Transform(
-            Dictionary(
-                elements=[
-                    ("expect_online_on",
-                     DropdownChoice(
-                         title=_(u"Expect resource to be online on"),
-                         choices=[
-                             ("first", _(u"the first node")),
-                             ("any", _(u"any node")),
-                         ],
-                     )),
-                ],
-                optional_keys=[],
-            ),
-            forth=lambda x: {"expect_online_on": "first"},
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_(u"Resource Group"))
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="hacmp_resources",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_(u"Resource Group")),
+        parameter_valuespec=_parameter_valuespec_hacmp_resources,
+        title=lambda: _("AIX HACMP Resource Groups"),
+    ))

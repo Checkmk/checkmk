@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
 import pytest
 import time
 import ast
@@ -158,12 +159,12 @@ def ensure_core_and_get_connection(site, ec, core):
 
 @pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 def test_command_reload(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print "Old config load time: %s" % old_t
+    print("Old config load time: %s" % old_t)
     assert old_t > time.time() - 86400
 
     time.sleep(1)  # needed to have at least one second after EC start
@@ -171,14 +172,14 @@ def test_command_reload(site, ec, core):
     time.sleep(1)  # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print "New config load time: %s" % old_t
+    print("New config load time: %s" % old_t)
     assert new_t > old_t
 
 
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_status_table_via_core(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
     if core is None:
@@ -231,7 +232,7 @@ def test_status_table_via_core(site, ec, core):
 # core is None means direct query to status socket
 @pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_rules_table_via_core(site, ec, core):
-    print "Checking core: %s" % core
+    print("Checking core: %s" % core)
 
     live = ensure_core_and_get_connection(site, ec, core)
     if core is None:

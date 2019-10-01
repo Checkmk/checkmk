@@ -41,66 +41,54 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMssqlFileSizes(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _parameter_valuespec_mssql_file_sizes():
+    return Dictionary(
+        title=_("File Size Levels"),
+        elements=[
+            ("data_files",
+             Tuple(
+                 title=_("Total data file size: Absolute upper levels"),
+                 elements=[
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
+                 ],
+             )),
+            ("log_files",
+             Tuple(
+                 title=_("Total log file size: Absolute upper levels"),
+                 elements=[Filesize(title=_("Warning at")),
+                           Filesize(title=_("Critical at"))],
+             )),
+            ("log_files_used",
+             Alternative(
+                 title=_("Used log files: Absolute or relative upper levels"),
+                 elements=[
+                     Tuple(
+                         title=_("Upper absolute levels"),
+                         elements=[
+                             Filesize(title=_("Warning at")),
+                             Filesize(title=_("Critical at"))
+                         ],
+                     ),
+                     Tuple(
+                         title=_("Upper percentage levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at"))
+                         ],
+                     ),
+                 ],
+             )),
+        ],
+    )
 
-    @property
-    def check_group_name(self):
-        return "mssql_file_sizes"
 
-    @property
-    def title(self):
-        return _("MSSQL Log and Data File Sizes")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            title=_("File Size Levels"),
-            elements=[
-                ("data_files",
-                 Tuple(
-                     title=_("Total data file size: Absolute upper levels"),
-                     elements=[
-                         Filesize(title=_("Warning at")),
-                         Filesize(title=_("Critical at")),
-                     ],
-                 )),
-                ("log_files",
-                 Tuple(
-                     title=_("Total log file size: Absolute upper levels"),
-                     elements=[Filesize(title=_("Warning at")),
-                               Filesize(title=_("Critical at"))],
-                 )),
-                ("log_files_used",
-                 Alternative(
-                     title=_("Used log files: Absolute or relative upper levels"),
-                     elements=[
-                         Tuple(
-                             title=_("Upper absolute levels"),
-                             elements=[
-                                 Filesize(title=_("Warning at")),
-                                 Filesize(title=_("Critical at"))
-                             ],
-                         ),
-                         Tuple(
-                             title=_("Upper percentage levels"),
-                             elements=[
-                                 Percentage(title=_("Warning at")),
-                                 Percentage(title=_("Critical at"))
-                             ],
-                         ),
-                     ],
-                 )),
-            ],
-        )
-
-    @property
-    def item_spec(self):
-        return TextAscii(title=_("Service descriptions"), allow_empty=False)
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mssql_file_sizes",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mssql_file_sizes,
+        title=lambda: _("MSSQL Log and Data File Sizes"),
+    ))

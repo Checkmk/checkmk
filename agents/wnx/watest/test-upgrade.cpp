@@ -18,7 +18,7 @@
 namespace cma::cfg::upgrade {
 
 extern std::filesystem::path G_LegacyAgentPresetPath;
-void SetLegacyAgentPath(std::filesystem::path path);
+void SetLegacyAgentPath(const std::filesystem::path& path);
 
 const std::string ini_expected = "b53c5b77c595ba7e";
 const std::string ini_name = "check_mk.hash.ini";
@@ -35,11 +35,11 @@ TEST(UpgradeTest, GetHash) {
     fs::path dir = cma::cfg::GetUserDir();
     auto ini = dir / ini_name;
     auto state = dir / state_name;
-    EXPECT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
-    EXPECT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
+    ASSERT_EQ(GetOldHashFromFile(ini, kIniHashMarker), ini_expected);
+    ASSERT_EQ(GetOldHashFromFile(state, kStateHashMarker), state_expected);
 
-    EXPECT_EQ(GetOldHashFromIni(ini), ini_expected);
-    EXPECT_EQ(GetOldHashFromState(state), state_expected);
+    ASSERT_EQ(GetOldHashFromIni(ini), ini_expected);
+    ASSERT_EQ(GetOldHashFromState(state), state_expected);
 }
 
 TEST(UpgradeTest, GetDefaHash) {
@@ -139,24 +139,26 @@ TEST(UpgradeTest, PatchIniHash) {
         ASSERT_EQ(new_hash, new_expected);
     }
 
-    {
-        fs::path dir = cma::cfg::GetUserDir();
-        auto ini = dir / ini_name;
-        tst::SafeCleanTempDir();
-        auto [source, target] = tst::CreateInOut();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
+    fs::path dir = cma::cfg::GetUserDir();
+    auto dat = dir / dat_name;
+    auto new_hash = GetNewHash(dat);
+    {
+        auto ini = dir / ini_name;
 
         fs::copy_file(ini, target / ini_name,
                       fs::copy_options::overwrite_existing, ec);
         fs::copy_file(dat, target / dat_name,
                       fs::copy_options::overwrite_existing, ec);
-        auto ret = PatchIniHash(ini, new_hash);
+    }
+    {
+        auto ret = PatchIniHash(target / ini_name, new_hash);
         EXPECT_TRUE(ret);
 
-        auto old_hash = GetOldHashFromIni(ini);
+        auto old_hash = GetOldHashFromIni(target / ini_name);
         ASSERT_TRUE(!old_hash.empty());
         ASSERT_EQ(old_hash, new_expected);
     }
@@ -175,8 +177,8 @@ TEST(UpgradeTest, PatchIniHash) {
 TEST(UpgradeTest, PatchStateHash) {
     namespace fs = std::filesystem;
     std::error_code ec;
+    fs::path dir = cma::cfg::GetUserDir();
     {
-        fs::path dir = cma::cfg::GetUserDir();
         auto state = dir / state_name;
         auto old_hash = GetOldHashFromState(state);
         ASSERT_TRUE(!old_hash.empty());
@@ -188,24 +190,26 @@ TEST(UpgradeTest, PatchStateHash) {
         ASSERT_EQ(new_hash, new_expected);
     }
 
+    tst::SafeCleanTempDir();
+    auto [source, target] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    auto dat = dir / dat_name;
+    auto new_hash = GetNewHash(dat);
     {
         fs::path dir = cma::cfg::GetUserDir();
         auto state = dir / state_name;
-        tst::SafeCleanTempDir();
-        auto [source, target] = tst::CreateInOut();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-        auto dat = dir / dat_name;
-        auto new_hash = GetNewHash(dat);
 
         fs::copy_file(state, target / state_name,
                       fs::copy_options::overwrite_existing, ec);
         fs::copy_file(dat, target / dat_name,
                       fs::copy_options::overwrite_existing, ec);
-        auto ret = PatchStateHash(state, new_hash);
+    }
+    {
+        auto ret = PatchStateHash(target / state_name, new_hash);
         EXPECT_TRUE(ret);
 
-        auto old_hash = GetOldHashFromState(state);
+        auto old_hash = GetOldHashFromState(target / state_name);
         ASSERT_TRUE(!old_hash.empty());
         ASSERT_EQ(old_hash, new_expected);
     }
@@ -240,7 +244,9 @@ std::string bakeryfile =
     "    port = 6556\n"
     "\n"
     "    # Create logfiles useful for tracing crashes of the agent\n"
-    "    crash_debug = yes\n"
+    "    # crash_debug = yes\n"
+    "    # Create logfiles useful for tracing crashes of the agent\n"
+    "    logging = all\n"
     "\n"
     "\n"
     "[local]\n"
@@ -455,6 +461,43 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
     auto user_yaml = pd_dir / files::kDefaultMainConfigName;
     user_yaml += files::kDefaultUserExt;
     return user_yaml;
+}
+
+TEST(UpgradeTest, LoggingSupport) {
+    using namespace cma::cfg;
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto [lwa_dir, pd_dir] = CreateInOut();
+    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
+
+    std::error_code ec;
+
+    auto expected_bakery_name = ConstructBakeryYmlPath(pd_dir);
+    auto expected_user_name = ConstructUserYmlPath(pd_dir);
+
+    // bakery file and no local
+    {
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
+                        tst::SafeCleanTempDir("out"););
+        auto name = "check_mk";
+        auto ini = CreateIniFile(lwa_dir, bakeryfile, name);
+        EXPECT_TRUE(IsBakeryIni(ini));
+        auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
+        EXPECT_EQ(yaml_file.filename().wstring(),
+                  wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
+        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        EXPECT_TRUE(yaml.IsMap());
+        auto yml_global = yaml[groups::kGlobal];
+        ASSERT_TRUE(yml_global.IsMap());
+        auto logging = cma::cfg::GetNode(yml_global, vars::kLogging);
+        ASSERT_TRUE(logging.IsMap());
+
+        auto debug =
+            cma::cfg::GetVal(logging, vars::kLogDebug, std::string(""));
+
+        EXPECT_EQ(logging[vars::kLogDebug].as<std::string>(), "all");
+    }
 }
 
 TEST(UpgradeTest, UserIniPackagedAgent) {
@@ -837,7 +880,22 @@ TEST(UpgradeTest, CopyFoldersApi) {
     }
 }
 
+static auto a1 =
+    "AlignmentFixupsPersec|Caption|ContextSwitchesPersec|Description|ExceptionDispatchesPersec|FileControlBytesPersec|FileControlOperationsPersec|FileDataOperationsPersec|FileReadBytesPersec|FileReadOperationsPersec|FileWriteBytesPersec|FileWriteOperationsPersec|FloatingEmulationsPersec|Frequency_Object|Frequency_PerfTime|Frequency_Sys100NS|Name|PercentRegistryQuotaInUse|PercentRegistryQuotaInUse_Base|Processes|ProcessorQueueLength|SystemCallsPersec|SystemUpTime|Threads|Timestamp_Object|Timestamp_PerfTime|Timestamp_Sys100NS|WMIStatus";
+static auto a2 =
+    "8753143349248||8757138597559||8753154542256|1668537305287|952521535002|951235405633|25314498833504|950257251850|3054676197176|950165926199|949187772416|10000000|2435538|10000000||949554799728|951335256063|949187772535|949187772416|952503978051|132104050924847952|949187774233|132134863734478619|7504388659458|132134935734470000|OK";
+
 TEST(UpgradeTest, CopyFolders) {
+#if (0)
+    // test of bad data
+    // #TODO remove ASAP or rework to test API
+    auto t1 = cma::tools::SplitString(a1, "|");
+    auto t2 = cma::tools::SplitString(a2, "|");
+    for (int i = 0; i < t1.size(); i++) {
+        XLOG::l.i("{}\t{}\n", t1[i].c_str(), t2[i].c_str());
+    }
+#endif
+
     namespace fs = std::filesystem;
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)

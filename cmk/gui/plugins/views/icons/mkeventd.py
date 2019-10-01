@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
+
 import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -58,14 +60,19 @@ class MkeventdIcon(Icon):
         if what != 'service' or not command.startswith('check_mk_active-mkevents'):
             return
 
-        if '!' not in command:
+        # Split command by the parts (COMMAND!ARG0!...) Beware: Do not split by escaped exclamation mark.
+        splitted_command = re.split(r'(?<!\\)!', command)
+
+        # All arguments are space separated in in ARG0
+        if len(splitted_command) != 2:
             return
 
         host = None
         app = None
 
         # Extract parameters from check_command:
-        args = command.split('!')[1].split()
+        # TODO: Use better argument string splitting (shlex.split())
+        args = splitted_command[1].split()
         if not args:
             return
 
@@ -107,7 +114,7 @@ class MkeventdIcon(Icon):
         title = _('Events of Host %s') % (row["host_name"])
 
         if len(args) >= 2:
-            app = args[1].strip('\'').replace("\\\\", "\\")
+            app = args[1].strip('\'').replace("\\\\", "\\").replace("\\!", "!")
             title = _('Events of Application "%s" on Host %s') % (app, host)
             url_vars.append(("event_application", app))
 

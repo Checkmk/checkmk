@@ -17,6 +17,28 @@
 
 namespace cma::cfg::cap {
 
+TEST(CapTest, CheckIsFilesTheSame) {
+    EXPECT_TRUE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                               "c:\\windows\\explorer.exe"));
+    EXPECT_FALSE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                                "c:\\windows\\HelpPane.exe"));
+
+    EXPECT_FALSE(
+        IsFilesTheSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [file1, file2] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    // source without target
+    std::string name = "a.txt";
+    {
+        tst::ConstructFile(file1 / name, "abcde0");
+        tst::ConstructFile(file2 / name, "abcde1");
+        EXPECT_FALSE(IsFilesTheSame(file1 / name, file2 / name));
+        EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
+    }
+}
+
 TEST(CapTest, Reinstall) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
@@ -58,6 +80,14 @@ TEST(CapTest, Reinstall) {
         tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
+
+    // source is older than target, but content is not the same
+    {
+        cma::tools::sleep(100);
+        tst::ConstructFile(source / name, "b");
+        EXPECT_TRUE(NeedReinstall(source / name, target / name));
+    }
+
     tst::SafeCleanTempDir();
 }
 
@@ -77,14 +107,16 @@ TEST(CapTest, InstallFileAsCopy) {
     // absent source and target
     {
         bool res = true;
-        EXPECT_NO_THROW(res = InstallFileAsCopy(L"", L"", L""));  //
+        EXPECT_NO_THROW(res =
+                            InstallFileAsCopy(L"", L"", L"", Mode::normal));  //
         EXPECT_FALSE(res);
 
-        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\"));  //
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L"sdf", L"c:\\", L"c:\\",
+                                                Mode::normal));  //
         EXPECT_TRUE(res);
 
-        EXPECT_NO_THROW(
-            res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss", L"scc"));  //
+        EXPECT_NO_THROW(res = InstallFileAsCopy(L":\\\\wefewfw", L"sssssssss",
+                                                L"scc", Mode::normal));  //
         EXPECT_FALSE(res);
     }
 
@@ -92,7 +124,7 @@ TEST(CapTest, InstallFileAsCopy) {
     {
         tst::ConstructFile(target_file, "1");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
-                                      source.wstring()));  //
+                                      source.wstring(), Mode::normal));  //
         ASSERT_FALSE(fs::exists(target_file, ec)) << "must be removed";
     }
 
@@ -100,7 +132,7 @@ TEST(CapTest, InstallFileAsCopy) {
     {
         tst::ConstructFile(source_file, "2");
         EXPECT_TRUE(InstallFileAsCopy(file_name, target.wstring(),
-                                      source.wstring()));  //
+                                      source.wstring(), Mode::normal));  //
         EXPECT_TRUE(fs::exists(target_file, ec)) << "must be presented";
     }
 }
@@ -108,7 +140,7 @@ TEST(CapTest, InstallFileAsCopy) {
 TEST(CapTest, PackagedAgent) {
     namespace fs = std::filesystem;
 
-    // check we have code compatible with instlalation
+    // check we have code compatible with installation
     auto ini_path = fs::current_path();
     ini_path /= "check_mk.ini";
     std::error_code ec;
@@ -385,6 +417,94 @@ TEST(CapTest, CheckInValid) {
         ASSERT_EQ(files.size(), 1)
             << "this file is invalid, but first file should be ok";
     }
+}
+
+TEST(CapTest, ReInstallRestore) {
+    using namespace cma::tools;
+    cma::OnStartTest();
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [r, u] = tst::CreateInOut();
+    auto root = r.wstring();
+    auto user = u.wstring();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    auto old_user = cma::cfg::GetUserDir();
+
+    fs::path ini_base = old_user;
+    ini_base /= "check_mk.ps.test.ini";
+    fs::path cap_base = old_user;
+    cap_base /= "plugins.test.cap";
+    fs::path cap_null = old_user;
+    cap_null /= "plugins_null.test.cap";
+
+    std::error_code ec;
+    try {
+        fs::create_directory(r / dirs::kInstall);
+        fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
+        fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
+        tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
+    } catch (const std::exception& e) {
+        ASSERT_TRUE(false) << "can't create file data exception is "
+                           << e.what();
+    }
+
+    GetCfg().pushFolders(r, u);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+
+    auto user_gen = [u](const std::wstring_view name) -> auto {
+        return (u / dirs::kInstall / name).wstring();
+    };
+
+    auto root_gen = [r](const std::wstring_view name) -> auto {
+        return (r / dirs::kInstall / name).wstring();
+    };
+
+    cma::cfg::cap::ReInstall();
+    auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+    auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
+    auto bakery = cma::tools::ReadFileInString(
+        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+    auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+    auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
+    auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+    auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
+    ASSERT_TRUE(user_ini);
+    ASSERT_EQ(user_cap_size, root_cap_size);
+    ASSERT_TRUE(user_dat);
+    ASSERT_TRUE(bakery);
+    EXPECT_TRUE(user_dat == root_dat);
+    EXPECT_TRUE(user_ini == root_ini);
+    auto table = SplitString(bakery.value(), "\n");
+    EXPECT_EQ(table[3], "ps:");
+
+    // now damage files
+    auto destroy_file = [](fs::path f) {
+        std::ofstream ofs(f, std::ios::binary);
+
+        if (ofs) {
+            ofs << "";
+        }
+    };
+
+    destroy_file(user_gen(L"check_mk.ini"));
+    destroy_file(user_gen(L"plugins.cap"));
+    destroy_file(user_gen(L"checkmk.dat"));
+    destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
+    cma::cfg::cap::ReInstall();
+
+    user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+    bakery = cma::tools::ReadFileInString(
+        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+    user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+    user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+    ASSERT_TRUE(user_ini);
+    ASSERT_EQ(user_cap_size, root_cap_size);
+    ASSERT_TRUE(user_dat);
+    EXPECT_TRUE(user_dat == root_dat);
+    EXPECT_TRUE(user_ini == root_ini);
+    table = SplitString(bakery.value(), "\n");
+    EXPECT_EQ(table[3], "ps:");
 }
 
 }  // namespace cma::cfg::cap

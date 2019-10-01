@@ -69,8 +69,6 @@ DISCOVERY = [
             ('outdisc', 0.0, None, None, None, None),
             ('outerr', 0.0, 0.01, 0.1, None, None),
             ('outqlen', 0, None, None, None, None),
-            ('in', 0.0, 62500.0, 250000.0, None, None),
-            ('out', 0.0, 62500.0, 250000.0, None, None),
         ],
     )]),
     ('6', {
@@ -93,8 +91,6 @@ DISCOVERY = [
             ('outdisc', 0.0, None, None, None, None),
             ('outerr', 0.0, 0.01, 0.1, None, None),
             ('outqlen', 0, None, None, None, None),
-            ('in', 800000.0, 625000.0, 2500000.0, None, None),
-            ('out', 3200000.0, 625000.0, 2500000.0, None, None),
         ],
     )]),
 ])

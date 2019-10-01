@@ -12,6 +12,8 @@
 
 #include "cap.h"
 #include "cfg.h"
+#include "commander.h"
+#include "common/version.h"
 #include "common/wtools.h"
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
@@ -327,6 +329,21 @@ int TestLegacy() {
     return 0;
 }
 
+int RestoreWATOConfig() {
+    using namespace std::chrono;
+
+    try {
+        // test for main thread. will be disabled in production
+        // to find file, read and start update POC.
+        XLOG::setup::ColoredOutputOnStdio(true);
+        XLOG::setup::DuplicateOnStdio(true);
+        cma::cfg::cap::ReInstall();
+    } catch (const std::exception& e) {
+        xlog::l("Exception is not allowed here %s", e.what());
+    }
+    return 0;
+}
+
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
@@ -415,10 +432,6 @@ int ExecMainService(StdioLog stdio_log) {
     using namespace std::chrono;
     using namespace cma::install;
     XLOG::setup::ColoredOutputOnStdio(true);
-    if (stdio_log == StdioLog::yes)
-        XLOG::setup::EnableTraceLog(false);
-    else
-        XLOG::setup::EnableTraceLog(true);
     XLOG::SendStringToStdio(
         "Adhoc/Exec Mode,"
         "press any key to stop execution\n",
@@ -457,6 +470,15 @@ int ExecMainService(StdioLog stdio_log) {
     return 0;
 }
 
+int ExecVersion() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    std::string version =
+        fmt::format("Check_MK Agent version {}", CMK_WIN_AGENT_VERSION);
+
+    XLOG::SendStringToStdio(version, XLOG::Colors::white);
+    return 0;
+}
+
 // on -cap
 int ExecCap() {
     XLOG::setup::DuplicateOnStdio(true);
@@ -479,6 +501,80 @@ int ExecPatchHash() {
     cma::cfg::upgrade::PatchOldFilesWithDatHash();
     XLOG::l.i("End of!");
     return 0;
+}
+
+static void InformPort(std::string_view mail_slot) {
+    cma::carrier::CoreCarrier cc;
+
+    using namespace cma::carrier;
+    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto ret = cc.establishCommunication(internal_port);
+    cc.sendCommand(cma::commander::kMainPeer, cma::commander::kReload);
+
+    cc.shutdownCommunication();
+}
+
+int ExecReloadConfig() {
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::SendStringToStdio("Reloading configuration...\n",
+                            XLOG::Colors::white);
+    cma::MailSlot mailbox_service(cma::cfg::kServiceMailSlot, 0);
+    cma::MailSlot mailbox_test(cma::cfg::kTestingMailSlot, 0);
+    using namespace cma::carrier;
+
+    XLOG::l.i("Asking for reload service");
+    InformPort(mailbox_service.GetName());
+
+    XLOG::l.i("Asking for reload executable");
+    InformPort(mailbox_test.GetName());
+
+    XLOG::SendStringToStdio("Done.", XLOG::Colors::white);
+    return 0;
+}
+
+// returns codes for main
+// 0 - no more Legacy Agent
+// 1 - legacy agent is here
+// 2 - bad uninstall
+int ExecRemoveLegacyAgent() {
+    using namespace cma::cfg;
+    XLOG::setup::ColoredOutputOnStdio(true);
+    XLOG::setup::DuplicateOnStdio(true);
+    XLOG::SendStringToStdio("Removing Legacy Agent...\n", XLOG::Colors::white);
+    ON_OUT_OF_SCOPE(XLOG::SendStringToStdio("Done.", XLOG::Colors::white););
+
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio(
+            "Legacy Agent is absent, no need to uninstall\n",
+            XLOG::Colors::green);
+        return 0;
+    }
+
+    XLOG::SendStringToStdio("This operation may be long, please, wait\n",
+                            XLOG::Colors::yellow);
+    auto result = UninstallProduct(cma::cfg::products::kLegacyAgent);
+    if (result) {
+        XLOG::SendStringToStdio("Successful execution of the uninstall file\n",
+                                XLOG::Colors::green);
+        if (!upgrade::FindLegacyAgent().empty()) {
+            XLOG::SendStringToStdio(
+                "Legacy Agent is not removed, probably you have to have to be in Elevated Mode\n",
+                XLOG::Colors::red);
+            return 2;
+        }
+    } else {
+        XLOG::SendStringToStdio("Failed Execution of uninstall file\n",
+                                XLOG::Colors::red);
+    }
+
+    if (upgrade::FindLegacyAgent().empty()) {
+        XLOG::SendStringToStdio("Legacy Agent looks as removed\n",
+                                XLOG::Colors::cyan);
+        return 0;
+    }
+
+    return 1;
 }
 
 int ExecShowConfig(std::string_view sec) {
@@ -773,9 +869,8 @@ int ServiceAsService(
     // reachable only on service stop
 }
 
-// we are setting service as restartable using more or less suitable parameters
-// set
-// returns false if failed call
+// we are setting service as restartable using more or less suitable
+// parameters set returns false if failed call
 bool ConfigureServiceAsRestartable(SC_HANDLE handle) {
     SERVICE_FAILURE_ACTIONS service_fail_actions;
     SC_ACTION fail_actions[3];
@@ -841,6 +936,11 @@ SERVICE_FAILURE_ACTIONS* GetServiceFailureActions(SC_HANDLE handle) {
 void DeleteServiceFailureActions(SERVICE_FAILURE_ACTIONS* actions) {
     if (actions) ::LocalFree(actions);
 }
+
+// Service Global Control
+bool global_stop_signaled = false;
+
+bool IsGlobalStopSignaled() { return global_stop_signaled; }
 
 // returns true ALSO on error(to avoid useless attempts to configure
 // non-configurable)

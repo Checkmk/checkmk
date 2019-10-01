@@ -39,71 +39,59 @@ from cmk.gui.plugins.wato import (
 )
 
 
-@rulespec_registry.register
-class RulespecCheckgroupParametersMysqlSessions(CheckParameterRulespecWithItem):
-    @property
-    def group(self):
-        return RulespecGroupCheckParametersApplications
+def _item_spec_mysql_sessions():
+    return TextAscii(
+        title=_("Instance"),
+        help=_("Only needed if you have multiple MySQL Instances on one server"),
+    )
 
-    @property
-    def check_group_name(self):
-        return "mysql_sessions"
 
-    @property
-    def title(self):
-        return _("MySQL Sessions & Connections")
-
-    @property
-    def match_type(self):
-        return "dict"
-
-    @property
-    def parameter_valuespec(self):
-        return Dictionary(
-            help=_("This check monitors the current number of active sessions to the MySQL "
-                   "database server as well as the connection rate."),
-            elements=[
-                (
-                    "total",
-                    Tuple(
-                        title=_("Number of current sessions"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
-                        ],
-                    ),
+def _parameter_valuespec_mysql_sessions():
+    return Dictionary(
+        help=_("This check monitors the current number of active sessions to the MySQL "
+               "database server as well as the connection rate."),
+        elements=[
+            (
+                "total",
+                Tuple(
+                    title=_("Number of current sessions"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
+                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                    ],
                 ),
-                (
-                    "running",
-                    Tuple(
-                        title=_("Number of currently running sessions"),
-                        help=_("Levels for the number of sessions that are currently active"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
-                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
-                        ],
-                    ),
+            ),
+            (
+                "running",
+                Tuple(
+                    title=_("Number of currently running sessions"),
+                    help=_("Levels for the number of sessions that are currently active"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
+                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
+                    ],
                 ),
-                (
-                    "connections",
-                    Tuple(
-                        title=_("Number of new connections per second"),
-                        elements=[
-                            Integer(title=_("Warning at"),
-                                    unit=_("connection/sec"),
-                                    default_value=20),
-                            Integer(title=_("Critical at"),
-                                    unit=_("connection/sec"),
-                                    default_value=40),
-                        ],
-                    ),
+            ),
+            (
+                "connections",
+                Tuple(
+                    title=_("Number of new connections per second"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("connection/sec"), default_value=20),
+                        Integer(title=_("Critical at"), unit=_("connection/sec"), default_value=40),
+                    ],
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
-    @property
-    def item_spec(self):
-        return TextAscii(
-            title=_("Instance"),
-            help=_("Only needed if you have multiple MySQL Instances on one server"),
-        )
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="mysql_sessions",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_mysql_sessions,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_mysql_sessions,
+        title=lambda: _("MySQL Sessions & Connections"),
+    ))

@@ -1,0 +1,14 @@
+Title: graylog_cluster_traffic: New check to monitor traffic of a graylog cluster
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1569934288
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+This check monitors the cluster traffic of a graylog instance. It outputs the
+input, output and decoded traffic. Graylog only covers that data every hour, so
+the last update time is also shown. Needs the datasource "Check state of
+Graylog" to be configured.

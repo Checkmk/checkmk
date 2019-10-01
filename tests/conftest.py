@@ -118,6 +118,7 @@ def fake_version_and_paths():
     import cmk
     monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
 
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())

@@ -2201,6 +2201,7 @@ class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
         description = None
         if set_service:
             description = self.info["service_description"]
+            assert description, '%r is missing a service_description' % self.name
             if item is not None:
                 assert "%s" in description, \
                     "Missing '%%s' formatter in service description of %r" \

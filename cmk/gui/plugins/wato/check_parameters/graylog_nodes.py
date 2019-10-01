@@ -69,10 +69,9 @@ def _parameter_valuespec_graylog_nodes():
         ("lc_override_lb_throttled",
          MonitoringState(title=_("State when lifecycle state is override_lb_throttled"),
                          default_value=1)),
-        ("ps_true", MonitoringState(title=_("State when processing state is true"),
-                                    default_value=0)),
-        ("ps_false",
-         MonitoringState(title=_("State when processing state is false"), default_value=2)),
+        ("ps_true", MonitoringState(title=_("State when index is processing"), default_value=0)),
+        ("ps_false", MonitoringState(title=_("State when index is not processing"),
+                                     default_value=2)),
         ("input_state",
          MonitoringState(title=_("State when input is not in state running"), default_value=1)),
     ],)

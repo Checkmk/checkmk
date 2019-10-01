@@ -103,7 +103,8 @@ def check_graylog_nodes(item, params, data):
 
             state = params.get("%s%s" % (levels, str(value).lower()), 1)
 
-            yield state, "%s: %s" % (infotext, value)
+            yield state, "%s: %s" % (infotext, str(value).replace("True", "yes").replace(
+                "False", "no"))
 
         long_output = []
         value_inputstates = node_info.get("inputstates")

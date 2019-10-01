@@ -508,8 +508,8 @@ class TextAscii(ValueSpec):
 
     def _validate_value(self, value, varprefix):
         try:
-            assert isinstance(value, six.text_type)
-        except AssertionError:
+            six.text_type(value)
+        except UnicodeDecodeError:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
         if self._forbidden_chars:
             for c in self._forbidden_chars:

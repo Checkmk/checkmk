@@ -840,11 +840,11 @@ def _compile_continuation_pattern(raw_pattern):
 
 
 class LogfileSection(object):
-    def __init__(self, filename, patterns, options):
+    def __init__(self, filename):
         super(LogfileSection, self).__init__(self)
         self.filename = filename
-        self.options = options
-        self.patterns = patterns
+        self.options = Options()
+        self.patterns = []
         self._compiled_patterns = None
 
     @property
@@ -867,8 +867,7 @@ class LogfileSection(object):
 
 def parse_sections(logfiles_config):
     """
-    Returns s list of (logfile name, (patterns, options)) tuples and
-    and a list of non-matching patterns.
+    Returns a list of LogfileSections and and a list of non-matching patterns.
     """
     found_sections = {}
     non_matching_patterns = []
@@ -882,6 +881,7 @@ def parse_sections(logfiles_config):
                 opt.set_opt(item)
 
         # Then handle the file patterns
+        # The thing here is that the same file could match different patterns.
         for glob_pattern in (f for f in cfg.files if '=' not in f):
             logfiles = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
@@ -889,14 +889,11 @@ def parse_sections(logfiles_config):
             if not logfiles:
                 non_matching_patterns.append(glob_pattern)
             for logfile in logfiles:
-                present_patterns, present_options = found_sections.get(logfile, ([], Options()))
-                present_patterns.extend(cfg.patterns)
-                present_options.update(opt)
-                found_sections[logfile] = (present_patterns, present_options)
+                section = found_sections.setdefault(logfile, LogfileSection(logfile))
+                section.patterns.extend(cfg.patterns)
+                section.options.update(opt)
 
-    logfile_sections = [
-        LogfileSection(logfile, *found_sections[logfile]) for logfile in sorted(found_sections)
-    ]
+    logfile_sections = [found_sections[k] for k in sorted(found_sections)]
 
     return logfile_sections, non_matching_patterns
 

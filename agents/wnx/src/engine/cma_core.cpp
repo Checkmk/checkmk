@@ -481,16 +481,28 @@ void UpdatePluginMap(PluginMap& Out,  // output is here
     RemoveDuplicatedPlugins(Out, CheckExists);
 }
 
-// hacks a string
-// '<<<plugin_super>>>' -> '<<<plugin_super:cached(11204124124:3600)>>>'
-void TryToHackStringWithCachedInfo(std::string& in_string,
-                                   const std::string& value_to_insert) {
-    if (in_string.find(cma::section::kFooter4) != std::string::npos) {
-        // no patch for the case
-        XLOG::t("Footer 4 in input");
-        return;
+std::optional<std::string> GetPiggyBackName(const std::string& in_string) {
+    using namespace cma::section;
+
+    if (in_string.find(kFooter4Left) != 0) return {};
+
+    auto end = in_string.find(kFooter4Right);
+    if (end == std::string::npos) return {};
+    constexpr auto footer_len = kFooter4Left.length();
+    if (footer_len > end) {
+        XLOG::l(XLOG_FUNC + " impossible");
+        return {};
     }
 
+    return in_string.substr(footer_len, end - footer_len);
+}
+
+// hacks a plugin header with another string, usually cached info
+// '<<<plugin_super>>>': '<<<plugin_super:cached(11204124124:3600)>>>'
+// '<<<>>>': '<<<:cached(11204124124:3600)>>>' returns nothing
+// returns true if patch happened
+bool TryToHackStringWithCachedInfo(std::string& in_string,
+                                   const std::string& value_to_insert) {
     // probably regex better or even simple memcmp/strcmp
     auto pos_start = in_string.find(cma::section::kLeftBracket);
     auto pos_end = in_string.find(cma::section::kRightBracket);
@@ -499,7 +511,10 @@ void TryToHackStringWithCachedInfo(std::string& in_string,
         pos_end > pos_start &&           //
         (pos_end - pos_start) < 100) {   // not very far away
         in_string.insert(pos_end, value_to_insert);
+        return true;
     }
+
+    return false;
 }
 
 static bool ConfigRemoveSlashR = false;
@@ -513,6 +528,7 @@ std::string ConstructPatchString(time_t time_now, int cache_age,
                : fmt::format(":cached({},{})", time_now, cache_age);
 }
 
+// #TODO refactor this function
 bool HackDataWithCacheInfo(std::vector<char>& out,
                            const std::vector<char>& original_data,
                            const std::string& patch, HackDataMode mode) {
@@ -520,7 +536,7 @@ bool HackDataWithCacheInfo(std::vector<char>& out,
 
     // check we have valid Data;
     std::string stringized(original_data.data(), original_data.size());
-    if (!stringized.size()) return false;
+    if (stringized.empty()) return false;
 
     if (patch.empty() && !ConfigRemoveSlashR) {
         out = original_data;
@@ -530,23 +546,41 @@ bool HackDataWithCacheInfo(std::vector<char>& out,
     auto table = cma::tools::SplitString(stringized, "\n");
 
     size_t data_count = 0;
+    bool hack_allowed = true;
     for (auto& t : table) {
         if (ConfigRemoveSlashR) {
             while (t.back() == '\r') t.pop_back();
         }
 
         t.push_back('\n');
+        data_count += t.size();
 
         // 2. try hack header if required
-        if (!patch.empty()) {
-            // ugly...
-            if (mode == HackDataMode::line)
-                t = patch + t;
-            else
-                TryToHackStringWithCachedInfo(t, patch);
+        if (patch.empty()) continue;
+
+        if (mode == HackDataMode::line) {
+            t = patch + t;
+            continue;
         }
 
-        data_count += t.size();
+        // check for piggyback
+        auto piggyback_name = GetPiggyBackName(t);
+        if (piggyback_name) {
+            if (piggyback_name->empty()) {
+                XLOG::t.i("piggyback input ended");
+                hack_allowed = true;
+            } else {
+                XLOG::t.i("piggyback input '{}' started", *piggyback_name);
+                hack_allowed = false;
+            }
+            continue;
+        }
+
+        // hack code if not piggyback and we have something to patch
+        if (hack_allowed) {
+            auto patched = TryToHackStringWithCachedInfo(t, patch);
+            if (patched) data_count += patch.size();
+        }
     }
 
     // gathering of everything

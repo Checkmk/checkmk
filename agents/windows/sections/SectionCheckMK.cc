@@ -78,6 +78,8 @@ SectionCheckMK::SectionCheckMK(Configuration &config,
     , _info_fields(createInfoFields(_env))
     , _script_statistics(script_statistics) {}
 
+extern std::string g_only_from_as_text;
+
 bool SectionCheckMK::produceOutputInner(std::ostream &out,
                                         const std::optional<std::string> &) {
     Debug(_logger) << "SectionCheckMK::produceOutputInner";

@@ -253,6 +253,7 @@ def monitoring_macro_help():
         "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
+# TODO: Change to factory
 class UserIconOrAction(DropdownChoice):
     def __init__(self, **kwargs):
         empty_text = _("In order to be able to choose actions here, you need to "
@@ -261,7 +262,6 @@ class UserIconOrAction(DropdownChoice):
 
         kwargs.update({
             'choices': self.list_user_icons_and_actions,
-            'allow_empty': False,
             'empty_text': empty_text,
             'help': kwargs.get('help', '') + ' ' + empty_text,
         })

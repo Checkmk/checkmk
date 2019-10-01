@@ -578,6 +578,7 @@ class CEESiteManagement(SiteManagement):
         return domains
 
 
+# TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
     def __init__(self, **kwargs):
         kwargs["elements"] = [
@@ -586,7 +587,7 @@ class LivestatusViaTCP(Dictionary):
                  title=_("TCP port"),
                  minvalue=1,
                  maxvalue=65535,
-                 default_value=kwargs.get("tcp_port", 6557),
+                 default_value=kwargs.pop("tcp_port", 6557),
              )),
             ("only_from",
              ListOfStrings(

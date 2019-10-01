@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Text, Type, Optional  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -159,6 +160,7 @@ def _vs_latency():
 
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
+    # type: (Text, int, Optional[Type[Filesize]]) -> Alternative
     if vs_limit_cls is None:
         vs_limit = Integer(
             unit=_("%s" % resource),
@@ -167,14 +169,15 @@ def _vs_limits(resource, default_limit, vs_limit_cls=None):
         )
     else:
         vs_limit = vs_limit_cls(
-            min_value=1,
+            minvalue=1,
             default_value=default_limit,
         )
 
     if resource:
-        title = _("Set limit and levels for %s" % resource)
+        title = _("Set limit and levels for %s" % resource)  # type: Optional[Text]
     else:
         title = None
+
     return Alternative(
         title=title,
         style="dropdown",

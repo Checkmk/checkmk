@@ -1,0 +1,14 @@
+Title: Windows Agent doesn't add 'cached' info into the piggybacks' headers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p3
+Date: 1569934705
+Class: fix
+
+Previously Windows Agent added cached data, something like ':cached(123456,600)'
+to the piggyback headers. This may led to problem for checks on monitoring 
+site.
+
+With this release the problem has been fixed.

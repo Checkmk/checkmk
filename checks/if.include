@@ -139,7 +139,7 @@ def need_if64adm():
 def fix_if_64_highspeed(info):
     for line in info:
         # TODO: Use six.string_types when this is a module.
-        if isinstance(line[3], basestring):  # not yet converted
+        if isinstance(line[3], six.string_types):  # not yet converted
             line[3] = saveint(line[3]) * 1000000
 
 

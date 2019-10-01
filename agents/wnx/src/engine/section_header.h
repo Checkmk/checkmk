@@ -30,6 +30,8 @@ constexpr std::string_view kRightSeparator{")"};
 
 // special markers
 constexpr std::string_view kFooter4{"<<<<>>>>"};
+constexpr std::string_view kFooter4Left{"<<<<"};
+constexpr std::string_view kFooter4Right{">>>>"};
 constexpr std::string_view kFooterStd{"<<<>>>"};
 
 // Sub Section(as for WMI)

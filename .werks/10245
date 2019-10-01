@@ -1,0 +1,24 @@
+Title: Fix thread leak triggered by unstable site connections
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1569940279
+Edition: cee
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 1.7.0i1
+
+The livestatus proxy normally keeps open several connections to the remote
+livestatus server and uses them in the moment a livestatus query is made
+from the central site to the remote site.
+
+In the moment a site is not reachable anymore, for example because of a
+network connection issue, this is detected by one of these connections.
+The site is then terminating all other connections and trying to recover
+from this situation by continuously reconnecting to the remote site.
+
+In this situation the livestatus proxy was not cleaning up it's old connection
+threads while opening new ones for the new connections. After some time this
+could result in "Resource temporarily unavailable" errors in various places or
+"can't start new thread" shown in the GUI.

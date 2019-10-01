@@ -42,6 +42,7 @@ std::string SkypeProvider::makeFirstLine() {
 
 std::wstring SkypeAspSomeCounter = L"ASP.NET Apps v4.0.30319";
 
+// not const for tests. not const wstring because of STL
 std::vector<std::wstring> SkypeCounterNames{
     L"LS:WEB - Address Book Web Query",
     L"LS:WEB - Address Book File Download",
@@ -71,7 +72,10 @@ std::vector<std::wstring> SkypeCounterNames{
     L"LS:A/V Auth - Requests",
     L"LS:DATAPROXY - Server Connections",
     L"LS:XmppFederationProxy - Streams",
-    L"LS:A/V Edge - UDP Counters"};
+    L"LS:A/V Edge - TCP Counters",
+    L"LS:A/V Edge - UDP Counters"
+    //
+};
 
 namespace internal {
 std::vector<std::wstring>* GetSkypeCountersVector() {

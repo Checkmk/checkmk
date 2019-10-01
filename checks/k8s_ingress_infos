@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,34 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import itertools
 
-def _parse_hosts(hosts):
-    results = []
-    for secret_name, hosts_ in hosts.iteritems():
-        results.extend({"host": host, "secret_name": secret_name} for host in hosts_)
-    return results
+_flatten = itertools.chain.from_iterable
 
 
-def _parse_backends(backends):
-    return [{
-        "path": path,
-        "service_name": service_name,
-        "service_port": service_port,
-    } for path, service_name, service_port in backends]
+def _has_tls(path, hosts):
+    """Return True if path is available over TLS, otherwise return False."""
+    return path.split("/", 1)[0] in _flatten(hosts.itervalues())
 
 
-def inv_k8s_ingresses(parsed, inventory_tree, status_data_tree):
-    path = "software.applications.kubernetes.ingresses.%s:"
-    for name, data in sorted(parsed.iteritems()):
-        inv_node = inventory_tree.get_dict(path % name)
-        inv_node.update({
-            'backends': _parse_backends(data['backends']),
-            'hosts': _parse_hosts(data['hosts']),
-            'load_balancers': data['load_balancers'],
-        })
+def _iter_backends(parsed):
+    for data in sorted(parsed.itervalues()):
+        for backend in data['backends']:
+            yield backend, data
 
 
-inv_info['k8s_ingress_infos'] = {
-    'inv_function': inv_k8s_ingresses,
+def inventory_k8s_ingress_infos(parsed):
+    for backend, _ in _iter_backends(parsed):
+        yield HostLabel(u'cmk/kubernetes_object', u'ingress')
+        yield (backend[0], None)
+
+
+def check_k8s_ingress_infos(item, params, parsed):
+    for backend, data in _iter_backends(parsed):
+        if backend[0] != item:
+            continue
+        ports = [backend[-1]]
+        if _has_tls(backend[0], data['hosts']):
+            ports.append(443)
+        yield 0, u"Ports: %s" % ", ".join(map(str, ports))
+        yield 0, u"Service: %s:%s" % (backend[1], backend[2])
+
+
+check_info['k8s_ingress_infos'] = {
+    'parse_function': parse_k8s,
+    'inventory_function': inventory_k8s_ingress_infos,
+    'check_function': check_k8s_ingress_infos,
+    'service_description': "Ingress %s",
     'includes': ['k8s.include'],
 }

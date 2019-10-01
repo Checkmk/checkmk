@@ -53,7 +53,7 @@ def main(argv=None):
         GraylogSection(name="cluster_health", uri="/system/indexer/cluster/health"),
         GraylogSection(name="cluster_inputstates", uri="/cluster/inputstates"),
         GraylogSection(name="cluster_stats", uri="/system/cluster/stats"),
-        GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic"),
+        GraylogSection(name="cluster_traffic", uri="/system/cluster/traffic?days=1&daily=false"),
         GraylogSection(name="failures", uri="/system/indexer/failures/count/?since=%s" % since),
         GraylogSection(name="jvm", uri="/system/stats/jvm"),
         GraylogSection(name="messages", uri="/count/total"),

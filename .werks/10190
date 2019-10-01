@@ -1,0 +1,13 @@
+Title: Windows Agent sends 'TCP counters' subsection for skype section
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p3
+Date: 1569933041
+Class: fix
+
+Previously this subsection was absent in the Agent's output. This  may lead 
+to the crash of skype check.
+
+Now this problem has been solved.

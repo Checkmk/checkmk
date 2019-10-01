@@ -162,12 +162,13 @@ def host_check_command(config_cache, host_config, ip, is_clust, default_host_che
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
-    if command_line[0] not in ['$', '/']:
-        for directory in ["/local", ""]:
-            path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
-            if os.path.exists(path + plugin_name):
-                command_line = path + command_line
-                break
+    if command_line[0] in ['$', '/']:
+        return command_line
+    for directory in ["/local", ""]:
+        path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
+        if os.path.exists(path + plugin_name):
+            command_line = path + command_line
+            break
     return command_line
 
 

@@ -1343,6 +1343,7 @@ class AutomationActiveCheck(Automation):
                                                       act_info["argument_function"](params))
             command_line = self._replace_core_macros(
                 hostname, act_info["command_line"].replace("$ARG1$", args))
+            command_line = core_config.autodetect_plugin(command_line)
             return self._execute_check_plugin(command_line)
 
     def _load_resource_file(self, macros):

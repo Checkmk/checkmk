@@ -23,14 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Configuration.h"
+
 #include <inttypes.h>
 #include <simpleini/SimpleIni.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <regex>
+
 #include "Configurable.h"
 #include "Logger.h"
 #include "PerfCounter.h"
@@ -190,6 +193,8 @@ void Configuration::outputConfigurables(std::ostream &out) {
     }
 }
 
+std::string g_only_from_as_text;
+
 void readConfigFile(std::istream &is, const std::string &hostname,
                     ConfigurableMap &configurables) {
     if (!is) {
@@ -213,6 +218,8 @@ void readConfigFile(std::istream &is, const std::string &hostname,
 
     CSimpleIniA::TNamesDepend sections;
     ini.GetAllSections(sections);
+    g_only_from_as_text = ini.GetValue("global", "only_from", "~");
+    if (g_only_from_as_text == "~") g_only_from_as_text = "";
     // Currently there is no need to sort the returned sections as section
     // configurations are handled independently and can be fed in any order.
     for (const auto &section : sections) {

@@ -39,8 +39,8 @@ Make sure the file is a valid python module:
 import os
 import ast
 import sys
-import pprint
 import time
+import yapf
 from importlib import import_module
 
 import generictests.run
@@ -83,9 +83,7 @@ class WritableDataset(object):
             v = getattr(self, k)
             if not v:
                 continue
-            k_str = '%s = ' % k
-            v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
-            content += ['', '', k_str + v_str]
+            content.append("%s = %r" % (k, v))
             imports |= self.get_imports(v)
 
         if not content:
@@ -94,11 +92,13 @@ class WritableDataset(object):
         with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
+            f.write('\n')
 
-            for item in imports:
+            for item in sorted(imports):
                 f.write('%s\n' % item)
 
-            f.write('\n'.join(content))
+            output, _ = yapf.yapflib.yapf_api.FormatCode('\n\n'.join(content))
+            f.write(output)
 
     def get_imports(self, value):
         try:

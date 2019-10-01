@@ -236,8 +236,8 @@ class ModeBulkImport(WatoMode):
                     attributes[attribute] = value.decode("utf-8")
                 else:
                     try:
-                        assert isinstance(value, six.text_type)
-                    except AssertionError:
+                        six.text_type(value)
+                    except UnicodeDecodeError:
                         raise MKUserError(
                             None,
                             _("Non-ASCII characters are not allowed in the "

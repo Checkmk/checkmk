@@ -123,19 +123,16 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
         if not content:
             return
 
+        content = list(sorted(imports)) + content
+
+        yapfed_content, __ = yapf.yapflib.yapf_api.FormatCode(
+            '\n\n'.join(content),
+            style_config=YAPF_STYLE,
+        )
+
         with Path(filename).open('w') as handle:
-            for comment in self.comments:
-                handle.write(u'# %s\n' % comment)
-
-            for item in sorted(imports):
-                handle.write(u'%s\n' % item)
-            handle.write(u'\n')
-
-            output, _ = yapf.yapflib.yapf_api.FormatCode(
-                u'\n\n'.join(content),
-                style_config=YAPF_STYLE,
-            )
-            handle.write(output)
+            handle.writelines(u'# %s\n' % c for c in self.comments)
+            handle.write(yapfed_content)
 
     def get_imports(self, value):
         try:

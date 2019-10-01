@@ -1,0 +1,136 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings["timesyncd_default_levels"] = {
+    "stratum_level": 10,
+    "quality_levels": (200.0, 500.0),
+    "alert_delay": (300, 3600),
+    "last_synchronised": (3600, 7200)
+}
+
+
+def _get_seconds(microseconds):
+    try:
+        time = float(microseconds) / 1000000
+    except ValueError:
+        try:
+            time = float(microseconds[:-2]) / 1000000
+        except ValueError:
+            raise MKGeneralException("invalid data value from time server")
+    return time
+
+
+TYPE_FUNCTION = {
+    "server": (lambda x: x),
+    "stratum": int,
+    "offset": _get_seconds,
+    "jitter": _get_seconds,
+}
+
+
+def parse_timesyncd(info):
+    parsed = {}
+    for line in info:
+        if not line:
+            continue
+
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            try:
+                parsed["synctime"] = float(line[0][3:-3])
+            except ValueError:
+                pass
+            continue
+        key = line[0].replace(':', '').lower()
+        if key in ("server", "stratum", "offset", "jitter"):
+            raw_str = line[1].replace('(', '').replace(')', '')
+            parsed[key] = TYPE_FUNCTION[key](raw_str)
+
+    return parsed
+
+
+def _get_levels_seconds(params):
+    try:
+        warn_milli, crit_milli = params["quality_levels"]
+    except KeyError:
+        return None, None
+    return warn_milli / 1000.0, crit_milli / 1000.0
+
+
+def check_timesyncd(_item, params, parsed):
+    server = parsed.get("server")
+    if server is None or server == "null":
+        yield 0, "Found no time server"
+        for subresult in tolerance_check(params, None):
+            yield subresult
+        return
+
+    stratum_level = params.get("stratum_level") - 1
+    stratum = parsed.get("stratum")
+    if stratum is not None:
+        yield check_levels(stratum, None, (stratum_level, stratum_level), infoname="Stratum")
+
+    levels = _get_levels_seconds(params)
+    # Jitter Information append
+    jitter = parsed.get("jitter")
+    if jitter is not None:
+        yield check_levels(jitter,
+                           "jitter",
+                           levels,
+                           human_readable_func=get_age_human_readable,
+                           infoname="Jitter")
+
+    # Offset information
+    offset = parsed.get("offset")
+    if offset is not None:
+        yield check_levels(abs(offset),
+                           "time_offset",
+                           levels,
+                           human_readable_func=get_age_human_readable,
+                           infoname="Offset")
+
+    synctime = parsed.get("synctime")
+    if synctime is not None:
+        yield check_levels(time.time() - synctime,
+                           None,
+                           params.get("last_synchronised"),
+                           human_readable_func=get_age_human_readable,
+                           infoname="Last synchronised")
+
+        set_item_state("time_server", synctime)  # remember last successful sync
+
+    yield 0, "synchronised on %s" % server
+
+
+check_info["timesyncd"] = {
+    'parse_function': parse_timesyncd,
+    'check_function': check_timesyncd,
+    'inventory_function': discover_single,
+    'service_description': 'Systemd Timesyncd Time',
+    'has_perfdata': True,
+    'group': 'timesyncd_time',
+    'default_levels_variable': "timesyncd_default_levels",
+    'includes': ["time.include"],
+}

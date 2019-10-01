@@ -148,6 +148,15 @@ def check_ntp(item, params, info):
     return 3, "peer not found", []
 
 
+def _get_suitable_line(info):
+    index = None
+    for idx, line in enumerate(info):
+        if line[0] in ('*', 'o'):
+            index = idx
+            break
+    return index
+
+
 def check_ntp_summary(_no_item, params, info):
     if isinstance(params, tuple):
         params = {
@@ -160,38 +169,16 @@ def check_ntp_summary(_no_item, params, info):
         return
 
     # We only are interested in our system peer or pulse per second source (pps)
-    for line in info:
-        if line[0] in ["*", "o"]:
-            state, text, perfdata = check_ntp(line[1], params["ntp_levels"], [line])
-            text += " (synchronized on %s)" % line[1]
-            set_item_state(None, ("sync", time.time(), state,
-                                  "last successful sync"))  # remember last successfull sync
-            yield state, text, perfdata
-            return
+    index = _get_suitable_line(info)
+    if index is None:
+        yield 0, "found %d peers, but none is suitable" % len(info)
+    else:
+        state, text, perfdata = check_ntp(info[index][1], params["ntp_levels"], [info[index]])
+        text += " (synchronized on %s)" % info[index][1]
+        yield state, text, perfdata
 
-    infotext = "found %d peers, but none is suitable" % len(info)
-    yield 0, infotext
-
-    # Currently no peer is suitable. But we want to tolerate that for a while.
-    entry = get_item_state(None)
-    if entry is None:
-        set_item_state(None, ("init", time.time(), 0, infotext))
-        yield 0, "just started monitoring"
-        return
-
-    _how, last_successful_sync, last_state, last_infotext = entry
-    time_since_sync = time.time() - last_successful_sync
-    infotext = "this is %s since " % get_age_human_readable(time_since_sync)
-    infotext += last_infotext
-    yield last_state, infotext
-
-    warn_time, crit_time = params["alert_delay"]
-    levelstext = "(levels at %s/%s)" % (get_age_human_readable(warn_time),
-                                        get_age_human_readable(crit_time))
-    if time_since_sync >= crit_time:
-        yield 2, levelstext
-    elif time_since_sync >= warn_time:
-        yield 1, levelstext
+    for subresult in tolerance_check(params, None if index is None else time.time()):
+        yield subresult
 
 
 check_info["ntp"] = {
@@ -209,4 +196,5 @@ check_info["ntp.time"] = {
     'has_perfdata': True,
     'group': 'ntp_time',
     'default_levels_variable': "ntp_time_default_levels",
+    'includes': ["time.include"]
 }

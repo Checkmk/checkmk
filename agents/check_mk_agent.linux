@@ -161,6 +161,7 @@ section_cpu() {
             cat /proc/sys/kernel/threads-max
         fi
     else
+
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'
         else
@@ -717,10 +718,23 @@ if [ -e /etc/openvpn/openvpn-status.log ]; then
         sed -e 1,3d -e '$d'
 fi
 
-# Time synchronization with NTP
-if inpath ntpq; then
-    # remove heading, make first column space separated
-    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+TIMESYNC_STATUS=$(systemctl status ntp | awk '{if(NR==3) print $2}')
+if [ $TIMESYNC_STATUS == "active" ]; then
+    # Time synchronization with NTP
+    if inpath ntpq; then
+        # remove heading, make first column space separated
+        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    fi
+else
+    # Time synchronization with systemd timesyncd
+    VERSION=$(systemd --version | awk '{if(NR==1) print $2}')
+    if [ $VERSION -ge 239 ]; then
+        if inpath timedatectl; then
+            echo "<<<timesyncd>>>"
+            timedatectl timesync-status
+            stat -c %Y /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+        fi
+    fi
 fi
 
 # Time synchronization with Chrony

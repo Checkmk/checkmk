@@ -1,0 +1,16 @@
+Title: timesyncd: time synchronisation check using systemd timesyncd service
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1569938943
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+ This check behaves simarly to the already existing ntp check. It uses
+ the output of {timedatectl timesync-status} as sent by the agent. It
+ lists the information of the synchronised time server including the
+ server address, stratum, offset and jitter. On a running instance the
+ time is synchronised either using ntp or timesyncd. The agent therefore
+ determines the correct service and the respective check to use.

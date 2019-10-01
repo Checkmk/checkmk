@@ -7720,6 +7720,7 @@ check_metrics["check_mk-ntp"] = {
         "scale": m
     },
 }
+
 check_metrics["check_mk-chrony"] = {
     "offset": {
         "name": "time_offset",
@@ -10012,8 +10013,8 @@ graph_info["backup_time"] = {
     "metrics": [("checkpoint_age", "area"), ("backup_age", "stack")],
 }
 
-graph_info["ntp_time_offset"] = {
-    "title": _("NTP time offset"),
+graph_info["time_offset"] = {
+    "title": _("Time offset"),
     "metrics": [("time_offset", "area"), ("jitter", "line")],
     "scalars": [
         ("time_offset:crit", _("Upper critical level")),

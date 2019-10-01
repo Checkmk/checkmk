@@ -1260,7 +1260,7 @@ class VisualFilterList(ListOfMultiple):
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore = kwargs.get("ignore", set())
+        ignore = kwargs.pop("ignore", set())
         self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))

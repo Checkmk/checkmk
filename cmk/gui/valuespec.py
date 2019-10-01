@@ -4844,8 +4844,8 @@ class LDAPDistinguishedName(TextUnicode):
 
 
 class Password(TextAscii):
-    def __init__(self, **kwargs):
-        self._is_stored_plain = kwargs.get("is_stored_plain", True)
+    def __init__(self, is_stored_plain=True, **kwargs):
+        self._is_stored_plain = is_stored_plain
         kwargs.setdefault("autocomplete", False)
 
         if self._is_stored_plain:

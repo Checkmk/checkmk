@@ -94,6 +94,9 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         data.update(other.to_dict())
         return DiscoveredHostLabels.from_dict(data)
 
+    def __repr__(self):
+        return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
+
 
 class ABCLabel(object):
     """Representing a service label in Checkmk

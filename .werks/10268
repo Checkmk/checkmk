@@ -1,0 +1,14 @@
+Title: Monitor ingresses from Kubernetes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1569928525
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+This werk adds check for Kubernetes ingresses.  It outputs path, port,
+and service name.
+
+The check adds one entry per path.

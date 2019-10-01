@@ -1,0 +1,17 @@
+title: Kubernetes ingresses
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors path, port, and service name of ingresses.
+
+ It makes it possible to identify vanishing or newly
+ instantiated ingresses.  It is always {OK}.
+
+ Use Check HTTP service to monitor the state of the services
+ behind the ingresses.
+
+inventory:
+ One service is created per path.
+

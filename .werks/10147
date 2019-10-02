@@ -1,0 +1,12 @@
+Title: nginx_status: requests metric is now correctly the rate
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p3
+Date: 1569999181
+
+

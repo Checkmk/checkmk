@@ -29,7 +29,13 @@ discovery_netapp_api_ports_ignored = []
 
 
 def parse_netapp_ports(info):
-    return netapp_api_parse_lines(info, ports=True)
+    def port_name(name, values):
+        try:
+            return "%s port %s" % (values["port-type"].capitalize(), name)
+        except KeyError:
+            return name
+
+    return netapp_api_parse_lines(info, item_func=port_name)
 
 
 def _identify_ignored_port_types(discovery_ignored):

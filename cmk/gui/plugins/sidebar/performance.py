@@ -49,6 +49,10 @@ class Performance(SidebarSnapin):
     def description(cls):
         return _("Live monitor of the overall performance of all monitoring servers")
 
+    @classmethod
+    def refresh_regularly(cls):
+        return True
+
     def show(self):
         only_sites = snapin_site_choice("performance", config.site_choices())
 

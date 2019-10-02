@@ -19,7 +19,6 @@ help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
-	@echo "test-docker               - Run docker tests"
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-gui-crawl            - Run GUI crawl test"
@@ -55,10 +54,6 @@ test-bandit: $(VENV) bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
-
-test-docker: $(VENV)
-	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker docker
 
 test-format-python: $(VENV) ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories

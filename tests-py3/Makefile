@@ -13,6 +13,7 @@ include ../defines.make
 
 help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
+	@echo "test-docker               - Run docker tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-unit                 - Run unit tests"
 
@@ -24,9 +25,12 @@ help:
 $(VENV):
 	$(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 
+test-docker: $(VENV)
+	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
+	$(PYTEST) -T docker docker
+
 test-pylint: $(VENV)
 	$(PYTEST) -T pylint pylint
 
 test-unit: $(VENV)
 	$(PYTEST) -T unit git unit
-

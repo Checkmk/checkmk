@@ -50,7 +50,8 @@ def parse_k8s_unavailability(value, total):
 
 def inventory_k8s_replicas(parsed):
     if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
-        return [(None, {})]
+        yield HostLabel(u'cmk/kubernetes_object', u'deployment')
+        yield (None, {})
 
 
 def check_k8s_replicas(_no_item, params, parsed):

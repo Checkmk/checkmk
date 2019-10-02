@@ -1,5 +1,7 @@
 # yapf: disable
 
+from cmk_base.discovered_labels import HostLabel
+
 checkname = "k8s_pod_container"
 
 parsed = {
@@ -16,7 +18,9 @@ parsed = {
     }
 }
 
-discovery = {"": [(None, {})]}
+discovery = {
+    "": [(None, {}), HostLabel(u'cmk/kubernetes_object', u'pod')]
+}
 
 checks = {
     "": [(

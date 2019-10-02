@@ -26,7 +26,9 @@
 
 
 def inventory_k8s_daemon_pods(parsed):
-    return [(None, {})]
+    if parsed:
+        yield HostLabel(u"cmk/kubernetes_object", u"daemonset")
+        yield (None, {})
 
 
 def check_k8s_daemon_pods(_no_item, _params, parsed):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -48,14 +48,13 @@
 #
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
-import cookielib
 import getopt
 import re
 import socket
 import sys
-import urllib
-import urllib2
-from HTMLParser import HTMLParser
+import urllib.request, urllib.parse, urllib.error
+import http.cookiejar
+import html.parser
 
 
 def usage():
@@ -120,38 +119,47 @@ def get_base_url(ssl, host, port):
 
 # TODO: Refactor to requests
 def init_http():
-    return urllib2.build_opener(urllib2.HTTPRedirectHandler(), urllib2.HTTPHandler(debuglevel=0),
-                                urllib2.HTTPSHandler(debuglevel=0),
-                                urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+    return urllib.request.build_opener(
+        urllib.request.HTTPRedirectHandler(), urllib.request.HTTPHandler(debuglevel=0),
+        urllib.request.HTTPSHandler(debuglevel=0),
+        urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
 
 def open_url(client, url, method='GET', data=None, timeout=None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
         start = '&' if '?' in url else '?'
-        url += start + urllib.urlencode(data)
+        url += start + urllib.parse.urlencode(data)
         data = None
 
     try:
         if data:
             debug('POST %s' % url)
-            data = urllib.urlencode(data.items())
+            # Py3:
+            # Encode a dict or sequence of two-element tuples into a URL query string.
+            data = urllib.parse.urlencode(data, encoding="utf8")
             debug('  => %s' % data)
-            fd = client.open(url, data, timeout)  # will be a POST
+            # Py3:
+            # POST data should be bytes, an iterable of bytes, or a file object.
+            # It cannot be of type str.
+            fd = client.open(url, data.encode("utf8"), timeout)  # will be a POST
         else:
             debug('GET %s' % url)
             fd = client.open(url, timeout=timeout)  # GET
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
-    except urllib2.URLError as e:
+
+    except urllib.error.URLError as e:
         new_state(2, 'Unable to open %s: %s' % (url, e.reason))
+
     except socket.timeout as e:
         new_state(2, 'Unable to open %s: %s' % (url, e))
+
     real_url = fd.geturl()
     code = fd.getcode()
     content = fd.read()
 
-    encoding = fd.headers.getparam('charset')
+    encoding = fd.headers.get_content_charset()
     if encoding:
         content = content.decode(encoding)
 
@@ -161,11 +169,11 @@ def open_url(client, url, method='GET', data=None, timeout=None):
     return real_url, content
 
 
-class FormParser(HTMLParser):
+class FormParser(html.parser.HTMLParser):
     def __init__(self):
         self.forms = {}
         self.current_form = None
-        HTMLParser.__init__(self)
+        super().__init__()
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -206,16 +214,16 @@ def parse_form(content, form_name):
 
     elif num_forms == 1 and form_name is not None and form_name in forms:
         new_state(
-            2,
-            'Found one form with name "%s" but expected name "%s"' % (forms.keys()[0], form_name))
+            2, 'Found one form with name "%s" but expected name "%s"' %
+            (list(forms.keys())[0], form_name))
 
     elif num_forms == 1:
-        form = forms[forms.keys()[0]]
+        form = forms[list(forms.keys())[0]]
 
     elif form_name is None:
         new_state(
-            2, 'No form name provided but found multiple forms (Names: %s)' %
-            (', '.join(forms.keys())))
+            2,
+            'No form name provided but found multiple forms (Names: %s)' % ', '.join(forms.keys()))
 
     else:
         form = forms.get(form_name)
@@ -349,7 +357,7 @@ def main(args=None):
             timeout = int(a)
         elif o == '-n':
             if ',' in a:
-                num_warn, num_crit = map(int, a.split(',', 1))
+                num_warn, num_crit = [int(level) for level in a.split(',', 1)]
             else:
                 num_warn = int(a)
         elif o == '-d':

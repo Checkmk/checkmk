@@ -80,7 +80,7 @@ def check_mail_arguments(params):
 
 
 active_check_info["mail"] = {
-    "command_line": "$USER1$/check_mail $ARG1$",
+    "command_line": "check_mail $ARG1$",
     "argument_function": check_mail_arguments,
     "service_description": lambda params: params["service_description"],
     "has_perfdata": True,

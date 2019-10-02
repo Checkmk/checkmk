@@ -59,7 +59,7 @@ def check_elasticsearch_query_arguments(params):
 
 
 active_check_info["elasticsearch_query"] = {
-    "command_line": "$USER1$/check_elasticsearch_query $ARG1$",
+    "command_line": "check_elasticsearch_query $ARG1$",
     "argument_function": check_elasticsearch_query_arguments,
     "service_description": lambda params: "Elasticsearch Query %s" % params["svc_item"],
     "has_perfdata": True,

@@ -252,7 +252,7 @@ def check_http_description(params):
 
 
 active_check_info["http"] = {
-    "command_line": "$USER1$/check_http $ARG1$",
+    "command_line": "check_http $ARG1$",
     "argument_function": check_http_arguments,
     "service_description": check_http_description,
     "has_perfdata": True,

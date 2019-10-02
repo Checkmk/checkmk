@@ -96,7 +96,7 @@ def check_icmp_description(params):
 
 
 active_check_info['icmp'] = {
-    "command_line": '$USER1$/check_icmp $ARG1$',
+    "command_line": 'check_icmp $ARG1$',
     "argument_function": check_icmp_arguments,
     "service_description": check_icmp_description,
     "has_perfdata": True,

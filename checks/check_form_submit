@@ -66,7 +66,7 @@ def check_form_submit_arguments(params):
 
 
 active_check_info["form_submit"] = {
-    "command_line": "$USER1$/check_form_submit $ARG1$",
+    "command_line": "check_form_submit $ARG1$",
     "argument_function": check_form_submit_arguments,
     "service_description": lambda params: "FORM %s" % params[0],
 }

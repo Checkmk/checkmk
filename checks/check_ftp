@@ -82,7 +82,7 @@ def check_ftp_get_item(params):
 
 
 active_check_info["ftp"] = {
-    "command_line": "$USER1$/check_ftp $ARG1$",
+    "command_line": "check_ftp $ARG1$",
     "argument_function": check_ftp_arguments,
     "service_description": check_ftp_get_item,
     "has_perfdata": True,

@@ -60,7 +60,7 @@ def check_netapp_api_luns(item, params, lun):
         yield df_check_filesystem_single(item, size_total, size_avail, 0, None, None, params)
 
 
-def netapp_api_luns_item(name):
+def netapp_api_luns_item(name, _values):
     return name.rsplit("/", 1)[-1]
 
 

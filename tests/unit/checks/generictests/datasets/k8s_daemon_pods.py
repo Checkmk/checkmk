@@ -1,6 +1,8 @@
 # -*- encoding: utf-8
 # yapf: disable
 
+from cmk_base.discovered_labels import HostLabel
+
 checkname = 'k8s_daemon_pods'
 
 parsed = {
@@ -16,7 +18,9 @@ parsed = {
     u'updated_number_scheduled': 1
 }
 
-discovery = {'': [(None, {})]}
+discovery = {
+    '': [(None, {}), HostLabel(u'cmk/kubernetes_object', u'daemonset')]
+}
 
 checks = {
     '': [(

@@ -25,6 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 
+def discover_k8s_service_port(parsed):
+    if parsed:
+        yield HostLabel(u'cmk/kubernetes_object', u'service')
+        for item in parsed:
+            yield (item, {})
+
+
 def k8s_check_value(value, expected, infotext_template):
     state = 0
     infotext = infotext_template % value
@@ -63,7 +70,7 @@ def check_k8s_service_port(item, params, parsed):
 
 check_info['k8s_service_port'] = {
     'parse_function': parse_k8s,
-    'inventory_function': discover(),
+    'inventory_function': discover_k8s_service_port,
     'check_function': check_k8s_service_port,
     'service_description': 'Port %s',
     'group': 'k8s_port',

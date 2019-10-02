@@ -170,21 +170,19 @@ class BackupTarFile(tarfile.TarFile):
         self._send_rrdcached_command("RESUMEALL")
 
     def _send_rrdcached_command(self, cmd):
-        if not self._sock:
-            self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        if self._sock is None:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
-                self._sock.connect(self._rrdcached_socket_path)
-            except socket.error as e:
-                # ECONNRESET: Broken pipe
-                # EPIPE:      Connection reset by peer
-                #             Happens, for example, when the rrdcached is reloaded/restarted during backup
-                if e.errno in (errno.ECONNRESET, errno.EPIPE):
-                    self._sock = None
-                    if self._verbose:
-                        sys.stdout.write("skipping rrdcached command (%s)\n" % e)
-                    return
-                else:
-                    raise
+                sock.connect(self._rrdcached_socket_path)
+            except IOError as e:
+                if self._verbose:
+                    sys.stdout.write("skipping rrdcached command (%s)\n" % e)
+            except Exception:
+                raise
+            self._sock = sock
+
+        if self._sock is None:
+            return
 
         try:
             if self._verbose:
@@ -194,14 +192,14 @@ class BackupTarFile(tarfile.TarFile):
             answer = ""
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024)
-        except socket.error as e:
-            if e.errno == errno.EPIPE:
-                self._sock = None
-                if self._verbose:
-                    sys.stdout.write("skipping rrdcached command (broken pipe)\n")
-                return
-            else:
-                raise
+        except IOError as e:
+            self._sock = None
+            if self._verbose:
+                sys.stdout.write("skipping rrdcached command (broken pipe)\n")
+            return
+        except Exception:
+            self._sock = None
+            raise
 
         code, msg = answer.strip().split(" ", 1)
         if code == "-1":
@@ -223,7 +221,7 @@ class BackupTarFile(tarfile.TarFile):
     def close(self):
         super(BackupTarFile, self).close()
 
-        if self._sock:
+        if self._sock is not None:
             self._resume_all_rrds()
             self._sock.close()
 

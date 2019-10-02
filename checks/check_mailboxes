@@ -75,7 +75,7 @@ def check_mailboxes_arguments(params):
 
 
 active_check_info["mailboxes"] = {
-    "command_line": "$USER1$/check_mailboxes $ARG1$",
+    "command_line": "check_mailboxes $ARG1$",
     "argument_function": check_mailboxes_arguments,
     "service_description": lambda params: params["service_description"],
     "has_perfdata": True,

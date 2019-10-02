@@ -75,7 +75,7 @@ def check_ldap_desc(params):
 
 
 active_check_info["ldap"] = {
-    "command_line": "$USER1$/check_ldap $ARG1$",
+    "command_line": "check_ldap $ARG1$",
     "argument_function": check_ldap_arguments,
     "service_description": check_ldap_desc,
     "has_perfdata": True,

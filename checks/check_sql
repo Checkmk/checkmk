@@ -77,7 +77,7 @@ def check_sql_arguments(params):
 
 
 active_check_info["sql"] = {
-    "command_line": "$USER1$/check_sql $ARG1$",
+    "command_line": "check_sql $ARG1$",
     "argument_function": check_sql_arguments,
     "service_description": lambda args: args["description"],
     "has_perfdata": True,

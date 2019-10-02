@@ -110,7 +110,7 @@ def test_iter_config_lines(mk_logwatch, tmp_path):
 ])
 def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_data, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
     __, c_config = mk_logwatch.read_config(None)
     cluster = c_config[0]
@@ -175,7 +175,7 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
                               monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
     l_config, __ = mk_logwatch.read_config(None)
     logfiles = l_config[0]
@@ -446,7 +446,7 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     section = Section(logfile, patterns, opt)
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(section, status)
+    output = mk_logwatch.process_logfile(section, status, False)
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:

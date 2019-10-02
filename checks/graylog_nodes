@@ -85,69 +85,78 @@ factory_settings["graylog_nodes_default_levels"] = {
 }
 
 
-@get_parsed_item_data
-def check_graylog_nodes(item, params, data):
-    if data is None:
+def inventory_graylog_nodes(parsed):
+    for node in parsed.keys():
+        yield node, {}
+
+
+def check_graylog_nodes(item, params, parsed):
+    if parsed is None:
         return
 
-    for node_info in data:
-        for key, infotext, levels in [
-            ("lb_status", "Load balancer state", "lb_"),
-            ("lifecycle", "Lifecycle is", "lc_"),
-            ("is_processing", "Is processing", "ps_"),
-        ]:
+    if item not in parsed:
+        yield 2, "Missing in agent output (graylog service running?)"
+        return
 
-            value = node_info.get(key)
-            if value is None:
+    for _item_name, details in parsed.iteritems():
+        for node_info in details:
+            for key, infotext, levels in [
+                ("lb_status", "Load balancer state", "lb_"),
+                ("lifecycle", "Lifecycle is", "lc_"),
+                ("is_processing", "Is processing", "ps_"),
+            ]:
+
+                value = node_info.get(key)
+                if value is None:
+                    continue
+
+                state = params.get("%s%s" % (levels, str(value).lower()), 1)
+
+                yield state, "%s: %s" % (infotext, str(value).replace("True", "yes").replace(
+                    "False", "no"))
+
+            long_output = []
+            value_inputstates = node_info.get("inputstates")
+            if value_inputstates is None:
                 continue
 
-            state = params.get("%s%s" % (levels, str(value).lower()), 1)
+            for inputstate in value_inputstates:
+                long_output_str = ""
 
-            yield state, "%s: %s" % (infotext, str(value).replace("True", "yes").replace(
-                "False", "no"))
+                value_input_message = inputstate.get("message_input")
+                if value_input_message is not None:
 
-        long_output = []
-        value_inputstates = node_info.get("inputstates")
-        if value_inputstates is None:
-            continue
+                    value_name = value_input_message.get("name")
+                    if value_name is not None:
+                        long_output_str += "Name: %s, " % value_name
 
-        for inputstate in value_inputstates:
-            long_output_str = ""
+                    value_title = value_input_message.get("title")
+                    if value_title is not None:
+                        long_output_str += "Title: %s, " % value_title.title()
 
-            value_input_message = inputstate.get("message_input")
-            if value_input_message is not None:
+                value_input_state = inputstate.get("state")
+                if value_input_state is not None:
+                    state_of_input = 0
+                    if value_input_state != "RUNNING":
+                        state_of_input = params["input_state"]
+                    long_output_str += "Status: %s%s" % (value_input_state,
+                                                         state_markers[state_of_input])
 
-                value_name = value_input_message.get("name")
-                if value_name is not None:
-                    long_output_str += "Name: %s, " % value_name
+                long_output.append(long_output_str)
 
-                value_title = value_input_message.get("title")
-                if value_title is not None:
-                    long_output_str += "Title: %s, " % value_title.title()
+            input_info = "Inputs: %d" % len(value_inputstates)
+            if state_of_input:
+                input_info += ", One or more inputs not in state running, see long output for more details"
 
-            value_input_state = inputstate.get("state")
-            if value_input_state is not None:
-                state_of_input = 0
-                if value_input_state != "RUNNING":
-                    state_of_input = params["input_state"]
-                long_output_str += "Status: %s%s" % (value_input_state,
-                                                     state_markers[state_of_input])
+            yield state_of_input, input_info
 
-            long_output.append(long_output_str)
-
-        input_info = "Inputs: %d" % len(value_inputstates)
-        if state_of_input:
-            input_info += ", One or more inputs not in state running, see long output for more details"
-
-        yield state_of_input, input_info
-
-        yield 0, "\n%s" % "\n".join(long_output)
+            yield 0, "\n%s" % "\n".join(long_output)
 
 
 check_info["graylog_nodes"] = {
     "parse_function": parse_graylog_nodes,
     "check_function": check_graylog_nodes,
-    "inventory_function": discover(),
+    "inventory_function": inventory_graylog_nodes,
     "default_levels_variable": "graylog_nodes_default_levels",
     "service_description": "Graylog Node %s",
     "has_perfdata": True,

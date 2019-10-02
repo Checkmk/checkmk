@@ -104,6 +104,7 @@ class ArgsParser(object):
 
         self.verbosity = argv.count('-v') + 2 * argv.count('-vv'),
         self.config = argv[argv.index('-c') + 1] if '-c' in argv else None
+        self.debug = '-d' in argv or '--debug' in argv
 
 
 #   .--MEI-Cleanup---------------------------------------------------------.
@@ -178,10 +179,6 @@ class MEIFolderCleaner(object):
                 shutil.rmtree(path)
             except Exception, e:
                 LOGGER.debug("Finding and removing leftover folders failed: %s", e)
-
-
-def debug():
-    return '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]
 
 
 def get_status_filename(cluster_config):
@@ -270,7 +267,7 @@ def get_config_files(directory, config_file_arg=None):
     return config_file_paths
 
 
-def iter_config_lines(files):
+def iter_config_lines(files, debug=False):
     for file_ in files:
         try:
             with open(file_) as fid:
@@ -283,7 +280,7 @@ def iter_config_lines(files):
                     msg = "Error reading file %r (please use utf-8 encoding!)\n" % file_
                     sys.stdout.write(CONFIG_ERROR_PREFIX + msg)
         except IOError:
-            if debug():
+            if debug:
                 raise
 
 
@@ -329,7 +326,7 @@ def consume_logfile_definition(config_lines):
     return logfiles
 
 
-def read_config(files):
+def read_config(files, debug=False):
     """
     Read logwatch.cfg (patterns, cluster mapping, etc.).
 
@@ -344,7 +341,7 @@ def read_config(files):
 
     logfiles_configs = []
     cluster_configs = []
-    config_lines = list(iter_config_lines(files))
+    config_lines = list(iter_config_lines(files, debug=debug))
 
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
@@ -369,7 +366,7 @@ def read_config(files):
     return logfiles_configs, cluster_configs
 
 
-def read_status(file_name):
+def read_status(file_name, debug=False):
     """
     Support status files with the following structure:
 
@@ -380,7 +377,7 @@ def read_status(file_name):
     Status file lines may not be empty but must contain | separated status meta data.
     """
     LOGGER.debug("Status file: %r", file_name)
-    if debug():
+    if debug:
         return {}
 
     status = {}
@@ -515,7 +512,7 @@ def decode_filename(byte_str_filename):
     return byte_str_filename.decode('utf-8')
 
 
-def process_logfile(section, status):
+def process_logfile(section, status, debug):
     """
     Returns tuple of (
         logfile lines,
@@ -528,7 +525,7 @@ def process_logfile(section, status):
     try:
         log_iter = LogLinesIter(section.filename, section.options.encoding)
     except OSError:
-        if debug():
+        if debug:
             raise
         return [u"[[[%s:cannotopen]]]\n" % decode_filename(section.filename)]
 
@@ -547,7 +544,7 @@ def process_logfile(section, status):
 
     # If we have never seen this file before, we do not want
     # to make a fuss about ancient log messages... (unless configured to)
-    if offset is None and not (section.options.fromstart or debug()):
+    if offset is None and not (section.options.fromstart or debug):
         return output
 
     # If the inode of the logfile has changed it has appearently
@@ -982,9 +979,9 @@ def main(argv=None):
 
     try:
         files = get_config_files(MK_CONFDIR, config_file_arg=args.config)
-        logfiles_config, cluster_config = read_config(files)
+        logfiles_config, cluster_config = read_config(files, args.debug)
     except Exception, exc:
-        if debug():
+        if args.debug:
             raise
         sys.stdout.write(CONFIG_ERROR_PREFIX + "%s\n" % exc)
         sys.exit(1)
@@ -998,7 +995,7 @@ def main(argv=None):
     # with an empty status. That keeps the monitoring up and running - even if we might lose a
     # message in the extreme case of a corrupted status file.
     try:
-        status = read_status(status_filename)
+        status = read_status(status_filename, args.debug)
     except Exception:
         status = {}
 
@@ -1009,12 +1006,12 @@ def main(argv=None):
 
     for section in found_sections:
         try:
-            output = process_logfile(section, status)
+            output = process_logfile(section, status, args.debug)
             write_output(output, section.options.maxoutputsize)
-        except () if debug() else Exception, exc:
+        except () if args.debug else Exception, exc:
             LOGGER.debug("Exception when processing %r: %s", section.filename, exc)
 
-    if not debug():
+    if not args.debug:
         save_status(status, status_filename)
 
 

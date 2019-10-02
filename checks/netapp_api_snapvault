@@ -71,7 +71,7 @@ def check_netapp_api_snapvault(item, params, snapvault):
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
 
 
-def netapp_api_snapvault_item(name):
+def netapp_api_snapvault_item(name, _values):
     return name.replace("$", "_")
 
 

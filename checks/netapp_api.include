@@ -47,7 +47,7 @@ def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func
             name = ".".join(custom_name)
 
         if item_func:
-            name = item_func(name)
+            name = item_func(name, instance)
 
         if ports:
             name = "%s port %s" % (instance.get("port-type").capitalize(), name)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -26,12 +26,11 @@
 
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
 import sys
 import os
 import subprocess
-import pytest  # type: ignore
-import docker  # type: ignore
+import pytest
+import docker
 
 import testlib
 
@@ -161,8 +160,9 @@ def _start(request, client, version=None, is_update=False, **kwargs):
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=120)
-        output = c.logs()
+        testlib.wait_until(lambda: _exec_run(c, ["omd", "status"], user=site_id)[0] == 0,
+                           timeout=120)
+        output = c.logs().decode("utf-8")
 
         if not is_update:
             assert "Created new site" in output
@@ -174,9 +174,14 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         assert "STARTING SITE" in output
         assert "### CONTAINER STARTED" in output
     finally:
-        print("Log so far: %s" % c.logs())
+        sys.stdout.write("Log so far: %s\n" % c.logs().decode("utf-8"))
 
     return c
+
+
+def _exec_run(c, *args, **kwargs):
+    exit_code, output = c.exec_run(*args, **kwargs)
+    return exit_code, output.decode("utf-8")
 
 
 # TODO: Test with all editions (daily for enterprise + last stable for raw/managed)
@@ -198,7 +203,7 @@ def test_start_simple(request, client, edition):
     assert "/usr/lib/postfix/sbin/master" not in cmds
 
     # Check omd standard config
-    exit_code, output = c.exec_run(["omd", "config", "show"], user="cmk")
+    exit_code, output = _exec_run(c, ["omd", "config", "show"], user="cmk")
     assert "TMPFS: off" in output
     assert "APACHE_TCP_ADDR: 0.0.0.0" in output
     assert "APACHE_TCP_PORT: 5000" in output
@@ -210,8 +215,8 @@ def test_start_simple(request, client, edition):
         assert "CORE: nagios" in output
 
     # check sites uid/gid
-    assert c.exec_run(["id", "-u", "cmk"])[1].rstrip() == "1000"
-    assert c.exec_run(["id", "-g", "cmk"])[1].rstrip() == "1000"
+    assert _exec_run(c, ["id", "-u", "cmk"])[1].rstrip() == "1000"
+    assert _exec_run(c, ["id", "-g", "cmk"])[1].rstrip() == "1000"
 
     assert exit_code == 0
 
@@ -221,11 +226,11 @@ def test_start_cmkadmin_passsword(request, client):
         "CMK_PASSWORD": "blabla",
     })
 
-    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
-                       "blabla"])[0] == 0
+    assert _exec_run(
+        c, ["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blabla"])[0] == 0
 
-    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
-                       "blub"])[0] == 3
+    assert _exec_run(c,
+                     ["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blub"])[0] == 3
 
 
 def test_start_custom_site_id(request, client):
@@ -233,7 +238,7 @@ def test_start_custom_site_id(request, client):
         "CMK_SITE_ID": "xyz",
     })
 
-    assert c.exec_run(["omd", "status"], user="xyz")[0] == 0
+    assert _exec_run(c, ["omd", "status"], user="xyz")[0] == 0
 
 
 def test_start_enable_livestatus(request, client):
@@ -241,7 +246,7 @@ def test_start_enable_livestatus(request, client):
         "CMK_LIVESTATUS_TCP": "on",
     })
 
-    exit_code, output = c.exec_run(["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
+    exit_code, output = _exec_run(c, ["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
     assert exit_code == 0
     assert output == "on\n"
 
@@ -249,7 +254,7 @@ def test_start_enable_livestatus(request, client):
 def test_start_execute_custom_command(request, client):
     c = _start(request, client)
 
-    exit_code, output = c.exec_run(["echo", "1"], user="cmk")
+    exit_code, output = _exec_run(c, ["echo", "1"], user="cmk")
     assert exit_code == 0
     assert output == "1\n"
 
@@ -301,37 +306,40 @@ def test_start_enable_mail(request, client):
     assert "syslogd" in cmds
     assert "/usr/lib/postfix/sbin/master" in cmds
 
-    assert c.exec_run(["which", "mail"], user="cmk")[0] == 0
+    assert _exec_run(c, ["which", "mail"], user="cmk")[0] == 0
 
-    assert c.exec_run(["postconf", "myorigin"])[1].rstrip() == "myorigin = myhost.mydomain.com"
-    assert c.exec_run(["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
+    assert _exec_run(c, ["postconf", "myorigin"])[1].rstrip() == "myorigin = myhost.mydomain.com"
+    assert _exec_run(c,
+                     ["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
 
 
 def test_http_access(request, client):
     c = _start(request, client)
 
-    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in c.exec_run(
-        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000"])[-1]
-    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in c.exec_run(
-        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/"])[-1]
-    assert "Location: http://127.0.0.1:5000/cmk/check_mk/\r\n" in c.exec_run(
-        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
-    assert "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n" in c.exec_run(
-        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in _exec_run(
+        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in _exec_run(
+        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/check_mk/\r\n" in _exec_run(
+        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
+    assert "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n" in _exec_run(
+        c, ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
 
-    assert "Location: \r\n" not in c.exec_run(
+    assert "Location: \r\n" not in _exec_run(
+        c,
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
-    assert "name=\"_login\"" in c.exec_run(
+    assert "name=\"_login\"" in _exec_run(
+        c,
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
 
 
 def test_container_agent(request, client):
     c = _start(request, client)
     # Is the agent installed and executable?
-    assert c.exec_run(["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
+    assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert "0.0.0.0:6556" in c.exec_run(["netstat", "-tln"])[-1]
+    assert "0.0.0.0:6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):
@@ -386,6 +394,7 @@ def test_update(request, client, version):
                    volumes_from=c_orig.id)
 
     # 5. verify result
-    c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
-    assert c_new.exec_run(["test", "-f", "pre-update-marker"], user="cmk",
-                          workdir="/omd/sites/cmk")[0] == 0
+    _exec_run(c_new, ["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
+    assert _exec_run(c_new, ["test", "-f", "pre-update-marker"],
+                     user="cmk",
+                     workdir="/omd/sites/cmk")[0] == 0

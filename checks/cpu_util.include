@@ -286,7 +286,7 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
         if timestamp == 0:
             set_item_state(core_state_name, this_time)
         elif state:
-            return state, infotext
+            return state, infotext, []
         return 0, "", []
 
     clear_item_state(core_state_name)

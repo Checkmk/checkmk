@@ -5,7 +5,7 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0b5
+Version: 1.6.0b7
 Date: 1565957495
 
 If set, the instance name is used in the service description. If unset,

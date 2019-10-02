@@ -261,7 +261,8 @@ def test_start_execute_custom_command(request, client):
 
 def test_start_with_custom_command(request, client, version):
     image, _build_logs = _build(request, client, version)
-    output = client.containers.run(image=image.id, detach=False, command=["bash", "-c", "echo 1"])
+    output = client.containers.run(image=image.id, detach=False, command=["bash", "-c",
+                                                                          "echo 1"]).decode("utf-8")
 
     assert "Created new site" in output
     assert output.endswith("1\n")

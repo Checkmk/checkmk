@@ -75,33 +75,24 @@ def check_nginx_status(item, params, data):
         per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
         computed_values['%s_per_sec' % key] = per_sec
 
-    perfdata = sorted(data.items())
+    state, txt, perf = check_levels(data['active'],
+                                    'active',
+                                    params.get('active_connections'),
+                                    infoname="Active",
+                                    human_readable_func=lambda i: "%d" % i)
+    txt += ' (%d reading, %d writing, %d waiting)' % (data['reading'], data['writing'],
+                                                      data['waiting'])
+    perf += [(key, data[key]) for key in ('reading', 'writing', 'waiting')]
+    yield state, txt, perf
 
-    worst_state = 0
+    requests_rate = computed_values['requests_per_sec']
+    state, txt, perf = check_levels(requests_rate, 'requests', None, infoname="Requests", unit="/s")
+    txt += ' (%0.2f/Connection)' % computed_values['requests_per_conn']
+    yield state, txt, perf
 
-    conn_warn, conn_crit = params.get('active_connections', (None, None))
-    conn_txt = ''
-    if conn_crit is not None and data['active'] > conn_crit:
-        worst_state = max(worst_state, 2)
-        conn_txt = ' (!!)'
-    elif conn_warn is not None and data['active'] > conn_warn:
-        worst_state = max(worst_state, 1)
-        conn_txt = ' (!)'
-
-    output = [
-        'Active: %d%s (%d reading, %d writing, %d waiting)' %
-        (data['active'], conn_txt, data['reading'], data['writing'], data['waiting']),
-        'Requests: %0.2f/s (%0.2f/Connection)' %
-        (computed_values['requests_per_sec'], computed_values['requests_per_conn']),
-    ]
-
-    if data['accepted'] == data['handled']:
-        output.append('Accepted/Handled: %0.2f/s' % computed_values['accepted_per_sec'])
-    else:
-        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' %
-                      (computed_values['accepted_per_sec'], computed_values['handled_per_sec']))
-
-    return worst_state, ', '.join(output), perfdata
+    yield 0, 'Accepted: %0.2f/s' % computed_values['accepted_per_sec'], [('accepted',
+                                                                          data['accepted'])]
+    yield 0, 'Handled: %0.2f/s' % computed_values['handled_per_sec'], [('handled', data['handled'])]
 
 
 check_info['nginx_status'] = {

@@ -1,0 +1,14 @@
+Title: Some dashlets were not correctly refreshed
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1570123693
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Some dashlets, like the graph and snapin dashlets, were not
+refreshed as intended on the dashboards. They were initially
+rendered, but never updated.

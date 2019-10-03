@@ -10,6 +10,8 @@ from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
 from contextlib import contextmanager
 import freezegun
+from cmk.gui.watolib.rulespecs import rulespec_registry
+import cmk.gui.plugins.wato.check_parameters
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -132,6 +134,32 @@ def discovery(check, subcheck, dataset, info_arg, immu):
     return d_result
 
 
+def validate_discovered_params(check, params):
+    """Validate params with respect to the rule's valuespec
+    """
+    if not params:
+        return
+
+    # get the rule's valuespec
+    rulespec_group = check.info.get("group")
+    if rulespec_group is None:
+        return
+    key = "checkgroup_parameters:%s" % rulespec_group
+    spec = rulespec_registry[key].valuespec
+
+    # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
+    # *may* be 'None'. However, this is deliberately not allowed by the valuespec,
+    # to force the user to make a choice. The 'Invalid Parameter' message in this
+    # case does make sense, as it encourages the user to open and update the
+    # parameters. See Werk 6646
+    if 'cpu_rescale_max' in params:
+        params = params.copy()
+        params.update(cpu_rescale_max=True)
+
+    print("Loading %r with prams %r" % (key, params))
+    spec.validate_value(params, "")
+
+
 def check_discovered_result(check, discovery_result, info_arg, immu):
     """Run the check on all discovered items with the default parameters.
     We cannot validate the results, but at least make sure we don't crash.
@@ -141,6 +169,9 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
     item = discovery_result.item
 
     params = get_merged_parameters(check, discovery_result.default_params)
+
+    validate_discovered_params(check, params)
+
     immu.register(params, 'params')
 
     raw_checkresult = check.run_check(item, params, info_arg)

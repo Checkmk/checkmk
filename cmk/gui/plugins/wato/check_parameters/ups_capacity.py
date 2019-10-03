@@ -41,7 +41,7 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_ups_capacity():
     return Dictionary(
         title=_("Levels for battery parameters"),
-        optional_keys=False,
+        optional_keys=['battime'],
         elements=[
             (
                 "capacity",

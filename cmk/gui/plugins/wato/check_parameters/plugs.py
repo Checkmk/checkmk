@@ -26,8 +26,10 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Dictionary,
     DropdownChoice,
     TextAscii,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -46,15 +48,34 @@ def _item_spec_plugs():
         allow_empty=True)
 
 
+def _transform(params):
+    if isinstance(params, dict):
+        return params
+    if params in ('on', 'off'):
+        return {'required_state': params}
+    return {}
+
+
 def _parameter_valuespec_plugs():
-    return DropdownChoice(help=_("This rule sets the required state of a PDU plug. It is meant to "
-                                 "be independent of the hardware manufacturer."),
-                          title=_("Required plug state"),
-                          choices=[
-                              ("on", _("Plug is ON")),
-                              ("off", _("Plug is OFF")),
-                          ],
-                          default_value="on")
+    return Transform(
+        Dictionary(
+            ignored_keys=['discoverd_state'],
+            elements=[
+                ('required_state',
+                 DropdownChoice(
+                     help=_("This rule sets the required state of a PDU plug. It is meant to "
+                            "be independent of the hardware manufacturer."),
+                     title=_("Required plug state"),
+                     choices=[
+                         ("on", _("Plug is ON")),
+                         ("off", _("Plug is OFF")),
+                     ],
+                     default_value="on",
+                 )),
+            ],
+        ),
+        forth=_transform,
+    )
 
 
 rulespec_registry.register(

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import pytest  # type: ignore
+
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
 import cmk.gui.config as config
@@ -29,9 +31,48 @@ class DummyDashlet(dashboard.Dashlet):
 def test_dashlet_registry_plugins():
     dashboard._transform_old_dict_based_dashlets()
     assert sorted(dashboard.dashlet_registry.keys()) == sorted([
-        'hoststats', 'notify_failed_notifications', 'mk_logo', 'network_topology', 'servicestats',
-        'url', 'overview', 'pnpgraph', 'view', 'custom_graph', 'notify_users', 'nodata', 'snapin'
+        'hoststats',
+        'notify_failed_notifications',
+        'mk_logo',
+        'network_topology',
+        'servicestats',
+        'url',
+        'overview',
+        'pnpgraph',
+        'view',
+        'custom_graph',
+        'notify_users',
+        'nodata',
+        'snapin',
     ])
+
+
+@pytest.mark.parametrize("type_name,expected_refresh_interval", [
+    ('custom_graph', 60),
+    ('hoststats', 60),
+    ('mk_logo', False),
+    ('network_topology', False),
+    ('nodata', False),
+    ('notify_failed_notifications', 60),
+    ('notify_users', False),
+    ('overview', False),
+    ('pnpgraph', 60),
+    ('servicestats', 60),
+    ('snapin', 30),
+    ('url', False),
+    ('view', False),
+])
+def test_dashlet_refresh_intervals(type_name, expected_refresh_interval):
+    dashlet_type = dashboard.dashlet_registry[type_name]
+    assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
+
+    dashlet = dashlet_type(dashboard_name="main",
+                           dashboard={},
+                           dashlet_id=1,
+                           dashlet={},
+                           wato_folder="xyz")
+
+    assert dashlet.refresh_interval() == expected_refresh_interval
 
 
 def _legacy_dashlet_type(attrs=None):
@@ -244,12 +285,12 @@ def test_old_dashlet_settings():
 def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.infos() == []
     assert dashboard.Dashlet.single_infos() == []
-    assert dashboard.Dashlet.is_selectable() == True
-    assert dashboard.Dashlet.is_resizable() == True
-    assert dashboard.Dashlet.is_iframe_dashlet() == False
+    assert dashboard.Dashlet.is_selectable() is True
+    assert dashboard.Dashlet.is_resizable() is True
+    assert dashboard.Dashlet.is_iframe_dashlet() is False
     assert dashboard.Dashlet.initial_size() == dashboard.Dashlet.minimum_size
     assert dashboard.Dashlet.initial_position() == (1, 1)
-    assert dashboard.Dashlet.initial_refresh_interval() == False
+    assert dashboard.Dashlet.initial_refresh_interval() is False
     assert dashboard.Dashlet.vs_parameters() is None
     assert dashboard.Dashlet.opt_parameters() is None
     assert dashboard.Dashlet.validate_parameters_func() is None
@@ -294,14 +335,14 @@ def test_show_title():
                            dashlet_id=1,
                            dashlet={},
                            wato_folder="xyz")
-    assert dashlet.show_title() == True
+    assert dashlet.show_title() is True
 
     dashlet = DummyDashlet(dashboard_name="main",
                            dashboard={},
                            dashlet_id=1,
                            dashlet={"show_title": False},
                            wato_folder="xyz")
-    assert dashlet.show_title() == False
+    assert dashlet.show_title() is False
 
 
 def test_title_url():
@@ -326,14 +367,14 @@ def test_show_background():
                            dashlet_id=1,
                            dashlet={},
                            wato_folder="xyz")
-    assert dashlet.show_background() == True
+    assert dashlet.show_background() is True
 
     dashlet = DummyDashlet(dashboard_name="main",
                            dashboard={},
                            dashlet_id=1,
                            dashlet={"background": False},
                            wato_folder="xyz")
-    assert dashlet.show_background() == False
+    assert dashlet.show_background() is False
 
 
 def test_on_resize():

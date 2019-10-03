@@ -246,7 +246,7 @@ class Dashlet(six.with_metaclass(abc.ABCMeta, object)):
         return self._dashlet_spec.get("position", self.initial_position())
 
     def refresh_interval(self):
-        return self._dashlet_spec.get("refresh", Dashlet.initial_refresh_interval())
+        return self._dashlet_spec.get("refresh", self.initial_refresh_interval())
 
     def get_refresh_action(self):
         if not self.refresh_interval():

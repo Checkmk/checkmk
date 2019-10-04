@@ -66,16 +66,6 @@
 import json
 
 
-def parse_graylog_cluster_stats(info):
-    parsed = {}
-
-    for line in info:
-
-        parsed.update(json.loads(line[0]))
-
-    return parsed
-
-
 def check_graylog_cluster_stats(no_item, params, parsed):
     if not parsed:
         return
@@ -102,12 +92,13 @@ def check_graylog_cluster_stats(no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats"] = {
-    "parse_function": parse_graylog_cluster_stats,
+    "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_cluster_stats,
     'inventory_function': discover_single,
     "service_description": "Graylog Cluster Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats",
+    "includes": ["graylog.include"],
 }
 
 
@@ -207,13 +198,13 @@ def check_graylog_cluster_stats_elastic(no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats.elastic"] = {
-    "parse_function": parse_graylog_cluster_stats,
     "check_function": check_graylog_cluster_stats_elastic,
     'inventory_function': inventory_graylog_cluster_stats_elastic,
     "default_levels_variable": "graylog_cluster_stats_elastic_defaultlevels",
     "service_description": "Graylog Cluster Elasticsearch Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats_elastic",
+    "includes": ["graylog.include"],
 }
 
 
@@ -268,10 +259,10 @@ def check_graylog_cluster_stats_mongodb(no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats.mongodb"] = {
-    "parse_function": parse_graylog_cluster_stats,
     "check_function": check_graylog_cluster_stats_mongodb,
     'inventory_function': inventory_graylog_cluster_stats_mongodb,
     "service_description": "Graylog Cluster MongoDB Stats",
     "has_perfdata": True,
     "group": "graylog_cluster_stats_mongodb",
+    "includes": ["graylog.include"],
 }

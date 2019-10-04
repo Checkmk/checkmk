@@ -30,15 +30,6 @@
 import json
 
 
-def parse_graylog_messages(info):
-    parsed = {}
-
-    for line in info:
-        parsed.update(json.loads(line[0]))
-
-    return parsed
-
-
 def inventory_graylog_messages(parsed):
     events = parsed.get("events")
     if events is not None:
@@ -76,10 +67,11 @@ def check_graylog_messages(no_item, params, parsed):
 
 
 check_info["graylog_messages"] = {
-    "parse_function": parse_graylog_messages,
+    "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_messages,
     "inventory_function": inventory_graylog_messages,
     "service_description": "Graylog Messages",
     "has_perfdata": True,
     "group": "graylog_messages",
+    "includes": ["graylog.include"],
 }

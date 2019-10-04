@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -44,20 +44,17 @@ cmk.utils.password_store.replace_passwords()
 def parse_exception(exc):
     exc = str(exc)
     if exc[0] == '{':
-        exc = "%d - %s" % ast.literal_eval(exc).values()[0]
+        exc = "%d - %s" % list(ast.literal_eval(exc).values())[0]
     return str(exc)
 
 
 def output_check_result(rc, s, perfdata):
-    if perfdata is None:
-        perfdata = []
-
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    sys.stdout.write('%s - %s' % (stxt, s))
+    output = '%s - %s' % (stxt, s)
     if perfdata:
-        sys.stdout.write(
-            ' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata])))
-    sys.stdout.write('\n')
+        perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
+        output += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % output)
 
 
 def usage(msg=None):
@@ -175,14 +172,16 @@ def fetch_mails(match_subject):
                         raise Exception('Failed to fetch mail %s (%s). Available messages: %r' %
                                         (num, parse_exception(e), messages))
 
-        if match_subject:
-            # Now filter out the messages not wanted to be handled by this check
-            for index, msg in mails.items():
-                matches = match_subject.match(msg.get('Subject', ''))
-                if not matches:
-                    del mails[index]
+        if not match_subject:
+            return mails
 
-        return mails
+        # Now filter out the messages not wanted to be handled by this check
+        return {
+            index: msg
+            for index, msg in mails.items()
+            if match_subject.match(msg.get('Subject', ''))
+        }
+
     except Exception as e:
         if opt_debug:
             raise
@@ -467,10 +466,11 @@ def parse_arguments(sys_args):
         elif o == '--body-limit':
             body_limit = int(a)
 
-    param_names = dict(opts).keys()
-    for param_name in required_params:
-        if '--' + param_name not in param_names:
-            usage('The needed parameter --%s is missing' % param_name)
+    d_opts = dict(opts)
+    for required_param in required_params:
+        required_opt = "--%s" % required_param
+        if required_opt not in d_opts:
+            usage('The needed parameter %s is missing' % required_opt)
 
     if fetch_proto not in ['IMAP', 'POP3']:
         usage('The given protocol is not supported.')

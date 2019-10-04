@@ -51,7 +51,7 @@ def check_cisco_cpu(item, params, info):
     state = 0
     infotext = "%.1f%% utilization in the last 5 minutes" % util
 
-    warn, crit = params
+    warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
     if util >= crit:
         state = 2
     elif util >= warn:

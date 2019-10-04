@@ -27,19 +27,10 @@
 
 def inventory_emc_isilon_cpu_utilization(info):
     # the device reports cpu utilization for each core and a total. This interprets only the total
-    return [(None, None)]
+    return [(None, {})]
 
 
 def check_emc_isilon_cpu_utilization(item, params, info):
-    def range_index(value, *dividers):
-        idx = 0
-        for div in dividers:
-            if value < div:
-                break
-            else:
-                idx += 1
-        return idx
-
     # expecting only one line because why would there be multiple totals?
     for line in info:
         # all utilizations are in per mil
@@ -49,24 +40,20 @@ def check_emc_isilon_cpu_utilization(item, params, info):
         interrupt_perc = int(line[3]) * 0.1
         total_perc = (user_perc + system_perc + interrupt_perc)
 
-        infotext = [
-            "user: %.1f%%" % user_perc,
-            ", system: %.1f%%" % system_perc,
-            ", total: %.1f%%" % total_perc
-        ]
+        for utype, value in (("user", user_perc), ("system", system_perc), ("interrupt",
+                                                                            interrupt_perc)):
+            yield check_levels(value,
+                               utype,
+                               None,
+                               human_readable_func=get_percent_human_readable,
+                               infoname=utype.title())
 
-        status = 0
-        if params:
-            warn, crit = params
-            status = range_index(total_perc, warn, crit)
-
-            if status != 0:
-                infotext.append(" (warn/crit at %.1f%%/%.1f%%)" % (warn, crit))
-
-        # perfometer expects a wait value but we don't have data for that
-        perfdata = [("user", user_perc), ("system", system_perc), ("interrupt", interrupt_perc)]
-
-        return status, "".join(infotext), perfdata
+        levels = params if not isinstance(params, dict) else params.get("util")
+        yield check_levels(total_perc,
+                           None,
+                           levels,
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Total")
 
 
 check_info["emc_isilon_cpu"] = {

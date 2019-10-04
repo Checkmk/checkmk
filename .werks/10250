@@ -1,0 +1,15 @@
+Title: Mail graphs: Do not render in dark theme style
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1570197452
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+The graphs in HTML mails were rendered in dark theme style when
+the dark theme was configured as default theme in the global
+settings. These graphs should not be themed, just like the graphs
+in the PDF reports.

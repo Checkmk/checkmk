@@ -152,7 +152,7 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
     return (item, params, result.raw_repr())
 
 
-def check_listed_result(check, list_entry, info_arg, immu):
+def process_listed_result(check, list_entry, info_arg, immu):
     """Run check for all results listed in dataset"""
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
@@ -164,7 +164,7 @@ def check_listed_result(check, list_entry, info_arg, immu):
 
     result = CheckResult(result_raw)
     result_expected = CheckResult(results_expected_raw)
-    assertCheckResultsEqual(result, result_expected)
+    return result, result_expected
 
 
 @contextmanager
@@ -227,8 +227,12 @@ def run(check_manager, dataset, write=False):
                         new_entry = check_discovered_result(check, dr, info_arg, immu)
                         dataset.update_check_result(subcheck, new_entry)
 
-                if not write:
-                    for entry in checks_expected.get(subcheck, []):
-                        check_listed_result(check, entry, info_arg, immu)
+                for entry in checks_expected.get(subcheck, []):
+                    result, result_expected = process_listed_result(check, entry, info_arg, immu)
+                    if write:
+                        new_entry = (entry[0], entry[1], result.raw_repr())
+                        dataset.update_check_result(subcheck, new_entry)
+                    else:
+                        assertCheckResultsEqual(result, result_expected)
 
         immu.test(' at end of subcheck loop %r ' % subcheck)

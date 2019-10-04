@@ -29,15 +29,6 @@
 import json
 
 
-def parse_graylog_failures(info):
-    parsed = {}
-
-    for line in info:
-        parsed.update(json.loads(line[0]))
-
-    return parsed
-
-
 def inventory_graylog_failures(parsed):
     failure_details = parsed.get("failures")
     if failure_details is not None:
@@ -108,10 +99,11 @@ def check_graylog_failures(_no_item, params, parsed):
 
 
 check_info["graylog_failures"] = {
-    "parse_function": parse_graylog_failures,
+    "parse_function": parse_graylog_agent_data,
     "check_function": check_graylog_failures,
     "inventory_function": inventory_graylog_failures,
     "service_description": "Graylog Index Failures",
     "has_perfdata": True,
     "group": "graylog_failures",
+    "includes": ["graylog.include"],
 }

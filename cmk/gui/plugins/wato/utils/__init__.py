@@ -621,6 +621,7 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
         size=25,  # type: int
 ):  # -> CascadingDropdown
     return CascadingDropdown(
+        title=title,
         choices=[
             ("password", _("Explicit"), Password(
                 allow_empty=allow_empty,

@@ -30,10 +30,10 @@ checks = {
             (0, 'no error messages', []),
         ]),
         ('my_other_log', {}, [
-            (1, '2 WARN messages (Last worst: "watch your step!")', []),
+            (1, '1 WARN messages (Last worst: "watch your step!")', []),
         ]),
         ('mylog', {}, [
-            (2, '2 CRIT messages (Last worst: "whoha! Someone mooped!")', []),
+            (2, '1 CRIT messages (Last worst: "whoha! Someone mooped!")', []),
         ]),
     ],
 }

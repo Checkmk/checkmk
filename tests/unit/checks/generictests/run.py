@@ -222,10 +222,9 @@ def run(check_manager, dataset, write=False):
                     dataset.discovery[subcheck] = [e.tuple for e in discovery_result.entries
                                                   ] + discovery_result.labels.to_list()
 
-                # test checks for DiscoveryResult entries
-                for dr in discovery_result.entries:
-                    cdr = check_discovered_result(check, dr, info_arg, immu)
-                    if write and cdr:
+                    # test checks for DiscoveryResult entries
+                    for dr in discovery_result.entries:
+                        cdr = check_discovered_result(check, dr, info_arg, immu)
                         dataset.checks.setdefault(subcheck, []).append(cdr)
 
                 if not write:

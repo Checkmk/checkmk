@@ -64,8 +64,7 @@ def check_emc_isilon_cpu_utilization(item, params, info):
                 infotext.append(" (warn/crit at %.1f%%/%.1f%%)" % (warn, crit))
 
         # perfometer expects a wait value but we don't have data for that
-        perfdata = [("user", "%.3f" % user_perc), ("system", "%.3f" % system_perc),
-                    ("interrupt", "%.3f" % interrupt_perc)]
+        perfdata = [("user", user_perc), ("system", system_perc), ("interrupt", interrupt_perc)]
 
         return status, "".join(infotext), perfdata
 

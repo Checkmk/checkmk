@@ -79,6 +79,14 @@ class WritableDataset(object):
         self.mock_host_conf_merged = init_dict.get('mock_host_conf_merged', {})
         self.mock_item_state = init_dict.get('mock_item_state', {})
 
+    def update_check_result(self, subcheck, new_entry):
+        subcheck_data = self.checks.setdefault(subcheck, [])[:]
+        for idx, present_result in enumerate(subcheck_data):
+            if present_result[:2] == new_entry[:2]:
+                self.checks[subcheck][idx] = new_entry
+                return
+        self.checks[subcheck].append(new_entry)
+
     def write(self, directory):
         content = []
         imports = set()

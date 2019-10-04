@@ -147,9 +147,9 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
     check_func = check.info.get("check_function")
     immu.test(' after check (%s): ' % check_func.__name__)
 
-    cr = CheckResult(raw_checkresult)
+    result = CheckResult(raw_checkresult)
 
-    return (item, params, cr.raw_repr())
+    return (item, params, result.raw_repr())
 
 
 def check_listed_result(check, list_entry, info_arg, immu):
@@ -224,8 +224,8 @@ def run(check_manager, dataset, write=False):
 
                     # test checks for DiscoveryResult entries
                     for dr in discovery_result.entries:
-                        cdr = check_discovered_result(check, dr, info_arg, immu)
-                        dataset.checks.setdefault(subcheck, []).append(cdr)
+                        new_entry = check_discovered_result(check, dr, info_arg, immu)
+                        dataset.update_check_result(subcheck, new_entry)
 
                 if not write:
                     for entry in checks_expected.get(subcheck, []):

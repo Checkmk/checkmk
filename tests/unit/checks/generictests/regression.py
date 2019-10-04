@@ -26,7 +26,10 @@ discovery function, including node info or extra sections, if necessary.
   py.test -T unit tests/unit/checks/generictests/regression.py \
   --datasetfile ~/tmp/example.py
 
-This will create a file called '~/tmp/example_regression.py'.
+This will create a file called '../datasets/example.py' (relative to this file),
+if that file already exists, it is postfixed by '_regression.py'.
+If you specify '--inplace' in the command line, the existing file
+'--datasetfile' will be overwritten.
 
 3) In order to use it as a test case move it to the folder
 [check_mk]/tests/unit/checks/generictests/datasets/.
@@ -120,7 +123,20 @@ class WritableDataset(object):
         return imports
 
 
-def test_main(check_manager, datasetfile):
+def _get_out_filename(datasetfile, inplace):
+    if inplace:
+        return datasetfile
+
+    basename = os.path.basename(datasetfile)
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    out_name = os.path.join(dirname, 'datasets', basename)
+    if not os.path.exists(out_name):
+        return out_name
+
+    return out_name.replace('.py', '_regression.py')
+
+
+def test_main(check_manager, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -135,7 +151,8 @@ def test_main(check_manager, datasetfile):
     input_data = import_module(os.path.splitext(modn)[0])
     sys.path.pop(0)
 
-    regression = WritableDataset(datasetfile.replace('.py', '_regression.py'), vars(input_data))
+    out_name = _get_out_filename(datasetfile, inplace)
+    regression = WritableDataset(out_name, vars(input_data))
 
     generictests.run(check_manager, regression, write=True)
 

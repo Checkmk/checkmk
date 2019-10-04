@@ -1121,16 +1121,20 @@ class EC2Summary(AWSSectionGeneric):
     def _fetch_instances_filtered_by_tags(self, col_reservations):
         if col_reservations:
             tags = self._prepare_tags_for_api_response(self._tags)
-            instances = [
+            return [
                 inst for res in col_reservations
                 for inst in res['Instances'] for tag in inst['Tags'] if tag in tags
             ]
-        else:
-            response = self._client.describe_instances(Filters=self._tags)
-            instances = [
+
+        instances = []
+        for chunk in _chunks(self._tags, length=200):
+            # EC2 FilterLimitExceeded: The maximum number of filter values
+            # specified on a single call is 200
+            response = self._client.describe_instances(Filters=chunk)
+            instances.extend([
                 inst for res in self._get_response_content(response, 'Reservations')
                 for inst in res['Instances']
-            ]
+            ])
         return instances
 
     def _fetch_instances_without_filter(self):
@@ -1172,11 +1176,17 @@ class EC2Labels(AWSSectionLabels):
         return AWSColleagueContents({}, 0.0)
 
     def get_live_data(self, colleague_contents):
-        response = self._client.describe_tags(Filters=[{
+        tags_to_filter = [{
             'Name': 'resource-id',
             'Values': [inst['InstanceId'] for inst in colleague_contents.content.itervalues()],
-        }])
-        return self._get_response_content(response, 'Tags')
+        }]
+        tags = []
+        for chunk in _chunks(tags_to_filter, length=200):
+            # EC2 FilterLimitExceeded: The maximum number of filter values
+            # specified on a single call is 200
+            response = self._client.describe_tags(Filters=chunk)
+            tags.extend(self._get_response_content(response, 'Tags'))
+        return tags
 
     def _compute_content(self, raw_content, colleague_contents):
         inst_id_to_ec2_piggyback_hostname_map = {
@@ -1216,18 +1226,25 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return AWSColleagueContents({}, 0.0)
 
     def get_live_data(self, colleague_contents):
-        response = self._describe_security_groups()
-        return {
-            group['GroupId']: group
-            for group in self._get_response_content(response, 'SecurityGroups')
-        }
+        sec_groups = self._describe_security_groups()
+        return {group['GroupId']: group for group in sec_groups}
 
     def _describe_security_groups(self):
         if self._names is not None:
-            return self._client.describe_security_groups(InstanceIds=self._names)
+            response = self._client.describe_security_groups(InstanceIds=self._names)
+            return self._get_response_content(response, 'SecurityGroups')
+
         elif self._tags is not None:
-            return self._client.describe_security_groups(Filters=self._tags)
-        return self._client.describe_security_groups()
+            sec_groups = []
+            for chunk in _chunks(self._tags, length=200):
+                # EC2 FilterLimitExceeded: The maximum number of filter values
+                # specified on a single call is 200
+                response = self._client.describe_security_groups(Filters=chunk)
+                sec_groups.extend(self._get_response_content(response, 'SecurityGroups'))
+            return sec_groups
+
+        response = self._client.describe_security_groups()
+        return self._get_response_content(response, 'SecurityGroups')
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
@@ -1454,7 +1471,14 @@ class EBSSummary(AWSSectionGeneric):
             return {
                 vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
             }
-        return self._format_volumes(self._client.describe_volumes(Filters=self._tags))
+
+        volumes = []
+        for chunk in _chunks(self._tags, length=200):
+            # EC2 FilterLimitExceeded: The maximum number of filter values
+            # specified on a single call is 200
+            response = self._client.describe_volumes(Filters=chunk)
+            volumes.extend(self._get_response_content(response, 'Volumes'))
+        return {r['VolumeId']: r for r in volumes}
 
     def _fetch_volumes_without_filter(self):
         return self._format_volumes(self._client.describe_volumes())
@@ -2531,6 +2555,7 @@ class RDSSummary(AWSSectionGeneric):
                 for name in self._names
             ]
         elif self._tags is not None:
+
             return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
         return self._client.describe_db_instances()
 

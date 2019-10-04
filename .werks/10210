@@ -1,0 +1,13 @@
+Title: agent_aws: Fixed FilterLimitExceeded while collecting EC2 instance attributes
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1570192010
+
+boto3 API operations for collection attributes of EC2 instances have a limit of 200
+values if 'Filters' argument is used.

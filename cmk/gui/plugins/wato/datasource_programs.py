@@ -1828,10 +1828,11 @@ def _vs_element_aws_service_selection():
                    "<i>Use explicit service names and ignore overall tags</i>: With this selection "
                    "you can state explicit names. The overall tags are ignored for these service."),
             choices=[
-                ('all', _("Gather all service instances and restrict by overall tags")),
-                ('tags', _("Use explicit service tags and overrule overall tags"),
-                 _vs_aws_tags(_("Tags"))),
-                ('names', _("Use explicit service names and ignore overall tags"), ListOfStrings()),
+                ('all', _("Gather all service instances and restrict by overall AWS tags")),
+                ('tags', _("Use explicit AWS service tags and overrule overall AWS tags"),
+                 _vs_aws_tags(_("AWS Tags"))),
+                ('names', _("Use explicit service names and ignore overall AWS tags"),
+                 ListOfStrings()),
             ]))
 
 
@@ -1973,7 +1974,8 @@ def _valuespec_special_agents_aws():
                  ],
                  default_keys=["ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch"],
              )),
-            ("overall_tags", _vs_aws_tags(_("Restrict monitoring services by one of these tags"))),
+            ("overall_tags",
+             _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
         optional_keys=["overall_tags"],
     )

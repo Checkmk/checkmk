@@ -225,9 +225,40 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     ((u"/var/log/messages|7767698|32455445\n"
       u"/var/foo|42\n"
       u"/var/test/x12134.log|12345"), {
-          "/var/log/messages": (7767698, 32455445),
-          "/var/foo": (42, -1),
-          "/var/test/x12134.log": (12345, -1),
+          "/var/log/messages": {
+              "file": "/var/log/messages",
+              "offset": 7767698,
+              "inode": 32455445,
+          },
+          "/var/foo": {
+              "file": "/var/foo",
+              "offset": 42,
+              "inode": -1,
+          },
+          "/var/test/x12134.log": {
+              "file": "/var/test/x12134.log",
+              "offset": 12345,
+              "inode": -1,
+          }
+      }),
+    ((u"{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
+      u"{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
+      u"{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"), {
+          "/var/log/messages": {
+              "file": "/var/log/messages",
+              "offset": 7767698,
+              "inode": 32455445,
+          },
+          "/var/foo": {
+              "file": "/var/foo",
+              "offset": 42,
+              "inode": -1,
+          },
+          "/var/test/x12134.log": {
+              "file": "/var/test/x12134.log",
+              "offset": 12345,
+              "inode": -1,
+          }
       }),
 ])
 def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
@@ -238,33 +269,45 @@ def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
     # loading and __getitem__
     state = mk_logwatch.State(str(file_path)).read()
     assert state._data == state_dict
-    for key in state_dict:
-        assert state[key] == state_dict[key]
+    for key, expected_data in state_dict.iteritems():
+        assert state.get(key) == expected_data
 
 
-@pytest.mark.parametrize("state_data, state_dict", [
-    ((u"/var/log/messages|7767698|32455445\n"
-      u"/var/foo|42|-1\n"
-      u"/var/test/x12134.log|12345|-1"), {
-          "/var/log/messages": (7767698, 32455445),
-          "/var/foo": (42, -1),
-          "/var/test/x12134.log": (12345, -1),
-      }),
+@pytest.mark.parametrize("state_dict", [
+    {
+        "/var/log/messages": {
+            "file": "/var/log/messages",
+            "offset": 7767698,
+            "inode": 32455445,
+        },
+        "/var/foo": {
+            "file": "/var/foo",
+            "offset": 42,
+            "inode": -1,
+        },
+        "/var/test/x12134.log": {
+            "file": "/var/test/x12134.log",
+            "offset": 12345,
+            "inode": -1,
+        }
+    },
 ])
-def test_state_write(mk_logwatch, tmp_path, state_data, state_dict):
+def test_state_write(mk_logwatch, tmp_path, state_dict):
     # setup for writing
     file_path = tmp_path.joinpath("logwatch.state.testcase")
     state = mk_logwatch.State(str(file_path))
     assert not state._data
 
-    # writing and __setitem__
-    for key in state_dict:
-        state[key] = state_dict[key]
+    # writing
+    for key, data in state_dict.iteritems():
+        filestate = state.get(key)
+        # should work w/o setting 'file'
+        filestate['offset'] = data['offset']
+        filestate['inode'] = data['inode']
     state.write()
 
-    written_lines = file_path.read_text().splitlines()
-    supposed_lines = state_data.splitlines()
-    assert sorted(written_lines) == sorted(supposed_lines)
+    read_state = mk_logwatch.State(str(file_path)).read()
+    assert read_state._data == state_dict
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
@@ -385,7 +428,7 @@ class MockStdout(object):
 
 
 @pytest.mark.parametrize(
-    "logfile, patterns, opt_raw, status, expected_output",
+    "logfile, patterns, opt_raw, state, expected_output",
     [
         (
             __file__,
@@ -397,7 +440,7 @@ class MockStdout(object):
                 'nocontext': True
             },
             {
-                __file__: (0, -1)
+                'offset': 0,
             },
             [
                 u"[[[%s]]]\n" % __file__,
@@ -411,7 +454,7 @@ class MockStdout(object):
             ],
             {},
             {
-                __file__: (0, -1)
+                'offset': 0,
             },
             [
                 u"[[[%s]]]\n" % __file__,
@@ -438,7 +481,7 @@ class MockStdout(object):
                 'nocontext': True
             },
             {
-                __file__: (0, -1)
+                'offset': 0,
             },
             [  # match umlauts
                 u"[[[%s]]]\n" % __file__,
@@ -447,7 +490,7 @@ class MockStdout(object):
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
     ])
-def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, status,
+def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, state,
                          expected_output):
 
     Section = namedtuple("section", "filename compiled_patterns options")
@@ -457,11 +500,12 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     section = Section(logfile, patterns, opt)
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(section, status, False)
+    output = mk_logwatch.process_logfile(section, state, False)
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
-        assert logfile in status
+        assert isinstance(state['offset'], int)
+        assert state['offset'] >= 15000  # about the size of this file
 
 
 @pytest.fixture

@@ -17,6 +17,28 @@
 
 namespace cma::cfg::cap {
 
+TEST(CapTest, CheckIsFilesTheSame) {
+    EXPECT_TRUE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                               "c:\\windows\\explorer.exe"));
+    EXPECT_FALSE(IsFilesTheSame("c:\\windows\\explorer.exe",
+                                "c:\\windows\\HelpPane.exe"));
+
+    EXPECT_FALSE(
+        IsFilesTheSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+    namespace fs = std::filesystem;
+    tst::SafeCleanTempDir();
+    auto [file1, file2] = tst::CreateInOut();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    // source without target
+    std::string name = "a.txt";
+    {
+        tst::ConstructFile(file1 / name, "abcde0");
+        tst::ConstructFile(file2 / name, "abcde1");
+        EXPECT_FALSE(IsFilesTheSame(file1 / name, file2 / name));
+        EXPECT_TRUE(NeedReinstall(file2 / name, file1 / name));
+    }
+}
+
 TEST(CapTest, Reinstall) {
     namespace fs = std::filesystem;
     tst::SafeCleanTempDir();
@@ -58,6 +80,14 @@ TEST(CapTest, Reinstall) {
         tst::ConstructFile(source / name, "a");
         EXPECT_TRUE(NeedReinstall(target / name, source / name));
     }
+
+    // source is older than target, but content is not the same
+    {
+        cma::tools::sleep(100);
+        tst::ConstructFile(source / name, "b");
+        EXPECT_TRUE(NeedReinstall(source / name, target / name));
+    }
+
     tst::SafeCleanTempDir();
 }
 
@@ -194,6 +224,158 @@ TEST(CapTest, InstallIni) {
         EXPECT_TRUE(ReinstallIni(ini_target, ini_source));  //
         EXPECT_TRUE(fs::exists(bakery_yml, ec)) << "must be presented";
         EXPECT_TRUE(fs::exists(ini_target, ec)) << "must be presented";
+    }
+}
+
+static bool ValidateInstallYml(const std::filesystem::path& file) {
+    auto yml = YAML::LoadFile(file.u8string());
+    if (!yml.IsDefined() || !yml.IsMap()) return false;
+    try {
+        return yml[groups::kGlobal][vars::kInstall].as<bool>() &&
+               yml[groups::kGlobal][vars::kEnabled].as<bool>();
+    } catch (const std::exception& e) {
+        XLOG::l("exception during tests", e.what());
+        return false;
+    }
+}
+
+TEST(CapTest, DetailsA) {
+    namespace fs = std::filesystem;
+
+    // prepare
+    fs::path yml_base = cma::cfg::GetUserDir();
+    auto [r, u] = tst::CreateInOut();
+    fs::create_directories(r / dirs::kInstall);
+    fs::create_directories(u / dirs::kInstall);
+    fs::create_directories(u / dirs::kBakery);
+    GetCfg().pushFolders(r, u);
+    std::error_code ec;
+    std::string yml_name = files::kInstallYmlFileA;
+    yml_base /= "check_mk.wato.install.yml";
+    auto yml_target = u / dirs::kInstall / yml_name;
+    auto yml_source = r / dirs::kInstall / yml_name;
+    auto yml_bakery = cma::cfg::GetBakeryFile();
+
+    // on out
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+
+    // bakery [+] target[-]
+    // Uninstall
+    // bakery [+] target[-]
+    tst::CreateWorkFile(yml_bakery, "b");
+    EXPECT_NO_THROW(details::UninstallYaml(yml_bakery, yml_target));
+    EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "if";
+
+    // bakery [+] target[+]
+    // Uninstall
+    // bakery [-] target[-]
+    tst::CreateWorkFile(yml_bakery, "b");
+    EXPECT_NO_THROW(details::UninstallYaml(yml_bakery, yml_target));
+    EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "if";
+}
+
+TEST(CapTest, DetailsB) {
+    namespace fs = std::filesystem;
+
+    fs::path yml_base = cma::cfg::GetUserDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    auto [r, u] = tst::CreateInOut();
+    fs::create_directories(r / dirs::kInstall);
+    fs::create_directories(u / dirs::kInstall);
+    fs::create_directories(u / dirs::kBakery);
+    GetCfg().pushFolders(r, u);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+    std::error_code ec;
+    std::string yml_name = files::kInstallYmlFileA;
+    yml_base /= "check_mk.wato.install.yml";
+    auto yml_target = u / dirs::kInstall / yml_name;
+    auto yml_source = r / dirs::kInstall / yml_name;
+    auto yml_bakery = cma::cfg::GetBakeryFile();
+
+    EXPECT_NO_THROW(details::UninstallYaml(yml_bakery, yml_target));
+    tst::CreateWorkFile(yml_bakery, "a");
+    EXPECT_NO_THROW(details::UninstallYaml(yml_bakery, yml_target));
+    EXPECT_TRUE(fs::exists(yml_bakery, ec))
+        << "should not delete bakery, if no installed";
+
+    tst::CreateWorkFile(yml_target, "b");
+    EXPECT_TRUE(fs::exists(yml_target, ec));
+    EXPECT_NO_THROW(details::UninstallYaml(yml_bakery, yml_target));
+    EXPECT_FALSE(fs::exists(yml_bakery, ec))
+        << "should delete bakery, if no installed";
+    EXPECT_FALSE(fs::exists(yml_target, ec)) << "should delete target too";
+
+    // exists source yml
+    EXPECT_FALSE(fs::exists(yml_target, ec)) << "remove it before testing";
+    EXPECT_FALSE(fs::exists(yml_bakery, ec)) << "remove it before testing";
+    tst::CreateWorkFile(yml_source, "s");
+    EXPECT_NO_THROW(details::InstallYaml(yml_bakery, yml_target, yml_source));
+    EXPECT_TRUE(fs::exists(yml_target, ec)) << "should be installed";
+    EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "should be installed";
+
+    // simulate MSI without yml
+    fs::remove(yml_source, ec);
+    EXPECT_NO_THROW(details::InstallYaml(yml_bakery, yml_target, yml_source));
+    EXPECT_TRUE(fs::exists(yml_target, ec)) << "should exist";
+    EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "should exist";
+}
+
+TEST(CapTest, InstallYml) {
+    namespace fs = std::filesystem;
+
+    fs::path yml_base = cma::cfg::GetUserDir();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    auto [r, u] = tst::CreateInOut();
+    fs::create_directories(r / dirs::kInstall);
+    fs::create_directories(u / dirs::kInstall);
+    fs::create_directories(u / dirs::kBakery);
+    GetCfg().pushFolders(r, u);
+    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+    std::error_code ec;
+
+    std::string yml_name = files::kInstallYmlFileA;
+    yml_base /= "check_mk.wato.install.yml";
+    auto yml_target = u / dirs::kInstall / yml_name;
+    auto yml_source = r / dirs::kInstall / yml_name;
+    ASSERT_TRUE(fs::exists(yml_base, ec));
+    EXPECT_NO_THROW(fs::copy_file(yml_base, yml_source));
+
+    auto yml_bakery = cma::cfg::GetBakeryFile();
+
+    fs::remove(yml_bakery, ec);
+    fs::remove(yml_source, ec);
+    // absent source and target, nothing done
+    {
+        EXPECT_NO_THROW(ReinstallYaml("", "", ""));                        //
+        EXPECT_NO_THROW(ReinstallYaml("a", ":\\\\wefewfw", "sssssssss"));  //
+        EXPECT_FALSE(ReinstallYaml(yml_bakery, yml_target, yml_source));   //
+        EXPECT_FALSE(fs::exists(yml_bakery, ec)) << "must be absent";
+        EXPECT_FALSE(fs::exists(yml_target, ec)) << "must be absent";
+    }
+
+    // target presented
+    {
+        fs::copy_file(yml_base, yml_source, ec);
+        tst::CreateWorkFile(yml_target, "brr1");
+        tst::CreateWorkFile(yml_bakery, "brr2");
+        EXPECT_TRUE(ReinstallYaml(yml_bakery, yml_target, yml_source));  //
+        EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "must be presented";
+        EXPECT_TRUE(fs::exists(yml_target, ec)) << "must be presented";
+        EXPECT_TRUE(ValidateInstallYml(yml_bakery));
+        EXPECT_TRUE(ValidateInstallYml(yml_source));
+    }
+
+    // target and presented
+    {
+        fs::copy_file(yml_base, yml_source, ec);
+        tst::CreateWorkFile(yml_target, "brr1");
+        tst::CreateWorkFile(yml_bakery, "brr2");
+        EXPECT_TRUE(ReinstallYaml(yml_bakery, yml_target, yml_source));  //
+        EXPECT_TRUE(fs::exists(yml_bakery, ec)) << "must be presented";
+        EXPECT_TRUE(fs::exists(yml_target, ec)) << "must be presented";
+        EXPECT_TRUE(ValidateInstallYml(yml_bakery));
+        EXPECT_TRUE(ValidateInstallYml(yml_source));
     }
 }
 
@@ -389,92 +571,133 @@ TEST(CapTest, CheckInValid) {
     }
 }
 
+// This is complicated test, rather Functional/Business
+// We are checking three situation
+// Legacy check_mk.install.yml is absent
+// Build  check_mk.install.yml is present, but not installed
+// Build  check_mk.install.yml is present and installed
 TEST(CapTest, ReInstallRestore) {
     using namespace cma::tools;
-    cma::OnStartTest();
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    auto [r, u] = tst::CreateInOut();
-    auto root = r.wstring();
-    auto user = u.wstring();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    enum class Mode { legacy, build, wato };
+    for (auto mode : {Mode::legacy, Mode::build, Mode::wato}) {
+        XLOG::SendStringToStdio("*\n", XLOG::Colors::yellow);
 
-    auto old_user = cma::cfg::GetUserDir();
+        cma::OnStartTest();
+        tst::SafeCleanTempDir();
+        auto [r, u] = tst::CreateInOut();
+        auto root = r.wstring();
+        auto user = u.wstring();
+        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
-    fs::path ini_base = old_user;
-    ini_base /= "check_mk.ps.test.ini";
-    fs::path cap_base = old_user;
-    cap_base /= "plugins.test.cap";
-    fs::path cap_null = old_user;
-    cap_null /= "plugins_null.test.cap";
+        auto old_user = cma::cfg::GetUserDir();
 
-    std::error_code ec;
-    try {
-        fs::create_directory(r / dirs::kInstall);
-        fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
-        fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
-        tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
-    } catch (const std::exception& e) {
-        ASSERT_TRUE(false) << "can't create file data exception is "
-                           << e.what();
-    }
+        fs::path ini_base = old_user;
+        ini_base /= "check_mk.ps.test.ini";
+        fs::path cap_base = old_user;
+        cap_base /= "plugins.test.cap";
+        fs::path yml_b_base = old_user;
+        yml_b_base /= "check_mk.build.install.yml";
+        fs::path yml_w_base = old_user;
+        yml_w_base /= "check_mk.wato.install.yml";
 
-    GetCfg().pushFolders(r, u);
-    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+        std::error_code ec;
+        try {
+            // Prepare installed files
+            fs::create_directory(r / dirs::kInstall);
+            fs::copy_file(ini_base, r / dirs::kInstall / "check_mk.ini");
+            fs::copy_file(cap_base, r / dirs::kInstall / "plugins.cap");
+            tst::CreateWorkFile(r / dirs::kInstall / "checkmk.dat", "this");
 
-    auto user_gen = [u](const std::wstring_view name) -> auto {
-        return (u / dirs::kInstall / name).wstring();
-    };
+            if (mode == Mode::build)
+                fs::copy_file(yml_b_base,
+                              r / dirs::kInstall / files::kInstallYmlFileA);
+            if (mode == Mode::wato)
+                fs::copy_file(yml_w_base,
+                              r / dirs::kInstall / files::kInstallYmlFileA);
 
-    auto root_gen = [r](const std::wstring_view name) -> auto {
-        return (r / dirs::kInstall / name).wstring();
-    };
-
-    cma::cfg::cap::ReInstall();
-    auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
-    auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
-    auto bakery = cma::tools::ReadFileInString(
-        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
-    auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
-    auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
-    auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
-    auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
-    ASSERT_TRUE(user_ini);
-    ASSERT_EQ(user_cap_size, root_cap_size);
-    ASSERT_TRUE(user_dat);
-    ASSERT_TRUE(bakery);
-    EXPECT_TRUE(user_dat == root_dat);
-    EXPECT_TRUE(user_ini == root_ini);
-    auto table = SplitString(bakery.value(), "\n");
-    EXPECT_EQ(table[3], "ps:");
-
-    // now damage files
-    auto destroy_file = [](fs::path f) {
-        std::ofstream ofs(f, std::ios::binary);
-
-        if (ofs) {
-            ofs << "";
+        } catch (const std::exception& e) {
+            ASSERT_TRUE(false) << "can't create file data exception is "
+                               << e.what() << "Mode " << static_cast<int>(mode);
         }
-    };
 
-    destroy_file(user_gen(L"check_mk.ini"));
-    destroy_file(user_gen(L"plugins.cap"));
-    destroy_file(user_gen(L"checkmk.dat"));
-    destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
-    cma::cfg::cap::ReInstall();
+        // change folders
+        GetCfg().pushFolders(r, u);
+        ON_OUT_OF_SCOPE(GetCfg().popFolders(););
 
-    user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
-    bakery = cma::tools::ReadFileInString(
-        (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
-    user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
-    user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
-    ASSERT_TRUE(user_ini);
-    ASSERT_EQ(user_cap_size, root_cap_size);
-    ASSERT_TRUE(user_dat);
-    EXPECT_TRUE(user_dat == root_dat);
-    EXPECT_TRUE(user_ini == root_ini);
-    table = SplitString(bakery.value(), "\n");
-    EXPECT_EQ(table[3], "ps:");
+        auto user_gen = [u](const std::wstring_view name) -> auto {
+            return (u / dirs::kInstall / name).wstring();
+        };
+
+        auto root_gen = [r](const std::wstring_view name) -> auto {
+            return (r / dirs::kInstall / name).wstring();
+        };
+
+        // Main Function
+        cma::cfg::cap::ReInstall();
+
+        auto user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+        auto root_ini = ReadFileInString(root_gen(L"check_mk.ini").c_str());
+        auto bakery = cma::tools::ReadFileInString(
+            (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+        auto user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+        auto root_cap_size = fs::file_size(root_gen(L"plugins.cap").c_str());
+        auto user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+        auto root_dat = ReadFileInString(root_gen(L"checkmk.dat").c_str());
+        ASSERT_TRUE(user_ini);
+        ASSERT_EQ(user_cap_size, root_cap_size);
+        ASSERT_TRUE(user_dat);
+        ASSERT_TRUE(bakery);
+        EXPECT_TRUE(user_dat == root_dat);
+        EXPECT_TRUE(user_ini == root_ini);
+
+        // bakery check
+        auto y = YAML::Load(*bakery);
+        if (mode == Mode::wato) {
+            EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
+            EXPECT_TRUE(y["global"]["wato"].as<bool>());
+        } else {
+            EXPECT_NO_THROW(y["ps"].IsMap());
+        }
+
+        // now damage files
+        auto destroy_file = [](fs::path f) {
+            std::ofstream ofs(f, std::ios::binary);
+
+            if (ofs) {
+                ofs << "";
+            }
+        };
+
+        destroy_file(user_gen(L"check_mk.ini"));
+        destroy_file(user_gen(files::kInstallYmlFileW));
+        destroy_file(user_gen(L"plugins.cap"));
+        destroy_file(user_gen(L"checkmk.dat"));
+        destroy_file(u / dirs::kBakery / files::kBakeryYmlFile);
+
+        // main Function again
+        cma::cfg::cap::ReInstall();
+
+        user_ini = ReadFileInString(user_gen(L"check_mk.ini").c_str());
+        bakery = cma::tools::ReadFileInString(
+            (u / dirs::kBakery / files::kBakeryYmlFile).wstring().c_str());
+        user_cap_size = fs::file_size(user_gen(L"plugins.cap").c_str());
+        user_dat = ReadFileInString(user_gen(L"checkmk.dat").c_str());
+        ASSERT_TRUE(user_ini);
+        ASSERT_EQ(user_cap_size, root_cap_size);
+        ASSERT_TRUE(user_dat);
+        EXPECT_TRUE(user_dat == root_dat);
+        EXPECT_TRUE(user_ini == root_ini);
+
+        // bakery check
+        y = YAML::Load(*bakery);
+        if (mode == Mode::wato) {
+            EXPECT_NO_THROW(y["global"]["wato"].as<bool>());
+            EXPECT_TRUE(y["global"]["wato"].as<bool>());
+        } else {
+            EXPECT_NO_THROW(y["ps"].IsMap());
+        }
+    }
 }
 
 }  // namespace cma::cfg::cap

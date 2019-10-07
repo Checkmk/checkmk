@@ -44,6 +44,11 @@ def _load_config():
         _config_loaded = True
 
 
+def reset_config():
+    global _config_loaded
+    _config_loaded = False
+
+
 def service_description(hostname, check_plugin_name, item):
     # type: (str, str, Text) -> Text
     _load_config()

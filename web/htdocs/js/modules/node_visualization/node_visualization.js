@@ -85,6 +85,7 @@ class NodeVisualization {
 export class BIVisualization extends NodeVisualization {
     show_aggregations(list_of_aggregations, use_layout_id) {
         let aggr_ds = this.datasource_manager.get_datasource(node_visualization_datasources.AggregationsDatasource.id())
+        aggr_ds.enable()
         aggr_ds.subscribe_new_data(d=>this._show_aggregations(list_of_aggregations))
         aggr_ds.fetch_aggregations(list_of_aggregations, use_layout_id)
     }
@@ -119,13 +120,16 @@ export class TopologyVisualization extends NodeVisualization {
     }
     show_topology(list_of_hosts) {
         let topo_ds = this.datasource_manager.get_datasource(node_visualization_datasources.TopologyDatasource.id())
+        topo_ds.enable()
+        topo_ds.set_update_interval(30)
+        //this.viewport.current_viewport.always_update_layout = true
+
         topo_ds.subscribe_new_data(d=>this._show_topology(list_of_hosts))
 
 
         this.add_search_togglebutton()
         this.add_depth_slider()
         this.add_max_nodes_slider()
-        this.viewport.current_viewport.always_update_layout = true
 
         this.update_sliders()
         topo_ds.fetch_hosts({growth_root_nodes: list_of_hosts,

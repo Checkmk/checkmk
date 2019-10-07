@@ -266,11 +266,10 @@ def _parameter_valuespec_logwatch_ec():
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextAscii(),
+                                        TextAscii(allow_empty=False,),
                                         title=
                                         _("Local: Spooling - Send events to local Event Console into given spool directory"
                                          ),
-                                        allow_empty=False,
                                         forth=lambda x: x[6:],
                                         # remove prefix
                                         back=lambda x: "spool:" + x,  # add prefix
@@ -291,7 +290,6 @@ def _parameter_valuespec_logwatch_ec():
                                                         ("port",
                                                          Integer(
                                                              title=_("Port"),
-                                                             allow_empty=False,
                                                              default_value=514,
                                                              minvalue=1,
                                                              maxvalue=65535,
@@ -355,7 +353,6 @@ def _parameter_valuespec_logwatch_ec():
                                                      ("port",
                                                       Integer(
                                                           title=_("Port"),
-                                                          allow_empty=False,
                                                           default_value=514,
                                                           minvalue=1,
                                                           maxvalue=65535,
@@ -407,7 +404,8 @@ def _parameter_valuespec_logwatch_ec():
                            "Reinventorize this check in order to make it OK again."),
                      )),
                     ('expected_logfiles',
-                     ListOfStrings(
+                     ListOf(
+                         TextUnicode(),
                          title=_("List of expected logfiles"),
                          help=
                          _("When the monitoring of forwarded logfiles is enabled, the check verifies that "

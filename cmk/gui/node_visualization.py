@@ -214,6 +214,7 @@ class AjaxFetchAggregationData(AjaxPage):
 
             data = {}
             data["hierarchy"] = hierarchy
+            data["aggr_type"] = row["tree"]["aggr_tree"]["aggr_type"]
             data["groups"] = row["groups"]
             data["data_timestamp"] = int(time.time())
 

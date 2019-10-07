@@ -3,43 +3,65 @@
 This is actually a script, but we need all the test magic,
 so call it as a test.
 
-In order to create a regression test for a check, do the following:
-
-1) Create a minimal compliant dataset as described in generictests/__init__.py.
-For example, let's create the file ~/tmp/example.py with the content
-
-
-checkname = 'nfsmounts'
+You can use this script to do one of the following two things:
+    A. Create a new test from scratch
+    B. Update all or one selected test to match the current status quo
 
 
-info = [
-    ['/path/to/share', 'ok', '1611668', '794767', '712899', '32768']
-]
+A. Create a new test from scratch
 
+    In order to create a regression test for a check, do the following:
 
-The checkname variable should not include the subcheck name.
-The info variable should be defined exactly as expected by the parse or
-discovery function, including node info or extra sections, if necessary.
+    1) Create a minimal compliant dataset as described in generictests/__init__.py.
+       For example, let's create the file ~/tmp/example.py with the content
 
-2) From this file we create a regression test dataset by running
+          checkname = 'nfsmounts'
 
-  py.test -T unit tests/unit/checks/generictests/regression.py \
-  --datasetfile ~/tmp/example.py
+          info = [
+              ['/path/to/share', 'ok', '1611668', '794767', '712899', '32768']
+          ]
 
-This will create a file called '~/tmp/example_regression.py'.
+       The checkname variable should not include the subcheck name.
+       The info variable should be defined exactly as expected by the parse or
+       discovery function, including node info or extra sections, if necessary.
 
-3) In order to use it as a test case move it to the folder
-[check_mk]/tests/unit/checks/generictests/datasets/.
-Make sure the file is a valid python module:
+    2) From this file we create a regression test dataset by running
 
- mv /tmp/example_regression.py \
- ~/git/check_mk/tests/unit/checks/generictests/datasets/nfsmounts_1.py
+       py.test -T unit tests/unit/checks/generictests/regression.py \
+       --datasetfile ~/tmp/example.py
+
+      This will create a file called '../datasets/example.py' (relative to the
+      path of this script, i.e. __file__), if that file already exists,
+      it is postfixed by '_regression.py'.
+      If you specify '--inplace' in the command line, the existing file
+      '--datasetfile' will be overwritten.
+
+    3) (only if you used "--inplace"): In order to use the resulting file as a
+       test case, move it to the folder ../datasets/ (again: relative to the
+        path of this script, i.e. __file__).
+
+    Make sure the file is a valid python module. Since the files content
+    is yapf'ed, I suggest you do not change the formatting (which simplifies
+    case B, if and when you need it).
+
+B. Update all or one selected test to match the current status quo
+
+    If you made changes that affect more than one test file, you can
+    overwrite all existing test datasets. To do so, run
+
+    py.test -T unit tests/unit/checks/generictests/regression.py --inplace
+
+    This will take quite some time, and overwrite ALL test datasets.
+    You can restrict this process to a subset of files using
+     * the paramter "--datasetfile path/to/file"
+     * the regular "-k test-name-pattern"  option to py.test
 
 """
 import os
+import ast
 import sys
-import pprint
 import time
+import yapf
 from importlib import import_module
 
 import generictests.run
@@ -69,21 +91,29 @@ class WritableDataset(object):
         self.freeze_time = freeze_time
         self.parsed = init_dict.get('parsed', None)
         self.discovery = init_dict.get('discovery', {})
-        self.checks = {}
+        self.checks = init_dict.get('checks', {})
         self.extra_sections = init_dict.get('extra_sections', {})
         self.mock_host_conf = init_dict.get('mock_host_conf', {})
         self.mock_host_conf_merged = init_dict.get('mock_host_conf_merged', {})
         self.mock_item_state = init_dict.get('mock_item_state', {})
 
+    def update_check_result(self, subcheck, new_entry):
+        subcheck_data = self.checks.setdefault(subcheck, [])[:]
+        for idx, present_result in enumerate(subcheck_data):
+            if present_result[:2] == new_entry[:2]:
+                self.checks[subcheck][idx] = new_entry
+                return
+        self.checks[subcheck].append(new_entry)
+
     def write(self, directory):
         content = []
+        imports = set()
         for k in self.writelist:
             v = getattr(self, k)
             if not v:
                 continue
-            k_str = '%s = ' % k
-            v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
-            content += ['', '', k_str + v_str]
+            content.append("%s = %r" % (k, v))
+            imports |= self.get_imports(v)
 
         if not content:
             return
@@ -91,15 +121,56 @@ class WritableDataset(object):
         with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
-            f.write('\n'.join(content))
+            f.write('\n')
+
+            for item in sorted(imports):
+                f.write('%s\n' % item)
+
+            output, _ = yapf.yapflib.yapf_api.FormatCode('\n\n'.join(content))
+            f.write(output)
+
+    def get_imports(self, value):
+        try:
+            ast.literal_eval(repr(value))
+            return set()
+        except ValueError:
+            pass
+
+        if isinstance(value, dict):
+            iterate = value.iteritems()
+        elif isinstance(value, (tuple, list)):
+            iterate = value
+        else:
+            return {"from %s import %s" % (value.__module__, value.__class__.__name__)}
+
+        imports = set()
+        for val in iterate:
+            imports |= self.get_imports(val)
+        return imports
 
 
-def test_main(check_manager, datasetfile):
+def _get_out_filename(datasetfile, inplace):
+    if inplace:
+        return datasetfile
+
+    basename = os.path.basename(datasetfile)
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    out_name = os.path.join(dirname, 'datasets', basename)
+    if not os.path.exists(out_name):
+        return out_name
+
+    return out_name.replace('.py', '_regression.py')
+
+
+def test_main(check_manager, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
-    shape of a test. Provide the above arguments using
-    "--argument_name argument_value"
+    shape of a test. Provide the datasetfile using
+    "--datasetfile argument_value"
+    (defaults to all found files)
+    and (optional flag)
+    "--inplace"
     """
     if not datasetfile:
         raise ValueError("must provide '--datasetfile'")
@@ -109,7 +180,8 @@ def test_main(check_manager, datasetfile):
     input_data = import_module(os.path.splitext(modn)[0])
     sys.path.pop(0)
 
-    regression = WritableDataset(datasetfile.replace('.py', '_regression.py'), vars(input_data))
+    out_name = _get_out_filename(datasetfile, inplace)
+    regression = WritableDataset(out_name, vars(input_data))
 
     generictests.run(check_manager, regression, write=True)
 

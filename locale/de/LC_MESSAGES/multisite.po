@@ -13051,6 +13051,9 @@ msgstr "Nicht den Graphtitel anzeigen"
 msgid "Don't show graph title"
 msgstr "Nicht den Graphtitel anzeigen"
 
+msgid "Don't show or warn if \"Failed Actions\" are present (default)"
+msgstr "\"Failed Action\" werden nicht angezeigt und lösen keine Warnungen aus (default)"
+
 msgid "Don't use HTTP header authentication"
 msgstr "HTTP-Header-Authentifizierung nicht nutzen"
 
@@ -14308,7 +14311,7 @@ msgid "English"
 msgstr "Englisch"
 
 #, fuzzy
-msgid "Ent-to-end latency"
+msgid "End-to-end latency"
 msgstr "Leselatenz"
 
 msgid "Enter"
@@ -19387,6 +19390,13 @@ msgid ""
 msgstr ""
 "Ohne diese Berechtigung kann ein Benutzer noch solche Events sehen, die von "
 "einem Host kommen, für den er ein Kontakt ist."
+
+msgid ""
+"If activated, any \"Failed Action\" entry will be shown in the main check and "
+"the check will go to the WARN state."
+msgstr ""
+"Falls aktiviert, werden \"Failed Action\" Einträge im Hauptcheck angezeigt "
+"und der check auf WARN gesetzt, falls Einträge vorhanden sind."
 
 msgid ""
 "If active the check will not only notify about un-monitored services, it will "
@@ -35113,6 +35123,12 @@ msgstr "Soll WATO Nagios neustarten/neuladen beim Anwenden von Änderungen"
 
 msgid "Show"
 msgstr "Zeige"
+
+msgid "Show \"Failed Actions\""
+msgstr "Zeige \"Failed Actions\""
+
+msgid "Show \"Failed Actions\" and warn if any is present"
+msgstr "Zeige \"Failed Actions\" und warne falls welche vorhanden sind"
 
 msgid "Show / hide notification context"
 msgstr "Alarmierungs-Kontext zeigen / verstecken"

@@ -70,12 +70,21 @@ from cmk_base.discovered_labels import (
 
 
 class DiscoveryAutomation(Automation):
-    # if required, schedule an inventory check
-    def _trigger_discovery_check(self, host_config):
-        # TODO: Check the last condition ("or host_config.nodes"). Is this really correct?
-        if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-                (not host_config.is_cluster or host_config.nodes):
-            discovery.schedule_discovery_check(host_config.hostname)
+    def _trigger_discovery_check(self, config_cache, host_config):
+        # type: (config.ConfigCache, config.HostConfig) -> None
+        """if required, schedule the "Check_MK Discovery" check"""
+        if not config.inventory_check_autotrigger:
+            return
+
+        service_discovery_name = config_cache.service_discovery_name()
+        disc_check_params = host_config.discovery_check_parameters
+        if not host_config.add_service_discovery_check(disc_check_params, service_discovery_name):
+            return
+
+        if host_config.is_cluster:
+            return
+
+        discovery.schedule_discovery_check(host_config.hostname)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -141,7 +150,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if error is not None:
                 failed_hosts[hostname] = error
             else:
-                self._trigger_discovery_check(host_config)
+                self._trigger_discovery_check(config_cache, host_config)
 
         return counts, failed_hosts
 
@@ -242,7 +251,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                                             service_labels))
 
         autochecks.set_autochecks_of(host_config, new_services)
-        self._trigger_discovery_check(host_config)
+        self._trigger_discovery_check(config_cache, host_config)
         return None
 
 
@@ -262,7 +271,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        self._trigger_discovery_check(host_config)
+        self._trigger_discovery_check(config_cache, host_config)
         return None
 
 
@@ -1038,6 +1047,7 @@ class AutomationGetCheckManPage(Automation):
 
         # Add a few informations from check_info. Note: active checks do not
         # have an entry in check_info
+
         if check_plugin_name in config.check_info:
             manpage["type"] = "check_mk"
             info = config.check_info[check_plugin_name]
@@ -1056,6 +1066,12 @@ class AutomationGetCheckManPage(Automation):
         # Assume active check
         elif check_plugin_name.startswith("check_"):
             manpage["type"] = "active"
+        elif check_plugin_name in ['check-mk', "check-mk-inventory"]:
+            manpage["type"] = "check_mk"
+            if check_plugin_name == "check-mk":
+                manpage["service_description"] = "Check_MK"
+            if check_plugin_name == "check-mk-inventory":
+                manpage["service_description"] = "Check_MK Discovery"
         else:
             raise MKAutomationError("Could not detect type of manpage: %s. "
                                     "Maybe the check is missing." % check_plugin_name)
@@ -1155,7 +1171,7 @@ class AutomationDiagHost(Automation):
                 sources = data_sources.DataSources(hostname, ipaddress)
                 sources.set_max_cachefile_age(config.check_max_cachefile_age)
 
-                output = ""
+                state, output = 0, u""
                 for source in sources.get_data_sources():
                     if isinstance(source, data_sources.DSProgramDataSource) and cmd:
                         source = data_sources.DSProgramDataSource(hostname, ipaddress, cmd)
@@ -1166,11 +1182,23 @@ class AutomationDiagHost(Automation):
                     elif isinstance(source, data_sources.snmp.SNMPDataSource):
                         continue
 
-                    output += source.run_raw()
+                    source_output = source.run_raw()
+
+                    # We really receive a byte string here. The agent sections
+                    # may have different encodings and are normally decoded one
+                    # by one (CheckMKAgentDataSource._parse_info).  For the
+                    # moment we use UTF-8 with fallback to latin-1 by default,
+                    # similar to the CheckMKAgentDataSource, but we do not
+                    # respect the ecoding options of sections.
+                    # If this is a problem, we would have to apply parse and
+                    # decode logic and unparse the decoded output again.
+                    output += config.decode_incoming_string(source_output)
+
                     if source.exception():
+                        state = 1
                         output += "%s" % source.exception()
 
-                return 0, output
+                return state, output
 
             elif test == 'traceroute':
                 family_flag = "-6" if host_config.is_ipv6_primary else "-4"
@@ -1315,6 +1343,7 @@ class AutomationActiveCheck(Automation):
                                                       act_info["argument_function"](params))
             command_line = self._replace_core_macros(
                 hostname, act_info["command_line"].replace("$ARG1$", args))
+            command_line = core_config.autodetect_plugin(command_line)
             return self._execute_check_plugin(command_line)
 
     def _load_resource_file(self, macros):

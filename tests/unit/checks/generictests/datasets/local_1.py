@@ -15,7 +15,8 @@ info = [
     ['node_1', 'P', 'Some_yet_other_Service', 'temp=40;30;50|humidity=28;50:100;0:50;0;100'],
     ['node_2', 'P', 'Has-no-var', '-', 'This', 'has', 'no', 'variable'],
     ['node_2', 'P', 'No-Text', 'hirn=-8;-20'],
-    ['rogue', 'P', 'D\'oh!', 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!']
+    ['rogue', 'P', 'D\'oh!', 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!'],
+    ['node_1', '0', 'This_is_yay', 'foo=18;20;50;;', 'Na', 'Na', 'Na'],
 ]
 
 
@@ -29,6 +30,7 @@ discovery = {
         ('Some_other_Service', {}),
         ('Some_yet_other_Service', {}),
         ('This_is_OK', {}),
+        ('This_is_yay', {}),
         ('D\'oh!', {})
     ],
 }
@@ -77,6 +79,11 @@ checks = {
         ('D\'oh!', {}, [
             (3, "On node rogue: Invalid performance data: 'this is an invalid metric'. Output is: I messed up!", [
                 ('isotopes', 0, None, None, None, None),
+            ]),
+        ]),
+        ('This_is_yay', {}, [
+            (0, 'On node node_1: Na Na Na', [
+                ('foo', 18, 20, 50, None, None),
             ]),
         ]),
     ],

@@ -34,7 +34,8 @@ from __future__ import (
 )
 
 import argparse
-from collections import OrderedDict, MutableSequence
+from collections import OrderedDict, MutableSequence, defaultdict
+import contextlib
 import functools
 import itertools
 import json
@@ -54,6 +55,15 @@ from kubernetes.client.rest import ApiException  # type: ignore
 
 import cmk.utils.profile
 import cmk.utils.password_store
+
+
+@contextlib.contextmanager
+def suppress(*exc):
+    # This is contextlib.suppress from Python 3.2
+    try:
+        yield
+    except exc:
+        pass
 
 
 class PathPrefixAction(argparse.Action):
@@ -357,6 +367,53 @@ class Deployment(Metadata):
         }
 
 
+class Ingress(Metadata):
+    def __init__(self, ingress):
+        super(Ingress, self).__init__(ingress.metadata)
+        self._backends = []  # list of (path, service_name, service_port)
+        self._hosts = defaultdict(list)  # secret -> list of hosts
+        self._load_balancers = []
+
+        spec = ingress.spec
+        if spec:
+            if spec.backend:
+                self._backends.append(
+                    ("(default)", spec.backend.service_name, spec.backend.service_port))
+            for rule in spec.rules if spec.rules else ():
+                if rule.http:
+                    for path in rule.http.paths:
+                        path_ = {
+                            (True, True): rule.host + path.path,
+                            (True, False): rule.host,
+                            (False, True): path.path,
+                            (False, False): "/"
+                        }[(rule.host is not None, path.path is not None)]
+                        self._backends.append(
+                            (path_, path.backend.service_name, path.backend.service_port))
+            for tls in spec.tls if spec.tls else ():
+                self._hosts[tls.secret_name if tls.secret_name else ""].extend(
+                    tls.hosts if tls.hosts else ())
+
+        status = ingress.status
+        if status:
+            with suppress(AttributeError):
+                # Anything along the path to status..ingress is optional (aka may be None).
+                self._load_balancers.extend([{
+                    "hostname": _.hostname if _.hostname else "",
+                    "ip": _.ip if _.ip else "",
+                } for _ in status.load_balancer.ingress])
+
+    @property
+    def info(self):
+        return {
+            self.name: {
+                "backends": self._backends,
+                "hosts": self._hosts,
+                "load_balancers": self._load_balancers,
+            }
+        }
+
+
 class Pod(Metadata):
     def __init__(self, pod):
         # type: (client.V1Pod) -> None
@@ -476,6 +533,48 @@ class Pod(Metadata):
             'pod_ip': self.pod_ip,
             'qos_class': self.qos_class,
         }
+
+
+class Endpoint(Metadata):
+    # See Also:
+    #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
+
+    def __init__(self, endpoint):
+        super(Endpoint, self).__init__(endpoint.metadata)
+        # There is no spec here.
+        self._subsets = [
+            self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
+        ]
+
+    @staticmethod
+    def _parse_subset(subset):
+        # Silent false positive from pylint.
+        #  - https://github.com/PyCQA/pylint/issues/574
+        #  - https://github.com/PyCQA/pylint/issues/2818
+        # pylint: disable=superfluous-parens
+        addresses = [{
+            "hostname": _.hostname if _.hostname else "",
+            "ip": _.ip if _.ip else "",
+            "node_name": _.node_name if _.node_name else "",
+        } for _ in (subset.addresses if subset.addresses else ())]
+        not_ready_addresses = [{
+            "hostname": _.hostname if _.hostname else "",
+            "ip": _.ip if _.ip else "",
+            "node_name": _.node_name if _.node_name else "",
+        } for _ in (subset.not_ready_addresses if subset.not_ready_addresses else ())]
+        ports = [
+            {
+                "name": _.name if _.name else "",
+                "port": _.port,  # not optional
+                "protocol": _.protocol if _.protocol else "TCP",
+            } for _ in (subset.ports if subset.ports else ())
+        ]
+        # pylint: enable=superfluous-parens
+        return {"addresses": addresses, "not_ready_addresses": not_ready_addresses, "ports": ports}
+
+    @property
+    def infos(self):
+        return {"subsets": self._subsets}
 
 
 class Job(Metadata):
@@ -821,6 +920,11 @@ class DeploymentList(K8sList[Deployment]):
         return {deployment.name: deployment.replicas for deployment in self}
 
 
+class IngressList(K8sList[Ingress]):
+    def infos(self):
+        return {ingress.name: ingress.info for ingress in self}
+
+
 class DaemonSetList(K8sList[DaemonSet]):
     def info(self):
         return {daemon_set.name: daemon_set.info for daemon_set in self}
@@ -882,6 +986,11 @@ class PodList(K8sList[Pod]):
     def total_resources(self):
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return functools.reduce(merge, [p.resources for p in self], Pod.zero_resources())
+
+
+class EndpointList(K8sList[Endpoint]):
+    def info(self):
+        return {endpoint.name: endpoint.infos for endpoint in self}
 
 
 class JobList(K8sList[Job]):
@@ -1109,9 +1218,11 @@ class ApiData(object):
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
+        endpoints = core_api.list_endpoints_for_all_namespaces()
         jobs = batch_api.list_job_for_all_namespaces()
         services = core_api.list_service_for_all_namespaces()
         deployments = ext_api.list_deployment_for_all_namespaces()
+        ingresses = ext_api.list_ingress_for_all_namespaces()
         daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
         stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
 
@@ -1127,9 +1238,11 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+        self.endpoints = EndpointList(map(Endpoint, endpoints.items))
         self.jobs = JobList(map(Job, jobs.items))
         self.services = ServiceList(map(Service, services.items))
         self.deployments = DeploymentList(map(Deployment, deployments.items))
+        self.ingresses = IngressList(map(Ingress, ingresses.items))
         self.daemon_sets = DaemonSetList(map(DaemonSet, daemon_sets.items))
         self.stateful_sets = StatefulSetList(map(StatefulSet, stateful_sets.items))
 
@@ -1234,6 +1347,13 @@ class ApiData(object):
         g.join('k8s_pod_info', self.pods.info())
         return '\n'.join(g.output(piggyback_prefix="pod_"))
 
+    def endpoint_sections(self):
+        logging.info('Output endpoint sections')
+        g = PiggybackGroup()
+        g.join('labels', self.endpoints.labels())
+        g.join('k8s_endpoint_info', self.endpoints.info())
+        return '\n'.join(g.output(piggyback_prefix="endpoint_"))
+
     def job_sections(self):
         logging.info('Output job sections')
         g = PiggybackGroup()
@@ -1259,11 +1379,18 @@ class ApiData(object):
         return '\n'.join(g.output(piggyback_prefix="service_"))
 
     def deployment_sections(self):
-        logging.info('Output node sections')
+        logging.info('Output deployment sections')
         g = PiggybackGroup()
         g.join('labels', self.deployments.labels())
         g.join('k8s_replicas', self.deployments.replicas())
         return '\n'.join(g.output(piggyback_prefix="deployment_"))
+
+    def ingress_sections(self):
+        logging.info('Output ingress sections')
+        g = PiggybackGroup()
+        g.join('labels', self.ingresses.labels())
+        g.join('k8s_ingress_infos', self.ingresses.infos())
+        return '\n'.join(g.output(piggyback_prefix="ingress_"))
 
     def daemon_set_sections(self):
         logging.info('Daemon set sections')
@@ -1325,10 +1452,14 @@ def main(args=None):
                 print(api_data.node_sections())
             if 'pods' in arguments.infos:
                 print(api_data.pod_sections())
+            if 'endpoints' in arguments.infos:
+                print(api_data.endpoint_sections())
             if 'jobs' in arguments.infos:
                 print(api_data.job_sections())
             if 'deployments' in arguments.infos:
                 print(api_data.deployment_sections())
+            if 'ingresses' in arguments.infos:
+                print(api_data.ingress_sections())
             if 'services' in arguments.infos:
                 print(api_data.service_sections())
             if 'daemon_sets' in arguments.infos:

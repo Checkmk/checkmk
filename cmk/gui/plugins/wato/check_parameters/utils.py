@@ -25,8 +25,10 @@
 # Boston, MA 02110-1301 USA.
 """Module to hold shared code for check parameter module internals"""
 
+from typing import List, Tuple as TypingTuple  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -122,20 +124,21 @@ def transform_filesystem_free(value):
 
 fs_levels_elements = [
     ("levels",
-     Alternative(title=_("Levels for filesystem"),
-                 show_alternative_title=True,
-                 default_value=(80.0, 90.0),
-                 match=match_dual_level_type,
-                 elements=[
-                     get_free_used_dynamic_valuespec("used", "filesystem"),
-                     Transform(get_free_used_dynamic_valuespec("free",
-                                                               "filesystem",
-                                                               default_value=(20.0, 10.0)),
-                               title=_("Levels for filesystem free space"),
-                               allow_empty=False,
-                               forth=transform_filesystem_free,
-                               back=transform_filesystem_free)
-                 ])),
+     Alternative(
+         title=_("Levels for filesystem"),
+         show_alternative_title=True,
+         default_value=(80.0, 90.0),
+         match=match_dual_level_type,
+         elements=[
+             get_free_used_dynamic_valuespec("used", "filesystem"),
+             Transform(
+                 get_free_used_dynamic_valuespec("free", "filesystem", default_value=(20.0, 10.0)),
+                 title=_("Levels for filesystem free space"),
+                 forth=transform_filesystem_free,
+                 back=transform_filesystem_free,
+             )
+         ],
+     )),
     ("show_levels",
      DropdownChoice(
          title=_("Display warn/crit levels in check output..."),
@@ -145,7 +148,7 @@ fs_levels_elements = [
              ("always", _("Always")),
          ],
          default_value="onmagic",
-     ))
+     )),
 ]
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
@@ -158,7 +161,7 @@ fs_levels_elements_hack = [
         totext="",
         title="",
     )),
-]
+]  # type: List[TypingTuple[str, ValueSpec]]
 
 fs_reserved_elements = [
     ("show_reserved",
@@ -186,7 +189,7 @@ fs_reserved_elements = [
              (False, _("Include reserved space")),
              (True, _("Exclude reserved space")),
          ])),
-]
+]  # type: List[TypingTuple[str, ValueSpec]]
 
 fs_inodes_elements = [
     ("inodes_levels",
@@ -200,19 +203,26 @@ fs_inodes_elements = [
                        Percentage(title=_("Warning if less than")),
                        Percentage(title=_("Critical if less than")),
                    ]),
-             Tuple(title=_("Absolute free"),
-                   elements=[
-                       Integer(title=_("Warning if less than"),
-                               size=10,
-                               unit=_("inodes"),
-                               minvalue=0,
-                               default_value=10000),
-                       Integer(title=_("Critical if less than"),
-                               size=10,
-                               unit=_("inodes"),
-                               minvalue=0,
-                               default_value=5000),
-                   ])
+             Tuple(
+                 title=_("Absolute free"),
+                 elements=[
+                     Integer(title=_("Warning if less than"),
+                             size=10,
+                             unit=_("inodes"),
+                             minvalue=0,
+                             default_value=10000),
+                     Integer(title=_("Critical if less than"),
+                             size=10,
+                             unit=_("inodes"),
+                             minvalue=0,
+                             default_value=5000),
+                 ],
+             ),
+             FixedValue(
+                 None,
+                 totext="",
+                 title=_("Ignore levels"),
+             ),
          ],
          default_value=(10.0, 5.0),
      )),
@@ -306,7 +316,12 @@ size_trend_elements = [
               label=_("Enable generation of performance data from trends"))),
 ]
 
-filesystem_elements = fs_levels_elements + fs_levels_elements_hack + fs_reserved_elements + fs_inodes_elements + fs_magic_elements + size_trend_elements
+filesystem_elements = fs_levels_elements \
+                    + fs_levels_elements_hack \
+                    + fs_reserved_elements \
+                    + fs_inodes_elements \
+                    + fs_magic_elements \
+                    + size_trend_elements # type: List[TypingTuple[str, ValueSpec]]
 
 
 def vs_filesystem(extra_elements=None):

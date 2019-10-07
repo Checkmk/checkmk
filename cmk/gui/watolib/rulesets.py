@@ -61,6 +61,9 @@ import cmk_base.export
 # to_config_with_folder_macro() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
 
+# Make the GUI config module reset the base config to always get the latest state of the config
+config.register_post_config_load_hook(cmk_base.export.reset_config)
+
 
 class RuleConditions(object):
     def __init__(self,
@@ -284,7 +287,7 @@ class RulesetCollection(object):
         # Adding this instead of the full path makes it easy to move config
         # files around. The real FOLDER_PATH will be added dynamically while
         # loading the file in cmk_base.config
-        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/' + FOLDER_PATH")
+        content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
@@ -493,7 +496,8 @@ class Ruleset(object):
 
         self.tuple_transformer.transform_in_place(rules_config,
                                                   is_service=self.rulespec.is_for_services,
-                                                  is_binary=self.rulespec.is_binary_ruleset)
+                                                  is_binary=self.rulespec.is_binary_ruleset,
+                                                  use_ruleset_id_cache=False)
 
         for rule_config in rules_config:
             rule = Rule(folder, self)

@@ -29,6 +29,12 @@ public:
 
 private:
     virtual std::string makeBody() override;
+    static std::string makeOnlyFrom();
+
+#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+    friend class SectionProviders;
+    FRIEND_TEST(SectionProviders, BasicCheckMkOnlyFrom);
+#endif
 };
 
 }  // namespace provider

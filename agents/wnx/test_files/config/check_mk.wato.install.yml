@@ -1,0 +1,8 @@
+# Created by Check_MK Agent Bakery.
+# This file is managed via WATO, do not edit manually or you 
+# lose your changes next time when you update the agent.
+global:
+  enabled: yes
+  install: yes   # tells agent to use this file during installation
+  port: 6556
+  wato: yes      # just to check that loaded, do not used in the bakery

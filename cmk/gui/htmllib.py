@@ -132,7 +132,7 @@ class Escaper(object):
             return str(value)
         elif isinstance(value, HTML):
             return "%s" % value  # This is HTML code which must not be escaped
-        elif attr_type not in [str, unicode]:  # also possible: type Exception!
+        elif not isinstance(attr_type, six.string_types):  # also possible: type Exception!
             value = "%s" % value  # Note: this allows Unicode. value might not have type str now
         return html_escape(value, quote=True)
 
@@ -249,12 +249,9 @@ class HTML(object):
         super(HTML, self).__init__()
         self.value = self._ensure_unicode(value)
 
-    def __unicode__(self):
-        return self.value
-
     def _ensure_unicode(self, thing, encoding_index=0):
         try:
-            return unicode(thing)
+            return six.text_type(thing)
         except UnicodeDecodeError:
             return thing.decode("utf-8")
 

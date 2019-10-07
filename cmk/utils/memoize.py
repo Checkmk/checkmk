@@ -75,7 +75,7 @@ class _HashedSeq(list):
         self.hashvalue = hash(tup)
 
     def __hash__(self):
-        # type: () -> int
+        #FIXME Removed type declaration 'type: () -> int'
         return self.hashvalue
 
 

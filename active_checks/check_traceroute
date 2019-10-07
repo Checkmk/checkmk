@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -77,7 +77,7 @@ def option_to_state(c):
     return {"w": 1, "c": 2}[c.lower()]
 
 
-def check_traceroute(target, routes, nodns, method, address_family):
+def _execute_traceroute(target, nodns, method, address_family):
     cmd = ["traceroute"]
     if nodns:
         cmd.append("-n")
@@ -86,19 +86,23 @@ def check_traceroute(target, routes, nodns, method, address_family):
     if address_family:
         cmd.append(address_family)
     cmd.append(target)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf8")
     sto, ste = p.communicate()
     if p.returncode:
-        return 3, "UNKNOWN - " + ste.replace("\n", " "), ""
+        sys.stdout.write("UNKNOWN - " + ste.replace("\n", " "))
+        sys.exit(3)
+    return sto
 
+
+def check_traceroute(lines, routes):
     # find all visited routers
     routers = set([])
-    for line in sto.split("\n")[1:]:
+    for line in lines[1:]:
         parts = line.strip().split()
         for part in parts:
             try:
-                ipaddress.ip_interface(unicode(part))
                 part = part.lstrip("(").rstrip(",").rstrip(")")
+                ipaddress.ip_interface(part)
                 routers.add(part)
             except ValueError:
                 pass
@@ -121,12 +125,12 @@ def check_traceroute(target, routes, nodns, method, address_family):
             1: "WARN",
             2: "CRIT"
         }[state],
-        len(sto.split("\n")[1:]),
+        len(lines[1:]),
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
     )
 
-    return state, info, sto
+    return state, info
 
 
 def bail_out(reason):
@@ -134,12 +138,12 @@ def bail_out(reason):
     sys.exit(3)
 
 
-def valid_ip_version(address, flag_version):
+def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    unicode_address = unicode(address.split('%')[0])
-    address_version = str(ipaddress.ip_interface(unicode_address).ip.version)
-    is_valid = address_version == flag_version.lstrip('-')
-    return address_version, is_valid
+    ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    if not ip_address_version == ip_version_arg:
+        bail_out('IP protocol version "%s" not the same as the IP address version "%s".' %
+                 (ip_version_arg, ip_address_version))
 
 
 def usage():
@@ -166,64 +170,69 @@ Other options:
 """)
 
 
-os.unsetenv("LANG")
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
 
-opt_verbose = 0
-opt_debug = False
-opt_nodns = False
-opt_method = None
-opt_address_family = None
+    os.unsetenv("LANG")
 
-short_options = "hw:W:c:C:nTI46"
-long_options = [
-    "verbose",
-    "help",
-    "debug",
-]
+    opt_verbose = 0
+    opt_debug = False
+    opt_nodns = False
+    opt_method = None
+    opt_address_family = None
 
-route_params = []
+    short_options = "hw:W:c:C:nTI46"
+    long_options = [
+        "verbose",
+        "help",
+        "debug",
+    ]
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+    route_params = []
 
-    if len(args) < 1:
-        bail_out("Please specify the target destination.")
+    try:
+        opts, args = getopt.getopt(args, short_options, long_options)
 
-    target_address = args[0]
+        if len(args) < 1:
+            bail_out("Please specify the target destination.")
 
-    # first parse modifers
-    for o, a in opts:
-        if o in ['-v', '--verbose']:
-            opt_verbose += 1
-        elif o in ['-d', '--debug']:
-            opt_debug = True
-        elif o in ['-w', '-W', '-c', '-C']:
-            route_params.append((o[1], a))
-        elif o == '-n':
-            opt_nodns = True
-        elif o in ['-T', '-I']:
-            opt_method = o
-        elif o in ['-4', '-6']:
-            if opt_address_family:
-                bail_out('Cannot use both IPv4 and IPv6')
-            target_address_version, is_valid_version = valid_ip_version(target_address, o)
-            if not is_valid_version:
-                bail_out('IP protocol version (%s) not the same as the IP address version (%s).' %
-                         (o[1], target_address_version))
-            opt_address_family = o
+        target_address = args[0]
 
-    # now handle action options
-    for o, a in opts:
-        if o in ['-h', '--help']:
-            usage()
-            sys.exit(0)
+        # first parse modifers
+        for o, a in opts:
+            if o in ['-v', '--verbose']:
+                opt_verbose += 1
+            elif o in ['-d', '--debug']:
+                opt_debug = True
+            elif o in ['-w', '-W', '-c', '-C']:
+                route_params.append((o[1], a))
+            elif o == '-n':
+                opt_nodns = True
+            elif o in ['-T', '-I']:
+                opt_method = o
+            elif o in ['-4', '-6']:
+                if opt_address_family:
+                    bail_out('Cannot use both IPv4 and IPv6')
+                validate_ip_version(target_address, int(o.lstrip("-")))
+                opt_address_family = o
 
-    status, output, long_output = check_traceroute(target_address, route_params, opt_nodns,
-                                                   opt_method, opt_address_family)
-    sys.stdout.write(output.strip() + "\n" + long_output)
-    sys.exit(status)
+        # now handle action options
+        for o, a in opts:
+            if o in ['-h', '--help']:
+                usage()
+                sys.exit(0)
 
-except Exception as e:
-    if opt_debug:
-        raise
-    bail_out(e)
+        sto = _execute_traceroute(target_address, opt_nodns, opt_method, opt_address_family)
+        status, output = check_traceroute(sto.split("\n"), route_params)
+        sys.stdout.write(output.strip() + "\n%s" % sto)
+        sys.exit(status)
+
+    except Exception as e:
+        if opt_debug:
+            raise
+        bail_out(e)
+
+
+if __name__ == "__main__":
+    main()

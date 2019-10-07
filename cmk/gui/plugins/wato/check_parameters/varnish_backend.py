@@ -44,24 +44,24 @@ def _parameter_valuespec_varnish_backend():
          Tuple(
              title=_("Upper levels for \"backend connections busy/too many\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
         ("fail",
          Tuple(
              title=_("Upper levels for \"backend connections failures\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
         ("unhealthy",
          Tuple(
              title=_("Upper levels for \"backend connections unhealthy/not attempted\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
     ],)

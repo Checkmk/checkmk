@@ -59,8 +59,8 @@ def _parameter_valuespec_jvm_tp():
                      Tuple(
                          title=_("Percentage levels of current thread count in threadpool"),
                          elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                             Integer(title=_("Warning at"), unit=_(u"%")),
+                             Integer(title=_("Critical at"), unit=_(u"%")),
                          ],
                      )
                  ],
@@ -72,8 +72,8 @@ def _parameter_valuespec_jvm_tp():
                      Tuple(
                          title=_("Percentage of current threads busy in threadpool"),
                          elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                             Integer(title=_("Warning at"), unit=_(u"%")),
+                             Integer(title=_("Critical at"), unit=_(u"%")),
                          ],
                      )
                  ],

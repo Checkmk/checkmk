@@ -980,8 +980,7 @@ class DiscoveryPageRenderer(object):
     def render(self, discovery_result, request):
         # type: (DiscoveryResult, dict) -> None
         with html.plugged():
-            if discovery_result.check_table or self._is_active(discovery_result):
-                self._show_action_buttons(discovery_result)
+            self._show_action_buttons(discovery_result)
             self._show_discovered_host_labels(discovery_result)
             self._show_discovery_details(discovery_result, request)
             return html.drain()
@@ -1044,7 +1043,11 @@ class DiscoveryPageRenderer(object):
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with table_element(css="data", searchable=False, limit=None, sortable=False) as table:
+            with table_element(css="data",
+                               searchable=False,
+                               limit=None,
+                               sortable=False,
+                               omit_headers=True) as table:
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:

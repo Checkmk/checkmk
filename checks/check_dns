@@ -39,7 +39,7 @@ def check_dns_arguments(params):
         # Convert from old (str) to new (list of strings)
         exp = settings["expected_address"]
         # TODO: Use six.string_types when this is a module.
-        if isinstance(exp, basestring):
+        if isinstance(exp, six.string_types):
             exp = [exp]
         for entry in exp:
             args += ["-a", entry]
@@ -65,7 +65,7 @@ def check_dns_desc(params):
 
 
 active_check_info["dns"] = {
-    "command_line": "$USER1$/check_dns $ARG1$",
+    "command_line": "check_dns $ARG1$",
     "argument_function": check_dns_arguments,
     "service_description": check_dns_desc,
     "has_perfdata": True,

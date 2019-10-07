@@ -2,6 +2,7 @@
 # encoding: utf-8
 # pylint: disable=redefined-outer-name
 
+from pathlib2 import Path
 import pytest  # type: ignore
 from mockldap import MockLdap, LDAPObject  # type: ignore
 import six
@@ -216,6 +217,23 @@ def encode_to_byte_strings(inp):
     elif isinstance(inp, six.text_type):
         return inp.encode("utf-8")
     return inp
+
+
+@pytest.fixture(scope="module", autouse=True)
+def user_files():
+    profile_dir = Path(cmk.utils.paths.var_dir, "web", "admin")
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    with profile_dir.joinpath("cached_profile.mk").open("w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write(u"%r" % {
+            "alias": u"admin",
+            "connector": "default",
+        })
+
+    Path(cmk.utils.paths.htpasswd_file).parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    with open(cmk.utils.paths.htpasswd_file, "w") as f:
+        f.write(
+            "automation:$5$rounds=535000$eDIHah5PgsY2widK$tiVBvDgq0Nwxy5zd/oNFRZ8faTlOPA2T.tx.lTeQoZ1\n"
+            "cmkadmin:Sl94oMGDJB/wQ\n")
 
 
 @pytest.fixture()

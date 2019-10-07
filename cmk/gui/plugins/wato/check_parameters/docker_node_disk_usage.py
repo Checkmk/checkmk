@@ -58,32 +58,32 @@ def _parameter_valuespec_docker_node_disk_usage():
              Tuple(
                  title=_("Size"),
                  elements=[
-                     Filesize(title=_("Warning at"), allow_empty=False),
-                     Filesize(title=_("Critical at"), allow_empty=False),
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
                  ],
              )),
             ("reclaimable",
              Tuple(
                  title=_("Reclaimable"),
                  elements=[
-                     Filesize(title=_("Warning at"), allow_empty=False),
-                     Filesize(title=_("Critical at"), allow_empty=False),
+                     Filesize(title=_("Warning at")),
+                     Filesize(title=_("Critical at")),
                  ],
              )),
             ("count",
              Tuple(
                  title=_("Total count"),
                  elements=[
-                     Integer(title=_("Warning at"), allow_empty=False),
-                     Integer(title=_("Critical at"), allow_empty=False),
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
                  ],
              )),
             ("active",
              Tuple(
                  title=_("Active"),
                  elements=[
-                     Integer(title=_("Warning at"), allow_empty=False),
-                     Integer(title=_("Critical at"), allow_empty=False),
+                     Integer(title=_("Warning at")),
+                     Integer(title=_("Critical at")),
                  ],
              )),
         ],

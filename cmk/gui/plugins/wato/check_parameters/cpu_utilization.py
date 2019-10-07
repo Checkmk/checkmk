@@ -30,7 +30,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Dictionary,
     Integer,
-    Optional,
     Percentage,
     Tuple,
     Transform,
@@ -195,16 +194,30 @@ rulespec_registry.register(
     ))
 
 
+def _transform_cpu_utilization(params):
+    if params is None:
+        return {}
+    if isinstance(params, Tuple):
+        return {"util": params}
+    return params
+
+
 def _parameter_valuespec_cpu_utilization():
-    return Optional(Tuple(elements=[
-        Percentage(title=_("Warning at a utilization of")),
-        Percentage(title=_("Critical at a utilization of"))
-    ]),
-                    label=_("Alert on too high CPU utilization"),
-                    help=_("The CPU utilization sums up the percentages of CPU time that is used "
-                           "for user processes and kernel routines over all available cores within "
-                           "the last check interval. The possible range is from 0% to 100%"),
-                    default_value=(90.0, 95.0))
+    return Transform(
+        Dictionary(elements=[
+            ("util",
+             Tuple(elements=[
+                 Percentage(title=_("Warning at a utilization of")),
+                 Percentage(title=_("Critical at a utilization of"))
+             ],
+                   title=_("Alert on too high CPU utilization"),
+                   help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                          "for user processes and kernel routines over all available cores within "
+                          "the last check interval. The possible range is from 0% to 100%"),
+                   default_value=(90.0, 95.0))),
+        ]),
+        forth=_transform_cpu_utilization,
+    )
 
 
 rulespec_registry.register(

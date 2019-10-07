@@ -1,0 +1,18 @@
+Title: Windows agent: Resolved problem with message UNKN – Item not found
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1569498653
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 1.7.0i1
+
+Previously wmi_cpuload section may trigger the answer from the client before 
+the plugins section was ready. As a result some services reported error 
+"UNKN - Item not found".
+
+Now this error is fixed.
+
+

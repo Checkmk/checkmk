@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import Text, Type, Optional  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
@@ -159,26 +160,38 @@ def _vs_latency():
 
 
 def _vs_limits(resource, default_limit, vs_limit_cls=None):
+    # type: (Text, int, Optional[Type[Filesize]]) -> Alternative
     if vs_limit_cls is None:
-        vs_limit = Integer(unit=_("%s" % resource), min_value=1, default_value=default_limit)
+        vs_limit = Integer(
+            unit=_("%s" % resource),
+            minvalue=1,
+            default_value=default_limit,
+        )
     else:
-        vs_limit = vs_limit_cls(min_value=1, default_value=default_limit)
+        vs_limit = vs_limit_cls(
+            minvalue=1,
+            default_value=default_limit,
+        )
 
     if resource:
-        title = _("Set limit and levels for %s" % resource)
+        title = _("Set limit and levels for %s" % resource)  # type: Optional[Text]
     else:
         title = None
+
     return Alternative(
         title=title,
         style="dropdown",
         elements=[
-            Tuple(
-                title=_("Set levels"),
-                elements=[
-                    Alternative(elements=[FixedValue(None, totext="Limit from AWS API"), vs_limit]),
-                    Percentage(title=_("Warning at"), default_value=80.0),
-                    Percentage(title=_("Critical at"), default_value=90.0),
-                ]),
+            Tuple(title=_("Set levels"),
+                  elements=[
+                      Alternative(
+                          elements=[FixedValue(
+                              None,
+                              totext=_("Limit from AWS API"),
+                          ), vs_limit]),
+                      Percentage(title=_("Warning at"), default_value=80.0),
+                      Percentage(title=_("Critical at"), default_value=90.0),
+                  ]),
             Tuple(title=_("No levels"),
                   elements=[
                       FixedValue(None, totext=""),

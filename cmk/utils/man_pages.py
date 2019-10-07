@@ -178,6 +178,7 @@ catalog_titles = {
         "artec"         : "ARTEC",
         "db2"           : "IBM DB2",
         "elasticsearch" : "Elasticsearch",
+        "graylog"       : "Graylog",
         "jenkins"       : "Jenkins",
         "splunk"        : "Splunk",
         "mongodb"       : "MongoDB",

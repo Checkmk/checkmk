@@ -235,7 +235,8 @@ def get_filesystem_levels(mountpoint, size_gb, params):
         crit_hr = get_bytes_human_readable(crit * mega)
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
-    if "inodes_levels" in params:
+    inodes_levels = params.get("inodes_levels")
+    if inodes_levels:
         if isinstance(levels["inodes_levels"], tuple):
             warn, crit = levels["inodes_levels"]
         else:

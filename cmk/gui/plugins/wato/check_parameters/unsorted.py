@@ -207,7 +207,7 @@ def _valuespec_inventory_fujitsu_ca_ports():
                      ("CARA", _("CARA")),
                      ("Initiator", _("Initiator")),
                  ],
-                 row=4,
+                 rows=4,
                  size=30,
              )),
         ],

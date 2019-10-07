@@ -1,0 +1,17 @@
+Title: Discovery page: Missing "full scan" button in some cases
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1569341563
+
+In previous 1.6 releases the message "No discovery information available.
+Please perform a full scan." could appear without a visible "Full scan"
+button could appear making it hard to proceed with a service discovery.
+
+As a workaround with previou versions, you could execute a bulk discovery for
+this host or go on the diagnostic page and click on the "Test" button once.
+Afterwards you should be able to proceed on the discovery page.

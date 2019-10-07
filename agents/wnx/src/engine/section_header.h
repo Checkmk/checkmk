@@ -30,6 +30,8 @@ constexpr std::string_view kRightSeparator{")"};
 
 // special markers
 constexpr std::string_view kFooter4{"<<<<>>>>"};
+constexpr std::string_view kFooter4Left{"<<<<"};
+constexpr std::string_view kFooter4Right{">>>>"};
 constexpr std::string_view kFooterStd{"<<<>>>"};
 
 // Sub Section(as for WMI)
@@ -42,7 +44,6 @@ constexpr std::string_view kRightSubSectionBracket{"]"};
 constexpr std::string_view kUseEmbeddedName = {"*"};
 
 constexpr std::string_view kUptimeName{"uptime"};
-constexpr std::string_view kCheckMkName{"check_mk"};
 constexpr std::string_view kDfName{"df"};
 constexpr std::string_view kMemName{"mem"};
 constexpr std::string_view kSystemTime{"systemtime"};

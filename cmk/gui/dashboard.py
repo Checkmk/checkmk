@@ -30,6 +30,7 @@ import json
 from typing import (  # pylint: disable=unused-import
     Any, Dict, Optional,
 )
+import six
 
 import cmk.gui.pages
 import cmk.gui.notify as notify
@@ -792,7 +793,7 @@ def render_dashlet_exception_content(dashlet_instance, nr, e):
 
     # Unify different string types from exception messages to a unicode string
     try:
-        exc_txt = unicode(e)
+        exc_txt = six.text_type(e)
     except UnicodeDecodeError:
         exc_txt = str(e).decode("utf-8")
 

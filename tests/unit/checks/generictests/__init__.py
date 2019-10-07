@@ -59,3 +59,4 @@ Some more advanced ones are
 """
 from generictests.checkhandler import checkhandler
 from generictests.run import run
+from generictests.utils import DATASET_NAMES, DATASET_FILES

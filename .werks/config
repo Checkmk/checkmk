@@ -55,4 +55,10 @@ compatible = [
     ("incomp", "Incompatible"),
 ]
 
-online_url = "http://mathias-kettner.de/check_mk_werks.php?werk_id=%d"
+knowledge = [
+    ( "undoc", "User manual state unknown" ),
+    ( "todoc", "Needs to be added to user manual" ),
+    ( "doc",   "Is reflected in user manual or does not need to" ),
+]
+
+online_url = "https://checkmk.com/check_mk-werks.php?werk_id=%d"

@@ -37,6 +37,7 @@ import cmk.utils.paths
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
+import cmk_base
 import cmk_base.crash_reporting
 import cmk_base.config as config
 import cmk_base.console as console
@@ -598,10 +599,18 @@ def discover_marked_hosts(core):
 
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
-        if config.monitoring_core == "cmc":
-            cmk_base.core.do_reload(core)
-        else:
-            cmk_base.core.do_restart(core)
+        with config.set_use_core_config(use_core_config=False):
+            try:
+                cmk_base.config_cache.clear_all()
+                config.get_config_cache().initialize()
+
+                if config.monitoring_core == "cmc":
+                    cmk_base.core.do_reload(core)
+                else:
+                    cmk_base.core.do_restart(core)
+            finally:
+                cmk_base.config_cache.clear_all()
+                config.get_config_cache().initialize()
 
 
 def _fetch_host_states():
@@ -1237,6 +1246,9 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         exitcode = None
         perfdata = []  # type: List[Tuple]
         if check_source not in ['legacy', 'active', 'custom']:
+            if discovered_service.check_plugin_name not in config.check_info:
+                continue  # Skip not existing check silently
+
             # apply check_parameters
             try:
                 if isinstance(discovered_service.parameters_unresolved, str):
@@ -1246,16 +1258,14 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     params = discovered_service.parameters_unresolved
             except Exception:
-                raise MKGeneralException("Invalid check parameter string '%s'" %
-                                         discovered_service.parameters_unresolved)
+                raise MKGeneralException(
+                    "Invalid check parameter string '%s' found in discovered service %r" %
+                    (discovered_service.parameters_unresolved, discovered_service))
 
             check_api_utils.set_service(discovered_service.check_plugin_name,
                                         discovered_service.description)
             section_name = cmk_base.check_utils.section_name_of(
                 discovered_service.check_plugin_name)
-
-            if discovered_service.check_plugin_name not in config.check_info:
-                continue  # Skip not existing check silently
 
             try:
                 try:
@@ -1338,7 +1348,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         else:
             checkgroup = config.check_info[discovered_service.check_plugin_name]["group"]
 
-        if isinstance(params, cmk_base.config.TimespecificParamList):
+        if isinstance(params, config.TimespecificParamList):
             params = {
                 "tp_computed_params": {
                     "params": checking.determine_check_params(params),

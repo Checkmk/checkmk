@@ -65,6 +65,10 @@ function file_age() {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
 }
 
+file_mtime () {
+    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
+}
+
 
 function run_mrpe() {
     local descr=$1
@@ -96,6 +100,7 @@ function run_cached () {
     local MAXAGE=$2
     shift 2
     local CMDLINE="$section$@"
+    local AGE
 
     if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
     if [ "$mrpe" = 1 ] ; then
@@ -116,6 +121,8 @@ function run_cached () {
 
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ] ; then
+        local MTIME
+        MTIME=$(file_mtime "$CACHEFILE")
         AGE=$(file_age "$CACHEFILE")
         if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is

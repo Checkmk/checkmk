@@ -79,7 +79,23 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):
         self._labels[label.name] = label
 
     def to_dict(self):
-        return {label.name: label.to_dict() for label in self._labels.itervalues()}
+        return {
+            label.name: label.to_dict()
+            for label in sorted(self._labels.itervalues(), key=lambda x: x.name)
+        }
+
+    def to_list(self):
+        return [label for label in sorted(self._labels.itervalues(), key=lambda x: x.name)]
+
+    def __add__(self, other):
+        if not isinstance(other, DiscoveredHostLabels):
+            raise TypeError('%s not type DiscoveredHostLabels' % other)
+        data = self.to_dict().copy()
+        data.update(other.to_dict())
+        return DiscoveredHostLabels.from_dict(data)
+
+    def __repr__(self):
+        return "DiscoveredHostLabels(%r)" % (repr(arg) for arg in self.to_list())
 
 
 class ABCLabel(object):
@@ -152,6 +168,21 @@ class HostLabel(ABCLabel):
             "value": self.value,
             "plugin_name": self.plugin_name,
         }
+
+    def __repr__(self):
+        return "HostLabel(%r, %r)" % (self.name, self.value)
+
+    def __eq__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name == other.name and self.value == other.value and
+                self.plugin_name == other.plugin_name)
+
+    def __ne__(self, other):
+        if not isinstance(other, HostLabel):
+            raise TypeError('%s not type HostLabel' % other)
+        return (self.name != other.name or self.value != other.value or
+                self.plugin_name != other.plugin_name)
 
 
 class DiscoveredServiceLabels(ABCDiscoveredLabels):

@@ -576,6 +576,8 @@ std::string mapSectionName(const std::string &sectionName) {
     return it == mappedSectionNames.end() ? sectionName : it->second;
 }
 
+std::string mapDirect(const std::string &name) { return name; }
+
 void addConditionPattern(globline_container &globline, const char *state,
                          const char *value) {
     globline.patterns.emplace_back(std::toupper(state[0]), value);
@@ -673,7 +675,11 @@ public:
     Configurable<bool> support_ipv6;
     Configurable<bool> remove_legacy;
     Configurable<std::string> passphrase;
-    OnlyFromConfigurable only_from;
+    SplittingListConfigurable<
+        std::vector<std::string>,
+        BlockMode::FileExclusive<std::vector<std::string>>,
+        AddMode::Append<std::vector<std::string>>>
+        only_from;
     SplittingListConfigurable<std::set<std::string>,
                               BlockMode::BlockExclusive<std::set<std::string>>,
                               AddMode::SetInserter<std::set<std::string>>>
@@ -760,7 +766,12 @@ bool CheckIniFile(const std::filesystem::path &Path) {
     Configurable<bool> support_ipv6(parser, "global", "ipv6", supportIPv6());
     Configurable<bool> remove_legacy(parser, "global", "remove_legacy", false);
     Configurable<std::string> passphrase(parser, "global", "passphrase", "");
-    OnlyFromConfigurable only_from(parser, "global", "only_from");
+    SplittingListConfigurable<
+        std::vector<std::string>,
+        BlockMode::FileExclusive<std::vector<std::string>>,
+        AddMode::Append<std::vector<std::string>>>
+        only_from(parser, "global", "only_from", mapDirect);
+
     Configurable<bool> _ps_use_wmi(parser, "ps", "use_wmi", false);
     SplittingListConfigurable<std::set<std::string>,
                               BlockMode::BlockExclusive<std::set<std::string>>,

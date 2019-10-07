@@ -1,0 +1,10 @@
+Title: Windows Agent's plugins mk_logwatch and mk_jolokia are updated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b12
+Date: 1568879516
+Class: feature
+
+Since now Windows Agent uses newest versions of those plugins

@@ -56,10 +56,17 @@ div.dashlet {
     margin: 0;
     overflow: hidden;
 
-    /* TODO: Reproduce this element within a body.dashlet */
     /* Dashlets with "background" set to True */
     &.background {
-      background-color: #cbd6da;
+      background-color: $dashlet-inner-bg-color;
+    }
+
+    > div {
+      color: $primary-font-color;
+
+      &[id*="dashlet_graph"] img[id*="dashlet_img"] {
+	filter: $pnp4nagios-img-filter;
+      }
     }
   }
 

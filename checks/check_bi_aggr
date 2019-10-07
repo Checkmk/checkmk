@@ -66,7 +66,7 @@ def check_bi_aggr_arguments(params):
 
 
 active_check_info["bi_aggr"] = {
-    "command_line": "$USER1$/check_bi_aggr $ARG1$",
+    "command_line": "check_bi_aggr $ARG1$",
     "argument_function": check_bi_aggr_arguments,
     "service_description": lambda params: "Aggr %s" % params[1]
                            if isinstance(params, tuple) else params["aggregation_name"],

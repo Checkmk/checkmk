@@ -202,12 +202,8 @@ def substitute_help():
          + html.render_table(HTML().join(_help_rows), class_="help")
 
 
-class ActionList(ListOf):
-    def __init__(self, vs, **kwargs):
-        ListOf.__init__(self, vs, **kwargs)
-
-    def validate_value(self, value, varprefix):
-        ListOf.validate_value(self, value, varprefix)
+def ActionList(vs, **kwargs):
+    def validate_action_list(self, value, varprefix):
         action_ids = [v["id"] for v in value]
         rule_packs = load_mkeventd_rules()
         for rule_pack in rule_packs:
@@ -218,6 +214,8 @@ class ActionList(ListOf):
                             varprefix,
                             _("You are missing the action with the ID <b>%s</b>, "
                               "which is still used in some rules.") % action_id)
+
+    return ListOf(vs, validate=validate_action_list, **kwargs)
 
 
 class RuleState(CascadingDropdown):
@@ -600,7 +598,7 @@ def vs_mkeventd_rule(customer=None):
                         ("interval",
                          CascadingDropdown(
                              title=_("Interval"),
-                             html_separator="&nbsp;",
+                             separator="&nbsp;",
                              choices=[
                                  (7 * 86400, _("week"),
                                   Integer(
@@ -3468,7 +3466,6 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                  ],)),
             ],),
             title=_("Translate SNMP traps"),
-            label=_("Use the available SNMP MIBs to translate contents of the SNMP traps"),
             help=_("When this option is enabled all available SNMP MIB files will be used "
                    "to translate the incoming SNMP traps. Information which can not be "
                    "translated, e.g. because a MIB is missing, are written untouched to "

@@ -120,22 +120,6 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
             .duration(node_visualization_utils.DefaultTransition.duration())
             .style("opacity", 1)
 
-//        this.div_selection.append("input")
-//            .style("pointer-events", "all")
-//            .attr("id", "reset_pan_and_zoom")
-//            .attr("type", "button")
-//            .classed("button", true)
-//            .attr("value", "Stop simulation")
-//            .on("click", ()=>{
-//                this.viewport.layout_manager.force_style.simulation.alpha(0)
-//            })
-//            .style("opacity", 0)
-//            .transition()
-//            .duration(node_visualization_utils.DefaultTransition.duration())
-//            .style("opacity", 1)
-
-
-
         this.viewport.selection.on("mousemove.translation_info", ()=>this.mousemove())
         let rows = this.div_selection.append("table")
                     .attr("id", "translation_infobox")
@@ -583,7 +567,11 @@ class AbstractGUINode {
                    .classed("noselect", true)
                    .attr("transform", "translate(" + (this.radius+3) + "," + (this.radius+3) + ")")
                    .attr("text-anchor", "start")
-                   .text(d=>{return d.service ? d.service : d.name})
+                   .text(d=>{
+                       if (d.chunk.aggr_type == "single" && d.service)
+                           return d.service
+                       return d.name
+                   })
                    .merge(text_selection)
         }
 
@@ -634,6 +622,11 @@ class AbstractGUINode {
                 img: this.viewport.main_instance.get_theme_prefix() + "/images/icon_status.png"
             })
         }
+
+    // Debugging: Writes node content to console
+    // elements.push({text:  "Dump node",
+    //         on: ()=> console.log(this.node)
+    // })
         return elements
     }
 
@@ -645,10 +638,22 @@ class AbstractGUINode {
             if (child_node.data.state != 0) {
                 critical_children.push(child_node)
                 this._filter_root_cause(child_node)
+            } else {
+                this._clear_node_positioning_of_tree(child_node)
             }
         })
         node.children = critical_children
         this.update_collapsed_indicator(node)
+    }
+
+    _clear_node_positioning_of_tree(tree_root) {
+        tree_root.data.node_positioning = {}
+        if (!tree_root._children)
+            return
+
+        tree_root._children.forEach(child_node=>{
+            this._clear_node_positioning_of_tree(child_node)
+        })
     }
 
     toggle_collapse() {
@@ -845,6 +850,9 @@ class AbstractGUINode {
         return node_visualization_utils.DefaultTransition.add_transition(selection.attr("in_transit", 100))
             .on("end", d=>{
                 let matrix = this.selection.node().transform.baseVal[0].matrix
+                // TODO: check this preliminary fix. target_coords might be empty
+                if (!this.node.data.target_coords)
+                    return
                 if (matrix.e.toFixed(2) != this.node.data.target_coords.x.toFixed(2) ||
                     matrix.f.toFixed(2) != this.node.data.target_coords.y.toFixed(2)) {
                     this.update_position(true)
@@ -1158,15 +1166,12 @@ class BIAggregatorNode extends AbstractGUINode {
                                                             }, href: "",
                             img: theme_prefix + "/images/icons/icons8-expand-48.png"})
 
-        if (this.node.data.state != 0) {
-            elements.push({text: "Below this node, show only problems", on: ()=>{
-                                d3.event.stopPropagation()
-                                this._filter_root_cause(this.node)
-                                this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
-                                this.viewport.update_layers()
-            },
-            img: theme_prefix + "/images/icons/icons8-error-48.png"})
-        }
+        elements.push({text: "Below this node, show only problems", on: ()=>{
+                            d3.event.stopPropagation()
+                            this._filter_root_cause(this.node)
+                            this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk)
+                            this.viewport.update_layers()
+                        }, img: theme_prefix + "/images/icons/icons8-error-48.png"})
         return elements
     }
 }
@@ -1216,13 +1221,13 @@ class NodeLink {
         let target = this.link_data.target
         let force_type = node_visualization_layout_styles.LayoutStyleForce.prototype.type()
 
+        let is_force = source.data.current_positioning.style_type == force_type ||
+                       target.data.current_positioning.style_type == force_type
         if (source.data.transition_info.use_transition ||
-            target.data.transition_info.use_transition ||
-            source.data.current_positioning.style_type == force_type ||
-            target.data.current_positioning.style_type == force_type)
+            target.data.transition_info.use_transition || is_force)
             this.selection.interrupt()
 
-        if (this.selection.attr("in_transit") > 0) {
+        if (this.selection.attr("in_transit") > 0 && !is_force) {
             return
         }
 
@@ -1450,7 +1455,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
 
     update_gui(force=false) {
         this._update_position_of_context_menu()
-        if (!force && node_visualization_layout_styles.force_simulation._simulation.alpha() < 0.10) {
+        if (!force && node_visualization_layout_styles.force_simulation._simulation.alpha() < 0.11) {
             for (let idx in this.node_instances)
                 this.node_instances[idx].node.data.transition_info.use_transition = false
             return

@@ -79,7 +79,9 @@ def all_groups(what):
     Groups are collected via livestatus from all sites. In case no alias is defined
     the name is used as second element. The list is sorted by lower case alias in the first place."""
     groups = live().query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what)
-    return sorted([(name, alias or name) for name, alias in groups], key=lambda e: e[1].lower())
+    # The dict() removes duplicate group names. Aliases don't need be deduplicated.
+    return sorted([(name, alias or name) for name, alias in dict(groups).iteritems()],
+                  key=lambda e: e[1].lower())
 
 
 #.

@@ -63,7 +63,7 @@ def check_sftp_desc(params):
 
 
 active_check_info["sftp"] = {
-    "command_line": "$USER1$/check_sftp $ARG1$",
+    "command_line": "check_sftp $ARG1$",
     "argument_function": check_sftp_arguments,
     "service_description": check_sftp_desc,
 }

@@ -50,7 +50,7 @@ def test_get_applicable_configs(bakelet, configs, applicable):
         },
         {
             'context': True,
-            'logfiles': ['/etc/*'],
+            'logfiles': [r'c:\some path\with spaces\*'],
             'maxfilesize': 1024,
             'maxlines': 5000,
             'maxlinesize': 100,
@@ -60,12 +60,12 @@ def test_get_applicable_configs(bakelet, configs, applicable):
         },
     ], [
         '',
-        '/var/log/*.log /omd/sites/*/var/log/*.log overflow=C nocontext=True fromstart=True',
+        '"/var/log/*.log" "/omd/sites/*/var/log/*.log" overflow=C nocontext=True fromstart=True',
         ' C foo',
         ' W BAR',
         ' O .*',
         '',
-        '/etc/* maxlines=5000 maxtime=20 overflow=W maxfilesize=1024 maxlinesize=100',
+        '"c:\\some path\\with spaces\\*" maxlines=5000 maxtime=20 overflow=W maxfilesize=1024 maxlinesize=100',
         ' I .*',
     ]),
 ])

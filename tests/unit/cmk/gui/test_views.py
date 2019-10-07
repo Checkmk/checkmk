@@ -6090,6 +6090,7 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.kubernetes.assigned_pods:*.name',
     '.software.applications.kubernetes.nodes:',
     '.software.applications.kubernetes.nodes:*.name',
+    '.software.applications.kubernetes.ingresses:',
     '.software.applications.kubernetes.pod_container:',
     '.software.applications.kubernetes.pod_container:*.container_id',
     '.software.applications.kubernetes.pod_container:*.image',

@@ -27,23 +27,27 @@
 # {
 #     'port': 8080,
 #     'password': 'marchingband',
-#     'infos': ['instance', 'jobs', 'nodes', 'queue'],
+#     'sections': ['instance', 'jobs', 'nodes', 'queue'],
 #     'user': 'kitty'
 # }
 
 
 def agent_jenkins_arguments(params, hostname, ipaddress):
-    args = []
-
-    args += ["-P", params["protocol"]]
-    args += ["-m", ' '.join(params["infos"])]
-    args += ["-u", params["user"]]
-    args += ["-s", passwordstore_get_cmdline("%s", params["password"])]
+    args = [
+        "-P",
+        params["protocol"],
+        "-m",
+        ','.join(params["sections"]),
+        "-u",
+        params["user"],
+        "-s",
+        passwordstore_get_cmdline("%s", params["password"]),
+    ]
 
     if "port" in params:
         args += ["-p", params["port"]]
 
-    args += [params["instance"]]
+    args.append(params["instance"])
 
     return args
 

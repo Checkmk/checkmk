@@ -16,8 +16,16 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-3.3.3.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil
+PYTHON3_MODULES_LIST += six-1.12.0.tar.gz # direct dependency, indirect via python-dateutil, vcrpy
 PYTHON3_MODULES_LIST += python-dateutil-2.8.0.tar.gz # direct dependency
+
+PYTHON3_MODULES_LIST += PyYAML-5.1.2.tar.gz # indirect via vcrpy
+PYTHON3_MODULES_LIST += wrapt-1.11.2.tar.gz # indirect via vcrpy
+PYTHON3_MODULES_LIST += yarl-1.3.0.tar.gz # indirect via vcrpy
+PYTHON3_MODULES_LIST += multidict-4.5.2.tar.gz # indirect via vcrpy
+PYTHON3_MODULES_LIST += idna-2.8.tar.gz # indirect via vcrpy
+PYTHON3_MODULES_LIST += vcrpy-2.1.0.tar.gz # direct dependency
+
 
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_BUILD) $(FREETDS_BUILD) $(PYTHON3_MODULES_UNPACK)
 	set -e ; cd $(PYTHON3_MODULES_DIR) ; \

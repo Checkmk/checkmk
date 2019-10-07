@@ -44,6 +44,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    Labels,
     SingleLabel,
     Transform,
     Checkbox,
@@ -1686,7 +1687,7 @@ class LabelCondition(Transform):
                             ("is", _("has")),
                             ("is_not", _("has not")),
                         ],),
-                        SingleLabel(world=SingleLabel.World.CONFIG,),
+                        SingleLabel(world=Labels.World.CONFIG,),
                     ],
                     show_titles=False,
                 ),

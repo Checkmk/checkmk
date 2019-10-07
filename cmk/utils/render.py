@@ -146,6 +146,33 @@ def scale_factor_prefix(value, base, prefixes=('', 'k', 'M', 'G', 'T', 'P')):
     return factor / base, prefix  # fixed: true-division
 
 
+def drop_dotzero(v, digits=2):
+    # type: (float, int) -> str
+    """Renders a number as a floating point number and drops useless
+    zeroes at the end of the fraction
+
+    45.1 -> "45.1"
+    45.0 -> "45"
+    """
+    t = '%.*f' % (digits, v)
+    if "." in t:
+        return t.rstrip("0").rstrip(".")
+    return t
+
+
+def fmt_number_with_precision(v, *args, **kwargs):
+    factor, prefix = scale_factor_prefix(v, base=kwargs.get('base', 1000.0))
+    value = float(v) / factor
+    precision = kwargs.get("precision", 2)
+    if kwargs.get("drop_zeroes", False):
+        number = drop_dotzero(value, precision)
+    else:
+        number = '%.*f' % (precision, value)
+
+    unit = kwargs.get("unit", "")
+    return '%s %s' % (number, prefix + unit)
+
+
 def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
     # type: (int, float, int, str) -> str
     """Formats byte values to be used in texts for humans.
@@ -153,9 +180,7 @@ def fmt_bytes(b, base=1024.0, precision=2, unit="B"):
     Takes bytes as integer and returns a string which represents the bytes in a
     more human readable form scaled to TB/GB/MB/KB. The unit parameter simply
     changes the returned string, but does not interfere with any calculations."""
-    factor, prefix = scale_factor_prefix(b, base)
-
-    return '%.*f %s' % (precision, b / factor, prefix + unit)  # fixed: true-division
+    return fmt_number_with_precision(b, base=base, precision=precision, unit=unit)
 
 
 # Precise size of a file - separated decimal separator
@@ -323,23 +348,18 @@ def calculate_physical_precision(v, precision):
     return scale_symbols[scale], places_after_comma, 1000**scale
 
 
-def drop_dotzero(v, digits=2):
-    """Renders a number as a floating point number and drops useless
-    zeroes at the end of the fraction
+def fmt_nic_speed(speed):
+    """Format network speed (bit/s) for humans."""
+    try:
+        speedi = int(speed)
+    except ValueError:
+        return speed
 
-    45.1 -> "45.1"
-    45.0 -> "45"
-    """
-    t = "%%.%df" % digits % v
-    if "." in t:
-        return t.rstrip("0").rstrip(".")
-    return t
-
-
-def fmt_number_with_precision(v, *args, **kwargs):
-    precision = kwargs.get("drop_zeroes", None) or kwargs.get("precision", 2)
-    factor, prefix = scale_factor_prefix(v, base=1000.0)
-    return '%.*f %s' % (precision, float(v) / factor, prefix)
+    return fmt_number_with_precision(speedi,
+                                     base=1000.0,
+                                     precision=2,
+                                     unit="bit/s",
+                                     drop_zeroes=True)
 
 
 #.
@@ -358,8 +378,9 @@ def _frexp10(x):
 
 
 def _frexpb(x, base):
+    # type: (float, int) -> Tuple[float, int]
     exp = int(math.log(x, base))
-    mantissa = int(x / base**exp)
+    mantissa = x / base**exp
     if mantissa < 1:
         mantissa *= base
         exp -= 1

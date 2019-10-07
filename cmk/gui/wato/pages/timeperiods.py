@@ -353,7 +353,6 @@ class ModeTimeperiodImportICal(WatoMode):
                      maxvalue=50,
                      default_value=10,
                      unit=_('years'),
-                     allow_empty=False,
                  )),
                 ('times',
                  Optional(

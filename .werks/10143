@@ -1,0 +1,12 @@
+Title: mk_logwatch: Bring back python 2.6 compatibility
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1569492453
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+In version 1.6.0p1 the mk_logwatch plugin was not python 2.6 compatible.

@@ -69,7 +69,6 @@ def _parameter_valuespec_oracle_jobs():
              DropdownChoice(
                  title=_("Job State"),
                  help=_("The state of the job is ignored per default."),
-                 totext="",
                  choices=[
                      (True, _("Ignore the state of the Job")),
                      (False, _("Consider the state of the job")),

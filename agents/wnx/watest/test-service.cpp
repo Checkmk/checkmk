@@ -140,6 +140,7 @@ TEST(Misc, All) {
 }
 
 namespace cma::srv {
+extern bool global_stop_signaled;
 TEST(SelfConfigure, Checker) {
     auto handle = SelfOpen();
     if (handle == nullptr) {
@@ -153,6 +154,14 @@ TEST(SelfConfigure, Checker) {
     EXPECT_NO_THROW(IsServiceConfigured(handle));
     EXPECT_NO_THROW(SelfConfigure());  //
     EXPECT_TRUE(IsServiceConfigured(handle));
+}
+
+TEST(CmaSrv, GlobalApi) {
+    EXPECT_FALSE(cma::srv::IsGlobalStopSignaled());
+    ServiceProcessor sp;
+    sp.stopService();
+    EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
+    global_stop_signaled = false;
 }
 
 }  // namespace cma::srv

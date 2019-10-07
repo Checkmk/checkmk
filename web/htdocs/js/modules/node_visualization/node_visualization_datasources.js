@@ -48,8 +48,7 @@ export class DatasourceManager {
         // Datasources lookup {id: instance}
         this.datasources = {}
         this._initialize_datasources()
-        // TODO: enable interval
-        // setInterval(() => this.schedule(), 1000)
+        setInterval(() => this.schedule(true), 10000)
     }
 
     _initialize_datasources() {
@@ -94,7 +93,7 @@ export class AbstractDatasource {
     constructor(description) {
         this.description = description
 
-        this._enabled = true
+        this._enabled = false
         this._supports_regular_updates = true
         this._update_interval = 30
         this._last_update = 0
@@ -185,7 +184,7 @@ export class AggregationsDatasource extends AbstractDatasource {
 
     constructor() {
         super("Aggregation datasource")
-        this._update_interval = 1
+        this._update_interval = 30
     }
 
     fetch_aggregations(list_of_aggregations, use_layout_id) {

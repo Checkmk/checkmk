@@ -1,0 +1,10 @@
+Title: sap_hana_backup: Don't crash upon missing timestamp
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569335010
+Class: fix
+
+

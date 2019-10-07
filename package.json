@@ -22,12 +22,12 @@
   "author": "",
   "license": "GPL-2.0",
   "devDependencies": {
-    "@babel/core": "^7.6.0",
-    "@babel/preset-env": "^7.6.0",
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
     "autoprefixer": "^9.6.1",
     "babel-loader": "^8.0.6",
     "css-loader": "^3.2.0",
-    "eslint": "^6.2.2",
+    "eslint": "^6.4.0",
     "eslint-plugin-compat": "^3.3.0",
     "extract-loader": "^3.1.0",
     "file-loader": "^4.2.0",
@@ -39,14 +39,14 @@
     "sass-loader": "^8.0.0",
     "script-loader": "^0.7.2",
     "style-loader": "^1.0.0",
-    "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.9",
     "webpack-fix-style-only-entries": "^0.3.1"
   },
   "dependencies": {
     "@yaireo/tagify": "2.16.0",
     "core-js": "^3.2.1",
-    "d3": "^5.11.0",
+    "d3": "^5.12.0",
     "d3-flextree": "^2.1.1",
     "jquery": "^3.4.1",
     "select2": "^4.0.10"

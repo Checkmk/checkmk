@@ -1,0 +1,17 @@
+Title: mk_logwatch: Explicitly specify encoding of logfiles
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1569482228
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+mk_logwatch tries its best to determine the correct encoding of a file,
+and to recover from errors if it is wrong.
+If that does not work for you, you can configure a specific encoding using
+the bakery rule or by adding e.g. "encoding=latin1" to the options in the
+config file (see config examples in {{~MySITE/share/check_mk/agents/cfg_examples/}}).
+

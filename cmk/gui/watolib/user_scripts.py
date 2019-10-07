@@ -51,7 +51,7 @@ def load_user_scripts(what):
     try:
         if what == "notifications":
             # Support for setup.sh
-            not_dir = cmk.utils.paths.notifications_dir
+            not_dir = str(cmk.utils.paths.notifications_dir)
     except Exception:
         pass
 

@@ -161,7 +161,7 @@ def get_response(proto, cafile, address, portspec, page):
         elif proto == "https" and is_local:
             return urllib2.urlopen(request, context=get_ssl_no_verify_context())
         return urllib2.urlopen(request)
-    except urllib2.URLError as exc:
+    except urllib2.URLError, exc:
         if 'unknown protocol' in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
@@ -196,10 +196,10 @@ def main():
                     break
 
                 sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
-        except urllib2.HTTPError as exc:
+        except urllib2.HTTPError, exc:
             sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
 
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception, exc:  # pylint: disable=broad-except
             sys.stderr.write('Exception (%s%s): %s\n' % (address, portspec, exc))
 
     return 0

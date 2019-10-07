@@ -89,36 +89,14 @@ def _parse_filestats_load_lines(info):
 #   '----------------------------------------------------------------------'
 
 
-def filestats_check_int_levels(value,
-                               lower_levels_pair,
-                               upper_levels_pair,
-                               hr_function=lambda i: "%d" % i):
-    state, msg = 0, ""
-    if lower_levels_pair not in (None, (None, None)):
-        warn, crit = lower_levels_pair
-        if value <= warn:
-            state = 1
-            msg = " (warn/crit below %s/%s)" % (hr_function(warn), hr_function(crit))
-        if value <= crit:
-            return 2, msg
-
-    if upper_levels_pair not in (None, (None, None)):
-        warn, crit = upper_levels_pair
-        if value >= warn:
-            state = 1
-            msg = " (warn/crit at %s/%s)" % (hr_function(warn), hr_function(crit))
-        if value >= crit:
-            return 2, msg
-
-    return state, msg
-
-
 def check_filestats_count(count, params):
     '''common check result - used by main and count_only check'''
-    state, text = filestats_check_int_levels(count, params.get("mincount"), params.get("maxcount"))
-    warn, crit = params.get("maxcount", (None, None))
-    return state, "Files in total: %d%s" % (count, text), \
-           [('file_count', count, warn, crit, None, None)]
+    levels = params.get("maxcount", (None, None)) + params.get("mincount", (None, None))
+    return check_levels(count,
+                        'file_count',
+                        levels,
+                        infoname="Files in total",
+                        human_readable_func=lambda i: "%d" % i)
 
 
 def check_filestats_extremes(files, params):
@@ -129,16 +107,17 @@ def check_filestats_extremes(files, params):
     ):
         files.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
         for efile, label in ((files[0], minlabel), (files[-1], maxlabel)):
-            state, text = filestats_check_int_levels(
-                efile.get(key),
-                params.get("min%s_%s" % (key, label)),
-                params.get("max%s_%s" % (key, label)),
-                hr_function,
-            )
+            levels = (params.get("max%s_%s" % (key, label),
+                                 (None, None)) + params.get("min%s_%s" % (key, label),
+                                                            (None, None)))
+            state, text, _no_perf = check_levels(efile[key],
+                                                 None,
+                                                 levels,
+                                                 infoname=label.title(),
+                                                 human_readable_func=hr_function)
             if state:
                 text = "%s: %s" % (text, efile.get('path', "<path info missing>"))
-            value_hr = hr_function(efile.get(key))
-            yield state, "%s: %s%s" % (label.title(), value_hr, text)
+            yield state, text
 
 
 #.

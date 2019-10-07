@@ -44,16 +44,16 @@ def _parameter_valuespec_varnish_objects():
          Tuple(
              title=_("Upper levels for \"expired objects\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
         ("lru_nuked",
          Tuple(
              title=_("Upper levels for \"LRU nuked objects\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
     ],)

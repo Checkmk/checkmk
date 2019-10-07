@@ -1,0 +1,14 @@
+Title: Skype AV Edge check: fix crash on missing TCP metrics in agent output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1569587191
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 1.7.0i1
+
+This WERK fixes most potential crashes in this particular check as well.
+Instead of crashing, the check will return no data which will lead to
+the metric becoming stale over time.

@@ -46,8 +46,8 @@ def _parameter_valuespec_threepar_capacity():
             Tuple(
                 title=_("Levels for failed capacity in percent"),
                 elements=[
-                    Percentage(title=_("Warning at"), default=0.0),
-                    Percentage(title=_("Critical at"), default=0.0),
+                    Percentage(title=_("Warning at"), default_value=0.0),
+                    Percentage(title=_("Critical at"), default_value=0.0),
                 ],
             ),
         ),

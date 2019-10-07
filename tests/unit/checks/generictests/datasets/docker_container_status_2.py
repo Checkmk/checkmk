@@ -1,6 +1,6 @@
 # -*- encoding: utf-8
 # yapf: disable
-
+from cmk_base.discovered_labels import HostLabel
 
 checkname = 'docker_container_status'
 
@@ -19,6 +19,7 @@ extra_sections = {
 discovery = {
     '': [
         (None, {}),
+        HostLabel(u'cmk/docker_object', u'container'),
     ],
     'health': [],
 }

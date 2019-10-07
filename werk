@@ -12,6 +12,7 @@ if sys.stdout.isatty():
     tty_cyan = '\033[36m'
     tty_white = '\033[37m'
     tty_bgred = '\033[41m'
+    tty_bggreen = '\033[42m'
     tty_bgyellow = '\033[43m'
     tty_bgblue = '\033[44m'
     tty_bgmagenta = '\033[45m'
@@ -31,9 +32,12 @@ else:
     tty_magenta = ''
     tty_cyan = ''
     tty_white = ''
+    tty_bgred = ''
+    tty_bggreen = ''
     tty_bgblue = ''
     tty_bgmagenta = ''
     tty_bgcyan = ''
+    tty_bgwhite = ''
     tty_bold = ''
     tty_underline = ''
     tty_normal = ''
@@ -137,6 +141,10 @@ def werk_is_modified(werkid):
     return werkid in g_modified
 
 
+def werk_exists(werkid):
+    return os.path.exists(str(werkid))
+
+
 def load_werk(werkid):
     werk = {
         "id": werkid,
@@ -145,6 +153,7 @@ def load_werk(werkid):
         "component": "general",
         "compatible": "compat",
         "edition": "cre",
+        "knowledge": "undoc",
     }
 
     f = open(str(werkid))
@@ -167,7 +176,7 @@ def load_werk(werkid):
 def save_werk(werk):
     f = open(str(werk["id"]), "w")
     f.write("Title: %s\n" % werk["title"])
-    for key, val in werk.items():
+    for key, val in sorted(werk.items()):
         if key not in ["title", "description", "id"]:
             f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
     f.write("\n")
@@ -195,7 +204,7 @@ def git_commit(werk, custom_files):
             if prefix:
                 title = "%s %s" % (prefix, title)
 
-    title = "%04d %s" % (werk['id'], title)
+    title = "%05d %s" % (werk['id'], title)
 
     if custom_files:
         files_to_commit = custom_files
@@ -266,6 +275,7 @@ where COMMAND is one of:
   delete #..             - delete werk(s)
   grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
   edit [#]               - open werk # in editor (or newest werk)
+  knowledge|knw ID STATE - change the knowlege state of a werk
   blame [#]              - show who worked on a werk
   url #                  - show the online URL of werk #
 
@@ -291,10 +301,24 @@ def list_werk(werk):
     lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
     sys.stdout.write(
-        "#%04d %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
-        (int(werk["id"]), time.strftime("%F", time.localtime(int(werk["date"]))),
-         colored_class(werk["class"], 8), werk["edition"], werk["component"], werk["compatible"],
-         tty_bold, werk["level"], tty_normal, werk["version"], bold, title, tty_normal))
+        "%s %-9s %s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
+        (format_werk_id(werk["id"]), time.strftime(
+            "%F", time.localtime(int(werk["date"]))), colored_class(werk["class"], 8),
+         format_knw_state(werk["knowledge"]) if werk["class"] == "feature" else "   ",
+         werk["edition"], werk["component"], werk["compatible"], tty_bold, werk["level"],
+         tty_normal, werk["version"], bold, title, tty_normal))
+
+
+def format_werk_id(werk_id):
+    return tty_bgwhite + tty_blue + ("#%05d" % int(werk_id)) + tty_normal
+
+
+def format_knw_state(knw_state):
+    return {
+        "undoc": tty_bgblue + tty_white + tty_bold + "?D?" + tty_normal,
+        "todoc": tty_bgred + tty_white + tty_bold + "!D!" + tty_normal,
+        "doc": tty_bggreen + tty_white + tty_bold + " D " + tty_normal,
+    }.get(knw_state, knw_state)
 
 
 def colored_class(classname, digits):
@@ -328,14 +352,9 @@ def main_list(args, format):
             continue
 
         hit = False
-        for tp, values in [
-            ("edition", editions),
-            ("component", all_components()),
-            ("level", levels),
-            ("class", classes),
-            ("version", versions),
-            ("compatible", compatible),
-        ]:
+        for tp, values in [("edition", editions), ("component", all_components()),
+                           ("level", levels), ("class", classes), ("version", versions),
+                           ("compatible", compatible), ("knowledge", knowledge)]:
             for v in values:
                 if isinstance(v, tuple):
                     v = v[0]
@@ -348,7 +367,9 @@ def main_list(args, format):
             if hit:
                 break
         if not hit:
-            bail_out("No such edition, component, state, class or target version: %s" % a)
+            bail_out(
+                "No such edition, component, state, class, knowledge state or target version: %s" %
+                a)
 
     # Filter
     newwerks = []
@@ -533,6 +554,10 @@ def main_new(args):
     werk["component"] = input_choice("Component", get_edition_components(werk["edition"]))
     werk["level"] = input_choice("Level", levels)
     werk["compatible"] = input_choice("Compatible", compatible)
+    if werk["class"] == "feature":
+        werk["knowledge"] = "undoc"  # Don't ask. Developers must not deal with this
+    else:
+        werk["knowledge"] = "doc"  # Bug and security fixes never get documented in user manual
     werk["description"] = u"\n"
 
     g_werks[werk["id"]] = werk
@@ -540,7 +565,7 @@ def main_new(args):
     invalidate_my_werkid(werk["id"])
     edit_werk(werk["id"], args)
 
-    sys.stdout.write("Werk saved with id %d.\n" % werk["id"])
+    sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk["id"]))
 
 
 def get_werk_arg(args):
@@ -594,9 +619,22 @@ def main_resolve(args):
 
 
 def main_delete(args):
-    for ids in args:
-        if 0 == os.system("git rm %s" % ids):  # nosec
-            sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
+    if len(args) == 0:
+        if g_last_werk is None:
+            bail_out("Please specify the werks to delete.")
+        args = [g_last_werk]
+    for werk_id in args:
+        if not werk_exists(werk_id):
+            bail_out("There is no werk %s." % format_werk_id(werk_id))
+
+        if 0 == os.system("git rm -f %s" % werk_id):  # nosec
+            sys.stdout.write("Deleted werk %s (%s).\n" %
+                             (format_werk_id(werk_id), g_werks[int(werk_id)]["title"]))
+            my_ids = get_werk_ids()
+            my_ids.append(werk_id)
+            store_werk_ids(my_ids)
+            sys.stdout.write("You lucky bastard now own the werk ID %s.\n" %
+                             format_werk_id(werk_id))
 
 
 def grep(line, kw, n):
@@ -657,6 +695,25 @@ def main_grep(args):
                     sys.stdout.write("  %s\n" % lines[x])
 
 
+def main_knowledge(args):
+    if len(args) != 2:
+        bail_out("Usage: werk knowledge ID undoc|todoc|doc")
+    werkid = args[0]
+    if not werk_exists(werkid):
+        bail_out("No such werk.")
+    werkid = int(werkid)
+    save_last_werkid(werkid)
+
+    knw_state = args[1]
+    if knw_state not in [c[0] for c in knowledge]:
+        bail_out("Invalid knowledge state. Allowed are %s." %
+                 ", ".join(["%s (%s)" % c for c in knowledge]))
+
+    werk = load_werk(werkid)
+    werk["knowledge"] = knw_state
+    save_werk(werk)
+
+
 def main_edit(args):
     if len(args) == 0:
         werkid = int(g_last_werk)
@@ -687,7 +744,7 @@ def edit_werk(werkid, custom_files=[], commit=True):
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if 0 == os.system("bash -c '%s +8 %s'" % (editor, werkid)):  # nosec
+    if 0 == os.system("bash -c '%s +11 %s'" % (editor, werkid)):  # nosec
         load_werks()
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
@@ -703,7 +760,7 @@ def main_commit(args):
         for id in g_modified:
             list_werk(g_werks[id])
         cmd = "git commit -m 'Updated werk entries %s' ." % (", ".join(
-            ["#%04d" % id for id in g_modified]))
+            ["#%05d" % id for id in g_modified]))
         if 0 == os.system(cmd):  # nosec
             sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
         else:
@@ -737,8 +794,8 @@ def werk_cherry_pick(commit_id, no_commit):
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
-            sys.stdout.write("Changed version of werk #%04d to %s.\n" %
-                             (werk_id, g_current_version))
+            sys.stdout.write("Changed version of werk %s to %s.\n" %
+                             (format_werk_id(werk_id), g_current_version))
 
     # Commit
     if not no_commit:
@@ -838,6 +895,7 @@ edition_components = {}
 classes = []
 levels = []
 compatible = []
+knowledge = []
 online_url = None
 
 versions = set([])
@@ -859,6 +917,8 @@ commands = {
     "delete": main_delete,
     "grep": main_grep,
     "edit": main_edit,
+    "knowledge": main_knowledge,
+    "knw": main_knowledge,
     "ids": main_fetch_ids,
     "pick": main_pick,
     "cherry-pick": main_pick,

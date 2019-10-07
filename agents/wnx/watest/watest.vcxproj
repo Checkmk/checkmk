@@ -151,7 +151,7 @@
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-call check_watest.cmd watest
+
 )
 
 </Command>
@@ -194,7 +194,7 @@ call check_watest.cmd watest
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-call check_watest.cmd watest
+
 )
 
 </Command>
@@ -239,7 +239,7 @@ call check_watest.cmd watest
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-call check_watest.cmd watest
+
 )
 
 </Command>
@@ -284,7 +284,7 @@ call check_watest.cmd watest
 @copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
 @copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
 @copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-call check_watest.cmd watest
+
 )
 
 </Command>
@@ -310,6 +310,7 @@ call check_watest.cmd watest
     <ClCompile Include="test-cap.cpp" />
     <ClCompile Include="test-carrier.cpp" />
     <ClCompile Include="test-cfg.cpp" />
+    <ClCompile Include="test-cma_yml.cpp" />
     <ClCompile Include="test-cma-tools.cpp" />
     <ClCompile Include="test-cvt.cpp" />
     <ClCompile Include="test-encryption.cpp" />

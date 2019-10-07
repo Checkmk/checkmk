@@ -1,12 +1,16 @@
 #ifndef test_tools_h__
 #define test_tools_h__
 //
-#include <filesystem>
-#include <string>
-#include <string_view>
-#include <tuple>
 
 #include "cfg.h"
+#include "iosfwd"                // for ofstream
+#include "on_start.h"            // for OnStart, AppType, AppType::test
+#include "system_error"          // for error_code
+#include "xstring"               // for string, basic_string, wstring
+#include "yaml-cpp/node/impl.h"  // for Node::Node, Node::~Node
+namespace YAML {
+class Node;
+}
 
 namespace tst {
 class YamlLoader {
@@ -97,5 +101,7 @@ const std::string_view very_temp = "tmpx";
 void SafeCleanTmpxDir();
 
 void PrintNode(YAML::Node node, std::string_view S);
+std::vector<std::string> ReadFileAsTable(const std::string& Name);
+
 }  // namespace tst
 #endif  // test_tools_h__

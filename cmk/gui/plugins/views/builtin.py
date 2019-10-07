@@ -4052,7 +4052,6 @@ multisite_builtin_views["docker_containers"] = _simple_host_view(
         'painters': host_view_painters + [
             ('host_docker_node', None, None),
             ('perfometer', None, '', 'CPU utilization'),
-            ('perfometer', None, '', 'CPU utilization'),
             ('perfometer', None, '', 'Memory used'),
             ('perfometer', None, '', 'Uptime'),
         ],

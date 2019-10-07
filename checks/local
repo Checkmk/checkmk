@@ -86,6 +86,7 @@ def _parse_perfentry(entry):
     '''
     Perfdata = collections.namedtuple("Perfdata", ("name", "value", "levels", "tuple"))
 
+    entry = entry.rstrip(";")
     name, raw = entry.split('=', 1)
     raw = raw.split(";")
     value = float_ignore_uom(raw[0])

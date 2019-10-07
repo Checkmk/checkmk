@@ -880,7 +880,22 @@ TEST(UpgradeTest, CopyFoldersApi) {
     }
 }
 
+static auto a1 =
+    "AlignmentFixupsPersec|Caption|ContextSwitchesPersec|Description|ExceptionDispatchesPersec|FileControlBytesPersec|FileControlOperationsPersec|FileDataOperationsPersec|FileReadBytesPersec|FileReadOperationsPersec|FileWriteBytesPersec|FileWriteOperationsPersec|FloatingEmulationsPersec|Frequency_Object|Frequency_PerfTime|Frequency_Sys100NS|Name|PercentRegistryQuotaInUse|PercentRegistryQuotaInUse_Base|Processes|ProcessorQueueLength|SystemCallsPersec|SystemUpTime|Threads|Timestamp_Object|Timestamp_PerfTime|Timestamp_Sys100NS|WMIStatus";
+static auto a2 =
+    "8753143349248||8757138597559||8753154542256|1668537305287|952521535002|951235405633|25314498833504|950257251850|3054676197176|950165926199|949187772416|10000000|2435538|10000000||949554799728|951335256063|949187772535|949187772416|952503978051|132104050924847952|949187774233|132134863734478619|7504388659458|132134935734470000|OK";
+
 TEST(UpgradeTest, CopyFolders) {
+#if (0)
+    // test of bad data
+    // #TODO remove ASAP or rework to test API
+    auto t1 = cma::tools::SplitString(a1, "|");
+    auto t2 = cma::tools::SplitString(a2, "|");
+    for (int i = 0; i < t1.size(); i++) {
+        XLOG::l.i("{}\t{}\n", t1[i].c_str(), t2[i].c_str());
+    }
+#endif
+
     namespace fs = std::filesystem;
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(XLOG::kStdio)

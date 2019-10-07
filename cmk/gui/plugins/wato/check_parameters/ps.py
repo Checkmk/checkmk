@@ -43,10 +43,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
+    ListOf,
     ListChoice,
     MonitoringState,
-    ListOf,
     CascadingDropdown,
+    Labels,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupManualChecksApplications,
@@ -210,7 +211,7 @@ def process_level_elements():
                  ("text", _("Text output")),
                  ("html", _("HTML output")),
              ],
-             default_value="disable",
+             default_value=None,
          )),
         ('process_info_arguments',
          Integer(
@@ -302,7 +303,6 @@ def validate_process_discovery_descr_option(description, varprefix):
 def process_discovery_descr_option():
     return TextAscii(
         title=_('Process Name'),
-        style="dropdown",
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
         help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
@@ -337,11 +337,11 @@ def process_match_options():
             Transform(
                 RegExp(
                     size=50,
+                    label=_("Command line:"),
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
                 ),
                 title=_("Regular expression matching command line"),
-                label=_("Command line:"),
                 help=_("This regex must match the <i>beginning</i> of the complete "
                        "command line of the process including arguments.<br>"
                        "When using groups, matches will be instantiated "
@@ -561,6 +561,14 @@ def _valuespec_inventory_processes_rules():
                              'otherwise.'))
                  ])),
                 ("cgroup", cgroup_match_options()),
+                ("label",
+                 Labels(
+                     Labels.World.CONFIG,
+                     title=_("Host Label"),
+                     help=
+                     _("Here you can set host labels that automatically get created when discovering the services."
+                      ),
+                 )),
                 ('default_params',
                  Dictionary(
                      title=_("Default parameters for detected services"),

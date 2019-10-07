@@ -34,7 +34,8 @@ import time
 import subprocess
 import json
 from cStringIO import StringIO
-from typing import NamedTuple
+from typing import NamedTuple, List  # pylint: disable=unused-import
+from pathlib2 import Path
 
 import cmk.ec.export
 from cmk.utils.log import VERBOSE
@@ -62,7 +63,7 @@ class PackageException(Exception):
 PERM_MAP = (
     (cmk.utils.paths.checks_dir, 0o644),
     (str(cmk.utils.paths.local_checks_dir), 0o644),
-    (cmk.utils.paths.notifications_dir, 0o755),
+    (str(cmk.utils.paths.notifications_dir), 0o755),
     (str(cmk.utils.paths.local_notifications_dir), 0o755),
     (cmk.utils.paths.inventory_dir, 0o644),
     (str(cmk.utils.paths.local_inventory_dir), 0o644),
@@ -72,11 +73,11 @@ PERM_MAP = (
     (str(cmk.utils.paths.local_agents_dir), 0o755),
     (cmk.utils.paths.web_dir, 0o644),
     (str(cmk.utils.paths.local_web_dir), 0o644),
-    (cmk.utils.paths.pnp_templates_dir, 0o644),
+    (str(cmk.utils.paths.pnp_templates_dir), 0o644),
     (str(cmk.utils.paths.local_pnp_templates_dir), 0o644),
-    (cmk.utils.paths.doc_dir, 0o644),
+    (str(cmk.utils.paths.doc_dir), 0o644),
     (str(cmk.utils.paths.local_doc_dir), 0o644),
-    (cmk.utils.paths.locale_dir, 0o644),
+    (str(cmk.utils.paths.locale_dir), 0o644),
     (str(cmk.utils.paths.local_locale_dir), 0o644),
     (str(cmk.utils.paths.local_bin_dir), 0o755),
     (str(cmk.utils.paths.local_lib_dir.joinpath("nagios", "plugins")), 0o755),
@@ -132,10 +133,12 @@ package_ignored_files = {
 
 
 def _pac_dir():
-    return cmk.utils.paths.omd_root + "/var/check_mk/packages/"
+    # type: () -> Path
+    return Path(cmk.utils.paths.omd_root, "var", "check_mk", "packages")
 
 
 def get_package_parts():
+    # type: () -> List[PackagePart]
     return _package_parts
 
 
@@ -301,7 +304,7 @@ def package_create(args):
     write_package_info(package)
     logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
     logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
-               _pac_dir() + pacname, tty.normal)
+               _pac_dir().joinpath(pacname), tty.normal)
 
 
 def package_find(_no_args):
@@ -349,8 +352,7 @@ def package_release(args):
 
 
 def package_exists(pacname):
-    pacpath = _pac_dir() + pacname
-    return os.path.exists(pacpath)
+    return _pac_dir().joinpath(pacname).exists()  # pylint: disable=no-member
 
 
 def package_pack(args):
@@ -449,7 +451,7 @@ def remove_package(package):
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
-    os.remove(_pac_dir() + package["name"])
+    _pac_dir().joinpath(package["name"]).unlink()  # pylint: disable=no-member
 
 
 def create_package(pkg_info):
@@ -562,8 +564,12 @@ def install_package(file_name=None, file_object=None):
 
             tarsource = tar.extractfile(part.ident + ".tar")
 
-            tardest = subprocess.Popen(["tar", "xf", "-", "-C", part.path] + filenames,
-                                       stdin=subprocess.PIPE)
+            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+            # been installed for cache invalidation.
+            tardest = subprocess.Popen(["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                                       stdin=subprocess.PIPE,
+                                       shell=False,
+                                       close_fds=True)
             while True:
                 data = tarsource.read(4096)
                 if not data:
@@ -714,8 +720,10 @@ def packaged_files_in_dir(part):
 
 
 def read_package_info(pacname):
+    pkg_info_path = _pac_dir() / pacname
     try:
-        package = parse_package_info(open(_pac_dir() + pacname).read())
+        with pkg_info_path.open() as f:
+            package = parse_package_info(f.read())
         package["name"] = pacname  # do not trust package content
         num_files = sum([len(fl) for fl in package["files"].values()])
         package["num_files"] = num_files
@@ -723,21 +731,23 @@ def read_package_info(pacname):
     except IOError:
         return None
     except Exception:
-        logger.log(VERBOSE, "Ignoring invalid package file '%s%s'. Please remove it from %s!",
-                   _pac_dir(), pacname, _pac_dir())
+        logger.log(VERBOSE, "Ignoring invalid package file '%s'. Please remove it from %s!",
+                   pkg_info_path, _pac_dir())
         return None
 
 
 def write_package_info(package):
-    open(_pac_dir() + package["name"], "w").write(pprint.pformat(package) + "\n")
+    pkg_info_path = _pac_dir() / package["name"]
+    with pkg_info_path.open("w") as f:
+        f.write(pprint.pformat(package) + "\n")
 
 
 def remove_package_info(pacname):
-    os.remove(_pac_dir() + pacname)
+    _pac_dir().joinpath(pacname).unlink()  # pylint: disable=no-member
 
 
 def all_package_names():
-    return sorted([p for p in os.listdir(_pac_dir()) if p not in ['.', '..']])
+    return sorted([p.name for p in _pac_dir().iterdir()])
 
 
 def parse_package_info(python_string):

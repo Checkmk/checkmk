@@ -69,11 +69,7 @@ def parse_splunk_system_msg(info):
     return parsed
 
 
-def inventory_splunk_system_msg(parsed):
-    yield None, {}
-
-
-def check_splunk_system_msg(no_item, params, parsed):
+def check_splunk_system_msg(_no_item, _params, parsed):
     if not parsed:
         yield 0, "No open messages"
         return
@@ -111,7 +107,6 @@ def _handle_severity(msg):
 check_info["splunk_system_msg"] = {
     "parse_function": parse_splunk_system_msg,
     "check_function": check_splunk_system_msg,
-    "inventory_function": inventory_splunk_system_msg,
+    "inventory_function": lambda _parsed: [(None, {})],
     "service_description": "Splunk System Messages",
-    "group": "splunk_system_msg",
 }

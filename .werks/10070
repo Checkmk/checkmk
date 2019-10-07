@@ -1,0 +1,42 @@
+Title: systemd: Fixed possible memory leak related to KillMode in unit file
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.7.0i1
+Date: 1569396481
+Class: fix
+
+We have seen cases in which the parameter "KillMode=process" of the unit file
+"check_mk@.service" causes a memory leak. This was first seen on Debian Buster
+but could occur in the future on other operating systems too.
+
+The cached check runs that are forked in the backround seem to cause systemd
+not to discard the service once it's done. If you run:
+
+C+:
+RP:systemd-cgls -au system-check_mk.slice
+C-:
+
+you can see a lot of old services and task_struct objects in slab growing
+constantly. You can see those processes also on eg. Debian Stretch but there
+they should have no effect on task_struct objects.
+
+To fix this, the parameter "KillMode=process" was changed to "Type=forking".
+
+To change the unit file:
+
+C+:
+RP:systemctl stop check_mk.socket
+RP:systemctl disable check_mk.socket
+C-:
+
+Copy the new check_mk@.service unit file to /etc/systemd/system/.
+You can download the file within "Monitoring Agents" - "Agent files"
+or find it in site user context ~/share/check_mk/agents/cfg_examples/systemd/.
+
+C+:
+RP:systemctl daemon-reload
+RP:systemctl enable check_mk.socket
+RP:systemctl start check_mk.socket
+C-:

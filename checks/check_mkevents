@@ -56,7 +56,7 @@ def check_mkevents_description(params):
 
 
 active_check_info["mkevents"] = {
-    "command_line": "$USER1$/check_mkevents $ARG1$",
+    "command_line": "check_mkevents $ARG1$",
     "argument_function": check_mkevents_arguments,
     "service_description": check_mkevents_description,
 }

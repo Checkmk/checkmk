@@ -28,10 +28,13 @@ import logging
 import os
 import subprocess
 import sys
+from typing import Text  # pylint: disable=unused-import
+from pathlib2 import Path
 
 from cmk.utils.log import VERBOSE
 import cmk.utils.tty as tty
 import cmk.utils.paths
+import cmk.utils.store as store
 
 logger = logging.getLogger("cmk.base.localize")
 
@@ -50,25 +53,36 @@ domain = 'multisite'
 
 
 def _locale_base():
+    # type: () -> str
     return str(cmk.utils.paths.local_locale_dir)
 
 
 def _pot_file():
-    if os.path.exists(str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'):
-        return str(cmk.utils.paths.local_locale_dir) + '/multisite.pot'
+    # type: () -> str
+    local_pot_file = cmk.utils.paths.local_locale_dir.joinpath('multisite.pot')
+    if local_pot_file.exists():
+        return str(local_pot_file)
     return _locale_base() + '/multisite.pot'
 
 
+def _builtin_po_file(lang):
+    # type: (str) -> Path
+    return cmk.utils.paths.locale_dir.joinpath(lang, 'LC_MESSAGES', '%s.po' % domain)
+
+
 def _po_file(lang):
+    # type: (str) -> str
     return _locale_base() + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
 
 
 def _mo_file(lang):
+    # type: (str) -> str
     return _locale_base() + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
 
 
 def _alias_file(lang):
-    return _locale_base() + '/%s/alias' % lang
+    # type: (str) -> Path
+    return Path(_locale_base(), lang, "alias")
 
 
 def _localize_usage(err=''):
@@ -106,7 +120,7 @@ def do_localize(args):
 
     alias = None
     if len(args) > 2:
-        alias = args[2]
+        alias = args[2].decode("utf-8")
 
     commands = {
         "update": _localize_update,
@@ -132,13 +146,17 @@ def do_localize(args):
 
 
 def _write_alias(lang, alias):
+    # type: (str, Text) -> None
     if not alias:
         return
 
-    if alias == '-':
-        os.remove(_alias_file(lang))
-    else:
-        open(_alias_file(lang), 'w').write(alias)
+    alias_file_path = _alias_file(lang)
+    if alias == '-' and alias_file_path.exists():
+        alias_file_path.unlink()
+        return
+
+    with alias_file_path.open("w", encoding="utf-8") as f:
+        f.write(alias)
 
 
 def _check_binaries():
@@ -260,20 +278,7 @@ def _localize_update(lang):
         raise LocalizeException('No language given')
 
     po_file = _po_file(lang)
-
-    try:
-        os.makedirs(os.path.dirname(po_file))
-    except Exception:
-        pass
-
-    # Maybe initialize the file in the local hierarchy with the file in
-    # the default hierarchy
-    if not os.path.exists(po_file) \
-       and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        open(po_file, 'w').write(
-            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
-        logger.info('Initialize %s with the file in the default hierarchy', po_file)
-
+    _initialize_local_po_file(lang)
     _localize_sniff()
 
     if not os.path.exists(po_file):
@@ -293,14 +298,7 @@ def _localize_compile(lang):
                                 ' '.join(_get_languages()))
 
     po_file = _po_file(lang)
-
-    # Maybe initialize the file in the local hierarchy with the file in
-    # the default hierarchy
-    if not os.path.exists(po_file) \
-       and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
-        open(po_file, 'w').write(
-            open(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
-        logger.info('Initialize %s with the file in the default hierarchy', po_file)
+    _initialize_local_po_file(lang)
 
     if not os.path.exists(po_file):
         raise LocalizeException('The .po file %s does not exist.' % po_file)
@@ -309,3 +307,18 @@ def _localize_compile(lang):
         logger.error('Failed!')
     else:
         logger.info('Success! Output: %s', _mo_file(lang))
+
+
+def _initialize_local_po_file(lang):
+    # type: (str) -> None
+    """Initialize the file in the local hierarchy with the file in the default hierarchy if needed"""
+    po_file = _po_file(lang)
+
+    store.makedirs(po_file)
+
+    builtin_po_file = _builtin_po_file(lang)
+    if not os.path.exists(po_file) and builtin_po_file.exists():
+        with builtin_po_file.open("r", encoding="utf-8") as source, \
+             Path(po_file).open("w", encoding="utf-8") as dest:
+            dest.write(source.read())
+        logger.info('Initialize %s with the file in the default hierarchy', po_file)

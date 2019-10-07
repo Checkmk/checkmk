@@ -13,7 +13,7 @@
 
 #include "common/cfg_info.h"
 #include "logger.h"
-#include "tools/_xlog.h"
+#include "windows_service_api.h"  // global situation
 
 namespace cma::srv {
 
@@ -39,8 +39,14 @@ bool AsyncAnswer::waitAnswer(std::chrono::milliseconds WaitInterval) {
     std::unique_lock lk(lock_);
     ON_OUT_OF_SCOPE(sw_.stop());
     return cv_ready_.wait_until(
-        lk, steady_clock::now() + WaitInterval,
-        [this]() -> bool { return awaiting_segments_ <= received_segments_; });
+        lk, steady_clock::now() + WaitInterval, [this]() -> bool {
+            // check for global exit
+            if (cma::srv::IsGlobalStopSignaled()) {
+                XLOG::l.i("Breaking Answer on stop");
+                return true;
+            }
+            return awaited_segments_ <= received_segments_;
+        });
 }
 
 // combines two vectors together
@@ -91,13 +97,13 @@ AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
 bool AsyncAnswer::prepareAnswer(std::string_view Ip) noexcept {
     std::lock_guard lk(lock_);
 
-    if (!external_ip_.empty() || awaiting_segments_ != 0 ||
+    if (!external_ip_.empty() || awaited_segments_ != 0 ||
         received_segments_ != 0)
         return false;
 
     dropDataNoLock();
     external_ip_ = Ip;
-    awaiting_segments_ = 0;
+    awaited_segments_ = 0;
     received_segments_ = 0;
     plugins_.clear();
     local_.clear();
@@ -153,7 +159,7 @@ bool AsyncAnswer::addSegment(
 
     received_segments_++;
 
-    if (awaiting_segments_ <= received_segments_) {
+    if (awaited_segments_ <= received_segments_) {
         // theoretically on answer may wait many threads
         // so notify all.
         cv_ready_.notify_all();
@@ -162,10 +168,18 @@ bool AsyncAnswer::addSegment(
     return true;
 }
 
+// used to kick answer and check status
+bool AsyncAnswer::tryBreakWait() {
+    std::lock_guard lk(lock_);
+    cv_ready_.notify_all();
+
+    return true;
+}
+
 // resets data, internal use only
 void AsyncAnswer::dropDataNoLock() {
     tp_id_ = GenerateAnswerId();
-    awaiting_segments_ = 0;
+    awaited_segments_ = 0;
     received_segments_ = 0;
     data_.resize(0);
     segments_.resize(0);

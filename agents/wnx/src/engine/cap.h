@@ -32,14 +32,30 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
 bool NeedReinstall(const std::filesystem::path &Target,
                    const std::filesystem::path &Src);
 
+bool IsFilesTheSame(const std::filesystem::path &Target,
+                    const std::filesystem::path &Src);
+
 using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
                           const std::filesystem::path &SrcCap);
 
-bool ReinstallCaps(const std::filesystem::path &TargetCap,
-                   const std::filesystem::path &SrcCap);
+bool ReinstallCaps(const std::filesystem::path &target_cap,
+                   const std::filesystem::path &source_cap);
 
-bool ReinstallIni(const std::filesystem::path &TargetIni,
-                  const std::filesystem::path &SrcIni);
+bool ReinstallIni(const std::filesystem::path &target_ini,
+                  const std::filesystem::path &source_ini);
+
+bool ReinstallYaml(const std::filesystem::path &bakery_yml,
+                   const std::filesystem::path &target_yml,
+                   const std::filesystem::path &source_yml);
+
+namespace details {
+void UninstallYaml(const std::filesystem::path &bakery_yaml,
+                   const std::filesystem::path &target_yaml);
+
+void InstallYaml(const std::filesystem::path &bakery_yaml,
+                 const std::filesystem::path &target_yaml,
+                 const std::filesystem::path &source_yaml);
+}  // namespace details
 
 // data structures to use
 enum class ProcMode { install, remove, list };

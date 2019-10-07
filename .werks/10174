@@ -1,0 +1,20 @@
+Title: Add Web-API calls for Checkmk Grafana datasource 1.1.0
+Level: 2
+Component: metrics
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.7.0i1
+Date: 1569248499
+
+The upcoming version 1.1.0 of the Checkmk Grafana datasource
+(https://github.com/tribe29/grafana-checkmk-datasource/)
+will introduce some new features that need these new API calls:
+
+<ul>
+<li>get_combined_graph_identifications: Used to aggregate similar graphs
+of the same type together to a single value</li>
+<li>get_graph_annotations: Used to add some monitoring events as Grafana
+annotations to dashboards.</li>
+</ul>

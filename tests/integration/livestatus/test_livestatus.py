@@ -5,6 +5,7 @@
 from __future__ import print_function
 import collections
 import pytest  # type: ignore
+import six
 
 from testlib import web, create_linux_test_host  # pylint: disable=unused-import
 
@@ -69,7 +70,7 @@ def test_host_custom_variables(default_cfg, site):
         u'ip-v4': u'ip-v4',
         u'networking': u'lan',
         u'piggyback': u'auto-piggyback',
-        u'site': unicode(site.id),
+        u'site': six.text_type(site.id),
         u'snmp_ds': u'no-snmp',
         u'tcp': u'tcp',
     }

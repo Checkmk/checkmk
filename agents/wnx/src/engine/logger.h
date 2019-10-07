@@ -492,16 +492,21 @@ public:
     // #TODO please, Sergey, this is copy-paste and copy-paste is streng
     // verboten by Check MK
     template <typename... T>
-    auto exec(int Modifications, const std::string& Format, T... args) {
+    auto exec(int Modifications, const std::string& Format,
+              T... args) noexcept {
         try {
             auto s = fmt::format(Format, args...);
+            // check construction
+            if (this == nullptr || !this->constructed_) return s;
             auto e = *this;
             e.mods_ |= Modifications;
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
+            // we do not want any exceptions during logging
             auto s =
                 fmt::format("Invalid parameters for log string \"{}\"", Format);
+            if (this == nullptr || !this->constructed_) return s;
             auto e = *this;
             e.mods_ |= XLOG::kCritError;
             e.postProcessAndPrint(s);
@@ -619,9 +624,15 @@ public:
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
     }
 
-    const xlog::LogParam& getLogParam() const { return log_param_; }
+    const xlog::LogParam& getLogParam() const noexcept { return log_param_; }
 
-    bool constructed() const { return constructed_ == kConstructedValue; }
+    bool constructed() const noexcept {
+        return constructed_ == kConstructedValue;
+    }
+
+    int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
+
+    size_t getBackupLogMaxSize() const noexcept { return backup_log_max_size_; }
 
 private:
     uint32_t constructed_;  // filled during construction
@@ -651,7 +662,9 @@ private:
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::ostringstream os_;     // stream storage
+    std::atomic<int> backup_log_max_count_ = cma::cfg::kBackupLogMaxCount;
+    std::atomic<size_t> backup_log_max_size_ = cma::cfg::kBackupLogMaxSize;
+    std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 
     bool copy_;  // informs us that whole structure is temporary
@@ -704,6 +717,11 @@ void EnableWinDbg(bool Enable);
 bool IsEventLogEnabled();
 
 }  // namespace setup
+
+namespace internal {
+int Type2Marker(xlog::Type Lt) noexcept;
+int Mods2Directions(const xlog::LogParam& lp, int mods) noexcept;
+}  // namespace internal
 
 }  // namespace XLOG
 

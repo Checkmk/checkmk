@@ -628,7 +628,7 @@ metric_info["server_latency"] = {
 }
 
 metric_info["e2e_latency"] = {
-    "title": _("Ent-to-end latency"),
+    "title": _("End-to-end latency"),
     "unit": "s",
     "color": "21/b",
 }
@@ -1612,6 +1612,12 @@ metric_info["util"] = {
     "title": _("CPU utilization"),
     "unit": "%",
     "color": "26/a",
+}
+
+metric_info["util_numcpu_as_max"] = {
+    "title": _("CPU utilization"),
+    "unit": "%",
+    "color": "#004080",
 }
 
 metric_info["util_average"] = {
@@ -6046,6 +6052,96 @@ metric_info["jenkins_pending_tasks"] = {
     "color": "51/a",
 }
 
+metric_info["msgs_avg"] = {
+    "title": _("Average number of messages"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["index_count"] = {
+    "title": _("Indices"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["store_size"] = {
+    "title": _("Store size"),
+    "unit": "bytes",
+    "color": "32/a",
+}
+
+metric_info["id_cache_size"] = {
+    "title": _("ID cache size"),
+    "unit": "bytes",
+    "color": "25/a",
+}
+
+metric_info["field_data_size"] = {
+    "title": _("Field data size"),
+    "unit": "bytes",
+    "color": "16/a",
+}
+
+metric_info["avg_doc_size"] = {
+    "title": _("Average document size"),
+    "unit": "bytes",
+    "color": "25/b",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "23/a",
+}
+
+metric_info["num_collections"] = {
+    "title": _("Collections"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_objects"] = {
+    "title": _("Objects"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_extents"] = {
+    "title": _("Extents"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_input"] = {
+    "title": _("Inputs"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["num_output"] = {
+    "title": _("Outputs"),
+    "unit": "count",
+    "color": "14/a",
+}
+
+metric_info["num_stream_rule"] = {
+    "title": _("Stream rules"),
+    "unit": "count",
+    "color": "16/a",
+}
+
+metric_info["num_extractor"] = {
+    "title": _("Extractors"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["num_user"] = {
+    "title": _("User"),
+    "unit": "count",
+    "color": "23/a",
+}
+
 for nimble_op_ty in ["read", "write"]:
     for nimble_key, nimble_title, nimble_color in [
         ("total", "Total", "11/a"),
@@ -6093,6 +6189,7 @@ metric_info['pending_requests'] = {
     "unit": "count",
     "color": "16/a",
 }
+
 metric_info['unacknowledged_requests'] = {
     "title": _("Unacknowledged requests"),
     "unit": "count",
@@ -6108,6 +6205,24 @@ metric_info['application_pending_requests'] = {
 metric_info['epoch_objects'] = {
     "title": _("Epoch objects"),
     "unit": "count",
+    "color": "42/a",
+}
+
+metric_info['graylog_input'] = {
+    "title": _("Input traffic"),
+    "unit": "bytes",
+    "color": "16/b",
+}
+
+metric_info['graylog_output'] = {
+    "title": _("Output traffic"),
+    "unit": "bytes",
+    "color": "23/a",
+}
+
+metric_info['graylog_decoded'] = {
+    "title": _("Decoded traffic"),
+    "unit": "bytes",
     "color": "42/a",
 }
 
@@ -6255,6 +6370,8 @@ for check in [
             "name": "util_average"
         },
     }
+
+check_metrics["check_mk-winperf_processor.util"].update({"util": {"name": "util_numcpu_as_max"}})
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf": {
@@ -7397,6 +7514,7 @@ cpu_util_unix_translate = {
 
 check_metrics["check_mk-kernel.util"] = cpu_util_unix_translate
 check_metrics["check_mk-statgrab_cpu"] = cpu_util_unix_translate
+check_metrics["check_mk-lxc_container_cpu"] = cpu_util_unix_translate
 
 check_metrics["check_mk-lparstat_aix.cpu_util"] = {
     "wait": {
@@ -7424,7 +7542,7 @@ check_metrics["check_mk-vms_sys.util"] = {
 
 check_metrics["check_mk-winperf.cpuusage"] = {
     "cpuusage": {
-        "name": "util_numcpu_as_max"
+        "name": "util"
     },
 }
 
@@ -8826,6 +8944,19 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type": "linear",
+    "segments": ["mem_used"],
+    "total": "mem_used:max",
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "mem_used",
+    "half_value": GB,
+    "exponent": 4.0,
+})
+
+perfometer_info.append({
     "type": "logarithmic",
     "metric": "time_offset",
     "half_value": 1.0,
@@ -8978,12 +9109,6 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["sort_overflow"],
-})
-
-perfometer_info.append({
-    "type": "linear",
-    "segments": ["mem_used"],
-    "total": "mem_used:max",
 })
 
 perfometer_info.append({
@@ -10123,9 +10248,9 @@ graph_info["util_average_2"] = {
 graph_info["cpu_utilization_numcpus"] = {
     "title": _("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
     "metrics": [
-        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
         ("user", "area"),
-        ("util_numcpu_as_max#008000", "line", _("Total")),
+        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
+        ("util_numcpu_as_max#004080", "line", _("Total")),
     ],
     "scalars": [
         "util_numcpu_as_max:warn",

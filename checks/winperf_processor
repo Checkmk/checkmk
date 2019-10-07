@@ -92,11 +92,13 @@ def check_winperf_util(_no_item, params, info):
                 cores.append(("core%d" % i, core_used_perc))
 
             if not wrapped:
-                for status, infotext, perfdata in check_cpu_util(used_perc, params, this_time,
-                                                                 cores):
-                    if perfdata and perfdata[0][0] == "util":
-                        perfdata[0] = perfdata[0][:5] + (len(cores),)
-                    yield status, infotext, perfdata
+                for subresult in check_cpu_util(used_perc, params, this_time, cores):
+                    if len(subresult) == 3 and subresult[2]:
+                        perf = subresult[2]
+                        if perf[0][0] == "util":
+                            perf[0] = perf[0][:5] + (len(cores),)
+                    yield subresult
+
         elif what == "user":
             used_perc = _clamp_percentage(100.0 * cpusecs_per_sec)
             yield 0, "%s perc: %.1f %%" % (what, used_perc), [(what, used_perc)]

@@ -162,12 +162,13 @@ def host_check_command(config_cache, host_config, ip, is_clust, default_host_che
 
 def autodetect_plugin(command_line):
     plugin_name = command_line.split()[0]
-    if command_line[0] not in ['$', '/']:
-        for directory in ["/local", ""]:
-            path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
-            if os.path.exists(path + plugin_name):
-                command_line = path + command_line
-                break
+    if command_line[0] in ['$', '/']:
+        return command_line
+    for directory in ["/local", ""]:
+        path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
+        if os.path.exists(path + plugin_name):
+            command_line = path + command_line
+            break
     return command_line
 
 
@@ -445,7 +446,7 @@ def get_host_attributes(hostname, config_cache):
 
 
 def _get_tag_attributes(collection, prefix):
-    return {u"__%s_%s" % (prefix, k): unicode(v) for k, v in collection.iteritems()}
+    return {u"__%s_%s" % (prefix, k): six.text_type(v) for k, v in collection.iteritems()}
 
 
 def get_cluster_attributes(config_cache, host_config, nodes):

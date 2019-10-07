@@ -105,7 +105,7 @@ def read_config():
         try:
             if not cfg.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
-        except Exception as e:
+        except Exception, e:
             sys.stdout.write("**ERROR** Failed to parse config file %s: %s\n" %
                              (config_file, repr(e)))
 
@@ -146,7 +146,7 @@ def read_status():
                     'wrst': parts[i * 8 + 9].rstrip(),
                     'stddev': parts[i * 8 + 10].rstrip(),
                 }
-        except Exception as e:
+        except Exception, e:
             sys.stdout.write("*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" %
                              (line, repr(e)))
     return current_status
@@ -180,13 +180,13 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    host = unicode(host, 'UTF-8')
+    host = host.decode("utf8")
     result = []
     for word in _punct_re.split(host.lower()):
         word = normalize('NFKD', word).encode('ascii', 'ignore')
         if word:
             result.append(word)
-    return unicode(delim.join(result))
+    return delim.join(result).decode("utf8")
 
 
 def check_mtr_pid(pid):

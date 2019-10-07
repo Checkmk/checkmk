@@ -10,6 +10,8 @@ from testlib import MissingCheckInfoError
 from generictests.checkhandler import checkhandler
 from contextlib import contextmanager
 import freezegun
+from cmk.gui.watolib.rulespecs import rulespec_registry
+import cmk.gui.plugins.wato.check_parameters
 
 
 class DiscoveryParameterTypeError(AssertionError):
@@ -119,7 +121,7 @@ def discovery(check, subcheck, dataset, info_arg, immu):
         assert disco_func, "%r has no discovery function!" \
                            % check.name
     if not disco_func:
-        return []
+        return DiscoveryResult()
 
     d_result_raw = check.run_discovery(info_arg)
     immu.test(' after discovery (%s): ' % disco_func.__name__)
@@ -132,6 +134,32 @@ def discovery(check, subcheck, dataset, info_arg, immu):
     return d_result
 
 
+def validate_discovered_params(check, params):
+    """Validate params with respect to the rule's valuespec
+    """
+    if not params:
+        return
+
+    # get the rule's valuespec
+    rulespec_group = check.info.get("group")
+    if rulespec_group is None:
+        return
+    key = "checkgroup_parameters:%s" % rulespec_group
+    spec = rulespec_registry[key].valuespec
+
+    # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
+    # *may* be 'None'. However, this is deliberately not allowed by the valuespec,
+    # to force the user to make a choice. The 'Invalid Parameter' message in this
+    # case does make sense, as it encourages the user to open and update the
+    # parameters. See Werk 6646
+    if 'cpu_rescale_max' in params:
+        params = params.copy()
+        params.update(cpu_rescale_max=True)
+
+    print("Loading %r with prams %r" % (key, params))
+    spec.validate_value(params, "")
+
+
 def check_discovered_result(check, discovery_result, info_arg, immu):
     """Run the check on all discovered items with the default parameters.
     We cannot validate the results, but at least make sure we don't crash.
@@ -141,18 +169,21 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
     item = discovery_result.item
 
     params = get_merged_parameters(check, discovery_result.default_params)
+
+    validate_discovered_params(check, params)
+
     immu.register(params, 'params')
 
     raw_checkresult = check.run_check(item, params, info_arg)
     check_func = check.info.get("check_function")
     immu.test(' after check (%s): ' % check_func.__name__)
 
-    cr = CheckResult(raw_checkresult)
+    result = CheckResult(raw_checkresult)
 
-    return (item, params, cr.raw_repr())
+    return (item, params, result.raw_repr())
 
 
-def check_listed_result(check, list_entry, info_arg, immu):
+def process_listed_result(check, list_entry, info_arg, immu):
     """Run check for all results listed in dataset"""
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
@@ -164,7 +195,7 @@ def check_listed_result(check, list_entry, info_arg, immu):
 
     result = CheckResult(result_raw)
     result_expected = CheckResult(results_expected_raw)
-    assertCheckResultsEqual(result, result_expected)
+    return result, result_expected
 
 
 @contextmanager
@@ -215,18 +246,24 @@ def run(check_manager, dataset, write=False):
             with MockItemState(mock_is), \
                  MockHostExtraConf(check, mock_hec), \
                  MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
-                # test discovery
-                d_result = discovery(check, subcheck, dataset, info_arg, immu)
-                if write:
-                    dataset.discovery[subcheck] = [e.tuple for e in d_result]
-                    # test checks
-                for dr in d_result:
-                    cdr = check_discovered_result(check, dr, info_arg, immu)
-                    if write and cdr:
-                        dataset.checks.setdefault(subcheck, []).append(cdr)
-                if not write:
-                    for entry in checks_expected.get(subcheck, []):
 
-                        check_listed_result(check, entry, info_arg, immu)
+                # test discovery
+                discovery_result = discovery(check, subcheck, dataset, info_arg, immu)
+                if write:
+                    dataset.discovery[subcheck] = [e.tuple for e in discovery_result.entries
+                                                  ] + discovery_result.labels.to_list()
+
+                    # test checks for DiscoveryResult entries
+                    for dr in discovery_result.entries:
+                        new_entry = check_discovered_result(check, dr, info_arg, immu)
+                        dataset.update_check_result(subcheck, new_entry)
+
+                for entry in checks_expected.get(subcheck, []):
+                    result, result_expected = process_listed_result(check, entry, info_arg, immu)
+                    if write:
+                        new_entry = (entry[0], entry[1], result.raw_repr())
+                        dataset.update_check_result(subcheck, new_entry)
+                    else:
+                        assertCheckResultsEqual(result, result_expected)
 
         immu.test(' at end of subcheck loop %r ' % subcheck)

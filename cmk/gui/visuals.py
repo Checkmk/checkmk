@@ -929,6 +929,7 @@ def page_edit_visual(what,
                     'description',
                     'linktitle',
                     'icon',
+                    'add_context_to_title',
             ]:
                 visual[key] = general_properties[key]
 
@@ -1259,7 +1260,7 @@ class VisualFilterList(ListOfMultiple):
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore = kwargs.get("ignore", set())
+        ignore = kwargs.pop("ignore", set())
         self._filters = self._get_filters(info_list, ignore)
 
         kwargs.setdefault('title', _('Filters'))
@@ -1321,9 +1322,6 @@ class VisualFilter(ValueSpec):
         if not isinstance(value, dict):
             raise MKUserError(varprefix,
                               _("The value must be of type dict, but it has type %s") % type(value))
-
-    def validate_value(self, value, varprefix):
-        ValueSpec.custom_validate(self, value, varprefix)
 
 
 def SingleInfoSelection(info_keys, **args):

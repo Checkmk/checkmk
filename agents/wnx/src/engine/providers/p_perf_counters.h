@@ -25,11 +25,11 @@ protected:
     std::string makeBody() override;
 };
 
-class Uptime : public Asynchronous {
+class UptimeAsync : public Asynchronous {
 public:
-    Uptime() : Asynchronous(cma::section::kUptimeName, 0) {}
+    UptimeAsync() : Asynchronous(cma::section::kUptimeName, 0) {}
 
-    Uptime(const std::string& Name, char Separator = 0)
+    UptimeAsync(const std::string& Name, char Separator = 0)
         : Asynchronous(Name, Separator) {}
 
 protected:

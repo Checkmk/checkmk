@@ -107,6 +107,19 @@ def test_discovered_host_labels_to_dict():
     }
 
 
+def test_discovered_host_labels_to_list():
+    labels = DiscoveredHostLabels()
+    assert labels.to_list() == []
+
+    labels.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+    labels.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+
+    assert labels.to_list() == [
+        HostLabel(u"xyz", u"blä", "plugin_2"),
+        HostLabel(u"äbc", u"123", "plugin_1")
+    ]
+
+
 def test_discovered_host_labels_from_dict():
     label_dict = {
         u"äbc": {
@@ -120,6 +133,43 @@ def test_discovered_host_labels_from_dict():
     }
     labels = DiscoveredHostLabels.from_dict(label_dict)
     assert labels.to_dict() == label_dict
+
+
+def test_discovered_host_labels_add():
+    labels_1 = DiscoveredHostLabels()
+    labels_1.add_label(HostLabel(u"äbc", u"123", "plugin_1"))
+
+    labels_2 = DiscoveredHostLabels()
+    labels_2.add_label(HostLabel(u"xyz", u"blä", "plugin_2"))
+
+    new_labels = labels_1 + labels_2
+    assert new_labels.to_dict() == {
+        u"äbc": {
+            "value": u"123",
+            "plugin_name": "plugin_1",
+        },
+        u"xyz": {
+            "value": u"blä",
+            "plugin_name": "plugin_2",
+        },
+    }
+
+    labels_1 += labels_2
+    assert labels_1.to_dict() == {
+        u"äbc": {
+            "value": u"123",
+            "plugin_name": "plugin_1",
+        },
+        u"xyz": {
+            "value": u"blä",
+            "plugin_name": "plugin_2",
+        },
+    }
+
+
+def test_discovered_host_label_equal():
+    assert HostLabel(u"äbc", u"123") != HostLabel(u"xyz", u"blä")
+    assert HostLabel(u"äbc", u"123") == HostLabel(u"äbc", u"123")
 
 
 @pytest.fixture()

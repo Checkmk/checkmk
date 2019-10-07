@@ -44,16 +44,16 @@ def _parameter_valuespec_varnish_esi():
          Tuple(
              title=_("Upper levels for \"ESI errors\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
         ("warnings",
          Tuple(
              title=_("Upper levels for \"ESI warnings\" per second"),
              elements=[
-                 Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                 Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                 Float(title=_("Warning at"), default_value=1.0),
+                 Float(title=_("Critical at"), default_value=2.0)
              ],
          )),
     ],)

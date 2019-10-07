@@ -27,6 +27,7 @@
 import abc
 import os
 import time
+import io
 import six
 
 import cmk.utils.paths
@@ -1487,11 +1488,21 @@ class PainterCheckManpage(Painter):
 
     def render(self, row, cell):
         command = row["service_check_command"]
-        if not command.startswith("check_mk-"):
+
+        if not command.startswith(("check_mk-", "check-mk", "check_mk_active-cmk_inv")):
             return "", ""
-        checktype = command[9:]
+
+        if command == "check-mk":
+            checktype = "check-mk"
+        elif command == "check-mk-inventory":
+            checktype = "check-mk-inventory"
+        elif "check_mk_active-cmk_inv" in command:
+            checktype = "check_cmk_inv"
+        else:
+            checktype = command[9:]
 
         page = man_pages.load_man_page(checktype)
+
         if page is None:
             return "", _("Man page %s not found.") % checktype
 
@@ -1597,7 +1608,7 @@ def paint_custom_notes(what, row):
             .replace('$SERVICEDESC$',    row.get("service_description", ""))
 
     for f in files:
-        contents.append(replace_tags(unicode(open(f).read(), "utf-8").strip()))
+        contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
     return "", "<hr>".join(contents)
 
 
@@ -2869,7 +2880,7 @@ class PainterNumProblems(Painter):
 
     @property
     def short_title(self):
-        return _("Pro.")
+        return _("Prob.")
 
     @property
     def columns(self):

@@ -5,6 +5,7 @@ import json
 import six
 import pytest  # type: ignore
 from pathlib2 import Path
+import six
 
 import cmk.utils.paths
 import cmk.gui.modules as modules
@@ -795,7 +796,7 @@ def my_theme(theme_dirs):
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Määh Theme :-)"})))
+        six.text_type(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
 
@@ -813,7 +814,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Määh Bettr Theme :-D"})))
+        six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Määh Theme :-)"),
@@ -827,7 +828,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
     my_dir.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode(json.dumps({"title": "Fixed theme"})))
+        six.text_type(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Fixed theme"),
@@ -836,7 +837,7 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 def test_theme_broken_meta(my_theme):
     my_theme.joinpath("theme.json").open(mode="w", encoding="utf-8").write(
-        unicode("{\"titlewrong\": xyz\"bla\"}"))
+        six.text_type("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"my_theme"),

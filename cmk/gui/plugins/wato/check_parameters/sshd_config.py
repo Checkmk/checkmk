@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    ListOfIntegers,
+    ListOfNetworkPorts,
     ListOfStrings,
     Transform,
 )
@@ -76,14 +76,7 @@ def _parameter_valuespec_sshd_config():
              ],
              default_value="2",
          )),
-        ("Port",
-         ListOfIntegers(
-             title=_("Allowed Ports"),
-             minvalue=0,
-             maxvalue=65535,
-             orientation="horizontal",
-             default_value=[22],
-         )),
+        ("Port", ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22])),
         ("PasswordAuthentication",
          DropdownChoice(
              title=_("Allow password authentication"),

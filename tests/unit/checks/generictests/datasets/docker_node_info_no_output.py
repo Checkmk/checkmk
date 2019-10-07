@@ -1,6 +1,6 @@
 # -*- encoding: utf-8
 # yapf: disable
-
+from cmk_base.discovered_labels import HostLabel
 
 checkname = 'docker_node_info'
 
@@ -8,7 +8,8 @@ checkname = 'docker_node_info'
 info = [['']]
 
 
-discovery = {'': [(None, {})], 'containers': [(None, {})]}
+discovery = {'': [(None, {}), HostLabel(u'cmk/docker_object', u'node')],
+            'containers': [(None, {})]}
 
 
 checks = {'': [(None, {}, [])],

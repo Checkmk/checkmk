@@ -56,7 +56,7 @@ def check_uniserv_desc(params):
 
 
 active_check_info["uniserv"] = {
-    "command_line": "$USER1$/check_uniserv $ARG1$",
+    "command_line": "check_uniserv $ARG1$",
     "argument_function": check_uniserv_arguments,
     "service_description": check_uniserv_desc,
 }

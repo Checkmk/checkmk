@@ -69,12 +69,21 @@ def _parameter_valuespec_jenkins_nodes():
              ],
          )),
         ("jenkins_temp",
-         Tuple(title=_("Absolute levels for free temp space"),
-               elements=[
-                   Integer(title=_("Warning if below"), unit=_("MB"), minvalue=0),
-                   Integer(title=_("Critical if below"), unit=_("MB"), minvalue=0),
-               ],
-               allow_empty=False)),
+         Tuple(
+             title=_("Absolute levels for free temp space"),
+             elements=[
+                 Integer(
+                     title=_("Warning if below"),
+                     unit=_("MB"),
+                     minvalue=0,
+                 ),
+                 Integer(
+                     title=_("Critical if below"),
+                     unit=_("MB"),
+                     minvalue=0,
+                 ),
+             ],
+         )),
     ],)
 
 

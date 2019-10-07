@@ -54,7 +54,7 @@ def check_traceroute_arguments(params):
 
 
 active_check_info["traceroute"] = {
-    "command_line": "$USER1$/check_traceroute $ARG1$",
+    "command_line": "check_traceroute $ARG1$",
     "argument_function": check_traceroute_arguments,
     "service_description": lambda params: "Routing",
 }

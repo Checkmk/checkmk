@@ -44,8 +44,8 @@ def _parameter_valuespec_carbon_monoxide():
          Tuple(
              title="Levels in parts per million",
              elements=[
-                 Integer(title=_("Warning at"), unit=_("ppm"), default=10),
-                 Integer(title=_("Critical at"), unit=_("ppm"), default=25),
+                 Integer(title=_("Warning at"), unit=_("ppm"), default_value=10),
+                 Integer(title=_("Critical at"), unit=_("ppm"), default_value=25),
              ],
          )),
     ],)

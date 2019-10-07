@@ -51,12 +51,19 @@ body.main.dashlet div.warning {
 '-------------------------------------------------------------------------*/
 
 table.filterform {
-    border-collapse: collapse;
-    padding: 0px;
-    border-style: none;
-}
-table.filterform td {
-    padding: 0px;
+  padding: 0;
+  border-collapse: collapse;
+  border-style: none;
+
+  td {
+    padding: 0;
+  }
+
+  > tbody > tr > td div.floatfilter .content .checkbox {
+    display: block;
+    float: left;
+    margin: 0 8px 4px 0;
+  }
 }
 
 div.floatfilter {

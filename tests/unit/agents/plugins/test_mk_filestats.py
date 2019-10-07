@@ -12,23 +12,19 @@ def mk_filestats():
 
 
 def test_lazy_file(mk_filestats):
-    lfile = mk_filestats.LazyFileStats("no such file")
+    lfile = mk_filestats.FileStat("no such file")
     assert lfile.path == "no such file"
-    assert lfile._size is None
-    assert lfile._age is None
-
-    assert lfile.stat_status is None
     assert lfile.size is None
-    assert lfile.stat_status == "file vanished"
     assert lfile.age is None
+    assert lfile.stat_status == "file vanished"
 
     assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
-    lfile = mk_filestats.LazyFileStats(__file__)  # this should exist...
+    lfile = mk_filestats.FileStat(__file__)  # this should exist...
     assert lfile.path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
-    assert lfile.age is not None
+    assert isinstance(lfile.age, int)
     assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
 
@@ -84,7 +80,7 @@ def test_numeric_filter_raises(mk_filestats, invalid_arg):
 def test_path_filter(mk_filestats, reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        lazy_file = mk_filestats.LazyFileStats(path)
+        lazy_file = mk_filestats.FileStat(path)
         assert result == path_filter.matches(lazy_file)
 
 

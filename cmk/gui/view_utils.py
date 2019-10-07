@@ -26,6 +26,7 @@
 
 import re
 import json
+import six
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -94,7 +95,7 @@ def get_host_list_links(site, hosts):
             args.append(("display_options", html.request.var("display_options")))
 
         url = html.makeuri_contextless(args, filename="view.py")
-        link = unicode(html.render_a(host, href=url))
+        link = six.text_type(html.render_a(host, href=url))
         entries.append(link)
     return entries
 

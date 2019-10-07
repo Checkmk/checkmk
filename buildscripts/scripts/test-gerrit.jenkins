@@ -3,7 +3,7 @@ node {
     def WORKSPACE = pwd()
     
     try {
-        stage("Auschecken: Check_MK") {
+        stage("Auschecken: Checkmk") {
             checkout([$class: 'GitSCM',
                 branches: [
                     [name: '${GERRIT_PATCHSET_REVISION}']
@@ -31,13 +31,26 @@ node {
             ])
         }
         
-        CHANGED_FILES = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION} | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
-        GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        // Creates a \n separated list of changed files
+        def CHANGED_FILES_REL = sh(script: "git diff-tree --no-commit-id --name-only -r ${GERRIT_PATCHSET_REVISION}", returnStdout: true).toString().trim()
+        def CHANGED_FILES_ABS = sh(script: "echo '${CHANGED_FILES_REL}' | sed 's|^|${WORKSPACE}/|g'", returnStdout: true).toString().trim()
+
+        // Gather the list of changed python files
+        def GREP_PATTERNS = sh(script: "echo '${CHANGED_FILES_ABS}' | sed 's/^/-e /g'", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_PYTHON_FILES = sh(script: "tests/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
+        def CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
+
+        // Gather the list of changed agent plugins
+        def CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
+        // Gather the list of changed livestatus / core files
+        def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
         print "Changed python files: ${CHANGED_PYTHON_FILES}"
-        CHANGED_PYTHON3_FILES = sh(script: "tests-py3/find-python-files | grep -h ${GREP_PATTERNS} - || true", returnStdout: true).toString().trim()
         print "Changed python3 files: ${CHANGED_PYTHON3_FILES}"
-        CHANGED_PYLINT_RC_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/.pylintrc' - || true", returnStdout: true).toString().trim()
+        print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
+        print "Changed core files: ${CHANGED_CORE_FILES}"
 
         stage("Python typing") {
             if (CHANGED_PYTHON_FILES != "") {
@@ -61,7 +74,7 @@ node {
         }
         
         stage("Python futurize") {
-            CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
+            CHANGED_TEST_FUTURIZE_FILE = sh(script: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/tests/test-futurize' - || true", returnStdout: true).toString().trim()
             if (CHANGED_TEST_FUTURIZE_FILE != "") {
                 dir('tests') {
                     sh ". /bauwelt/bin/bw-setup-jenkins-env ; make --quiet test-python-futurize"
@@ -133,39 +146,67 @@ node {
             }
         }
         
-        stage("Cppcheck") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+        stage("Agent integration tests") {
+            if (CHANGED_AGENT_PLUGINS != "") {
+                dir('tests') {
+                    withEnv(["PYTEST_ADDOPTS=\"--junitxml='$WORKSPACE/junit-agent-integration.xml'\""]) {
+                        sh ". /bauwelt/bin/bw-setup-jenkins-env ; make test-agent-integration"
+                    }
+                }
+            } else {
+                println "No agent files changed. Skipping."
             }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+        }
+
+        stage("Cppcheck") {
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter cppcheck ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("Clang-Tidy") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
-            }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter tidy ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("IWYU") {
-            dir("livestatus/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
-            }
-            dir("enterprise/core/src") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                }
+                dir("enterprise/core/src") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ${WORKSPACE}/scripts/run-cxx-linter iwyu ${GERRIT_PATCHSET_REVISION}"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
         stage("NEB/CMC Unit Tests") {
-            dir("livestatus/src/test") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
-            }
-            dir("enterprise/core/src/test") {
-                sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+            if (CHANGED_CORE_FILES != "") {
+                dir("livestatus/src/test") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                }
+                dir("enterprise/core/src/test") {
+                    sh ". /bauwelt/bin/bw-setup-jenkins-env ; ./.f12"
+                }
+            } else {
+                println "No core files changed. Skipping."
             }
         }
 
@@ -175,7 +216,7 @@ node {
     } finally {
         step([
             $class: 'WarningsPublisher',
-            canComputeNew: false, 
+            canComputeNew: false,
             canResolveRelativePaths: false,
             canRunOnFailed: true,
             defaultEncoding: '',

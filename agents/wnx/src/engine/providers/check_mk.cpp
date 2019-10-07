@@ -72,6 +72,17 @@ static std::string AddressV4ToCheckMkNetworkV6(std::string_view addr) {
     return hex;
 }
 
+static std::string AddressV4ToCheckMkV6(std::string_view addr) {
+    using namespace asio;
+
+    auto addr_4 = ip::make_address_v4(addr);  //
+    auto addr_6 = ip::make_address_v6(ip::v4_mapped, addr_4);
+
+    auto hex = AddressV6ToHex(addr_6);
+
+    return hex;
+}
+
 // function to provide format compatibility for monitoring site
 // probably, a bit to pedantic, "aber sicher ist sicher"
 std::string AddressToCheckMkString(std::string_view entry) noexcept {
@@ -86,15 +97,22 @@ std::string AddressToCheckMkString(std::string_view entry) noexcept {
     try {
         if (of::IsAddressV4(entry)) {
             // we need two addresses, ipv4 and compatible ipv6
-            auto out = AddressV4ToCheckMkNetworkV4(entry);
+            // auto out= AddressV4ToCheckMkNetworkV4(entry);
+            std::string out(entry);
 
-            auto hex = AddressV4ToCheckMkNetworkV6(entry);
+            return out;
+            // unreachable
+
+            // auto hex = AddressV4ToCheckMkNetworkV6(entry);
+            auto hex = AddressV4ToCheckMkV6(entry);
 
             if (!hex.empty()) out += " " + hex;
             return out;
         }
 
         if (of::IsAddressV6(entry)) {
+            return std::string(entry);
+            // unreachable
             auto addr = ip::make_address_v6(entry);
             auto hex = AddressV6ToHex(addr);  // again conversion
             hex += "/128";                    // max bits
@@ -106,34 +124,50 @@ std::string AddressToCheckMkString(std::string_view entry) noexcept {
     return {};
 }
 
-std::string CheckMk::makeBody() {
-    using namespace std::chrono;
-    using namespace std;
-    using namespace cma;
-    using namespace wtools;
+std::string CheckMk::makeOnlyFrom() {
     using namespace cma::cfg;
+    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
+    if (only_from.empty()) return "";
+    if (only_from.size() == 1 && only_from[0] == "~") return "";
+
+    std::string out;
+    for (auto& entry : only_from) {
+        auto value = AddressToCheckMkString(entry);
+        if (!value.empty()) out += value + " ";
+    }
+
+    if (!out.empty()) out.pop_back();  // last space
+
+    return out;
+}
+
+std::string CheckMk::makeBody() {
+    using namespace std;
+    using namespace wtools;
 
     XLOG::t(XLOG_FUNC + " entering");
 
-    pair<string, string> infos[] = {
+    static pair<string, string> infos[] = {
         // start -----------------------------------------------
         {"Version", CHECK_MK_VERSION},
         {"BuildDate", __DATE__},
         {"AgentOS", "windows"},
         {"Hostname", cfg::GetHostName()},
-
         {"Architecture", tgt::Is64bit() ? "64bit" : "32bit"},
-        {"WorkingDirectory", ConvertToUTF8(cfg::GetWorkingDir())},
-        {"ConfigFile", ConvertToUTF8(cfg::GetPathOfRootConfig())},
-        {"LocalConfigFile", ConvertToUTF8(cfg::GetPathOfUserConfig())},
-        {"AgentDirectory", ConvertToUTF8(cfg::GetRootDir())},
-        {"PluginsDirectory", ConvertToUTF8(cfg::GetUserPluginsDir())},
-        {"StateDirectory", ConvertToUTF8(cfg::GetStateDir())},
-        {"ConfigDirectory", ConvertToUTF8(cfg::GetPluginConfigDir())},
-        {"TempDirectory", ConvertToUTF8(cfg::GetTempDir())},
-        {"LogDirectory", ConvertToUTF8(cfg::GetLogDir())},
-        {"SpoolDirectory", ConvertToUTF8(cfg::GetSpoolDir())},
-        {"LocalDirectory", ConvertToUTF8(cfg::GetLocalDir())}
+    };
+
+    pair<string, wstring> directories[] = {
+        {"WorkingDirectory", cfg::GetWorkingDir()},
+        {"ConfigFile", cfg::GetPathOfRootConfig()},
+        {"LocalConfigFile", cfg::GetPathOfUserConfig()},
+        {"AgentDirectory", cfg::GetRootDir()},
+        {"PluginsDirectory", cfg::GetUserPluginsDir()},
+        {"StateDirectory", cfg::GetStateDir()},
+        {"ConfigDirectory", cfg::GetPluginConfigDir()},
+        {"TempDirectory", cfg::GetTempDir()},
+        {"LogDirectory", cfg::GetLogDir()},
+        {"SpoolDirectory", cfg::GetSpoolDir()},
+        {"LocalDirectory", cfg::GetLocalDir()}
         // end -------------------------------------------------
     };
 
@@ -142,16 +176,12 @@ std::string CheckMk::makeBody() {
         out += fmt::format("{}: {}\n", info.first, info.second);
     }
 
-    out += "OnlyFrom:";
-    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-    if (only_from.empty()) {
-        return out + " 0.0.0.0/0\n";
+    for (const auto& d : directories) {
+        out += fmt::format("{}: {}\n", d.first, ConvertToUTF8(d.second));
     }
 
-    for (auto& entry : only_from) {
-        auto value = AddressToCheckMkString(entry);
-        if (!value.empty()) out += " " + value;
-    }
+    out += "OnlyFrom: ";
+    out += makeOnlyFrom();
     out += '\n';
     return out;
 }  // namespace provider

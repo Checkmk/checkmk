@@ -1,0 +1,14 @@
+Title: Fix possible XSS using titles of custom snapins
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1569593314
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Authenticated users that are allowed to configure and share custom snapins
+could inject arbitrary JS code to all users which are permitted to view this
+snapin.

@@ -29,10 +29,10 @@ checks = {
         'errors': (0.01, 0.1),
         'state': ['1'],
         'speed': 10000000000
-    }, [(0, u'[TEAM:F[o]O 123-BAR] (Connected) 10.00 Gbit/s', [])]),
+    }, [(0, u'[TEAM:F[o]O 123-BAR] (Connected) 10 Gbit/s', [])]),
          ('2', {
              'errors': (0.01, 0.1),
              'state': ['1'],
              'speed': 10000000000
-         }, [(0, u'[TEAM:F[o]O 123-BAR 2] (Connected) 10.00 Gbit/s', [])])]
+         }, [(0, u'[TEAM:F[o]O 123-BAR 2] (Connected) 10 Gbit/s', [])])]
 }

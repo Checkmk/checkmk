@@ -111,8 +111,6 @@ public:
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
 
-    // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
-    AuthorizationKind hostAuthorization() const override;
     AuthorizationKind serviceAuthorization() const override;
     AuthorizationKind groupAuthorization() const override;
 

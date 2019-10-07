@@ -73,7 +73,14 @@ public:
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
     std::string generateContent(const std::string_view& SectionName,
-                                bool ForceGeneration = false);
+                                bool ForceGeneration);
+    std::string generateContent() {
+        return generateContent(section::kUseEmbeddedName, false);
+    }
+
+    std::string generateContent(const std::string_view& section_name) {
+        return generateContent(section_name, false);
+    }
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const;

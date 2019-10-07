@@ -44,6 +44,7 @@ if sys.version_info[0] >= 3:
 else:
     from pathlib2 import Path
 
+import errno
 from typing import List  # pylint: disable=unused-import
 import argparse
 import logging
@@ -84,9 +85,10 @@ class UpdateConfig(object):
         # stuff. Currently, we just move the console handler to the top, so
         # both worlds are happy. We really, really need to split business logic
         # from presentation code... :-/
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
+        if log.logger.handlers:
+            console_handler = log.logger.handlers[0]
+            del log.logger.handlers[:]
+            logging.getLogger().addHandler(console_handler)
 
     def run(self):
         self._logger.log(VERBOSE, "Initializing application...")
@@ -108,6 +110,7 @@ class UpdateConfig(object):
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
+            (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
         ]
 
     def _rewrite_wato_tag_config(self):
@@ -149,6 +152,22 @@ class UpdateConfig(object):
         # which is only known to cmk.update_config in the future).
         cmk.gui.config.load_config()
         cmk.gui.config.set_super_user()
+
+    def _cleanup_version_specific_caches(self):
+        # type: () -> None
+        paths = [
+            Path(cmk.utils.paths.include_cache_dir, "builtin"),
+            Path(cmk.utils.paths.include_cache_dir, "local"),
+            Path(cmk.utils.paths.precompiled_checks_dir, "builtin"),
+            Path(cmk.utils.paths.precompiled_checks_dir, "local"),
+        ]
+        for base_dir in paths:
+            try:
+                for f in base_dir.iterdir():
+                    f.unlink()
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise  # Do not fail on missing directories / files
 
 
 def main(args):

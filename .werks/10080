@@ -1,0 +1,13 @@
+Title: Fixed broken perfometer for memory usage with missing values
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1570439714
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+The rendering of a memory usage perfometers did fail when min or max values where missing.
+We added a perfometer as fallback that will display the memory usage in a logarithmic form
+when min or max values are not present.

@@ -5,9 +5,15 @@ from pathlib2 import Path
 import cmk.utils.paths
 
 pathlib_paths = [
+    "core_discovered_host_labels_dir",
+    "base_discovered_host_labels_dir",
     "discovered_host_labels_dir",
     "piggyback_dir",
     "piggyback_source_dir",
+    "notifications_dir",
+    "pnp_templates_dir",
+    "doc_dir",
+    "locale_dir",
     "mib_dir",
     "local_share_dir",
     "local_checks_dir",

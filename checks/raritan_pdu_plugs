@@ -27,41 +27,45 @@
 raritan_pdu_plugs_default = '"on"'  # only to be downwards compatible and can be removed any decade now.
 
 
-def inventory_raritan_pdu_plugs(parsed):
-    for key, value in parsed.iteritems():
-        yield key, value["state_int"]
-
-
 def parse_raritan_pdu_plugs(info):
     parsed = {}
 
     for outlet_label, outlet_name, outlet_state in info:
-        try:
-            state_int = int(outlet_state)
-        except ValueError:
-            state_int = None
         parsed[outlet_label] = {
             "state": raritan_map_state.get(outlet_state, (None, None)),
-            "state_int": state_int,
             "outlet_name": outlet_name,
         }
     return parsed
+
+
+def inventory_raritan_pdu_plugs(parsed):
+    for key, value in parsed.iteritems():
+        yield key, {'discovered_state': value["state"][1]}
+
+
+def _transform(params):
+    if isinstance(params, dict):
+        return params
+    if isinstance(params, int):
+        state = raritan_map_state.get("%s" % params, (None, None))[1]
+        return {'discovered_state': state}
+    if params in ('on', 'off'):
+        return {'required_state': params}
+    return {}
 
 
 @get_parsed_item_data
 def check_raritan_pdu_plugs(_no_item, params, data):
     if data.get("outlet_name"):
         yield 0, data["outlet_name"]
-    required_state = params
+
     state, state_info = data["state"]
-    outlet_state = data["state_int"]
-    state = 0
-    if isinstance(required_state, int):
-        if outlet_state != required_state:
-            state = 2
-    elif state_info != required_state:
-        state = 2
     yield state, "Status: %s" % state_info
+
+    params = _transform(params)
+    required_state = params.get('required_state', params.get('discovered_state'))
+    if state_info != required_state:
+        yield 2, "Expected: %s" % required_state
 
 
 check_info['raritan_pdu_plugs'] = {

@@ -38,6 +38,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import (
     ID,
+    Age,
     Alternative,
     CascadingDropdown,
     Checkbox,
@@ -153,14 +154,18 @@ def _valuespec_special_agents_kubernetes():
                  ListChoice(choices=[
                      ("nodes", _("Nodes")),
                      ("services", _("Services")),
+                     ("ingresses", _("Ingresses")),
                      ("deployments", _("Deployments")),
                      ("pods", _("Pods")),
+                     ("endpoints", _("Endpoints")),
                      ("daemon_sets", _("Daemon sets")),
                      ("stateful_sets", _("Stateful sets")),
                      ("jobs", _("Job")),
                  ],
                             default_value=[
                                 "nodes",
+                                "endpoints",
+                                "ingresses",
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
@@ -232,7 +237,7 @@ def _valuespec_special_agents_vsphere():
                      (False, _("Queried host is the vCenter")),
                      ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
                  ],
-                 default=True,
+                 default_value=True,
              )),
             ("tcp_port",
              Integer(
@@ -303,7 +308,8 @@ def _valuespec_special_agents_vsphere():
                  help=
                  _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
                    "virtual machines in case the default vm is unable to start. This option tells the "
-                   "vsphere agent to exclude placeholder vms in its output."))),
+                   "vsphere agent to exclude placeholder vms in its output."),
+             )),
             ("host_pwr_display",
              DropdownChoice(
                  title=_("Display ESX Host power state on"),
@@ -312,7 +318,7 @@ def _valuespec_special_agents_vsphere():
                      ("esxhost", _("The ESX Host")),
                      ("vm", _("The Virtual Machine")),
                  ],
-                 default=None,
+                 default_value=None,
              )),
             ("vm_pwr_display",
              DropdownChoice(
@@ -327,7 +333,7 @@ def _valuespec_special_agents_vsphere():
                      ("esxhost", _("The ESX Host")),
                      ("vm", _("The Virtual Machine")),
                  ],
-                 default=None,
+                 default_value=None,
              )),
             ("snapshot_display",
              DropdownChoice(
@@ -342,7 +348,7 @@ def _valuespec_special_agents_vsphere():
                      ("esxhost", _("The ESX Host")),
                      ("vCenter", _("The queried ESX system (vCenter / Host)")),
                  ],
-                 default=None,
+                 default_value=None,
              )),
             ("vm_piggyname",
              DropdownChoice(
@@ -352,7 +358,7 @@ def _valuespec_special_agents_vsphere():
                      ("hostname",
                       _("Use the VMs hostname if set, otherwise fall back to ESX name")),
                  ],
-                 default="alias",
+                 default_value="alias",
              )),
             ("spaces",
              DropdownChoice(
@@ -361,7 +367,7 @@ def _valuespec_special_agents_vsphere():
                      ("cut", _("Cut everything after first space")),
                      ("underscore", _("Replace with underscores")),
                  ],
-                 default="underscore",
+                 default_value="underscore",
              )),
         ],
         optional_keys=[
@@ -480,17 +486,18 @@ def _special_agents_ipmi_sensors_vs_ipmitool():
 
 
 def _valuespec_special_agents_ipmi_sensors():
-    return Transform(CascadingDropdown(
-        choices=[
-            ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
-            ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
-        ],
-        required_keys=["username", "password", "privilege_lvl"],
-        title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
-        help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-               "which collects the data through the FreeIPMI resp. IPMItool command"),
-    ),
-                     forth=_special_agents_ipmi_sensors_transform_ipmi_sensors)
+    return Transform(
+        CascadingDropdown(
+            choices=[
+                ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
+                ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
+            ],
+            title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
+            help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+                   "which collects the data through the FreeIPMI resp. IPMItool command"),
+        ),
+        forth=_special_agents_ipmi_sensors_transform_ipmi_sensors,
+    )
 
 
 rulespec_registry.register(
@@ -1174,27 +1181,40 @@ def _valuespec_special_agents_ruckus_spot():
                  title=_("Server Address"),
                  help=_("Here you can set a manual address if the server differs from the host"),
                  elements=[
-                     FixedValue(True, title=_("Use host address"), totext=""),
-                     TextAscii(title=_("Enter address"))
+                     FixedValue(
+                         True,
+                         title=_("Use host address"),
+                         totext="",
+                     ),
+                     TextAscii(title=_("Enter address"),)
                  ],
                  default_value=True)),
-            ("port", Integer(title=_("Port"), allow_empty=False, default_value=8443)),
+            ("port", Integer(
+                title=_("Port"),
+                default_value=8443,
+            )),
             ("venueid", TextAscii(
                 title=_("Venue ID"),
                 allow_empty=False,
             )),
-            ("api_key", TextAscii(title=_("API key"), allow_empty=False, size=70)),
+            ("api_key", TextAscii(
+                title=_("API key"),
+                allow_empty=False,
+                size=70,
+            )),
             ("cmk_agent",
-             Dictionary(title=_("Also contact Check_MK agent"),
-                        help=_("With this setting, the special agent will also contact the "
-                               "Check_MK agent on the same system at the specified port."),
-                        elements=[("port",
-                                   Integer(
-                                       title=_("Port"),
-                                       default_value=6556,
-                                       allow_empty=False,
-                                   ))],
-                        optional_keys=[])),
+             Dictionary(
+                 title=_("Also contact Check_MK agent"),
+                 help=_("With this setting, the special agent will also contact the "
+                        "Check_MK agent on the same system at the specified port."),
+                 elements=[
+                     ("port", Integer(
+                         title=_("Port"),
+                         default_value=6556,
+                     )),
+                 ],
+                 optional_keys=[],
+             )),
         ],
         title=_("Agent for Ruckus Spot"),
         help=_("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
@@ -1808,10 +1828,11 @@ def _vs_element_aws_service_selection():
                    "<i>Use explicit service names and ignore overall tags</i>: With this selection "
                    "you can state explicit names. The overall tags are ignored for these service."),
             choices=[
-                ('all', _("Gather all service instances and restrict by overall tags")),
-                ('tags', _("Use explicit service tags and overrule overall tags"),
-                 _vs_aws_tags(_("Tags"))),
-                ('names', _("Use explicit service names and ignore overall tags"), ListOfStrings()),
+                ('all', _("Gather all service instances and restrict by overall AWS tags")),
+                ('tags', _("Use explicit AWS service tags and overrule overall AWS tags"),
+                 _vs_aws_tags(_("AWS Tags"))),
+                ('names', _("Use explicit service names and ignore overall AWS tags"),
+                 ListOfStrings()),
             ]))
 
 
@@ -1953,7 +1974,8 @@ def _valuespec_special_agents_aws():
                  ],
                  default_keys=["ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch"],
              )),
-            ("overall_tags", _vs_aws_tags(_("Restrict monitoring services by one of these tags"))),
+            ("overall_tags",
+             _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
         optional_keys=["overall_tags"],
     )
@@ -2020,20 +2042,21 @@ def _valuespec_special_agents_elasticsearch():
                 title=_("Password of the user"),
                 allow_empty=False,
             )),
-            ("protocol",
-             DropdownChoice(title=_("Protocol"),
-                            choices=[
-                                ("http", "HTTP"),
-                                ("https", "HTTPS"),
-                            ],
-                            default_value="https")),
+            (
+                "protocol",
+                DropdownChoice(title=_("Protocol"),
+                               choices=[
+                                   ("http", "HTTP"),
+                                   ("https", "HTTPS"),
+                               ],
+                               default_value="https"),
+            ),
             ("port",
              Integer(
                  title=_("Port"),
                  help=_(
                      "Use this option to query a port which is different from standard port 9200."),
                  default_value=9200,
-                 allow_empty=False,
              )),
             (
                 "infos",
@@ -2087,20 +2110,21 @@ def _valuespec_special_agents_splunk():
                 title=_("Password of the user"),
                 allow_empty=False,
             )),
-            ("protocol",
-             DropdownChoice(title=_("Protocol"),
-                            choices=[
-                                ("http", "HTTP"),
-                                ("https", "HTTPS"),
-                            ],
-                            default_value="https")),
+            (
+                "protocol",
+                DropdownChoice(title=_("Protocol"),
+                               choices=[
+                                   ("http", "HTTP"),
+                                   ("https", "HTTPS"),
+                               ],
+                               default_value="https"),
+            ),
             ("port",
              Integer(
                  title=_("Port"),
                  help=_(
                      "Use this option to query a port which is different from standard port 8089."),
                  default_value=8089,
-                 allow_empty=False,
              )),
             ("infos",
              ListChoice(
@@ -2170,22 +2194,23 @@ def _valuespec_special_agents_jenkins():
                  title=_("Password of the user"),
                  allow_empty=False,
              )),
-            ("protocol",
-             DropdownChoice(title=_("Protocol"),
-                            choices=[
-                                ("http", "HTTP"),
-                                ("https", "HTTPS"),
-                            ],
-                            default_value="https")),
+            (
+                "protocol",
+                DropdownChoice(title=_("Protocol"),
+                               choices=[
+                                   ("http", "HTTP"),
+                                   ("https", "HTTPS"),
+                               ],
+                               default_value="https"),
+            ),
             ("port",
              Integer(
                  title=_("Port"),
                  help=_(
                      "Use this option to query a port which is different from standard port 8080."),
                  default_value=443,
-                 allow_empty=False,
              )),
-            ("infos",
+            ("sections",
              ListChoice(
                  title=_("Informations to query"),
                  help=_("Defines what information to query. You can choose "
@@ -2210,4 +2235,97 @@ rulespec_registry.register(
         group=RulespecGroupDatasourcePrograms,
         name="special_agents:jenkins",
         valuespec=_valuespec_special_agents_jenkins,
+    ))
+
+
+def _factory_default_special_agents_graylog():
+    # No default, do not use setting if no rule matches
+    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+
+def _valuespec_special_agents_graylog():
+    return Dictionary(
+        title=_("Check state of Graylog"),
+        help=_("Requests node, cluster and indice data from a graylog "
+               "instance."),
+        optional_keys=["port"],
+        elements=[
+            ("instance",
+             TextAscii(
+                 title=_("Graylog instance to query."),
+                 help=_("Use this option to set which instance should be "
+                        "checked by the special agent. Please add the "
+                        "hostname here, eg. my_graylog.com."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("user",
+             TextAscii(
+                 title=_("Username"),
+                 help=_("The username that should be used for accessing the "
+                        "graylog API. Has to have read permissions at least."),
+                 size=32,
+                 allow_empty=False,
+             )),
+            ("password", PasswordFromStore(
+                title=_("Password of the user"),
+                allow_empty=False,
+            )),
+            ("protocol",
+             DropdownChoice(
+                 title=_("Protocol"),
+                 choices=[
+                     ("http", "HTTP"),
+                     ("https", "HTTPS"),
+                 ],
+                 default_value="https",
+             )),
+            ("port",
+             Integer(
+                 title=_("Port"),
+                 help=_(
+                     "Use this option to query a port which is different from standard port 443."),
+                 default_value=443,
+             )),
+            ("since",
+             Age(
+                 title=_("Time for coverage of failures"),
+                 help=_(
+                     "Use this option to set the timeframe in which failures should be covered."),
+                 default_value=1800,
+             )),
+            ("sections",
+             ListChoice(
+                 title=_("Informations to query"),
+                 help=_("Defines what information to query. You can choose "
+                        "between the alarms, collectors, cluster statistics, "
+                        "failures, jvm heap size, message count, nodes and sidecar "
+                        "fleet."),
+                 choices=[
+                     ("alerts", _("Alarms")),
+                     ("collectors", _("Collectors")),
+                     ("cluster_stats", _("Cluster statistics")),
+                     ("cluster_traffic", _("Cluster traffic statistics")),
+                     ("failures", _("Failed index operations")),
+                     ("jvm", _("JVM heap size")),
+                     ("messages", _("Message count")),
+                     ("nodes", _("Nodes")),
+                     ("sidecars", _("Sidecar fleet")),
+                 ],
+                 default_value=[
+                     "alerts", "collectors", "cluster_stats", "cluster_traffic", "failures", "jvm",
+                     "messages", "nodes", "sidecars"
+                 ],
+                 allow_empty=False,
+             )),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        factory_default=_factory_default_special_agents_graylog(),
+        group=RulespecGroupDatasourcePrograms,
+        name="special_agents:graylog",
+        valuespec=_valuespec_special_agents_graylog,
     ))

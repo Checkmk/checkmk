@@ -260,7 +260,7 @@ rpm:
 	# has a rpath hard coded to the OMD shipped libpython2.7.
 	NO_BRP_CHECK_RPATH="yes" \
 	NO_BRP_STALE_LINK_ERROR="yes" \
-	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot

@@ -41,3 +41,4 @@ copy .\test_files\cap\*.test.cap 	    %user_dir% > nul      || powershell Write-
 copy .\test_files\unit_test\*.ini 	    %user_dir% > nul      || powershell Write-Host "Failed test ini copy" -Foreground Red	&&  exit /b 12
 copy .\test_files\unit_test\*.dat 	    %user_dir% > nul      || powershell Write-Host "Failed test dat copy" -Foreground Red	&&  exit /b 13
 copy .\test_files\unit_test\*.state 	    %user_dir% > nul      || powershell Write-Host "Failed test state copy" -Foreground Red	&&  exit /b 14
+copy .\test_files\config\*.yml 	%user_dir% > nul	  || powershell Write-Host "Failed test ymls copy" -Foreground Red	&&  exit /b 15

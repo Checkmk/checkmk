@@ -11,7 +11,7 @@ FUTURIZE := $(PIPENV) run ./test-futurize
 include ../defines.make
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \
-        test-format-shell test-gui-crawl test-integration test-packaging \
+        test-format-shell test-gui-crawl test-integration test-agent-integration test-packaging \
         test-pylint test-python-futurize test-shellcheck test-unit \
         list-unit-tests test-unit-one-by-one test-unit-coverage-html
 
@@ -19,11 +19,12 @@ help:
 	echo $(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 	@echo "pipenv-check              - Checks for security vulnerabilities/PEP 508 markers"
 	@echo "test-bandit               - Run bandit (security) tests"
-	@echo "test-docker               - Run docker tests"
 	@echo "test-format-python        - Test the python formatting"
 	@echo "test-format-shell         - Run the shell formatting"
 	@echo "test-gui-crawl            - Run GUI crawl test"
 	@echo "test-integration          - Run integration tests"
+	@echo "test-agent-integration    - Run agent (plugin) related integration tests"
+	@echo "test-format-python        - Test the python formatting"
 	@echo "test-packaging            - Run packaging tests"
 	@echo "test-pylint               - Run pylint based tests"
 	@echo "test-python-futurize      - Run python futurize tests"
@@ -54,10 +55,6 @@ test-bandit: $(VENV) bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -lll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
-test-docker: $(VENV)
-	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
-	$(PYTEST) -T docker docker
-
 test-format-python: $(VENV) ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
@@ -78,6 +75,9 @@ test-gui-crawl: $(VENV) $(NODE_MODULES)
 
 test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
+
+test-agent-integration: $(VENV)
+	$(PYTEST) -T agent-integration $(realpath agent-integration)
 
 test-composition: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T composition $(realpath composition)

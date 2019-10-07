@@ -31,6 +31,7 @@ import os
 import csv
 import time
 from difflib import SequenceMatcher
+import six
 
 import cmk.utils.store as store
 
@@ -235,8 +236,8 @@ class ModeBulkImport(WatoMode):
                     attributes[attribute] = value.decode("utf-8")
                 else:
                     try:
-                        unicode(value)
-                    except:
+                        six.text_type(value)
+                    except UnicodeDecodeError:
                         raise MKUserError(
                             None,
                             _("Non-ASCII characters are not allowed in the "

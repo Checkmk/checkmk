@@ -534,7 +534,7 @@ class Rulespec(six.with_metaclass(abc.ABCMeta, object)):
             return None
 
         if isinstance(item_spec, (DropdownChoice, OptionalDropdownChoice)):
-            return item_spec._choices
+            return item_spec.choices()
 
         return None
 
@@ -1200,7 +1200,6 @@ class TimeperiodValuespec(ValueSpec):
         # Set the actual used mode
         html.hidden_field(self.tp_current_mode, "%d" % is_active)
 
-        mode = _("Disable") if is_active else _("Enable")
         vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
         toggle_url = html.makeuri(vars_copy.items())
 
@@ -1208,13 +1207,13 @@ class TimeperiodValuespec(ValueSpec):
             value = self._get_timeperiod_value(value)
             self._get_timeperiod_valuespec().render_input(varprefix, value)
             html.buttonlink(toggle_url,
-                            _("%s timespecific parameters") % mode,
+                            _("Disable timespecific parameters"),
                             class_=["toggle_timespecific_parameter"])
         else:
             value = self._get_timeless_value(value)
             r = self._enclosed_valuespec.render_input(varprefix, value)
             html.buttonlink(toggle_url,
-                            _("%s timespecific parameters") % mode,
+                            _("Enable timespecific parameters"),
                             class_=["toggle_timespecific_parameter"])
             return r
 
@@ -1243,13 +1242,8 @@ class TimeperiodValuespec(ValueSpec):
     def canonical_value(self):
         return self._enclosed_valuespec.canonical_value()
 
-    def validate_datatype(self, value, varprefix):
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_datatype(value, varprefix)
-
-    def validate_value(self, value, varprefix):
+    def _validate_value(self, value, varprefix):
+        super(TimeperiodValuespec, self)._validate_value(value, varprefix)
         if self.is_active(value):
             self._get_timeperiod_valuespec().validate_value(value, varprefix)
         else:

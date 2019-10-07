@@ -5,9 +5,12 @@ import os
 import re
 import sys
 import locale
+from collections import namedtuple
 import pytest  # type: ignore
 from testlib import import_module
 import six
+
+from testlib import cmk_path  # pylint: disable=import-error
 
 
 @pytest.fixture(scope="module")
@@ -17,12 +20,13 @@ def mk_logwatch():
 
 def test_options_defaults(mk_logwatch):
     opt = mk_logwatch.Options()
-    for attribute in ('maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex', 'overflow',
-                      'nocontext', 'maxoutputsize'):
+    for attribute in ('encoding', 'maxfilesize', 'maxlines', 'maxtime', 'maxlinesize', 'regex',
+                      'overflow', 'nocontext', 'maxoutputsize'):
         assert getattr(opt, attribute) == mk_logwatch.Options.DEFAULTS[attribute]
 
 
 @pytest.mark.parametrize("option_string, key, expected_value", [
+    ("encoding=utf8", 'encoding', 'utf8'),
     ("maxfilesize=42", 'maxfilesize', 42),
     ("maxlines=23", 'maxlines', 23),
     ("maxlinesize=13", 'maxlinesize', 13),
@@ -106,12 +110,12 @@ def test_iter_config_lines(mk_logwatch, tmp_path):
 ])
 def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_data, monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
     __, c_config = mk_logwatch.read_config(None)
     cluster = c_config[0]
 
-    assert isinstance(cluster, mk_logwatch.ClusterConfig)
+    assert isinstance(cluster, mk_logwatch.ClusterConfigBlock)
     assert cluster.name == cluster_name
     assert cluster.ips_or_subnets == cluster_data
 
@@ -151,14 +155,14 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
     ),
     (
         [
-            u'/var/log/syslog /var/log/kern.log',
+            u'"c:\\a path\\with spaces" "d:\\another path\\with spaces"',
             u' I registered panic notifier',
             u' C panic',
             u' C Oops',
             u' W generic protection rip',
             u' W .*Unrecovered read error - auto reallocate failed',
         ],
-        [u'/var/log/syslog', u'/var/log/kern.log'],
+        [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces'],
         [
             (u'I', u'registered panic notifier', [], []),
             (u'C', u'panic', [], []),
@@ -171,12 +175,12 @@ def test_read_config_cluster(mk_logwatch, config_lines, cluster_name, cluster_da
 def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfiles_patterns,
                               monkeypatch):
     """checks if the agent plugin parses the configuration appropriately."""
-    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files: iter(config_lines))
+    monkeypatch.setattr(mk_logwatch, 'iter_config_lines', lambda _files, **kw: iter(config_lines))
 
     l_config, __ = mk_logwatch.read_config(None)
     logfiles = l_config[0]
 
-    assert isinstance(logfiles, mk_logwatch.LogfilesConfig)
+    assert isinstance(logfiles, mk_logwatch.PatternConfigBlock)
     assert logfiles.files == logfiles_files
     assert len(logfiles.patterns) == len(logfiles_patterns)
     for actual, expected in zip(logfiles.patterns, logfiles_patterns):
@@ -207,56 +211,66 @@ def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatc
     stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
     stdout_mock.isatty.return_value = istty
     fake_config = [
-        mk_logwatch.ClusterConfig("my_cluster",
-                                  ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
-        mk_logwatch.ClusterConfig("another_cluster",
-                                  ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
+        mk_logwatch.ClusterConfigBlock(
+            "my_cluster", ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']),
+        mk_logwatch.ClusterConfigBlock("another_cluster",
+                                       ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'])
     ]
 
     status_filename = mk_logwatch.get_status_filename(fake_config)
     assert status_filename == statusfile
 
 
-def test_read_status(mk_logwatch, tmp_path):
-    # setup
-    fake_status_path = tmp_path / "test"
-    fake_status_path.mkdir()
-    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
-    fake_status_file.write_text(u"""/var/log/messages|7767698|32455445
-/var/test/x12134.log|12345|32444355""",
-                                encoding="utf-8")
-    file_path = str(fake_status_file)
+@pytest.mark.parametrize("state_data, state_dict", [
+    ((u"/var/log/messages|7767698|32455445\n"
+      u"/var/foo|42\n"
+      u"/var/test/x12134.log|12345"), {
+          "/var/log/messages": (7767698, 32455445),
+          "/var/foo": (42, -1),
+          "/var/test/x12134.log": (12345, -1),
+      }),
+])
+def test_state_load(mk_logwatch, tmp_path, state_data, state_dict):
+    # setup for reading
+    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    file_path.write_text(state_data, encoding="utf-8")
 
-    # execution
-    actual_status = mk_logwatch.read_status(file_path)
-    # comparing dicts (having unordered keys) is ok
-    assert actual_status == {
-        '/var/log/messages': (7767698, 32455445),
-        '/var/test/x12134.log': (12345, 32444355)
-    }
+    # loading and __getitem__
+    state = mk_logwatch.State(str(file_path)).read()
+    assert state._data == state_dict
+    for key in state_dict:
+        assert state[key] == state_dict[key]
 
 
-def test_save_status(mk_logwatch, tmp_path):
-    fake_status_path = tmp_path / "test"
-    fake_status_path.mkdir()
-    fake_status_file = fake_status_path.joinpath("logwatch.state.another_cluster")
-    fake_status_file.write_text(u"", encoding="utf-8")
-    file_path = str(fake_status_file)
-    fake_status = {
-        '/var/log/messages': (7767698, 32455445),
-        '/var/test/x12134.log': (12345, 32444355)
-    }
-    mk_logwatch.save_status(fake_status, file_path)
-    assert sorted(fake_status_file.read_text().splitlines()) == [
-        '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
-    ]
+@pytest.mark.parametrize("state_data, state_dict", [
+    ((u"/var/log/messages|7767698|32455445\n"
+      u"/var/foo|42|-1\n"
+      u"/var/test/x12134.log|12345|-1"), {
+          "/var/log/messages": (7767698, 32455445),
+          "/var/foo": (42, -1),
+          "/var/test/x12134.log": (12345, -1),
+      }),
+])
+def test_state_write(mk_logwatch, tmp_path, state_data, state_dict):
+    # setup for writing
+    file_path = tmp_path.joinpath("logwatch.state.testcase")
+    state = mk_logwatch.State(str(file_path))
+    assert not state._data
+
+    # writing and __setitem__
+    for key in state_dict:
+        state[key] = state_dict[key]
+    state.write()
+
+    written_lines = file_path.read_text().splitlines()
+    supposed_lines = state_data.splitlines()
+    assert sorted(written_lines) == sorted(supposed_lines)
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    ("/*",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
-    ("/**",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+    ("/*", ["/file.log", "/hard_link_to_file.log", "/hard_linked_file.log", "/symlinked_file.log"]),
+    ("/**", ["/file.log", "/hard_link_to_file.log", "/hard_linked_file.log", "/symlinked_file.log"
+            ]),
     ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
@@ -284,13 +298,13 @@ def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, posit
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
     monkeypatch.setattr(os, 'lseek', lambda *_args: len(buff))
-    log_iter = mk_logwatch.LogLinesIter('void')
+    log_iter = mk_logwatch.LogLinesIter('void', None)
     assert log_iter._enc == encoding
     assert log_iter.get_position() == position
 
 
 def test_log_lines_iter(mk_logwatch):
-    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__)
+    log_iter = mk_logwatch.LogLinesIter(mk_logwatch.__file__, None)
 
     log_iter.set_position(710)
     assert log_iter.get_position() == 710
@@ -307,6 +321,62 @@ def test_log_lines_iter(mk_logwatch):
     log_iter.skip_remaining()
     assert log_iter.next_line() is None
     assert log_iter.get_position() == os.stat(mk_logwatch.__file__).st_size
+
+
+@pytest.mark.parametrize(
+    "use_specific_encoding,lines,expected_result",
+    [
+        # UTF-8 encoding works by default
+        (None, [
+            b"abc1",
+            u"äbc2".encode("utf-8"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+        # Replace characters that can not be decoded
+        (None, [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"\ufffdbc2\n",
+            u"abc3\n",
+        ]),
+        # Set custom encoding
+        ("latin-1", [
+            b"abc1",
+            u"äbc2".encode("latin-1"),
+            b"abc3",
+        ], [
+            u"abc1\n",
+            u"äbc2\n",
+            u"abc3\n",
+        ]),
+    ])
+def test_non_ascii_line_processing(mk_logwatch, tmp_path, monkeypatch, use_specific_encoding, lines,
+                                   expected_result):
+    # Write test logfile first
+    log_path = tmp_path.joinpath("testlog")
+    with log_path.open("wb") as f:
+        f.write(b"\n".join(lines) + "\n")
+
+    # Now test processing
+    log_iter = mk_logwatch.LogLinesIter(str(log_path), None)
+    if use_specific_encoding:
+        log_iter._enc = use_specific_encoding
+
+    result = []
+    while True:
+        l = log_iter.next_line()
+        if l is None:
+            break
+        result.append(l)
+
+    assert result == expected_result
 
 
 class MockStdout(object):
@@ -379,11 +449,15 @@ class MockStdout(object):
     ])
 def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, status,
                          expected_output):
+
+    Section = namedtuple("section", "filename compiled_patterns options")
+
     opt = mk_logwatch.Options()
     opt.values.update(opt_raw)
+    section = Section(logfile, patterns, opt)
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
-    output = mk_logwatch.process_logfile(logfile, patterns, opt, status)
+    output = mk_logwatch.process_logfile(section, status, False)
     assert all(isinstance(item, six.text_type) for item in output)
     assert output == expected_output
     if len(output) > 1:
@@ -392,73 +466,42 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
 
 @pytest.fixture
 def fake_filesystem(tmp_path):
-    """
-    root
-      file.log
-      symlink_to_file.log -> symlinked_file.log
-      /subdir
-        symlink_to_file.log -> another_symlinked_file.log
-        /subsubdir
-          yaf.log
-      /symlink_to_dir -> /symlinked_dir
-      /symlinked_dir
-        yet_another_file.log
-      hard_linked_file_a.log = hard_linked_file_b.log
-    """
-    fake_fs = tmp_path / "root"
-    fake_fs.mkdir()
+    root = [
+        # name     | type  | content/target
+        ("file.log", "file", None),
+        ("symlink_to_file.log", "symlink", "symlinked_file.log"),
+        ("subdir", "dir", [
+            ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),
+            ("subsubdir", "dir", [
+                ("yaf.log", "file", None),
+            ]),
+        ]),
+        ("symlink_to_dir", "symlink", "symlinked_dir"),
+        ("symlinked_dir", "dir", [
+            ("yet_another_file.log", "file", None),
+        ]),
+        ("hard_linked_file.log", "file", None),
+        ("hard_link_to_file.log", "hardlink", "hard_linked_file.log"),
+    ]
 
-    fake_file = fake_fs / "file.log"
-    fake_file.write_text(u"blub")
+    def create_recursively(dirpath, name, type_, value):
+        obj_path = os.path.join(dirpath, name)
 
-    fake_fs_subdir = fake_fs / "subdir"
-    fake_fs_subdir.mkdir()
-
-    fake_fs_subsubdir = fake_fs / "subdir" / "subsubdir"
-    fake_fs_subsubdir.mkdir()
-    fake_subsubdir_file = fake_fs_subsubdir / "yaf.log"
-    fake_subsubdir_file.write_text(u"bla")
-
-    fake_fs_another_subdir = fake_fs / "another_subdir"
-    fake_fs_another_subdir.mkdir()
-
-    fake_symlink_file_root_level = fake_fs / "symlink_to_file.log"
-    fake_symlink_file_root_level.symlink_to(fake_fs / "symlinked_file.log")
-    assert fake_symlink_file_root_level.is_symlink()
-
-    fake_symlink_file_subdir_level = fake_fs_subdir / "symlink_to_file.log"
-    fake_symlink_file_subdir_level.symlink_to(fake_fs_subdir / "another_symlinked_file.log",
-                                              target_is_directory=False)
-    assert fake_symlink_file_subdir_level.is_symlink()
-
-    fake_fs_symlink_to_dir = fake_fs / "symlink_to_dir"
-    fake_fs_symlinked_dir = fake_fs / "symlinked_dir"
-    fake_fs_symlinked_dir.mkdir()
-    symlinked_file = fake_fs_symlinked_dir / "yet_another_file.log"
-    symlinked_file.write_text(u"bla")
-    fake_fs_symlink_to_dir.symlink_to(fake_fs_symlinked_dir, target_is_directory=True)
-
-    hard_linked_file_a = fake_fs / "hard_linked_file_a.log"
-    hard_linked_file_a.write_text(u"bla")  # only create src via writing
-    hard_linked_file_b = fake_fs / "hard_linked_file_b.log"
-    os.link(str(hard_linked_file_a), str(hard_linked_file_b))
-    assert os.stat(str(hard_linked_file_a)) == os.stat(str(hard_linked_file_b))
-
-    return fake_fs
-
-
-def _print_tree(directory, resolve=True):
-    """
-    Print fake filesystem with optional expansion of symlinks.
-    Don't remove this helper function. Used for debugging.
-    """
-    print('%s' % directory)
-    for path in sorted(directory.rglob('*')):
-        if resolve:
-            try:  # try resolve symlinks
-                path = path.resolve()
-            except Exception:
+        if type_ == "file":
+            with open(obj_path, 'w'):
                 pass
-        depth = len(path.relative_to(directory).parts)
-        spacer = '    ' * depth
-        print('%s%s' % (spacer, path.name))
+            return
+
+        if type_ == "dir":
+            os.mkdir(obj_path)
+            for spec in value:
+                create_recursively(obj_path, *spec)
+            return
+
+        source = os.path.join(dirpath, value)
+        link = os.symlink if type_ == "symlink" else os.link
+        link(source, obj_path)
+
+    create_recursively(str(tmp_path), "root", "dir", root)
+
+    return tmp_path / "root"

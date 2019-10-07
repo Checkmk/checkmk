@@ -699,11 +699,20 @@ class RulesetToDictTransformer(object):
     def __init__(self, tag_to_group_map):
         super(RulesetToDictTransformer, self).__init__()
         self._tag_groups = tag_to_group_map
+        self._transformed_ids = set()
 
-    def transform_in_place(self, ruleset, is_service, is_binary):
+    def transform_in_place(self, ruleset, is_service, is_binary, use_ruleset_id_cache=True):
+        if use_ruleset_id_cache:
+            ruleset_id = id(ruleset)
+            if ruleset_id in self._transformed_ids:
+                return
+
         for index, rule in enumerate(ruleset):
             if not isinstance(rule, dict):
                 ruleset[index] = self._transform_rule(rule, is_service, is_binary)
+
+        if use_ruleset_id_cache:
+            self._transformed_ids.add(ruleset_id)
 
     def _transform_rule(self, tuple_rule, is_service, is_binary):
         rule = {

@@ -17,7 +17,7 @@
 namespace cma::cfg {
 
 Global::Global() {
-    XLOG::l.t("Global init");
+    // may crash on init XLOG::l.t("Global init");
     setDefaults();
     setupLogEnvironment();
 }

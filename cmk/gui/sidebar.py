@@ -37,7 +37,6 @@ import cmk.utils.paths
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -446,7 +445,7 @@ class SidebarRenderer(object):
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
-        html.b(HTML(snapin_class.title()), class_=["heading"], **toggle_actions)
+        html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
 
         # End of header
         html.close_div()

@@ -142,19 +142,13 @@ def _imap_parameters():
                  choices=[
                      (False, _('Use no encryption'),
                       Optional(
-                          Integer(
-                              allow_empty=False,
-                              default_value=143,
-                          ),
+                          Integer(default_value=143,),
                           title=_('TCP Port'),
                           help=_('By default the standard IMAP Port 143 is used.'),
                       )),
                      (True, _('Encrypt IMAP communication using SSL'),
                       Optional(
-                          Integer(
-                              allow_empty=False,
-                              default_value=993,
-                          ),
+                          Integer(default_value=993,),
                           title=_('TCP Port'),
                           help=_('By default the standard IMAP/SSL Port 993 is used.'),
                       )),
@@ -189,19 +183,13 @@ def _pop3_parameters():
                  choices=[
                      (False, _('Use no encryption'),
                       Optional(
-                          Integer(
-                              allow_empty=False,
-                              default_value=110,
-                          ),
+                          Integer(default_value=110,),
                           title=_('TCP Port'),
                           help=_('By default the standard POP3 Port 110 is used.'),
                       )),
                      (True, _('Encrypt POP3 communication using SSL'),
                       Optional(
-                          Integer(
-                              allow_empty=False,
-                              default_value=995,
-                          ),
+                          Integer(default_value=995,),
                           title=_('TCP Port'),
                           help=_('By default the standard POP3/SSL Port 995 is used.'),
                       )),
@@ -593,12 +581,10 @@ def _valuespec_active_checks_sql():
                     default_value="postgres",
                 ),
             ),
-            ("port",
-             Integer(
-                 title=_("Database Port"),
-                 help=_('The port the DBMS listens to'),
-                 allow_empty=True,
-             )),
+            ("port", Integer(
+                title=_("Database Port"),
+                help=_('The port the DBMS listens to'),
+            )),
             ("name",
              TextAscii(
                  title=_("Database Name"),
@@ -630,14 +616,15 @@ def _valuespec_active_checks_sql():
                            'Alternatively the first column can be interpreted as number value and you can '
                            'define levels for this number. The '
                            'second column is used as check output. The third column is optional and can '
-                           'contain performance data.')),
+                           'contain performance data.'),
+                         allow_empty=False,
+                     ),
                      UploadOrPasteTextFile(
                          title=_("Import Query"),
                          file_title=_("File including Query"),
                          default_mode="upload",
                      ),
                  ],
-                 allow_empty=False,
              )),
             (
                 "procedure",
@@ -2032,7 +2019,6 @@ def _valuespec_active_checks_mail_loop():
              Integer(
                  title=_('SMTP TCP Port to connect to'),
                  help=_('The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>.'),
-                 allow_empty=False,
                  default_value=25,
              )),
             ('smtp_auth',
@@ -2136,11 +2122,10 @@ def _valuespec_active_checks_mail():
                                                  ),
                                             ),
                                             Transform(
-                                                TextAscii(),
+                                                TextAscii(allow_empty=False,),
                                                 title=
                                                 _("Spooling: Send events to local event console into given spool directory"
                                                  ),
-                                                allow_empty=False,
                                                 # remove prefix
                                                 forth=lambda x: x[6:],
                                                 back=lambda x: "spool:" + x,  # add prefix
@@ -2163,7 +2148,6 @@ def _valuespec_active_checks_mail():
                                               ),
                                               Integer(
                                                   title=_("Port"),
-                                                  allow_empty=False,
                                                   default_value=514,
                                                   minvalue=1,
                                                   maxvalue=65535,
@@ -2422,7 +2406,6 @@ def _valuespec_active_checks_elasticsearch_query():
                  help=_(
                      "Use this option to query a port which is different from standard port 9200."),
                  default_value=9200,
-                 allow_empty=False,
              )),
             ("pattern",
              TextUnicode(
@@ -2469,18 +2452,19 @@ def _valuespec_active_checks_elasticsearch_query():
                      "The query will then check for the count of log messages in the defined range. "
                      "Default is 1 minute."),
                  display=["days", "hours", "minutes"],
-                 allow_empty=False,
                  default_value=60,
              )),
             ('count',
              Tuple(title=_("Thresholds on message count"),
                    elements=[
-                       Integer(title=_("Warning at or above"),
-                               unit=_("log messages"),
-                               allow_empty=False),
-                       Integer(title=_("Critical at or above"),
-                               unit=_("log messages"),
-                               allow_empty=False)
+                       Integer(
+                           title=_("Warning at or above"),
+                           unit=_("log messages"),
+                       ),
+                       Integer(
+                           title=_("Critical at or above"),
+                           unit=_("log messages"),
+                       ),
                    ])),
         ],
     )

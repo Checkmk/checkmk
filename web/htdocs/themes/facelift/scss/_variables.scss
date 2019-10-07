@@ -276,6 +276,7 @@ $toggle-button-down-bg-color:		    $theme-color-text-light;
 $toggle-button-down-border-color:	    $theme-button-border;
 $toggle-button-down-hover-bg-color:	    $theme-button-border;
 $toggle-button-down-hover-border-color:	    #ccc;
+$toggle-button-search-img-filter:	    null;
 
 $success-bg-color:			    #9dbecd;
 
@@ -294,7 +295,7 @@ $data-td-bg-color:			    $white;
 $data-table-border-collapse:		    null;
 $data-table-border-spacing:		    0 2px;
 $data-table-border-topmost:		    $primary-table-border;
-$data-table-border-top:			    null;
+$data-table-border-top:			    $primary-table-border;
 $data-table-border-bottom:		    $primary-table-border;
 $data-table-state-border-top:		    null;
 $data-table-state-border-bottom:	    null;
@@ -488,6 +489,10 @@ $node-vis-menu-bg-color:		    null;
 $node-vis-history-bg-color:		    null;
 $node-vis-history-border-color:		    null;
 $node-vis-history-filter:		    null;
+$node-vis-growth-img-filter:		    null;
+$node-vis-growth-root-color:		    rgb(25, 90, 230); // blue
+$topology-filter-bg-color:		    null;
+$topology-filter-border-color:		    null;
 
 $host-folder-font-color:		    #bde;
 
@@ -501,6 +506,7 @@ $foldertree-snapin-font-color:		    $theme-color-nuance-7;
 $table-headerleft-border-bottom:	    none;
 
 $agent-config-inner-title-bg-color:	    $grey-1;
+$agent-config-td-color:			    rgb(42, 42, 42);
 
 $service-container-groupheader-bg-color:    null;
 
@@ -524,3 +530,13 @@ $timetable-hilite-even-bg-color:	    null;
 $timetable-hilite-odd-bg-color:		    null;
 
 $pnp-graph-img-border-color:		    $theme-color-table-border;
+$graph-hover-popup-font-color:		    #1a243d;
+$graph-hover-popup-bg-color:		    #f0f2f4;
+$graph-hover-popup-border:		    1px solid #cccfdb;
+$graph-hover-popup-box-shadow:		    0.5px 0.5px 2px #ccc;
+
+$globalvars-modified-border-color:	    #cdf;
+$globalvars-modified-box-shadow:	    3px 3px 5px #eee inset;
+$globalvars-modified-globally-box-shadow:   3px 3px 5px #8bc7e5 inset;
+
+$dashlet-inner-bg-color:		    $white;

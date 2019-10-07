@@ -36,6 +36,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
     Dictionary,
@@ -1161,7 +1162,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                      'has a sort index of <tt>10</tt>, the graph icon a sort index '
                                      'of <tt>20</tt>. All other default icons have a sort index of '
                                      '<tt>30</tt> configured.'),
-                                 min_value=0,
+                                 minvalue=0,
                                  default_value=15,
                              )),
                         ],
@@ -1510,7 +1511,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
                                      'has a sort index of <tt>10</tt>, the graph icon a sort index '
                                      'of <tt>20</tt>. All other default icons have a sort index of '
                                      '<tt>30</tt> configured.'),
-                                 min_value=0,
+                                 minvalue=0,
                              )),
                         ],
                         optional_keys=['toplevel', 'sort_index'],
@@ -1560,7 +1561,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                          title=_('Minimum number of items to create a group'),
                          help=_('When less than these items are found for a group, the services '
                                 'are not shown grouped together.'),
-                         min_value=2,
+                         minvalue=2,
                          default_value=2,
                      )),
                 ],
@@ -2686,7 +2687,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
         return Optional(
             Integer(title=_("Perform service discovery check every"),
                     unit=_("minutes"),
-                    min_value=1,
+                    minvalue=1,
                     default_value=720),
             title=_("Enable regular service discovery checks (deprecated)"),
             help=_("If enabled, Check_MK will create one additional service per host "
@@ -3348,7 +3349,6 @@ def _valuespec_extra_service_conf_first_notification_delay():
             minvalue=0,
             default_value=300,
             label=_("Delay:"),
-            unit=_("minutes"),
             title=_("Delay service notifications"),
             help=_("This setting delays notifications about service problems by the "
                    "specified amount of time. If the service is OK again within that "
@@ -3636,149 +3636,221 @@ def _valuespec_periodic_discovery():
                 title=_("Do not perform periodic service discovery check"),
                 totext=_("no discovery check"),
             ),
-            Transform(
-                Dictionary(
-                    title=_("Perform periodic service discovery check"),
-                    help=_(
-                        "If enabled, Check_MK will create one additional service per host "
-                        "that does a periodic check, if the service discovery would find new services "
-                        "that are currently not monitored."),
-                    elements=[
-                        ("check_interval",
-                         Transform(
-                             Age(minvalue=1, display=["days", "hours", "minutes"]),
-                             forth=lambda v: int(v * 60),
-                             back=lambda v: float(v) / 60.0,
-                             title=_("Perform service discovery every"),
-                         )),
-                        ("severity_unmonitored",
-                         DropdownChoice(
-                             title=_("Severity of unmonitored services"),
-                             help=_(
-                                 "Please select which alarm state the service discovery check services "
-                                 "shall assume in case that un-monitored services are found."),
-                             choices=[
-                                 (0, _("OK - do not alert, just display")),
-                                 (1, _("Warning")),
-                                 (2, _("Critical")),
-                                 (3, _("Unknown")),
-                             ],
-                         )),
-                        ("severity_vanished",
-                         DropdownChoice(
-                             title=_("Severity of vanished services"),
-                             help=
-                             _("Please select which alarm state the service discovery check services "
-                               "shall assume in case that non-existing services are being monitored."
-                              ),
-                             choices=[
-                                 (0, _("OK - do not alert, just display")),
-                                 (1, _("Warning")),
-                                 (2, _("Critical")),
-                                 (3, _("Unknown")),
-                             ],
-                         )),
-                        ("severity_new_host_label",
-                         DropdownChoice(
-                             title=_("Severity of new host labels"),
-                             help=_(
-                                 "Please select which state the service discovery check services "
-                                 "shall assume in case that new host labels are found."),
-                             choices=[
-                                 (0, _("OK - do not alert, just display")),
-                                 (1, _("Warning")),
-                                 (2, _("Critical")),
-                                 (3, _("Unknown")),
-                             ],
-                         )),
-                        ("inventory_check_do_scan",
-                         DropdownChoice(
-                             title=_("Service discovery check for SNMP devices"),
-                             choices=[
-                                 (True, _("Perform full SNMP scan always, detect new check types")),
-                                 (False,
-                                  _("Just rely on existing check files, detect new items only"))
-                             ])),
-                        ("inventory_rediscovery",
-                         Dictionary(
-                             title=_("Automatically update service configuration"),
-                             help=_(
-                                 "If active the check will not only notify about un-monitored services, "
-                                 "it will also automatically add/remove them as neccessary."),
-                             elements=[
-                                 ("mode",
-                                  DropdownChoice(
-                                      title=_("Mode"),
-                                      choices=[
-                                          (0, _("Add unmonitored services, new host labels")),
-                                          (1, _("Remove vanished services")),
-                                          (2,
-                                           _("Add unmonitored & remove vanished services and host labels"
-                                            )),
-                                          (3,
-                                           _("Refresh all services and host labels (tabula rasa)"))
-                                      ],
-                                      orientation="vertical",
-                                      default_value=0,
-                                  )),
-                                 ("group_time",
-                                  Age(title=_("Group discovery and activation for up to"),
-                                      help=_(
-                                          "A delay can be configured here so that multiple "
-                                          "discoveries can be activated in one go. This avoids frequent core "
-                                          "restarts in situations with frequent services changes."),
-                                      default_value=15 * 60,
-                                      display=["hours", "minutes"])),
-                                 ("excluded_time",
-                                  ListOfTimeRanges(
-                                      title=
-                                      _("Never do discovery or activate changes in the following time ranges"
-                                       ),
-                                      help=_("This avoids automatic changes during these times so "
-                                             "that the automatic system doesn't interfere with "
-                                             "user activity."),
-                                  )),
-                                 ("activation",
-                                  DropdownChoice(
-                                      title=_("Automatic activation"),
-                                      choices=[
-                                          (True, _("Automatically activate changes")),
-                                          (False, _("Do not activate changes")),
-                                      ],
-                                      default_value=True,
-                                      help=_(
-                                          "Here you can have the changes activated whenever services "
-                                          "have been added or removed."),
-                                  )),
-                                 ("service_whitelist",
-                                  ListOfStrings(
-                                      title=_("Activate only services matching"),
-                                      allow_empty=False,
-                                      help=
-                                      _("Set service names or regular expression patterns here to "
-                                        "allow only matching services to be activated automatically. "
-                                        "If you set both this and \'Don't activate services matching\', "
-                                        "both rules have to apply for a service to be activated."),
-                                  )),
-                                 ("service_blacklist",
-                                  ListOfStrings(
-                                      title=_("Don't activate services matching"),
-                                      allow_empty=False,
-                                      help=
-                                      _("Set service names or regular expression patterns here to "
-                                        "prevent matching services from being activated automatically. "
-                                        "If you set both this and \'Activate only services matching\', "
-                                        "both rules have to apply for a service to be activated."),
-                                  )),
-                             ],
-                             optional_keys=["service_whitelist", "service_blacklist"],
-                         )),
-                    ],
-                    optional_keys=["inventory_rediscovery"],
-                ),
-                forth=_periodic_discovery_add_severity_new_host_label,
-            ),
-        ])
+            _vs_periodic_discovery(),
+        ],
+    )
+
+
+def _vs_periodic_discovery():
+    # type: () -> Transform
+    return Transform(
+        Dictionary(
+            title=_("Perform periodic service discovery check"),
+            help=_("If enabled, Check_MK will create one additional service per host "
+                   "that does a periodic check, if the service discovery would find new services "
+                   "that are currently not monitored."),
+            elements=[
+                ("check_interval",
+                 Transform(
+                     Age(
+                         minvalue=1,
+                         display=["days", "hours", "minutes"],
+                     ),
+                     forth=lambda v: int(v * 60),
+                     back=lambda v: float(v) / 60.0,
+                     title=_("Perform service discovery every"),
+                 )),
+                ("severity_unmonitored",
+                 DropdownChoice(
+                     title=_("Severity of unmonitored services"),
+                     help=_("Please select which alarm state the service discovery check services "
+                            "shall assume in case that un-monitored services are found."),
+                     choices=[
+                         (0, _("OK - do not alert, just display")),
+                         (1, _("Warning")),
+                         (2, _("Critical")),
+                         (3, _("Unknown")),
+                     ],
+                 )),
+                ("severity_vanished",
+                 DropdownChoice(
+                     title=_("Severity of vanished services"),
+                     help=_("Please select which alarm state the service discovery check services "
+                            "shall assume in case that non-existing services are being monitored."),
+                     choices=[
+                         (0, _("OK - do not alert, just display")),
+                         (1, _("Warning")),
+                         (2, _("Critical")),
+                         (3, _("Unknown")),
+                     ],
+                 )),
+                ("severity_new_host_label",
+                 DropdownChoice(
+                     title=_("Severity of new host labels"),
+                     help=_("Please select which state the service discovery check services "
+                            "shall assume in case that new host labels are found."),
+                     choices=[
+                         (0, _("OK - do not alert, just display")),
+                         (1, _("Warning")),
+                         (2, _("Critical")),
+                         (3, _("Unknown")),
+                     ],
+                 )),
+                ("inventory_check_do_scan",
+                 DropdownChoice(
+                     title=_("Service discovery check for SNMP devices"),
+                     choices=[
+                         (True, _("Perform full SNMP scan always, detect new check types")),
+                         (False, _("Just rely on existing check files, detect new items only")),
+                     ],
+                 )),
+                ("inventory_rediscovery",
+                 Dictionary(
+                     title=_("Automatically update service configuration"),
+                     help=_("If active the check will not only notify about un-monitored services, "
+                            "it will also automatically add/remove them as neccessary."),
+                     elements=[
+                         ("mode",
+                          DropdownChoice(
+                              title=_("Mode"),
+                              choices=[
+                                  (0, _("Add unmonitored services, new host labels")),
+                                  (1, _("Remove vanished services")),
+                                  (2,
+                                   _("Add unmonitored & remove vanished services and host labels")),
+                                  (3, _("Refresh all services and host labels (tabula rasa)"))
+                              ],
+                              default_value=0,
+                          )),
+                         ("group_time",
+                          Age(
+                              title=_("Group discovery and activation for up to"),
+                              help=_(
+                                  "A delay can be configured here so that multiple "
+                                  "discoveries can be activated in one go. This avoids frequent core "
+                                  "restarts in situations with frequent services changes."),
+                              default_value=15 * 60,
+                              display=["hours", "minutes"],
+                          )),
+                         ("excluded_time",
+                          ListOfTimeRanges(
+                              title=
+                              _("Never do discovery or activate changes in the following time ranges"
+                               ),
+                              help=_("This avoids automatic changes during these times so "
+                                     "that the automatic system doesn't interfere with "
+                                     "user activity."),
+                          )),
+                         ("activation",
+                          DropdownChoice(
+                              title=_("Automatic activation"),
+                              choices=[
+                                  (True, _("Automatically activate changes")),
+                                  (False, _("Do not activate changes")),
+                              ],
+                              default_value=True,
+                              help=_("Here you can have the changes activated whenever services "
+                                     "have been added or removed."),
+                          )),
+                         ("service_whitelist",
+                          ListOfStrings(
+                              title=_("Activate only services matching"),
+                              allow_empty=False,
+                              help=_(
+                                  "Set service names or regular expression patterns here to "
+                                  "allow only matching services to be activated automatically. "
+                                  "If you set both this and \'Don't activate services matching\', "
+                                  "both rules have to apply for a service to be activated."),
+                          )),
+                         ("service_blacklist",
+                          ListOfStrings(
+                              title=_("Don't activate services matching"),
+                              allow_empty=False,
+                              help=_(
+                                  "Set service names or regular expression patterns here to "
+                                  "prevent matching services from being activated automatically. "
+                                  "If you set both this and \'Activate only services matching\', "
+                                  "both rules have to apply for a service to be activated."),
+                          )),
+                     ],
+                 )),
+                ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
+            ],
+            optional_keys=["inventory_rediscovery"],
+        ),
+        forth=_periodic_discovery_add_severity_new_host_label,
+    )
+
+
+def _valuespec_automatic_rediscover_parameters():
+    # type: () -> Dictionary
+    return Dictionary(
+        title=_("Automatically update service configuration"),
+        help=_("If active the check will not only notify about un-monitored services, "
+               "it will also automatically add/remove them as neccessary."),
+        elements=[
+            ("mode",
+             DropdownChoice(
+                 title=_("Mode"),
+                 choices=[
+                     (0, _("Add unmonitored services, new host labels")),
+                     (1, _("Remove vanished services")),
+                     (2, _("Add unmonitored & remove vanished services and host labels")),
+                     (3, _("Refresh all services and host labels (tabula rasa)")),
+                 ],
+                 default_value=0,
+             )),
+            (
+                "group_time",
+                Age(
+                    title=_("Group discovery and activation for up to"),
+                    help=_("A delay can be configured here so that multiple "
+                           "discoveries can be activated in one go. This avoids frequent core "
+                           "restarts in situations with frequent services changes."),
+                    default_value=15 * 60,
+                    # The cronjob (etc/cron.d/cmk_discovery) is executed every 5 minutes
+                    minvalue=5 * 60,
+                    display=["hours", "minutes"],
+                )),
+            ("excluded_time",
+             ListOfTimeRanges(
+                 title=_("Never do discovery or activate changes in the following time ranges"),
+                 help=_("This avoids automatic changes during these times so "
+                        "that the automatic system doesn't interfere with "
+                        "user activity."),
+             )),
+            ("activation",
+             DropdownChoice(
+                 title=_("Automatic activation"),
+                 choices=[
+                     (True, _("Automatically activate changes")),
+                     (False, _("Do not activate changes")),
+                 ],
+                 default_value=True,
+                 help=_("Here you can have the changes activated whenever services "
+                        "have been added or removed."),
+             )),
+            ("service_whitelist",
+             ListOfStrings(
+                 title=_("Activate only services matching"),
+                 allow_empty=False,
+                 help=_("Set service names or regular expression patterns here to "
+                        "allow only matching services to be activated automatically. "
+                        "If you set both this and \'Don't activate services matching\', "
+                        "both rules have to apply for a service to be activated."),
+             )),
+            ("service_blacklist",
+             ListOfStrings(
+                 title=_("Don't activate services matching"),
+                 allow_empty=False,
+                 help=_("Set service names or regular expression patterns here to "
+                        "prevent matching services from being activated automatically. "
+                        "If you set both this and \'Activate only services matching\', "
+                        "both rules have to apply for a service to be activated."),
+             )),
+        ],
+        optional_keys=["service_whitelist", "service_blacklist"],
+    )
 
 
 rulespec_registry.register(
@@ -3875,12 +3947,41 @@ rulespec_registry.register(
     ))
 
 
+def _validate_max_cache_ages_and_validity_periods(params, varprefix):
+    global_max_cache_age = params.get("global_max_cache_age")
+    global_period = params.get("global_validity", {}).get('period')
+    _validate_max_cache_age_and_validity_period(global_max_cache_age, global_period, varprefix)
+
+    for exception in params.get("per_piggybacked_host", []):
+        max_cache_age = exception.get("max_cache_age")
+        period = exception.get("validity", {}).get('period', global_period)
+        if max_cache_age == "global":
+            _validate_max_cache_age_and_validity_period(global_max_cache_age, period, varprefix)
+        else:
+            _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix)
+
+
+def _validate_max_cache_age_and_validity_period(max_cache_age, period, varprefix):
+    if isinstance(max_cache_age, int) and isinstance(period, int)\
+       and max_cache_age < period:
+        raise MKUserError(varprefix, _("Maximum cache age must be greater than period."))
+
+
 def _valuespec_piggybacked_host_files():
+    global_max_cache_age_uri = html.makeuri_contextless(
+        [('mode', 'edit_configvar'), ('varname', 'piggyback_max_cachefile_age')],
+        filename="wato.py")
+
+    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
+                                   global_max_cache_age_uri)
+    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
+                            global_max_cache_age_uri)
+
     return Dictionary(
         title=_("Piggybacked Host Files"),
         optional_keys=[],
         elements=[
-            ("global_max_cache_age", _vs_max_cache_age()),
+            ("global_max_cache_age", _vs_max_cache_age(global_max_cache_age_title)),
             ("global_validity", _vs_validity()),
             ("per_piggybacked_host",
              ListOf(
@@ -3892,7 +3993,7 @@ def _valuespec_piggybacked_host_files():
                               title=_("Piggybacked host name"),
                               allow_empty=False,
                           )),
-                         ("max_cache_age", _vs_max_cache_age(additional_title=_("or above"))),
+                         ("max_cache_age", _vs_max_cache_age(max_cache_age_title)),
                          ("validity", _vs_validity()),
                      ],
                  ),
@@ -3908,21 +4009,17 @@ def _valuespec_piggybacked_host_files():
             "data is missing within a check interval. "
             "This rule helps you to get more control over the piggybacked host data handling. "
             "The source host names have to be set in the condition field <i>Explicit hosts</i>."),
+        validate=_validate_max_cache_ages_and_validity_periods,
     )
 
 
-def _vs_max_cache_age(additional_title=None):
-    if additional_title is None:
-        title = _("Use maximum age from global settings")
-    else:
-        title = _("Use maximum age from global settings %s" % additional_title)
+def _vs_max_cache_age(max_cache_age_title):
     return Alternative(
         title=_("Set maximum age how long piggyback files are kept"),
-        style="dropdown",
         elements=[
             FixedValue(
                 "global",
-                title=title,
+                title=max_cache_age_title,
                 totext="",
             ),
             Age(
@@ -4342,8 +4439,14 @@ def _valuespec_snmp_timing():
                 Float(
                     title=_("Response timeout for a single query"),
                     help=_(
-                        "After a request is sent to the remote SNMP agent we will wait up to this "
-                        "number of seconds until assuming the answer get lost and retrying."),
+                        "After a request is sent to the remote SNMP agent, the service will wait "
+                        "up to the provided timeout limit before assuming that the answer got "
+                        "lost. It will then retry to obtain an answer by sending another "
+                        "request.\n"
+                        "In the worst case, the total duration of the service can take up to the "
+                        "product of the number of retries and the timeout duration. In "
+                        "consequence, you should provide combined reasonable values for both "
+                        "parameters."),
                     default_value=1,
                     minvalue=0.1,
                     maxvalue=60,
@@ -4736,7 +4839,13 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed."),
+               "access the agent. IPv6 addresses and networks are also allowed.") \
+            + _("If you are using the Agent bakery, the configuration will be "
+                "used for restricting network access to the baked agents. Even "
+                "if you don't use the bakery, the configured IP address "
+                "restrictions of a host will be verified against the allowed "
+                "IP addresses reported by the agent. This is done during "
+                "monitoring by the Check_MK service."),
     )
 
 
@@ -4840,7 +4949,7 @@ def _valuespec_snmp_check_interval():
             Integer(
                 title=_("Do check every"),
                 unit=_("minutes"),
-                min_value=1,
+                minvalue=1,
                 default_value=1,
             ),
         ])

@@ -368,7 +368,7 @@ class FilterTime(Filter):
             html.write("%s:" % whatname)
             html.close_td()
             html.open_td()
-            html.text_input(varprefix, style="width: 116px;")
+            html.text_input(varprefix)
             html.close_td()
             html.open_td()
             html.dropdown(varprefix + "_range", choices, deflt="3600")

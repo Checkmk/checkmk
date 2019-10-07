@@ -743,4 +743,10 @@ bool AddUniqStringToSetIgnoreCase(StringSet& cache,
 bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
 }  // namespace tools
 
+// finds piggyback template <<<<name>>>>, if found returns 'name'
+std::optional<std::string> GetPiggyBackName(const std::string& in_string);
+
+bool TryToHackStringWithCachedInfo(std::string& in_string,
+                                   const std::string& value_to_insert);
+
 }  // namespace cma

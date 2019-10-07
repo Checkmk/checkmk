@@ -41,20 +41,21 @@ Boston, MA 02110-1301 USA.
 
 #topology_filters {
   position: absolute;
-  pointer-events: none;
-  overflow: hidden;
   top: 124px;
   right: 22px;
   left: 22px;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .topology_center, .topology_remote {
-  fill: white;
+  fill: transparent;
 }
-
 
 #topology_filters div.floatfilter, #topology_filters input#search {
   pointer-events: all;
+  background-color: $topology-filter-bg-color;
+  border-color: $topology-filter-border-color;
 }
 
 #node_visualization_root_div {
@@ -97,11 +98,15 @@ div.node_vis {
 	left: 0;
       }
     }
+
+    img[title="Search"] {
+      filter: $toggle-button-search-img-filter;
+    }
   }
 
   .node_element .growth_root {
-        stroke: rgb(25, 90, 230); // blue
-        stroke-width: 1;
+      stroke: $node-vis-growth-root-color;
+      stroke-width: 1;
    }
 
   div.box, img.box {
@@ -332,7 +337,7 @@ div.node_vis {
   .togglebox {
     display: table-cell;
     width: 150px;
-    height: 30px;
+    height: 27px;
     text-align: center;
     vertical-align: middle;
 
@@ -416,6 +421,9 @@ div.node_vis {
     height: 30px;
   }
 
+  image.growth_possible {
+    filter: $node-vis-growth-img-filter;
+  }
 }
 
 div.node_vis line.dashed, div.node_vis path.dashed, .style_indicator {

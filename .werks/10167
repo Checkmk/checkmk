@@ -1,0 +1,15 @@
+Title: Fix excessive memory consumption on systems using apache 2.2 (e.g. RedHat 6)
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.7.0i1
+Date: 1568974382
+
+The site apache was consuming a lot more memory than intended. The memory usage
+seemed to grow with every request to the apache 2.2 process. This was caused by
+a bad mod_wsgi configuration. This config made each apache process create multiple
+python interpreters within a single process, one for each GUI page (views.py, ...).
+Apache 2.4 based systems were not affected by this.

@@ -525,6 +525,7 @@ inventory_displayhints.update({
     ".software.applications.kubernetes.roles:*.role" : {"title": _("Name")},
     ".software.applications.kubernetes.roles:*.namespace" : {"title": _("Namespace")},
     ".software.applications.kubernetes.nodes:*.name" : {"title": _("Name")},
+    ".software.applications.kubernetes.ingresses:": {"title": _("Ingress")},
     ".software.applications.kubernetes.pod_container:*.name": {"title": _("Name")},
     ".software.applications.kubernetes.pod_container:*.image": {"title": _("Image")},
     ".software.applications.kubernetes.pod_container:*.image_pull_policy": {"title": _("Image pull policy")},

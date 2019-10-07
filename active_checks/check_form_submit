@@ -99,7 +99,7 @@ def new_state(rc, s):
     raise HostResult((rc, s))
 
 
-def bail_out(rc, s):
+def output_check_result(rc, s):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
     sys.stdout.write('%s - %s\n' % (stxt, s))
 
@@ -396,5 +396,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     exitcode, info = main()
-    bail_out(exitcode, info)
+    output_check_result(exitcode, info)
     sys.exit(exitcode)

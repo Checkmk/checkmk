@@ -74,52 +74,18 @@ def get_mock_values(dataset, subcheck):
     return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, []), mock_hc_m.get(subcheck, {}),
 
 
-def parse(check_manager, dataset):
-    """Test parse function
-
-    If dataset has .info attribute and the check has parse function defined,
-    test it, and return the result. Otherwise return None.
-    If the .parsed attribute is present, it is compared to the result.
-    """
-    print("parse: %r" % dataset.checkname)
-    info = getattr(dataset, 'info', None)
-    parsed_expected = getattr(dataset, 'parsed', None)
-
-    if info is None:
-        return None
-
-    try:
-        main_check = check_manager.get_check(dataset.checkname)
-        parse_function = main_check.info.get("parse_function")
-    except MissingCheckInfoError:
-        # this could be ok -
-        # it just implies we don't have a parse function
-        parse_function = None
-
-    if parsed_expected is not None:
-        # we *must* have a parse function in this case!
-        assert parse_function, "%s has no parse function!" \
-                               % dataset.checkname
-    elif not parse_function:  # we may not have one:
-        return None
-
-    parsed = main_check.run_parse(info)
-    if parsed_expected is not None:
-        assertEqual(parsed, parsed_expected, ' parsed result ')
-    return parsed
+def get_discovery_expected(subcheck, dataset):
+    """Return expected DiscoveryResult"""
+    discovery_dict = getattr(dataset, 'discovery', {})
+    discovery_raw = discovery_dict.get(subcheck, [])
+    return DiscoveryResult(discovery_raw)
 
 
-def discovery(check, subcheck, dataset, info_arg, immu):
-    """Test discovery funciton, return discovery result"""
-    print("discovery: %r" % check.name)
-
-    discov_expected = getattr(dataset, 'discovery', {})
+def get_discovery_actual(check, info_arg, immu):
+    """Validate and return actual DiscoveryResult"""
+    print("discovery: %r" % (check.name,))
 
     disco_func = check.info.get("inventory_function")
-    if discov_expected.get(subcheck):
-        # we *must* have a discovery function in this case!
-        assert disco_func, "%r has no discovery function!" \
-                           % check.name
     if not disco_func:
         return DiscoveryResult()
 
@@ -127,11 +93,21 @@ def discovery(check, subcheck, dataset, info_arg, immu):
     immu.test(' after discovery (%s): ' % disco_func.__name__)
 
     d_result = DiscoveryResult(d_result_raw)
-    if subcheck in discov_expected:
-        d_result_expected = DiscoveryResult(discov_expected[subcheck])
-        assertDiscoveryResultsEqual(check, d_result, d_result_expected)
+    for entry in d_result.entries:
+        params = get_merged_parameters(check, entry.default_params)
+        validate_discovered_params(check, params)
 
     return d_result
+
+
+def update_dataset_attrs_with_discovery(dataset, check, subcheck, discovery_result):
+    """Feed discovery results into check test cases to run and write later"""
+    dataset.discovery[subcheck] = discovery_result.labels.to_list()
+    for entry in discovery_result.entries:
+        params = get_merged_parameters(check, entry.default_params)
+        dataset.discovery[subcheck].append(entry.tuple)
+        # add test cases for DiscoveryResult entries
+        dataset.update_check_result(subcheck, (entry.item, params, []))
 
 
 def validate_discovered_params(check, params):
@@ -144,7 +120,7 @@ def validate_discovered_params(check, params):
     rulespec_group = check.info.get("group")
     if rulespec_group is None:
         return
-    key = "checkgroup_parameters:%s" % rulespec_group
+    key = "checkgroup_parameters:%s" % (rulespec_group,)
     spec = rulespec_registry[key].valuespec
 
     # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
@@ -160,42 +136,74 @@ def validate_discovered_params(check, params):
     spec.validate_value(params, "")
 
 
-def check_discovered_result(check, discovery_result, info_arg, immu):
-    """Run the check on all discovered items with the default parameters.
-    We cannot validate the results, but at least make sure we don't crash.
+def run_test_on_parse(check_manager, dataset, immu):
+    """Test parse function
+
+    If dataset has .info attribute and the check has parse function defined,
+    test it, and return the result. Otherwise return None.
+    If the .parsed attribute is present, it is compared to the result.
     """
-    print("Check %r in check %r" % (discovery_result, check.name))
+    print("parse: %r" % (dataset.checkname,))
+    info = getattr(dataset, 'info', None)
+    parsed_expected = getattr(dataset, 'parsed', None)
 
-    item = discovery_result.item
+    if info is None:
+        return None
 
-    params = get_merged_parameters(check, discovery_result.default_params)
+    immu.register(dataset.info, 'info')
+    try:
+        main_check = check_manager.get_check(dataset.checkname)
+        parse_function = main_check.info.get("parse_function")
+    except MissingCheckInfoError:
+        # this could be ok -
+        # it just implies we don't have a parse function
+        parse_function = None
 
-    validate_discovered_params(check, params)
+    if parsed_expected is not None:
+        # we *must* have a parse function in this case!
+        assert parse_function, "%s has no parse function!" % (dataset.checkname,)
+    elif not parse_function:  # we may not have one:
+        return None
 
-    immu.register(params, 'params')
+    parsed = main_check.run_parse(info)
+    if parsed_expected is not None:
+        assertEqual(parsed, parsed_expected, ' parsed result ')
 
-    raw_checkresult = check.run_check(item, params, info_arg)
+    immu.test(' after parse function ')
+    immu.register(parsed, 'parsed')
+
+    return parsed
+
+
+def run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write):
+    d_result_act = get_discovery_actual(check, info_arg, immu)
+    if write:
+        update_dataset_attrs_with_discovery(dataset, check, subcheck, d_result_act)
+    else:
+        d_result_exp = get_discovery_expected(subcheck, dataset)
+        assertDiscoveryResultsEqual(check, d_result_act, d_result_exp)
+
+
+def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
+    """Run check for test case listed in dataset"""
+    test_cases = getattr(dataset, 'checks', {}).get(subcheck, [])
     check_func = check.info.get("check_function")
-    immu.test(' after check (%s): ' % check_func.__name__)
 
-    result = CheckResult(raw_checkresult)
+    for item, params, results_expected_raw in test_cases:
 
-    return (item, params, result.raw_repr())
+        print("Dataset item %r in check %r" % (item, check.name))
+        immu.register(params, 'params')
+        result_raw = check.run_check(item, params, info_arg)
+        immu.test(' after check (%s): ' % check_func.__name__)
 
+        result = CheckResult(result_raw)
+        result_expected = CheckResult(results_expected_raw)
 
-def process_listed_result(check, list_entry, info_arg, immu):
-    """Run check for all results listed in dataset"""
-    item, params, results_expected_raw = list_entry
-    print("Dataset item %r in check %r" % (item, check.name))
-
-    immu.register(params, 'params')
-    result_raw = check.run_check(item, params, info_arg)
-    check_func = check.info.get("check_function")
-    immu.test(' after check (%s): ' % check_func.__name__)
-
-    result = CheckResult(result_raw)
-    result_expected = CheckResult(results_expected_raw)
-    return result, result_expected
+        if write:
+            new_entry = (item, params, result.raw_repr())
+            dataset.update_check_result(subcheck, new_entry)
+        else:
+            assertCheckResultsEqual(result, result_expected)
 
 
 @contextmanager
@@ -214,23 +222,15 @@ def optional_freeze_time(dataset):
 
 def run(check_manager, dataset, write=False):
     """Run all possible tests on 'dataset'"""
-    print("START: %r" % dataset)
+    print("START: %r" % (dataset,))
     checklist = checkhandler.get_applicables(dataset.checkname)
-    assert checklist, "Found no check plugin for %r" % dataset.checkname
+    assert checklist, "Found no check plugin for %r" % (dataset.checkname,)
 
     immu = Immutables()
 
     with optional_freeze_time(dataset):
-        # test the parse function
-        if hasattr(dataset, 'info'):
-            immu.register(dataset.info, 'info')
-        parsed = parse(check_manager, dataset)
-        immu.test(' after parse function ')
 
-        immu.register(parsed, 'parsed')
-
-        # get the expected check results, if present
-        checks_expected = getattr(dataset, 'checks', {})
+        parsed = run_test_on_parse(check_manager, dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
         for sname in checklist:
@@ -247,23 +247,8 @@ def run(check_manager, dataset, write=False):
                  MockHostExtraConf(check, mock_hec), \
                  MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 
-                # test discovery
-                discovery_result = discovery(check, subcheck, dataset, info_arg, immu)
-                if write:
-                    dataset.discovery[subcheck] = [e.tuple for e in discovery_result.entries
-                                                  ] + discovery_result.labels.to_list()
+                run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write)
 
-                    # test checks for DiscoveryResult entries
-                    for dr in discovery_result.entries:
-                        new_entry = check_discovered_result(check, dr, info_arg, immu)
-                        dataset.update_check_result(subcheck, new_entry)
+                run_test_on_checks(check, subcheck, dataset, info_arg, immu, write)
 
-                for entry in checks_expected.get(subcheck, []):
-                    result, result_expected = process_listed_result(check, entry, info_arg, immu)
-                    if write:
-                        new_entry = (entry[0], entry[1], result.raw_repr())
-                        dataset.update_check_result(subcheck, new_entry)
-                    else:
-                        assertCheckResultsEqual(result, result_expected)
-
-        immu.test(' at end of subcheck loop %r ' % subcheck)
+        immu.test(' at end of subcheck loop %r ' % (subcheck,))

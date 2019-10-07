@@ -23,14 +23,8 @@ import generictests
 
 pytestmark = pytest.mark.checks
 
-EXCLUDES = ('', '__init__', 'conftest', '__pycache__')
 
-DATASET_DIR = Path(cmk_path(), 'tests', 'unit', 'checks', 'generictests', 'datasets')
-
-DATASET_NAMES = {_f.stem for _f in DATASET_DIR.glob("*.py") if _f.stem not in EXCLUDES}
-
-
-@pytest.mark.parametrize("datasetname", DATASET_NAMES)
+@pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
 def test_dataset(check_manager, datasetname):
     dataset = import_module("generictests.datasets.%s" % datasetname)
     generictests.run(check_manager, dataset)

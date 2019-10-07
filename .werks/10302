@@ -1,0 +1,14 @@
+Title: Correct stacked graphs right edge
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1570539766
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+Stacked graphs would show a strange termination of data taking all data
+points to zero at the timestamp where the RRD database has not yet recorded
+data. This werk skips that last point altogether.

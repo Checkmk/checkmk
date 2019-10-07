@@ -42,6 +42,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
     TextUnicode,
+    HTTPUrl,
     DropdownChoice,
     Tuple,
     ListOf,
@@ -635,6 +636,26 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableCrashReportURL(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "crash_report_url"
+
+    def valuespec(self):
+        return HTTPUrl(
+            title=_("Crash report HTTP URL"),
+            help=_("By default crash reports will be sent to our crash reporting server."),
+            size=80,
+            show_as_link=False,
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
@@ -647,7 +668,7 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
 
     def valuespec(self):
         return TextAscii(
-            title=_("Fallback mail address for crash reports"),
+            title=_("Crash report fallback mail address"),
             help=_("By default crash reports will be sent to our crash reporting server. In case "
                    "this fails for some reason, the crash reports can be sent by mail to the "
                    "address configured here."),

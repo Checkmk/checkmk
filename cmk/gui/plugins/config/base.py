@@ -261,6 +261,8 @@ virtual_host_trees = []
 # Fall back to PNP4Nagios as graphing GUI even on CEE
 force_pnp_graphing = False
 
+# Target URL for sending crash reports to
+crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@checkmk.com"
 

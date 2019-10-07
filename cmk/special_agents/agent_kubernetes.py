@@ -46,6 +46,7 @@ import time
 from typing import (  # pylint: disable=unused-import
     Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union,
 )
+import urllib3  # type: ignore
 
 from dateutil.parser import parse as parse_time
 from kubernetes import client
@@ -98,18 +99,15 @@ def parse(args):
 def setup_logging(verbosity):
     # type: (int) -> None
     if verbosity >= 3:
-        fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
         lvl = logging.DEBUG
     elif verbosity == 2:
-        fmt = '%(levelname)s: %(filename)s: %(lineno)s: %(message)s'
-        lvl = logging.DEBUG
-    elif verbosity == 1:
-        fmt = '%(levelname)s: %(funcName)s: %(message)s'
         lvl = logging.INFO
+    elif verbosity == 1:
+        lvl = logging.WARN
     else:
-        fmt = '%(levelname)s: %(message)s'
-        lvl = logging.WARNING
-    logging.basicConfig(level=lvl, format=fmt)
+        logging.disable(logging.CRITICAL)
+        lvl = logging.CRITICAL
+    logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
 
 
 def parse_frac_prefix(value):
@@ -1184,7 +1182,8 @@ def get_api_client(arguments):
     config.api_key['authorization'] = arguments.token
 
     if arguments.no_cert_check:
-        logging.warn('Disabling SSL certificate verification')
+        logging.info('Disabling SSL certificate verification')
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         config.verify_ssl = False
     else:
         config.ssl_ca_cert = os.environ.get('REQUESTS_CA_BUNDLE')
@@ -1221,9 +1220,24 @@ def main(args=None):
                 print(api_data.daemon_set_sections())
             if 'stateful_sets' in arguments.infos:
                 print(api_data.stateful_set_sections())
+    except urllib3.exceptions.MaxRetryError as e:
+        if arguments.debug:
+            raise
+        if isinstance(e.reason, urllib3.exceptions.NewConnectionError):
+            print('Failed to establish a connection to %s:%s at URL %s' %
+                  (e.pool.host, e.pool.port, e.url),
+                  file=sys.stderr,
+                  end='')
+        else:
+            print(e, file=sys.stderr, end='')
+        return 1
     except Exception as e:
         if arguments.debug:
             raise
-        print("%s" % e, file=sys.stderr)
+        print(e, file=sys.stderr, end='')
         return 1
     return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

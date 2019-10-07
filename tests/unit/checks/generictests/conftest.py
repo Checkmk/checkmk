@@ -1,8 +1,9 @@
 from generictests.crashtest import CrashReportList
+from generictests import DATASET_FILES
 
 
 def pytest_addoption(parser):
-    parser.addoption("--datasetfile", action="store", default="")
+    parser.addoption("--datasetfile", action="store", default=None)
     parser.addoption("--crashstates", action="store", default="")
     parser.addoption("--inplace", action="store_true", default=False)
 
@@ -10,8 +11,11 @@ def pytest_addoption(parser):
 def pytest_generate_tests(metafunc):
     # This is called for every test. Only get/set command line arguments
     # if the argument is specified in the list of test "fixturenames".
-    if 'datasetfile' in metafunc.fixturenames and metafunc.config.option.datasetfile is not None:
-        metafunc.parametrize('datasetfile', [metafunc.config.option.datasetfile])
+    if 'datasetfile' in metafunc.fixturenames:
+        if metafunc.config.option.datasetfile is not None:
+            metafunc.parametrize('datasetfile', [metafunc.config.option.datasetfile])
+        elif metafunc.config.option.inplace:
+            metafunc.parametrize('datasetfile', [str(f) for f in DATASET_FILES])
 
     if 'crashdata' in metafunc.fixturenames and metafunc.config.option.crashstates is not None:
         crash_reports = CrashReportList(metafunc.config.option.crashstates)

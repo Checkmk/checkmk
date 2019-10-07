@@ -6,4 +6,6 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 echo "TARGET: $ROOT/share/check_mk/checks"
-sudo rsync -ar --delete-after ./ $ROOT/share/check_mk/checks/
+# NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
+# would screw up our include caching mechanism!
+sudo rsync -rlpgoD --delete-after ./ $ROOT/share/check_mk/checks/

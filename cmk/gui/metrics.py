@@ -305,6 +305,9 @@ class Perfometers(object):
             except Exception:
                 return False
 
+        if "total" in perfometer:
+            return self._total_values_exists(perfometer["total"], translated_metrics)
+
         return True
 
     def _skip_perfometer_by_trivial_metrics(self, required_metric_names, translated_metrics):
@@ -321,6 +324,23 @@ class Perfometers(object):
 
         available_metric_names = set(translated_metrics.keys())
         return not required_metric_names.issubset(available_metric_names)
+
+    def _total_values_exists(self, value, translated_metrics):
+        """
+        Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
+        The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
+        """
+        if not isinstance(value, str):
+            return True
+
+        if not ":" in value:
+            return True
+
+        perf_name, perf_param = value.split(":", 1)
+        if perf_param not in translated_metrics[perf_name]["scalar"].keys():
+            return False
+
+        return True
 
 
 class MetricometerRenderer(six.with_metaclass(abc.ABCMeta, object)):

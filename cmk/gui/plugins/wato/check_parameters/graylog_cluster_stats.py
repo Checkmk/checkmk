@@ -65,7 +65,7 @@ def _parameter_valuespec_graylog_cluster_stats():
                  Integer(title=_("Critical if less then"), unit="outputs")
              ],
          )),
-        ("outputs_count_upper",
+        ("output_count_upper",
          Tuple(
              title=_("Total number of outputs upper level"),
              elements=[

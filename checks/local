@@ -148,7 +148,8 @@ def parse_local(info):
         node, stripped_line = line[0], line[1:]
         expired, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
-            parsed.setdefault(None, []).append(LocalResult(node, None, None, stripped_line))
+            # just pass on the line, to report the offending ouput
+            parsed.setdefault(None, []).append(" ".join(stripped_line))
             continue
 
         state, state_msg = _sanitize_state(stripped_line[0])
@@ -180,8 +181,8 @@ def local_compute_state(perfdata):
 def inventory_local(parsed):
     if None in parsed:
         output = parsed[None][0]
-        raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" %
-                                 " ".join(output.line))
+        raise MKGeneralException("Invalid line in agent section <<<local>>>: %r" % (output,))
+
     return [(key, {}) for key in parsed]
 
 

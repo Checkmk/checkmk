@@ -8513,6 +8513,19 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
+    "type": "linear",
+    "segments": ["mem_used"],
+    "total": "mem_used:max",
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "mem_used",
+    "half_value": GB,
+    "exponent": 4.0,
+})
+
+perfometer_info.append({
     "type": "logarithmic",
     "metric": "time_offset",
     "half_value": 1.0,
@@ -8683,12 +8696,6 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["sort_overflow"],
-})
-
-perfometer_info.append({
-    "type": "linear",
-    "segments": ["mem_used"],
-    "total": "mem_used:max",
 })
 
 perfometer_info.append({

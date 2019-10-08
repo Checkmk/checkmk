@@ -133,6 +133,8 @@ def update_files(args, hostname, servicedesc, item, source):
             filepath.replace(".info", ".rrd"),
         )
 
+    return False
+
 
 def update_journal(rrdfile, rrdfilenew):
     journaldir = Path(cmk.utils.paths.omd_root, 'var/rrdcached/')
@@ -184,7 +186,7 @@ def update_service_info(config_cache, hostnames, args):
                                                   'pnp4nagios')
 
     if args.dry_run and pnp_files_present:
-        logger.info("Journal files will be updates")
+        logger.info("Journal files will be updated")
         return
 
 
@@ -193,9 +195,9 @@ def _ask_for_confirmation_backup(args):
                      " - RRD info files (CMC) in path %s\n"
                      " - RRD filenames (Nagios format) in path %s\n"
                      " - RRD Journal Cache in path %s\n\n" %
-                     (Path(cmk.utils.paths.omd_root, "/var/check_mk/rrd/"),
-                      Path(cmk.utils.paths.omd_root, "/var/pnp4nagios/perfdata/"),
-                      Path(cmk.utils.paths.omd_root, '/var/rrdcached/')))
+                     (Path(cmk.utils.paths.omd_root, "var/check_mk/rrd/"),
+                      Path(cmk.utils.paths.omd_root, "var/pnp4nagios/perfdata/"),
+                      Path(cmk.utils.paths.omd_root, "var/rrdcached/")))
     if args.dry_run:
         return True
 

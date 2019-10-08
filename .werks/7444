@@ -16,13 +16,13 @@ features in Checkmk performing bulk access to data can't.
 
 <ul>
 
-<li>All sites created with Checkm 1.6.0 onwards will automatically use the
+<li>All sites created with Checkmk 1.6.0 onward will automatically use the
 new naming convention and don't need to be migrated</li>
 
 <li> The migration is not mandatory, your Checkmk instance will continue
 working under the legacy mode until you migrate.</li>
 
-<li>If you use CRE, you don't need to de the migration</li>
+<li>If you use CRE, you don't need to do the migration</li>
 
 <li>If you don't plan to do bulk access to data as required by the Historic
 Data Views for filesystems (see Werk #7445), you don't need to migrate your
@@ -34,7 +34,7 @@ Filesystems, you need to do migration.</li>
 </ul>
 
 The incorporation of Historic Data Views, for Capacity Management,
-requieres querying the filesystem usage of all host in a given time
+requires querying the filesystem usage of all host in a given time
 window. It becomes prohibitive expensive to do such request since first
 every service is queried for its mount point name and then every RRD is
 individually queried again for the mount point name data.
@@ -42,7 +42,7 @@ individually queried again for the mount point name data.
 In this werk we provide a migration script that would edit all meta data
 files describing the RRDs that receive output from all our supported
 filesystem checks. It will also set a flag in your config so that
-Filesystem check plug-ins start delivering usage perfomance data under the
+Filesystem check plug-ins start delivering usage performance data under the
 static name of fs_used.
 
 You are advised to do a backup of your RRD files and journal files before
@@ -51,3 +51,12 @@ during the migration.
 
 Migration is one way and needs to be performed once per site any rollback
 has to be done from your own backup.
+
+<h3>Instructions:</h3>
+<ol>
+    <li>Stop your omd site. (# omd stop SITE)</li>
+    <li>Do a full backup of your site (# omd backup SITE)</li>
+    <li>Log in as the site user ($ sudo su - SITE)</li>
+    <li>As site user run the script ($ bin/update_rrd_fs_names.py). You can optionally use <i>-n</i> for a dry-run.</li>
+    <li>Start the site again.</li>
+</ol>

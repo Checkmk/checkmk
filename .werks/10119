@@ -1,0 +1,13 @@
+Title: Fixed CMC config generation in the presence of non-ASCII characters.
+Class: fix
+Compatible: compat
+Component: config
+Date: 1570528370
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 1.7.0i1
+
+Non-ASCII characters in various places (e.g. group names) caused a failure in
+the CMC config generation. This was a regression in 1.6.0 and has been fixed
+now.

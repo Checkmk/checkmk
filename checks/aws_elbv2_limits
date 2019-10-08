@@ -37,17 +37,12 @@ factory_settings['aws_elbv2_limits_default_levels'] = {
 }
 
 
-def parse_aws_elbv2_limits(info):
-    return [(resource_key, resource_title, limit, amount, region, None)
-            for resource_key, resource_title, limit, amount, region in parse_aws(info)]
-
-
 def check_aws_elbv2_limits(item, params, parsed):
     return check_aws_limits("elbv2", params, parsed)
 
 
 check_info['aws_elbv2_limits'] = {
-    'parse_function': parse_aws_elbv2_limits,
+    'parse_function': parse_aws_limits_generic,
     'inventory_function': discover_single,
     'check_function': check_aws_elbv2_limits,
     'service_description': 'AWS/ELBv2 Limits',

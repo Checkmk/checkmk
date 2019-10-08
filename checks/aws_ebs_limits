@@ -37,7 +37,9 @@ factory_settings['aws_ebs_limits_default_levels'] = {
 
 def parse_aws_ebs_limits(info):
     parsed = []
-    for resource_key, resource_title, limit, amount, region in parse_aws(info):
+    for line in parse_aws(info):
+        resource_key, resource_title, limit, amount, region = parse_aws_limit_line(line)
+
         if resource_key in [
                 "block_store_space_standard",
                 "block_store_space_io1",

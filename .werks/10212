@@ -1,0 +1,11 @@
+Title: aws_limits: Fixed parsing old agent data which does not contain information about region
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1570521733
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+

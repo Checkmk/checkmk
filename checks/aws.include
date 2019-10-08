@@ -135,6 +135,19 @@ def _is_valid_aws_limits_perf_data(perfvar):
     return True
 
 
+def parse_aws_limit_line(line):
+    if len(line) == 5:
+        return tuple(line)
+    return tuple(line + [None])
+
+
+def parse_aws_limits_generic(info):
+    parsed = []
+    for line in parse_aws(info):
+        parsed.append(parse_aws_limit_line(line) + (None,))
+    return parsed
+
+
 def check_aws_limits(aws_service, params, parsed):
     """
     Generic check for checking limits of AWS resource.

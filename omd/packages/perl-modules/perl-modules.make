@@ -103,26 +103,12 @@ PERL_MODULES_LIST2 := \
                   Nagios-Plugin-0.36.tar.gz \
                   DateTime-1.18.tar.gz
 
-$(PACKAGE_DIR)/$(PERL_MODULES)/src/%-patched.tar.gz: $(PACKAGE_DIR)/$(PERL_MODULES)/src/%.tar.gz
-	tar xf $<
-	for P in $$($(LS) $(PACKAGE_DIR)/$(PERL_MODULES)/patches/$**.dif); do \
-	    $(ECHO) "applying $$P..." ; \
-	    $(PATCH) -p1 -b -d $* < $$P ; \
-	done
-	tar czf $@ $*
-
-
-$(PERL_MODULES_BUILD): $(PACKAGE_DIR)/$(PERL_MODULES)/src/Crypt-SSLeay-0.72-patched.tar.gz
+$(PERL_MODULES_BUILD):
 	$(MKDIR) $(PACKAGE_PERL_MODULES_DESTDIR)/dest
 	$(MKDIR) $(PACKAGE_PERL_MODULES_DESTDIR)/src
 	echo $(PERL_MODULES)
 	$(RSYNC) $(PACKAGE_DIR)/$(PERL_MODULES)/src/. $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
 	$(RSYNC) $(PACKAGE_DIR)/$(PERL_MODULES)/build_module.pl $(PACKAGE_DIR)/$(PERL_MODULES)/lib $(PACKAGE_PERL_MODULES_DESTDIR)/src/.
-	for F in $$(ls $(PACKAGE_PERL_MODULES_DESTDIR)/src/*-patched.tar.gz); do \
-		echo $$F; \
-		echo $${F/-patched/}; \
-	    mv $$F $${F/-patched/}; \
-	done
 	echo "install --install_base $(PACKAGE_PERL_MODULES_DESTDIR)/dest" > $(PACKAGE_PERL_MODULES_DESTDIR)/dest/.modulebuildrc
 	unset LANG; \
 	    unset PERL5LIB; \
@@ -159,4 +145,4 @@ $(PERL_MODULES_SKEL): $(PERL_MODULES_INSTALL)
 	$(TOUCH) $@
 
 perl-modules-clean:
-	$(RM) -r src/inc $(PACKAGE_PERL_MODULES_DESTDIR) $(BUILD_HELPER_DIR) $(PACKAGE_DIR)/$(PERL_MODULES)/src/*-patched.tar.gz
+	$(RM) -r src/inc $(PACKAGE_PERL_MODULES_DESTDIR) $(BUILD_HELPER_DIR)

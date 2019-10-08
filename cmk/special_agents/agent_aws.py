@@ -3280,9 +3280,8 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_summary)
             self._sections.append(elbv2_labels)
             self._sections.append(elbv2_target_groups)
-            #TODO enable when checks are ready
-            #self._sections.append(elbv2_application)
-            #self._sections.append(elbv2_network)
+            self._sections.append(elbv2_application)
+            self._sections.append(elbv2_network)
 
         if 'glacier' in services:
             if config.service_config.get('glacier_limits'):

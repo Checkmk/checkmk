@@ -1,0 +1,12 @@
+Title: agent_aws: Add ELBv2 network and application load balancer sections
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1570543142
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+

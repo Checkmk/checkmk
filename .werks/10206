@@ -1,11 +1,14 @@
-Title: Support for Red Hat 8 / CentOS 8
-Class: feature
+Title: check_mk_agent.solaris: Fixed missing MTIME which broke the agent data parsing
+Level: 1
+Component: checks
+Class: fix
 Compatible: compat
-Component: distros
-Date: 1570531092
 Edition: cre
-Knowledge: undoc
-Level: 2
-Version: 1.7.0i1
+State: unknown
+Version: 1.6.0p1
+Date: 1569415336
 
-
+The MTIME for cached sections was empty such that Checkmk could not
+calculate the cache age of these sections.
+The fixed Solaris agent has to be deployed or installed on the
+affected hosts.

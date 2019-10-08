@@ -39,17 +39,12 @@ factory_settings['aws_glacier_limits_default_levels'] = {
 }
 
 
-def parse_aws_glacier_limits(info):  # pylint: disable=function-redefined
-    return [(resource_key, resource_title, limit, amount, region, None)
-            for resource_key, resource_title, limit, amount, region in parse_aws(info)]
-
-
 def check_aws_glacier_limits(item, params, parsed):
     return check_aws_limits("glacier", params, parsed)
 
 
 check_info['aws_glacier_limits'] = {
-    'parse_function': parse_aws_glacier_limits,
+    'parse_function': parse_aws_limits_generic,
     'inventory_function': discover_single,
     'check_function': check_aws_glacier_limits,
     'service_description': 'AWS/Glacier Limits',

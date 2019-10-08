@@ -41,11 +41,6 @@ factory_settings['aws_ec2_limits_default_levels'] = {
 }
 
 
-def parse_aws_ec2_limits(info):
-    return [(resource_key, resource_title, limit, amount, region, None)
-            for resource_key, resource_title, limit, amount, region in parse_aws(info)]
-
-
 def _transform_ec2_limits(params):
     transformed = {}
     for k, v in params.iteritems():
@@ -66,7 +61,7 @@ def check_aws_ec2_limits(item, params, parsed):
 
 
 check_info['aws_ec2_limits'] = {
-    'parse_function': parse_aws_ec2_limits,
+    'parse_function': parse_aws_limits_generic,
     'inventory_function': discover_single,
     'check_function': check_aws_ec2_limits,
     'service_description': 'AWS/EC2 Limits',

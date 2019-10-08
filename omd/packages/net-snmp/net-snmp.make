@@ -18,7 +18,9 @@ $(NET_SNMP)-install: $(NET_SNMP_INSTALL)
 $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_BUILD) $(PERL_MODULES_BUILD)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
-	cd $(NET_SNMP_DIR) && ./configure \
+	cd $(NET_SNMP_DIR) \
+        && if [ "$(DISTRO_CODE)" == "el8" ]; then export CFLAGS='-Wformat -I../../include -D_REENTRANT -D_GNU_SOURCE -O2 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-strong -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m64 -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fwrapv -fno-strict-aliasing -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64'; fi \
+        && ./configure \
 	    --enable-ipv6 \
 	    --disable-agent \
 	    --disable-snmptrapd-subagent \

@@ -96,7 +96,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
         p = subprocess.Popen(cmd,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
+                             stderr=subprocess.PIPE,
                              close_fds=True)
     except Exception as e:
         raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" %
@@ -114,6 +114,9 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     exitcode = p.wait()
     auto_logger.info("FINISHED: %d" % exitcode)
     auto_logger.debug("OUTPUT: %r" % outdata)
+    errdata = p.stderr.read()
+    if errdata:
+        auto_logger.warning("'%s' returned '%s'" % (" ".join(cmd), errdata))
     if exitcode != 0:
         auto_logger.error("Error running %r (exit code %d)" %
                           (subprocess.list2cmdline(cmd), exitcode))

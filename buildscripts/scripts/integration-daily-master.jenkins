@@ -99,6 +99,9 @@ try {
                                     'centos-7')
                                         DISTRO_CODE='-el7-38.x86_64.rpm'
                                         ;;
+                                    'centos-8')
+                                        DISTRO_CODE='-el8-38.x86_64.rpm'
+                                        ;;
                                     *)
                                         DISTRO_CODE_TMP=\$(echo $DISTRO | tr -d '-')
                                         DISTRO_CODE="-\${DISTRO_CODE_TMP}-38.x86_64.rpm"

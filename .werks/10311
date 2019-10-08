@@ -1,0 +1,11 @@
+Title: Support for Red Hat 8 / CentOS 8
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1570537226
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 1.7.0i1
+
+

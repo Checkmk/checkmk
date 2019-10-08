@@ -18,7 +18,7 @@ Requires:
 %global __os_install_post %{nil}
 # disable creating debug packages
 %global debug_package %{nil}
-
+%global _build_id_links none
 
 %description
 Check_MK is a full featured system monitoring

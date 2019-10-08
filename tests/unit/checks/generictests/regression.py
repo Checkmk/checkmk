@@ -66,6 +66,11 @@ from importlib import import_module
 
 import generictests.run
 
+YAPF_STYLE = {
+    'dedent_closing_brackets': 1,
+    'split_before_closing_bracket': 1,
+}
+
 
 class WritableDataset(object):
     def __init__(self, filename, init_dict):
@@ -121,12 +126,15 @@ class WritableDataset(object):
         with open('%s/%s' % (directory, self.filename.split("/")[-1]), 'w') as f:
             for comment in self.comments:
                 f.write('# %s\n' % comment)
-            f.write('\n')
 
             for item in sorted(imports):
                 f.write('%s\n' % item)
+            f.write('\n')
 
-            output, _ = yapf.yapflib.yapf_api.FormatCode('\n\n'.join(content))
+            output, _ = yapf.yapflib.yapf_api.FormatCode(
+                '\n\n'.join(content),
+                style_config=YAPF_STYLE,
+            )
             f.write(output)
 
     def get_imports(self, value):

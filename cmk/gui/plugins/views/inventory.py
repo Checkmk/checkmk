@@ -42,8 +42,7 @@ import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
 from cmk.gui.htmllib import HTML
-
-from cmk.gui.valuespec import Checkbox, Hostname
+from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.visuals import (
@@ -181,6 +180,15 @@ def declare_inv_column(invpath, datatype, title, short=None):
         "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
+        "params": Dictionary(title=_("Report options"),
+                             elements=[
+                                 ("use_short",
+                                  Checkbox(
+                                      title=_("Use short title in reports header"),
+                                      default_value=False,
+                                  )),
+                             ],
+                             required_keys=['use_short']),
         # Only leaf nodes can be shown in reports. There is currently no way to render trees.
         # The HTML code would simply be stripped by the default rendering mechanism which does
         # not look good for the HW/SW inventory tree

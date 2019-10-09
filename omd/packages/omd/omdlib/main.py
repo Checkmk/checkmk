@@ -2898,7 +2898,6 @@ def finalize_size_as_user(site, what):
     # configuration settings
     config_set_all(site)
     initialize_site_ca(site)
-
     save_site_conf(site)
 
     call_scripts(site, 'post-' + what)
@@ -3326,10 +3325,14 @@ def main_update(site, args, options=None):
 
     call_scripts(site, 'update-pre-hooks')
 
-    # Let hooks do their work and update configuration.
+    # Let hooks of the new(!) version do their work and update configuration.
+    # For this we need to refresh the site configuration, because new hooks
+    # may introduce new settings and default values.
+    site.load_config()
     config_set_all(site)
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
+    save_site_conf(site)
 
     call_scripts(site, 'post-update')
 

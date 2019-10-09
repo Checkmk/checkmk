@@ -1,0 +1,12 @@
+Title: HW/SW Inventory: Fixed filtering inventory tree if permitted paths are configured in contact groups
+Knowledge: doc
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p23
+Date: 1570636330
+
+

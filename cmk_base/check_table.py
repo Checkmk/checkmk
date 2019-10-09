@@ -175,7 +175,8 @@ class HostCheckTable(object):
            (not self._host_config.has_management_board or self._host_config.management_protocol != "snmp"):
             passed = False
 
-        elif not self._host_config.is_agent_host and self._config_cache.is_tcp_check(checkname):
+        elif not self._host_config.is_agent_host and self._config_cache.is_tcp_check(checkname) and \
+           (not self._host_config.has_management_board or self._host_config.management_protocol != "ipmi"):
             passed = False
 
         self._is_checkname_valid_cache[checkname] = passed

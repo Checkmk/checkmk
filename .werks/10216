@@ -1,0 +1,14 @@
+Title: IPMI Management Board: Fixed missing services
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p4
+Date: 1570615420
+
+If a host is a no-agent host with an IPMI management board configuration then
+the discovery page found some IPMI services. During the check phase these
+services were incorrectly filtered out such that no service was checked.

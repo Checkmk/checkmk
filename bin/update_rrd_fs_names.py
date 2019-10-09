@@ -142,7 +142,8 @@ def update_journal(rrdfile, rrdfilenew):
         logger.info('- Updating journal file %s', filepath)
         new_file = filepath.with_suffix(filepath.suffix + '.new')
         try:
-            with filepath.open('r') as old_jou, new_file.open('w') as new_jou:
+            with filepath.open('r', encoding="utf-8") as old_jou, new_file.open(
+                    'w', encoding="utf-8") as new_jou:
                 for line in old_jou:
                     if rrdfile in line:
                         line = line.replace(rrdfile, rrdfilenew)

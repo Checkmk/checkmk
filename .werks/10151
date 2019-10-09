@@ -1,0 +1,20 @@
+Title: mssql: Sanitize mssql ini file name
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1570619710
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+If the instance name contained a backslash, the ini-files path was wrongly considered
+to contain a subdirectory. When using the agent bakery, this lead to missing
+plugins in the deployed agents.
+
+We now replace "\" and "," by "_"; such that the instance "FOO\Bar,5038" will
+create the file "mssql_FOO_Bar_5038.ini", instead of "Bar,5038.ini" in the folder
+"mssql_FOO".
+
+Users that manually adopted to the previous behaviour, should redeploy the
+plugin and move the file accordingly.

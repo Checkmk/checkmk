@@ -30759,7 +30759,7 @@ msgstr "Bitte Namen für Status-Host angeben."
 
 #, python-format
 msgid ""
-"Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
+"Please specify the path to the export file. The text <tt><HOST></tt> "
 "will be replaced with the host name the inventory has been done for. If you "
 "use a relative path then that will be relative to Check_MK's directory for "
 "variable data, which is <tt>%s</tt>."

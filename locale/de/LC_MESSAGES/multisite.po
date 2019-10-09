@@ -15085,7 +15085,7 @@ msgstr "Als PNG exportieren"
 msgid "Export data of views using the CSV export"
 msgstr "Daten von Ansichten mit dem CSV-Export exportieren"
 
-msgid "Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"
+msgid "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
 msgstr ""
 "Zu erzeugende Export-Datei, <tt>&lt;HOST&gt;</tt> steht dabei für den "
 "Hostnamen"

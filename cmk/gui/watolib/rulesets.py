@@ -725,6 +725,29 @@ class Ruleset(object):
                 effectiverules.append((folder, rule_index, rule))
 
             elif self.match_type() == "dict":
+                # It may happen that a ruleset started with non-dict values. For example
+                # a ruleset that has only has a WARN and CRIT threshold in a two element
+                # tuple.
+                # When we then have to extend the ruleset to hold dict values and change
+                # the match type to dict, we normally do this by adding a top-level
+                # Transform() valuespec which encapsulates the Dictionary() valuespec.
+                # The logic for migrating the parameters is implemented in the forth()
+                # method of the transform.
+                # Users which already have saved rules using the previous valuespec now
+                # have tuples in their ruleset and reach this code with other data
+                # structures than dictionaries.
+                # We currently have no 100% safe way of automatically fixing this on the
+                # fly. The best we can do is print a meaningful error message to the user.
+                # Would be better to do these transforms once during site update. The
+                # cmk-update-config command would be a good place to do this.
+                if not isinstance(rule.value, dict):
+                    raise MKGeneralException(
+                        _("Failed to process rule #%d of ruleset \"%s\" in folder \"%s\". "
+                          "The value of a rule is incompatible to the current rule "
+                          "specification. You can try fix this by opening the rule "
+                          "for editing and save the rule again without modification.") %
+                        (rule_index, self.title(), folder.title()))
+
                 new_result = rule.value.copy()  # pylint: disable=no-member
                 new_result.update(resultdict)
                 resultdict = new_result

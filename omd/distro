@@ -3,7 +3,7 @@
 # This script determines the Linux distribution we are running
 # on. It output two words: (1) The distro name and (2) the version
 # Example output "UBUNTU 10.04"
-set -x
+
 # Ubuntu is detected with /etc/lsb-release
 SEP=${1:- }
 if [ -e /etc/lsb-release ]

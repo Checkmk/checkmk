@@ -684,7 +684,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ['service_check_command_expanded']
 
     def render(self, row, cell):
-        return html.attrencode(row["service_check_command_expanded"])
+        return (None, html.attrencode(row["service_check_command_expanded"]))
 
 
 @painter_registry.register

@@ -38,25 +38,6 @@
 # MSSQL_MSSQL46 test_autoclose RECOVERY PENDING FULL 1 0^M
 
 
-def parse_mssql_databases(info):
-    parsed = {}
-    headers = ['Instance', 'DBname', 'Status', 'Recovery', 'auto_close', 'auto_shrink']
-
-    for line in info:
-        if line == headers:
-            continue
-
-        if len(line) == 6:
-            data = dict(zip(headers, line))
-        elif len(line) == 7:
-            data = dict(zip(headers, line[:2] + ["%s %s" % (line[2], line[3])] + line[-3:]))
-        else:
-            continue
-        parsed.setdefault("%s %s" % (data["Instance"], data["DBname"]), data)
-
-    return parsed
-
-
 @get_parsed_item_data
 def check_mssql_databases(_no_item, params, data):
     map_states = {
@@ -84,4 +65,5 @@ check_info['mssql_databases'] = {
     'check_function': check_mssql_databases,
     'service_description': 'MSSQL %s Database',
     'group': 'mssql_databases',
+    'includes': ['mssql.include'],
 }

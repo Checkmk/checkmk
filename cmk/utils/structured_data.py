@@ -256,7 +256,9 @@ class StructuredDataTree(object):
             return self
         filtered_tree = StructuredDataTree()
         for path, keys in allowed_paths:
-            sub_tree = self._root.get_filtered_branch(path, keys, Container())
+            # Make a copy of 'paths' which is mutable
+            # later 'paths' is modified via .pop(0)
+            sub_tree = self._root.get_filtered_branch(list(path), keys, Container())
             if sub_tree is None:
                 continue
             filtered_tree._root.merge_with(sub_tree)

@@ -1,0 +1,11 @@
+Title: cisco_secure: More robust parsing for interfaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1570602111
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.7.0i1
+
+Interfaces did not get recognized when they only existed in the second list of SNMP output.

@@ -59,10 +59,6 @@ def parse_hepta(info):
     return parsed
 
 
-def inventory_hepta(info):
-    yield "HPF8030 Info", {}
-
-
 def check_hepta(item, params, parsed):
     yield(0, "DeviceType %s ; SerialNumber %s ; FirmwareVersion %s ; FirmwareDate %s ; "\
           "Version %s" % (parsed['devicetype'], parsed['serialnumber'], parsed['firmwareversion'], parsed['firmwaredate'], parsed['version']  ))
@@ -70,11 +66,12 @@ def check_hepta(item, params, parsed):
 
 check_info['hepta'] = {
     'parse_function': parse_hepta,
-    'inventory_function': inventory_hepta,
+    'inventory_function': discover_single,
     'check_function': check_hepta,
-    'service_description': '%s',
+    'service_description': 'HPF Info',
     'snmp_info': (
-        '.1.3.6.1.4.1.12527.40',
+        '.1.3.6.1.4.1.12527',
+        ['29', '40'],
         [
             "1.1.0",  #hopf8030HEPTADeviceType
             "1.3.0",  #hopf8030HEPTASerialNumber

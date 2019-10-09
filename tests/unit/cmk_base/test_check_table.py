@@ -132,3 +132,44 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
 
     CheckManager().load(["smart"])
     assert check_table.get_check_table(hostname) == expected_result
+
+
+@pytest.mark.parametrize("hostname, expected_result", [
+    ("mgmt-board-ipmi", [("mgmt_ipmi_sensors", "TEMP X")]),
+    ("ipmi-host", [("ipmi_sensors", "TEMP Y")]),
+])
+def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
+    autochecks = {
+        "mgmt-board-ipmi": [
+            Service("mgmt_ipmi_sensors", "TEMP X", "Management Interface: IPMI Sensor TEMP X", {}),
+        ],
+        "ipmi-host": [Service("ipmi_sensors", "TEMP Y", "IPMI Sensor TEMP Y", {}),]
+    }
+
+    ts = Scenario().add_host("mgmt-board-ipmi",
+                             tags={
+                                 'piggyback': 'auto-piggyback',
+                                 'networking': 'lan',
+                                 'address_family': 'no-ip',
+                                 'criticality': 'prod',
+                                 'snmp_ds': 'no-snmp',
+                                 'site': 'heute',
+                                 'agent': 'no-agent'
+                             })
+    ts.add_host("ipmi-host",
+                tags={
+                    'piggyback': 'auto-piggyback',
+                    'networking': 'lan',
+                    'agent': 'cmk-agent',
+                    'criticality': 'prod',
+                    'snmp_ds': 'no-snmp',
+                    'site': 'heute',
+                    'address_family': 'ip-v4-only'
+                })
+    ts.set_option("management_protocol", {"mgmt-board-ipmi": "ipmi"})
+
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
+
+    CheckManager().load(["mgmt_ipmi_sensors", "ipmi_sensors"])
+    assert check_table.get_check_table(hostname).keys() == expected_result

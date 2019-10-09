@@ -91,6 +91,9 @@ def _parse_lnx_if_ipaddress(lines):
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
             iface = ip_stats.setdefault((node, line[1][:-1].split("@")[0]), {})
             iface.update(dict(zip(line[3::2], line[4::2])))
+            # The interface flags are summarized in the angle brackets.
+            if "UP" in line[2][1:-1].split(","):
+                iface['state'] = "UP"
             continue
 
         if not iface:

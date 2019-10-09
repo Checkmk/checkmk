@@ -1,0 +1,10 @@
+Title: lnx_if: Fixed wrong interpretation of interface status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p4
+Date: 1570628484
+Class: fix
+
+

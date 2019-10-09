@@ -1,0 +1,11 @@
+Title: mrpe: Bake MRPE for Solaris
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p4
+Date: 1570534962
+
+

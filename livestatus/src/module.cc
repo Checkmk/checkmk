@@ -63,6 +63,8 @@
 #include "nagios.h"
 #include "strutil.h"
 
+using namespace std::chrono_literals;
+
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
 extern int event_broker_options;
@@ -72,10 +74,10 @@ extern unsigned long event_broker_options;
 extern int enable_environment_macros;
 
 // maximum idle time for connection in keep alive state
-static std::chrono::milliseconds fl_idle_timeout = std::chrono::minutes(5);
+static std::chrono::milliseconds fl_idle_timeout = 5min;
 
 // maximum time for reading a query
-static std::chrono::milliseconds fl_query_timeout = std::chrono::seconds(10);
+static std::chrono::milliseconds fl_query_timeout = 10s;
 
 // allow 10 concurrent connections per default
 size_t g_livestatus_threads = 10;
@@ -204,13 +206,13 @@ void *main_thread(void *data) {
     while (!fl_should_terminate) {
         do_statistics();
         auto now = std::chrono::system_clock::now();
-        if (now - last_update_status >= std::chrono::seconds(5)) {
+        if (now - last_update_status >= 5s) {
             update_status();
             last_update_status = now;
         }
         Poller poller;
         poller.addFileDescriptor(g_unix_socket, PollEvents::in);
-        int retval = poller.poll(std::chrono::milliseconds(2500));
+        int retval = poller.poll(2500ms);
         if (retval > 0 &&
             poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
 #if HAVE_ACCEPT4

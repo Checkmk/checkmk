@@ -31,6 +31,8 @@
 #include "Logger.h"
 #include "Poller.h"
 
+using namespace std::chrono_literals;
+
 namespace {
 constexpr size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
@@ -38,7 +40,7 @@ constexpr size_t maximum_buffer_size = 500 * 1024 * 1024;
 
 bool timeout_reached(const std::chrono::system_clock::time_point &start,
                      const std::chrono::milliseconds &timeout) {
-    return (timeout != std::chrono::milliseconds(0)) &&
+    return (timeout != 0ms) &&
            (std::chrono::system_clock::now() - start >= timeout);
 }
 }  // namespace
@@ -226,7 +228,7 @@ InputBuffer::Result InputBuffer::readData() {
 
         Poller poller;
         poller.addFileDescriptor(_fd, PollEvents::in);
-        int retval = poller.poll(std::chrono::milliseconds(200));
+        int retval = poller.poll(200ms);
         if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::in)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);

@@ -80,6 +80,7 @@ inline std::chrono::system_clock::time_point from_tm(tm tp) {
 
 template <typename Rep, typename Period>
 inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
+    using namespace std::chrono_literals;
     timeval tv;
     // NOTE: The static_casts below are needed to avoid warning on e.g. some
     // 32bit platforms, because the underlying types might be larger than the
@@ -89,8 +90,7 @@ inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     tv.tv_sec = static_cast<decltype(tv.tv_sec)>(
         std::chrono::duration_cast<std::chrono::seconds>(dur).count());
     tv.tv_usec = static_cast<decltype(tv.tv_usec)>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            dur % std::chrono::seconds(1))
+        std::chrono::duration_cast<std::chrono::microseconds>(dur % 1s)
             .count());
     return tv;
 }

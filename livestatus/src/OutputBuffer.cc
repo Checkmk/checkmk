@@ -30,6 +30,8 @@
 #include "Logger.h"
 #include "Poller.h"
 
+using namespace std::chrono_literals;
+
 OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
     : _fd(fd)
     , _termination_flag(termination_flag)
@@ -70,7 +72,7 @@ void OutputBuffer::writeData(std::ostringstream &os) {
     while (!shouldTerminate() && bytes_to_write > 0) {
         Poller poller;
         poller.addFileDescriptor(_fd, PollEvents::out);
-        int retval = poller.poll(std::chrono::milliseconds(100));
+        int retval = poller.poll(100ms);
         if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {

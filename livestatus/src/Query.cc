@@ -54,6 +54,8 @@
 #include "nagios.h"  // for contact
 #endif
 
+using namespace std::chrono_literals;
+
 namespace {
 std::string nextStringArgument(char **line) {
     if (auto value = next_field(line)) {
@@ -586,7 +588,7 @@ void Query::parseLocaltimeLine(char *line) {
             "timezone difference greater than or equal to 24 hours");
     }
 
-    if (offset != std::chrono::seconds(0)) {
+    if (offset != 0s) {
         using hour = std::chrono::duration<double, std::ratio<3600>>;
         Debug(_logger) << "timezone offset is "
                        << std::chrono::duration_cast<hour>(offset).count()

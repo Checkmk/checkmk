@@ -1,0 +1,12 @@
+Title: Fix broken "Service: Check command expanded" painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1570623986
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 1.7.0i1
+
+
